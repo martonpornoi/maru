@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Account Change - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Account Change</h1>
+      <p><a href="{% url 'accounts:access_grant_list' %}">Back to accounts</a></p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Summary</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>Account</th>
+            <td>{{ audit_log.target_email }}</td>
+          </tr>
+          <tr>
+            <th>Action</th>
+            <td>{{ audit_log.action }}</td>
+          </tr>
+          <tr>
+            <th>By</th>
+            <td>{{ audit_log.actor_email|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>When</th>
+            <td>{{ audit_log.created_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel stack">
+      <h2>Before</h2>
+      {% if audit_log.before %}
+        <table>
+          <tbody>
+            <tr>
+              <th>Email</th>
+              <td>{{ audit_log.before.email }}</td>
+            </tr>
+            <tr>
+              <th>Active</th>
+              <td>{% if audit_log.before.active %}Yes{% else %}No{% endif %}</td>
+            </tr>
+            <tr>
+              <th>Roles</th>
+              <td>{{ audit_log.before.roles|join:", "|default:"No roles" }}</td>
+            </tr>
+            <tr>
+              <th>Notes</th>
+              <td>{{ audit_log.before.notes|default:"-" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No previous state.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>After</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>Email</th>
+            <td>{{ audit_log.after.email }}</td>
+          </tr>
+          <tr>
+            <th>Active</th>
+            <td>{% if audit_log.after.active %}Yes{% else %}No{% endif %}</td>
+          </tr>
+          <tr>
+            <th>Roles</th>
+            <td>{{ audit_log.after.roles|join:", "|default:"No roles" }}</td>
+          </tr>
+          <tr>
+            <th>Notes</th>
+            <td>{{ audit_log.after.notes|default:"-" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Scheduling Metadata - {{ panel.title }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:timetable' panel.project.slug %}">Back to timetable</a></p>
+      <h1>{{ panel.title }}</h1>
+      <p class="muted">{{ panel.project.name }} · scheduling metadata</p>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <div class="actions">
+        <button type="submit">Save metadata</button>
+        <a href="{% url 'projects:timetable' panel.project.slug %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

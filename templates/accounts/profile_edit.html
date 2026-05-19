@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'accounts:my_events' %}">Back to My Events</a></p>
+      <h1>Edit Profile</h1>
+      <p class="muted">This profile can be used for approved-host views and future website exports.</p>
+    </div>
+
+    <form class="panel stack" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <div class="actions">
+        <button type="submit">Save profile</button>
+        <a href="{% url 'accounts:my_events' %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}
+

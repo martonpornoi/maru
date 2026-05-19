@@ -1,0 +1,63 @@
+project:
+  name: Neon Paws 2027
+  slug: neon-paws-2027
+  timezone: Europe/Berlin
+  opens_at: "2027-03-05T10:00:00+01:00"
+  closes_at: "2027-03-07T22:00:00+01:00"
+
+accounts:
+  - email: marton.pornoi@gmail.com
+    roles: [Admin, Board, Event Manager]
+
+hotels:
+  - name: City Lights Conference Hotel
+    rooms:
+      - name: Neon Hall
+        capacity: 420
+        properties: [stage, lights, sound, haze_allowed]
+      - name: Synth Room 1
+        capacity: 70
+        properties: [projector, movable_wall]
+      - name: Synth Room 2
+        capacity: 70
+        properties: [projector, movable_wall]
+      - name: Dealers Den
+        capacity: 120
+        properties: [tables, power, public_area]
+    combinations:
+      - name: Synth Room 1+2
+        rooms: [Synth Room 1, Synth Room 2]
+        capacity: 150
+
+subprojects:
+  - name: Performance Applications
+    slug: performances
+    kind: event_submission
+    form:
+      sections:
+        - title: Performance
+          fields:
+            - label: Display - Title
+              type: short_text
+              required: true
+            - label: Display - Abstract
+              type: long_text
+              required: true
+            - label: Technical Rider
+              type: long_text
+            - label: Lighting Sensitivity Warning
+              type: boolean
+
+  - name: Themeing Crew
+    slug: themeing-crew
+    kind: volunteer_registration
+    form:
+      sections:
+        - title: Crew Availability
+          fields:
+            - label: Build-up availability
+              type: availability_grid
+            - label: Preferred Work
+              type: multi_choice
+              options: [Decor, Signage, Lighting Props, Tear-down]
+

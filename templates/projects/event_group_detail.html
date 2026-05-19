@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event_group.name }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:detail' event_group.project.slug %}">Back to {{ event_group.project.name }}</a></p>
+      <h1>{{ event_group.name }}</h1>
+      <p class="muted">
+        {% if event_group.requires_order %}Ordered group{% else %}Unordered group{% endif %}
+        {% if event_group.description %} · {{ event_group.description }}{% endif %}
+      </p>
+      <p><a href="{% url 'projects:edit_event_group' event_group.pk %}">Edit event group</a></p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Panels</h2>
+      {% if panel_rows %}
+        <table>
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Panel</th>
+              <th>Recurrence</th>
+              <th>Placement</th>
+              <th>Warnings</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in panel_rows %}
+              {% with panel=row.panel %}
+                <tr>
+                  <td>{{ panel.group_order|default:"-" }}</td>
+                  <td>{{ panel.title }}</td>
+                  <td>{{ panel.recurrence_label|default:"-" }}</td>
+                  {% if panel.placement %}
+                    <td>{{ panel.placement.starts_at|date:"Y-m-d H:i" }} - {{ panel.placement.ends_at|date:"H:i" }} · {{ panel.placement.location_name }}</td>
+                  {% else %}
+                    <td class="muted">Unplaced</td>
+                  {% endif %}
+                  <td>
+                    {% if row.is_missing_order %}
+                      <strong>Missing order</strong>
+                    {% elif row.has_order_warning %}
+                      <strong>Group order</strong>
+                    {% else %}
+                      <span class="muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td><a href="{% url 'projects:edit_panel_metadata' panel.pk %}">Edit metadata</a></td>
+                </tr>
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No panels are assigned to this group yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

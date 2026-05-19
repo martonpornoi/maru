@@ -1,0 +1,60 @@
+project:
+  name: Cozy Furcon 2025
+  slug: cozy-furcon-2025
+  timezone: Europe/Budapest
+  opens_at: "2025-11-14T12:00:00+01:00"
+  closes_at: "2025-11-16T18:00:00+01:00"
+
+accounts:
+  - email: marton.pornoi@gmail.com
+    roles: [Admin, Board, Event Manager]
+
+hotels:
+  - name: Riverside Hotel
+    rooms:
+      - name: Ballroom
+        capacity: 260
+        properties: [stage, sound, projector]
+      - name: Creative Room
+        capacity: 55
+        properties: [tables, art_supplies_allowed]
+      - name: Fursuit Lounge
+        capacity: 40
+        properties: [fans, water_station, no_photos]
+  - name: Annex
+    rooms:
+      - name: Games Room
+        capacity: 65
+        properties: [tables, late_night, board_games]
+
+subprojects:
+  - name: Cozy Panels
+    slug: cozy-panels
+    kind: event_submission
+    form:
+      sections:
+        - title: Panel Basics
+          fields:
+            - label: Display - Title
+              type: short_text
+              required: true
+            - label: Display - Abstract
+              type: long_text
+              required: true
+            - label: Comfort Level
+              type: single_choice
+              options: [Quiet, Social, Loud, Late Night]
+
+  - name: Fursuit Support Volunteers
+    slug: fursuit-support
+    kind: volunteer_registration
+    form:
+      sections:
+        - title: Support Details
+          fields:
+            - label: Preferred Station
+              type: single_choice
+              options: [Headless Lounge, Water Table, Repair Kit, Queue Support]
+            - label: Heat safety experience
+              type: long_text
+

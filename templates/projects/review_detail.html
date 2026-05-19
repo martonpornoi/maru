@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Review {{ application.title }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:review_application_list' %}">Back to review queue</a></p>
+      <h1>{{ application.title }}</h1>
+      <p class="muted">{{ application.subproject.project.name }} · {{ application.subproject.name }} · {{ application.applicant.email }} · {{ application.status }}</p>
+      {% if applicant_profile %}
+        <p><a href="{% url 'accounts:profile_detail' applicant_profile.pk %}">View applicant profile</a></p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Decision</h2>
+      <div class="actions">
+        <form method="post" action="{% url 'projects:review_application_decision' application.pk 'approve' %}">
+          {% csrf_token %}
+          <button type="submit">Approve</button>
+        </form>
+        <form method="post" action="{% url 'projects:review_application_decision' application.pk 'reject' %}">
+          {% csrf_token %}
+          <button type="submit">Reject</button>
+        </form>
+        {% if application.subproject.accepts_reopen_requests %}
+          <form method="post" action="{% url 'projects:reopen_application' application.pk %}">
+            {% csrf_token %}
+            <button type="submit">Reopen for edits</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if application.panel %}
+      <div class="panel stack">
+        <h2>Panel Scheduling Metadata</h2>
+        <p><a href="{% url 'projects:edit_panel_metadata' application.panel.pk %}">Edit scheduling metadata</a></p>
+        <table>
+          <tbody>
+            <tr>
+              <th>Group</th>
+              <td>{{ application.panel.event_group.name|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th>Group order</th>
+              <td>{{ application.panel.group_order|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th>Recurrence</th>
+              <td>{{ application.panel.recurrence_label|default:"-" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    <div class="panel stack">
+      <h2>Submitted Answers</h2>
+      {% if latest_version %}
+        <table>
+          <thead>
+            <tr>
+              <th>Google Forms Label</th>
+              <th>Answer</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for label, answer in latest_version.answers.items %}
+              <tr>
+                <td>{{ label }}</td>
+                <td>{{ answer }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No version data found.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

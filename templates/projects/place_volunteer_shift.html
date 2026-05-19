@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Place {{ shift.title }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:timetable' shift.project.slug %}">Back to timetable</a></p>
+      <h1>Place {{ shift.title }}</h1>
+      <p class="muted">{{ shift.project.name }} · {{ shift.role }}</p>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <div class="actions">
+        <button type="submit">Save placement</button>
+        <a href="{% url 'projects:timetable' shift.project.slug %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}
+

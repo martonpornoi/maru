@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} Volunteer Shifts - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:detail' project.slug %}">Back to {{ project.name }}</a></p>
+      <h1>{{ project.name }} Volunteer Shifts</h1>
+      <p class="muted">Scheduled shifts you can inspect for this project.</p>
+    </div>
+
+    <div class="panel">
+      {% if rows %}
+        <table>
+          <thead>
+            <tr>
+              <th>Shift</th>
+              <th>Role</th>
+              <th>Staffing</th>
+              <th>Time</th>
+              <th>Location</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              {% with shift=row.shift %}
+              <tr>
+                <td><a href="{% url 'projects:volunteer_shift_detail' shift.pk %}">{{ shift.title }}</a></td>
+                <td>{{ shift.role }}</td>
+                <td>{{ row.assigned_count }} / {{ shift.needed_volunteers }} assigned{% if row.open_spots %}, {{ row.open_spots }} open{% endif %}{% if shift.locked %}, locked{% endif %}</td>
+                <td>{{ shift.placement.starts_at|date:"Y-m-d H:i" }} - {{ shift.placement.ends_at|date:"H:i" }}</td>
+                <td>{{ shift.placement.location_name }}</td>
+                <td>
+                  <a href="{% url 'projects:volunteer_shift_detail' shift.pk %}">View</a>
+                </td>
+              </tr>
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No scheduled volunteer shifts are available yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

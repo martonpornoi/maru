@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Import Accounts - maru{% endblock %}
+
+{% block content %}
+  <section class="panel stack">
+    <div>
+      <h1>Import Accounts</h1>
+      <p><a href="{% url 'accounts:access_grant_list' %}">Back to accounts</a></p>
+    </div>
+
+    <p class="muted">Upload a CSV with columns: email, active, roles. Use semicolons between roles.</p>
+
+    {% if errors %}
+      <div class="message">
+        <strong>Import blocked.</strong>
+        <ul>
+          {% for error in errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <form class="stack" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <button type="submit">Import accounts</button>
+    </form>
+  </section>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Accounts</h1>
+      <p class="muted">Manage allowlisted Google accounts and their maru roles.</p>
+      <div class="actions">
+        <a class="button" href="{% url 'accounts:create_access_grant' %}">Add account</a>
+        <a href="{% url 'accounts:import_access_grants' %}">Import CSV</a>
+        <a href="{% url 'accounts:export_access_grants' %}">Export CSV</a>
+      </div>
+    </div>
+
+    <div class="panel stack">
+      <h2>Access List</h2>
+      <form class="actions" method="get">
+        <label>
+          Email
+          <input name="q" type="search" value="{{ filters.query }}" placeholder="name@gmail.com">
+        </label>
+        <label>
+          Active
+          <select name="active">
+            <option value=""{% if not filters.active %} selected{% endif %}>Any</option>
+            <option value="active"{% if filters.active == "active" %} selected{% endif %}>Active</option>
+            <option value="inactive"{% if filters.active == "inactive" %} selected{% endif %}>Inactive</option>
+          </select>
+        </label>
+        <label>
+          Role
+          <select name="role">
+            <option value=""{% if not filters.role %} selected{% endif %}>Any</option>
+            {% for role in role_choices %}
+              <option value="{{ role }}"{% if filters.role == role %} selected{% endif %}>{{ role }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit">Filter</button>
+        <a href="{% url 'accounts:access_grant_list' %}">Reset</a>
+      </form>
+      {% if rows %}
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Active</th>
+              <th>Roles</th>
+              <th>Notes</th>
+              <th>Last login</th>
+              <th>Profile</th>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              {% with grant=row.grant %}
+                <tr>
+                  <td>{{ grant.email }}</td>
+                  <td>{% if grant.active %}Yes{% else %}No{% endif %}</td>
+                  <td>
+                    {% for role in grant.roles.all %}
+                      {{ role.role }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                      <span class="muted">No roles</span>
+                    {% endfor %}
+                  </td>
+                  <td>{{ grant.notes|default:"-"|truncatechars:80 }}</td>
+                  <td>
+                    {% if row.last_login %}
+                      {{ row.last_login|date:"Y-m-d H:i" }}
+                    {% elif row.user_exists %}
+                      <span class="muted">Never</span>
+                    {% else %}
+                      <span class="muted">No user yet</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if row.profile_unlocked %}
+                      Unlocked
+                    {% elif row.user_exists %}
+                      <span class="muted">Locked</span>
+                    {% else %}
+                      <span class="muted">No user yet</span>
+                    {% endif %}
+                  </td>
+                  <td><a href="{% url 'accounts:edit_access_grant' grant.pk %}">Edit</a></td>
+                  <td>
+                    {% if row.user_exists %}
+                      {% if row.profile_unlocked %}
+                        <form method="post" action="{% url 'accounts:lock_access_grant_profile' grant.pk %}">
+                          {% csrf_token %}
+                          <button type="submit">Lock profile</button>
+                        </form>
+                      {% else %}
+                        <form method="post" action="{% url 'accounts:unlock_access_grant_profile' grant.pk %}">
+                          {% csrf_token %}
+                          <button type="submit">Unlock profile</button>
+                        </form>
+                      {% endif %}
+                    {% else %}
+                      <span class="muted">Unavailable</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No accounts match these filters.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Recent Changes</h2>
+      <form class="actions" method="get">
+        <label>
+          Account
+          <input name="audit_account" type="search" value="{{ audit_filters.account }}" placeholder="target@gmail.com">
+        </label>
+        <label>
+          Actor
+          <input name="audit_actor" type="search" value="{{ audit_filters.actor }}" placeholder="admin@gmail.com">
+        </label>
+        <label>
+          Action
+          <select name="audit_action">
+            <option value=""{% if not audit_filters.action %} selected{% endif %}>Any</option>
+            {% for value, label in audit_action_choices %}
+              <option value="{{ value }}"{% if audit_filters.action == value %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit">Filter changes</button>
+        <a href="{% url 'accounts:access_grant_list' %}">Reset</a>
+      </form>
+      {% if audit_logs %}
+        <table>
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Account</th>
+              <th>Action</th>
+              <th>By</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in audit_logs %}
+              <tr>
+                <td>{{ log.created_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ log.target_email }}</td>
+                <td><a href="{% url 'accounts:access_grant_audit_log_detail' log.pk %}">{{ log.action }}</a></td>
+                <td>{{ log.actor_email|default:"-" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No account changes match these filters.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

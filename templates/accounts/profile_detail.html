@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ viewed_profile.display_name|default:viewed_profile.fursuit_name|default:"Convention participant" }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'accounts:my_events' %}">Back to My Events</a></p>
+      <h1>{{ viewed_profile.display_name|default:viewed_profile.fursuit_name|default:"Convention participant" }}</h1>
+      {% if can_manage %}
+        <p class="muted">Staff view · {{ viewed_profile.user.email }}</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Profile</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>Display name</th>
+            <td>{{ viewed_profile.display_name|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>Fursuit name</th>
+            <td>{{ viewed_profile.fursuit_name|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>Bio</th>
+            <td>{{ viewed_profile.bio|default:"-" }}</td>
+          </tr>
+          {% if viewed_profile.profile_picture %}
+            <tr>
+              <th>Profile picture</th>
+              <td><a href="{{ viewed_profile.profile_picture.url }}">Open profile picture</a></td>
+            </tr>
+          {% endif %}
+          {% if viewed_profile.fursuit_picture and can_manage or viewed_profile.show_fursuit_picture and viewed_profile.fursuit_picture %}
+            <tr>
+              <th>Fursuit picture</th>
+              <td><a href="{{ viewed_profile.fursuit_picture.url }}">Open fursuit picture</a></td>
+            </tr>
+          {% endif %}
+          {% if show_contact %}
+            <tr>
+              <th>Telegram</th>
+              <td>{{ viewed_profile.telegram|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th>Discord</th>
+              <td>{{ viewed_profile.discord|default:"-" }}</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

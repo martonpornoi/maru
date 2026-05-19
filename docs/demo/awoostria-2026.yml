@@ -1,0 +1,107 @@
+project:
+  name: Awoostria 2026
+  slug: awoostria-2026
+  timezone: Europe/Vienna
+  opens_at: "2026-07-22T10:00:00+02:00"
+  closes_at: "2026-07-25T23:00:00+02:00"
+
+accounts:
+  - email: marton.pornoi@gmail.com
+    roles: [Admin, Board, Event Manager]
+
+hotels:
+  - name: Main Convention Hotel
+    rooms:
+      - name: Main Stage
+        capacity: 520
+        properties: [stage, projector, sound, lights, livestream]
+      - name: Panel Room A
+        capacity: 90
+        properties: [projector, movable_wall, classroom]
+      - name: Panel Room B
+        capacity: 80
+        properties: [projector, movable_wall, classroom]
+      - name: Quiet Den
+        capacity: 35
+        properties: [low_noise, beanbags, no_photos]
+    combinations:
+      - name: Panel Room A+B
+        rooms: [Panel Room A, Panel Room B]
+        capacity: 180
+  - name: Overflow Hotel
+    rooms:
+      - name: Workshop Suite
+        capacity: 45
+        properties: [tables, washable_floor, sink]
+      - name: Volunteer Office
+        capacity: 12
+        properties: [staff_only, printer, lockable]
+
+subprojects:
+  - name: Event Submissions
+    slug: events
+    kind: event_submission
+    form:
+      sections:
+        - title: Display
+          fields:
+            - label: Display - Title
+              type: short_text
+              required: true
+            - label: Display - Subtitle (optional)
+              type: short_text
+            - label: Display - Abstract
+              type: long_text
+              required: true
+            - label: Display - Description
+              type: long_text
+            - label: Display - Duration
+              type: duration
+              required: true
+            - label: Display - Tags
+              type: multi_choice
+              options: [Core Event, Chill, Creative Exchange, Fursuiter-Friendly, Noise Warning, Lights Warning]
+        - title: Mapping
+          fields:
+            - label: Mapping - Estimated Headcount
+              type: single_choice
+              options: [S, M, L, XXXL]
+            - label: Mapping - Room Layout
+              type: multi_choice
+              options: [Theater, U-Shape, Cabaret, Exhibit, Activity, Empty]
+            - label: Mapping - Technical Description
+              type: long_text
+            - label: Mapping - Things you would need from us
+              type: long_text
+
+  - name: Dance Competition Volunteers
+    slug: dance-volunteers
+    kind: volunteer_registration
+    form:
+      sections:
+        - title: Volunteer Details
+          fields:
+            - label: Preferred Role
+              type: single_choice
+              options: [Check-in, Backstage, Music Desk, Runner, Stage Door]
+            - label: Availability
+              type: availability_grid
+            - label: Dance experience
+              type: long_text
+
+  - name: DJ Applications
+    slug: dj-applications
+    kind: dj_application
+    form:
+      sections:
+        - title: DJ Set
+          fields:
+            - label: DJ Name
+              type: short_text
+              required: true
+            - label: Preferred Set Length
+              type: single_choice
+              options: [45 minutes, 60 minutes, 90 minutes]
+            - label: Sample Mix Link
+              type: url
+

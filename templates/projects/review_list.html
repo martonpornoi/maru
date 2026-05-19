@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Review Applications - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Review Applications</h1>
+      <p class="muted">Staff review queue for submitted applications.</p>
+    </div>
+
+    <div class="panel">
+      {% if applications %}
+        <table>
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Subproject</th>
+              <th>Application</th>
+              <th>Applicant</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for application in applications %}
+              <tr>
+                <td>{{ application.subproject.project.name }}</td>
+                <td>{{ application.subproject.name }}</td>
+                <td><a href="{% url 'projects:review_application_detail' application.pk %}">{{ application.title }}</a></td>
+                <td>{{ application.applicant.email }}</td>
+                <td>{{ application.status }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No applications yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+

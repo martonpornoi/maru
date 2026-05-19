@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} Timetable - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:detail' project.slug %}">Back to {{ project.name }}</a></p>
+      <h1>{{ project.name }} Timetable</h1>
+      <p class="muted">Round: {{ project.timetable_round }}</p>
+      <p><a href="{% url 'projects:timetable_print' project.slug %}">Printable timetable</a></p>
+    </div>
+
+    {% if can_manage_all %}
+      <div class="panel stack">
+        <h2>Round Controls</h2>
+        <div class="actions">
+          {% for round in rounds %}
+            <form method="post" action="{% url 'projects:change_timetable_round' project.slug round.value %}">
+              {% csrf_token %}
+              <button type="submit">{{ round.value }}</button>
+            </form>
+          {% endfor %}
+        </div>
+        <p><a href="{% url 'projects:create_volunteer_shift' project.slug %}">Create volunteer shift</a></p>
+      </div>
+    {% endif %}
+
+    <div class="panel">
+      <h2>Panels</h2>
+      {% if rows %}
+        <table>
+          <thead>
+            <tr>
+              <th>Panel</th>
+              <th>Host</th>
+              <th>Group</th>
+              <th>Time</th>
+              <th>Location</th>
+              <th>Warnings</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              {% with panel=row.panel %}
+              <tr>
+                <td>{{ panel.title }}</td>
+                <td>
+                  {% if row.host.profile_pk %}
+                    <a href="{% url 'accounts:profile_detail' row.host.profile_pk %}">{{ row.host.label }}</a>
+                  {% else %}
+                    {{ row.host.label }}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if panel.event_group %}
+                    {{ panel.event_group.name }}
+                    {% if panel.group_order %}#{{ panel.group_order }}{% endif %}
+                    {% if panel.recurrence_label %}<span class="muted">{{ panel.recurrence_label }}</span>{% endif %}
+                  {% else %}
+                    <span class="muted">-</span>
+                  {% endif %}
+                </td>
+                {% if panel.placement %}
+                  <td>{{ panel.placement.starts_at|date:"Y-m-d H:i" }} - {{ panel.placement.ends_at|date:"H:i" }}</td>
+                  <td>{{ panel.placement.location_name }}</td>
+                {% else %}
+                  <td class="muted">Unplaced</td>
+                  <td class="muted">Unplaced</td>
+                {% endif %}
+                <td>
+                  {% if row.has_conflict %}
+                    <strong>Conflict</strong>
+                  {% elif row.group_order_problem %}
+                    <strong>Group order</strong>
+                  {% else %}
+                    <span class="muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if row.can_place %}
+                    <a href="{% url 'projects:place_panel' panel.pk %}">Place</a>
+                    {% if can_manage_all %}
+                      <a href="{% url 'projects:edit_panel_metadata' panel.pk %}">Metadata</a>
+                    {% endif %}
+                  {% else %}
+                    <span class="muted">View only</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No panels are visible in this timetable round yet.</p>
+      {% endif %}
+    </div>
+
+    {% if can_manage_all %}
+      <div class="panel">
+        <h2>Volunteer Shifts</h2>
+        {% if shift_rows %}
+          <table>
+            <thead>
+              <tr>
+                <th>Shift</th>
+                <th>Role</th>
+                <th>Staffing</th>
+                <th>Time</th>
+                <th>Location</th>
+                <th>Warnings</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in shift_rows %}
+                {% with shift=row.shift %}
+                <tr>
+                  <td>{{ shift.title }}</td>
+                  <td>{{ shift.role }}</td>
+                  <td>{{ row.assigned_count }} / {{ shift.needed_volunteers }} assigned{% if row.open_spots %}, {{ row.open_spots }} open{% endif %}</td>
+                  {% if shift.placement %}
+                    <td>{{ shift.placement.starts_at|date:"Y-m-d H:i" }} - {{ shift.placement.ends_at|date:"H:i" }}</td>
+                    <td>{{ shift.placement.location_name }}</td>
+                  {% else %}
+                    <td class="muted">Unplaced</td>
+                    <td class="muted">Unplaced</td>
+                  {% endif %}
+                  <td>
+                    {% if row.has_conflict %}
+                      <strong>Conflict</strong>
+                    {% else %}
+                      <span class="muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'projects:place_volunteer_shift' shift.pk %}">Place</a>
+                    <a href="{% url 'projects:assign_volunteer_shift' shift.pk %}">Assign</a>
+                  </td>
+                </tr>
+                {% endwith %}
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No volunteer shifts yet.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

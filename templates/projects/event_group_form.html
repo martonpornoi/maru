@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{% if event_group %}Edit{% else %}Create{% endif %} Event Group - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:detail' project.slug %}">Back to {{ project.name }}</a></p>
+      <h1>{% if event_group %}Edit {{ event_group.name }}{% else %}Create Event Group{% endif %}</h1>
+      <p class="muted">{{ project.name }}</p>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <div class="actions">
+        <button type="submit">Save event group</button>
+        <a href="{% url 'projects:detail' project.slug %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

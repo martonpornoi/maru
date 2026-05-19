@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}{{ application.title }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'accounts:my_events' %}">Back to My Events</a></p>
+      <h1>{{ application.title }}</h1>
+      <p class="muted">{{ application.subproject.project.name }} · {{ application.subproject.name }} · {{ application.status }}</p>
+      {% if can_edit %}
+        <p><a href="{% url 'projects:edit_application' application.pk %}">Edit and resubmit application</a></p>
+      {% endif %}
+      {% if application.panel %}
+        <p><a href="{% url 'projects:place_panel' application.panel.pk %}">Place this panel</a></p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Application Versions</h2>
+      {% if versions %}
+        {% for version in versions %}
+          <h3>Version {{ version.version }}{% if latest_version.pk == version.pk %} · Latest{% endif %}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Google Forms Label</th>
+                <th>Answer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for label, answer in version.answers.items %}
+                <tr>
+                  <td>{{ label }}</td>
+                  <td>{{ answer }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endfor %}
+      {% else %}
+        <p class="muted">No version data found.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

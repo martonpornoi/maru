@@ -1,0 +1,77 @@
+project:
+  name: Awoostria 2026
+  slug: awoostria-2026
+  timezone: Europe/Vienna
+  opens_at: "2026-07-22T10:00:00+02:00"
+  closes_at: "2026-07-25T23:00:00+02:00"
+
+accounts:
+  - email: marton.pornoi@gmail.com
+    roles: [Admin, Board, Event Manager]
+
+hotels:
+  - name: Main Convention Hotel
+    rooms:
+      - name: Main Stage
+        capacity: 500
+        properties: [stage, projector, sound, lights]
+      - name: Panel Room A
+        capacity: 80
+        properties: [projector, movable_wall]
+      - name: Panel Room B
+        capacity: 80
+        properties: [projector, movable_wall]
+    combinations:
+      - name: Panel Room A+B
+        rooms: [Panel Room A, Panel Room B]
+        capacity: 170
+
+event_groups:
+  - name: Fursuit Cooling Track
+    slug: fursuit-cooling-track
+    description: Ordered panels about cooling and safe fursuiting.
+    requires_order: true
+  - name: Daily Community Meetups
+    slug: daily-community-meetups
+    description: Recurring social programming.
+
+subprojects:
+  - name: Event Submissions
+    slug: events
+    kind: event_submission
+    form:
+      sections:
+        - title: Display
+          fields:
+            - label: Display - Title
+              type: short_text
+              required: true
+            - label: Display - Subtitle (optional)
+              type: short_text
+            - label: Display - Abstract
+              type: long_text
+              required: true
+            - label: Display - Duration
+              type: duration
+              required: true
+        - title: Mapping
+          fields:
+            - label: Mapping - Estimated Headcount
+              type: single_choice
+              options: [S, M, L, XXXL]
+            - label: Mapping - Room Layout
+              type: multi_choice
+              options: [Theater, U-Shape, Cabaret, Exhibit, Activity, Empty]
+
+  - name: Dance Competition Volunteers
+    slug: dance-volunteers
+    kind: volunteer_registration
+    form:
+      sections:
+        - title: Volunteer Details
+          fields:
+            - label: Preferred Role
+              type: single_choice
+              options: [Check-in, Backstage, Music Desk, Runner]
+            - label: Availability
+              type: availability_grid

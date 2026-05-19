@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} Printable Timetable - maru{% endblock %}
+
+{% block content %}
+  <style>
+    .print-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+    }
+    .print-table th,
+    .print-table td {
+      vertical-align: top;
+    }
+    @media print {
+      header,
+      .no-print {
+        display: none;
+      }
+      :root,
+      body,
+      main {
+        background: #ffffff;
+        color: #000000;
+      }
+      main {
+        max-width: none;
+        padding: 0;
+      }
+      .panel {
+        border: 0;
+        padding: 0;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      table {
+        font-size: 11pt;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #999999;
+        padding: 6px 4px;
+      }
+    }
+  </style>
+
+  <section class="stack">
+    <div class="print-header">
+      <div>
+        <p class="no-print"><a href="{% url 'projects:timetable' project.slug %}">Back to timetable</a></p>
+        <h1>{{ project.name }} Timetable</h1>
+        <p class="muted">{{ project.opens_at|date:"Y-m-d H:i" }} - {{ project.closes_at|date:"Y-m-d H:i" }} · {{ project.timezone }}</p>
+      </div>
+      <button class="no-print" type="button" onclick="window.print()">Print</button>
+    </div>
+
+    <div class="panel">
+      {% if entries %}
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Type</th>
+              <th>Title</th>
+              <th>Location</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in entries %}
+              <tr>
+                {% if entry.starts_at %}
+                  <td>{{ entry.starts_at|date:"Y-m-d H:i" }} - {{ entry.ends_at|date:"H:i" }}</td>
+                {% else %}
+                  <td class="muted">Unplaced</td>
+                {% endif %}
+                <td>{{ entry.kind }}</td>
+                <td>{{ entry.title }}</td>
+                <td>{{ entry.location }}</td>
+                <td>{{ entry.detail }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No timetable entries are visible in this round.</p>
+      {% endif %}
+    </div>
+
+    {% if not shows_staff_layers %}
+      <p class="muted no-print">Staff-only volunteer layers are not included in this view.</p>
+    {% endif %}
+  </section>
+{% endblock %}

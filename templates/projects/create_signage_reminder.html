@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Create Signage Reminder - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:detail' project.slug %}">Back to {{ project.name }}</a></p>
+      <h1>Create Signage Reminder</h1>
+      <p class="muted">{{ project.name }}</p>
+    </div>
+
+    <div class="panel">
+      <form method="post" class="stack">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="actions">
+          <button type="submit">Create reminder</button>
+          <a href="{% url 'projects:detail' project.slug %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </section>
+{% endblock %}

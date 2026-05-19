@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:list' %}">Back to projects</a></p>
+      <h1>{{ project.name }}</h1>
+      <p class="muted">{{ project.opens_at|date:"Y-m-d H:i" }} - {{ project.closes_at|date:"Y-m-d H:i" }} · {{ project.timezone }}</p>
+      <p>
+        <a href="{% url 'projects:timetable' project.slug %}">Open timetable</a>
+        {% if can_claim_volunteer_shifts %}
+          <a href="{% url 'projects:volunteer_shift_list' project.slug %}">Open volunteer shifts</a>
+        {% endif %}
+        {% if can_review_applications %}
+          <a href="{% url 'projects:create_signage_reminder' project.slug %}">Create signage reminder</a>
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Event Groups</h2>
+      {% if can_review_applications %}
+        <p><a href="{% url 'projects:create_event_group' project.slug %}">Create event group</a></p>
+      {% endif %}
+      {% if project.event_groups.all %}
+        <table>
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Order Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event_group in project.event_groups.all %}
+              <tr>
+                <td>
+                  {% if can_review_applications %}
+                    <a href="{% url 'projects:event_group_detail' event_group.pk %}">{{ event_group.name }}</a>
+                  {% else %}
+                    {{ event_group.name }}
+                  {% endif %}
+                </td>
+                <td>{% if event_group.requires_order %}Yes{% else %}No{% endif %}</td>
+                <td>{{ event_group.description|default:"-" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No event groups defined.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Hotels And Rooms</h2>
+      {% for hotel in project.hotels.all %}
+        <section>
+          <h3>{{ hotel.name }}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Room</th>
+                <th>Capacity</th>
+                <th>Properties</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for room in hotel.rooms.all %}
+                <tr>
+                  <td>{{ room.name }}</td>
+                  <td>{{ room.capacity|default:"-" }}</td>
+                  <td>{{ room.properties|join:", " }}</td>
+                </tr>
+              {% endfor %}
+              {% for combination in hotel.room_combinations.all %}
+                <tr>
+                  <td>{{ combination.name }} <span class="muted">(combined)</span></td>
+                  <td>{{ combination.capacity|default:"-" }}</td>
+                  <td>
+                    {% for room in combination.rooms.all %}
+                      {{ room.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      {% empty %}
+        <p class="muted">No hotels defined.</p>
+      {% endfor %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Subprojects And Forms</h2>
+      {% for subproject in project.subprojects.all %}
+        <section>
+          <h3>{{ subproject.name }}</h3>
+          <p class="muted">{{ subproject.kind }}</p>
+          <p>
+            <a href="{% url 'projects:submit_application' project.slug subproject.slug %}">Submit application</a>
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Google Forms Label</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Options</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field in subproject.form_fields.all %}
+                <tr>
+                  <td>{{ field.label }}</td>
+                  <td>{{ field.field_type }}</td>
+                  <td>{% if field.required %}Yes{% else %}No{% endif %}</td>
+                  <td>{{ field.options|join:", " }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="muted">No fields defined.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      {% empty %}
+        <p class="muted">No subprojects defined.</p>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

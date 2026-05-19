@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Assign Volunteers - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:timetable' shift.project.slug %}">Back to timetable</a></p>
+      <h1>Assign Volunteers</h1>
+      <p class="muted">{{ shift.project.name }} - {{ shift.title }}{% if shift.locked %} - locked{% endif %}</p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Current Assignments</h2>
+      <p>{{ shift.assignment_count }} / {{ shift.needed_volunteers }} assigned.</p>
+      <div class="actions">
+        {% if shift.locked %}
+          <form method="post" action="{% url 'projects:lock_volunteer_shift' shift.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="locked" value="0">
+            <button type="submit">Reopen shift</button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'projects:lock_volunteer_shift' shift.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="locked" value="1">
+            <button type="submit">Lock shift</button>
+          </form>
+        {% endif %}
+      </div>
+      {% if assignments %}
+        <table>
+          <thead>
+            <tr>
+              <th>Volunteer</th>
+              <th>Status</th>
+              <th>Notes</th>
+              <th>Assigned</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for assignment in assignments %}
+              <tr>
+                <td>{{ assignment.user.email }}</td>
+                <td>{{ assignment.status }}</td>
+                <td>{{ assignment.notes|default:"-" }}</td>
+                <td>{{ assignment.assigned_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                  <div class="actions">
+                    {% if assignment.status != "confirmed" %}
+                      <form method="post" action="{% url 'projects:change_volunteer_assignment_status' assignment.pk 'confirmed' %}">
+                        {% csrf_token %}
+                        <button type="submit">Confirm</button>
+                      </form>
+                    {% endif %}
+                    {% if assignment.status != "removed" %}
+                      <form method="post" action="{% url 'projects:change_volunteer_assignment_status' assignment.pk 'removed' %}">
+                        {% csrf_token %}
+                        <button type="submit">Remove</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No volunteers assigned yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Add Volunteer</h2>
+      {% if shift.locked %}
+        <p class="muted">This shift is locked.</p>
+      {% else %}
+        <form method="post" class="stack">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <div class="actions">
+            <button type="submit">Assign volunteer</button>
+            <a href="{% url 'projects:timetable' shift.project.slug %}">Cancel</a>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

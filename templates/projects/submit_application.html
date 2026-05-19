@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_editing %}Edit{% else %}Submit{% endif %} {{ subproject.name }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:detail' subproject.project.slug %}">Back to {{ subproject.project.name }}</a></p>
+      <h1>{% if is_editing %}Edit {{ application.title }}{% else %}{{ subproject.name }}{% endif %}</h1>
+      <p class="muted">{{ subproject.project.name }} · imported Google Forms-compatible labels</p>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {{ field.errors }}
+        </label>
+      {% empty %}
+        <p class="muted">No form fields are defined for this subproject.</p>
+      {% endfor %}
+      <div class="actions">
+        <button type="submit">{{ submit_label|default:"Submit application" }}</button>
+        {% if is_editing %}
+          <a href="{% url 'projects:application_detail' application.pk %}">Cancel</a>
+        {% else %}
+          <a href="{% url 'projects:detail' subproject.project.slug %}">Cancel</a>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+{% endblock %}

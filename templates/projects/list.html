@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Projects</h1>
+      <p class="muted">Educational demo conventions imported from YAML.</p>
+    </div>
+
+    {% for project in projects %}
+      <article class="panel stack">
+        <div>
+          <h2><a href="{% url 'projects:detail' project.slug %}">{{ project.name }}</a></h2>
+          <p class="muted">{{ project.opens_at|date:"Y-m-d H:i" }} - {{ project.closes_at|date:"Y-m-d H:i" }} · {{ project.timezone }}</p>
+        </div>
+        <p>
+          {{ project.subprojects.count }} subprojects ·
+          {{ project.hotels.count }} hotels
+        </p>
+      </article>
+    {% empty %}
+      <div class="panel">
+        <p class="muted">No projects yet. Run <code>uv run --extra dev python manage.py seed_demo</code>.</p>
+      </div>
+    {% endfor %}
+  </section>
+{% endblock %}
+

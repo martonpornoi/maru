@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Log in - maru{% endblock %}
+
+{% block content %}
+  <section class="panel stack">
+    <div>
+      <h1>Log in</h1>
+      <p class="muted">Only allowlisted Gmail or Googlemail accounts can enter.</p>
+    </div>
+    {% if google_oauth_configured %}
+      <p>
+        <a class="button" href="{% url 'accounts:google_login_start' %}">Continue with Google</a>
+      </p>
+    {% else %}
+      <p class="muted">Google OAuth is not configured yet.</p>
+    {% endif %}
+
+    {% if dev_login_enabled %}
+      <form class="stack" method="post">
+        {% csrf_token %}
+        <label>
+          Development email login
+          <input name="email" type="email" autocomplete="email" required autofocus placeholder="name@gmail.com">
+        </label>
+        <button type="submit">Continue locally</button>
+      </form>
+    {% endif %}
+  </section>
+{% endblock %}

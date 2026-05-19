@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}{{ shift.title }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:volunteer_shift_list' shift.project.slug %}">Back to volunteer shifts</a></p>
+      <h1>{{ shift.title }}</h1>
+      <p class="muted">{{ shift.project.name }} - {{ shift.role }}</p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Shift Details</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>Role</th>
+            <td>{{ shift.role }}</td>
+          </tr>
+          <tr>
+            <th>Staffing</th>
+            <td>{{ shift.assignment_count }} / {{ shift.needed_volunteers }} assigned{% if shift.open_spots %}, {{ shift.open_spots }} open{% endif %}</td>
+          </tr>
+          <tr>
+            <th>Status</th>
+            <td>{% if shift.locked %}Locked{% else %}Open{% endif %}</td>
+          </tr>
+          {% if shift.placement %}
+            <tr>
+              <th>Time</th>
+              <td>{{ shift.placement.starts_at|date:"Y-m-d H:i" }} - {{ shift.placement.ends_at|date:"H:i" }}</td>
+            </tr>
+            <tr>
+              <th>Location</th>
+              <td>{{ shift.placement.location_name }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <th>Time</th>
+              <td class="muted">Unplaced</td>
+            </tr>
+            <tr>
+              <th>Location</th>
+              <td class="muted">Unplaced</td>
+            </tr>
+          {% endif %}
+          <tr>
+            <th>Notes</th>
+            <td>{{ shift.notes|default:"-" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel stack">
+      <h2>Your Status</h2>
+      {% if user_assignment %}
+        <p>{{ user_assignment.status }}</p>
+      {% else %}
+        <p class="muted">You are not assigned to this shift.</p>
+      {% endif %}
+
+      {% if blocker %}
+        <p class="muted">{{ blocker }}</p>
+      {% else %}
+        <form method="post" action="{% url 'projects:claim_volunteer_shift' shift.pk %}">
+          {% csrf_token %}
+          <button type="submit">Claim shift</button>
+        </form>
+      {% endif %}
+    </div>
+
+    {% if can_manage_all %}
+      <div class="panel stack">
+        <h2>Staff View</h2>
+        <div class="actions">
+          <a href="{% url 'projects:assign_volunteer_shift' shift.pk %}">Manage assignments</a>
+          <a href="{% url 'projects:place_volunteer_shift' shift.pk %}">Place shift</a>
+        </div>
+        {% if visible_assignments %}
+          <table>
+            <thead>
+              <tr>
+                <th>Volunteer</th>
+                <th>Status</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for assignment in visible_assignments %}
+                <tr>
+                  <td>{{ assignment.user.email }}</td>
+                  <td>{{ assignment.status }}</td>
+                  <td>{{ assignment.notes|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No assignments yet.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
