@@ -7,12 +7,70 @@ from maru.projects import views
 app_name = "projects"
 
 urlpatterns = [
+    path("hotels/", views.hotel_list_view, name="hotel_list"),
+    path("hotels/new/", views.create_hotel_view, name="create_hotel"),
+    path("hotels/<int:pk>/", views.hotel_detail_view, name="hotel_detail"),
+    path(
+        "hotel-floor-plans/<int:pk>/edit/",
+        views.edit_hotel_floor_plan_view,
+        name="edit_hotel_floor_plan",
+    ),
+    path(
+        "hotel-floor-plans/<int:pk>/delete/",
+        views.delete_hotel_floor_plan_view,
+        name="delete_hotel_floor_plan",
+    ),
+    path(
+        "hotels/<int:pk>/rooms/new/",
+        views.create_hotel_room_view,
+        name="create_hotel_room",
+    ),
+    path("rooms/<int:pk>/edit/", views.edit_hotel_room_view, name="edit_hotel_room"),
     path("projects/", views.project_list_view, name="list"),
+    path("forms/", views.form_list_view, name="form_list"),
+    path("projects/<slug:slug>/forms/", views.form_list_view, name="project_form_list"),
+    path("projects/<slug:slug>/forms/new/", views.create_form_view, name="create_form"),
+    path("forms/<int:pk>/edit/", views.edit_form_view, name="edit_form"),
     path("projects/<slug:slug>/", views.project_detail_view, name="detail"),
+    path(
+        "projects/<slug:slug>/rooms/",
+        views.project_room_settings_view,
+        name="project_room_settings",
+    ),
+    path(
+        "project-room-settings/<int:pk>/",
+        views.edit_project_room_setting_view,
+        name="edit_project_room_setting",
+    ),
+    path(
+        "project-room-combination-settings/<int:pk>/",
+        views.edit_project_room_combination_setting_view,
+        name="edit_project_room_combination_setting",
+    ),
+    path(
+        "project-room-availability/<slug:kind>/<int:pk>/delete/",
+        views.delete_project_room_availability_view,
+        name="delete_project_room_availability",
+    ),
     path(
         "projects/<slug:slug>/event-groups/new/",
         views.create_event_group_view,
         name="create_event_group",
+    ),
+    path(
+        "projects/<slug:slug>/export-tokens/",
+        views.export_token_list_view,
+        name="export_token_list",
+    ),
+    path(
+        "export-tokens/<int:pk>/rotate/",
+        views.rotate_export_token_view,
+        name="rotate_export_token",
+    ),
+    path(
+        "export-tokens/<int:pk>/<slug:active>/",
+        views.set_export_token_active_view,
+        name="set_export_token_active",
     ),
     path(
         "event-groups/<int:pk>/",
@@ -54,6 +112,11 @@ urlpatterns = [
         "exports/signage-reminders/<str:token>.json",
         views.signage_reminder_export_view,
         name="signage_reminder_export",
+    ),
+    path(
+        "exports/role-status/<str:token>.json",
+        views.role_status_export_view,
+        name="role_status_export",
     ),
     path(
         "projects/<slug:slug>/signage-reminders/new/",

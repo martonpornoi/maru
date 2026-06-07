@@ -4,12 +4,15 @@ import pytest
 from django.core.management import call_command
 from django.urls import reverse
 
-from maru.accounts.models import ArchivedParticipation
-from maru.domain import SEED_ACCESS_EMAIL
+from maru.accounts.models import ArchivedParticipation, Notification, UserProfile
+from maru.domain import SEED_ACCESS_EMAIL, ApplicationStatus, AssignmentStatus
 from maru.projects.models import (
+    Application,
+    Panel,
     Project,
     Room,
     Subproject,
+    TimetablePlacement,
     VolunteerShift,
     VolunteerShiftAssignment,
 )
@@ -30,6 +33,29 @@ def test_seed_demo_loads_educational_projects() -> None:
     ).exists()
     assert VolunteerShiftAssignment.objects.filter(
         user__email="dance.helper@gmail.com"
+    ).exists()
+    assert Application.objects.filter(
+        title="DJ Neon Trail Opening Set",
+        status=ApplicationStatus.SUBMITTED.value,
+    ).exists()
+    assert Panel.objects.filter(title="Fursuit Cooling 101").exists()
+    assert TimetablePlacement.objects.filter(
+        panel__title="Emergency Plush and Paw Repairs",
+        room__name="Workshop Suite",
+    ).exists()
+    assert VolunteerShiftAssignment.objects.filter(
+        user__email="stage.runner@gmail.com",
+        status=AssignmentStatus.CLAIMED.value,
+    ).exists()
+    assert UserProfile.objects.filter(
+        user__email="cooling.host@gmail.com",
+        display_name="Cooling Host",
+        profile_picture="",
+        fursuit_picture="",
+    ).exists()
+    assert Notification.objects.filter(
+        user__email="cooling.host@gmail.com",
+        title="Panel scheduled",
     ).exists()
     assert ArchivedParticipation.objects.filter(
         user__email=SEED_ACCESS_EMAIL
@@ -56,3 +82,37 @@ def test_project_pages_show_seeded_demo_data(client) -> None:
     assert "Main Convention Hotel" in content
     assert "Panel Room A+B" in content
     assert "Display - Title" in content
+
+
+@pytest.mark.django_db
+def test_sidebar_project_selector_replaces_project_menu_links(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+
+    response = client.get(reverse("accounts:my_profile"))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "project-switcher" in content
+    assert "Awoostria 2026" in content
+    assert "26.07.22 - 26.07.25" in content
+    assert reverse("projects:detail", args=["awoostria-2026"]) in content
+    assert "Project Operations" not in content
+    assert "Project Setup" not in content
+
+    response = client.get(reverse("projects:detail", args=["awoostria-2026"]))
+
+    content = response.content.decode()
+    switcher_button = content.split("project-switcher-button", 1)[1].split(
+        "</summary>",
+        1,
+    )[0]
+    assert response.status_code == 200
+    assert "Awoostria 2026" in switcher_button
+    assert "Con Spaces" in content
+    assert reverse("projects:list") in content
+    assert (
+        reverse("accounts:project_user_directory", args=["awoostria-2026"])
+        in content
+    )
+    assert reverse("projects:project_room_settings", args=["awoostria-2026"]) in content

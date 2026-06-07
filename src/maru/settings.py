@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "maru.accounts",
     "maru.projects",
+    "maru.social",
 ]
 
 MIDDLEWARE = [
@@ -108,7 +109,7 @@ CSRF_TRUSTED_ORIGINS = _env_list("MARU_CSRF_TRUSTED_ORIGINS")
 X_FRAME_OPTIONS = "DENY"
 
 LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "accounts:my_events"
+LOGIN_REDIRECT_URL = "accounts:my_profile"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 MARU_GOOGLE_EMAIL_DOMAINS = ("gmail.com", "googlemail.com")

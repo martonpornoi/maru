@@ -28,6 +28,11 @@ class Command(BaseCommand):
                 f"{result.room_combinations} room combinations, "
                 f"{result.event_groups} event groups, "
                 f"{result.subprojects} subprojects, "
-                f"{result.form_fields} form fields"
+                f"{result.form_fields} form fields, "
+                f"{result.role_definitions} roles, "
+                f"{result.role_assignments} role assignments, "
+                f"{result.benefits} benefits, "
+                f"{result.status_benefits} status benefits, "
+                f"{result.labels} labels"
             )
         )

@@ -8,6 +8,7 @@ from maru.domain import (
     ApplicationStatus,
     AssignmentStatus,
     ExportType,
+    FormStatus,
     SubprojectKind,
     TimetableLayer,
     TimetableRound,
@@ -29,6 +30,7 @@ class Project(models.Model):
         choices=[(round_.value, round_.value) for round_ in TimetableRound],
         default=TimetableRound.PRIVATE_PLACEMENT.value,
     )
+    hotels = models.ManyToManyField("Hotel", related_name="projects", blank=True)
     profile_exports_enabled = models.BooleanField(default=False)
     profile_contact_exports_enabled = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -128,6 +130,19 @@ class Subproject(models.Model):
         max_length=64,
         choices=[(kind.value, kind.value) for kind in SubprojectKind],
     )
+    form_status = models.CharField(
+        max_length=32,
+        choices=[(status.value, status.value) for status in FormStatus],
+        default=FormStatus.PUBLISHED.value,
+    )
+    inherited_from = models.ForeignKey(
+        "self",
+        related_name="inherited_forms",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    is_timetable_source = models.BooleanField(default=False)
     accepts_reopen_requests = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -145,23 +160,15 @@ class Subproject(models.Model):
 
 
 class Hotel(models.Model):
-    project = models.ForeignKey(
-        Project, related_name="hotels", on_delete=models.CASCADE
-    )
     name = models.CharField(max_length=160)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["project", "name"], name="unique_hotel_name_per_project"
-            )
-        ]
-        ordering = ["project__opens_at", "name"]
+        ordering = ["name"]
 
     def __str__(self) -> str:
-        return f"{self.project.name}: {self.name}"
+        return self.name
 
 
 class Room(models.Model):
@@ -206,6 +213,124 @@ class RoomCombination(models.Model):
         return f"{self.hotel.name}: {self.name}"
 
 
+class HotelFloorPlan(models.Model):
+    hotel = models.ForeignKey(
+        Hotel, related_name="floor_plans", on_delete=models.CASCADE
+    )
+    floor_label = models.CharField(max_length=120)
+    image = models.ImageField(upload_to="hotels/floor-plans/")
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["hotel", "floor_label"],
+                name="unique_floor_plan_label_per_hotel",
+            )
+        ]
+        ordering = ["hotel__name", "floor_label"]
+
+    def __str__(self) -> str:
+        return f"{self.hotel.name}: {self.floor_label}"
+
+
+class ProjectRoomSetting(models.Model):
+    project = models.ForeignKey(
+        Project, related_name="room_settings", on_delete=models.CASCADE
+    )
+    room = models.ForeignKey(
+        Room, related_name="project_settings", on_delete=models.CASCADE
+    )
+    local_name = models.CharField(max_length=160, blank=True)
+    blocked = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "room"], name="unique_room_setting_per_project"
+            )
+        ]
+        ordering = ["room__hotel__name", "room__name"]
+
+    @property
+    def display_name(self) -> str:
+        return self.local_name or self.room.name
+
+    def __str__(self) -> str:
+        return f"{self.project.name}: {self.display_name}"
+
+
+class ProjectRoomCombinationSetting(models.Model):
+    project = models.ForeignKey(
+        Project,
+        related_name="room_combination_settings",
+        on_delete=models.CASCADE,
+    )
+    room_combination = models.ForeignKey(
+        RoomCombination,
+        related_name="project_settings",
+        on_delete=models.CASCADE,
+    )
+    local_name = models.CharField(max_length=160, blank=True)
+    blocked = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "room_combination"],
+                name="unique_room_combination_setting_per_project",
+            )
+        ]
+        ordering = ["room_combination__hotel__name", "room_combination__name"]
+
+    @property
+    def display_name(self) -> str:
+        return self.local_name or self.room_combination.name
+
+    def __str__(self) -> str:
+        return f"{self.project.name}: {self.display_name}"
+
+
+class ProjectRoomAvailability(models.Model):
+    setting = models.ForeignKey(
+        ProjectRoomSetting,
+        related_name="availability_windows",
+        on_delete=models.CASCADE,
+    )
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["starts_at"]
+
+    def __str__(self) -> str:
+        return f"{self.setting}: {self.starts_at:%Y-%m-%d %H:%M}"
+
+
+class ProjectRoomCombinationAvailability(models.Model):
+    setting = models.ForeignKey(
+        ProjectRoomCombinationSetting,
+        related_name="availability_windows",
+        on_delete=models.CASCADE,
+    )
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["starts_at"]
+
+    def __str__(self) -> str:
+        return f"{self.setting}: {self.starts_at:%Y-%m-%d %H:%M}"
+
+
 class FormField(models.Model):
     subproject = models.ForeignKey(
         Subproject, related_name="form_fields", on_delete=models.CASCADE
@@ -238,6 +363,10 @@ class Application(models.Model):
         "auth.User", related_name="applications", on_delete=models.CASCADE
     )
     title = models.CharField(max_length=240)
+    event_header_image = models.ImageField(
+        blank=True,
+        upload_to="events/header-images/",
+    )
     status = models.CharField(
         max_length=32,
         choices=[(status.value, status.value) for status in ApplicationStatus],

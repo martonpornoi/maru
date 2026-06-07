@@ -1,44 +1,256 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}maru{% endblock %}</title>
+    <link rel="icon" href="{% static 'accounts/brand/favicon.ico' %}" sizes="any">
+    <link rel="apple-touch-icon" href="{% static 'accounts/brand/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'accounts/brand/site.webmanifest' %}">
     <style>
       :root {
         color-scheme: light;
+        --maru-navy: #071B3A;
+        --maru-amber: #B9822E;
+        --maru-ivory: #FAF3E3;
+        --maru-ivory-soft: #fffaf0;
+        --maru-border: #decba8;
+        --maru-muted: #675943;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: #202124;
-        background: #f6f7f9;
+        color: var(--maru-navy);
+        background: var(--maru-ivory);
       }
       body {
         margin: 0;
+        background: var(--maru-ivory);
       }
-      header {
+      .app-shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+      }
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding: 24px 20px;
+        background: var(--maru-ivory-soft);
+        border-right: 1px solid var(--maru-border);
+        overflow-y: auto;
+      }
+      .brand {
+        display: block;
+        color: inherit;
+        text-decoration: none;
+      }
+      .brand-logo {
+        display: block;
+        width: 100%;
+        max-width: 190px;
+        height: auto;
+        border-radius: 8px;
+        object-fit: contain;
+      }
+      .nav-section {
+        display: grid;
+        gap: 8px;
+      }
+      .nav-section-title {
+        margin: 0;
+        color: var(--maru-muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .nav-link {
+        display: block;
+        padding: 8px 10px;
+        border-radius: 6px;
+        color: var(--maru-navy);
+        text-decoration: none;
+      }
+      .nav-link:hover,
+      .nav-link:focus {
+        background: rgb(185 130 46 / 14%);
+        color: var(--maru-navy);
+      }
+      .sidebar-footer {
+        margin-top: auto;
+        display: grid;
+        gap: 10px;
+      }
+      .user-email {
+        overflow-wrap: anywhere;
+      }
+      .sidebar-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+        border: 1px solid var(--maru-border);
+        border-radius: 8px;
+        color: inherit;
+        text-decoration: none;
+      }
+      .sidebar-profile:hover,
+      .sidebar-profile:focus {
+        border-color: var(--maru-amber);
+        background: rgb(185 130 46 / 14%);
+      }
+      .project-switcher {
+        display: grid;
+        gap: 8px;
+      }
+      .project-switcher summary {
+        list-style: none;
+      }
+      .project-switcher summary::-webkit-details-marker {
+        display: none;
+      }
+      .project-switcher-button {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 24px;
-        padding: 16px 24px;
-        background: #ffffff;
-        border-bottom: 1px solid #d9dee7;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid var(--maru-border);
+        border-radius: 8px;
+        background: var(--maru-ivory-soft);
+        color: var(--maru-navy);
+        cursor: pointer;
+        font-weight: 750;
       }
-      nav {
+      .project-switcher-button::after {
+        content: "▾";
+        color: var(--maru-amber);
+        font-size: 0.8rem;
+      }
+      .project-switcher[open] .project-switcher-button::after {
+        content: "▴";
+      }
+      .project-menu {
+        display: grid;
+        gap: 8px;
+      }
+      .project-menu-item {
+        display: grid;
+        gap: 2px;
+        padding: 10px;
+        border: 1px solid var(--maru-border);
+        border-radius: 8px;
+        background: rgb(250 243 227 / 62%);
+        color: inherit;
+        text-decoration: none;
+      }
+      .project-menu-item:hover,
+      .project-menu-item:focus {
+        border-color: var(--maru-amber);
+        background: rgb(185 130 46 / 14%);
+      }
+      .project-menu-name {
+        font-weight: 750;
+      }
+      .project-menu-date {
+        color: var(--maru-muted);
+        font-size: 0.86rem;
+      }
+      .sidebar-profile-text {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+      .sidebar-profile-name {
+        overflow: hidden;
+        font-weight: 750;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .avatar {
+        display: block;
+        flex: 0 0 auto;
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--maru-border);
+        border-radius: 50%;
+        background: var(--maru-ivory);
+        object-fit: cover;
+      }
+      .avatar-list {
+        width: 56px;
+        height: 56px;
+      }
+      .user-avatar-link {
+        display: inline-block;
+      }
+      .user-tile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+      }
+      .user-tile {
+        box-sizing: border-box;
+        aspect-ratio: 1 / 1;
+        display: grid;
+        border: 8px solid var(--maru-border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .user-tile-inner {
+        min-height: 0;
+        display: grid;
+        align-content: start;
+        justify-items: center;
+        gap: 10px;
+        padding: 18px;
+        overflow: auto;
+      }
+      .user-tile-header {
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+        text-align: center;
+      }
+      .user-tile-name {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .user-tile-meta {
         display: flex;
-        gap: 14px;
-        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .user-chip {
+        display: inline-block;
+        padding: 3px 7px;
+        border: 1px solid rgb(7 27 58 / 18%);
+        border-radius: 999px;
+        background: rgb(250 243 227 / 72%);
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+      .user-tile .avatar-list {
+        width: 104px;
+        height: 104px;
       }
       main {
         max-width: 960px;
-        margin: 0 auto;
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0;
         padding: 32px 24px;
       }
       a {
-        color: #1769aa;
+        color: var(--maru-amber);
       }
       .panel {
-        background: #ffffff;
-        border: 1px solid #d9dee7;
+        background: var(--maru-ivory-soft);
+        border: 1px solid var(--maru-border);
         border-radius: 8px;
         padding: 24px;
       }
@@ -61,7 +273,7 @@
       textarea {
         max-width: 420px;
         padding: 10px 12px;
-        border: 1px solid #aeb7c4;
+        border: 1px solid var(--maru-border);
         border-radius: 6px;
         font: inherit;
       }
@@ -75,7 +287,7 @@
         padding-left: 20px;
       }
       .errorlist {
-        color: #b42318;
+        color: #9f2a1f;
         margin: 0;
       }
       .actions {
@@ -91,8 +303,8 @@
         padding: 10px 14px;
         border: 0;
         border-radius: 6px;
-        background: #1f7a5a;
-        color: #ffffff;
+        background: var(--maru-navy);
+        color: var(--maru-ivory);
         font: inherit;
         font-weight: 700;
         cursor: pointer;
@@ -101,11 +313,42 @@
       .message {
         padding: 10px 12px;
         border-radius: 6px;
-        background: #fff4d6;
-        border: 1px solid #e0b84e;
+        background: rgb(185 130 46 / 16%);
+        border: 1px solid var(--maru-amber);
+      }
+      .profile-media-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+      .profile-media {
+        display: grid;
+        gap: 8px;
+      }
+      .profile-media img {
+        width: 100%;
+        max-height: 360px;
+        object-fit: contain;
+        border: 1px solid var(--maru-border);
+        border-radius: 8px;
+        background: var(--maru-ivory);
+      }
+      .event-header-image {
+        width: min(100%, 960px);
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border: 1px solid var(--maru-border);
+        border-radius: 8px;
+        background: var(--maru-navy);
+      }
+      .event-header-image img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
       .muted {
-        color: #667085;
+        color: var(--maru-muted);
       }
       table {
         width: 100%;
@@ -113,42 +356,136 @@
       }
       th, td {
         padding: 10px 8px;
-        border-bottom: 1px solid #e4e7ec;
+        border-bottom: 1px solid var(--maru-border);
         text-align: left;
+      }
+      @media (max-width: 800px) {
+        .app-shell {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          position: static;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--maru-border);
+        }
+        main {
+          padding: 24px 16px;
+        }
       }
     </style>
   </head>
   <body>
-    <header>
-      <nav>
-        <strong>maru</strong>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="{% if request.user.is_authenticated %}{% url 'accounts:my_profile' %}{% else %}{% url 'accounts:login' %}{% endif %}">
+          <img class="brand-logo" src="{% static 'accounts/brand/maru_rectangle_full_logo.png' %}" alt="maru Convention Planning">
+        </a>
+
         {% if request.user.is_authenticated %}
-          <a href="{% url 'accounts:my_events' %}">My Events</a>
-          <a href="{% url 'projects:list' %}">Projects</a>
-          {% if can_manage_accounts %}
-            <a href="{% url 'accounts:access_grant_list' %}">Accounts</a>
-          {% endif %}
+          <details class="project-switcher">
+            <summary class="project-switcher-button">
+              <span>
+                {% if current_sidebar_project %}
+                  {{ current_sidebar_project.name }}
+                {% else %}
+                  {{ ui_labels.menu.projects }}
+                {% endif %}
+              </span>
+            </summary>
+            <div class="project-menu">
+              <a class="project-menu-item" href="{% url 'projects:list' %}">
+                <span class="project-menu-name">{{ ui_labels.menu.projects }}</span>
+                <span class="project-menu-date">General view</span>
+              </a>
+              {% for project in sidebar_projects %}
+                <a class="project-menu-item" href="{% url 'projects:detail' project.slug %}">
+                  <span class="project-menu-name">{{ project.name }}</span>
+                  <span class="project-menu-date">{{ project.opens_at|date:"y.m.d" }} - {{ project.closes_at|date:"y.m.d" }}</span>
+                </a>
+              {% empty %}
+                <a class="project-menu-item" href="{% url 'projects:list' %}">
+                  <span class="project-menu-name">{{ ui_labels.menu.projects }}</span>
+                  <span class="project-menu-date">No projects yet</span>
+                </a>
+              {% endfor %}
+            </div>
+          </details>
+
+          <a class="sidebar-profile" href="{% url 'accounts:my_profile' %}">
+            <img class="avatar" src="{% if current_user_profile and current_user_profile.profile_picture %}{{ current_user_profile.profile_picture.url }}{% else %}{% static 'accounts/default-avatar.svg' %}{% endif %}" alt="">
+            <span class="sidebar-profile-text">
+              <span class="sidebar-profile-name">
+                {% if current_user_profile and current_user_profile.display_name %}
+                  {{ current_user_profile.display_name }}
+              {% else %}
+                  My Profile
+                {% endif %}
+              </span>
+            </span>
+          </a>
+
+          <nav class="nav-section" aria-label="Public pages">
+            {% if current_sidebar_project %}
+              <a class="nav-link" href="{% url 'accounts:project_user_directory' current_sidebar_project.slug %}">{{ ui_labels.menu.users }}</a>
+            {% else %}
+              <a class="nav-link" href="{% url 'accounts:user_directory' %}">{{ ui_labels.menu.users }}</a>
+            {% endif %}
+            <a class="nav-link" href="{% url 'social:list' %}">{{ ui_labels.menu.social_media }}</a>
+            <a class="nav-link" href="{% url 'accounts:statistics' %}">{{ ui_labels.menu.statistics }}</a>
+            {% if current_sidebar_project %}
+              <a class="nav-link" href="{% url 'projects:project_form_list' current_sidebar_project.slug %}">{{ ui_labels.menu.forms }}</a>
+            {% else %}
+              <a class="nav-link" href="{% url 'projects:form_list' %}">{{ ui_labels.menu.forms }}</a>
+            {% endif %}
+          </nav>
+
           {% if can_review_applications %}
-            <a href="{% url 'projects:review_application_list' %}">Review</a>
+            <nav class="nav-section" aria-label="Staff">
+              <p class="nav-section-title">{{ ui_labels.menu.staff }}</p>
+              <a class="nav-link" href="{% url 'projects:review_application_list' %}">{{ ui_labels.menu.application_review }}</a>
+            </nav>
+          {% endif %}
+
+          {% if can_open_setup %}
+            <nav class="nav-section" aria-label="Setup">
+              <p class="nav-section-title">{{ ui_labels.menu.setup }}</p>
+              {% if current_sidebar_project %}
+                <a class="nav-link" href="{% url 'projects:project_room_settings' current_sidebar_project.slug %}">{{ ui_labels.menu.con_spaces }}</a>
+                <a class="nav-link" href="{% url 'accounts:project_roles_access' current_sidebar_project.slug %}">{{ ui_labels.menu.roles_access }}</a>
+                <a class="nav-link" href="{% url 'accounts:project_statuses_benefits' current_sidebar_project.slug %}">{{ ui_labels.menu.statuses_benefits }}</a>
+                <a class="nav-link" href="{% url 'accounts:project_labels' current_sidebar_project.slug %}">{{ ui_labels.menu.labels }}</a>
+              {% else %}
+                <a class="nav-link" href="{% url 'projects:hotel_list' %}">{{ ui_labels.menu.hotels }}</a>
+                <a class="nav-link" href="{% url 'accounts:roles_access' %}">{{ ui_labels.menu.roles_access }}</a>
+                <a class="nav-link" href="{% url 'accounts:statuses_benefits' %}">{{ ui_labels.menu.statuses_benefits }}</a>
+                <a class="nav-link" href="{% url 'accounts:labels' %}">{{ ui_labels.menu.labels }}</a>
+              {% endif %}
+              <a class="nav-link" href="{% url 'accounts:user_tile_color_rules' %}">{{ ui_labels.menu.color_codes }}</a>
+            </nav>
           {% endif %}
         {% endif %}
-      </nav>
-      {% if request.user.is_authenticated %}
-        <form method="post" action="{% url 'accounts:logout' %}">
-          {% csrf_token %}
-          <button type="submit">Log out</button>
-        </form>
-      {% endif %}
-    </header>
-    <main>
-      {% if messages %}
-        <div class="stack">
-          {% for message in messages %}
-            <div class="message">{{ message }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-      {% block content %}{% endblock %}
-    </main>
+
+        {% if request.user.is_authenticated %}
+          <div class="sidebar-footer">
+            <span class="muted user-email">{{ request.user.email }}</span>
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button type="submit">Log out</button>
+            </form>
+          </div>
+        {% endif %}
+      </aside>
+      <main>
+        {% if messages %}
+          <div class="stack">
+            {% for message in messages %}
+              <div class="message">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
   </body>
 </html>

@@ -5,15 +5,74 @@
 {% block content %}
   <section class="stack">
     <div>
-      <p><a href="{% url 'accounts:my_events' %}">Back to My Events</a></p>
       <h1>{{ viewed_profile.display_name|default:viewed_profile.fursuit_name|default:"Convention participant" }}</h1>
-      {% if can_manage %}
+      {% if is_owner %}
+        <p class="muted">Your profile, notifications, applications, archive, and shifts.</p>
+      {% elif can_manage %}
         <p class="muted">Staff view · {{ viewed_profile.user.email }}</p>
+      {% endif %}
+      {% if can_edit_profile %}
+        <div class="actions">
+          {% if is_owner %}
+            <a class="button" href="{% url 'accounts:profile_edit' %}">Edit profile</a>
+            <a class="button" href="{% url 'projects:list' %}">Browse projects</a>
+          {% else %}
+            <a class="button" href="{% url 'accounts:profile_edit_detail' viewed_profile.pk %}">Edit profile</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    {% if personal_dashboard %}
+      <div class="panel stack">
+        <h2>Access</h2>
+        {% if grant %}
+          <p>Your account is active.</p>
+          <p class="muted">
+            Roles:
+            {% for role in grant.roles.all %}
+              {{ role.role }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+              Registered User
+            {% endfor %}
+          </p>
+        {% else %}
+          <p class="muted">No active access grant found for this account.</p>
+        {% endif %}
+        {% if viewed_profile.profile_unlocked %}
+          <p>Your profile is unlocked.</p>
+        {% elif can_manage_accounts %}
+          <p class="muted">Admin access lets you edit profile settings before approval unlock.</p>
+        {% else %}
+          <p class="muted">Your profile unlocks after one of your applications is approved.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="panel stack">
+      <h2>Pictures</h2>
+      {% if viewed_profile.profile_picture or viewed_profile.fursuit_picture and show_fursuit_picture %}
+        <div class="profile-media-grid">
+          {% if viewed_profile.profile_picture %}
+            <figure class="profile-media">
+              <img src="{{ viewed_profile.profile_picture.url }}" alt="Profile picture for {{ viewed_profile.display_name|default:viewed_profile.fursuit_name|default:'participant' }}">
+              <figcaption>Profile picture</figcaption>
+            </figure>
+          {% endif %}
+          {% if viewed_profile.fursuit_picture and show_fursuit_picture %}
+            <figure class="profile-media">
+              <img src="{{ viewed_profile.fursuit_picture.url }}" alt="Fursuit picture for {{ viewed_profile.fursuit_name|default:viewed_profile.display_name|default:'participant' }}">
+              <figcaption>Fursuit picture</figcaption>
+            </figure>
+          {% endif %}
+        </div>
+      {% else %}
+        <p class="muted">No pictures uploaded yet.</p>
       {% endif %}
     </div>
 
     <div class="panel stack">
-      <h2>Profile</h2>
+      <h2>Details</h2>
       <table>
         <tbody>
           <tr>
@@ -25,21 +84,13 @@
             <td>{{ viewed_profile.fursuit_name|default:"-" }}</td>
           </tr>
           <tr>
+            <th>Pronouns</th>
+            <td>{{ viewed_profile.pronouns|default:"-" }}</td>
+          </tr>
+          <tr>
             <th>Bio</th>
             <td>{{ viewed_profile.bio|default:"-" }}</td>
           </tr>
-          {% if viewed_profile.profile_picture %}
-            <tr>
-              <th>Profile picture</th>
-              <td><a href="{{ viewed_profile.profile_picture.url }}">Open profile picture</a></td>
-            </tr>
-          {% endif %}
-          {% if viewed_profile.fursuit_picture and can_manage or viewed_profile.show_fursuit_picture and viewed_profile.fursuit_picture %}
-            <tr>
-              <th>Fursuit picture</th>
-              <td><a href="{{ viewed_profile.fursuit_picture.url }}">Open fursuit picture</a></td>
-            </tr>
-          {% endif %}
           {% if show_contact %}
             <tr>
               <th>Telegram</th>
@@ -49,9 +100,286 @@
               <th>Discord</th>
               <td>{{ viewed_profile.discord|default:"-" }}</td>
             </tr>
+            <tr>
+              <th>Phone</th>
+              <td>{{ viewed_profile.phone_number|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th>Personal email</th>
+              <td>{{ viewed_profile.personal_email|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th>Convention email</th>
+              <td>{{ viewed_profile.convention_email|default:"-" }}</td>
+            </tr>
+          {% endif %}
+          {% if show_private_details %}
+            <tr>
+              <th>Address</th>
+              <td>
+                {% if viewed_profile.street_address or viewed_profile.city or viewed_profile.country %}
+                  {{ viewed_profile.street_address|default:"" }}{% if viewed_profile.address_extra %}<br>{{ viewed_profile.address_extra }}{% endif %}
+                  {% if viewed_profile.postal_code or viewed_profile.city %}<br>{{ viewed_profile.postal_code }} {{ viewed_profile.city }}{% endif %}
+                  {% if viewed_profile.region %}<br>{{ viewed_profile.region }}{% endif %}
+                  {% if viewed_profile.country %}<br>{{ viewed_profile.get_country_display }}{% endif %}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+            </tr>
           {% endif %}
         </tbody>
       </table>
     </div>
+
+    <div class="panel stack">
+      <h2>Convention Profiles</h2>
+      {% if convention_profile_rows %}
+        <table>
+          <thead>
+            <tr>
+              <th>Convention</th>
+              <th>Attendee type</th>
+              <th>Ticket</th>
+              <th>Fursuiter</th>
+              <th>Benefits</th>
+              <th>Volunteer type</th>
+              <th>Roles</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in convention_profile_rows %}
+              {% with convention_profile=row.convention_profile %}
+              <tr>
+                <td>{{ convention_profile.project.name }}</td>
+                <td>{{ convention_profile.attendee_type|default:"-" }}</td>
+                <td>
+                  Selected: {{ convention_profile.ticket_level_selected }}<br>
+                  Verified: {{ convention_profile.ticket_level_verified|default:"-" }}
+                </td>
+                <td>
+                  {{ convention_profile.fursuiter_status }}
+                  {% if convention_profile.fursuit_species %}
+                    <br>{{ convention_profile.fursuit_species }}
+                  {% endif %}
+                </td>
+                <td>{{ row.benefits|join:", "|default:"-" }}</td>
+                <td>{{ convention_profile.volunteer_type }}</td>
+                <td>
+                  {% for role in convention_profile.role_labels %}
+                    {{ role }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    <span class="muted">No convention roles assigned</span>
+                  {% endfor %}
+                </td>
+              </tr>
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No convention-specific profile details yet.</p>
+      {% endif %}
+    </div>
+
+    {% if personal_dashboard %}
+      <div class="panel stack">
+        <h2>Notifications</h2>
+        {% if unread_notifications %}
+          <h3>Unread</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Message</th>
+                <th>Details</th>
+                <th>Link</th>
+                <th>Created</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for notification in unread_notifications %}
+                <tr>
+                  <td>{{ notification.title }}</td>
+                  <td>{{ notification.body }}</td>
+                  <td>
+                    {% if notification.link_url %}
+                      <a href="{{ notification.link_url }}">{{ notification.link_label|default:"Open" }}</a>
+                    {% else %}
+                      <span class="muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ notification.created_at|date:"Y-m-d H:i" }}</td>
+                  <td>
+                    <form method="post" action="{% url 'accounts:mark_notification_read' notification.pk %}">
+                      {% csrf_token %}
+                      <button type="submit">Mark read</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No unread notifications.</p>
+        {% endif %}
+
+        {% if read_notifications %}
+          <h3>Read</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Message</th>
+                <th>Details</th>
+                <th>Link</th>
+                <th>Read</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for notification in read_notifications %}
+                <tr>
+                  <td>{{ notification.title }}</td>
+                  <td>{{ notification.body }}</td>
+                  <td>
+                    {% if notification.link_url %}
+                      <a href="{{ notification.link_url }}">{{ notification.link_label|default:"Open" }}</a>
+                    {% else %}
+                      <span class="muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ notification.read_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+      </div>
+
+      <div class="panel stack">
+        <h2>Current Applications</h2>
+        {% if active_applications %}
+          <table>
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Subproject</th>
+                <th>Application</th>
+                <th>Status</th>
+                <th>Versions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for application in active_applications %}
+                <tr>
+                  <td>{{ application.subproject.project.name }}</td>
+                  <td>{{ application.subproject.name }}</td>
+                  <td><a href="{% url 'projects:application_detail' application.pk %}">{{ application.title }}</a></td>
+                  <td>{{ application.status }}</td>
+                  <td>{{ application.version_count }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No submitted applications yet.</p>
+        {% endif %}
+      </div>
+
+      <div class="panel stack">
+        <h2>Application History</h2>
+        {% if historical_applications %}
+          <table>
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Subproject</th>
+                <th>Application</th>
+                <th>Outcome</th>
+                <th>Versions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for application in historical_applications %}
+                <tr>
+                  <td>{{ application.subproject.project.name }}</td>
+                  <td>{{ application.subproject.name }}</td>
+                  <td><a href="{% url 'projects:application_detail' application.pk %}">{{ application.title }}</a></td>
+                  <td>{{ application.status }}</td>
+                  <td>{{ application.version_count }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No finished applications yet.</p>
+        {% endif %}
+      </div>
+
+      <div class="panel stack">
+        <h2>Volunteer Shifts</h2>
+        {% if volunteer_assignments %}
+          <table>
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Shift</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Time</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for assignment in volunteer_assignments %}
+                {% with shift=assignment.shift %}
+                  <tr>
+                    <td>{{ shift.project.name }}</td>
+                    <td>{{ shift.title }}</td>
+                    <td>{{ shift.role }}</td>
+                    <td>{{ assignment.status }}</td>
+                    {% if shift.placement %}
+                      <td>{{ shift.placement.starts_at|date:"Y-m-d H:i" }} - {{ shift.placement.ends_at|date:"H:i" }}</td>
+                      <td>{{ shift.placement.location_name }}</td>
+                    {% else %}
+                      <td class="muted">Unplaced</td>
+                      <td class="muted">Unplaced</td>
+                    {% endif %}
+                  </tr>
+                {% endwith %}
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No assigned volunteer shifts yet.</p>
+        {% endif %}
+      </div>
+
+      <div class="panel stack">
+        <h2>Archive</h2>
+        {% if archived_groups %}
+          {% for group in archived_groups %}
+            <h3>{{ group.year }} · {{ group.project_name }}</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Panel</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in group.items %}
+                  <tr>
+                    <td>
+                      <a href="{% url 'accounts:archived_participation_detail' item.pk %}">{{ item.panel_title }}</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endfor %}
+        {% else %}
+          <p class="muted">No archived panels yet.</p>
+        {% endif %}
+      </div>
+    {% endif %}
   </section>
 {% endblock %}

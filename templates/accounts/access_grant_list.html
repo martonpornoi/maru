@@ -9,8 +9,8 @@
       <p class="muted">Manage allowlisted Google accounts and their maru roles.</p>
       <div class="actions">
         <a class="button" href="{% url 'accounts:create_access_grant' %}">Add account</a>
-        <a href="{% url 'accounts:import_access_grants' %}">Import CSV</a>
-        <a href="{% url 'accounts:export_access_grants' %}">Export CSV</a>
+        <a class="button" href="{% url 'accounts:import_access_grants' %}">Import CSV</a>
+        <a class="button" href="{% url 'accounts:export_access_grants' %}">Export CSV</a>
       </div>
     </div>
 
@@ -35,6 +35,15 @@
             <option value=""{% if not filters.role %} selected{% endif %}>Any</option>
             {% for role in role_choices %}
               <option value="{{ role }}"{% if filters.role == role %} selected{% endif %}>{{ role }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          Profile
+          <select name="profile_state">
+            <option value=""{% if not filters.profile_state %} selected{% endif %}>Any</option>
+            {% for value, label in profile_state_choices %}
+              <option value="{{ value }}"{% if filters.profile_state == value %} selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </label>
@@ -87,7 +96,11 @@
                       <span class="muted">No user yet</span>
                     {% endif %}
                   </td>
-                  <td><a href="{% url 'accounts:edit_access_grant' grant.pk %}">Edit</a></td>
+                  <td>
+                    <a href="{% url 'accounts:edit_access_grant' grant.pk %}">Edit</a>
+                    ·
+                    <a href="{% url 'accounts:access_grant_history' grant.pk %}">History</a>
+                  </td>
                   <td>
                     {% if row.user_exists %}
                       {% if row.profile_unlocked %}
@@ -152,13 +165,30 @@
             {% for log in audit_logs %}
               <tr>
                 <td>{{ log.created_at|date:"Y-m-d H:i" }}</td>
-                <td>{{ log.target_email }}</td>
+                <td>
+                  {% if log.grant %}
+                    <a href="{% url 'accounts:access_grant_history' log.grant.pk %}">{{ log.target_email }}</a>
+                  {% else %}
+                    {{ log.target_email }}
+                  {% endif %}
+                </td>
                 <td><a href="{% url 'accounts:access_grant_audit_log_detail' log.pk %}">{{ log.action }}</a></td>
                 <td>{{ log.actor_email|default:"-" }}</td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
+        {% if audit_page.has_other_pages %}
+          <nav class="actions" aria-label="Recent changes pages">
+            {% if audit_page.has_previous %}
+              <a href="?{% if audit_querystring %}{{ audit_querystring }}&amp;{% endif %}audit_page={{ audit_page.previous_page_number }}">Previous</a>
+            {% endif %}
+            <span class="muted">Page {{ audit_page.number }} of {{ audit_page.paginator.num_pages }}</span>
+            {% if audit_page.has_next %}
+              <a href="?{% if audit_querystring %}{{ audit_querystring }}&amp;{% endif %}audit_page={{ audit_page.next_page_number }}">Next</a>
+            {% endif %}
+          </nav>
+        {% endif %}
       {% else %}
         <p class="muted">No account changes match these filters.</p>
       {% endif %}

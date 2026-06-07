@@ -13,6 +13,7 @@ All export endpoints are token-scoped. Tokens are created in Django admin as
 /exports/public-profiles/<token>.json
 /exports/volunteer-shifts/<token>.json
 /exports/signage-reminders/<token>.json
+/exports/role-status/<token>.json
 ```
 
 Tokens only work for their configured export type. A wrong, inactive, or unknown
@@ -29,6 +30,7 @@ Panel entries use this shape:
 {
   "type": "panel",
   "title": "Part One",
+  "header_image": "/media/events/header-images/part-one.png",
   "starts_at": "2026-07-22T11:00:00+02:00",
   "ends_at": "2026-07-22T12:00:00+02:00",
   "location": "Panel Room A",
@@ -42,8 +44,9 @@ Panel entries use this shape:
 ```
 
 The `group` object is omitted when a panel is not grouped. Public timetable
-exports do not include host e-mail addresses, internal scheduling warnings, or
-staff-only notes.
+exports include the submitted 16:9 event header image URL when one exists. They
+do not include host e-mail addresses, internal scheduling warnings, or staff-only
+notes.
 
 ## Public Profiles
 
@@ -67,15 +70,27 @@ Signage reminder exports return active reminders whose display window contains
 the current time. Consumers should poll this endpoint from signage players and
 replace the displayed message list with the latest response.
 
+## Role Status
+
+Role/status exports are for official systems that need aggregate or
+consent-safe access information. They include ticket-level counts, fursuiter
+status counts, benefit counts, and public profile rows only for users with
+unlocked public profiles. They do not expose e-mail addresses, private contact
+fields, or raw authority-role assignments.
+
 ## Token Rotation
 
-Use this process when a token might be exposed or when rotating credentials
-regularly:
+Admin and Board users can manage export tokens from a project page via
+`Manage export tokens`. The page can create scoped tokens, rotate an existing
+token, and deactivate or reactivate tokens. Raw token values are only shown
+immediately after creating or rotating a token.
 
-1. Create a new `ExportToken` for the same project and export type.
+Use this process when a token might be exposed or when rotating credentials:
+
+1. Create or rotate an export token from the project token page.
 2. Deploy the new token to the website or signage consumer.
 3. Confirm the consumer is reading successfully.
-4. Deactivate the old token in Django admin.
+4. Deactivate old or unused tokens from the project token page.
 5. Run the health check command and verify the old token is inactive.
 
 ```bash

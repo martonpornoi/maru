@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <p><a href="{% url 'social:list' %}">Back to social media</a></p>
+
+    <article class="panel stack">
+      <div class="actions">
+        <div>
+          <p class="muted">
+            {{ post.get_status_display }}
+            {% if post.published_at %}
+              · Published {{ post.published_at }}
+            {% elif post.scheduled_for %}
+              · Scheduled for {{ post.scheduled_for }}
+            {% endif %}
+          </p>
+          <h1>{{ post.title }}</h1>
+        </div>
+        {% if post.author == request.user or can_review_applications %}
+          <a class="button" href="{% url 'social:edit' post.pk %}">Edit</a>
+        {% endif %}
+      </div>
+
+      <p>{{ post.body|linebreaksbr }}</p>
+
+      {% if post.embed_url %}
+        <div>
+          <h2>Embed</h2>
+          <p><a href="{{ post.embed_url }}">{{ post.embed_url }}</a></p>
+        </div>
+      {% endif %}
+
+      {% if post.media %}
+        <div>
+          <h2>Media</h2>
+          <p><a href="{{ post.media.url }}">{{ post.media.name }}</a></p>
+          {% if post.media.url|lower|slice:"-4:" == ".gif" or post.media.url|lower|slice:"-4:" == ".png" or post.media.url|lower|slice:"-4:" == ".jpg" or post.media.url|lower|slice:"-5:" == ".jpeg" %}
+            <img src="{{ post.media.url }}" alt="" style="max-width: 100%; border-radius: 8px;">
+          {% endif %}
+        </div>
+      {% endif %}
+    </article>
+
+    {% if post.versions.exists %}
+      <div class="panel stack">
+        <h2>Versions</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Version</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>Scheduled</th>
+              <th>Published</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for version in post.versions.all %}
+              <tr>
+                <td>v{{ version.version_number }}</td>
+                <td>{{ version.get_action_display }}</td>
+                <td>{{ version.get_status_display }}</td>
+                <td>{{ version.scheduled_for|default:"-" }}</td>
+                <td>{{ version.published_at|default:"-" }}</td>
+                <td>{{ version.created_at }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    {% if post.publications.exists %}
+      <div class="panel stack">
+        <h2>Publication Queue</h2>
+        <p class="muted">Queued means maru has prepared the post for that channel. Sent means an external worker has actually posted it.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Channel</th>
+              <th>Status</th>
+              <th>Published externally?</th>
+              <th>Queued</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for publication in post.publications.all %}
+              <tr>
+                <td>{{ publication.get_channel_display }}</td>
+                <td>{{ publication.get_status_display }}</td>
+                <td>{% if publication.status == "sent" %}Yes{% else %}No{% endif %}</td>
+                <td>{{ publication.created_at }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

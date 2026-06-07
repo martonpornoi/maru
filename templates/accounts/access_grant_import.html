@@ -9,7 +9,7 @@
       <p><a href="{% url 'accounts:access_grant_list' %}">Back to accounts</a></p>
     </div>
 
-    <p class="muted">Upload a CSV with columns: email, active, roles. Use semicolons between roles.</p>
+    <p class="muted">Upload a CSV with columns: email, active, roles, and optional notes. Use semicolons between roles.</p>
 
     {% if errors %}
       <div class="message">
@@ -22,8 +22,74 @@
       </div>
     {% endif %}
 
+    {% if report %}
+      <div class="panel stack">
+        <h2>Validation Report</h2>
+        <p>
+          Created: {{ report.summary.created }} ·
+          Updated: {{ report.summary.updated }} ·
+          Unchanged: {{ report.summary.unchanged }} ·
+          Rejected: {{ report.summary.rejected }}
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Line</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Active</th>
+              <th>Roles</th>
+              <th>Notes</th>
+              <th>Changes</th>
+              <th>Issues</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in report.rows %}
+              <tr>
+                <td>{{ row.line_number }}</td>
+                <td>{{ row.email|default:"-" }}</td>
+                <td>{{ row.status }}</td>
+                <td>{% if row.active %}true{% else %}false{% endif %}</td>
+                <td>{{ row.roles|join:"; "|default:"-" }}</td>
+                <td>{{ row.notes|default:"-" }}</td>
+                <td>
+                  {% if row.changes %}
+                    <ul>
+                      {% for change in row.changes %}
+                        <li>{{ change.label }}: {{ change.before }} -> {{ change.after }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <span class="muted">-</span>
+                  {% endif %}
+                </td>
+                <td>{{ row.errors|join:", "|default:"-" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if report.can_apply %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="apply">
+            <textarea hidden name="csv_content">{{ csv_content }}</textarea>
+            <button type="submit">Apply import</button>
+          </form>
+        {% elif report.summary.rejected %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="download_rejected">
+            <textarea hidden name="csv_content">{{ csv_content }}</textarea>
+            <button type="submit">Download rejected rows</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+
     <form class="stack" method="post" enctype="multipart/form-data">
       {% csrf_token %}
+      <input type="hidden" name="action" value="preview">
       {{ form.non_field_errors }}
       {% for field in form %}
         <label>
@@ -32,7 +98,7 @@
           {{ field.errors }}
         </label>
       {% endfor %}
-      <button type="submit">Import accounts</button>
+      <button type="submit">Preview import</button>
     </form>
   </section>
 {% endblock %}

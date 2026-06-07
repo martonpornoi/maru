@@ -18,7 +18,83 @@ class Role(StrEnum):
     REGISTERED_USER = "Registered User"
 
 
+class AttendeeType(StrEnum):
+    ATTENDEE = "Attendee"
+    SPONSOR = "Sponsor"
+    SUPER_SPONSOR = "Super Sponsor"
+    FURSUITER = "Fursuiter"
+
+
+class Pronouns(StrEnum):
+    NOT_SET = ""
+    HE_HIM = "he/him"
+    SHE_HER = "she/her"
+    THEY_THEM = "they/them"
+    HE_THEY = "he/they"
+    SHE_THEY = "she/they"
+    ANY = "any pronouns"
+    ASK_ME = "ask me"
+
+
+class VolunteerType(StrEnum):
+    NONE = "None"
+    VOLUNTEER = "Volunteer"
+    DEPUTY = "Deputy"
+    LEAD = "Lead"
+    BOARD_MEMBER = "Board Member"
+
+
+class PermissionKey(StrEnum):
+    ACCOUNTS_MANAGE = "accounts.manage"
+    PROJECTS_CREATE = "projects.create"
+    PROJECT_SETUP_MANAGE = "project.setup.manage"
+    PROJECT_ROLES_MANAGE = "project.roles.manage"
+    PROJECT_ROLES_ASSIGN = "project.roles.assign"
+    PROJECT_LABELS_MANAGE = "project.labels.manage"
+    PROJECT_FORMS_MANAGE = "project.forms.manage"
+    PROJECT_APPLICATIONS_REVIEW = "project.applications.review"
+    PROJECT_TIMETABLE_MANAGE = "project.timetable.manage"
+    PROJECT_VOLUNTEERS_MANAGE = "project.volunteers.manage"
+    PROJECT_SPACES_MANAGE = "project.spaces.manage"
+    PROJECT_STATUSES_MANAGE = "project.statuses.manage"
+    PROJECT_FURSUITERS_VALIDATE = "project.fursuiters.validate"
+    PROJECT_REGISTRATION_MANAGE = "project.registration.manage"
+    PROJECT_EXPORTS_MANAGE = "project.exports.manage"
+    PROJECT_SOCIAL_MANAGE = "project.social.manage"
+    PROJECT_SIGNAGE_MANAGE = "project.signage.manage"
+    PROFILES_PRIVATE_VIEW = "profiles.private.view"
+
+
+class TicketLevel(StrEnum):
+    PENDING = "Pending"
+    PAID = "Paid"
+    SPONSOR = "Sponsor"
+    SUPER_SPONSOR = "Super Sponsor"
+    INFINITY = "Infinity"
+
+
+class FursuiterStatus(StrEnum):
+    NOT_REQUESTED = "not_requested"
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class BenefitTarget(StrEnum):
+    SPACE_ACCESS = "space_access"
+    CHECK_IN = "check_in"
+    EXPORT = "export"
+
+
 FULL_CONTROL_ROLES = frozenset({Role.ADMIN, Role.BOARD})
+
+TICKET_LEVEL_RANK = {
+    TicketLevel.PENDING.value: 0,
+    TicketLevel.PAID.value: 1,
+    TicketLevel.SPONSOR.value: 2,
+    TicketLevel.SUPER_SPONSOR.value: 3,
+    TicketLevel.INFINITY.value: 4,
+}
 
 
 class SubprojectKind(StrEnum):
@@ -27,6 +103,12 @@ class SubprojectKind(StrEnum):
     DJ_APPLICATION = "dj_application"
     DANCE_COMPETITION = "dance_competition"
     GENERIC_APPLICATION = "generic_application"
+
+
+class FormStatus(StrEnum):
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    CLOSED = "closed"
 
 
 class ApplicationStatus(StrEnum):
@@ -61,6 +143,7 @@ class ExportType(StrEnum):
     PUBLIC_PROFILES = "public_profiles"
     VOLUNTEER_SHIFTS = "volunteer_shifts"
     SIGNAGE_REMINDERS = "signage_reminders"
+    ROLE_STATUS = "role_status"
 
 
 @dataclass(frozen=True)

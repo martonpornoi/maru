@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Export Token Rotated - maru{% endblock %}
+
+{% block content %}
+  <section class="panel stack">
+    <div>
+      <p><a href="{% url 'projects:export_token_list' project.slug %}">Back to export tokens</a></p>
+      <h1>Export Token Rotated</h1>
+      <p class="muted">{{ export_token.name }} · {{ export_token.export_type }}</p>
+    </div>
+
+    <div class="message">
+      <strong>New token</strong>
+      <p><code>{{ new_token }}</code></p>
+    </div>
+  </section>
+{% endblock %}

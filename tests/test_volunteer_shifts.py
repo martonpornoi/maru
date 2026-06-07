@@ -36,7 +36,7 @@ def test_staff_can_create_and_place_volunteer_shift(client) -> None:
     assert response.status_code == 200
     shift = VolunteerShift.objects.get(title="Main Stage Door Watch")
     assert shift.needed_volunteers == 2
-    room = Room.objects.get(hotel__project=project, name="Main Stage")
+    room = Room.objects.get(hotel__projects=project, name="Main Stage")
 
     response = client.post(
         reverse("projects:place_volunteer_shift", args=[shift.pk]),
@@ -78,7 +78,7 @@ def test_timetable_shows_volunteer_shift_layer_to_staff(client) -> None:
         title="Dance Competition Check-in",
         role="Check-in",
     )
-    room = Room.objects.get(hotel__project=project, name="Main Stage")
+    room = Room.objects.get(hotel__projects=project, name="Main Stage")
     VolunteerShiftPlacement.objects.create(
         shift=shift,
         room=room,
@@ -120,7 +120,7 @@ def test_volunteer_shift_layer_marks_same_room_overlap_conflicts(client) -> None
     call_command("seed_demo")
     client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
     project = Project.objects.get(slug="awoostria-2026")
-    room = Room.objects.get(hotel__project=project, name="Main Stage")
+    room = Room.objects.get(hotel__projects=project, name="Main Stage")
     first = VolunteerShift.objects.create(
         project=project,
         title="Main Stage Door Watch",
@@ -203,7 +203,7 @@ def test_assigned_shift_appears_in_my_events(client) -> None:
     call_command("seed_demo")
     helper = _allow_user("helper@gmail.com")
     project = Project.objects.get(slug="awoostria-2026")
-    room = Room.objects.get(hotel__project=project, name="Main Stage")
+    room = Room.objects.get(hotel__projects=project, name="Main Stage")
     shift = VolunteerShift.objects.create(
         project=project,
         title="Dance Competition Check-in",
@@ -586,7 +586,7 @@ def _placed_shift(
     ends_at: str,
     needed_volunteers: int = 2,
 ) -> VolunteerShift:
-    room = Room.objects.get(hotel__project=project, name="Main Stage")
+    room = Room.objects.get(hotel__projects=project, name="Main Stage")
     shift = VolunteerShift.objects.create(
         project=project,
         title=title,

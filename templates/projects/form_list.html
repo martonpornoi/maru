@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{% if project %}{{ project.name }} Forms{% else %}Forms{% endif %} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>{% if project %}{{ project.name }} Forms{% else %}Forms{% endif %}</h1>
+      {% if project %}
+        <p class="muted">Forms used by this project. Inherited forms become editable copies for this project.</p>
+      {% else %}
+        <p class="muted">All forms ever used across projects.</p>
+      {% endif %}
+    </div>
+
+    {% if project %}
+      <div class="panel stack">
+        <h2>Admin</h2>
+        <div class="actions">
+          <a class="button" href="{% url 'projects:create_form' project.slug %}">Create form</a>
+        </div>
+        {% if clone_form.fields.source_form.queryset.exists %}
+          <form class="stack" method="post">
+            {% csrf_token %}
+            <h3>Inherit Existing Form</h3>
+            {{ clone_form.non_field_errors }}
+            {% for field in clone_form %}
+              <label>
+                {{ field.label }}
+                {{ field }}
+                {{ field.errors }}
+              </label>
+            {% endfor %}
+            <button type="submit">Inherit as draft</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="panel stack">
+      {% if forms %}
+        <table>
+          <thead>
+            <tr>
+              <th>Form</th>
+              <th>Project</th>
+              <th>Status</th>
+              <th>Timetable</th>
+              <th>Fields</th>
+              <th>Inherited from</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for form_item in forms %}
+              <tr>
+                <td>{{ form_item.name }}</td>
+                <td>{{ form_item.project.name }}</td>
+                <td>{{ form_item.get_form_status_display }}</td>
+                <td>{% if form_item.is_timetable_source %}Yes{% else %}No{% endif %}</td>
+                <td>{{ form_item.form_fields.count }}</td>
+                <td>
+                  {% if form_item.inherited_from %}
+                    {{ form_item.inherited_from.project.name }} - {{ form_item.inherited_from.name }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td><a href="{% url 'projects:edit_form' form_item.pk %}">Edit</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No forms defined yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

@@ -7,10 +7,11 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="accounts:my_events", permanent=False)),
+    path("", RedirectView.as_view(pattern_name="accounts:my_profile", permanent=False)),
     path("admin/", admin.site.urls),
     path("", include("maru.accounts.urls")),
     path("", include("maru.projects.urls")),
+    path("", include("maru.social.urls")),
 ]
 
 if settings.DEBUG:

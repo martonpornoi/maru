@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Roles & Access - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Roles & Access</h1>
+      <p class="muted">{{ scope_label }}. Roles use stable permission keys, while display names can change per project.</p>
+    </div>
+
+    {% if project %}
+      <div class="panel stack">
+        <h2>Clone Configuration</h2>
+        <p class="muted">Copy role, benefit, and label defaults into this project as editable local settings.</p>
+        <form class="actions" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="clone">
+          {{ clone_form.source_project.label_tag }}
+          {{ clone_form.source_project }}
+          {{ clone_form.source_project.errors }}
+          <button type="submit">Clone settings</button>
+        </form>
+      </div>
+    {% endif %}
+
+    <div class="panel stack">
+      <h2>Role Definitions</h2>
+      {% if roles %}
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Key</th>
+              <th>Permissions</th>
+              <th>Active</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for role in roles %}
+              <tr>
+                <td>{{ role.name }}</td>
+                <td>{{ role.key }}</td>
+                <td>{{ role.permissions|join:", "|default:"-" }}</td>
+                <td>{% if role.active %}Yes{% else %}No{% endif %}</td>
+                <td><a href="{% url 'accounts:edit_role_definition' role.pk %}">Edit</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No roles exist in this scope yet.</p>
+      {% endif %}
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_role">
+      <h2>Create Role</h2>
+      {{ role_form.non_field_errors }}
+      {% for field in role_form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <button type="submit">Save role</button>
+    </form>
+
+    {% if project %}
+      <div class="panel stack">
+        <h2>Assignments</h2>
+        {% if assignments %}
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Scopes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for assignment in assignments %}
+                <tr>
+                  <td>{{ assignment.user.email }}</td>
+                  <td>{{ assignment.role_definition.name }}</td>
+                  <td>{{ assignment.scopes|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No project roles assigned yet.</p>
+        {% endif %}
+
+        <form class="stack" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="assign_role">
+          <h3>Assign Role</h3>
+          {{ assignment_form.non_field_errors }}
+          {% for field in assignment_form %}
+            <label>
+              {{ field.label }}
+              {{ field }}
+              {% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}
+              {{ field.errors }}
+            </label>
+          {% endfor %}
+          <button type="submit">Assign role</button>
+        </form>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

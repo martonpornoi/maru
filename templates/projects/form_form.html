@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ heading }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:project_form_list' project.slug %}">Back to forms</a></p>
+      <h1>{{ heading }}</h1>
+      <p class="muted">Draft forms can be edited safely. Published forms can accept submissions. Closed forms stay archived.</p>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save">
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <button type="submit">Save form</button>
+    </form>
+
+    {% if managed_form %}
+      <div class="panel stack">
+        <h2>Fields</h2>
+        {% if managed_form.form_fields.all %}
+          <table>
+            <thead>
+              <tr>
+                <th>Label</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Options</th>
+                <th>Position</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field in managed_form.form_fields.all %}
+                <tr>
+                  <td>{{ field.label }}</td>
+                  <td>{{ field.field_type }}</td>
+                  <td>{% if field.required %}Yes{% else %}No{% endif %}</td>
+                  <td>{{ field.options|join:", "|default:"-" }}</td>
+                  <td>{{ field.position }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No fields defined yet.</p>
+        {% endif %}
+
+        <form class="stack" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add_field">
+          <h3>Add Field</h3>
+          {{ field_form.non_field_errors }}
+          {% for field in field_form %}
+            <label>
+              {{ field.label }}
+              {{ field }}
+              {% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}
+              {{ field.errors }}
+            </label>
+          {% endfor %}
+          <button type="submit">Add field</button>
+        </form>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

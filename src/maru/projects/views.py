@@ -7,26 +7,47 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Count
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from maru.accounts.models import AccessGrant, Notification, UserProfile
+from maru.accounts.models import (
+    AccessGrant,
+    Notification,
+    UserConventionProfile,
+    UserProfile,
+)
+from maru.accounts.permissions import has_permission, user_benefit_keys
 from maru.domain import (
     ApplicationStatus,
     AssignmentStatus,
     ExportType,
+    FormStatus,
+    PermissionKey,
     Role,
     SubprojectKind,
     TimetableRound,
 )
 from maru.projects.forms import (
     ApplicationSubmissionForm,
+    CloneManagedFormForm,
     EventGroupForm,
+    ExportTokenForm,
+    HotelFloorPlanForm,
+    HotelForm,
+    ManagedFormFieldForm,
+    ManagedFormForm,
     PanelPlacementForm,
     PanelSchedulingMetadataForm,
+    ProjectHotelsForm,
+    ProjectRoomAvailabilityForm,
+    ProjectRoomCombinationAvailabilityForm,
+    ProjectRoomCombinationSettingForm,
+    ProjectRoomSettingForm,
+    RoomForm,
     SignageReminderForm,
     VolunteerShiftAssignmentForm,
     VolunteerShiftForm,
@@ -38,16 +59,29 @@ from maru.projects.models import (
     EventGroup,
     ExportAccessLog,
     ExportToken,
+    Hotel,
+    HotelFloorPlan,
     Panel,
     Project,
+    ProjectRoomAvailability,
+    ProjectRoomCombinationAvailability,
+    ProjectRoomCombinationSetting,
+    ProjectRoomSetting,
+    Room,
+    RoomCombination,
     SignageReminder,
     Subproject,
     TimetablePlacement,
     VolunteerShift,
     VolunteerShiftAssignment,
     VolunteerShiftPlacement,
+    generate_export_token,
 )
-from maru.projects.review import can_claim_volunteer_shifts, can_review_applications
+from maru.projects.review import (
+    can_claim_volunteer_shifts,
+    can_manage_project_setup,
+    can_review_applications,
+)
 
 
 @login_required
@@ -68,6 +102,495 @@ def project_detail_view(request, slug: str):
         slug=slug,
     )
     return render(request, "projects/detail.html", {"project": project})
+
+
+@login_required
+def form_list_view(request, slug: str | None = None):
+    project = None
+    forms = (
+        Subproject.objects.select_related("project", "inherited_from").prefetch_related(
+            "form_fields"
+        )
+    )
+    clone_form = None
+    if slug:
+        project = get_object_or_404(Project, slug=slug)
+        if not _can_manage_project_module(
+            request.user,
+            project,
+            PermissionKey.PROJECT_FORMS_MANAGE,
+        ):
+            raise PermissionDenied
+        forms = forms.filter(project=project)
+        clone_form = CloneManagedFormForm(request.POST or None, project=project)
+        if request.method == "POST" and clone_form.is_valid():
+            cloned_form = clone_form.save()
+            messages.success(request, "Form inherited as an editable draft.")
+            return redirect("projects:edit_form", pk=cloned_form.pk)
+    elif not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    return render(
+        request,
+        "projects/form_list.html",
+        {
+            "clone_form": clone_form,
+            "forms": forms,
+            "project": project,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def create_form_view(request, slug: str):
+    project = get_object_or_404(Project, slug=slug)
+    if not _can_manage_project_module(
+        request.user,
+        project,
+        PermissionKey.PROJECT_FORMS_MANAGE,
+    ):
+        raise PermissionDenied
+    form = ManagedFormForm(request.POST or None, project=project)
+    if request.method == "POST" and form.is_valid():
+        managed_form = form.save()
+        messages.success(request, "Form created.")
+        return redirect("projects:edit_form", pk=managed_form.pk)
+    return render(
+        request,
+        "projects/form_form.html",
+        {
+            "form": form,
+            "heading": f"Create form for {project.name}",
+            "project": project,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def edit_form_view(request, pk: int):
+    managed_form = get_object_or_404(
+        Subproject.objects.select_related(
+            "project", "inherited_from"
+        ).prefetch_related(
+            "form_fields"
+        ),
+        pk=pk,
+    )
+    if not _can_manage_project_module(
+        request.user,
+        managed_form.project,
+        PermissionKey.PROJECT_FORMS_MANAGE,
+    ):
+        raise PermissionDenied
+    form = ManagedFormForm(
+        request.POST or None,
+        instance=managed_form,
+        project=managed_form.project,
+    )
+    field_form = ManagedFormFieldForm(request.POST or None, subproject=managed_form)
+    if request.method == "POST":
+        action = request.POST.get("action", "save")
+        if action == "add_field" and field_form.is_valid():
+            field_form.save()
+            messages.success(request, "Form field added.")
+            return redirect("projects:edit_form", pk=managed_form.pk)
+        if action == "save" and form.is_valid():
+            form.save()
+            messages.success(request, "Form updated.")
+            return redirect("projects:edit_form", pk=managed_form.pk)
+    return render(
+        request,
+        "projects/form_form.html",
+        {
+            "field_form": field_form,
+            "form": form,
+            "heading": f"Edit {managed_form.name}",
+            "managed_form": managed_form,
+            "project": managed_form.project,
+        },
+    )
+
+
+@login_required
+def hotel_list_view(request):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    hotels = Hotel.objects.prefetch_related(
+        "projects",
+        "rooms",
+        "room_combinations__rooms",
+        "floor_plans",
+    )
+    return render(request, "projects/hotel_list.html", {"hotels": hotels})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def create_hotel_view(request):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    form = HotelForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        hotel = form.save()
+        messages.success(request, "Hotel created.")
+        return redirect("projects:hotel_detail", pk=hotel.pk)
+    return render(
+        request,
+        "projects/hotel_form.html",
+        {"form": form, "heading": "Add hotel"},
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def hotel_detail_view(request, pk: int):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    hotel = get_object_or_404(
+        Hotel.objects.prefetch_related(
+            "projects",
+            "rooms",
+            "room_combinations__rooms",
+            "floor_plans",
+        ),
+        pk=pk,
+    )
+    floor_plan_form = HotelFloorPlanForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and floor_plan_form.is_valid():
+        floor_plan = floor_plan_form.save(commit=False)
+        floor_plan.hotel = hotel
+        floor_plan.save()
+        messages.success(request, "Floor layout uploaded.")
+        return redirect("projects:hotel_detail", pk=hotel.pk)
+    return render(
+        request,
+        "projects/hotel_detail.html",
+        {"floor_plan_form": floor_plan_form, "hotel": hotel},
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def create_hotel_room_view(request, pk: int):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    hotel = get_object_or_404(Hotel, pk=pk)
+    form = RoomForm(request.POST or None, hotel=hotel)
+    if request.method == "POST" and form.is_valid():
+        room = form.save()
+        messages.success(request, "Room created.")
+        return redirect("projects:hotel_detail", pk=room.hotel_id)
+    return render(
+        request,
+        "projects/room_form.html",
+        {"form": form, "heading": f"Add room to {hotel.name}", "hotel": hotel},
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def edit_hotel_room_view(request, pk: int):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    room = get_object_or_404(Room.objects.select_related("hotel"), pk=pk)
+    form = RoomForm(request.POST or None, instance=room)
+    if request.method == "POST" and form.is_valid():
+        room = form.save()
+        messages.success(request, "Room updated.")
+        return redirect("projects:hotel_detail", pk=room.hotel_id)
+    return render(
+        request,
+        "projects/room_form.html",
+        {"form": form, "heading": f"Edit {room.name}", "hotel": room.hotel},
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def edit_hotel_floor_plan_view(request, pk: int):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    floor_plan = get_object_or_404(
+        HotelFloorPlan.objects.select_related("hotel"),
+        pk=pk,
+    )
+    previous_image = floor_plan.image.name
+    form = HotelFloorPlanForm(
+        request.POST or None,
+        request.FILES or None,
+        instance=floor_plan,
+    )
+    if request.method == "POST" and form.is_valid():
+        floor_plan = form.save()
+        if (
+            previous_image
+            and "image" in form.changed_data
+            and previous_image != floor_plan.image.name
+        ):
+            floor_plan.image.storage.delete(previous_image)
+        messages.success(request, "Floor layout updated.")
+        return redirect("projects:hotel_detail", pk=floor_plan.hotel_id)
+    return render(
+        request,
+        "projects/hotel_floor_plan_form.html",
+        {
+            "floor_plan": floor_plan,
+            "form": form,
+            "heading": f"Edit {floor_plan.floor_label}",
+            "hotel": floor_plan.hotel,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+@transaction.atomic
+def delete_hotel_floor_plan_view(request, pk: int):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    floor_plan = get_object_or_404(
+        HotelFloorPlan.objects.select_related("hotel"),
+        pk=pk,
+    )
+    hotel_id = floor_plan.hotel_id
+    image_name = floor_plan.image.name
+    floor_plan.delete()
+    if image_name:
+        floor_plan.image.storage.delete(image_name)
+    messages.success(request, "Floor layout removed.")
+    return redirect("projects:hotel_detail", pk=hotel_id)
+
+
+@login_required
+def project_room_settings_view(request, slug: str):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    project = get_object_or_404(
+        Project.objects.prefetch_related(
+            "hotels__rooms",
+            "hotels__room_combinations__rooms",
+        ),
+        slug=slug,
+    )
+    hotels_form = ProjectHotelsForm(request.POST or None, instance=project)
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "update_hotels" and hotels_form.is_valid():
+            hotels_form.save()
+            _ensure_project_room_settings(project)
+            messages.success(request, "Project hotel assignments updated.")
+            return redirect("projects:project_room_settings", slug=project.slug)
+    _ensure_project_room_settings(project)
+    room_settings = ProjectRoomSetting.objects.filter(
+        project=project,
+        room__hotel__projects=project,
+    ).select_related("room__hotel").prefetch_related("availability_windows")
+    combination_settings = ProjectRoomCombinationSetting.objects.filter(
+        project=project,
+        room_combination__hotel__projects=project,
+    ).select_related("room_combination__hotel").prefetch_related("availability_windows")
+    return render(
+        request,
+        "projects/project_room_settings.html",
+        {
+            "combination_settings": combination_settings,
+            "hotels_form": hotels_form,
+            "project": project,
+            "room_settings": room_settings,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def edit_project_room_setting_view(request, pk: int):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    setting = get_object_or_404(
+        ProjectRoomSetting.objects.select_related("project", "room__hotel"),
+        pk=pk,
+    )
+    form = ProjectRoomSettingForm(request.POST or None, instance=setting)
+    availability_form = ProjectRoomAvailabilityForm(
+        request.POST or None,
+        project=setting.project,
+    )
+    if request.method == "POST":
+        action = request.POST.get("action", "save")
+        if action == "add_window" and availability_form.is_valid():
+            window = availability_form.save(commit=False)
+            window.setting = setting
+            window.save()
+            messages.success(request, "Opening window added.")
+            return redirect("projects:edit_project_room_setting", pk=setting.pk)
+        if action == "save" and form.is_valid():
+            form.save()
+            messages.success(request, "Project room settings updated.")
+            return redirect("projects:project_room_settings", slug=setting.project.slug)
+    return render(
+        request,
+        "projects/project_room_setting_form.html",
+        {
+            "availability_form": availability_form,
+            "availability_delete_kind": "room",
+            "form": form,
+            "setting": setting,
+            "windows": setting.availability_windows.all(),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def edit_project_room_combination_setting_view(request, pk: int):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    setting = get_object_or_404(
+        ProjectRoomCombinationSetting.objects.select_related(
+            "project",
+            "room_combination__hotel",
+        ),
+        pk=pk,
+    )
+    form = ProjectRoomCombinationSettingForm(request.POST or None, instance=setting)
+    availability_form = ProjectRoomCombinationAvailabilityForm(
+        request.POST or None,
+        project=setting.project,
+    )
+    if request.method == "POST":
+        action = request.POST.get("action", "save")
+        if action == "add_window" and availability_form.is_valid():
+            window = availability_form.save(commit=False)
+            window.setting = setting
+            window.save()
+            messages.success(request, "Opening window added.")
+            return redirect(
+                "projects:edit_project_room_combination_setting",
+                pk=setting.pk,
+            )
+        if action == "save" and form.is_valid():
+            form.save()
+            messages.success(request, "Project room settings updated.")
+            return redirect("projects:project_room_settings", slug=setting.project.slug)
+    return render(
+        request,
+        "projects/project_room_setting_form.html",
+        {
+            "availability_form": availability_form,
+            "availability_delete_kind": "combination",
+            "form": form,
+            "setting": setting,
+            "windows": setting.availability_windows.all(),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def delete_project_room_availability_view(request, kind: str, pk: int):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    if kind == "room":
+        window = get_object_or_404(
+            ProjectRoomAvailability.objects.select_related("setting__project"),
+            pk=pk,
+        )
+        project_slug = window.setting.project.slug
+    elif kind == "combination":
+        window = get_object_or_404(
+            ProjectRoomCombinationAvailability.objects.select_related(
+                "setting__project"
+            ),
+            pk=pk,
+        )
+        project_slug = window.setting.project.slug
+    else:
+        raise PermissionDenied
+    window.delete()
+    messages.success(request, "Opening window removed.")
+    return redirect("projects:project_room_settings", slug=project_slug)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def export_token_list_view(request, slug: str):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    project = get_object_or_404(
+        Project.objects.prefetch_related("export_tokens__access_logs"),
+        slug=slug,
+    )
+    form = ExportTokenForm(request.POST or None)
+    new_token = None
+    if request.method == "POST" and form.is_valid():
+        export_token = form.save(commit=False)
+        export_token.project = project
+        export_token.save()
+        new_token = export_token.token
+        messages.success(request, "Export token created. Copy it now.")
+    return render(
+        request,
+        "projects/export_token_list.html",
+        {
+            "form": form,
+            "new_token": new_token,
+            "project": project,
+            "token_rows": _export_token_rows(project.export_tokens.all()),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def rotate_export_token_view(request, pk: int):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    export_token = get_object_or_404(
+        ExportToken.objects.select_related("project"),
+        pk=pk,
+    )
+    export_token.token = generate_export_token()
+    export_token.active = True
+    export_token.save(update_fields=["token", "active", "updated_at"])
+    messages.success(request, "Export token rotated. Copy the new token now.")
+    return render(
+        request,
+        "projects/export_token_rotated.html",
+        {
+            "export_token": export_token,
+            "new_token": export_token.token,
+            "project": export_token.project,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def set_export_token_active_view(request, pk: int, active: str):
+    if not can_manage_project_setup(request.user):
+        raise PermissionDenied
+    export_token = get_object_or_404(
+        ExportToken.objects.select_related("project"),
+        pk=pk,
+    )
+    if active not in {"active", "inactive"}:
+        raise PermissionDenied
+    export_token.active = active == "active"
+    export_token.save(update_fields=["active", "updated_at"])
+    state = "activated" if export_token.active else "deactivated"
+    messages.success(request, f"Export token {state}.")
+    return redirect("projects:export_token_list", slug=export_token.project.slug)
 
 
 @login_required
@@ -242,6 +765,7 @@ def public_timetable_export_view(request, token: str):
     panels = (
         Panel.objects.filter(project=project, placement__isnull=False)
         .select_related(
+            "application",
             "event_group",
             "placement__room",
             "placement__room_combination",
@@ -329,6 +853,55 @@ def signage_reminder_export_view(request, token: str):
             "project": _project_export(export_token.project),
             "generated_at": now.isoformat(),
             "reminders": [_signage_reminder_export(reminder) for reminder in reminders],
+        }
+    )
+
+
+def role_status_export_view(request, token: str):
+    export_token = _get_export_token(request, token, ExportType.ROLE_STATUS)
+    project = export_token.project
+    convention_profiles = (
+        UserConventionProfile.objects.filter(project=project)
+        .select_related("user", "user__userprofile")
+        .order_by("user__email")
+    )
+    public_rows = []
+    benefit_counts: dict[str, int] = {}
+    for convention_profile in convention_profiles:
+        benefits = user_benefit_keys(convention_profile.user, project)
+        for benefit in benefits:
+            benefit_counts[benefit] = benefit_counts.get(benefit, 0) + 1
+        profile = getattr(convention_profile.user, "userprofile", None)
+        if profile and profile.profile_unlocked and profile.show_profile_publicly:
+            public_rows.append(
+                {
+                    "benefits": benefits,
+                    "display_name": (
+                        _profile_display_name(profile) or "Convention participant"
+                    ),
+                    "fursuiter_status": convention_profile.fursuiter_status,
+                    "ticket_level": convention_profile.ticket_level_verified,
+                }
+            )
+    return JsonResponse(
+        {
+            "benefit_counts": [
+                {"key": key, "total": total}
+                for key, total in sorted(benefit_counts.items())
+            ],
+            "export_type": ExportType.ROLE_STATUS.value,
+            "fursuiter_statuses": list(
+                convention_profiles.values("fursuiter_status")
+                .annotate(total=Count("id"))
+                .order_by("fursuiter_status")
+            ),
+            "project": _project_export(project),
+            "public_profiles": public_rows,
+            "ticket_levels": list(
+                convention_profiles.values("ticket_level_verified")
+                .annotate(total=Count("id"))
+                .order_by("ticket_level_verified")
+            ),
         }
     )
 
@@ -664,9 +1237,13 @@ def submit_application_view(request, project_slug: str, subproject_slug: str):
         project__slug=project_slug,
         slug=subproject_slug,
     )
+    if subproject.form_status != FormStatus.PUBLISHED.value:
+        raise Http404
     form_fields = list(subproject.form_fields.all())
     form = ApplicationSubmissionForm(
-        request.POST or None, form_fields=form_fields
+        request.POST or None,
+        request.FILES or None,
+        form_fields=form_fields,
     )
 
     if request.method == "POST" and form.is_valid():
@@ -675,6 +1252,7 @@ def submit_application_view(request, project_slug: str, subproject_slug: str):
             subproject=subproject,
             applicant=request.user,
             title=_application_title(answers, subproject.name),
+            event_header_image=form.cleaned_data.get("event_header_image") or "",
         )
         ApplicationVersion.objects.create(
             application=application, version=1, answers=answers
@@ -728,6 +1306,8 @@ def edit_application_view(request, pk: int):
     latest_version = application.versions.first()
     form = ApplicationSubmissionForm(
         request.POST or None,
+        request.FILES or None,
+        application=application,
         form_fields=form_fields,
         initial_answers=latest_version.answers if latest_version else {},
     )
@@ -735,7 +1315,11 @@ def edit_application_view(request, pk: int):
         answers = form.answers_by_label()
         application.title = _application_title(answers, application.subproject.name)
         application.status = ApplicationStatus.SUBMITTED.value
-        application.save(update_fields=["title", "status", "updated_at"])
+        update_fields = ["title", "status", "updated_at"]
+        if form.cleaned_data.get("event_header_image"):
+            application.event_header_image = form.cleaned_data["event_header_image"]
+            update_fields.append("event_header_image")
+        application.save(update_fields=update_fields)
         ApplicationVersion.objects.create(
             application=application,
             version=_next_application_version(application),
@@ -901,6 +1485,18 @@ def _notify_reviewers_application_resubmitted(application: Application) -> None:
     Notification.objects.bulk_create(notifications)
 
 
+def _can_manage_project_module(
+    user,
+    project: Project,
+    permission: PermissionKey,
+) -> bool:
+    return has_permission(user, permission, project) or has_permission(
+        user,
+        PermissionKey.PROJECT_SETUP_MANAGE,
+        project,
+    )
+
+
 def _approve_application(application: Application) -> None:
     application.status = ApplicationStatus.APPROVED.value
     application.save(update_fields=["status", "updated_at"])
@@ -957,6 +1553,18 @@ def _visible_panels_for_timetable(*, panels, project: Project, user, can_manage_
     return panels.none()
 
 
+def _ensure_project_room_settings(project: Project) -> None:
+    rooms = Room.objects.filter(hotel__projects=project)
+    for room in rooms:
+        ProjectRoomSetting.objects.get_or_create(project=project, room=room)
+    combinations = RoomCombination.objects.filter(hotel__projects=project)
+    for combination in combinations:
+        ProjectRoomCombinationSetting.objects.get_or_create(
+            project=project,
+            room_combination=combination,
+        )
+
+
 def _build_timetable_rows(panels, user, can_manage_all: bool) -> list[dict]:
     panel_list = list(panels)
     conflicting_panel_ids = _conflicting_panel_ids(panel_list)
@@ -967,6 +1575,10 @@ def _build_timetable_rows(panels, user, can_manage_all: bool) -> list[dict]:
             "group_order_problem": panel.pk in group_order_problem_ids,
             "has_conflict": panel.pk in conflicting_panel_ids,
             "host": _panel_host_context(panel, can_manage_all),
+            "location": _placement_location_name(
+                getattr(panel, "placement", None),
+                panel.project,
+            ),
             "panel": panel,
         }
         for panel in panel_list
@@ -980,11 +1592,37 @@ def _build_volunteer_shift_rows(shifts) -> list[dict]:
         {
             "assigned_count": shift.assignment_count,
             "has_conflict": shift.pk in conflicting_shift_ids,
+            "location": _placement_location_name(
+                getattr(shift, "placement", None),
+                shift.project,
+            ),
             "open_spots": shift.open_spots,
             "shift": shift,
         }
         for shift in shift_list
     ]
+
+
+def _placement_location_name(placement, project: Project) -> str:
+    if not placement:
+        return "Unplaced"
+    if placement.room_id:
+        setting = ProjectRoomSetting.objects.filter(
+            project=project,
+            room_id=placement.room_id,
+        ).first()
+        if setting:
+            return setting.display_name
+        return placement.room.name
+    if placement.room_combination_id:
+        setting = ProjectRoomCombinationSetting.objects.filter(
+            project=project,
+            room_combination_id=placement.room_combination_id,
+        ).first()
+        if setting:
+            return setting.display_name
+        return placement.room_combination.name
+    return "Unplaced"
 
 
 def _build_claimable_shift_rows(shifts, user) -> list[dict]:
@@ -1015,7 +1653,7 @@ def _build_print_entries(panels, shifts, can_manage_all: bool) -> list[dict]:
                 "detail": detail,
                 "ends_at": placement.ends_at if placement else None,
                 "kind": "Panel",
-                "location": placement.location_name if placement else "Unplaced",
+                "location": _placement_location_name(placement, panel.project),
                 "starts_at": placement.starts_at if placement else None,
                 "title": panel.title,
             }
@@ -1030,7 +1668,7 @@ def _build_print_entries(panels, shifts, can_manage_all: bool) -> list[dict]:
                 ),
                 "ends_at": placement.ends_at if placement else None,
                 "kind": "Volunteer Shift",
-                "location": placement.location_name if placement else "Unplaced",
+                "location": _placement_location_name(placement, shift.project),
                 "starts_at": placement.starts_at if placement else None,
                 "title": shift.title,
             }
@@ -1177,6 +1815,24 @@ def _record_export_access(
     )
 
 
+def _export_token_rows(tokens) -> list[dict]:
+    rows = []
+    for token in tokens:
+        successful_hits = [
+            log.created_at for log in token.access_logs.all() if log.success
+        ]
+        failed_hits = [log for log in token.access_logs.all() if not log.success]
+        rows.append(
+            {
+                "last_success_at": max(successful_hits) if successful_hits else None,
+                "failed_count": len(failed_hits),
+                "token": token,
+                "token_hint": token.token[-8:],
+            }
+        )
+    return rows
+
+
 def _project_export(project: Project) -> dict:
     return {
         "name": project.name,
@@ -1192,9 +1848,10 @@ def _panel_export(panel: Panel) -> dict:
     payload = {
         "type": "panel",
         "title": panel.title,
+        "header_image": _file_url(panel.application.event_header_image),
         "starts_at": placement.starts_at.isoformat(),
         "ends_at": placement.ends_at.isoformat(),
-        "location": placement.location_name,
+        "location": _placement_location_name(placement, panel.project),
     }
     if panel.event_group_id:
         payload["group"] = {
@@ -1232,7 +1889,7 @@ def _volunteer_shift_export(shift: VolunteerShift) -> dict:
         "role": shift.role,
         "starts_at": placement.starts_at.isoformat(),
         "ends_at": placement.ends_at.isoformat(),
-        "location": placement.location_name,
+        "location": _placement_location_name(placement, shift.project),
         "needed_volunteers": shift.needed_volunteers,
         "confirmed_assignments": shift.assignments.filter(
             status=AssignmentStatus.CONFIRMED.value

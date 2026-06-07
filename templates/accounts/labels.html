@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Labels - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Labels</h1>
+      <p class="muted">{{ scope_label }}. Override visible wording while keeping stable internal keys.</p>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      <h2>Set Label</h2>
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <button type="submit">Save label</button>
+    </form>
+
+    <div class="panel stack">
+      <h2>Current Labels</h2>
+      {% if labels %}
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Label</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for label in labels %}
+              <tr>
+                <td>{{ label.key }}</td>
+                <td>{{ label.label }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No labels exist in this scope yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

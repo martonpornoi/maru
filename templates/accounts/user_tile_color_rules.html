@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Color Codes - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Color Codes</h1>
+      <p class="muted">Pick one color per rule, then choose whether it changes the tile edge or interior.</p>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      <h2>Add Color Rule</h2>
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <button type="submit">Save color rule</button>
+    </form>
+
+    <div class="panel stack">
+      <h2>Color Rules</h2>
+      {% if rules %}
+        <table>
+          <thead>
+            <tr>
+              <th>Target</th>
+              <th>Applies to</th>
+              <th>Preview</th>
+              <th>Priority</th>
+              <th>Active</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rule in rules %}
+              <tr>
+                <td>{{ rule.get_target_type_display }}: {{ rule.target_value }}</td>
+                <td>{{ rule.get_applies_to_display }}</td>
+                <td>
+                  {% if rule.applies_to == "edge" %}
+                    <span class="user-chip" style="border: 4px solid {{ rule.background_color }};">
+                      Edge {{ rule.background_color }}
+                    </span>
+                  {% else %}
+                    <span class="user-chip" style="background: {{ rule.background_color }};">
+                      Interior {{ rule.background_color }}
+                    </span>
+                  {% endif %}
+                </td>
+                <td>{{ rule.priority }}</td>
+                <td>{% if rule.active %}Yes{% else %}No{% endif %}</td>
+                <td>
+                  <a href="{% url 'accounts:edit_user_tile_color_rule' rule.pk %}">Edit</a>
+                  <form method="post" action="{% url 'accounts:delete_user_tile_color_rule' rule.pk %}">
+                    {% csrf_token %}
+                    <button type="submit">Remove</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No color rules yet. Defaults are used until a rule is added.</p>
+      {% endif %}
+    </div>
+  </section>
+  <script>
+    document.querySelectorAll('input[type="color"]').forEach((input) => {
+      input.addEventListener("change", () => input.blur());
+    });
+  </script>
+{% endblock %}

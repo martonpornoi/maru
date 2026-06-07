@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.panel_title }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'accounts:my_profile' %}">Back to profile</a></p>
+      <h1>{{ item.panel_title }}</h1>
+      <p class="muted">Archived panel record</p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Archive Details</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>Project</th>
+            <td>{{ item.project_name }}</td>
+          </tr>
+          <tr>
+            <th>Year</th>
+            <td>{{ item.year }}</td>
+          </tr>
+          <tr>
+            <th>Panel</th>
+            <td>{{ item.panel_title }}</td>
+          </tr>
+          <tr>
+            <th>Added</th>
+            <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

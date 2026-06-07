@@ -16,6 +16,10 @@
         {% if can_review_applications %}
           <a href="{% url 'projects:create_signage_reminder' project.slug %}">Create signage reminder</a>
         {% endif %}
+        {% if can_manage_project_setup %}
+          <a href="{% url 'projects:export_token_list' project.slug %}">Manage export tokens</a>
+          <a href="{% url 'projects:project_room_settings' project.slug %}">Room settings</a>
+        {% endif %}
       </p>
     </div>
 
@@ -99,10 +103,17 @@
       {% for subproject in project.subprojects.all %}
         <section>
           <h3>{{ subproject.name }}</h3>
-          <p class="muted">{{ subproject.kind }}</p>
-          <p>
-            <a href="{% url 'projects:submit_application' project.slug subproject.slug %}">Submit application</a>
+          <p class="muted">
+            {{ subproject.kind }} · {{ subproject.get_form_status_display }}
+            {% if subproject.is_timetable_source %} · Timetable source{% endif %}
           </p>
+          {% if subproject.form_status == "published" %}
+            <p>
+              <a href="{% url 'projects:submit_application' project.slug subproject.slug %}">Submit application</a>
+            </p>
+          {% else %}
+            <p class="muted">This form is not accepting submissions.</p>
+          {% endif %}
           <table>
             <thead>
               <tr>

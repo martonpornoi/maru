@@ -9,6 +9,7 @@ import yaml
 from maru.domain import (
     AccessAccount,
     FormField,
+    PermissionKey,
     Project,
     Role,
     Subproject,
@@ -56,12 +57,55 @@ class ImportedSubproject:
 
 
 @dataclass(frozen=True)
+class ImportedRoleDefinition:
+    key: str
+    name: str
+    permissions: tuple[str, ...] = ()
+    description: str = ""
+    active: bool = True
+
+
+@dataclass(frozen=True)
+class ImportedRoleAssignment:
+    email: str
+    role_key: str
+    scopes: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class ImportedBenefit:
+    key: str
+    label: str
+    target: str
+    description: str = ""
+    active: bool = True
+
+
+@dataclass(frozen=True)
+class ImportedStatusBenefitGrant:
+    status_type: str
+    status_value: str
+    benefit_key: str
+
+
+@dataclass(frozen=True)
+class ImportedLabelOverride:
+    key: str
+    label: str
+
+
+@dataclass(frozen=True)
 class ImportedProjectConfig:
     project: Project
     accounts: tuple[AccessAccount, ...]
     hotels: tuple[ImportedHotel, ...]
     event_groups: tuple[ImportedEventGroup, ...]
     subprojects: tuple[ImportedSubproject, ...]
+    role_definitions: tuple[ImportedRoleDefinition, ...] = ()
+    role_assignments: tuple[ImportedRoleAssignment, ...] = ()
+    benefits: tuple[ImportedBenefit, ...] = ()
+    status_benefits: tuple[ImportedStatusBenefitGrant, ...] = ()
+    labels: tuple[ImportedLabelOverride, ...] = ()
 
 
 def load_project_yaml(path: str | Path) -> ImportedProjectConfig:
@@ -81,6 +125,11 @@ def parse_project_yaml(content: str) -> ImportedProjectConfig:
         hotels=_parse_hotels(data.get("hotels", [])),
         event_groups=_parse_event_groups(data.get("event_groups", [])),
         subprojects=_parse_subprojects(data.get("subprojects", [])),
+        role_definitions=_parse_role_definitions(data.get("roles", [])),
+        role_assignments=_parse_role_assignments(data.get("role_assignments", [])),
+        benefits=_parse_benefits(data.get("benefits", [])),
+        status_benefits=_parse_status_benefits(data.get("status_benefits", [])),
+        labels=_parse_labels(data.get("labels", [])),
     )
 
 
@@ -245,6 +294,119 @@ def _parse_subprojects(items: Any) -> tuple[ImportedSubproject, ...]:
             )
         )
     return tuple(subprojects)
+
+
+def _parse_role_definitions(items: Any) -> tuple[ImportedRoleDefinition, ...]:
+    if not isinstance(items, list):
+        msg = "roles must be a list"
+        raise ProjectImportError(msg)
+    roles = []
+    valid_permissions = {permission.value for permission in PermissionKey}
+    for item in items:
+        if not isinstance(item, dict):
+            msg = "Each role must be a mapping"
+            raise ProjectImportError(msg)
+        permissions = item.get("permissions", [])
+        if not isinstance(permissions, list):
+            msg = "role permissions must be a list"
+            raise ProjectImportError(msg)
+        invalid = sorted(
+            set(str(permission) for permission in permissions) - valid_permissions
+        )
+        if invalid:
+            msg = f"invalid role permissions: {', '.join(invalid)}"
+            raise ProjectImportError(msg)
+        roles.append(
+            ImportedRoleDefinition(
+                key=_required_string(item, "key"),
+                name=_required_string(item, "name"),
+                permissions=tuple(str(permission) for permission in permissions),
+                description=str(item.get("description", "")),
+                active=bool(item.get("active", True)),
+            )
+        )
+    return tuple(roles)
+
+
+def _parse_role_assignments(items: Any) -> tuple[ImportedRoleAssignment, ...]:
+    if not isinstance(items, list):
+        msg = "role_assignments must be a list"
+        raise ProjectImportError(msg)
+    assignments = []
+    for item in items:
+        if not isinstance(item, dict):
+            msg = "Each role assignment must be a mapping"
+            raise ProjectImportError(msg)
+        scopes = item.get("scopes", [])
+        if not isinstance(scopes, list):
+            msg = "role assignment scopes must be a list"
+            raise ProjectImportError(msg)
+        assignments.append(
+            ImportedRoleAssignment(
+                email=_required_string(item, "email").lower(),
+                role_key=_required_string(item, "role"),
+                scopes=tuple(str(scope) for scope in scopes),
+            )
+        )
+    return tuple(assignments)
+
+
+def _parse_benefits(items: Any) -> tuple[ImportedBenefit, ...]:
+    if not isinstance(items, list):
+        msg = "benefits must be a list"
+        raise ProjectImportError(msg)
+    benefits = []
+    for item in items:
+        if not isinstance(item, dict):
+            msg = "Each benefit must be a mapping"
+            raise ProjectImportError(msg)
+        benefits.append(
+            ImportedBenefit(
+                key=_required_string(item, "key"),
+                label=_required_string(item, "label"),
+                target=_required_string(item, "target"),
+                description=str(item.get("description", "")),
+                active=bool(item.get("active", True)),
+            )
+        )
+    return tuple(benefits)
+
+
+def _parse_status_benefits(items: Any) -> tuple[ImportedStatusBenefitGrant, ...]:
+    if not isinstance(items, list):
+        msg = "status_benefits must be a list"
+        raise ProjectImportError(msg)
+    grants = []
+    for item in items:
+        if not isinstance(item, dict):
+            msg = "Each status benefit must be a mapping"
+            raise ProjectImportError(msg)
+        grants.append(
+            ImportedStatusBenefitGrant(
+                status_type=_required_string(item, "status_type"),
+                status_value=_required_string(item, "status_value"),
+                benefit_key=_required_string(item, "benefit"),
+            )
+        )
+    return tuple(grants)
+
+
+def _parse_labels(items: Any) -> tuple[ImportedLabelOverride, ...]:
+    if not isinstance(items, list):
+        msg = "labels must be a list"
+        raise ProjectImportError(msg)
+    labels = []
+    for item in items:
+        if not isinstance(item, dict):
+            msg = "Each label must be a mapping"
+            raise ProjectImportError(msg)
+        labels.append(
+            ImportedLabelOverride(
+                key=_required_string(item, "key"),
+                label=_required_string(item, "label"),
+            )
+        )
+    return tuple(labels)
 
 
 def _parse_form_fields(form: Any) -> tuple[FormField, ...]:

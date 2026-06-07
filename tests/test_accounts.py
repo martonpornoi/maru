@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
+from datetime import timedelta
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
@@ -20,10 +21,12 @@ from maru.accounts.models import (
     AccessRole,
     ArchivedParticipation,
     Notification,
+    UserConventionProfile,
     UserProfile,
+    UserTileColorRule,
 )
-from maru.domain import SEED_ACCESS_EMAIL, Role
-from maru.projects.models import Application, ApplicationVersion, Subproject
+from maru.domain import SEED_ACCESS_EMAIL, Role, VolunteerType
+from maru.projects.models import Application, ApplicationVersion, Project, Subproject
 
 
 @pytest.mark.django_db
@@ -56,7 +59,10 @@ def test_seeded_user_can_log_in(client) -> None:
     )
 
     assert response.status_code == 200
-    assert "My Events" in response.content.decode()
+    assert (
+        "Your profile, notifications, applications, archive, and shifts"
+        in response.content.decode()
+    )
     assert get_user_model().objects.filter(email=SEED_ACCESS_EMAIL).exists()
 
 
@@ -138,7 +144,10 @@ def test_allowlisted_google_oauth_identity_can_log_in(client) -> None:
         )
 
     assert response.status_code == 200
-    assert "My Events" in response.content.decode()
+    assert (
+        "Your profile, notifications, applications, archive, and shifts"
+        in response.content.decode()
+    )
     assert get_user_model().objects.filter(email=SEED_ACCESS_EMAIL).exists()
     exchange.assert_called_once()
 
@@ -233,6 +242,229 @@ def test_admin_can_view_access_grants_with_statuses(client) -> None:
 
 
 @pytest.mark.django_db
+def test_admin_can_view_user_directory_with_images_and_names_only(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    host_grant = _create_access_user(
+        "hostpicture@gmail.com",
+        [Role.HOST.value, Role.VOLUNTEER.value],
+    )
+    host_user = get_user_model().objects.get(email=host_grant.email)
+    host_profile = UserProfile.objects.get(user=host_user)
+    host_profile.display_name = "Picture Host"
+    host_profile.profile_picture = "profiles/profile-pictures/picture-host.png"
+    host_profile.profile_unlocked = True
+    host_profile.save(
+        update_fields=["display_name", "profile_picture", "profile_unlocked"]
+    )
+    pending_grant = AccessGrant.objects.create(email="pendinguser@gmail.com")
+    AccessRole.objects.create(grant=pending_grant, role=Role.SECURITY.value)
+
+    response = client.get(reverse("accounts:user_directory"))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Users" in content
+    assert "Admin" in content
+    assert "Manage accounts" in content
+    assert reverse("accounts:access_grant_list") in content
+    assert reverse("accounts:create_access_grant") in content
+    assert reverse("accounts:import_access_grants") in content
+    assert reverse("accounts:export_access_grants") in content
+    assert "Picture Host" in content
+    assert "hostpicture@gmail.com" not in content
+    assert "Volunteer" not in content
+    assert "/media/profiles/profile-pictures/picture-host.png" in content
+    assert "pendinguser@gmail.com" not in content
+    assert "Security" not in content
+    assert "Pending user" in content
+    assert "/static/accounts/default-avatar.svg" in content
+    assert reverse("accounts:profile_detail", args=[host_profile.pk]) in content
+
+
+@pytest.mark.django_db
+def test_regular_user_can_view_user_directory_under_public_navigation(client) -> None:
+    _create_access_user("regularuser@gmail.com", [Role.REGISTERED_USER.value])
+    host_grant = _create_access_user("hostuser@gmail.com", [Role.HOST.value])
+    host_profile = UserProfile.objects.get(user__email=host_grant.email)
+    host_profile.display_name = "Host User"
+    host_profile.save(update_fields=["display_name"])
+    client.post(reverse("accounts:login"), {"email": "regularuser@gmail.com"})
+
+    response = client.get(reverse("accounts:user_directory"))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Users" in content
+    assert "Statistics" in content
+    assert "Manage accounts" not in content
+    assert "Host User" in content
+    assert "hostuser@gmail.com" not in content
+    assert "Host</span>" not in content
+
+
+@pytest.mark.django_db
+def test_project_user_directory_only_shows_users_attached_to_project(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    awoostria = Project.objects.get(slug="awoostria-2026")
+    cozy = Project.objects.get(slug="cozy-furcon-2025")
+    awoostria_grant = _create_access_user(
+        "awoostria.user@gmail.com",
+        [Role.REGISTERED_USER.value],
+    )
+    cozy_grant = _create_access_user(
+        "cozy.user@gmail.com",
+        [Role.REGISTERED_USER.value],
+    )
+    awoostria_user = get_user_model().objects.get(email=awoostria_grant.email)
+    cozy_user = get_user_model().objects.get(email=cozy_grant.email)
+    UserProfile.objects.filter(user=awoostria_user).update(
+        display_name="Awoostria User"
+    )
+    UserProfile.objects.filter(user=cozy_user).update(display_name="Cozy User")
+    UserConventionProfile.objects.create(user=awoostria_user, project=awoostria)
+    UserConventionProfile.objects.create(user=cozy_user, project=cozy)
+
+    response = client.get(
+        reverse("accounts:project_user_directory", args=[awoostria.slug])
+    )
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Awoostria 2026 Users" in content
+    assert "Awoostria User" in content
+    assert "Cozy User" not in content
+    assert "All users ever registered" not in content
+
+
+@pytest.mark.django_db
+def test_user_directory_renders_square_tiles_with_layered_colors(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    project = Project.objects.get(slug="awoostria-2026")
+    host = get_user_model().objects.get(email="cooling.host@gmail.com")
+    UserConventionProfile.objects.update_or_create(
+        user=host,
+        project=project,
+        defaults={
+            "attendee_type": "Fursuiter",
+            "volunteer_type": VolunteerType.LEAD.value,
+            "roles": [Role.VOLUNTEER.value],
+        },
+    )
+    UserTileColorRule.objects.create(
+        target_type=UserTileColorRule.ATTENDEE_TYPE,
+        target_value="Fursuiter",
+        applies_to=UserTileColorRule.EDGE,
+        background_color="#654321",
+        priority=100,
+    )
+    UserTileColorRule.objects.create(
+        target_type=UserTileColorRule.VOLUNTEER_TYPE,
+        target_value=VolunteerType.LEAD.value,
+        applies_to=UserTileColorRule.INTERIOR,
+        background_color="#123456",
+        priority=100,
+    )
+
+    response = client.get(reverse("accounts:user_directory"))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "user-tile" in content
+    assert "border-color: #654321;" in content
+    assert "background: #123456; color: #ffffff;" in content
+    assert "Lead" not in content
+    assert "Volunteer" not in content
+    assert "Fursuiter" not in content
+
+
+@pytest.mark.django_db
+def test_setup_users_can_manage_user_tile_color_rules(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+
+    response = client.post(
+        reverse("accounts:user_tile_color_rules"),
+        {
+            "target": "attendee_type:Fursuiter",
+            "applies_to": UserTileColorRule.EDGE,
+            "background_color": "#112233",
+            "priority": "5",
+            "active": "on",
+        },
+        follow=True,
+    )
+
+    rule = UserTileColorRule.objects.get(target_value="Fursuiter")
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert rule.target_type == UserTileColorRule.ATTENDEE_TYPE
+    assert rule.applies_to == UserTileColorRule.EDGE
+    assert rule.background_color == "#112233"
+    assert "User tile color rule saved" in content
+    assert "Edge #112233" in content
+    assert "Color Codes" in content
+
+    response = client.post(
+        reverse("accounts:user_tile_color_rules"),
+        {
+            "target": f"volunteer_type:{VolunteerType.DEPUTY.value}",
+            "applies_to": UserTileColorRule.INTERIOR,
+            "background_color": "#ddffee",
+            "priority": "3",
+            "active": "on",
+        },
+        follow=True,
+    )
+
+    rule = UserTileColorRule.objects.get(target_value=VolunteerType.DEPUTY.value)
+    assert response.status_code == 200
+    assert rule.target_type == UserTileColorRule.VOLUNTEER_TYPE
+    assert rule.applies_to == UserTileColorRule.INTERIOR
+
+
+@pytest.mark.django_db
+def test_regular_user_cannot_manage_user_tile_color_rules(client) -> None:
+    _create_access_user("regularuser@gmail.com", [Role.REGISTERED_USER.value])
+    client.post(reverse("accounts:login"), {"email": "regularuser@gmail.com"})
+
+    response = client.get(reverse("accounts:user_tile_color_rules"))
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_statistics_show_attendee_counts_by_project_country_and_type(client) -> None:
+    call_command("seed_demo")
+    viewer_grant = _create_access_user(
+        "statsviewer@gmail.com",
+        [Role.REGISTERED_USER.value],
+    )
+    project = Project.objects.get(slug="awoostria-2026")
+    host = get_user_model().objects.get(email="cooling.host@gmail.com")
+    host_profile = UserProfile.objects.get(user=host)
+    host_profile.country = "HU"
+    host_profile.save(update_fields=["country"])
+    UserConventionProfile.objects.create(
+        user=host,
+        project=project,
+        attendee_type="Fursuiter",
+        roles=[Role.HOST.value],
+    )
+    client.post(reverse("accounts:login"), {"email": viewer_grant.email})
+
+    response = client.get(reverse("accounts:statistics"))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Awoostria 2026" in content
+    assert "Fursuiter" in content
+    assert "Hungary" in content
+
+
+@pytest.mark.django_db
 def test_admin_can_filter_audit_logs_by_account(client) -> None:
     call_command("seed_maru")
     client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
@@ -294,6 +526,55 @@ def test_admin_can_filter_audit_logs_by_action(client) -> None:
 
 
 @pytest.mark.django_db
+def test_admin_account_audit_logs_are_paginated(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    base_time = timezone.now()
+    for index in range(30):
+        audit_log = _access_audit_log(f"page-{index:02d}.target@gmail.com")
+        AccessGrantAuditLog.objects.filter(pk=audit_log.pk).update(
+            created_at=base_time + timedelta(minutes=index)
+        )
+
+    response = client.get(
+        reverse("accounts:access_grant_list"),
+        {"audit_page": "2"},
+    )
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Page 2 of 2" in content
+    assert "page-04.target@gmail.com" in content
+    assert "page-05.target@gmail.com" not in content
+    assert "Previous" in content
+
+
+@pytest.mark.django_db
+def test_admin_account_audit_pagination_preserves_filters(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    for index in range(26):
+        _access_audit_log(
+            f"filtered-{index:02d}.target@gmail.com",
+            actor_email="audit.admin@gmail.com",
+        )
+    _access_audit_log(
+        "other.target@gmail.com",
+        actor_email="other.admin@gmail.com",
+    )
+
+    response = client.get(
+        reverse("accounts:access_grant_list"),
+        {"audit_actor": "audit.admin@gmail.com"},
+    )
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "audit_actor=audit.admin%40gmail.com&amp;audit_page=2" in content
+    assert "other.admin@gmail.com" not in content
+
+
+@pytest.mark.django_db
 def test_admin_can_filter_access_grants_by_email(client) -> None:
     call_command("seed_maru")
     client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
@@ -347,6 +628,66 @@ def test_admin_can_filter_access_grants_by_role(client) -> None:
 
 
 @pytest.mark.django_db
+def test_admin_can_filter_access_grants_by_unlocked_profiles(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    locked_grant = _create_access_user("closed.host@gmail.com", [Role.HOST.value])
+    unlocked_grant = _create_access_user("open.host@gmail.com", [Role.HOST.value])
+    user = get_user_model().objects.get(email=unlocked_grant.email)
+    profile = UserProfile.objects.get(user=user)
+    profile.profile_unlocked = True
+    profile.save(update_fields=["profile_unlocked"])
+
+    response = client.get(
+        reverse("accounts:access_grant_list"), {"profile_state": "unlocked"}
+    )
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert unlocked_grant.email in content
+    assert locked_grant.email not in content
+
+
+@pytest.mark.django_db
+def test_admin_can_filter_access_grants_by_locked_profiles(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    locked_grant = _create_access_user("closed.host@gmail.com", [Role.HOST.value])
+    unlocked_grant = _create_access_user("open.host@gmail.com", [Role.HOST.value])
+    user = get_user_model().objects.get(email=unlocked_grant.email)
+    profile = UserProfile.objects.get(user=user)
+    profile.profile_unlocked = True
+    profile.save(update_fields=["profile_unlocked"])
+
+    response = client.get(
+        reverse("accounts:access_grant_list"), {"profile_state": "locked"}
+    )
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert locked_grant.email in content
+    assert unlocked_grant.email not in content
+
+
+@pytest.mark.django_db
+def test_admin_can_filter_access_grants_by_missing_user_profiles(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    user_grant = _create_access_user("known.host@gmail.com", [Role.HOST.value])
+    pending_grant = AccessGrant.objects.create(email="pending.host@gmail.com")
+    AccessRole.objects.create(grant=pending_grant, role=Role.HOST.value)
+
+    response = client.get(
+        reverse("accounts:access_grant_list"), {"profile_state": "no_user"}
+    )
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert pending_grant.email in content
+    assert user_grant.email not in content
+
+
+@pytest.mark.django_db
 def test_admin_can_export_access_grants_as_csv(client) -> None:
     call_command("seed_maru")
     client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
@@ -385,19 +726,39 @@ def test_admin_can_import_access_grants_from_csv(client) -> None:
     call_command("seed_maru")
     client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
     existing = _create_access_user("helper@gmail.com", [Role.REGISTERED_USER.value])
+    csv_content = "\n".join(
+        [
+            "email,active,roles,notes",
+            "newhost@gmail.com,true,Host;Volunteer,Stage lead",
+            "helper@gmail.com,false,Volunteer,Check availability",
+        ]
+    )
+
+    response = client.post(
+        reverse("accounts:import_access_grants"),
+        {"csv_file": _account_csv(csv_content)},
+    )
+
+    content = response.content.decode()
+    existing.refresh_from_db()
+    assert response.status_code == 200
+    assert "Validation Report" in content
+    assert "Created: 1" in content
+    assert "Updated: 1" in content
+    assert "Changes" in content
+    assert "Active: true -> false" in content
+    assert "Roles: Registered User -> Volunteer" in content
+    assert "Notes: - -> Check availability" in content
+    assert "Apply import" in content
+    assert not AccessGrant.objects.filter(email="newhost@gmail.com").exists()
+    assert existing.active
+    assert existing.notes == ""
 
     response = client.post(
         reverse("accounts:import_access_grants"),
         {
-            "csv_file": _account_csv(
-                "\n".join(
-                    [
-                        "email,active,roles,notes",
-                        "newhost@gmail.com,true,Host;Volunteer,Stage lead",
-                        "helper@gmail.com,false,Volunteer,Check availability",
-                    ]
-                )
-            )
+            "action": "apply",
+            "csv_content": f"{csv_content}\n",
         },
         follow=True,
     )
@@ -452,10 +813,59 @@ def test_account_csv_import_validation_blocks_all_changes(client) -> None:
     assert "use a Gmail or Googlemail address" in content
     assert "invalid roles: Made Up" in content
     assert "duplicate email dupe@gmail.com" in content
+    assert "Rejected: 3" in content
+    assert "Apply import" not in content
+    assert "Download rejected rows" in content
     assert not AccessGrant.objects.filter(email="validhost@gmail.com").exists()
     assert not AccessGrantAuditLog.objects.exclude(
         target_email=SEED_ACCESS_EMAIL
     ).exists()
+
+
+@pytest.mark.django_db
+def test_admin_can_download_rejected_account_import_rows(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    csv_content = "\n".join(
+        [
+            "email,active,roles,notes",
+            "validhost@gmail.com,true,Host,Ready",
+            "person@example.org,true,Host,Bad domain",
+            "badrole@gmail.com,true,Made Up,Bad role",
+        ]
+    )
+
+    response = client.post(
+        reverse("accounts:import_access_grants"),
+        {
+            "action": "download_rejected",
+            "csv_content": csv_content,
+        },
+    )
+
+    rows = list(csv.DictReader(io.StringIO(response.content.decode())))
+    assert response.status_code == 200
+    assert response["Content-Type"] == "text/csv"
+    assert "maru-rejected-accounts.csv" in response["Content-Disposition"]
+    assert rows == [
+        {
+            "active": "true",
+            "email": "person@example.org",
+            "issues": "use a Gmail or Googlemail address",
+            "line": "3",
+            "notes": "Bad domain",
+            "roles": Role.HOST.value,
+        },
+        {
+            "active": "true",
+            "email": "badrole@gmail.com",
+            "issues": "invalid roles: Made Up",
+            "line": "4",
+            "notes": "Bad role",
+            "roles": "Made Up",
+        },
+    ]
+    assert not AccessGrant.objects.filter(email="validhost@gmail.com").exists()
 
 
 @pytest.mark.django_db
@@ -692,6 +1102,53 @@ def test_admin_can_view_access_grant_audit_detail(client) -> None:
 
 
 @pytest.mark.django_db
+def test_admin_can_view_access_grant_history_grouped_by_account(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    grant = _create_access_user("history.target@gmail.com", [Role.HOST.value])
+    first_log = _access_audit_log(
+        grant.email,
+        action=AccessGrantAuditLog.ACTION_CREATED,
+        actor_email=SEED_ACCESS_EMAIL,
+        grant=grant,
+    )
+    second_log = _access_audit_log(
+        grant.email,
+        action=AccessGrantAuditLog.ACTION_UPDATED,
+        actor_email="other.admin@gmail.com",
+        grant=grant,
+    )
+    _access_audit_log("other.target@gmail.com", actor_email=SEED_ACCESS_EMAIL)
+
+    response = client.get(reverse("accounts:access_grant_history", args=[grant.pk]))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Account History" in content
+    assert grant.email in content
+    assert first_log.action in content
+    assert second_log.action in content
+    assert "other.admin@gmail.com" in content
+    assert "other.target@gmail.com" not in content
+
+
+@pytest.mark.django_db
+def test_account_list_links_to_access_grant_history(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    grant = _create_access_user("history.target@gmail.com", [Role.HOST.value])
+    _access_audit_log(grant.email, grant=grant)
+
+    response = client.get(reverse("accounts:access_grant_list"))
+
+    content = response.content.decode()
+    history_url = reverse("accounts:access_grant_history", args=[grant.pk])
+    assert response.status_code == 200
+    assert history_url in content
+    assert "History" in content
+
+
+@pytest.mark.django_db
 def test_board_user_cannot_view_access_grant_audit_detail(client) -> None:
     grant = _create_access_user("boarduser@gmail.com", [Role.BOARD.value])
     audit_log = AccessGrantAuditLog.objects.create(
@@ -710,6 +1167,19 @@ def test_board_user_cannot_view_access_grant_audit_detail(client) -> None:
 
     response = client.get(
         reverse("accounts:access_grant_audit_log_detail", args=[audit_log.pk])
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_board_user_cannot_view_access_grant_history(client) -> None:
+    board_grant = _create_access_user("boarduser@gmail.com", [Role.BOARD.value])
+    target_grant = _create_access_user("history.target@gmail.com", [Role.HOST.value])
+    client.post(reverse("accounts:login"), {"email": board_grant.email})
+
+    response = client.get(
+        reverse("accounts:access_grant_history", args=[target_grant.pk])
     )
 
     assert response.status_code == 403
@@ -742,7 +1212,7 @@ def test_my_events_groups_archived_participation_by_year_and_project(client) -> 
     call_command("seed_demo")
     client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
     user = get_user_model().objects.get(email=SEED_ACCESS_EMAIL)
-    ArchivedParticipation.objects.create(
+    first_archive = ArchivedParticipation.objects.create(
         user=user,
         year=2025,
         project_name="Cozy Furcon",
@@ -762,6 +1232,51 @@ def test_my_events_groups_archived_participation_by_year_and_project(client) -> 
     assert "2025 · Cozy Furcon" in content
     assert "Fursuit Lounge Basics" in content
     assert "Dance Floor Etiquette" in content
+    assert reverse(
+        "accounts:archived_participation_detail", args=[first_archive.pk]
+    ) in content
+
+
+@pytest.mark.django_db
+def test_user_can_open_own_archived_participation_detail(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    user = get_user_model().objects.get(email=SEED_ACCESS_EMAIL)
+    item = ArchivedParticipation.objects.create(
+        user=user,
+        year=2025,
+        project_name="Cozy Furcon",
+        panel_title="Fursuit Lounge Basics",
+    )
+
+    response = client.get(
+        reverse("accounts:archived_participation_detail", args=[item.pk])
+    )
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Archived panel record" in content
+    assert "Cozy Furcon" in content
+    assert "Fursuit Lounge Basics" in content
+
+
+@pytest.mark.django_db
+def test_user_cannot_open_another_users_archived_participation_detail(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    other = get_user_model().objects.create(username="other", email="other@gmail.com")
+    item = ArchivedParticipation.objects.create(
+        user=other,
+        year=2025,
+        project_name="Cozy Furcon",
+        panel_title="Private Archive Panel",
+    )
+
+    response = client.get(
+        reverse("accounts:archived_participation_detail", args=[item.pk])
+    )
+
+    assert response.status_code == 404
 
 
 @pytest.mark.django_db
@@ -860,8 +1375,10 @@ def _access_audit_log(
     *,
     action: str = AccessGrantAuditLog.ACTION_UPDATED,
     actor_email: str = "marton.pornoi@gmail.com",
+    grant: AccessGrant | None = None,
 ) -> AccessGrantAuditLog:
     return AccessGrantAuditLog.objects.create(
+        grant=grant,
         actor_email=actor_email,
         target_email=target_email,
         action=action,

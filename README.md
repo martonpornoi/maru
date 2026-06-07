@@ -1,8 +1,11 @@
 # maru
 
-maru is a clean-room event operations platform for furry conventions. It is
-inspired by the useful workflows in pretalx, but it uses convention-focused
-language and structure from the start.
+maru is a clean-room event operations content backend for furry conventions. It
+is designed as the internal source of truth for submissions, profiles,
+schedules, volunteers, rooms, and public data exports that an official website
+or signage system can safely fetch from. It is inspired by the useful workflows
+in pretalx, but it uses convention-focused language and structure from the
+start.
 
 The product model is:
 
@@ -83,9 +86,45 @@ uv run --extra dev python manage.py seed_demo
 
 Then log in and open `http://127.0.0.1:8000/projects/`.
 
+The demo seed includes several accounts so you can switch between roles with
+the development login:
+
+- `marton.pornoi@gmail.com`: Admin, Board, Event Manager
+- `cooling.host@gmail.com`: approved host with a public profile and scheduled panel
+- `crafts.host@gmail.com`: approved host with profile and scheduled workshop
+- `neon.dj@gmail.com`: host with a submitted DJ-style application in review
+- `lounge.host@gmail.com`: host with a reopened application
+- `dance.helper@gmail.com`: volunteer with confirmed and claimed shifts
+- `stage.runner@gmail.com`: volunteer with confirmed and claimed shifts
+
+The Awoostria demo also includes scheduled panels, profile/fursuit image paths,
+internal notifications, event group metadata, open volunteer shifts, confirmed
+assignments, and claimed assignments.
+
 The project detail pages now include `Submit application` links for each
-subproject. Submitted applications appear under `My Events`, split between
-current applications and application history.
+subproject. Submitted applications appear on `My Profile`, split between current
+applications and application history.
+
+Admins, Board users, and Event Managers can manage convention forms from the
+sidebar `Forms` link. In the general project selector state, the Forms page
+shows every form used across all projects:
+
+```text
+http://127.0.0.1:8000/forms/
+```
+
+When a specific project is selected, the Forms page only shows forms attached
+to that project:
+
+```text
+http://127.0.0.1:8000/projects/awoostria-2026/forms/
+```
+
+Project forms can be created with Google Forms-style fields, moved through
+`draft`, `published`, and `closed` states, or inherited from another project as
+an editable draft copy. Closed and draft forms do not accept new submissions.
+Each project keeps at least one timetable-source form so approved applications
+can become timetable panels.
 
 Users with `Admin`, `Board`, or `Event Manager` can review submitted
 applications at `http://127.0.0.1:8000/review/applications/`. Approving an
@@ -94,7 +133,7 @@ Staff can also reopen an application for applicant edits. The applicant can
 edit only while the application is in the `reopened` state, and each resubmitted
 edit is stored as a new version while older answers remain read-only.
 Application detail pages show all stored versions for the applicant.
-Notifications on `My Events` are split into unread and read sections. Users can
+Notifications on `My Profile` are split into unread and read sections. Users can
 mark notifications read, and notification links point back to related
 applications, review pages, or volunteer shifts when available.
 
@@ -113,7 +152,9 @@ host@gmail.com,true,Host;Volunteer,Can help with late-night panels
 CSV imports are validated before changes are applied. If any row has an invalid
 e-mail address, active value, role, duplicate e-mail, or missing required
 column, the import is blocked without partial changes. The `notes` column is
-optional on import and is only visible to Admin users.
+optional on import and is only visible to Admin users. Import uploads first show
+a validation report with created, updated, unchanged, and rejected rows; Admins
+must explicitly apply a valid preview before changes are written.
 
 Admins can manually unlock or lock a user's profile from the account list after
 the user has logged in at least once. Unlocking a profile creates an internal
@@ -128,6 +169,87 @@ Profile detail pages are available for approved public profiles and staff
 review. Staff can inspect applicant profiles from review pages. Regular users
 only see profiles that are unlocked and opted into public visibility, and
 contact handles stay hidden unless the profile owner enables them.
+Profiles include optional pronouns, address, phone, personal e-mail, and
+convention e-mail fields. Address details are only shown to the profile owner
+and staff. Each profile can also store per-convention attendee type and roles,
+so someone can be a fursuiter or sponsor for one project and have different
+staff/host roles for another.
+
+Signed-in users can browse the shared user directory, social media workspace,
+and statistics pages from the sidebar navigation:
+
+```text
+http://127.0.0.1:8000/accounts/users/
+http://127.0.0.1:8000/social-media/
+http://127.0.0.1:8000/statistics/
+```
+
+The statistics page summarizes convention profile counts by project, attendee
+type, and country.
+
+The Social Media page is a lightweight publishing workspace for public-facing
+updates. Users can save drafts with text, an optional embed URL, and optional
+uploaded media. Publishing can happen immediately, or it can be scheduled for a
+future time. Published posts create an immutable version snapshot and queue
+publication records for external channels such as Telegram, Bluesky, and X.
+Those queue records make it clear what is queued versus actually sent, and they
+are intentionally local placeholders until real bot/API credentials and delivery
+workers are configured.
+
+Scheduled social posts can be processed with:
+
+```bash
+uv run --extra dev python manage.py publish_scheduled_social_posts
+```
+
+The Users page displays people as square tiles that only show profile images
+and names. User color rules choose one color and where it applies: the tile
+edge or tile interior. Rules can target attendee types (`Attendee`, `Sponsor`,
+`Super Sponsor`, `Fursuiter`) or volunteer types (`None`, `Volunteer`,
+`Deputy`, `Lead`, `Board Member`). Admins and Board users can manage those
+color rules from:
+
+```text
+http://127.0.0.1:8000/setup/user-colors/
+```
+
+Roles, participant statuses, access benefits, and UI labels are configurable
+from Setup. General Projects mode edits global defaults, while active project
+mode edits local convention settings:
+
+```text
+http://127.0.0.1:8000/setup/roles/
+http://127.0.0.1:8000/setup/statuses/
+http://127.0.0.1:8000/setup/labels/
+http://127.0.0.1:8000/projects/awoostria-2026/setup/roles/
+http://127.0.0.1:8000/projects/awoostria-2026/setup/statuses/
+http://127.0.0.1:8000/projects/awoostria-2026/setup/labels/
+```
+
+The settled role/status model is documented in `docs/roles-and-access.md`.
+
+Admins and Board users can manage hotel room data from:
+
+```text
+http://127.0.0.1:8000/hotels/
+```
+
+The Hotels page is for persistent hotel facts: room names as shown on hotel
+floor plans, room capacities, equipment/property lists, room combinations, and
+one or more uploaded floor layout images per hotel. Floor layout images can be
+edited or removed from the hotel detail page.
+
+Each project also has project-specific room settings at:
+
+```text
+http://127.0.0.1:8000/projects/awoostria-2026/rooms/
+```
+
+Those settings are local to the convention project. Staff first choose which
+reusable hotel records the project uses, then can rename a room for one event,
+block a room for that event, and add multiple opening windows for different
+days. Timetable placement rejects panels and volunteer shifts outside the
+configured room opening windows.
 
 Approved event applications create panels. Hosts can place their own panels in
 the private placement round at a project timetable URL, for example:
@@ -169,7 +291,7 @@ rooms or room combinations.
 
 Volunteer shifts include a needed-volunteers count. Staff can assign registered
 users from the timetable, and assigned shifts appear under each user's
-`My Events` page. The demo seed includes two example volunteer users and
+`My Profile` page. The demo seed includes example volunteer users and
 pre-assigned shifts:
 
 - `dance.helper@gmail.com`
@@ -202,6 +324,7 @@ http://127.0.0.1:8000/exports/public-timetable/<token>.json
 http://127.0.0.1:8000/exports/public-profiles/<token>.json
 http://127.0.0.1:8000/exports/volunteer-shifts/<token>.json
 http://127.0.0.1:8000/exports/signage-reminders/<token>.json
+http://127.0.0.1:8000/exports/role-status/<token>.json
 ```
 
 Tokens only work for their configured export type. Public timetable exports stay
@@ -209,7 +332,8 @@ empty until the project timetable round is `public`. Volunteer shift exports
 include coverage counts, but do not expose volunteer e-mails or profiles.
 Signage reminder exports include active reminders within their display window,
 ordered by priority and start time. Staff can create signage reminders from a
-project page.
+project page. Role/status exports include aggregate and consent-safe
+participant status and benefit data without private contact fields.
 
 Public timetable entries include safe grouped-event metadata when available:
 group name, group slug, panel order inside the group, and recurrence label.

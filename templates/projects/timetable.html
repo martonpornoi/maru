@@ -64,7 +64,7 @@
                 </td>
                 {% if panel.placement %}
                   <td>{{ panel.placement.starts_at|date:"Y-m-d H:i" }} - {{ panel.placement.ends_at|date:"H:i" }}</td>
-                  <td>{{ panel.placement.location_name }}</td>
+                  <td>{{ row.location }}</td>
                 {% else %}
                   <td class="muted">Unplaced</td>
                   <td class="muted">Unplaced</td>
@@ -123,7 +123,7 @@
                   <td>{{ row.assigned_count }} / {{ shift.needed_volunteers }} assigned{% if row.open_spots %}, {{ row.open_spots }} open{% endif %}</td>
                   {% if shift.placement %}
                     <td>{{ shift.placement.starts_at|date:"Y-m-d H:i" }} - {{ shift.placement.ends_at|date:"H:i" }}</td>
-                    <td>{{ shift.placement.location_name }}</td>
+                    <td>{{ row.location }}</td>
                   {% else %}
                     <td class="muted">Unplaced</td>
                     <td class="muted">Unplaced</td>

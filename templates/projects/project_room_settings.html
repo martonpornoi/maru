@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} Room Settings - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:detail' project.slug %}">Back to {{ project.name }}</a></p>
+      <h1>{{ project.name }} Room Settings</h1>
+      <p class="muted">Project-specific names, blocks, and opening windows. These do not change the hotel master room names.</p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Project Hotels</h2>
+      <p class="muted">Choose which reusable hotel records this project uses.</p>
+      <div class="actions">
+        <a class="button" href="{% url 'projects:create_hotel' %}">Add hotel to database</a>
+        <a class="button" href="{% url 'projects:hotel_list' %}">Open general hotels</a>
+      </div>
+      <form class="stack" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_hotels">
+        {{ hotels_form.non_field_errors }}
+        {% for field in hotels_form %}
+          <label>
+            {{ field.label }}
+            {{ field }}
+            {{ field.errors }}
+          </label>
+        {% endfor %}
+        <button type="submit">Save project hotels</button>
+      </form>
+    </div>
+
+    <div class="panel stack">
+      <h2>Rooms</h2>
+      {% if room_settings %}
+        <table>
+          <thead>
+            <tr>
+              <th>Hotel room</th>
+              <th>Local event name</th>
+              <th>Blocked</th>
+              <th>Opening windows</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for setting in room_settings %}
+              <tr>
+                <td>{{ setting.room.hotel.name }} - {{ setting.room.name }}</td>
+                <td>{{ setting.local_name|default:"-" }}</td>
+                <td>{% if setting.blocked %}Yes{% else %}No{% endif %}</td>
+                <td>{{ setting.availability_windows.count }}</td>
+                <td><a href="{% url 'projects:edit_project_room_setting' setting.pk %}">Edit</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No rooms available.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Room Combinations</h2>
+      {% if combination_settings %}
+        <table>
+          <thead>
+            <tr>
+              <th>Hotel combination</th>
+              <th>Local event name</th>
+              <th>Blocked</th>
+              <th>Opening windows</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for setting in combination_settings %}
+              <tr>
+                <td>{{ setting.room_combination.hotel.name }} - {{ setting.room_combination.name }}</td>
+                <td>{{ setting.local_name|default:"-" }}</td>
+                <td>{% if setting.blocked %}Yes{% else %}No{% endif %}</td>
+                <td>{{ setting.availability_windows.count }}</td>
+                <td><a href="{% url 'projects:edit_project_room_combination_setting' setting.pk %}">Edit</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No room combinations available.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

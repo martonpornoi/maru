@@ -13,6 +13,15 @@
       {% endif %}
     </div>
 
+    {% if application.event_header_image %}
+      <div class="panel stack">
+        <h2>Event Header Image</h2>
+        <div class="event-header-image">
+          <img src="{{ application.event_header_image.url }}" alt="">
+        </div>
+      </div>
+    {% endif %}
+
     <div class="panel stack">
       <h2>Decision</h2>
       <div class="actions">

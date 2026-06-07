@@ -69,6 +69,8 @@ def test_public_timetable_export_emits_public_panel_data_without_host_email(
     client,
 ) -> None:
     application = _submit_application(client, "hostone@gmail.com", "Cooling 101")
+    application.event_header_image = "events/header-images/cooling-101.png"
+    application.save(update_fields=["event_header_image"])
     _approve_as_staff(client, application)
     panel = Panel.objects.get(application=application)
     _place_panel(panel)
@@ -97,6 +99,10 @@ def test_public_timetable_export_emits_public_panel_data_without_host_email(
     assert payload["export_type"] == ExportType.PUBLIC_TIMETABLE.value
     assert payload["project"]["slug"] == "awoostria-2026"
     assert payload["entries"][0]["title"] == "Cooling 101"
+    assert (
+        payload["entries"][0]["header_image"]
+        == "/media/events/header-images/cooling-101.png"
+    )
     assert payload["entries"][0]["location"] == "Panel Room A"
     assert "hostone@gmail.com" not in response.content.decode()
 
@@ -256,11 +262,97 @@ def test_check_export_tokens_can_filter_by_project() -> None:
 
 
 @pytest.mark.django_db
+def test_admin_can_create_export_token_from_project_ui(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": "marton.pornoi@gmail.com"})
+    project = Project.objects.get(slug="awoostria-2026")
+
+    response = client.post(
+        reverse("projects:export_token_list", args=[project.slug]),
+        {
+            "active": "on",
+            "export_type": ExportType.PUBLIC_TIMETABLE.value,
+            "name": "Website timetable",
+        },
+    )
+
+    token = ExportToken.objects.get(name="Website timetable")
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert token.project == project
+    assert token.active
+    assert token.token in content
+    assert "Copy it now" in content
+
+
+@pytest.mark.django_db
+def test_board_can_rotate_export_token_from_project_ui(client) -> None:
+    call_command("seed_demo")
+    _allow_user("boarduser@gmail.com", [Role.BOARD.value])
+    client.post(reverse("accounts:login"), {"email": "boarduser@gmail.com"})
+    project = Project.objects.get(slug="awoostria-2026")
+    token = ExportToken.objects.create(
+        project=project,
+        name="Website timetable",
+        export_type=ExportType.PUBLIC_TIMETABLE.value,
+    )
+    old_token = token.token
+
+    response = client.post(reverse("projects:rotate_export_token", args=[token.pk]))
+
+    token.refresh_from_db()
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert token.active
+    assert token.token != old_token
+    assert token.token in content
+    assert old_token not in content
+
+
+@pytest.mark.django_db
+def test_event_manager_cannot_manage_export_tokens(client) -> None:
+    call_command("seed_demo")
+    _allow_user("eventmanager@gmail.com", [Role.EVENT_MANAGER.value])
+    client.post(reverse("accounts:login"), {"email": "eventmanager@gmail.com"})
+    project = Project.objects.get(slug="awoostria-2026")
+
+    response = client.get(reverse("projects:export_token_list", args=[project.slug]))
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_admin_can_deactivate_and_reactivate_export_token(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": "marton.pornoi@gmail.com"})
+    project = Project.objects.get(slug="awoostria-2026")
+    token = ExportToken.objects.create(
+        project=project,
+        name="Website timetable",
+        export_type=ExportType.PUBLIC_TIMETABLE.value,
+    )
+
+    response = client.post(
+        reverse("projects:set_export_token_active", args=[token.pk, "inactive"])
+    )
+    token.refresh_from_db()
+    assert response.status_code == 302
+    assert not token.active
+
+    response = client.post(
+        reverse("projects:set_export_token_active", args=[token.pk, "active"])
+    )
+    token.refresh_from_db()
+    assert response.status_code == 302
+    assert token.active
+
+
+@pytest.mark.django_db
 def test_volunteer_shift_export_exposes_counts_but_not_user_profiles(client) -> None:
     call_command("seed_demo")
     project = Project.objects.get(slug="awoostria-2026")
     volunteer = _allow_user("helper@gmail.com")
-    room = Room.objects.get(hotel__project=project, name="Main Stage")
+    room = Room.objects.get(hotel__projects=project, name="Main Stage")
     shift = VolunteerShift.objects.create(
         project=project,
         title="Main Stage Door Watch",
@@ -352,7 +444,9 @@ def test_public_profile_export_exposes_only_consented_non_contact_fields(
     response = client.get(reverse("projects:public_profile_export", args=[token.token]))
 
     payload = response.json()
-    entry = payload["entries"][0]
+    entry = next(
+        item for item in payload["entries"] if item["display_name"] == "Host One"
+    )
     content = response.content.decode()
     assert response.status_code == 200
     assert payload["export_type"] == ExportType.PUBLIC_PROFILES.value
@@ -401,13 +495,23 @@ def test_public_profile_export_contact_requires_project_and_profile_consent(
 
     response = client.get(reverse("projects:public_profile_export", args=[token.token]))
 
-    assert "contact" not in response.json()["entries"][0]
+    entry = next(
+        item
+        for item in response.json()["entries"]
+        if item["display_name"] == "Host One"
+    )
+    assert "contact" not in entry
 
     profile.show_contact_handles = True
     profile.save(update_fields=["show_contact_handles"])
     response = client.get(reverse("projects:public_profile_export", args=[token.token]))
 
-    assert response.json()["entries"][0]["contact"] == {
+    entry = next(
+        item
+        for item in response.json()["entries"]
+        if item["display_name"] == "Host One"
+    )
+    assert entry["contact"] == {
         "telegram": "@hostone",
         "discord": "host.one",
     }
@@ -441,7 +545,9 @@ def test_public_profile_export_excludes_unapproved_or_hidden_profiles(client) ->
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert response.json()["entries"] == []
+    display_names = {entry["display_name"] for entry in response.json()["entries"]}
+    assert "Hidden Host" not in display_names
+    assert "Waiting Host" not in display_names
     assert "Hidden Host" not in content
     assert "Waiting Host" not in content
     assert "waiting@gmail.com" not in content
@@ -476,9 +582,11 @@ def _approve_as_staff(client, application: Application) -> None:
     )
 
 
-def _allow_user(email: str):
+def _allow_user(email: str, roles: list[str] | None = None):
+    roles = roles or [Role.REGISTERED_USER.value]
     grant, _ = AccessGrant.objects.get_or_create(email=email)
-    AccessRole.objects.get_or_create(grant=grant, role=Role.REGISTERED_USER.value)
+    for role in roles:
+        AccessRole.objects.get_or_create(grant=grant, role=role)
     user, created = get_user_model().objects.get_or_create(
         username=email,
         defaults={"email": email},
@@ -495,7 +603,7 @@ def _place_panel(
     starts_at: str = "2026-07-22T11:00:00+02:00",
     ends_at: str = "2026-07-22T12:00:00+02:00",
 ) -> None:
-    room = Room.objects.get(hotel__project=panel.project, name=room_name)
+    room = Room.objects.get(hotel__projects=panel.project, name=room_name)
     TimetablePlacement.objects.create(
         panel=panel,
         room=room,

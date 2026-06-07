@@ -87,7 +87,7 @@ def test_import_project_setup_creates_project_structure() -> None:
     assert project.subprojects.count() == 2
     assert AccessGrant.objects.filter(email="marton.pornoi@gmail.com").exists()
 
-    hotel = Hotel.objects.get(project=project, name="Main Convention Hotel")
+    hotel = Hotel.objects.get(projects=project, name="Main Convention Hotel")
     assert Room.objects.get(hotel=hotel, name="Panel Room A").properties == [
         "projector",
         "movable_wall",

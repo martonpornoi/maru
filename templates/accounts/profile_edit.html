@@ -5,26 +5,75 @@
 {% block content %}
   <section class="stack">
     <div>
-      <p><a href="{% url 'accounts:my_events' %}">Back to My Events</a></p>
-      <h1>Edit Profile</h1>
+      <p><a href="{{ back_url }}">Back to profile</a></p>
+      <h1>Edit {{ profile.display_name|default:profile.user.email }}</h1>
       <p class="muted">This profile can be used for approved-host views and future website exports.</p>
     </div>
 
     <form class="panel stack" method="post" enctype="multipart/form-data">
       {% csrf_token %}
+      <h2>Profile</h2>
       {{ form.non_field_errors }}
       {% for field in form %}
         <label>
           {{ field.label }}
           {{ field }}
+          {% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}
           {{ field.errors }}
         </label>
       {% endfor %}
+
+      <h2>Convention Details</h2>
+      {% for convention_form in convention_forms %}
+        <fieldset class="stack">
+          <legend>{{ convention_form.fields.attendee_type.label }}</legend>
+          {{ convention_form.non_field_errors }}
+          <label>
+            Attendee type
+            {{ convention_form.attendee_type }}
+            {{ convention_form.attendee_type.errors }}
+          </label>
+          <label>
+            Selected ticket level
+            {{ convention_form.ticket_level_selected }}
+            {{ convention_form.ticket_level_selected.errors }}
+          </label>
+          <label>
+            Verified ticket level
+            {{ convention_form.ticket_level_verified }}
+            {% if convention_form.ticket_level_verified.help_text %}<span class="muted">{{ convention_form.ticket_level_verified.help_text }}</span>{% endif %}
+            {{ convention_form.ticket_level_verified.errors }}
+          </label>
+          <label>
+            Volunteer type
+            {{ convention_form.volunteer_type }}
+            {% if convention_form.volunteer_type.help_text %}<span class="muted">{{ convention_form.volunteer_type.help_text }}</span>{% endif %}
+            {{ convention_form.volunteer_type.errors }}
+          </label>
+          <label>
+            Fursuit species
+            {{ convention_form.fursuit_species }}
+            {{ convention_form.fursuit_species.errors }}
+          </label>
+          <label>
+            Fursuiter status
+            {{ convention_form.fursuiter_status }}
+            {% if convention_form.fursuiter_status.help_text %}<span class="muted">{{ convention_form.fursuiter_status.help_text }}</span>{% endif %}
+            {{ convention_form.fursuiter_status.errors }}
+          </label>
+          <label>
+            Roles for this convention
+            {{ convention_form.roles }}
+            {% if convention_form.roles.help_text %}<span class="muted">{{ convention_form.roles.help_text }}</span>{% endif %}
+            {{ convention_form.roles.errors }}
+          </label>
+        </fieldset>
+      {% endfor %}
+
       <div class="actions">
         <button type="submit">Save profile</button>
-        <a href="{% url 'accounts:my_events' %}">Cancel</a>
+        <a href="{{ back_url }}">Cancel</a>
       </div>
     </form>
   </section>
 {% endblock %}
-

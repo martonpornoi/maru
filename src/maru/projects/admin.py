@@ -10,8 +10,13 @@ from maru.projects.models import (
     ExportToken,
     FormField,
     Hotel,
+    HotelFloorPlan,
     Panel,
     Project,
+    ProjectRoomAvailability,
+    ProjectRoomCombinationAvailability,
+    ProjectRoomCombinationSetting,
+    ProjectRoomSetting,
     Room,
     RoomCombination,
     SignageReminder,
@@ -28,14 +33,10 @@ class SubprojectInline(admin.TabularInline):
     extra = 0
 
 
-class HotelInline(admin.TabularInline):
-    model = Hotel
-    extra = 0
-
-
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    inlines = [SubprojectInline, HotelInline]
+    inlines = [SubprojectInline]
+    filter_horizontal = ["hotels"]
     list_display = [
         "name",
         "slug",
@@ -110,8 +111,22 @@ class FormFieldInline(admin.TabularInline):
 @admin.register(Subproject)
 class SubprojectAdmin(admin.ModelAdmin):
     inlines = [FormFieldInline]
-    list_display = ["name", "project", "slug", "kind", "accepts_reopen_requests"]
-    list_filter = ["kind", "accepts_reopen_requests", "project"]
+    list_display = [
+        "name",
+        "project",
+        "slug",
+        "kind",
+        "form_status",
+        "is_timetable_source",
+        "accepts_reopen_requests",
+    ]
+    list_filter = [
+        "kind",
+        "form_status",
+        "is_timetable_source",
+        "accepts_reopen_requests",
+        "project",
+    ]
     search_fields = ["name", "slug", "project__name"]
 
 
@@ -125,27 +140,61 @@ class RoomCombinationInline(admin.TabularInline):
     extra = 0
 
 
+class HotelFloorPlanInline(admin.TabularInline):
+    model = HotelFloorPlan
+    extra = 0
+
+
 @admin.register(Hotel)
 class HotelAdmin(admin.ModelAdmin):
-    inlines = [RoomInline, RoomCombinationInline]
-    list_display = ["name", "project"]
-    list_filter = ["project"]
-    search_fields = ["name", "project__name"]
+    inlines = [RoomInline, RoomCombinationInline, HotelFloorPlanInline]
+    list_display = ["name", "project_names"]
+    search_fields = ["name", "projects__name"]
+
+    @admin.display(description="Projects")
+    def project_names(self, hotel: Hotel) -> str:
+        return ", ".join(hotel.projects.values_list("name", flat=True))
 
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
     list_display = ["name", "hotel", "capacity"]
-    list_filter = ["hotel__project", "hotel"]
-    search_fields = ["name", "hotel__name", "hotel__project__name"]
+    list_filter = ["hotel"]
+    search_fields = ["name", "hotel__name", "hotel__projects__name"]
 
 
 @admin.register(RoomCombination)
 class RoomCombinationAdmin(admin.ModelAdmin):
     list_display = ["name", "hotel", "capacity"]
-    list_filter = ["hotel__project", "hotel"]
-    search_fields = ["name", "hotel__name", "hotel__project__name"]
+    list_filter = ["hotel"]
+    search_fields = ["name", "hotel__name", "hotel__projects__name"]
     filter_horizontal = ["rooms"]
+
+
+class ProjectRoomAvailabilityInline(admin.TabularInline):
+    model = ProjectRoomAvailability
+    extra = 0
+
+
+@admin.register(ProjectRoomSetting)
+class ProjectRoomSettingAdmin(admin.ModelAdmin):
+    inlines = [ProjectRoomAvailabilityInline]
+    list_display = ["display_name", "project", "room", "blocked"]
+    list_filter = ["project", "blocked", "room__hotel"]
+    search_fields = ["local_name", "room__name", "project__name"]
+
+
+class ProjectRoomCombinationAvailabilityInline(admin.TabularInline):
+    model = ProjectRoomCombinationAvailability
+    extra = 0
+
+
+@admin.register(ProjectRoomCombinationSetting)
+class ProjectRoomCombinationSettingAdmin(admin.ModelAdmin):
+    inlines = [ProjectRoomCombinationAvailabilityInline]
+    list_display = ["display_name", "project", "room_combination", "blocked"]
+    list_filter = ["project", "blocked", "room_combination__hotel"]
+    search_fields = ["local_name", "room_combination__name", "project__name"]
 
 
 class ApplicationVersionInline(admin.TabularInline):
@@ -158,9 +207,20 @@ class ApplicationVersionInline(admin.TabularInline):
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
     inlines = [ApplicationVersionInline]
-    list_display = ["title", "subproject", "applicant", "status", "submitted_at"]
+    list_display = [
+        "title",
+        "subproject",
+        "applicant",
+        "status",
+        "has_event_header_image",
+        "submitted_at",
+    ]
     list_filter = ["status", "subproject__project", "subproject"]
     search_fields = ["title", "applicant__email", "subproject__name"]
+
+    @admin.display(boolean=True, description="Header image")
+    def has_event_header_image(self, application: Application) -> bool:
+        return bool(application.event_header_image)
 
 
 @admin.register(EventGroup)

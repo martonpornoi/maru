@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Social Media - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Social Media</h1>
+      <p class="muted">Create public posts for the convention website and queued social channels.</p>
+    </div>
+
+    <div class="panel stack">
+      <div>
+        <h2>Admin</h2>
+        <p class="muted">Create and schedule public social media posts.</p>
+      </div>
+      <div class="actions">
+        <a class="button" href="{% url 'social:create' %}">New post</a>
+      </div>
+    </div>
+
+    {% if own_drafts %}
+      <div class="panel stack">
+        <h2>Your Drafts</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Updated</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for post in own_drafts %}
+              <tr>
+                <td><a href="{% url 'social:detail' post.pk %}">{{ post.title }}</a></td>
+                <td>{{ post.get_status_display }}</td>
+                <td>{{ post.updated_at }}</td>
+                <td><a href="{% url 'social:edit' post.pk %}">Edit</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    {% if scheduled_posts %}
+      <div class="panel stack">
+        <h2>Scheduled Posts</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Publishes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for post in scheduled_posts %}
+              <tr>
+                <td><a href="{% url 'social:detail' post.pk %}">{{ post.title }}</a></td>
+                <td>{{ post.get_status_display }}</td>
+                <td>{{ post.scheduled_for }}</td>
+                <td><a href="{% url 'social:edit' post.pk %}">Edit</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    <div class="stack">
+      <h2>Published Posts</h2>
+      {% for post in published_posts %}
+        <article class="panel stack">
+          <div>
+            <p class="muted">Published · {{ post.published_at }} by {{ post.author.userprofile.display_name|default:post.author.email }}</p>
+            <h3><a href="{% url 'social:detail' post.pk %}">{{ post.title }}</a></h3>
+          </div>
+          <p>{{ post.body|linebreaksbr }}</p>
+          {% if post.embed_url %}
+            <p><a href="{{ post.embed_url }}">{{ post.embed_url }}</a></p>
+          {% endif %}
+          {% if post.media %}
+            <p><a href="{{ post.media.url }}">Attached media</a></p>
+          {% endif %}
+        </article>
+      {% empty %}
+        <div class="panel">
+          <p class="muted">No published social media posts yet.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

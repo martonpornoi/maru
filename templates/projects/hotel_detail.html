@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}{{ hotel.name }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:hotel_list' %}">Back to hotels</a></p>
+      <h1>{{ hotel.name }}</h1>
+      <p class="muted">
+        Used by:
+        {% for project in hotel.projects.all %}
+          <a href="{% url 'projects:project_room_settings' project.slug %}">{{ project.name }}</a>{% if not forloop.last %}, {% endif %}
+        {% empty %}
+          not assigned to any project
+        {% endfor %}
+      </p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Floor Layouts</h2>
+      {% if hotel.floor_plans.all %}
+        <div class="profile-media-grid">
+          {% for floor_plan in hotel.floor_plans.all %}
+            <figure class="profile-media">
+              <img src="{{ floor_plan.image.url }}" alt="{{ hotel.name }} {{ floor_plan.floor_label }} floor layout">
+              <figcaption>
+                <strong>{{ floor_plan.floor_label }}</strong>
+                {% if floor_plan.notes %}<br>{{ floor_plan.notes }}{% endif %}
+                <br><a href="{% url 'projects:edit_hotel_floor_plan' floor_plan.pk %}">Edit</a>
+                <form method="post" action="{% url 'projects:delete_hotel_floor_plan' floor_plan.pk %}">
+                  {% csrf_token %}
+                  <button type="submit">Remove</button>
+                </form>
+              </figcaption>
+            </figure>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">No floor layouts uploaded yet.</p>
+      {% endif %}
+
+      <form class="stack" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <h3>Add floor layout</h3>
+        {{ floor_plan_form.non_field_errors }}
+        {% for field in floor_plan_form %}
+          <label>
+            {{ field.label }}
+            {{ field }}
+            {{ field.errors }}
+          </label>
+        {% endfor %}
+        <button type="submit">Upload floor layout</button>
+      </form>
+    </div>
+
+    <div class="panel stack">
+      <h2>Rooms</h2>
+      <p><a href="{% url 'projects:create_hotel_room' hotel.pk %}">Add room</a></p>
+      {% if hotel.rooms.all %}
+        <table>
+          <thead>
+            <tr>
+              <th>Room</th>
+              <th>Capacity</th>
+              <th>Equipment and properties</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for room in hotel.rooms.all %}
+              <tr>
+                <td>{{ room.name }}</td>
+                <td>{{ room.capacity|default:"-" }}</td>
+                <td>{{ room.properties|join:", "|default:"-" }}</td>
+                <td><a href="{% url 'projects:edit_hotel_room' room.pk %}">Edit</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No rooms defined yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Room Combinations</h2>
+      {% if hotel.room_combinations.all %}
+        <table>
+          <thead>
+            <tr>
+              <th>Combination</th>
+              <th>Capacity</th>
+              <th>Rooms</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for combination in hotel.room_combinations.all %}
+              <tr>
+                <td>{{ combination.name }}</td>
+                <td>{{ combination.capacity|default:"-" }}</td>
+                <td>
+                  {% for room in combination.rooms.all %}
+                    {{ room.name }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    <span class="muted">No rooms assigned</span>
+                  {% endfor %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No room combinations defined yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

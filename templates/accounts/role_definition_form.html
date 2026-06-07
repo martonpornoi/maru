@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Role - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p>
+        {% if project %}
+          <a href="{% url 'accounts:project_roles_access' project.slug %}">Back to roles</a>
+        {% else %}
+          <a href="{% url 'accounts:roles_access' %}">Back to roles</a>
+        {% endif %}
+      </p>
+      <h1>Edit {{ role.name }}</h1>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <button type="submit">Save role</button>
+    </form>
+  </section>
+{% endblock %}

@@ -5,7 +5,7 @@
 {% block content %}
   <section class="stack">
     <div>
-      <p><a href="{% url 'accounts:my_events' %}">Back to My Events</a></p>
+      <p><a href="{% url 'accounts:my_profile' %}">Back to profile</a></p>
       <h1>{{ application.title }}</h1>
       <p class="muted">{{ application.subproject.project.name }} · {{ application.subproject.name }} · {{ application.status }}</p>
       {% if can_edit %}
@@ -15,6 +15,15 @@
         <p><a href="{% url 'projects:place_panel' application.panel.pk %}">Place this panel</a></p>
       {% endif %}
     </div>
+
+    {% if application.event_header_image %}
+      <div class="panel stack">
+        <h2>Event Header Image</h2>
+        <div class="event-header-image">
+          <img src="{{ application.event_header_image.url }}" alt="">
+        </div>
+      </div>
+    {% endif %}
 
     <div class="panel stack">
       <h2>Application Versions</h2>

@@ -10,13 +10,25 @@
       <p class="muted">{{ subproject.project.name }} · imported Google Forms-compatible labels</p>
     </div>
 
-    <form class="panel stack" method="post">
+    <form class="panel stack" method="post" enctype="multipart/form-data">
       {% csrf_token %}
       {{ form.non_field_errors }}
+      <section class="stack">
+        <h2>Event Artwork</h2>
+        {% if application.event_header_image %}
+          <div class="event-header-image">
+            <img src="{{ application.event_header_image.url }}" alt="">
+          </div>
+          <p class="muted">Uploading a new image will replace the current header.</p>
+        {% endif %}
+      </section>
       {% for field in form %}
         <label>
           {{ field.label }}
           {{ field }}
+          {% if field.help_text %}
+            <span class="muted">{{ field.help_text }}</span>
+          {% endif %}
           {{ field.errors }}
         </label>
       {% empty %}

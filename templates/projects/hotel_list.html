@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Hotels - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Hotels</h1>
+      <p class="muted">General hotel database: floor-plan images, room names, room capacities, and equipment lists. Project assignment happens from a selected project's hotel settings.</p>
+      <p><a class="button" href="{% url 'projects:create_hotel' %}">Add hotel</a></p>
+    </div>
+
+    <div class="panel stack">
+      {% if hotels %}
+        <table>
+          <thead>
+            <tr>
+              <th>Hotel</th>
+              <th>Used by projects</th>
+              <th>Rooms</th>
+              <th>Floor layouts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for hotel in hotels %}
+              <tr>
+                <td><a href="{% url 'projects:hotel_detail' hotel.pk %}">{{ hotel.name }}</a></td>
+                <td>
+                  {% for project in hotel.projects.all %}
+                    {{ project.name }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    <span class="muted">Not assigned</span>
+                  {% endfor %}
+                </td>
+                <td>{{ hotel.rooms.count }}</td>
+                <td>{{ hotel.floor_plans.count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No hotels defined yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

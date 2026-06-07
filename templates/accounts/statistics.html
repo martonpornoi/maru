@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Statistics</h1>
+      <p class="muted">Convention profile counts by project, attendee type, and country.</p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Overview</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>People with convention profiles</th>
+            <td>{{ total_people }}</td>
+          </tr>
+          <tr>
+            <th>Convention profile records</th>
+            <td>{{ total_convention_profiles }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel stack">
+      <h2>By Convention</h2>
+      {% if project_counts %}
+        <table>
+          <thead>
+            <tr>
+              <th>Convention</th>
+              <th>People</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in project_counts %}
+              <tr>
+                <td>{{ project.name }}</td>
+                <td>{{ project.attendee_count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No convention profile data yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>By Attendee Type</h2>
+      {% if attendee_type_counts %}
+        <table>
+          <thead>
+            <tr>
+              <th>Attendee type</th>
+              <th>People</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in attendee_type_counts %}
+              <tr>
+                <td>{{ row.attendee_type }}</td>
+                <td>{{ row.total }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No attendee type data yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>By Country</h2>
+      {% if country_counts %}
+        <table>
+          <thead>
+            <tr>
+              <th>Country</th>
+              <th>People</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in country_counts %}
+              <tr>
+                <td>{{ row.country }}</td>
+                <td>{{ row.total }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No country data yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

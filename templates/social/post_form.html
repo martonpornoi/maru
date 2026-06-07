@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ heading }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'social:list' %}">Back to social media</a></p>
+      <h1>{{ heading }}</h1>
+      <p class="muted">Save keeps this as a draft. Publish queues it now, unless a future schedule time is set.</p>
+    </div>
+
+    <form class="panel stack" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <div class="actions">
+        <button type="submit" name="action" value="save">Save draft</button>
+        <button type="submit" name="action" value="publish">Publish or schedule</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

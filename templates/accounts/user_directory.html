@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Users - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>{% if project %}{{ project.name }} Users{% else %}Users{% endif %}</h1>
+      {% if project %}
+        <p class="muted">People connected to this project through profiles, applications, or volunteer shifts.</p>
+      {% else %}
+        <p class="muted">All users ever registered or added to the access list.</p>
+      {% endif %}
+    </div>
+
+    {% if can_manage_accounts %}
+      <div class="panel stack">
+        <div>
+          <h2>Admin</h2>
+          <p class="muted">Manage allowlisted accounts, roles, imports, and exports.</p>
+        </div>
+        <div class="actions">
+          <a class="button" href="{% url 'accounts:access_grant_list' %}">Manage accounts</a>
+          <a class="button" href="{% url 'accounts:create_access_grant' %}">Add account</a>
+          <a class="button" href="{% url 'accounts:import_access_grants' %}">Import CSV</a>
+          <a class="button" href="{% url 'accounts:export_access_grants' %}">Export CSV</a>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if rows %}
+      <div class="user-tile-grid">
+        {% for row in rows %}
+          <article class="user-tile" style="{{ row.tile_border_style }}">
+            <div class="user-tile-inner" style="{{ row.tile_inner_style }}">
+              <div class="user-tile-header">
+                {% if row.profile and row.show_profile_link %}
+                  <a class="user-avatar-link" href="{% url 'accounts:profile_detail' row.profile.pk %}">
+                    <img class="avatar avatar-list" src="{% if row.profile.profile_picture %}{{ row.profile.profile_picture.url }}{% else %}{% static 'accounts/default-avatar.svg' %}{% endif %}" alt="">
+                  </a>
+                {% elif row.profile %}
+                  <img class="avatar avatar-list" src="{% if row.profile.profile_picture %}{{ row.profile.profile_picture.url }}{% else %}{% static 'accounts/default-avatar.svg' %}{% endif %}" alt="">
+                {% else %}
+                  <img class="avatar avatar-list" src="{% static 'accounts/default-avatar.svg' %}" alt="">
+                {% endif %}
+
+                <h2 class="user-tile-name">
+                  {% if row.profile and row.show_profile_link %}
+                    <a href="{% url 'accounts:profile_detail' row.profile.pk %}">{{ row.display_name }}</a>
+                  {% else %}
+                    {{ row.display_name }}
+                  {% endif %}
+                </h2>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="panel">
+        <p class="muted">No users found.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

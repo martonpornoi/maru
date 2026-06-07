@@ -1,6 +1,6 @@
 # maru TODO
 
-Last updated: 2026-05-18
+Last updated: 2026-05-22
 
 ## Done
 
@@ -10,7 +10,7 @@ Last updated: 2026-05-18
 - Added development login placeholder that enforces Gmail/Googlemail and the
   internal access list.
 - Seeded `marton.pornoi@gmail.com` with `Admin`, `Board`, and `Event Manager`.
-- Added `My Events` page with archived participation placeholder.
+- Added personal dashboard page with archived participation placeholder.
 - Added project setup models:
   - Project
   - Subproject
@@ -28,10 +28,18 @@ Last updated: 2026-05-18
 - Added educational demo fixtures for several furry convention setups.
 - Added `seed_demo` command.
 - Added project list/detail pages for browsing imported demo data.
+- Expanded `seed_demo` into a richer interactive scenario:
+  - demo host, DJ, and volunteer accounts with different roles
+  - approved scheduled panels in several rooms
+  - submitted and reopened applications for review/edit flows
+  - public profiles with profile/fursuit image paths
+  - confirmed, claimed, and open volunteer shifts
+  - internal notifications for demo users
+  - tests cover the richer seeded demo data
 - Added first application submission flow:
   - submit an imported subproject form
   - store answers by original Google Forms label
-  - show submitted applications in `My Events`
+  - show submitted applications in the personal dashboard
   - show read-only application detail pages
 - Added staff review flow:
   - review queue for `Admin`, `Board`, and `Event Manager`
@@ -68,14 +76,14 @@ Last updated: 2026-05-18
   - shifts have a needed-volunteers count
   - staff can assign registered users to volunteer shifts
   - assigned users receive internal notifications
-  - assigned shifts show under `My Events`
+  - assigned shifts show under the personal dashboard
   - seeded demo data includes example volunteer users, shifts, and assignments
 - Added volunteer self-service claiming:
   - approved volunteers can browse scheduled shifts with open capacity
   - volunteers can claim open shifts themselves
   - full shifts cannot be claimed
   - overlapping assigned shifts cannot be claimed
-  - claimed shifts reuse the existing `My Events` volunteer shift list
+  - claimed shifts reuse the existing personal dashboard volunteer shift list
 - Added staff confirmation and claim management:
   - assignments can be `claimed`, `confirmed`, or `removed`
   - staff can confirm volunteer claims
@@ -83,7 +91,7 @@ Last updated: 2026-05-18
   - removed assignments free shift capacity
   - staff can lock or reopen shifts
   - locked shifts cannot be claimed
-  - assignment status appears under `My Events`
+  - assignment status appears under the personal dashboard
 - Added clearer volunteer shift detail pages:
   - each scheduled volunteer shift has a dedicated detail page
   - detail pages show role, staffing, lock state, time, room, and notes
@@ -132,7 +140,7 @@ Last updated: 2026-05-18
   - resubmissions create a new application version
   - original submitted answers remain preserved as older versions
   - submitted, approved, and rejected applications remain read-only
-- Added clearer `My Events` archive/history:
+- Added clearer personal archive/history:
   - current applications are separated from application history
   - approved, rejected, and archived applications move out of active work
   - application lists show stored version counts
@@ -146,7 +154,7 @@ Last updated: 2026-05-18
   - public profile fallbacks avoid using e-mail addresses as display names
 - Added richer internal notifications:
   - notifications can link to related applications, review pages, and shifts
-  - `My Events` separates unread notifications from read notification history
+  - `My Profile` separates unread notifications from read notification history
   - users can mark their own notifications read
   - users cannot mark another user's notification read
   - resubmitted applications notify staff reviewers
@@ -219,6 +227,12 @@ Last updated: 2026-05-18
   - Admin users can filter by role
   - filters preserve selected values in the UI
   - tests cover e-mail, status, and role filtering
+- Added profile state filters on the account list:
+  - Admin users can filter accounts by unlocked profile
+  - Admin users can filter accounts by locked profile
+  - Admin users can filter accounts that do not have a user yet
+  - profile filters preserve selected values in the UI
+  - tests cover unlocked, locked, and missing-user profile filtering
 - Added account CSV import/export helpers:
   - Admin users can export the access list as CSV
   - Admin users can import CSV files with `email`, `active`, and `roles`
@@ -243,6 +257,17 @@ Last updated: 2026-05-18
   - account changes can be filtered by action
   - recent changes now show up to 25 filtered entries
   - tests cover target, actor, and action filters
+- Added account audit-log pagination:
+  - recent account changes are paginated at 25 entries per page
+  - pagination links preserve audit-log filters
+  - invalid page values fall back through Django pagination handling
+  - tests cover second-page results and filter-preserving pagination links
+- Added staff-visible account history:
+  - each account row links to a grouped account history page
+  - recent change rows link to account history when the grant still exists
+  - account history shows current account state and all recorded changes
+  - Board users cannot open account history pages
+  - tests cover grouped account history, list links, and permissions
 - Added optional staff notes on access grants:
   - access grants now have Admin-only notes
   - notes are visible on the account list and editable on access grant forms
@@ -250,16 +275,153 @@ Last updated: 2026-05-18
   - notes are optional in account CSV import
   - note changes are captured in access grant audit snapshots
   - tests cover create, update, export, import, and audit snapshots with notes
+- Added account import validation reports and preview mode:
+  - uploaded account CSV files show a validation report before applying
+  - report rows are classified as created, updated, unchanged, or rejected
+  - validation report includes line number, account, status, roles, notes, and
+    row-specific issues
+  - invalid imports cannot be applied
+  - valid imports require an explicit Apply import step
+  - previewing a valid import does not write database changes
+  - tests cover preview, apply, rejected rows, and no partial writes
+- Added account import preview diff details:
+  - updated rows show field-level before/after changes before applying
+  - active, roles, and notes changes are formatted for Admin review
+  - unchanged, created, and rejected rows stay concise
+  - tests cover previewed active, role, and note diffs
+- Added rejected-row CSV downloads for account imports:
+  - blocked account imports offer a CSV download for rejected rows
+  - rejected-row downloads include line, email, active, roles, notes, and issues
+  - downloading rejected rows does not create or update access grants
+  - tests cover rejected-row CSV output and no partial writes
+- Added staff UI for export token rotation:
+  - Admin and Board users can manage tokens from project pages
+  - token management can create scoped export tokens
+  - token rotation generates a new active token for an existing token record
+  - token management can deactivate and reactivate tokens
+  - raw tokens are only shown immediately after creation or rotation
+  - Event Managers cannot manage export tokens
+  - integration docs describe the project token page rotation process
+  - tests cover create, rotate, deactivate, reactivate, and permissions
+- Added clearer persistent navigation and Admin profile access:
+  - top navigation moved into a left sidebar with grouped sections
+  - redundant Personal links were removed from the sidebar
+  - the profile card is the only sidebar route to the signed-in user's profile
+  - the profile card does not display the user's e-mail address
+  - general public links are ungrouped in the sidebar
+  - account management moved from the sidebar into an Admin section on Users
+  - project operations/setup links moved into a top sidebar project dropdown
+  - project dropdown items show project name plus compact start/end dates
+  - project-specific pages make the dropdown show the active project name
+  - project-specific Users links keep the selected project context
+  - Setup -> Hotels opens global hotel records in general context
+  - Setup -> Con Spaces opens project hotel assignments in active-project context
+  - profile settings moved onto profile pages instead of the sidebar
+  - Admin users can edit profile settings for their own and other profiles
+  - locked regular users remain blocked from profile editing
+  - tests cover Admin locked-profile access and locked-user sidebar behavior
+- Added dedicated profile pages:
+  - signed-in users can open their own profile at `/profile/`
+  - the sidebar profile card links to `My Profile`
+  - own profile pages are visible even when the profile is not public
+  - profile and fursuit pictures render inline on one page
+  - owners can see their own contact details and private fursuit picture
+  - tests cover own-profile picture rendering and sidebar links
+- Added richer profile details:
+  - profiles can store pronouns from a selectable list
+  - profiles can store phone number, personal e-mail, convention e-mail, and address fields
+  - country is selected from a fixed list
+  - address details are only shown to owners and staff
+  - convention profiles track attendee type per project
+  - convention profiles track multiple assigned roles per project
+  - Admin users can assign convention roles from profile edit pages
+  - tests cover contact/address saving and convention role assignment
+- Added Public navigation pages:
+  - signed-in users can open the Users directory from the ungrouped sidebar links
+  - signed-in users can open Social Media from the ungrouped sidebar links
+  - signed-in users can open a Statistics page from the ungrouped sidebar links
+  - Admin users can manage accounts from an Admin button group on Users
+  - general Users shows all registered/access-listed users
+  - project Users shows only people attached to the active project
+  - statistics show convention profile totals by project, attendee type, and country
+  - tests cover regular-user directory access and statistics rendering
+- Added Social Media publishing workspace:
+  - registered users can save social media drafts
+  - posts support body text, one safe embed URL, and uploaded media
+  - posts can be published immediately or scheduled for a future time
+  - publishing creates an immutable version snapshot
+  - publishing queues local publication records for Telegram, Bluesky, and X
+  - post lists separate drafts, scheduled posts, and published posts
+  - publication rows show whether external delivery actually happened
+  - due scheduled posts can be processed with `publish_scheduled_social_posts`
+  - queued records are ready for future bot/API workers without calling external services yet
+  - tests cover navigation, drafts, publishing, scheduling, queue records, and draft visibility
+- Added user directory tile colors:
+  - the Users page now renders people as square tiles instead of a table
+  - tiles use larger profile images with the name under the image
+  - tiles only show names and profile pictures
+  - tile border colors use configured attendee type rules
+  - tile interior colors use configured volunteer type rules
+  - color rules now use one selected color plus an edge/interior selector
+  - volunteer type supports None, Volunteer, Deputy, Lead, and Board Member
+  - default colors exist for common attendee and volunteer types when no custom rule exists
+  - setup users can manage tile color rules under Setup -> Color Codes
+  - tests cover layered tile colors, setup access, and regular-user denial
+- Added clickable archive entries under the personal dashboard:
+  - archived panel titles link to read-only detail pages
+  - archive detail pages show project, year, title, and added date
+  - archived details are restricted to the owning user
+  - tests cover archive links, detail rendering, and owner-only access
+- Added Hotels and project-specific room settings:
+  - setup users can open a separate Hotels page
+  - hotel rooms keep persistent names, capacities, and equipment/properties
+  - hotels are reusable master records shared by multiple projects
+  - projects select which hotels they use from their room settings page
+  - hotels can store, edit, and remove multiple floor layout images by floor level
+  - project room settings can rename rooms locally for one convention
+  - project room settings can block rooms for one convention
+  - project room settings can add multiple room opening windows
+  - panel and volunteer shift placement validates room opening windows
+  - timetable and public exports use project-local room names
+  - tests cover floor layout upload/edit/delete, permissions, local names, reusable hotels, and room hours
+- Added maru branding assets:
+  - favicon and app icon files live under Django static files
+  - the sidebar brand uses the main `maru_rectangle_full_logo.png` logo
+  - duplicate sidebar brand text was removed because it is part of the logo
+  - the shared website theme uses the logo navy, amber, and ivory palette
+  - redundant root favicon pack files were removed
+- Added project-aware Forms management:
+  - the sidebar includes a Forms page in both general and active-project context
+  - general Forms shows every form ever used across projects
+  - active-project Forms shows only forms attached to the selected project
+  - staff can create Google Forms-style forms and fields outside Django admin
+  - forms support draft, published, and closed states
+  - draft and closed forms do not accept application submissions
+  - projects can inherit forms from another project as editable draft copies
+  - inherited forms copy their field definitions without modifying the source form
+  - each project keeps at least one timetable-source form for panel scheduling
+  - tests cover general/project form lists, creation, field creation, inheritance, and timetable-source fallback
+- Added configurable roles, statuses, benefits, and labels:
+  - `docs/roles-and-access.md` records the settled V1 model
+  - active allowlisted users can use profile and public/user-facing pages without project authority
+  - Admin remains the only account/login access manager
+  - Board keeps full project authority without account management
+  - global role presets can be cloned into projects as editable local roles
+  - project role assignments can grant module permissions such as forms, statuses, labels, and timetable management
+  - ticket levels are modeled as Pending, Paid, Sponsor, Super Sponsor, and Infinity
+  - fursuiter status is self-submitted and validated by Fursuit Support
+  - benefits can target con-space access, check-in perks, and consent-safe exports
+  - global labels can be overridden per project for visible renamings
+  - YAML import supports roles, role assignments, benefits, status-benefit grants, and labels
+  - role/status export tokens expose aggregate and consent-safe benefit data
+  - access configuration changes are audit logged
 
 ## Next Slice
 
-Improve account operations:
+Project status:
 
-1. Add duplicate/import validation reports for account YAML/CSV flows.
-2. Add a preview mode for account imports before applying changes.
-3. Add profile state filters on the account list.
-4. Add audit-log pagination once the list grows.
-5. Add staff-visible account history grouping by target account.
+1. Current requested foundation is implemented and verified.
+2. New work should start from specific product decisions or UI polish requests.
 
 Target user flow:
 
@@ -269,27 +431,21 @@ user signs in with Google -> maru checks access grant roles
 
 ## Near-Term Backlog
 
-- Add duplicate/import validation reports for account YAML/CSV flows.
-- Add profile state filters on the account list.
-- Add profile state filters on the account list.
+- Decide whether project creation/editing should move from Django admin into
+  maru staff screens.
+- Decide whether hotel room combinations should get a richer editor outside
+  Django admin.
 
-## Timetable Backlog
+## Future Expansion
 
-- Add panel scheduling models.
-- Add timetable visibility rounds:
-  - private placement
-  - host negotiation
-  - public timetable
-- Add timetable layers:
-  - panels
-  - volunteer shifts
-  - signage/reminders
-  - staff-only operational blocks
-- Add richer staff UI for grouped/recurring events.
+- Add richer dashboard polish for repeated staff workflows.
+- Add more complete project setup screens outside Django admin.
+- Add richer staff-only operational timetable blocks beyond panels and
+  volunteer shifts.
 
 ## Export / Signage Backlog
 
-- Add staff UI for export token rotation.
+- Add optional staff UI for editing existing signage reminders.
 
 ## Safety Notes
 

@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import io
+
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.test import override_settings
 from django.urls import reverse
+from PIL import Image
 
 from maru.accounts.models import AccessGrant, AccessRole, Notification
 from maru.domain import SEED_ACCESS_EMAIL, Role
@@ -34,6 +39,58 @@ def test_user_can_submit_application_from_imported_form(client) -> None:
     version = ApplicationVersion.objects.get(application=application, version=1)
     assert version.answers["Display - Title"] == "Intro to Fursuit Cooling"
     assert version.answers["Display - Tags"] == ["Chill", "Fursuiter-Friendly"]
+
+
+@pytest.mark.django_db
+def test_user_can_upload_event_header_image(client, tmp_path) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    subproject = Subproject.objects.get(
+        project__slug="awoostria-2026", slug="events"
+    )
+    payload = _submission_payload(subproject)
+    payload["event_header_image"] = _image_upload("cooling-header.png", 1280, 720)
+
+    with override_settings(MEDIA_ROOT=tmp_path):
+        response = client.post(
+            reverse(
+                "projects:submit_application",
+                args=[subproject.project.slug, subproject.slug],
+            ),
+            payload,
+            follow=True,
+        )
+
+    application = Application.objects.get(title="Intro to Fursuit Cooling")
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert application.event_header_image.name.startswith("events/header-images/")
+    assert "Event Header Image" in content
+    assert application.event_header_image.url in content
+
+
+@pytest.mark.django_db
+def test_event_header_image_must_be_screen_readable_rectangle(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    subproject = Subproject.objects.get(
+        project__slug="awoostria-2026", slug="events"
+    )
+    payload = _submission_payload(subproject)
+    payload["event_header_image"] = _image_upload("tiny-header.png", 640, 360)
+
+    response = client.post(
+        reverse(
+            "projects:submit_application",
+            args=[subproject.project.slug, subproject.slug],
+        ),
+        payload,
+    )
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Header images must be at least 1280x720 px" in content
+    assert not Application.objects.filter(title="Intro to Fursuit Cooling").exists()
 
 
 @pytest.mark.django_db
@@ -258,3 +315,14 @@ def _submission_payload(
 def _allow_user(email: str) -> None:
     grant = AccessGrant.objects.create(email=email)
     AccessRole.objects.create(grant=grant, role=Role.REGISTERED_USER.value)
+
+
+def _image_upload(name: str, width: int, height: int) -> SimpleUploadedFile:
+    image_file = io.BytesIO()
+    image = Image.new("RGB", (width, height), color="#2f6f73")
+    image.save(image_file, format="PNG")
+    return SimpleUploadedFile(
+        name,
+        image_file.getvalue(),
+        content_type="image/png",
+    )

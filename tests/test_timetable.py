@@ -36,8 +36,8 @@ def test_approving_event_application_creates_panel_once(client) -> None:
         )
     )
 
-    assert Panel.objects.count() == 1
-    panel = Panel.objects.get()
+    assert Panel.objects.filter(application=application).count() == 1
+    panel = Panel.objects.get(application=application)
     assert panel.title == "Cooling 101"
     assert panel.owner.email == SEED_ACCESS_EMAIL
     assert panel.project.slug == "awoostria-2026"
@@ -50,7 +50,7 @@ def test_host_can_place_own_panel_in_private_round(client) -> None:
     client.post(reverse("accounts:logout"))
     client.post(reverse("accounts:login"), {"email": "hostone@gmail.com"})
     panel = Panel.objects.get(application=application)
-    room = Room.objects.get(hotel__project=panel.project, name="Panel Room A")
+    room = Room.objects.get(hotel__projects=panel.project, name="Panel Room A")
 
     response = client.post(
         reverse("projects:place_panel", args=[panel.pk]),
@@ -245,7 +245,7 @@ def test_timetable_marks_same_room_overlap_conflicts(client) -> None:
     _approve_as_staff(client, second)
     first_panel = Panel.objects.get(application=first)
     second_panel = Panel.objects.get(application=second)
-    room = Room.objects.get(hotel__project=first_panel.project, name="Panel Room A")
+    room = Room.objects.get(hotel__projects=first_panel.project, name="Panel Room A")
     TimetablePlacement.objects.create(
         panel=first_panel,
         room=room,
@@ -610,7 +610,7 @@ def test_staff_print_timetable_includes_volunteer_shifts(client) -> None:
     call_command("seed_demo")
     client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
     project = Project.objects.get(slug="awoostria-2026")
-    room = Room.objects.get(hotel__project=project, name="Main Stage")
+    room = Room.objects.get(hotel__projects=project, name="Main Stage")
     shift = VolunteerShift.objects.create(
         project=project,
         title="Main Stage Door Watch",
@@ -637,7 +637,7 @@ def test_staff_print_timetable_includes_volunteer_shifts(client) -> None:
 def test_regular_print_timetable_excludes_volunteer_shifts(client) -> None:
     call_command("seed_demo")
     project = Project.objects.get(slug="awoostria-2026")
-    room = Room.objects.get(hotel__project=project, name="Main Stage")
+    room = Room.objects.get(hotel__projects=project, name="Main Stage")
     shift = VolunteerShift.objects.create(
         project=project,
         title="Main Stage Door Watch",
@@ -695,7 +695,7 @@ def _allow_user(email: str) -> None:
 
 
 def _place_panel(panel: Panel, room_name: str, starts_at: str, ends_at: str) -> None:
-    room = Room.objects.get(hotel__project=panel.project, name=room_name)
+    room = Room.objects.get(hotel__projects=panel.project, name=room_name)
     TimetablePlacement.objects.create(
         panel=panel,
         room=room,

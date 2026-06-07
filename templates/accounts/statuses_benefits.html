@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Statuses & Benefits - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Statuses & Benefits</h1>
+      <p class="muted">{{ scope_label }}. Ticket and fursuiter statuses can grant configurable access benefits.</p>
+    </div>
+
+    <div class="panel stack">
+      <h2>Benefits</h2>
+      {% if benefits %}
+        <table>
+          <thead>
+            <tr>
+              <th>Label</th>
+              <th>Key</th>
+              <th>Target</th>
+              <th>Active</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for benefit in benefits %}
+              <tr>
+                <td>{{ benefit.label }}</td>
+                <td>{{ benefit.key }}</td>
+                <td>{{ benefit.target }}</td>
+                <td>{% if benefit.active %}Yes{% else %}No{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No benefits exist in this scope yet.</p>
+      {% endif %}
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_benefit">
+      <h2>Create Benefit</h2>
+      {{ benefit_form.non_field_errors }}
+      {% for field in benefit_form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <button type="submit">Save benefit</button>
+    </form>
+
+    <div class="panel stack">
+      <h2>Status Grants</h2>
+      {% if grants %}
+        <table>
+          <thead>
+            <tr>
+              <th>Status type</th>
+              <th>Status value</th>
+              <th>Benefit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for grant in grants %}
+              <tr>
+                <td>{{ grant.get_status_type_display }}</td>
+                <td>{{ grant.status_value }}</td>
+                <td>{{ grant.benefit.label }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No status-to-benefit grants exist in this scope yet.</p>
+      {% endif %}
+
+      <form class="stack" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="grant_benefit">
+        <h3>Grant Benefit From Status</h3>
+        {{ grant_form.non_field_errors }}
+        {% for field in grant_form %}
+          <label>
+            {{ field.label }}
+            {{ field }}
+            {{ field.errors }}
+          </label>
+        {% endfor %}
+        <button type="submit">Save grant</button>
+      </form>
+    </div>
+
+    {% if project %}
+      <div class="panel stack">
+        <h2>Pending Fursuiter Validation</h2>
+        {% if pending_fursuiters %}
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Fursuit name</th>
+                <th>Species</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for convention_profile in pending_fursuiters %}
+                <tr>
+                  <td>{{ convention_profile.user.email }}</td>
+                  <td>{{ convention_profile.user.userprofile.fursuit_name|default:"-" }}</td>
+                  <td>{{ convention_profile.fursuit_species|default:"-" }}</td>
+                  <td>
+                    <form class="actions" method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="convention_profile" value="{{ convention_profile.pk }}">
+                      <button type="submit" name="action" value="approve_fursuiter">Approve</button>
+                      <button type="submit" name="action" value="reject_fursuiter">Reject</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No pending fursuiter requests.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

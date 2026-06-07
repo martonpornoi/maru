@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Account History - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Account History</h1>
+      <p><a href="{% url 'accounts:access_grant_list' %}">Back to accounts</a></p>
+    </div>
+
+    <div class="panel stack">
+      <h2>{{ grant.email }}</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>Active</th>
+            <td>{% if grant.active %}Yes{% else %}No{% endif %}</td>
+          </tr>
+          <tr>
+            <th>Roles</th>
+            <td>
+              {% for role in grant.roles.all %}
+                {{ role.role }}{% if not forloop.last %}, {% endif %}
+              {% empty %}
+                <span class="muted">No roles</span>
+              {% endfor %}
+            </td>
+          </tr>
+          <tr>
+            <th>Notes</th>
+            <td>{{ grant.notes|default:"-" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel stack">
+      <h2>Changes</h2>
+      {% if audit_logs %}
+        <table>
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Action</th>
+              <th>By</th>
+              <th>Before</th>
+              <th>After</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in audit_logs %}
+              <tr>
+                <td>{{ log.created_at|date:"Y-m-d H:i" }}</td>
+                <td><a href="{% url 'accounts:access_grant_audit_log_detail' log.pk %}">{{ log.action }}</a></td>
+                <td>{{ log.actor_email|default:"-" }}</td>
+                <td>
+                  {% if log.before %}
+                    {% if log.before.active %}Active{% else %}Inactive{% endif %}
+                    · {{ log.before.roles|join:", "|default:"No roles" }}
+                  {% else %}
+                    <span class="muted">No previous state</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if log.after.active %}Active{% else %}Inactive{% endif %}
+                  · {{ log.after.roles|join:", "|default:"No roles" }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No recorded account changes yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

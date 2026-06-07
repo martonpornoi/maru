@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ heading }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:hotel_detail' hotel.pk %}">Back to {{ hotel.name }}</a></p>
+      <h1>{{ heading }}</h1>
+    </div>
+
+    <div class="panel stack">
+      {% if floor_plan.image %}
+        <figure class="profile-media">
+          <img src="{{ floor_plan.image.url }}" alt="{{ hotel.name }} {{ floor_plan.floor_label }} floor layout">
+          <figcaption>Current image</figcaption>
+        </figure>
+      {% endif %}
+
+      <form class="stack" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+          <label>
+            {{ field.label }}
+            {{ field }}
+            {{ field.errors }}
+          </label>
+        {% endfor %}
+        <button type="submit">Save floor layout</button>
+      </form>
+    </div>
+  </section>
+{% endblock %}

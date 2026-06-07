@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ setting.display_name }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:project_room_settings' setting.project.slug %}">Back to room settings</a></p>
+      <h1>Edit {{ setting.display_name }}</h1>
+      <p class="muted">This name, block state, and opening schedule only apply to {{ setting.project.name }}.</p>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save">
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label>
+          {{ field.label }}
+          {{ field }}
+          {{ field.errors }}
+        </label>
+      {% endfor %}
+      <button type="submit">Save room settings</button>
+    </form>
+
+    <div class="panel stack">
+      <h2>Opening Windows</h2>
+      {% if windows %}
+        <table>
+          <thead>
+            <tr>
+              <th>Starts</th>
+              <th>Ends</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for window in windows %}
+              <tr>
+                <td>{{ window.starts_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ window.ends_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                  <form method="post" action="{% url 'projects:delete_project_room_availability' availability_delete_kind window.pk %}">
+                    {% csrf_token %}
+                    <button type="submit">Remove</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No opening windows set. The room is available during project opening times unless blocked.</p>
+      {% endif %}
+
+      <form class="stack" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_window">
+        {{ availability_form.non_field_errors }}
+        {% for field in availability_form %}
+          <label>
+            {{ field.label }}
+            {{ field }}
+            {{ field.errors }}
+          </label>
+        {% endfor %}
+        <button type="submit">Add opening window</button>
+      </form>
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Export Tokens - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:detail' project.slug %}">Back to project</a></p>
+      <h1>Export Tokens</h1>
+      <p class="muted">{{ project.name }}</p>
+    </div>
+
+    {% if new_token %}
+      <div class="message">
+        <strong>New token</strong>
+        <p><code>{{ new_token }}</code></p>
+      </div>
+    {% endif %}
+
+    <div class="panel stack">
+      <h2>Existing Tokens</h2>
+      {% if token_rows %}
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Token</th>
+              <th>Last success</th>
+              <th>Failed hits</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in token_rows %}
+              {% with token=row.token %}
+                <tr>
+                  <td>{{ token.name }}</td>
+                  <td>{{ token.export_type }}</td>
+                  <td>{% if token.active %}Active{% else %}Inactive{% endif %}</td>
+                  <td><span class="muted">ending {{ row.token_hint }}</span></td>
+                  <td>
+                    {% if row.last_success_at %}
+                      {{ row.last_success_at|date:"Y-m-d H:i" }}
+                    {% else %}
+                      <span class="muted">Never</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ row.failed_count }}</td>
+                  <td>
+                    <form method="post" action="{% url 'projects:rotate_export_token' token.pk %}">
+                      {% csrf_token %}
+                      <button type="submit">Rotate</button>
+                    </form>
+                    {% if token.active %}
+                      <form method="post" action="{% url 'projects:set_export_token_active' token.pk 'inactive' %}">
+                        {% csrf_token %}
+                        <button type="submit">Deactivate</button>
+                      </form>
+                    {% else %}
+                      <form method="post" action="{% url 'projects:set_export_token_active' token.pk 'active' %}">
+                        {% csrf_token %}
+                        <button type="submit">Reactivate</button>
+                      </form>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No export tokens yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Create Token</h2>
+      <form class="stack" method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+          <label>
+            {{ field.label }}
+            {{ field }}
+            {{ field.errors }}
+          </label>
+        {% endfor %}
+        <button type="submit">Create token</button>
+      </form>
+    </div>
+  </section>
+{% endblock %}
