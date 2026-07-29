@@ -16,6 +16,13 @@ class SocialPost(models.Model):
         (PUBLISHED, "Published"),
     ]
 
+    project = models.ForeignKey(
+        "projects.Project",
+        related_name="social_posts",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=180)
     body = models.TextField()

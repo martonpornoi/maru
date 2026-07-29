@@ -21,6 +21,8 @@ from maru.accounts.models import (
     UserConventionProfile,
     UserProfile,
     UserTileColorRule,
+    VolunteerGroup,
+    VolunteerMembership,
 )
 from maru.accounts.permissions import can_set_verified_ticket_level, normalize_label_key
 from maru.domain import AttendeeType, FursuiterStatus, Role, TicketLevel, VolunteerType
@@ -244,6 +246,58 @@ class UserConventionProfileForm(forms.Form):
         return convention_profile
 
 
+class VolunteerGroupForm(forms.ModelForm):
+    class Meta:
+        model = VolunteerGroup
+        fields = ["title", "slug", "description", "parents"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "parents": forms.CheckboxSelectMultiple(),
+        }
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        parents = VolunteerGroup.objects.order_by("title")
+        if self.instance.pk:
+            parents = parents.exclude(pk=self.instance.pk)
+        self.fields["parents"].queryset = parents
+        self.fields["parents"].required = False
+
+    def clean_parents(self):
+        parents = self.cleaned_data["parents"]
+        if not self.instance.pk:
+            return parents
+        descendant_ids = _volunteer_group_descendant_ids(self.instance)
+        invalid_parents = [
+            parent.title for parent in parents if parent.pk in descendant_ids
+        ]
+        if invalid_parents:
+            raise forms.ValidationError(
+                "A child group cannot also be assigned as a parent."
+            )
+        return parents
+
+
+class VolunteerMembershipForm(forms.ModelForm):
+    class Meta:
+        model = VolunteerMembership
+        fields = ["user", "role", "custom_title", "responsibilities"]
+        labels = {
+            "custom_title": "Custom title",
+            "role": "Level",
+            "responsibilities": "Responsibilities",
+        }
+        widgets = {
+            "responsibilities": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.fields["user"].queryset = get_user_model().objects.order_by("email")
+        self.fields["custom_title"].required = False
+        self.fields["responsibilities"].required = False
+
+
 class RoleDefinitionForm(forms.ModelForm):
     permissions = forms.MultipleChoiceField(
         choices=permission_choices(),
@@ -408,8 +462,9 @@ class UserTileColorRuleForm(forms.ModelForm):
             "background_color": forms.TextInput(attrs={"type": "color"}),
         }
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, project=None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.project = project
         self.fields["target"].choices = _user_tile_target_choices()
         self.fields["background_color"].label = "Color"
         self.fields["background_color"].help_text = (
@@ -439,6 +494,7 @@ class UserTileColorRuleForm(forms.ModelForm):
         target_type, target_value = target.split(":", 1)
         duplicate = UserTileColorRule.objects.filter(
             applies_to=applies_to,
+            project=self.project,
             target_type=target_type,
             target_value=target_value,
         )
@@ -454,6 +510,7 @@ class UserTileColorRuleForm(forms.ModelForm):
     def save(self, commit=True):
         target_type, target_value = self.cleaned_data["target"].split(":", 1)
         rule = super().save(commit=False)
+        rule.project = self.project
         rule.target_type = target_type
         rule.target_value = target_value
         if commit:
@@ -477,3 +534,15 @@ def _user_tile_target_choices() -> list[tuple[str, str]]:
         for volunteer_type in VolunteerType
     ]
     return [*attendee_choices, *role_choices]
+
+
+def _volunteer_group_descendant_ids(group: VolunteerGroup) -> set[int]:
+    descendants: set[int] = set()
+    stack = list(group.children.all())
+    while stack:
+        child = stack.pop()
+        if child.pk in descendants:
+            continue
+        descendants.add(child.pk)
+        stack.extend(child.children.all())
+    return descendants

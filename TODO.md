@@ -1,6 +1,6 @@
 # maru TODO
 
-Last updated: 2026-05-22
+Last updated: 2026-06-07
 
 ## Done
 
@@ -415,6 +415,23 @@ Last updated: 2026-05-22
   - YAML import supports roles, role assignments, benefits, status-benefit grants, and labels
   - role/status export tokens expose aggregate and consent-safe benefit data
   - access configuration changes are audit logged
+- Added project archive snapshots and active-project scoping:
+  - closed projects are removed from the active Projects list and sidebar selector
+  - the bottom sidebar includes an Archives link for closed projects
+  - closed projects create a frozen `ProjectArchiveSnapshot`
+  - snapshots capture project facts, hotels, room settings, forms, timetable data,
+    volunteer shifts, social posts, color codes, role assignments, user profile
+    summaries, and account metadata
+  - non-admin users are redirected from live closed-project user/statistics pages
+    to the archive
+  - non-admin users cannot mutate closed-project setup, timetable, volunteer,
+    application review, social post, export-token, or profile convention data
+  - Admin users can refresh snapshots and retain live closed-project access
+  - social media posts and color-code rules can now be scoped to a project
+  - project Users, Social Media, Statistics, Forms, and Color Codes keep the
+    selected project context instead of jumping back to generic Projects mode
+  - tests cover archive rendering, snapshot privacy, closed-project permissions,
+    project-scoped social posts, statistics, and sidebar context
 
 ## Next Slice
 

@@ -43,6 +43,8 @@ from maru.accounts.forms import (
     UserConventionProfileForm,
     UserProfileForm,
     UserTileColorRuleForm,
+    VolunteerGroupForm,
+    VolunteerMembershipForm,
 )
 from maru.accounts.models import (
     AccessBenefit,
@@ -59,6 +61,8 @@ from maru.accounts.models import (
     UserConventionProfile,
     UserProfile,
     UserTileColorRule,
+    VolunteerGroup,
+    VolunteerMembership,
 )
 from maru.accounts.permissions import has_permission, user_benefit_keys
 from maru.domain import (
@@ -331,6 +335,8 @@ def user_directory_view(request, slug: str | None = None):
     project_user_emails: set[str] | None = None
     if slug:
         project = get_object_or_404(Project, slug=slug)
+        if project.is_closed and not can_manage_accounts(request.user):
+            return redirect("projects:archive_detail", slug=project.slug)
         project_user_emails = _project_user_emails(project)
     grants = AccessGrant.objects.prefetch_related("roles").order_by("email")
     if project_user_emails is not None:
@@ -345,7 +351,7 @@ def user_directory_view(request, slug: str | None = None):
         users_by_email.values(),
         project=project,
     )
-    tile_rules = list(UserTileColorRule.objects.filter(active=True))
+    tile_rules = _tile_rules_for_project(project)
     rows = []
     for grant in grants:
         user = users_by_email.get(grant.email)
@@ -413,20 +419,148 @@ def user_directory_view(request, slug: str | None = None):
 
 
 @login_required
+def volunteer_group_list_view(request):
+    groups = list(
+        VolunteerGroup.objects.prefetch_related(
+            "parents",
+            "children",
+            "memberships__user__userprofile",
+        ).order_by("title")
+    )
+    return render(
+        request,
+        "accounts/volunteer_group_list.html",
+        {
+            "can_manage": _can_manage_volunteer_hierarchy(request.user),
+            "groups": groups,
+            "hierarchy_nodes": _volunteer_hierarchy_tree(groups),
+        },
+    )
+
+
+@login_required
 @require_http_methods(["GET", "POST"])
-def user_tile_color_rule_list_view(request):
+def create_volunteer_group_view(request):
+    _require_volunteer_hierarchy_manager(request.user)
+    form = VolunteerGroupForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        group = form.save()
+        messages.success(request, "Volunteer group created.")
+        return redirect("accounts:volunteer_group_detail", slug=group.slug)
+    return render(
+        request,
+        "accounts/volunteer_group_form.html",
+        {"form": form, "heading": "Create volunteer group"},
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def volunteer_group_detail_view(request, slug: str):
+    group = get_object_or_404(
+        VolunteerGroup.objects.prefetch_related("parents", "children"),
+        slug=slug,
+    )
+    can_manage = _can_manage_volunteer_hierarchy(request.user)
+    membership_form = VolunteerMembershipForm()
+    if request.method == "POST":
+        if not can_manage:
+            raise PermissionDenied
+        action = request.POST.get("action", "")
+        if action == "save_member":
+            membership_form = VolunteerMembershipForm(request.POST)
+            if membership_form.is_valid():
+                membership, created = VolunteerMembership.objects.update_or_create(
+                    group=group,
+                    user=membership_form.cleaned_data["user"],
+                    defaults={
+                        "custom_title": membership_form.cleaned_data["custom_title"],
+                        "responsibilities": membership_form.cleaned_data[
+                            "responsibilities"
+                        ],
+                        "role": membership_form.cleaned_data["role"],
+                    },
+                )
+                messages.success(
+                    request,
+                    (
+                        "Volunteer member added."
+                        if created
+                        else "Volunteer member updated."
+                    ),
+                )
+                return redirect("accounts:volunteer_group_detail", slug=group.slug)
+        elif action == "remove_member":
+            membership = get_object_or_404(
+                VolunteerMembership,
+                pk=request.POST.get("membership"),
+                group=group,
+            )
+            membership.delete()
+            messages.success(request, "Volunteer member removed.")
+            return redirect("accounts:volunteer_group_detail", slug=group.slug)
+
+    memberships = (
+        VolunteerMembership.objects.filter(group=group)
+        .select_related("user", "user__userprofile")
+        .order_by("role", "user__email")
+    )
+    return render(
+        request,
+        "accounts/volunteer_group_detail.html",
+        {
+            "can_manage": can_manage,
+            "group": group,
+            "member_rows": _volunteer_member_rows(memberships),
+            "membership_form": membership_form,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit_volunteer_group_view(request, slug: str):
+    _require_volunteer_hierarchy_manager(request.user)
+    group = get_object_or_404(VolunteerGroup, slug=slug)
+    form = VolunteerGroupForm(request.POST or None, instance=group)
+    if request.method == "POST" and form.is_valid():
+        group = form.save()
+        messages.success(request, "Volunteer group updated.")
+        return redirect("accounts:volunteer_group_detail", slug=group.slug)
+    return render(
+        request,
+        "accounts/volunteer_group_form.html",
+        {"form": form, "group": group, "heading": f"Edit {group.title}"},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def delete_volunteer_group_view(request, slug: str):
+    _require_volunteer_hierarchy_manager(request.user)
+    group = get_object_or_404(VolunteerGroup, slug=slug)
+    group.delete()
+    messages.success(request, "Volunteer group deleted.")
+    return redirect("accounts:volunteer_groups")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def user_tile_color_rule_list_view(request, slug: str | None = None):
+    project = _setup_project(slug)
+    _require_open_project_or_admin(request.user, project)
     if not can_manage_project_setup(request.user):
         raise PermissionDenied
-    form = UserTileColorRuleForm(request.POST or None)
+    form = UserTileColorRuleForm(request.POST or None, project=project)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "User tile color rule saved.")
-        return redirect("accounts:user_tile_color_rules")
-    rules = UserTileColorRule.objects.all()
+        return redirect(_user_tile_color_rules_redirect(project))
+    rules = UserTileColorRule.objects.filter(project=project)
     return render(
         request,
         "accounts/user_tile_color_rules.html",
-        {"form": form, "rules": rules},
+        {"form": form, "project": project, "rules": rules},
     )
 
 
@@ -436,15 +570,25 @@ def edit_user_tile_color_rule_view(request, pk: int):
     if not can_manage_project_setup(request.user):
         raise PermissionDenied
     rule = get_object_or_404(UserTileColorRule, pk=pk)
-    form = UserTileColorRuleForm(request.POST or None, instance=rule)
+    _require_open_project_or_admin(request.user, rule.project)
+    form = UserTileColorRuleForm(
+        request.POST or None,
+        instance=rule,
+        project=rule.project,
+    )
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "User tile color rule updated.")
-        return redirect("accounts:user_tile_color_rules")
+        return redirect(_user_tile_color_rules_redirect(rule.project))
     return render(
         request,
         "accounts/user_tile_color_rule_form.html",
-        {"form": form, "heading": f"Edit {rule}", "rule": rule},
+        {
+            "form": form,
+            "heading": f"Edit {rule}",
+            "project": rule.project,
+            "rule": rule,
+        },
     )
 
 
@@ -454,15 +598,18 @@ def delete_user_tile_color_rule_view(request, pk: int):
     if not can_manage_project_setup(request.user):
         raise PermissionDenied
     rule = get_object_or_404(UserTileColorRule, pk=pk)
+    _require_open_project_or_admin(request.user, rule.project)
+    project = rule.project
     rule.delete()
     messages.success(request, "User tile color rule removed.")
-    return redirect("accounts:user_tile_color_rules")
+    return redirect(_user_tile_color_rules_redirect(project))
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def roles_access_view(request, slug: str | None = None):
     project = _setup_project(slug)
+    _require_open_project_or_admin(request.user, project)
     _require_access_config_permission(
         request.user,
         project,
@@ -541,6 +688,7 @@ def roles_access_view(request, slug: str | None = None):
 def edit_role_definition_view(request, pk: int):
     role = get_object_or_404(RoleDefinition.objects.select_related("project"), pk=pk)
     project = role.project
+    _require_open_project_or_admin(request.user, project)
     _require_access_config_permission(
         request.user,
         project,
@@ -572,6 +720,7 @@ def edit_role_definition_view(request, pk: int):
 @require_http_methods(["GET", "POST"])
 def statuses_benefits_view(request, slug: str | None = None):
     project = _setup_project(slug)
+    _require_open_project_or_admin(request.user, project)
     _require_access_config_permission(
         request.user,
         project,
@@ -667,6 +816,7 @@ def statuses_benefits_view(request, slug: str | None = None):
 @require_http_methods(["GET", "POST"])
 def labels_view(request, slug: str | None = None):
     project = _setup_project(slug)
+    _require_open_project_or_admin(request.user, project)
     _require_access_config_permission(
         request.user,
         project,
@@ -711,25 +861,36 @@ def labels_view(request, slug: str | None = None):
 
 
 @login_required
-def statistics_view(request):
+def statistics_view(request, slug: str | None = None):
+    project = _setup_project(slug)
+    if project and project.is_closed and not can_manage_accounts(request.user):
+        return redirect("projects:archive_detail", slug=project.slug)
+    convention_profiles = UserConventionProfile.objects.all()
+    profiles = UserProfile.objects.filter(user__convention_profiles__isnull=False)
+    if project:
+        convention_profiles = convention_profiles.filter(project=project)
+        profiles = profiles.filter(user__convention_profiles__project=project)
     country_counts = (
-        UserProfile.objects.exclude(country="")
-        .filter(user__convention_profiles__isnull=False)
+        profiles.exclude(country="")
         .values("country")
         .annotate(total=Count("user", distinct=True))
         .order_by("country")
     )
     attendee_type_counts = (
-        UserConventionProfile.objects.exclude(attendee_type="")
+        convention_profiles.exclude(attendee_type="")
         .values("attendee_type")
         .annotate(total=Count("id"))
         .order_by("attendee_type")
     )
-    project_counts = (
-        Project.objects.annotate(attendee_count=Count("user_convention_profiles"))
-        .filter(attendee_count__gt=0)
-        .order_by("opens_at", "name")
+    project_counts = Project.objects.annotate(
+        attendee_count=Count("user_convention_profiles")
     )
+    if project:
+        project_counts = project_counts.filter(pk=project.pk)
+    project_counts = project_counts.filter(attendee_count__gt=0).order_by(
+        "opens_at", "name"
+    )
+    country_labels = dict(UserProfile._meta.get_field("country").choices)
     return render(
         request,
         "accounts/statistics.html",
@@ -737,22 +898,15 @@ def statistics_view(request):
             "attendee_type_counts": attendee_type_counts,
             "country_counts": [
                 {
-                    "country": dict(UserProfile._meta.get_field("country").choices)[
-                        row["country"]
-                    ],
+                    "country": country_labels.get(row["country"], row["country"]),
                     "total": row["total"],
                 }
                 for row in country_counts
             ],
             "project_counts": project_counts,
-            "total_convention_profiles": UserConventionProfile.objects.count(),
-            "total_people": (
-                UserProfile.objects.filter(
-                    user__convention_profiles__isnull=False
-                )
-                .distinct()
-                .count()
-            ),
+            "project": project,
+            "total_convention_profiles": convention_profiles.count(),
+            "total_people": profiles.distinct().count(),
         },
     )
 
@@ -1059,6 +1213,8 @@ def _profile_convention_forms(*, request, profile, allow_role_edit: bool):
         for item in UserConventionProfile.objects.filter(user=profile.user)
     }
     projects = Project.objects.order_by("opens_at", "name")
+    if not can_manage_accounts(request.user):
+        projects = projects.filter(closes_at__gt=timezone.now())
     return [
         UserConventionProfileForm(
             request.POST or None,
@@ -1083,10 +1239,24 @@ def _profile_convention_forms(*, request, profile, allow_role_edit: bool):
     ]
 
 
+def _tile_rules_for_project(project):
+    if not project:
+        return list(UserTileColorRule.objects.filter(active=True, project=None))
+    project_rules = list(UserTileColorRule.objects.filter(active=True, project=project))
+    if project_rules:
+        return project_rules
+    return list(UserTileColorRule.objects.filter(active=True, project=None))
+
+
 def _setup_project(slug: str | None):
     if not slug:
         return None
     return get_object_or_404(Project, slug=slug)
+
+
+def _require_open_project_or_admin(user, project) -> None:
+    if project and project.is_closed and not can_manage_accounts(user):
+        raise PermissionDenied
 
 
 def _require_access_config_permission(user, project, permission: PermissionKey) -> None:
@@ -1128,6 +1298,12 @@ def _labels_redirect(project):
     return _setup_url("accounts:project_labels", project) if project else reverse(
         "accounts:labels",
     )
+
+
+def _user_tile_color_rules_redirect(project):
+    if project:
+        return reverse("accounts:project_user_tile_color_rules", args=[project.slug])
+    return reverse("accounts:user_tile_color_rules")
 
 
 def _record_access_configuration_change(
@@ -1242,6 +1418,15 @@ def _require_account_admin(user) -> None:
         raise PermissionDenied
 
 
+def _require_volunteer_hierarchy_manager(user) -> None:
+    if not _can_manage_volunteer_hierarchy(user):
+        raise PermissionDenied
+
+
+def _can_manage_volunteer_hierarchy(user) -> bool:
+    return can_manage_project_setup(user)
+
+
 def _access_grant_filters(request) -> dict[str, str]:
     role = request.GET.get("role", "")
     if role not in {choice.value for choice in Role}:
@@ -1280,6 +1465,91 @@ def _directory_display_name(grant: AccessGrant, user, profile: UserProfile | Non
     if user:
         return user.get_full_name() or "Convention participant"
     return "Pending user"
+
+
+def _volunteer_hierarchy_tree(groups: list[VolunteerGroup]) -> list[dict]:
+    child_lookup: dict[int, list[VolunteerGroup]] = {}
+    groups_by_id = {group.pk: group for group in groups}
+    child_ids = set()
+    for group in groups:
+        for parent in group.parents.all():
+            child_lookup.setdefault(parent.pk, []).append(group)
+            child_ids.add(group.pk)
+    roots = [group for group in groups if group.pk not in child_ids]
+    if not roots:
+        roots = groups
+
+    def build_node(group: VolunteerGroup, depth: int, path: set[int]) -> dict:
+        child_nodes = []
+        children = sorted(
+            child_lookup.get(group.pk, []),
+            key=lambda item: item.title.lower(),
+        )
+        for child in children:
+            if child.pk in path:
+                continue
+            child_nodes.append(build_node(child, depth + 1, {*path, child.pk}))
+        return {
+            "child_nodes": child_nodes,
+            "depth": depth,
+            "group": group,
+            "member_rows": _volunteer_member_rows(group.memberships.all()),
+            "open": depth == 0,
+        }
+
+    nodes = [
+        build_node(root, 0, {root.pk})
+        for root in sorted(roots, key=lambda item: item.title.lower())
+    ]
+
+    rendered_ids = _volunteer_tree_group_ids(nodes)
+    for group_id, group in groups_by_id.items():
+        if group_id not in rendered_ids:
+            nodes.append(build_node(group, 0, {group.pk}))
+
+    return nodes
+
+
+def _volunteer_tree_group_ids(nodes: list[dict]) -> set[int]:
+    group_ids = set()
+    stack = list(nodes)
+    while stack:
+        node = stack.pop()
+        group_ids.add(node["group"].pk)
+        stack.extend(node["child_nodes"])
+    return group_ids
+
+
+def _volunteer_member_rows(memberships) -> list[dict]:
+    role_order = {
+        VolunteerMembership.Role.LEAD: 0,
+        VolunteerMembership.Role.DEPUTY: 1,
+        VolunteerMembership.Role.VOLUNTEER: 2,
+    }
+    rows = [
+        {
+            "display_name": _user_display_name(membership.user),
+            "membership": membership,
+            "profile": getattr(membership.user, "userprofile", None),
+        }
+        for membership in memberships
+    ]
+    return sorted(
+        rows,
+        key=lambda row: (
+            role_order.get(row["membership"].role, 99),
+            row["display_name"].lower(),
+        ),
+    )
+
+
+def _user_display_name(user) -> str:
+    profile = getattr(user, "userprofile", None)
+    if profile and profile.display_name:
+        return profile.display_name
+    if profile and profile.fursuit_name:
+        return profile.fursuit_name
+    return user.get_full_name() or user.email
 
 
 def _convention_profiles_by_user(

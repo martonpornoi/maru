@@ -9,14 +9,15 @@ from maru.social.models import SocialPost, SocialPostVersion, SocialPublication
 class SocialPostAdmin(admin.ModelAdmin):
     list_display = [
         "title",
+        "project",
         "author",
         "status",
         "scheduled_for",
         "published_at",
         "updated_at",
     ]
-    list_filter = ["status"]
-    search_fields = ["title", "body", "author__email"]
+    list_filter = ["status", "project"]
+    search_fields = ["title", "body", "author__email", "project__name"]
 
 
 @admin.register(SocialPostVersion)

@@ -13,6 +13,7 @@ from maru.projects.models import (
     HotelFloorPlan,
     Panel,
     Project,
+    ProjectArchiveSnapshot,
     ProjectRoomAvailability,
     ProjectRoomCombinationAvailability,
     ProjectRoomCombinationSetting,
@@ -21,6 +22,8 @@ from maru.projects.models import (
     RoomCombination,
     SignageReminder,
     Subproject,
+    TimetableDay,
+    TimetableLayerSetting,
     TimetablePlacement,
     VolunteerShift,
     VolunteerShiftAssignment,
@@ -33,9 +36,19 @@ class SubprojectInline(admin.TabularInline):
     extra = 0
 
 
+class TimetableDayInline(admin.TabularInline):
+    model = TimetableDay
+    extra = 0
+
+
+class TimetableLayerSettingInline(admin.TabularInline):
+    model = TimetableLayerSetting
+    extra = 0
+
+
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    inlines = [SubprojectInline]
+    inlines = [SubprojectInline, TimetableDayInline, TimetableLayerSettingInline]
     filter_horizontal = ["hotels"]
     list_display = [
         "name",
@@ -61,6 +74,13 @@ class ExportTokenAdmin(admin.ModelAdmin):
     list_filter = ["export_type", "active", "project"]
     readonly_fields = ["token", "created_at", "updated_at"]
     search_fields = ["name", "project__name", "token"]
+
+
+@admin.register(ProjectArchiveSnapshot)
+class ProjectArchiveSnapshotAdmin(admin.ModelAdmin):
+    list_display = ["project", "closed_at", "updated_at"]
+    readonly_fields = ["project", "closed_at", "snapshot", "created_at", "updated_at"]
+    search_fields = ["project__name", "project__slug"]
 
 
 @admin.register(ExportAccessLog)
@@ -250,6 +270,27 @@ class TimetablePlacementAdmin(admin.ModelAdmin):
     list_display = ["panel", "layer", "starts_at", "ends_at", "location_name"]
     list_filter = ["layer", "panel__project"]
     search_fields = ["panel__title", "room__name", "room_combination__name"]
+
+
+@admin.register(TimetableDay)
+class TimetableDayAdmin(admin.ModelAdmin):
+    list_display = [
+        "display_label",
+        "project",
+        "service_date",
+        "starts_at",
+        "ends_at",
+        "grid_interval_minutes",
+    ]
+    list_filter = ["project"]
+    search_fields = ["label", "project__name"]
+
+
+@admin.register(TimetableLayerSetting)
+class TimetableLayerSettingAdmin(admin.ModelAdmin):
+    list_display = ["display_label", "project", "layer", "visible", "locked", "opacity"]
+    list_filter = ["project", "layer", "visible", "locked"]
+    search_fields = ["label", "project__name"]
 
 
 @admin.register(VolunteerShift)

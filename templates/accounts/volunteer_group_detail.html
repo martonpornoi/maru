@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.title }} - Volunteers - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>{{ group.title }}</h1>
+      {% if group.description %}
+        <p class="muted">{{ group.description }}</p>
+      {% endif %}
+      <div class="actions">
+        <a href="{% url 'accounts:volunteer_groups' %}">Back to volunteers</a>
+        {% if can_manage %}
+          <a class="button" href="{% url 'accounts:edit_volunteer_group' group.slug %}">Edit group</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="volunteer-relation-grid">
+      <div class="panel stack">
+        <h2>Parents</h2>
+        <div class="volunteer-meta">
+          {% for parent in group.parents.all %}
+            <a class="user-chip" href="{% url 'accounts:volunteer_group_detail' parent.slug %}">{{ parent.title }}</a>
+          {% empty %}
+            <span class="muted">Top level</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="panel stack">
+        <h2>Children</h2>
+        <div class="volunteer-meta">
+          {% for child in group.children.all %}
+            <a class="user-chip" href="{% url 'accounts:volunteer_group_detail' child.slug %}">{{ child.title }}</a>
+          {% empty %}
+            <span class="muted">No child groups</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="panel stack">
+      <h2>Members</h2>
+      {% if can_manage %}
+        <form class="actions" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save_member">
+          {{ membership_form.as_p }}
+          <button type="submit">Add or update member</button>
+        </form>
+      {% endif %}
+
+      {% if member_rows %}
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Level</th>
+              <th>Title</th>
+              <th>Responsibilities</th>
+              {% if can_manage %}<th></th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in member_rows %}
+              <tr>
+                <td>
+                  {% if row.profile %}
+                    <a href="{% url 'accounts:profile_detail' row.profile.pk %}">{{ row.display_name }}</a>
+                  {% else %}
+                    {{ row.display_name }}
+                  {% endif %}
+                </td>
+                <td>{{ row.membership.user.email }}</td>
+                <td>{{ row.membership.role }}</td>
+                <td>{{ row.membership.custom_title|default:"-" }}</td>
+                <td>{{ row.membership.responsibilities|default:"-" }}</td>
+                {% if can_manage %}
+                  <td>
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="remove_member">
+                      <input type="hidden" name="membership" value="{{ row.membership.pk }}">
+                      <button type="submit">Remove</button>
+                    </form>
+                  </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No members assigned.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

@@ -3,6 +3,172 @@
 {% block title %}{{ project.name }} Timetable - maru{% endblock %}
 
 {% block content %}
+  <style>
+    .planner-shell {
+      display: grid;
+      gap: 16px;
+    }
+    .planner-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .planner-settings {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .layer-controls {
+      display: grid;
+      gap: 10px;
+    }
+    .layer-control {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--maru-border);
+      border-radius: 8px;
+      background: rgb(250 243 227 / 72%);
+    }
+    .layer-control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .planner-scroll {
+      overflow: auto;
+      border: 1px solid var(--maru-border);
+      border-radius: 8px;
+      background: #f5f2eb;
+    }
+    .planner-board {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      min-height: 420px;
+      padding: 12px;
+    }
+    .planner-day {
+      flex: 0 0 auto;
+      border: 1px solid var(--maru-border);
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+    .planner-day-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--maru-navy);
+      color: var(--maru-ivory);
+      font-weight: 800;
+    }
+    .planner-room-header {
+      display: grid;
+      border-bottom: 1px solid var(--maru-border);
+      background: var(--maru-ivory-soft);
+    }
+    .planner-room-name,
+    .planner-time-header {
+      min-height: 52px;
+      box-sizing: border-box;
+      display: grid;
+      align-content: center;
+      padding: 8px;
+      border-right: 1px solid var(--maru-border);
+      font-size: 0.8rem;
+      font-weight: 750;
+    }
+    .planner-room-name small {
+      display: block;
+      margin-top: 2px;
+      color: var(--maru-muted);
+      font-weight: 600;
+    }
+    .planner-day-grid {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(to right, transparent 0, transparent 71px, rgb(7 27 58 / 12%) 71px, rgb(7 27 58 / 12%) 72px),
+        #ffffff;
+    }
+    .planner-room-lane {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      border-right: 1px solid rgb(7 27 58 / 15%);
+      opacity: 0.58;
+    }
+    .planner-room-lane:hover {
+      outline: 2px solid rgb(185 130 46 / 38%);
+      outline-offset: -2px;
+    }
+    .planner-time-tick {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 1px solid rgb(7 27 58 / 14%);
+      pointer-events: none;
+    }
+    .planner-time-tick-major {
+      border-top-color: rgb(7 27 58 / 38%);
+    }
+    .planner-time-label {
+      position: absolute;
+      left: 8px;
+      top: -0.55rem;
+      padding: 0 4px;
+      background: #ffffff;
+      color: var(--maru-muted);
+      font-size: 0.75rem;
+    }
+    .planner-item {
+      position: absolute;
+      z-index: 3;
+      box-sizing: border-box;
+      display: grid;
+      align-content: center;
+      gap: 3px;
+      padding: 8px;
+      border: 2px solid var(--maru-navy);
+      border-radius: 6px;
+      background: #ff9f43;
+      color: #111111;
+      font-size: 0.78rem;
+      line-height: 1.2;
+      text-align: center;
+      text-decoration: none;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgb(7 27 58 / 18%);
+    }
+    .planner-item[data-item-type="shift"] {
+      background: #9fc5ff;
+    }
+    .planner-item-conflict {
+      border-color: #b00020;
+      box-shadow: 0 0 0 3px rgb(176 0 32 / 18%);
+    }
+    .planner-item[draggable="true"] {
+      cursor: grab;
+    }
+    .planner-item[draggable="false"] {
+      cursor: pointer;
+    }
+    .planner-item-title {
+      font-weight: 850;
+    }
+    .planner-item-meta {
+      font-size: 0.72rem;
+    }
+    .planner-empty {
+      min-width: 560px;
+      padding: 28px;
+    }
+  </style>
+
   <section class="stack">
     <div>
       <p><a href="{% url 'projects:detail' project.slug %}">Back to {{ project.name }}</a></p>
@@ -14,17 +180,157 @@
     {% if can_manage_all %}
       <div class="panel stack">
         <h2>Round Controls</h2>
-        <div class="actions">
+        <div class="planner-actions">
           {% for round in rounds %}
             <form method="post" action="{% url 'projects:change_timetable_round' project.slug round.value %}">
               {% csrf_token %}
               <button type="submit">{{ round.value }}</button>
             </form>
           {% endfor %}
+          <a class="button" href="{% url 'projects:create_volunteer_shift' project.slug %}">Create volunteer shift</a>
         </div>
-        <p><a href="{% url 'projects:create_volunteer_shift' project.slug %}">Create volunteer shift</a></p>
       </div>
     {% endif %}
+
+    <div class="panel planner-shell">
+      <div>
+        <h2>Visual Planner</h2>
+        <p class="muted">Drag unlocked items onto room lanes to move them. Room backgrounds are fixed planning lanes.</p>
+      </div>
+
+      {% if can_manage_all %}
+        <div class="planner-settings">
+          <form method="post" class="stack">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_timetable_day">
+            <h3>Timeline Window</h3>
+            {{ day_form.as_p }}
+            <button type="submit">Save timeline day</button>
+          </form>
+
+          <form method="post" class="stack" id="layer-settings-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_layer_settings">
+            <h3>Layer Controls</h3>
+            <div class="layer-controls">
+              {% for setting in planner.layer_settings %}
+                <div class="layer-control" data-layer-control="{{ setting.layer }}">
+                  <strong>{{ setting.display_label }}</strong>
+                  <div class="layer-control-row">
+                    <label>
+                      <input class="layer-visible" type="checkbox" name="layer_{{ setting.layer }}_visible" data-layer="{{ setting.layer }}" {% if setting.visible %}checked{% endif %}>
+                      Visible
+                    </label>
+                    <label>
+                      <input class="layer-locked" type="checkbox" name="layer_{{ setting.layer }}_locked" data-layer="{{ setting.layer }}" {% if setting.locked %}checked{% endif %}>
+                      Locked
+                    </label>
+                  </div>
+                  <label>
+                    Opacity
+                    <input class="layer-opacity" type="range" name="layer_{{ setting.layer }}_opacity" data-layer="{{ setting.layer }}" min="0" max="1" step="0.05" value="{{ setting.opacity }}">
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+            <button type="submit">Save layer settings</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="layer-controls">
+          {% for setting in planner.layer_settings %}
+            <div class="layer-control" data-layer-control="{{ setting.layer }}">
+              <strong>{{ setting.display_label }}</strong>
+              <div class="layer-control-row">
+                <label>
+                  <input class="layer-visible" type="checkbox" data-layer="{{ setting.layer }}" {% if setting.visible %}checked{% endif %}>
+                  Visible
+                </label>
+                <label>
+                  Opacity
+                  <input class="layer-opacity" type="range" data-layer="{{ setting.layer }}" min="0" max="1" step="0.05" value="{{ setting.opacity }}">
+                </label>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="planner-scroll">
+        <div
+          class="planner-board"
+          data-move-url="{{ planner.move_url }}"
+          data-minute-height="{{ planner.minute_height }}"
+        >
+          {% if planner.has_venues and planner.days %}
+            {% for day in planner.days %}
+              <section class="planner-day" style="width: {{ day.width }}px;">
+                <div class="planner-day-title">
+                  <span>{{ day.display_label }}</span>
+                  <span>{{ day.starts_at|date:"H:i" }} - {{ day.ends_at|date:"H:i" }}</span>
+                </div>
+                <div class="planner-room-header" style="grid-template-columns: {{ planner.time_axis_width }}px repeat({{ planner.venues|length }}, {{ planner.room_width }}px);">
+                  <div class="planner-time-header">Time</div>
+                  {% for venue in planner.venues %}
+                    <div class="planner-room-name">
+                      {{ venue.name }}
+                      <small>{{ venue.hotel }}{% if venue.kind == "combination" %} · combined{% endif %}</small>
+                    </div>
+                  {% endfor %}
+                </div>
+                <div
+                  class="planner-day-grid"
+                  style="width: {{ day.width }}px; height: {{ day.height }}px;"
+                  data-day-start="{{ day.starts_at_iso }}"
+                  data-day-end="{{ day.ends_at_iso }}"
+                  data-day-duration-minutes="{{ day.duration_minutes }}"
+                  data-snap-minutes="{{ day.grid_interval_minutes }}"
+                >
+                  {% for venue in planner.venues %}
+                    <div
+                      class="planner-room-lane"
+                      data-drop-zone="1"
+                      data-location="{{ venue.location }}"
+                      data-day-start="{{ day.starts_at_iso }}"
+                      data-day-duration-minutes="{{ day.duration_minutes }}"
+                      data-snap-minutes="{{ day.grid_interval_minutes }}"
+                      style="left: {{ venue.left }}px; width: {{ venue.width }}px; background: {{ venue.background }};"
+                    ></div>
+                  {% endfor %}
+                  {% for tick in day.ticks %}
+                    <div class="planner-time-tick{% if tick.is_major %} planner-time-tick-major{% endif %}" style="top: {{ tick.top }}px;">
+                      {% if tick.label %}<span class="planner-time-label">{{ tick.label }}</span>{% endif %}
+                    </div>
+                  {% endfor %}
+                  {% for item in day.items %}
+                    <a
+                      class="planner-item{% if item.has_conflict %} planner-item-conflict{% endif %}"
+                      href="{{ item.edit_url }}"
+                      draggable="{% if item.can_drag %}true{% else %}false{% endif %}"
+                      data-can-drag="{% if item.can_drag %}1{% else %}0{% endif %}"
+                      data-duration-minutes="{{ item.duration_minutes }}"
+                      data-item-id="{{ item.item_id }}"
+                      data-item-type="{{ item.item_type }}"
+                      data-layer="{{ item.layer_key }}"
+                      data-location="{{ item.location }}"
+                      style="left: {{ item.left }}px; top: {{ item.top }}px; width: {{ item.width }}px; height: {{ item.height }}px; opacity: {{ item.layer_opacity }};{% if not item.layer_visible %} display: none;{% endif %}"
+                    >
+                      <span class="planner-item-title">{{ item.title }}</span>
+                      <span class="planner-item-meta">{{ item.starts_at }} - {{ item.ends_at }}</span>
+                      <span class="planner-item-meta">{{ item.detail }}</span>
+                    </a>
+                  {% endfor %}
+                </div>
+              </section>
+            {% endfor %}
+          {% else %}
+            <div class="planner-empty">
+              <p class="muted">Assign hotels and rooms, then define timetable day windows to build the visual planner.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
 
     <div class="panel">
       <h2>Panels</h2>
@@ -150,4 +456,124 @@
       </div>
     {% endif %}
   </section>
+
+  <script>
+    (() => {
+      const board = document.querySelector(".planner-board");
+      if (!board) {
+        return;
+      }
+
+      const minuteHeight = Number(board.dataset.minuteHeight || "2");
+      let draggedItem = null;
+
+      const csrfToken = () => {
+        const tokenInput = document.querySelector("input[name='csrfmiddlewaretoken']");
+        if (tokenInput) {
+          return tokenInput.value;
+        }
+        return "";
+      };
+
+      const formatDateTime = (date) => {
+        const pad = (value) => String(value).padStart(2, "0");
+        return [
+          date.getFullYear(),
+          pad(date.getMonth() + 1),
+          pad(date.getDate()),
+        ].join("-") + "T" + [pad(date.getHours()), pad(date.getMinutes())].join(":");
+      };
+
+      const layerState = (layer) => {
+        const visible = document.querySelector(`.layer-visible[data-layer="${layer}"]`);
+        const locked = document.querySelector(`.layer-locked[data-layer="${layer}"]`);
+        const opacity = document.querySelector(`.layer-opacity[data-layer="${layer}"]`);
+        return {
+          locked: locked ? locked.checked : false,
+          opacity: opacity ? opacity.value : "1",
+          visible: visible ? visible.checked : true,
+        };
+      };
+
+      const applyLayer = (layer) => {
+        const state = layerState(layer);
+        document.querySelectorAll(`.planner-item[data-layer="${layer}"]`).forEach((item) => {
+          item.style.display = state.visible ? "" : "none";
+          item.style.opacity = state.opacity;
+          item.draggable = item.dataset.canDrag === "1" && !state.locked;
+        });
+      };
+
+      document.querySelectorAll(".layer-visible, .layer-locked, .layer-opacity").forEach((input) => {
+        input.addEventListener("input", () => applyLayer(input.dataset.layer));
+        input.addEventListener("change", () => applyLayer(input.dataset.layer));
+        applyLayer(input.dataset.layer);
+      });
+
+      document.querySelectorAll(".planner-item").forEach((item) => {
+        item.addEventListener("dragstart", (event) => {
+          const state = layerState(item.dataset.layer);
+          if (state.locked || item.dataset.canDrag !== "1") {
+            event.preventDefault();
+            return;
+          }
+          draggedItem = item;
+          event.dataTransfer.effectAllowed = "move";
+        });
+      });
+
+      document.querySelectorAll("[data-drop-zone='1']").forEach((lane) => {
+        lane.addEventListener("dragover", (event) => {
+          if (!draggedItem || layerState(draggedItem.dataset.layer).locked) {
+            return;
+          }
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "move";
+        });
+
+        lane.addEventListener("drop", async (event) => {
+          if (!draggedItem || layerState(draggedItem.dataset.layer).locked) {
+            return;
+          }
+          event.preventDefault();
+          const rect = lane.getBoundingClientRect();
+          const snap = Number(lane.dataset.snapMinutes || "15");
+          const dayDuration = Number(lane.dataset.dayDurationMinutes || "0");
+          const duration = Number(draggedItem.dataset.durationMinutes || "60");
+          let startMinutes = Math.round(((event.clientY - rect.top) / minuteHeight) / snap) * snap;
+          startMinutes = Math.max(0, startMinutes);
+          if (dayDuration && startMinutes + duration > dayDuration) {
+            startMinutes = Math.max(0, dayDuration - duration);
+          }
+          const startDate = new Date(lane.dataset.dayStart);
+          startDate.setMinutes(startDate.getMinutes() + startMinutes);
+          const endDate = new Date(startDate);
+          endDate.setMinutes(endDate.getMinutes() + duration);
+
+          const body = new URLSearchParams({
+            ends_at: formatDateTime(endDate),
+            item_id: draggedItem.dataset.itemId,
+            item_type: draggedItem.dataset.itemType,
+            location: lane.dataset.location,
+            starts_at: formatDateTime(startDate),
+          });
+
+          const response = await fetch(board.dataset.moveUrl, {
+            body,
+            headers: {
+              "X-CSRFToken": csrfToken(),
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            method: "POST",
+          });
+          if (response.ok) {
+            window.location.reload();
+            return;
+          }
+          const payload = await response.json().catch(() => ({}));
+          alert(payload.error || "The timetable item could not be moved.");
+        });
+      });
+    })();
+  </script>
 {% endblock %}

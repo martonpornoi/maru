@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 from django.core.management import call_command
 from django.urls import reverse
+from django.utils import timezone
 
 from maru.accounts.models import AccessGrant, AccessRole
-from maru.domain import SEED_ACCESS_EMAIL, Role, TimetableRound
+from maru.domain import SEED_ACCESS_EMAIL, Role, TimetableLayer, TimetableRound
 from maru.projects.models import (
     Application,
     EventGroup,
@@ -13,6 +16,8 @@ from maru.projects.models import (
     Project,
     Room,
     Subproject,
+    TimetableDay,
+    TimetableLayerSetting,
     TimetablePlacement,
     VolunteerShift,
     VolunteerShiftPlacement,
@@ -658,6 +663,153 @@ def test_regular_print_timetable_excludes_volunteer_shifts(client) -> None:
     assert response.status_code == 200
     assert "Main Stage Door Watch" not in content
     assert "Staff-only volunteer layers are not included" in content
+
+
+@pytest.mark.django_db
+def test_visual_timetable_planner_renders_days_rooms_and_layers(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    project = Project.objects.get(slug="awoostria-2026")
+
+    response = client.get(reverse("projects:timetable", args=[project.slug]))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Visual Planner" in content
+    assert "data-drop-zone=\"1\"" in content
+    assert "Main Stage" in content
+    assert "Panel Room A+B" in content
+    assert "Fursuit Cooling 101" in content
+    assert "Registration Desk Morning Support" in content
+    assert "Volunteer shifts by person" in content
+    assert TimetableDay.objects.filter(project=project).count() >= 4
+    assert TimetableLayerSetting.objects.filter(project=project).count() == 3
+
+
+@pytest.mark.django_db
+def test_staff_can_update_visual_timetable_day_window(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    project = Project.objects.get(slug="awoostria-2026")
+
+    response = client.post(
+        reverse("projects:timetable", args=[project.slug]),
+        {
+            "action": "save_timetable_day",
+            "service_date": "2026-07-23",
+            "label": "Thu 7.23",
+            "starts_at": "2026-07-23T07:30",
+            "ends_at": "2026-07-24T03:00",
+            "grid_interval_minutes": "15",
+        },
+        follow=True,
+    )
+
+    day = TimetableDay.objects.get(project=project, service_date="2026-07-23")
+    assert response.status_code == 200
+    assert "Timetable day window saved." in response.content.decode()
+    assert day.display_label == "Thu 7.23"
+    starts_at = timezone.localtime(day.starts_at)
+    ends_at = timezone.localtime(day.ends_at)
+    assert starts_at.hour == 7
+    assert starts_at.minute == 30
+    assert ends_at.day == 24
+    assert ends_at.hour == 3
+
+
+@pytest.mark.django_db
+def test_staff_can_update_visual_layer_settings(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    project = Project.objects.get(slug="awoostria-2026")
+    client.get(reverse("projects:timetable", args=[project.slug]))
+
+    response = client.post(
+        reverse("projects:timetable", args=[project.slug]),
+        {
+            "action": "save_layer_settings",
+            "layer_panels_visible": "on",
+            "layer_panels_opacity": "1.00",
+            "layer_volunteer_shifts_visible": "on",
+            "layer_volunteer_shifts_locked": "on",
+            "layer_volunteer_shifts_opacity": "0.35",
+            "layer_signage_opacity": "0.45",
+        },
+        follow=True,
+    )
+
+    volunteer_layer = TimetableLayerSetting.objects.get(
+        project=project,
+        layer=TimetableLayer.VOLUNTEER_SHIFTS.value,
+    )
+    assert response.status_code == 200
+    assert "Timetable layer settings saved." in response.content.decode()
+    assert volunteer_layer.locked is True
+    assert volunteer_layer.visible is True
+    assert volunteer_layer.opacity == Decimal("0.35")
+
+
+@pytest.mark.django_db
+def test_visual_timetable_move_endpoint_moves_panel(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    project = Project.objects.get(slug="awoostria-2026")
+    panel = Panel.objects.get(title="Fursuit Cooling 101")
+    target_room = Room.objects.get(hotel__projects=project, name="Panel Room B")
+
+    response = client.post(
+        reverse("projects:move_timetable_item", args=[project.slug]),
+        {
+            "item_id": str(panel.pk),
+            "item_type": "panel",
+            "location": f"room:{target_room.pk}",
+            "starts_at": "2026-07-22T12:00",
+            "ends_at": "2026-07-22T13:00",
+        },
+    )
+
+    panel.placement.refresh_from_db()
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    assert panel.placement.room == target_room
+    assert timezone.localtime(panel.placement.starts_at).hour == 12
+
+
+@pytest.mark.django_db
+def test_visual_timetable_move_endpoint_respects_layer_lock(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    project = Project.objects.get(slug="awoostria-2026")
+    panel = Panel.objects.get(title="Fursuit Cooling 101")
+    original_room = panel.placement.room
+    target_room = Room.objects.get(hotel__projects=project, name="Panel Room B")
+    TimetableLayerSetting.objects.update_or_create(
+        project=project,
+        layer=TimetableLayer.PANELS.value,
+        defaults={
+            "label": "Panels",
+            "locked": True,
+            "opacity": Decimal("1.00"),
+            "position": 10,
+            "visible": True,
+        },
+    )
+
+    response = client.post(
+        reverse("projects:move_timetable_item", args=[project.slug]),
+        {
+            "item_id": str(panel.pk),
+            "item_type": "panel",
+            "location": f"room:{target_room.pk}",
+            "starts_at": "2026-07-22T12:00",
+            "ends_at": "2026-07-22T13:00",
+        },
+    )
+
+    panel.placement.refresh_from_db()
+    assert response.status_code == 423
+    assert response.json()["error"] == "Layer is locked."
+    assert panel.placement.room == original_room
 
 
 def _submit_application(client, email: str, title: str) -> Application:

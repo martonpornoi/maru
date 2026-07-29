@@ -27,6 +27,12 @@ urlpatterns = [
     ),
     path("rooms/<int:pk>/edit/", views.edit_hotel_room_view, name="edit_hotel_room"),
     path("projects/", views.project_list_view, name="list"),
+    path("archives/", views.project_archive_list_view, name="archives"),
+    path(
+        "archives/<slug:slug>/",
+        views.project_archive_detail_view,
+        name="archive_detail",
+    ),
     path("forms/", views.form_list_view, name="form_list"),
     path("projects/<slug:slug>/forms/", views.form_list_view, name="project_form_list"),
     path("projects/<slug:slug>/forms/new/", views.create_form_view, name="create_form"),
@@ -92,6 +98,11 @@ urlpatterns = [
         "projects/<slug:slug>/timetable/round/<slug:round_key>/",
         views.change_timetable_round_view,
         name="change_timetable_round",
+    ),
+    path(
+        "projects/<slug:slug>/timetable/move/",
+        views.move_timetable_item_view,
+        name="move_timetable_item",
     ),
     path(
         "exports/public-timetable/<str:token>.json",

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
+from zoneinfo import ZoneInfo
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -29,7 +31,16 @@ from maru.domain import (
     PermissionKey,
     Role,
     SubprojectKind,
+    TimetableLayer,
     TimetableRound,
+)
+from maru.projects.archive import (
+    ensure_project_archive_snapshot,
+    rebuild_project_archive_snapshot,
+)
+from maru.projects.context_processors import (
+    SIDEBAR_ARCHIVE_PROJECT_SESSION_KEY,
+    SIDEBAR_PROJECT_SESSION_KEY,
 )
 from maru.projects.forms import (
     ApplicationSubmissionForm,
@@ -49,6 +60,8 @@ from maru.projects.forms import (
     ProjectRoomSettingForm,
     RoomForm,
     SignageReminderForm,
+    TimetableDayForm,
+    TimetableLayerSettingsForm,
     VolunteerShiftAssignmentForm,
     VolunteerShiftForm,
     VolunteerShiftPlacementForm,
@@ -71,6 +84,8 @@ from maru.projects.models import (
     RoomCombination,
     SignageReminder,
     Subproject,
+    TimetableDay,
+    TimetableLayerSetting,
     TimetablePlacement,
     VolunteerShift,
     VolunteerShiftAssignment,
@@ -79,6 +94,7 @@ from maru.projects.models import (
 )
 from maru.projects.review import (
     can_claim_volunteer_shifts,
+    can_manage_accounts,
     can_manage_project_setup,
     can_review_applications,
 )
@@ -86,7 +102,11 @@ from maru.projects.review import (
 
 @login_required
 def project_list_view(request):
-    projects = Project.objects.prefetch_related("subprojects", "hotels")
+    request.session.pop(SIDEBAR_ARCHIVE_PROJECT_SESSION_KEY, None)
+    request.session.pop(SIDEBAR_PROJECT_SESSION_KEY, None)
+    projects = Project.objects.filter(closes_at__gt=timezone.now()).prefetch_related(
+        "subprojects", "hotels"
+    )
     return render(request, "projects/list.html", {"projects": projects})
 
 
@@ -101,7 +121,59 @@ def project_detail_view(request, slug: str):
         ),
         slug=slug,
     )
+    if project.is_closed and not can_manage_accounts(request.user):
+        archive_snapshot = ensure_project_archive_snapshot(project)
+        return render(
+            request,
+            "projects/archive_detail.html",
+            {
+                "archive_snapshot": archive_snapshot,
+                "can_refresh_archive": False,
+                "project": project,
+                "snapshot": archive_snapshot.snapshot if archive_snapshot else {},
+            },
+        )
     return render(request, "projects/detail.html", {"project": project})
+
+
+@login_required
+def project_archive_list_view(request):
+    projects = Project.objects.filter(closes_at__lte=timezone.now()).order_by(
+        "-closes_at", "name"
+    )
+    snapshots = []
+    for project in projects:
+        snapshots.append(ensure_project_archive_snapshot(project))
+    return render(
+        request,
+        "projects/archive_list.html",
+        {
+            "snapshots": [snapshot for snapshot in snapshots if snapshot],
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def project_archive_detail_view(request, slug: str):
+    project = get_object_or_404(Project, slug=slug, closes_at__lte=timezone.now())
+    if request.method == "POST":
+        if not can_manage_accounts(request.user):
+            raise PermissionDenied
+        archive_snapshot = rebuild_project_archive_snapshot(project)
+        messages.success(request, "Project archive snapshot refreshed.")
+        return redirect("projects:archive_detail", slug=project.slug)
+    archive_snapshot = ensure_project_archive_snapshot(project)
+    return render(
+        request,
+        "projects/archive_detail.html",
+        {
+            "archive_snapshot": archive_snapshot,
+            "can_refresh_archive": can_manage_accounts(request.user),
+            "project": project,
+            "snapshot": archive_snapshot.snapshot if archive_snapshot else {},
+        },
+    )
 
 
 @login_required
@@ -115,6 +187,7 @@ def form_list_view(request, slug: str | None = None):
     clone_form = None
     if slug:
         project = get_object_or_404(Project, slug=slug)
+        _require_open_project_or_admin(request.user, project)
         if not _can_manage_project_module(
             request.user,
             project,
@@ -145,6 +218,7 @@ def form_list_view(request, slug: str | None = None):
 @transaction.atomic
 def create_form_view(request, slug: str):
     project = get_object_or_404(Project, slug=slug)
+    _require_open_project_or_admin(request.user, project)
     if not _can_manage_project_module(
         request.user,
         project,
@@ -179,6 +253,7 @@ def edit_form_view(request, pk: int):
         ),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, managed_form.project)
     if not _can_manage_project_module(
         request.user,
         managed_form.project,
@@ -380,6 +455,7 @@ def project_room_settings_view(request, slug: str):
         ),
         slug=slug,
     )
+    _require_open_project_or_admin(request.user, project)
     hotels_form = ProjectHotelsForm(request.POST or None, instance=project)
     if request.method == "POST":
         action = request.POST.get("action")
@@ -419,6 +495,7 @@ def edit_project_room_setting_view(request, pk: int):
         ProjectRoomSetting.objects.select_related("project", "room__hotel"),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, setting.project)
     form = ProjectRoomSettingForm(request.POST or None, instance=setting)
     availability_form = ProjectRoomAvailabilityForm(
         request.POST or None,
@@ -462,6 +539,7 @@ def edit_project_room_combination_setting_view(request, pk: int):
         ),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, setting.project)
     form = ProjectRoomCombinationSettingForm(request.POST or None, instance=setting)
     availability_form = ProjectRoomCombinationAvailabilityForm(
         request.POST or None,
@@ -506,6 +584,7 @@ def delete_project_room_availability_view(request, kind: str, pk: int):
             pk=pk,
         )
         project_slug = window.setting.project.slug
+        _require_open_project_or_admin(request.user, window.setting.project)
     elif kind == "combination":
         window = get_object_or_404(
             ProjectRoomCombinationAvailability.objects.select_related(
@@ -514,6 +593,7 @@ def delete_project_room_availability_view(request, kind: str, pk: int):
             pk=pk,
         )
         project_slug = window.setting.project.slug
+        _require_open_project_or_admin(request.user, window.setting.project)
     else:
         raise PermissionDenied
     window.delete()
@@ -531,6 +611,7 @@ def export_token_list_view(request, slug: str):
         Project.objects.prefetch_related("export_tokens__access_logs"),
         slug=slug,
     )
+    _require_open_project_or_admin(request.user, project)
     form = ExportTokenForm(request.POST or None)
     new_token = None
     if request.method == "POST" and form.is_valid():
@@ -560,6 +641,7 @@ def rotate_export_token_view(request, pk: int):
         ExportToken.objects.select_related("project"),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, export_token.project)
     export_token.token = generate_export_token()
     export_token.active = True
     export_token.save(update_fields=["token", "active", "updated_at"])
@@ -584,6 +666,7 @@ def set_export_token_active_view(request, pk: int, active: str):
         ExportToken.objects.select_related("project"),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, export_token.project)
     if active not in {"active", "inactive"}:
         raise PermissionDenied
     export_token.active = active == "active"
@@ -600,6 +683,7 @@ def create_event_group_view(request, slug: str):
     if not can_review_applications(request.user):
         raise PermissionDenied
     project = get_object_or_404(Project, slug=slug)
+    _require_open_project_or_admin(request.user, project)
     form = EventGroupForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         event_group = form.save(commit=False)
@@ -651,6 +735,7 @@ def edit_event_group_view(request, pk: int):
     if not can_review_applications(request.user):
         raise PermissionDenied
     event_group = get_object_or_404(EventGroup.objects.select_related("project"), pk=pk)
+    _require_open_project_or_admin(request.user, event_group.project)
     form = EventGroupForm(request.POST or None, instance=event_group)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -666,6 +751,35 @@ def edit_event_group_view(request, pk: int):
 @login_required
 def timetable_view(request, slug: str):
     project = get_object_or_404(Project, slug=slug)
+    _ensure_timetable_defaults(project)
+    can_manage_all = can_review_applications(request.user)
+    day_form = TimetableDayForm(project=project)
+    layer_settings = _timetable_layer_settings(project)
+    layer_form = TimetableLayerSettingsForm(settings=layer_settings)
+
+    if request.method == "POST":
+        if not can_manage_all:
+            raise PermissionDenied
+        _require_open_project_or_admin(request.user, project)
+        action = request.POST.get("action")
+        if action == "save_timetable_day":
+            day_form = TimetableDayForm(request.POST, project=project)
+            if day_form.is_valid():
+                day_form.save()
+                messages.success(request, "Timetable day window saved.")
+                return redirect("projects:timetable", slug=project.slug)
+        elif action == "save_layer_settings":
+            layer_form = TimetableLayerSettingsForm(
+                request.POST,
+                settings=layer_settings,
+            )
+            if layer_form.is_valid():
+                layer_form.save()
+                messages.success(request, "Timetable layer settings saved.")
+                return redirect("projects:timetable", slug=project.slug)
+        else:
+            raise PermissionDenied
+
     panels = (
         Panel.objects.filter(project=project)
         .select_related(
@@ -679,7 +793,6 @@ def timetable_view(request, slug: str):
         .prefetch_related("placement__room_combination__rooms")
         .order_by("placement__starts_at", "title")
     )
-    can_manage_all = can_review_applications(request.user)
     panels = _visible_panels_for_timetable(
         panels=panels,
         project=project,
@@ -700,12 +813,22 @@ def timetable_view(request, slug: str):
             .order_by("placement__starts_at", "title")
         )
         shift_rows = _build_volunteer_shift_rows(shifts)
+    planner = _build_visual_timetable_planner(
+        can_manage_all=can_manage_all,
+        layer_settings=layer_settings,
+        panel_rows=rows,
+        project=project,
+        shift_rows=shift_rows,
+    )
 
     return render(
         request,
         "projects/timetable.html",
         {
             "can_manage_all": can_manage_all,
+            "day_form": day_form,
+            "layer_form": layer_form,
+            "planner": planner,
             "rounds": list(TimetableRound),
             "rows": rows,
             "shift_rows": shift_rows,
@@ -913,6 +1036,7 @@ def create_signage_reminder_view(request, slug: str):
     if not can_review_applications(request.user):
         raise PermissionDenied
     project = get_object_or_404(Project, slug=slug)
+    _require_open_project_or_admin(request.user, project)
     form = SignageReminderForm(request.POST or None, project=project)
     if request.method == "POST" and form.is_valid():
         reminder = form.save(commit=False)
@@ -933,6 +1057,7 @@ def change_timetable_round_view(request, slug: str, round_key: str):
     if not can_review_applications(request.user):
         raise PermissionDenied
     project = get_object_or_404(Project, slug=slug)
+    _require_open_project_or_admin(request.user, project)
     try:
         round_ = TimetableRound(round_key)
     except ValueError as exc:
@@ -941,6 +1066,49 @@ def change_timetable_round_view(request, slug: str, round_key: str):
     project.save(update_fields=["timetable_round", "updated_at"])
     messages.success(request, f"Timetable round changed to {round_.value}.")
     return redirect("projects:timetable", slug=project.slug)
+
+
+@login_required
+@require_http_methods(["POST"])
+@transaction.atomic
+def move_timetable_item_view(request, slug: str):
+    project = get_object_or_404(Project, slug=slug)
+    _require_open_project_or_admin(request.user, project)
+    item_type = request.POST.get("item_type")
+    item_id = request.POST.get("item_id")
+    if item_type == "panel":
+        panel = get_object_or_404(
+            Panel.objects.select_related("project", "owner", "application__subproject"),
+            pk=item_id,
+            project=project,
+        )
+        if _layer_is_locked(project, TimetableLayer.PANELS.value):
+            return JsonResponse({"ok": False, "error": "Layer is locked."}, status=423)
+        if not _can_place_panel(panel, request.user):
+            raise PermissionDenied
+        placement = TimetablePlacement.objects.filter(panel=panel).first()
+        form = PanelPlacementForm(request.POST, project=project, placement=placement)
+        if form.is_valid():
+            form.save(panel)
+            return JsonResponse({"ok": True})
+        return JsonResponse({"ok": False, "errors": form.errors}, status=400)
+    if item_type == "shift":
+        if not can_review_applications(request.user):
+            raise PermissionDenied
+        if _layer_is_locked(project, TimetableLayer.VOLUNTEER_SHIFTS.value):
+            return JsonResponse({"ok": False, "error": "Layer is locked."}, status=423)
+        shift = get_object_or_404(VolunteerShift, pk=item_id, project=project)
+        placement = VolunteerShiftPlacement.objects.filter(shift=shift).first()
+        form = VolunteerShiftPlacementForm(
+            request.POST,
+            project=project,
+            placement=placement,
+        )
+        if form.is_valid():
+            form.save(shift)
+            return JsonResponse({"ok": True})
+        return JsonResponse({"ok": False, "errors": form.errors}, status=400)
+    return JsonResponse({"ok": False, "error": "Unknown timetable item."}, status=400)
 
 
 @login_required
@@ -982,6 +1150,7 @@ def edit_panel_metadata_view(request, pk: int):
         Panel.objects.select_related("project", "event_group", "application"),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, panel.project)
     form = PanelSchedulingMetadataForm(
         request.POST or None,
         panel=panel,
@@ -1004,6 +1173,7 @@ def create_volunteer_shift_view(request, slug: str):
     if not can_review_applications(request.user):
         raise PermissionDenied
     project = get_object_or_404(Project, slug=slug)
+    _require_open_project_or_admin(request.user, project)
     form = VolunteerShiftForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         shift = form.save(commit=False)
@@ -1025,6 +1195,7 @@ def place_volunteer_shift_view(request, pk: int):
     if not can_review_applications(request.user):
         raise PermissionDenied
     shift = get_object_or_404(VolunteerShift.objects.select_related("project"), pk=pk)
+    _require_open_project_or_admin(request.user, shift.project)
     placement = VolunteerShiftPlacement.objects.filter(shift=shift).first()
     form = VolunteerShiftPlacementForm(
         request.POST or None,
@@ -1053,6 +1224,7 @@ def assign_volunteer_shift_view(request, pk: int):
         .prefetch_related("assignments__user"),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, shift.project)
     form = VolunteerShiftAssignmentForm(request.POST or None, shift=shift)
     if request.method == "POST" and shift.locked:
         messages.error(request, "This shift is locked.")
@@ -1098,6 +1270,7 @@ def change_volunteer_assignment_status_view(request, pk: int, status: str):
         VolunteerShiftAssignment.objects.select_related("shift__project", "user"),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, assignment.shift.project)
     assignment.status = status_.value
     assignment.save(update_fields=["status"])
     Notification.objects.create(
@@ -1124,6 +1297,7 @@ def lock_volunteer_shift_view(request, pk: int):
     if not can_review_applications(request.user):
         raise PermissionDenied
     shift = get_object_or_404(VolunteerShift.objects.select_related("project"), pk=pk)
+    _require_open_project_or_admin(request.user, shift.project)
     locked = request.POST.get("locked") == "1"
     shift.locked = locked
     shift.save(update_fields=["locked", "updated_at"])
@@ -1205,6 +1379,7 @@ def claim_volunteer_shift_view(request, pk: int):
         ),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, shift.project)
     blocker = _volunteer_claim_blocker(shift, request.user)
     if blocker:
         messages.error(request, blocker)
@@ -1239,6 +1414,7 @@ def submit_application_view(request, project_slug: str, subproject_slug: str):
     )
     if subproject.form_status != FormStatus.PUBLISHED.value:
         raise Http404
+    _require_open_project_or_admin(request.user, subproject.project)
     form_fields = list(subproject.form_fields.all())
     form = ApplicationSubmissionForm(
         request.POST or None,
@@ -1282,7 +1458,11 @@ def application_detail_view(request, pk: int):
         "projects/application_detail.html",
         {
             "application": application,
-            "can_edit": application.status == ApplicationStatus.REOPENED.value,
+            "can_edit": application.status == ApplicationStatus.REOPENED.value
+            and (
+                not application.subproject.project.is_closed
+                or can_manage_accounts(request.user)
+            ),
             "latest_version": latest_version,
             "versions": versions,
         },
@@ -1301,6 +1481,7 @@ def edit_application_view(request, pk: int):
     )
     if application.status != ApplicationStatus.REOPENED.value:
         raise PermissionDenied
+    _require_open_project_or_admin(request.user, application.subproject.project)
 
     form_fields = list(application.subproject.form_fields.all())
     latest_version = application.versions.first()
@@ -1349,6 +1530,10 @@ def review_application_list_view(request):
     applications = Application.objects.select_related(
         "applicant", "subproject__project"
     )
+    if not can_manage_accounts(request.user):
+        applications = applications.filter(
+            subproject__project__closes_at__gt=timezone.now()
+        )
     return render(
         request,
         "projects/review_list.html",
@@ -1394,6 +1579,7 @@ def review_application_decision_view(request, pk: int, decision: str):
         Application.objects.select_related("applicant", "subproject__project"),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, application.subproject.project)
     if decision == "approve":
         _approve_application(application)
         messages.success(request, "Application approved.")
@@ -1416,6 +1602,7 @@ def reopen_application_view(request, pk: int):
         Application.objects.select_related("applicant", "subproject__project"),
         pk=pk,
     )
+    _require_open_project_or_admin(request.user, application.subproject.project)
     if not application.subproject.accepts_reopen_requests:
         raise PermissionDenied
     application.status = ApplicationStatus.REOPENED.value
@@ -1497,6 +1684,11 @@ def _can_manage_project_module(
     )
 
 
+def _require_open_project_or_admin(user, project: Project) -> None:
+    if project.is_closed and not can_manage_accounts(user):
+        raise PermissionDenied
+
+
 def _approve_application(application: Application) -> None:
     application.status = ApplicationStatus.APPROVED.value
     application.save(update_fields=["status", "updated_at"])
@@ -1532,6 +1724,8 @@ def _create_panel_for_application(application: Application) -> Panel | None:
 
 
 def _can_place_panel(panel: Panel, user) -> bool:
+    if panel.project.is_closed and not can_manage_accounts(user):
+        return False
     if can_review_applications(user):
         return True
     if panel.owner_id != user.id:
@@ -1551,6 +1745,421 @@ def _visible_panels_for_timetable(*, panels, project: Project, user, can_manage_
     if project.timetable_round == TimetableRound.PUBLIC.value:
         return panels
     return panels.none()
+
+
+def _ensure_timetable_defaults(project: Project) -> None:
+    _ensure_project_room_settings(project)
+    _ensure_timetable_days(project)
+    _ensure_timetable_layer_settings(project)
+
+
+def _ensure_timetable_days(project: Project) -> None:
+    if TimetableDay.objects.filter(project=project).exists():
+        return
+    project_tz = ZoneInfo(project.timezone)
+    opens_at = timezone.localtime(project.opens_at, project_tz)
+    closes_at = timezone.localtime(project.closes_at, project_tz)
+    current_date = opens_at.date()
+    while current_date <= closes_at.date():
+        starts_at = (
+            opens_at
+            if current_date == opens_at.date()
+            else dt.datetime.combine(current_date, dt.time(hour=8), project_tz)
+        )
+        ends_at = (
+            closes_at
+            if current_date == closes_at.date()
+            else dt.datetime.combine(
+                current_date + dt.timedelta(days=1),
+                dt.time(hour=3),
+                project_tz,
+            )
+        )
+        if ends_at <= starts_at:
+            ends_at = starts_at + dt.timedelta(hours=12)
+        TimetableDay.objects.create(
+            project=project,
+            service_date=current_date,
+            starts_at=starts_at,
+            ends_at=ends_at,
+            grid_interval_minutes=15,
+        )
+        current_date += dt.timedelta(days=1)
+
+
+def _ensure_timetable_layer_settings(project: Project) -> None:
+    defaults = [
+        {
+            "label": "Panels",
+            "layer": TimetableLayer.PANELS.value,
+            "locked": False,
+            "opacity": 1,
+            "position": 10,
+            "visible": True,
+        },
+        {
+            "label": "Volunteer shifts by person",
+            "layer": TimetableLayer.VOLUNTEER_SHIFTS.value,
+            "locked": False,
+            "opacity": 0.68,
+            "position": 20,
+            "visible": True,
+        },
+        {
+            "label": "Signage reminders",
+            "layer": TimetableLayer.SIGNAGE.value,
+            "locked": True,
+            "opacity": 0.45,
+            "position": 30,
+            "visible": False,
+        },
+    ]
+    for default in defaults:
+        TimetableLayerSetting.objects.get_or_create(
+            project=project,
+            layer=default["layer"],
+            defaults=default,
+        )
+
+
+def _timetable_layer_settings(project: Project) -> list[TimetableLayerSetting]:
+    return list(
+        TimetableLayerSetting.objects.filter(project=project).order_by("position")
+    )
+
+
+def _layer_is_locked(project: Project, layer: str) -> bool:
+    _ensure_timetable_layer_settings(project)
+    return TimetableLayerSetting.objects.filter(
+        project=project,
+        layer=layer,
+        locked=True,
+    ).exists()
+
+
+def _build_visual_timetable_planner(
+    *,
+    can_manage_all: bool,
+    layer_settings: list[TimetableLayerSetting],
+    panel_rows: list[dict],
+    project: Project,
+    shift_rows: list[dict],
+) -> dict:
+    project_tz = ZoneInfo(project.timezone)
+    minute_height = 2
+    room_width = 150
+    time_axis_width = 72
+    venues = _planner_venues(project, room_width, time_axis_width)
+    venue_by_location = {venue["location"]: venue for venue in venues}
+    layer_by_key = {setting.layer: setting for setting in layer_settings}
+    days = [
+        _planner_day(
+            day,
+            project_tz,
+            minute_height,
+            room_width,
+            time_axis_width,
+            venues,
+        )
+        for day in TimetableDay.objects.filter(project=project).order_by("starts_at")
+    ]
+    day_by_pk = {day["pk"]: day for day in days}
+
+    for row in panel_rows:
+        panel = row["panel"]
+        placement = getattr(panel, "placement", None)
+        item = _planner_panel_item(
+            can_manage_all=can_manage_all,
+            day_by_pk=day_by_pk,
+            layer_by_key=layer_by_key,
+            minute_height=minute_height,
+            panel=panel,
+            placement=placement,
+            project=project,
+            row=row,
+            venue_by_location=venue_by_location,
+        )
+        if item:
+            item["day"]["items"].append(item)
+
+    for row in shift_rows:
+        shift = row["shift"]
+        placement = getattr(shift, "placement", None)
+        item = _planner_shift_item(
+            day_by_pk=day_by_pk,
+            layer_by_key=layer_by_key,
+            minute_height=minute_height,
+            placement=placement,
+            project=project,
+            row=row,
+            shift=shift,
+            venue_by_location=venue_by_location,
+        )
+        if item:
+            item["day"]["items"].append(item)
+
+    return {
+        "days": days,
+        "has_venues": bool(venues),
+        "layer_settings": layer_settings,
+        "minute_height": minute_height,
+        "move_url": reverse("projects:move_timetable_item", args=[project.slug]),
+        "room_width": room_width,
+        "time_axis_width": time_axis_width,
+        "venues": venues,
+    }
+
+
+def _planner_venues(
+    project: Project,
+    room_width: int,
+    time_axis_width: int,
+) -> list[dict]:
+    room_settings = (
+        ProjectRoomSetting.objects.filter(project=project, blocked=False)
+        .select_related("room__hotel")
+        .order_by("room__hotel__name", "room__name")
+    )
+    combination_settings = (
+        ProjectRoomCombinationSetting.objects.filter(project=project, blocked=False)
+        .select_related("room_combination__hotel")
+        .order_by("room_combination__hotel__name", "room_combination__name")
+    )
+    hotel_colors = {}
+    palette = ["#fff3b0", "#f6d0a7", "#dfe1e5", "#a7e7bf", "#ffc0c0", "#d7e8ff"]
+    venues = []
+    for setting in room_settings:
+        color = hotel_colors.setdefault(
+            setting.room.hotel_id,
+            palette[len(hotel_colors) % len(palette)],
+        )
+        venues.append(
+            {
+                "background": color,
+                "capacity": setting.room.capacity,
+                "hotel": setting.room.hotel.name,
+                "index": len(venues),
+                "kind": "room",
+                "left": time_axis_width + len(venues) * room_width,
+                "location": f"room:{setting.room_id}",
+                "name": setting.display_name,
+                "width": room_width,
+            }
+        )
+    for setting in combination_settings:
+        color = hotel_colors.setdefault(
+            setting.room_combination.hotel_id,
+            palette[len(hotel_colors) % len(palette)],
+        )
+        venues.append(
+            {
+                "background": color,
+                "capacity": setting.room_combination.capacity,
+                "hotel": setting.room_combination.hotel.name,
+                "index": len(venues),
+                "kind": "combination",
+                "left": time_axis_width + len(venues) * room_width,
+                "location": f"combination:{setting.room_combination_id}",
+                "name": setting.display_name,
+                "width": room_width,
+            }
+        )
+    return venues
+
+
+def _planner_day(
+    day: TimetableDay,
+    project_tz: ZoneInfo,
+    minute_height: int,
+    room_width: int,
+    time_axis_width: int,
+    venues: list[dict],
+) -> dict:
+    duration_minutes = _duration_minutes(day.starts_at, day.ends_at)
+    starts_at = timezone.localtime(day.starts_at, project_tz)
+    ends_at = timezone.localtime(day.ends_at, project_tz)
+    return {
+        "date": day.service_date,
+        "display_label": day.display_label,
+        "duration_minutes": duration_minutes,
+        "ends_at": ends_at,
+        "ends_at_iso": ends_at.strftime("%Y-%m-%dT%H:%M"),
+        "grid_interval_minutes": day.grid_interval_minutes,
+        "height": max(duration_minutes * minute_height, 240),
+        "items": [],
+        "pk": day.pk,
+        "starts_at": starts_at,
+        "starts_at_iso": starts_at.strftime("%Y-%m-%dT%H:%M"),
+        "ticks": _planner_ticks(day, project_tz, minute_height),
+        "width": time_axis_width + len(venues) * room_width,
+    }
+
+
+def _planner_ticks(
+    day: TimetableDay,
+    project_tz: ZoneInfo,
+    minute_height: int,
+) -> list[dict]:
+    ticks = []
+    start = timezone.localtime(day.starts_at, project_tz)
+    current = start
+    end = timezone.localtime(day.ends_at, project_tz)
+    interval = dt.timedelta(minutes=day.grid_interval_minutes)
+    while current <= end:
+        minutes = int((current - start).total_seconds() // 60)
+        is_major = current.minute == 0 or current == start
+        ticks.append(
+            {
+                "is_major": is_major,
+                "label": current.strftime("%H:%M") if is_major else "",
+                "top": minutes * minute_height,
+            }
+        )
+        current += interval
+    return ticks
+
+
+def _planner_panel_item(
+    *,
+    can_manage_all: bool,
+    day_by_pk: dict,
+    layer_by_key: dict[str, TimetableLayerSetting],
+    minute_height: int,
+    panel: Panel,
+    placement: TimetablePlacement | None,
+    project: Project,
+    row: dict,
+    venue_by_location: dict,
+) -> dict | None:
+    if not placement:
+        return None
+    day = _planner_day_for_placement(day_by_pk.values(), placement)
+    venue = venue_by_location.get(_placement_location_key(placement))
+    if not day or not venue:
+        return None
+    layer = layer_by_key[placement.layer]
+    return _planner_item(
+        can_drag=row["can_place"],
+        detail=_panel_host_label(panel, can_manage_all),
+        duration_minutes=_duration_minutes(placement.starts_at, placement.ends_at),
+        edit_url=reverse("projects:place_panel", args=[panel.pk]),
+        has_conflict=row["has_conflict"],
+        item_id=panel.pk,
+        item_type="panel",
+        layer=layer,
+        placement=placement,
+        starts_at=day["starts_at"],
+        title=panel.title,
+        venue=venue,
+        minute_height=minute_height,
+        day=day,
+    )
+
+
+def _planner_shift_item(
+    *,
+    day_by_pk: dict,
+    layer_by_key: dict[str, TimetableLayerSetting],
+    minute_height: int,
+    placement: VolunteerShiftPlacement | None,
+    project: Project,
+    row: dict,
+    shift: VolunteerShift,
+    venue_by_location: dict,
+) -> dict | None:
+    if not placement:
+        return None
+    day = _planner_day_for_placement(day_by_pk.values(), placement)
+    venue = venue_by_location.get(_placement_location_key(placement))
+    if not day or not venue:
+        return None
+    layer = layer_by_key[placement.layer]
+    assigned = ", ".join(
+        assignment.user.email for assignment in shift.assignments.all()[:3]
+    )
+    detail = (
+        f"{shift.role} - {row['assigned_count']}/{shift.needed_volunteers}"
+        f" assigned"
+    )
+    if assigned:
+        detail = f"{detail} - {assigned}"
+    return _planner_item(
+        can_drag=True,
+        detail=detail,
+        duration_minutes=_duration_minutes(placement.starts_at, placement.ends_at),
+        edit_url=reverse("projects:place_volunteer_shift", args=[shift.pk]),
+        has_conflict=row["has_conflict"],
+        item_id=shift.pk,
+        item_type="shift",
+        layer=layer,
+        placement=placement,
+        starts_at=day["starts_at"],
+        title=shift.title,
+        venue=venue,
+        minute_height=minute_height,
+        day=day,
+    )
+
+
+def _planner_item(
+    *,
+    can_drag: bool,
+    day: dict,
+    detail: str,
+    duration_minutes: int,
+    edit_url: str,
+    has_conflict: bool,
+    item_id: int,
+    item_type: str,
+    layer: TimetableLayerSetting,
+    minute_height: int,
+    placement,
+    starts_at,
+    title: str,
+    venue: dict,
+) -> dict:
+    offset_minutes = int((placement.starts_at - starts_at).total_seconds() // 60)
+    return {
+        "can_drag": can_drag and not layer.locked,
+        "day": day,
+        "detail": detail,
+        "duration_minutes": duration_minutes,
+        "edit_url": edit_url,
+        "ends_at": timezone.localtime(placement.ends_at).strftime("%H:%M"),
+        "has_conflict": has_conflict,
+        "height": max(duration_minutes * minute_height, 36),
+        "item_id": item_id,
+        "item_type": item_type,
+        "layer_key": layer.layer,
+        "layer_locked": layer.locked,
+        "layer_opacity": layer.opacity,
+        "layer_visible": layer.visible,
+        "left": venue["left"] + 8,
+        "location": venue["location"],
+        "starts_at": timezone.localtime(placement.starts_at).strftime("%H:%M"),
+        "title": title,
+        "top": max(offset_minutes * minute_height, 0),
+        "width": max(venue["width"] - 16, 80),
+    }
+
+
+def _planner_day_for_placement(days, placement) -> dict | None:
+    for day in days:
+        if day["starts_at"] <= placement.starts_at < day["ends_at"]:
+            return day
+    return None
+
+
+def _placement_location_key(placement) -> str:
+    if placement.room_id:
+        return f"room:{placement.room_id}"
+    if placement.room_combination_id:
+        return f"combination:{placement.room_combination_id}"
+    return ""
+
+
+def _duration_minutes(starts_at, ends_at) -> int:
+    return max(int((ends_at - starts_at).total_seconds() // 60), 1)
 
 
 def _ensure_project_room_settings(project: Project) -> None:
@@ -1914,6 +2523,8 @@ def _signage_reminder_export(reminder: SignageReminder) -> dict:
 
 
 def _volunteer_claim_blocker(shift: VolunteerShift, user) -> str:
+    if shift.project.is_closed and not can_manage_accounts(user):
+        return "This project is archived."
     if not can_claim_volunteer_shifts(user):
         return "You are not approved for volunteer shift claiming yet."
     if not hasattr(shift, "placement"):

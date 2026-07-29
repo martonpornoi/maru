@@ -101,6 +101,21 @@ The Awoostria demo also includes scheduled panels, profile/fursuit image paths,
 internal notifications, event group metadata, open volunteer shifts, confirmed
 assignments, and claimed assignments.
 
+Only active projects are shown in the sidebar project selector and on the main
+Projects page. Closed projects move to the bottom sidebar `Archives` link:
+
+```text
+http://127.0.0.1:8000/archives/
+```
+
+When a project closes, maru creates a read-only archive snapshot of the project
+state: used hotels and rooms, project-local room settings, forms, timetable
+panels, volunteer shifts, social posts, color codes, role assignments, user
+profile summaries, and account metadata. Regular users are redirected to the
+archive for closed-project live user/statistics pages and cannot modify closed
+project setup or scheduling data. Admin users can still refresh archive
+snapshots and access live closed-project management when needed.
+
 The project detail pages now include `Submit application` links for each
 subproject. Submitted applications appear on `My Profile`, split between current
 applications and application history.

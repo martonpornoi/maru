@@ -485,6 +485,72 @@ class UserConventionProfile(models.Model):
         return list(self.roles or [])
 
 
+class VolunteerGroup(models.Model):
+    title = models.CharField(max_length=160, unique=True)
+    slug = models.SlugField(max_length=120, unique=True)
+    description = models.TextField(blank=True)
+    members = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through="VolunteerMembership",
+        related_name="volunteer_groups",
+        blank=True,
+    )
+    parents = models.ManyToManyField(
+        "self",
+        symmetrical=False,
+        related_name="children",
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["title"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class VolunteerMembership(models.Model):
+    class Role(models.TextChoices):
+        LEAD = "Lead", "Lead"
+        DEPUTY = "Deputy", "Deputy"
+        VOLUNTEER = "Volunteer", "Volunteer"
+
+    group = models.ForeignKey(
+        VolunteerGroup,
+        related_name="memberships",
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="volunteer_memberships",
+        on_delete=models.CASCADE,
+    )
+    role = models.CharField(
+        max_length=32,
+        choices=Role.choices,
+        default=Role.VOLUNTEER,
+    )
+    custom_title = models.CharField(max_length=160, blank=True)
+    responsibilities = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["group", "user"],
+                name="unique_volunteer_membership",
+            )
+        ]
+        ordering = ["group__title", "role", "user__email"]
+
+    def __str__(self) -> str:
+        title = self.custom_title or self.role
+        return f"{self.user.email}: {self.group.title} ({title})"
+
+
 class UserTileColorRule(models.Model):
     ATTENDEE_TYPE = "attendee_type"
     VOLUNTEER_TYPE = "volunteer_type"
@@ -500,6 +566,13 @@ class UserTileColorRule(models.Model):
         (INTERIOR, "Tile interior"),
     ]
 
+    project = models.ForeignKey(
+        "projects.Project",
+        related_name="user_tile_color_rules",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
     target_type = models.CharField(max_length=32, choices=TARGET_CHOICES)
     target_value = models.CharField(max_length=80)
     applies_to = models.CharField(
@@ -525,11 +598,23 @@ class UserTileColorRule(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
+                fields=["project", "target_type", "target_value", "applies_to"],
+                condition=Q(project__isnull=False),
+                name="unique_project_user_tile_color_target",
+            ),
+            models.UniqueConstraint(
                 fields=["target_type", "target_value", "applies_to"],
-                name="unique_user_tile_color_target",
-            )
+                condition=Q(project__isnull=True),
+                name="unique_global_user_tile_color_target",
+            ),
         ]
-        ordering = ["-priority", "target_type", "target_value", "applies_to"]
+        ordering = [
+            "project__opens_at",
+            "-priority",
+            "target_type",
+            "target_value",
+            "applies_to",
+        ]
 
     def __str__(self) -> str:
         return f"{self.get_target_type_display()}: {self.target_value}"

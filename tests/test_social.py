@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from maru.accounts.models import AccessGrant, AccessRole
 from maru.domain import SEED_ACCESS_EMAIL, Role
+from maru.projects.models import Project
 from maru.social.models import SocialPost, SocialPostVersion, SocialPublication
 
 
@@ -134,6 +135,36 @@ def test_social_media_post_can_be_scheduled_for_future_publication(client) -> No
     assert not SocialPublication.objects.filter(post=post).exists()
     assert "Social media post scheduled for publication" in content
     assert "Scheduled for" in content
+
+
+@pytest.mark.django_db
+def test_project_social_media_posts_stay_project_scoped(client) -> None:
+    call_command("seed_demo")
+    client.post(reverse("accounts:login"), {"email": SEED_ACCESS_EMAIL})
+    project = Project.objects.get(slug="awoostria-2026")
+
+    response = client.post(
+        reverse("social:project_create", args=[project.slug]),
+        {
+            "title": "Project-only update",
+            "body": "This belongs to Awoostria.",
+            "action": "save",
+        },
+        follow=True,
+    )
+
+    post = SocialPost.objects.get(title="Project-only update")
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert post.project == project
+    assert reverse("social:project_list", args=[project.slug]) in content
+    assert reverse("social:project_edit", args=[project.slug, post.pk]) in content
+
+    project_response = client.get(reverse("social:project_list", args=[project.slug]))
+    global_response = client.get(reverse("social:list"))
+
+    assert "Project-only update" in project_response.content.decode()
+    assert "Project-only update" not in global_response.content.decode()
 
 
 @pytest.mark.django_db

@@ -33,11 +33,42 @@ urlpatterns = [
         views.user_directory_view,
         name="project_user_directory",
     ),
+    path("volunteers/", views.volunteer_group_list_view, name="volunteer_groups"),
+    path(
+        "volunteers/new/",
+        views.create_volunteer_group_view,
+        name="create_volunteer_group",
+    ),
+    path(
+        "volunteers/<slug:slug>/",
+        views.volunteer_group_detail_view,
+        name="volunteer_group_detail",
+    ),
+    path(
+        "volunteers/<slug:slug>/edit/",
+        views.edit_volunteer_group_view,
+        name="edit_volunteer_group",
+    ),
+    path(
+        "volunteers/<slug:slug>/delete/",
+        views.delete_volunteer_group_view,
+        name="delete_volunteer_group",
+    ),
     path("statistics/", views.statistics_view, name="statistics"),
+    path(
+        "projects/<slug:slug>/statistics/",
+        views.statistics_view,
+        name="project_statistics",
+    ),
     path(
         "setup/user-colors/",
         views.user_tile_color_rule_list_view,
         name="user_tile_color_rules",
+    ),
+    path(
+        "projects/<slug:slug>/setup/user-colors/",
+        views.user_tile_color_rule_list_view,
+        name="project_user_tile_color_rules",
     ),
     path(
         "setup/user-colors/<int:pk>/edit/",

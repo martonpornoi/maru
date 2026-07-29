@@ -1,0 +1,21 @@
+{% if member_rows %}
+  <div class="volunteer-tree-members">
+    {% for row in member_rows %}
+      <div class="volunteer-member-pill">
+        <span class="volunteer-member-name">
+          {% if row.profile %}
+            <a href="{% url 'accounts:profile_detail' row.profile.pk %}">{{ row.display_name }}</a>
+          {% else %}
+            {{ row.display_name }}
+          {% endif %}
+        </span>
+        <span class="muted">
+          {{ row.membership.role }}{% if row.membership.custom_title %} · {{ row.membership.custom_title }}{% endif %}
+        </span>
+        {% if row.membership.responsibilities %}
+          <span class="muted">{{ row.membership.responsibilities|truncatechars:110 }}</span>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

@@ -5,7 +5,13 @@
 {% block content %}
   <section class="stack">
     <div>
-      <p><a href="{% url 'social:list' %}">Back to social media</a></p>
+      <p>
+        {% if project %}
+          <a href="{% url 'social:project_list' project.slug %}">Back to social media</a>
+        {% else %}
+          <a href="{% url 'social:list' %}">Back to social media</a>
+        {% endif %}
+      </p>
       <h1>{{ heading }}</h1>
       <p class="muted">Save keeps this as a draft. Publish queues it now, unless a future schedule time is set.</p>
     </div>

@@ -24,6 +24,8 @@ from maru.accounts.models import (
     UserConventionProfile,
     UserProfile,
     UserTileColorRule,
+    VolunteerGroup,
+    VolunteerMembership,
 )
 from maru.domain import SEED_ACCESS_EMAIL, Role, VolunteerType
 from maru.projects.models import Application, ApplicationVersion, Project, Subproject
@@ -42,6 +44,52 @@ def test_seed_maru_creates_admin_access_grant() -> None:
         Role.BOARD.value,
         Role.EVENT_MANAGER.value,
     }
+
+
+@pytest.mark.django_db
+def test_seed_maru_creates_volunteer_hierarchy_and_test_users() -> None:
+    call_command("seed_maru")
+
+    board = VolunteerGroup.objects.get(slug="board")
+    events = VolunteerGroup.objects.get(slug="events")
+    helper_board = VolunteerGroup.objects.get(slug="helper-board")
+    orga = VolunteerGroup.objects.get(slug="orga")
+    helpers = VolunteerGroup.objects.get(slug="helpers")
+    maid_cafe = VolunteerGroup.objects.get(slug="maid-cafe")
+    lead_user = get_user_model().objects.get(email="volunteer.lead@gmail.com")
+    deputy_user = get_user_model().objects.get(email="volunteer.deputy@gmail.com")
+    helper_user = get_user_model().objects.get(email="volunteer.helper@gmail.com")
+
+    assert VolunteerGroup.objects.count() == 34
+    assert maid_cafe.title == "Maid Café"
+    assert board in orga.parents.all()
+    assert helper_board in helpers.parents.all()
+    assert all(
+        group.memberships.count() >= 3 for group in VolunteerGroup.objects.all()
+    )
+    assert VolunteerMembership.objects.filter(
+        group__slug="it",
+        role=VolunteerMembership.Role.LEAD,
+        user=lead_user,
+    ).exists()
+    assert VolunteerMembership.objects.filter(
+        group__slug="registration",
+        role=VolunteerMembership.Role.DEPUTY,
+        user=deputy_user,
+    ).exists()
+    assert VolunteerMembership.objects.filter(
+        group__slug="front-desk",
+        role=VolunteerMembership.Role.VOLUNTEER,
+        user=helper_user,
+    ).exists()
+    assert lead_user.volunteer_memberships.count() > 1
+    assert events.memberships.filter(role=VolunteerMembership.Role.LEAD).count() > 1
+    assert events.memberships.filter(role=VolunteerMembership.Role.DEPUTY).count() > 1
+    assert VolunteerMembership.objects.filter(
+        group=events,
+        custom_title="Generalist Lead",
+        responsibilities__icontains="cross-event coverage",
+    ).exists()
 
 
 def test_google_email_validation() -> None:
@@ -273,10 +321,10 @@ def test_admin_can_view_user_directory_with_images_and_names_only(client) -> Non
     assert reverse("accounts:export_access_grants") in content
     assert "Picture Host" in content
     assert "hostpicture@gmail.com" not in content
-    assert "Volunteer" not in content
+    assert "Volunteer</span>" not in content
     assert "/media/profiles/profile-pictures/picture-host.png" in content
     assert "pendinguser@gmail.com" not in content
-    assert "Security" not in content
+    assert "Security</span>" not in content
     assert "Pending user" in content
     assert "/static/accounts/default-avatar.svg" in content
     assert reverse("accounts:profile_detail", args=[host_profile.pk]) in content
@@ -301,6 +349,128 @@ def test_regular_user_can_view_user_directory_under_public_navigation(client) ->
     assert "Host User" in content
     assert "hostuser@gmail.com" not in content
     assert "Host</span>" not in content
+
+
+@pytest.mark.django_db
+def test_regular_user_can_view_volunteer_hierarchy(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": "volunteer.helper@gmail.com"})
+
+    response = client.get(reverse("accounts:volunteer_groups"))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Volunteers" in content
+    assert "Board" in content
+    assert "Helper Board" in content
+    assert "Maid Café" in content
+    assert "<details" in content
+    assert "volunteer-tree-children" in content
+    assert "Generalist Lead" in content
+    assert "Events Lead Test" in content
+    assert "Create group" not in content
+
+
+@pytest.mark.django_db
+def test_board_user_can_create_volunteer_group_with_parent(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": "board.deputy@gmail.com"})
+    parent = VolunteerGroup.objects.get(slug="helpers")
+
+    response = client.post(
+        reverse("accounts:create_volunteer_group"),
+        {
+            "description": "Checks badges at controlled entrances.",
+            "parents": [str(parent.pk)],
+            "slug": "badge-check",
+            "title": "Badge Check",
+        },
+        follow=True,
+    )
+
+    group = VolunteerGroup.objects.get(slug="badge-check")
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert group.title == "Badge Check"
+    assert list(group.parents.all()) == [parent]
+    assert "Volunteer group created" in content
+    assert "Badge Check" in content
+
+
+@pytest.mark.django_db
+def test_regular_user_cannot_create_volunteer_group(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": "volunteer.helper@gmail.com"})
+
+    response = client.get(reverse("accounts:create_volunteer_group"))
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_board_user_can_update_volunteer_group_members(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": "board.chairman@gmail.com"})
+    group = VolunteerGroup.objects.get(slug="it")
+    user = get_user_model().objects.get(email="volunteer.helper@gmail.com")
+
+    response = client.post(
+        reverse("accounts:volunteer_group_detail", args=[group.slug]),
+        {
+            "action": "save_member",
+            "custom_title": "Backup Systems Lead",
+            "responsibilities": "Coordinates backup systems coverage.",
+            "role": VolunteerMembership.Role.DEPUTY,
+            "user": str(user.pk),
+        },
+        follow=True,
+    )
+
+    membership = VolunteerMembership.objects.get(group=group, user=user)
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert membership.role == VolunteerMembership.Role.DEPUTY
+    assert membership.custom_title == "Backup Systems Lead"
+    assert membership.responsibilities == "Coordinates backup systems coverage."
+    assert "Volunteer member added" in content
+    assert "Helper Tester" in content
+    assert "Backup Systems Lead" in content
+
+    response = client.post(
+        reverse("accounts:volunteer_group_detail", args=[group.slug]),
+        {
+            "action": "save_member",
+            "custom_title": "Primary Systems Lead",
+            "responsibilities": "Owns primary systems coverage.",
+            "role": VolunteerMembership.Role.LEAD,
+            "user": str(user.pk),
+        },
+        follow=True,
+    )
+
+    membership.refresh_from_db()
+    assert response.status_code == 200
+    assert membership.role == VolunteerMembership.Role.LEAD
+    assert membership.custom_title == "Primary Systems Lead"
+
+
+@pytest.mark.django_db
+def test_regular_user_cannot_update_volunteer_group_members(client) -> None:
+    call_command("seed_maru")
+    client.post(reverse("accounts:login"), {"email": "volunteer.helper@gmail.com"})
+    group = VolunteerGroup.objects.get(slug="it")
+    user = get_user_model().objects.get(email="volunteer.helper@gmail.com")
+
+    response = client.post(
+        reverse("accounts:volunteer_group_detail", args=[group.slug]),
+        {
+            "action": "save_member",
+            "role": VolunteerMembership.Role.LEAD,
+            "user": str(user.pk),
+        },
+    )
+
+    assert response.status_code == 403
 
 
 @pytest.mark.django_db
@@ -376,7 +546,7 @@ def test_user_directory_renders_square_tiles_with_layered_colors(client) -> None
     assert "border-color: #654321;" in content
     assert "background: #123456; color: #ffffff;" in content
     assert "Lead" not in content
-    assert "Volunteer" not in content
+    assert "Volunteer</span>" not in content
     assert "Fursuiter" not in content
 
 
@@ -460,6 +630,14 @@ def test_statistics_show_attendee_counts_by_project_country_and_type(client) -> 
     content = response.content.decode()
     assert response.status_code == 200
     assert "Awoostria 2026" in content
+    assert "Fursuiter" in content
+    assert "Hungary" in content
+
+    response = client.get(reverse("accounts:project_statistics", args=[project.slug]))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Awoostria 2026 Statistics" in content
     assert "Fursuiter" in content
     assert "Hungary" in content
 

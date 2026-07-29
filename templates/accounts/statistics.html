@@ -1,12 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Statistics - maru{% endblock %}
+{% block title %}{% if project %}{{ project.name }} Statistics{% else %}Statistics{% endif %} - maru{% endblock %}
 
 {% block content %}
   <section class="stack">
     <div>
-      <h1>Statistics</h1>
-      <p class="muted">Convention profile counts by project, attendee type, and country.</p>
+      <h1>{% if project %}{{ project.name }} Statistics{% else %}Statistics{% endif %}</h1>
+      <p class="muted">
+        {% if project %}
+          Convention profile counts for this project by attendee type and country.
+        {% else %}
+          Convention profile counts by project, attendee type, and country.
+        {% endif %}
+      </p>
     </div>
 
     <div class="panel stack">

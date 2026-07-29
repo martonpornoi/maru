@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ heading }} - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>{{ heading }}</h1>
+      <p class="muted">Set the group title, description, and any direct parent groups.</p>
+    </div>
+
+    <form class="panel stack" method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="actions">
+        <button type="submit">Save group</button>
+        <a href="{% if group %}{% url 'accounts:volunteer_group_detail' group.slug %}{% else %}{% url 'accounts:volunteer_groups' %}{% endif %}">Cancel</a>
+      </div>
+    </form>
+
+    {% if group %}
+      <form class="panel stack" method="post" action="{% url 'accounts:delete_volunteer_group' group.slug %}">
+        {% csrf_token %}
+        <h2>Delete group</h2>
+        <p class="muted">Deleting a group also removes its member assignments and hierarchy links.</p>
+        <button type="submit">Delete group</button>
+      </form>
+    {% endif %}
+  </section>
+{% endblock %}

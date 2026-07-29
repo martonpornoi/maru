@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} Archive - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <p><a href="{% url 'projects:archives' %}">Back to archives</a></p>
+      <h1>{{ project.name }} Archive</h1>
+      <p class="muted">
+        Frozen after project close. Regular users can browse this archive but cannot
+        modify the closed project.
+      </p>
+      {% if can_refresh_archive %}
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit">Refresh archive snapshot</button>
+        </form>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Project</h2>
+      <table>
+        <tbody>
+          <tr><th>Name</th><td>{{ snapshot.project.name }}</td></tr>
+          <tr><th>Slug</th><td>{{ snapshot.project.slug }}</td></tr>
+          <tr><th>Open</th><td>{{ snapshot.project.opens_at }}</td></tr>
+          <tr><th>Close</th><td>{{ snapshot.project.closes_at }}</td></tr>
+          <tr><th>Snapshot</th><td>{{ snapshot.generated_at }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel stack">
+      <h2>Hotels And Spaces</h2>
+      {% for hotel in snapshot.hotels %}
+        <section>
+          <h3>{{ hotel.name }}</h3>
+          <table>
+            <thead>
+              <tr><th>Room</th><th>Capacity</th><th>Properties</th></tr>
+            </thead>
+            <tbody>
+              {% for room in hotel.rooms %}
+                <tr>
+                  <td>{{ room.name }}</td>
+                  <td>{{ room.capacity|default:"-" }}</td>
+                  <td>{{ room.properties|join:", "|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      {% empty %}
+        <p class="muted">No hotels captured.</p>
+      {% endfor %}
+    </div>
+
+    <div class="panel stack">
+      <h2>People</h2>
+      {% if snapshot.user_profiles %}
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Fursuit</th>
+              <th>Ticket</th>
+              <th>Fursuiter</th>
+              <th>Roles</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for profile in snapshot.user_profiles %}
+              <tr>
+                <td>{{ profile.display_name|default:profile.email }}</td>
+                <td>{{ profile.fursuit_name|default:"-" }}</td>
+                <td>
+                  {% if profile.convention %}
+                    {{ profile.convention.ticket_level_verified|default:profile.convention.ticket_level_selected }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>{% if profile.convention %}{{ profile.convention.fursuiter_status }}{% else %}-{% endif %}</td>
+                <td>{% if profile.convention %}{{ profile.convention.roles|join:", "|default:"-" }}{% else %}-{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No people captured.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Roles And Accounts</h2>
+      <h3>Role Assignments</h3>
+      {% if snapshot.role_assignments %}
+        <table>
+          <thead>
+            <tr><th>User</th><th>Role</th><th>Scopes</th></tr>
+          </thead>
+          <tbody>
+            {% for assignment in snapshot.role_assignments %}
+              <tr>
+                <td>{{ assignment.user }}</td>
+                <td>{{ assignment.role }}</td>
+                <td>{{ assignment.scopes|join:", "|default:"-" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No project role assignments captured.</p>
+      {% endif %}
+
+      {% if can_manage_accounts %}
+        <h3>Accounts</h3>
+        {% if snapshot.accounts %}
+          <table>
+            <thead>
+              <tr><th>Email</th><th>Active</th><th>Roles</th></tr>
+            </thead>
+            <tbody>
+              {% for account in snapshot.accounts %}
+                <tr>
+                  <td>{{ account.email }}</td>
+                  <td>{% if account.active %}Yes{% else %}No{% endif %}</td>
+                  <td>{{ account.roles|join:", "|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="muted">No account records captured.</p>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Color Codes</h2>
+      {% if snapshot.color_codes %}
+        <table>
+          <thead>
+            <tr><th>Target</th><th>Area</th><th>Color</th><th>Scope</th></tr>
+          </thead>
+          <tbody>
+            {% for rule in snapshot.color_codes %}
+              <tr>
+                <td>{{ rule.target_type }}: {{ rule.target_value }}</td>
+                <td>{{ rule.applies_to }}</td>
+                <td>{{ rule.color }}</td>
+                <td>{{ rule.scope }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No color codes captured.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Forms And Timetable</h2>
+      <h3>Forms</h3>
+      {% for form in snapshot.forms %}
+        <p><strong>{{ form.name }}</strong> · {{ form.status }} · {{ form.kind }}</p>
+      {% empty %}
+        <p class="muted">No forms captured.</p>
+      {% endfor %}
+
+      <h3>Panels</h3>
+      {% if snapshot.timetable.panels %}
+        <table>
+          <thead>
+            <tr><th>Title</th><th>Owner</th></tr>
+          </thead>
+          <tbody>
+            {% for panel in snapshot.timetable.panels %}
+              <tr>
+                <td>{{ panel.title }}</td>
+                <td>{{ panel.owner }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No panels captured.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Social Media</h2>
+      {% if snapshot.social_posts %}
+        <table>
+          <thead>
+            <tr><th>Title</th><th>Status</th><th>Updated</th></tr>
+          </thead>
+          <tbody>
+            {% for post in snapshot.social_posts %}
+              <tr>
+                <td>{{ post.title }}</td>
+                <td>{{ post.status }}</td>
+                <td>{{ post.updated_at }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No social media posts captured.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

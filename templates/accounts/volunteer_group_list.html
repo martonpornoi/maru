@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Volunteers - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Volunteers</h1>
+      <p class="muted">Volunteer groups, reporting lines, and current test memberships.</p>
+      {% if can_manage %}
+        <div class="actions">
+          <a class="button" href="{% url 'accounts:create_volunteer_group' %}">Create group</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="panel stack">
+      <h2>Hierarchy</h2>
+      {% if hierarchy_nodes %}
+        <div class="volunteer-tree">
+          {% include "accounts/_volunteer_tree_nodes.html" with nodes=hierarchy_nodes %}
+        </div>
+      {% else %}
+        <p class="muted">No volunteer groups yet.</p>
+      {% endif %}
+    </div>
+
+    {% if groups %}
+      <div class="panel stack">
+        <h2>Groups</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Parents</th>
+              <th>Children</th>
+              <th>Members</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for group in groups %}
+              <tr>
+                <td><a href="{% url 'accounts:volunteer_group_detail' group.slug %}">{{ group.title }}</a></td>
+                <td>
+                  {% for parent in group.parents.all %}
+                    {{ parent.title }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    <span class="muted">Top level</span>
+                  {% endfor %}
+                </td>
+                <td>
+                  {% for child in group.children.all %}
+                    {{ child.title }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    <span class="muted">None</span>
+                  {% endfor %}
+                </td>
+                <td>{{ group.memberships.count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

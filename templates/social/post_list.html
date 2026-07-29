@@ -5,7 +5,7 @@
 {% block content %}
   <section class="stack">
     <div>
-      <h1>Social Media</h1>
+      <h1>{% if project %}{{ project.name }} Social Media{% else %}Social Media{% endif %}</h1>
       <p class="muted">Create public posts for the convention website and queued social channels.</p>
     </div>
 
@@ -15,7 +15,15 @@
         <p class="muted">Create and schedule public social media posts.</p>
       </div>
       <div class="actions">
-        <a class="button" href="{% url 'social:create' %}">New post</a>
+        {% if can_create_post %}
+          {% if project %}
+            <a class="button" href="{% url 'social:project_create' project.slug %}">New post</a>
+          {% else %}
+            <a class="button" href="{% url 'social:create' %}">New post</a>
+          {% endif %}
+        {% else %}
+          <span class="muted">Archived project</span>
+        {% endif %}
       </div>
     </div>
 
@@ -34,10 +42,22 @@
           <tbody>
             {% for post in own_drafts %}
               <tr>
-                <td><a href="{% url 'social:detail' post.pk %}">{{ post.title }}</a></td>
+                <td>
+                  {% if project %}
+                    <a href="{% url 'social:project_detail' project.slug post.pk %}">{{ post.title }}</a>
+                  {% else %}
+                    <a href="{% url 'social:detail' post.pk %}">{{ post.title }}</a>
+                  {% endif %}
+                </td>
                 <td>{{ post.get_status_display }}</td>
                 <td>{{ post.updated_at }}</td>
-                <td><a href="{% url 'social:edit' post.pk %}">Edit</a></td>
+                <td>
+                  {% if project %}
+                    <a href="{% url 'social:project_edit' project.slug post.pk %}">Edit</a>
+                  {% else %}
+                    <a href="{% url 'social:edit' post.pk %}">Edit</a>
+                  {% endif %}
+                </td>
               </tr>
             {% endfor %}
           </tbody>
@@ -60,10 +80,22 @@
           <tbody>
             {% for post in scheduled_posts %}
               <tr>
-                <td><a href="{% url 'social:detail' post.pk %}">{{ post.title }}</a></td>
+                <td>
+                  {% if project %}
+                    <a href="{% url 'social:project_detail' project.slug post.pk %}">{{ post.title }}</a>
+                  {% else %}
+                    <a href="{% url 'social:detail' post.pk %}">{{ post.title }}</a>
+                  {% endif %}
+                </td>
                 <td>{{ post.get_status_display }}</td>
                 <td>{{ post.scheduled_for }}</td>
-                <td><a href="{% url 'social:edit' post.pk %}">Edit</a></td>
+                <td>
+                  {% if project %}
+                    <a href="{% url 'social:project_edit' project.slug post.pk %}">Edit</a>
+                  {% else %}
+                    <a href="{% url 'social:edit' post.pk %}">Edit</a>
+                  {% endif %}
+                </td>
               </tr>
             {% endfor %}
           </tbody>
@@ -77,7 +109,13 @@
         <article class="panel stack">
           <div>
             <p class="muted">Published · {{ post.published_at }} by {{ post.author.userprofile.display_name|default:post.author.email }}</p>
-            <h3><a href="{% url 'social:detail' post.pk %}">{{ post.title }}</a></h3>
+            <h3>
+              {% if project %}
+                <a href="{% url 'social:project_detail' project.slug post.pk %}">{{ post.title }}</a>
+              {% else %}
+                <a href="{% url 'social:detail' post.pk %}">{{ post.title }}</a>
+              {% endif %}
+            </h3>
           </div>
           <p>{{ post.body|linebreaksbr }}</p>
           {% if post.embed_url %}

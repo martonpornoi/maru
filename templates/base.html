@@ -134,6 +134,20 @@
       .project-switcher[open] .project-switcher-button::after {
         content: "▴";
       }
+      .project-switcher-exit {
+        box-sizing: border-box;
+        text-decoration: none;
+      }
+      .project-switcher-exit::after {
+        content: "";
+      }
+      .project-switcher-exit small {
+        display: block;
+        margin-top: 2px;
+        color: var(--maru-muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
       .project-menu {
         display: grid;
         gap: 8px;
@@ -237,6 +251,103 @@
       .user-tile .avatar-list {
         width: 104px;
         height: 104px;
+      }
+      .volunteer-tree {
+        display: grid;
+        gap: 10px;
+      }
+      .volunteer-tree-node {
+        position: relative;
+        display: grid;
+        gap: 8px;
+      }
+      .volunteer-branch {
+        display: grid;
+        gap: 8px;
+      }
+      .volunteer-branch > summary {
+        list-style: none;
+      }
+      .volunteer-branch > summary::-webkit-details-marker {
+        display: none;
+      }
+      .volunteer-branch > summary::before {
+        content: "▸";
+        color: var(--maru-amber);
+        font-size: 0.9rem;
+      }
+      .volunteer-branch[open] > summary::before {
+        content: "▾";
+      }
+      .volunteer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 14px;
+        border: 1px solid var(--maru-border);
+        border-radius: 8px;
+        background: rgb(250 243 227 / 62%);
+      }
+      summary.volunteer-row {
+        cursor: pointer;
+      }
+      .volunteer-row-main {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: grid;
+        gap: 4px;
+      }
+      .volunteer-row-title {
+        font-weight: 800;
+      }
+      .volunteer-tree-body {
+        display: grid;
+        gap: 10px;
+        margin-left: 18px;
+        padding-left: 18px;
+        border-left: 2px solid rgb(185 130 46 / 28%);
+      }
+      .volunteer-tree-children {
+        display: grid;
+        gap: 10px;
+      }
+      .volunteer-tree-children > .volunteer-tree-node::before {
+        content: "";
+        position: absolute;
+        top: 22px;
+        left: -18px;
+        width: 18px;
+        border-top: 2px solid rgb(185 130 46 / 28%);
+      }
+      .volunteer-leaf {
+        display: grid;
+        gap: 8px;
+      }
+      .volunteer-tree-members {
+        display: grid;
+        gap: 6px;
+      }
+      .volunteer-member-pill {
+        display: grid;
+        gap: 2px;
+        padding: 8px 10px;
+        border: 1px solid rgb(7 27 58 / 14%);
+        border-radius: 8px;
+        background: rgb(255 250 240 / 72%);
+      }
+      .volunteer-member-name {
+        font-weight: 750;
+      }
+      .volunteer-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .volunteer-relation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
       }
       main {
         max-width: 960px;
@@ -383,34 +494,43 @@
         </a>
 
         {% if request.user.is_authenticated %}
-          <details class="project-switcher">
-            <summary class="project-switcher-button">
+          {% if current_archive_project %}
+            <a class="project-switcher-button project-switcher-exit" href="{% url 'projects:list' %}">
               <span>
-                {% if current_sidebar_project %}
-                  {{ current_sidebar_project.name }}
-                {% else %}
-                  {{ ui_labels.menu.projects }}
-                {% endif %}
+                {{ current_archive_project.name }}
+                <small>Exit archive</small>
               </span>
-            </summary>
-            <div class="project-menu">
-              <a class="project-menu-item" href="{% url 'projects:list' %}">
-                <span class="project-menu-name">{{ ui_labels.menu.projects }}</span>
-                <span class="project-menu-date">General view</span>
-              </a>
-              {% for project in sidebar_projects %}
-                <a class="project-menu-item" href="{% url 'projects:detail' project.slug %}">
-                  <span class="project-menu-name">{{ project.name }}</span>
-                  <span class="project-menu-date">{{ project.opens_at|date:"y.m.d" }} - {{ project.closes_at|date:"y.m.d" }}</span>
-                </a>
-              {% empty %}
+            </a>
+          {% else %}
+            <details class="project-switcher">
+              <summary class="project-switcher-button">
+                <span>
+                  {% if current_sidebar_project %}
+                    {{ current_sidebar_project.name }}
+                  {% else %}
+                    {{ ui_labels.menu.projects }}
+                  {% endif %}
+                </span>
+              </summary>
+              <div class="project-menu">
                 <a class="project-menu-item" href="{% url 'projects:list' %}">
                   <span class="project-menu-name">{{ ui_labels.menu.projects }}</span>
-                  <span class="project-menu-date">No projects yet</span>
+                  <span class="project-menu-date">General view</span>
                 </a>
-              {% endfor %}
-            </div>
-          </details>
+                {% for project in sidebar_projects %}
+                  <a class="project-menu-item" href="{% url 'projects:detail' project.slug %}">
+                    <span class="project-menu-name">{{ project.name }}</span>
+                    <span class="project-menu-date">{{ project.opens_at|date:"y.m.d" }} - {{ project.closes_at|date:"y.m.d" }}</span>
+                  </a>
+                {% empty %}
+                  <a class="project-menu-item" href="{% url 'projects:list' %}">
+                    <span class="project-menu-name">{{ ui_labels.menu.projects }}</span>
+                    <span class="project-menu-date">No projects yet</span>
+                  </a>
+                {% endfor %}
+              </div>
+            </details>
+          {% endif %}
 
           <a class="sidebar-profile" href="{% url 'accounts:my_profile' %}">
             <img class="avatar" src="{% if current_user_profile and current_user_profile.profile_picture %}{{ current_user_profile.profile_picture.url }}{% else %}{% static 'accounts/default-avatar.svg' %}{% endif %}" alt="">
@@ -431,8 +551,14 @@
             {% else %}
               <a class="nav-link" href="{% url 'accounts:user_directory' %}">{{ ui_labels.menu.users }}</a>
             {% endif %}
-            <a class="nav-link" href="{% url 'social:list' %}">{{ ui_labels.menu.social_media }}</a>
-            <a class="nav-link" href="{% url 'accounts:statistics' %}">{{ ui_labels.menu.statistics }}</a>
+            <a class="nav-link" href="{% url 'accounts:volunteer_groups' %}">Volunteers</a>
+            {% if current_sidebar_project %}
+              <a class="nav-link" href="{% url 'social:project_list' current_sidebar_project.slug %}">{{ ui_labels.menu.social_media }}</a>
+              <a class="nav-link" href="{% url 'accounts:project_statistics' current_sidebar_project.slug %}">{{ ui_labels.menu.statistics }}</a>
+            {% else %}
+              <a class="nav-link" href="{% url 'social:list' %}">{{ ui_labels.menu.social_media }}</a>
+              <a class="nav-link" href="{% url 'accounts:statistics' %}">{{ ui_labels.menu.statistics }}</a>
+            {% endif %}
             {% if current_sidebar_project %}
               <a class="nav-link" href="{% url 'projects:project_form_list' current_sidebar_project.slug %}">{{ ui_labels.menu.forms }}</a>
             {% else %}
@@ -461,13 +587,18 @@
                 <a class="nav-link" href="{% url 'accounts:statuses_benefits' %}">{{ ui_labels.menu.statuses_benefits }}</a>
                 <a class="nav-link" href="{% url 'accounts:labels' %}">{{ ui_labels.menu.labels }}</a>
               {% endif %}
-              <a class="nav-link" href="{% url 'accounts:user_tile_color_rules' %}">{{ ui_labels.menu.color_codes }}</a>
+              {% if current_sidebar_project %}
+                <a class="nav-link" href="{% url 'accounts:project_user_tile_color_rules' current_sidebar_project.slug %}">{{ ui_labels.menu.color_codes }}</a>
+              {% else %}
+                <a class="nav-link" href="{% url 'accounts:user_tile_color_rules' %}">{{ ui_labels.menu.color_codes }}</a>
+              {% endif %}
             </nav>
           {% endif %}
         {% endif %}
 
         {% if request.user.is_authenticated %}
           <div class="sidebar-footer">
+            <a class="nav-link" href="{% url 'projects:archives' %}">Archives</a>
             <span class="muted user-email">{{ request.user.email }}</span>
             <form method="post" action="{% url 'accounts:logout' %}">
               {% csrf_token %}

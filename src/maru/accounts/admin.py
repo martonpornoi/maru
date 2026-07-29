@@ -17,6 +17,8 @@ from maru.accounts.models import (
     UserConventionProfile,
     UserProfile,
     UserTileColorRule,
+    VolunteerGroup,
+    VolunteerMembership,
 )
 
 
@@ -90,6 +92,35 @@ class UserConventionProfileAdmin(admin.ModelAdmin):
         "volunteer_type",
     ]
     search_fields = ["user__email", "project__name", "roles"]
+
+
+class VolunteerMembershipInline(admin.TabularInline):
+    model = VolunteerMembership
+    extra = 1
+
+
+@admin.register(VolunteerGroup)
+class VolunteerGroupAdmin(admin.ModelAdmin):
+    inlines = [VolunteerMembershipInline]
+    list_display = ["title", "slug", "member_count", "updated_at"]
+    prepopulated_fields = {"slug": ("title",)}
+    search_fields = ["title", "description"]
+    filter_horizontal = ["parents"]
+
+    def member_count(self, obj) -> int:
+        return obj.memberships.count()
+
+
+@admin.register(VolunteerMembership)
+class VolunteerMembershipAdmin(admin.ModelAdmin):
+    list_display = ["user", "group", "role", "custom_title"]
+    list_filter = ["role", "group"]
+    search_fields = [
+        "custom_title",
+        "group__title",
+        "responsibilities",
+        "user__email",
+    ]
 
 
 @admin.register(RoleDefinition)

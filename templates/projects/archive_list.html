@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Archives - maru{% endblock %}
+
+{% block content %}
+  <section class="stack">
+    <div>
+      <h1>Archives</h1>
+      <p class="muted">Closed projects are frozen here for read-only browsing.</p>
+    </div>
+
+    <div class="panel stack">
+      {% if snapshots %}
+        <table>
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Closed</th>
+              <th>Snapshot</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for archive_snapshot in snapshots %}
+              <tr>
+                <td>{{ archive_snapshot.project.name }}</td>
+                <td>{{ archive_snapshot.closed_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ archive_snapshot.updated_at|date:"Y-m-d H:i" }}</td>
+                <td><a href="{% url 'projects:archive_detail' archive_snapshot.project.slug %}">Open archive</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No closed projects yet.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

@@ -5,8 +5,11 @@
 {% block content %}
   <section class="stack">
     <div>
-      <h1>Color Codes</h1>
-      <p class="muted">Pick one color per rule, then choose whether it changes the tile edge or interior.</p>
+      <h1>{% if project %}{{ project.name }} Color Codes{% else %}Color Codes{% endif %}</h1>
+      <p class="muted">
+        Pick one color per rule, then choose whether it changes the tile edge or interior.
+        {% if project %}These rules apply only inside this project.{% else %}These are global defaults.{% endif %}
+      </p>
     </div>
 
     <form class="panel stack" method="post">
@@ -57,11 +60,15 @@
                 <td>{{ rule.priority }}</td>
                 <td>{% if rule.active %}Yes{% else %}No{% endif %}</td>
                 <td>
-                  <a href="{% url 'accounts:edit_user_tile_color_rule' rule.pk %}">Edit</a>
-                  <form method="post" action="{% url 'accounts:delete_user_tile_color_rule' rule.pk %}">
-                    {% csrf_token %}
-                    <button type="submit">Remove</button>
-                  </form>
+                  {% if not project or not project.is_closed or can_manage_accounts %}
+                    <a href="{% url 'accounts:edit_user_tile_color_rule' rule.pk %}">Edit</a>
+                    <form method="post" action="{% url 'accounts:delete_user_tile_color_rule' rule.pk %}">
+                      {% csrf_token %}
+                      <button type="submit">Remove</button>
+                    </form>
+                  {% else %}
+                    <span class="muted">Archived</span>
+                  {% endif %}
                 </td>
               </tr>
             {% endfor %}

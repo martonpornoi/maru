@@ -4,7 +4,13 @@
 
 {% block content %}
   <section class="stack">
-    <p><a href="{% url 'social:list' %}">Back to social media</a></p>
+    <p>
+      {% if project %}
+        <a href="{% url 'social:project_list' project.slug %}">Back to social media</a>
+      {% else %}
+        <a href="{% url 'social:list' %}">Back to social media</a>
+      {% endif %}
+    </p>
 
     <article class="panel stack">
       <div class="actions">
@@ -19,8 +25,12 @@
           </p>
           <h1>{{ post.title }}</h1>
         </div>
-        {% if post.author == request.user or can_review_applications %}
-          <a class="button" href="{% url 'social:edit' post.pk %}">Edit</a>
+        {% if can_edit_post %}
+          {% if project %}
+            <a class="button" href="{% url 'social:project_edit' project.slug post.pk %}">Edit</a>
+          {% else %}
+            <a class="button" href="{% url 'social:edit' post.pk %}">Edit</a>
+          {% endif %}
         {% endif %}
       </div>
 

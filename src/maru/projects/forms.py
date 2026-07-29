@@ -22,6 +22,8 @@ from maru.projects.models import (
     RoomCombination,
     SignageReminder,
     Subproject,
+    TimetableDay,
+    TimetableLayerSetting,
     TimetablePlacement,
     VolunteerShift,
     VolunteerShiftAssignment,
@@ -409,6 +411,110 @@ class PanelSchedulingMetadataForm(forms.ModelForm):
                     "Another panel in this group already uses this order.",
                 )
         return cleaned
+
+
+class TimetableDayForm(forms.ModelForm):
+    class Meta:
+        model = TimetableDay
+        fields = [
+            "service_date",
+            "label",
+            "starts_at",
+            "ends_at",
+            "grid_interval_minutes",
+        ]
+        widgets = {
+            "service_date": forms.DateInput(attrs={"type": "date"}),
+            "starts_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "ends_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+        help_texts = {
+            "service_date": "The convention day this visual timeline belongs to.",
+            "label": "Optional display label, for example Thu 7.23.",
+            "grid_interval_minutes": "Timeline snap interval in minutes.",
+        }
+
+    def __init__(self, *args, project: Project, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.project = project
+
+    def clean_grid_interval_minutes(self) -> int:
+        interval = self.cleaned_data["grid_interval_minutes"]
+        if interval < 5 or interval > 60:
+            raise forms.ValidationError("Use a grid interval between 5 and 60 minutes.")
+        if 60 % interval:
+            raise forms.ValidationError("The interval should divide one hour evenly.")
+        return interval
+
+    def clean(self):
+        cleaned = super().clean()
+        starts_at = cleaned.get("starts_at")
+        ends_at = cleaned.get("ends_at")
+        if starts_at and ends_at and ends_at <= starts_at:
+            self.add_error("ends_at", "End time must be after start time.")
+        if starts_at and starts_at < self.project.opens_at:
+            self.add_error(
+                "starts_at", "Start time must be inside project opening times."
+            )
+        if ends_at and ends_at > self.project.closes_at:
+            self.add_error("ends_at", "End time must be inside project opening times.")
+        return cleaned
+
+    def save(self, commit=True):
+        if self.instance.pk:
+            day = self.instance
+        else:
+            day = (
+                TimetableDay.objects.filter(
+                    project=self.project,
+                    service_date=self.cleaned_data["service_date"],
+                ).first()
+                or TimetableDay(project=self.project)
+            )
+        day.project = self.project
+        day.service_date = self.cleaned_data["service_date"]
+        day.label = self.cleaned_data["label"]
+        day.starts_at = self.cleaned_data["starts_at"]
+        day.ends_at = self.cleaned_data["ends_at"]
+        day.grid_interval_minutes = self.cleaned_data["grid_interval_minutes"]
+        if commit:
+            day.save()
+        return day
+
+
+class TimetableLayerSettingsForm(forms.Form):
+    def __init__(self, *args, settings: list[TimetableLayerSetting], **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.settings = settings
+        for setting in settings:
+            prefix = self.field_prefix(setting)
+            self.fields[f"{prefix}_visible"] = forms.BooleanField(
+                required=False,
+                initial=setting.visible,
+            )
+            self.fields[f"{prefix}_locked"] = forms.BooleanField(
+                required=False,
+                initial=setting.locked,
+            )
+            self.fields[f"{prefix}_opacity"] = forms.DecimalField(
+                decimal_places=2,
+                max_digits=3,
+                max_value=1,
+                min_value=0,
+                initial=setting.opacity,
+            )
+
+    @staticmethod
+    def field_prefix(setting: TimetableLayerSetting) -> str:
+        return f"layer_{setting.layer}"
+
+    def save(self) -> None:
+        for setting in self.settings:
+            prefix = self.field_prefix(setting)
+            setting.visible = self.cleaned_data[f"{prefix}_visible"]
+            setting.locked = self.cleaned_data[f"{prefix}_locked"]
+            setting.opacity = self.cleaned_data[f"{prefix}_opacity"]
+            setting.save(update_fields=["visible", "locked", "opacity", "updated_at"])
 
 
 class EventGroupForm(forms.ModelForm):

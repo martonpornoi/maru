@@ -1,0 +1,36 @@
+{% for node in nodes %}
+  <div class="volunteer-tree-node">
+    {% if node.child_nodes %}
+      <details class="volunteer-branch"{% if node.open %} open{% endif %}>
+        <summary class="volunteer-row">
+          <span class="volunteer-row-main">
+            <a class="volunteer-row-title" href="{% url 'accounts:volunteer_group_detail' node.group.slug %}">{{ node.group.title }}</a>
+            {% if node.group.description %}
+              <span class="muted">{{ node.group.description|truncatechars:120 }}</span>
+            {% endif %}
+          </span>
+          <span class="user-chip">{{ node.member_rows|length }} member{{ node.member_rows|length|pluralize }}</span>
+        </summary>
+        <div class="volunteer-tree-body">
+          {% include "accounts/_volunteer_tree_members.html" with member_rows=node.member_rows %}
+          <div class="volunteer-tree-children">
+            {% include "accounts/_volunteer_tree_nodes.html" with nodes=node.child_nodes %}
+          </div>
+        </div>
+      </details>
+    {% else %}
+      <article class="volunteer-leaf">
+        <div class="volunteer-row">
+          <div class="volunteer-row-main">
+            <a class="volunteer-row-title" href="{% url 'accounts:volunteer_group_detail' node.group.slug %}">{{ node.group.title }}</a>
+            {% if node.group.description %}
+              <span class="muted">{{ node.group.description|truncatechars:120 }}</span>
+            {% endif %}
+          </div>
+          <span class="user-chip">{{ node.member_rows|length }} member{{ node.member_rows|length|pluralize }}</span>
+        </div>
+        {% include "accounts/_volunteer_tree_members.html" with member_rows=node.member_rows %}
+      </article>
+    {% endif %}
+  </div>
+{% endfor %}

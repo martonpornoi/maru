@@ -5,7 +5,13 @@
 {% block content %}
   <section class="stack">
     <div>
-      <p><a href="{% url 'accounts:user_tile_color_rules' %}">Back to color codes</a></p>
+      <p>
+        {% if project %}
+          <a href="{% url 'accounts:project_user_tile_color_rules' project.slug %}">Back to color codes</a>
+        {% else %}
+          <a href="{% url 'accounts:user_tile_color_rules' %}">Back to color codes</a>
+        {% endif %}
+      </p>
       <h1>{{ heading }}</h1>
     </div>
 

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import secrets
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from maru.domain import (
     ApplicationStatus,
@@ -41,6 +43,28 @@ class Project(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def is_closed(self) -> bool:
+        return self.closes_at <= timezone.now()
+
+
+class ProjectArchiveSnapshot(models.Model):
+    project = models.OneToOneField(
+        Project,
+        related_name="archive_snapshot",
+        on_delete=models.CASCADE,
+    )
+    closed_at = models.DateTimeField()
+    snapshot = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-closed_at", "project__name"]
+
+    def __str__(self) -> str:
+        return f"{self.project.name} archive"
 
 
 class ExportToken(models.Model):
@@ -497,6 +521,73 @@ class TimetablePlacement(models.Model):
         if self.room_id:
             return self.room.name
         return "Unplaced"
+
+
+class TimetableDay(models.Model):
+    project = models.ForeignKey(
+        Project, related_name="timetable_days", on_delete=models.CASCADE
+    )
+    service_date = models.DateField()
+    label = models.CharField(max_length=120, blank=True)
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+    grid_interval_minutes = models.PositiveSmallIntegerField(default=15)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "service_date"],
+                name="unique_timetable_day_per_project",
+            )
+        ]
+        ordering = ["starts_at", "service_date"]
+
+    def __str__(self) -> str:
+        return f"{self.project.name}: {self.display_label}"
+
+    @property
+    def display_label(self) -> str:
+        return self.label or self.service_date.strftime("%a %m.%d")
+
+
+class TimetableLayerSetting(models.Model):
+    project = models.ForeignKey(
+        Project, related_name="timetable_layer_settings", on_delete=models.CASCADE
+    )
+    layer = models.CharField(
+        max_length=64,
+        choices=[(layer.value, layer.value) for layer in TimetableLayer],
+    )
+    label = models.CharField(max_length=120, blank=True)
+    visible = models.BooleanField(default=True)
+    locked = models.BooleanField(default=False)
+    opacity = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=1,
+        validators=[MinValueValidator(0), MaxValueValidator(1)],
+    )
+    position = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "layer"],
+                name="unique_timetable_layer_per_project",
+            )
+        ]
+        ordering = ["position", "layer"]
+
+    def __str__(self) -> str:
+        return f"{self.project.name}: {self.display_label}"
+
+    @property
+    def display_label(self) -> str:
+        return self.label or self.layer.replace("_", " ").title()
 
 
 class VolunteerShift(models.Model):
