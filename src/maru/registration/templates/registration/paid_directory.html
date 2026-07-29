@@ -1,0 +1,65 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}{{ edition.name }} attendees{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">Public opt-in list</p>
+    <h1>{{ edition.name }} attendees</h1>
+    <p>
+      This directory contains only people who separately chose to participate.
+      Their optional country is entered specifically for this public list, and
+      attendee levels come from current convention records. Contact, address,
+      legal identity, birth date, prices, payment, and emergency details are
+      never included.
+    </p>
+  </div>
+
+  {% if public_profiles %}
+    <div class="directory-grid">
+      {% for item in public_profiles %}
+        {% with profile=item.profile %}
+        <article class="directory-card">
+          {% if profile.profile_photo and profile.profile_photo_status == "approved" %}
+            <img src="{% url 'protected-profile-photo' profile.id %}" alt="Profile for {{ profile.account.display_name }}">
+          {% else %}
+            <div class="directory-avatar" aria-hidden="true">{{ profile.account.display_name|first|upper }}</div>
+          {% endif %}
+          <div>
+            <h2>{{ profile.account.display_name }}</h2>
+            {% if item.attendance_labels %}
+              <div class="attendance-labels" aria-label="Attendee levels">
+                {% for label in item.attendance_labels %}
+                  <span class="attendance-label tone-{{ label.tone }}">{{ label.label }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if profile.pronouns %}<p>{{ profile.pronouns }}</p>{% endif %}
+            {% if profile.bio %}<p>{{ profile.bio }}</p>{% endif %}
+            {% if profile.directory_country_code %}
+              <span class="directory-country">Country: <strong>{{ profile.directory_country_code }}</strong></span>
+            {% endif %}
+            {% if item.language_labels %}
+              <span>Speaks {{ item.language_labels|join:", " }}</span>
+            {% endif %}
+            {% for fursuit in profile.fursuits.all %}
+              <div class="public-fursuit">
+                {% if fursuit.photo and fursuit.photo_status == "approved" %}
+                  <img src="{% url 'protected-fursuit-photo' fursuit.id %}" alt="{{ fursuit.name }}">
+                {% endif %}
+                <strong>{{ fursuit.name }}</strong>
+                {% if fursuit.species %}<span>{{ fursuit.species }}</span>{% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </article>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <section class="empty-state">
+      <h2>No one has joined the directory yet</h2>
+      <p>Directory visibility is optional and private by default.</p>
+    </section>
+  {% endif %}
+{% endblock %}

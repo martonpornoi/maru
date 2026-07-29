@@ -1,0 +1,51 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Volunteer for {{ edition.name }}{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">{{ edition.organization.name }}</p>
+    <h1>Volunteer opportunities for {{ edition.name }}</h1>
+    <p>
+      Explore how the convention is organized. Filled positions remain visible
+      for transparency, but clearly stop accepting applications.
+    </p>
+  </div>
+
+  <div class="directory-grid">
+    {% for opportunity in opportunities %}
+      <article class="attendee-card">
+        <div>
+          <p class="eyebrow">{{ opportunity.position.department.name }}</p>
+          <h2>{{ opportunity.headline }}</h2>
+          <p>{{ opportunity.description }}</p>
+          {% if opportunity.position.reports_to %}
+            <p><strong>Reports to:</strong> {{ opportunity.position.reports_to.title }}</p>
+          {% endif %}
+          <p>
+            <strong>Headcount:</strong>
+            {{ opportunity.active_assignment_count }} / {{ opportunity.position.headcount }}
+          </p>
+        </div>
+        {% if opportunity.id in applied_ids %}
+          <span class="status-badge">Application submitted</span>
+        {% elif opportunity.accepts_applications %}
+          {% if account %}
+            <a class="button" href="{% url 'workforce-apply' edition.id opportunity.id %}">Apply</a>
+          {% else %}
+            <a class="button" href="{% url 'staff-login' %}?next={% url 'workforce-apply' edition.id opportunity.id %}">Sign in to apply</a>
+          {% endif %}
+        {% else %}
+          <span class="status-badge">Visible · not accepting applications</span>
+        {% endif %}
+      </article>
+    {% empty %}
+      <section class="notice-card">
+        <div>
+          <strong>No volunteer opportunities are published yet.</strong>
+          <p>Published positions will appear here without exposing applicants.</p>
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+{% endblock %}

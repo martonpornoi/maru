@@ -1,0 +1,38 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <div id="content-main">
+    <p class="help">
+      Use this once after creating an organization, convention series, edition,
+      and separate Chair account. It creates the initial authority controllers,
+      Convention Leadership structure, filled Chair position, and ten published
+      furry-convention position templates in one transaction.
+    </p>
+    <p class="warning">
+      This is a high-impact trust operation. It cannot be repeated for an
+      organization that already has authority records. Later appointments use
+      ordinary dual-control workflows.
+    </p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="errornote">{{ form.non_field_errors }}</div>
+      {% endif %}
+      <fieldset class="module aligned">
+        {% for field in form %}
+          <div class="form-row{% if field.errors %} errors{% endif %}">
+            {{ field.errors }}
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+              <div class="help">{{ field.help_text }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </fieldset>
+      <div class="submit-row">
+        <input type="submit" value="Create initial authority and position templates">
+      </div>
+    </form>
+  </div>
+{% endblock %}

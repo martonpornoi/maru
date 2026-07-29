@@ -1,0 +1,67 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Verify your email before registration{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">{{ configuration.organization.name }}</p>
+    <h1>Verify your email first</h1>
+    <p>
+      {{ configuration.edition.name }} requires a verified Maru account before
+      a registration can hold capacity. Verification does not reserve or buy a
+      ticket.
+    </p>
+  </div>
+
+  {% if account %}
+    <section class="notice-card">
+      <div>
+        <strong>{{ account.email }}</strong>
+        <p>
+          This signed-in account is waiting for email verification. You can
+          request another single-use link below.
+        </p>
+      </div>
+    </section>
+    <form method="post" class="registration-form">
+      {% csrf_token %}
+      <div class="submit-bar">
+        <span>After verification, return here to complete registration.</span>
+        <button class="button" type="submit">Send another verification link</button>
+      </div>
+    </form>
+  {% else %}
+    <section class="notice-card">
+      <div>
+        <strong>Already have a Maru account?</strong>
+        <p>Sign in so this registration joins your existing convention history.</p>
+      </div>
+      <a class="button secondary" href="{{ sign_in_url }}">Sign in</a>
+    </section>
+    <form method="post" class="registration-form" novalidate>
+      {% csrf_token %}
+      {% if account_form.non_field_errors %}
+        <div class="form-summary" role="alert">
+          {% for error in account_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+      {% endif %}
+      <fieldset class="form-section">
+        <legend>Create your Maru account</legend>
+        <p class="section-description">
+          One account works across conventions. We will send a single-use
+          verification link before showing the registration form.
+        </p>
+        <div class="field-grid two-column">
+          {% include "registration/_field.html" with field=account_form.email %}
+          {% include "registration/_field.html" with field=account_form.display_name %}
+          {% include "registration/_field.html" with field=account_form.password1 %}
+          {% include "registration/_field.html" with field=account_form.password2 %}
+        </div>
+      </fieldset>
+      <div class="submit-bar">
+        <span>No ticket or capacity is held at this step.</span>
+        <button class="button" type="submit">Create account and verify email</button>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}

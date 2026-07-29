@@ -1,0 +1,24 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Verify your email{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">Account security</p>
+    <h1>Verify your email</h1>
+    <p>Confirm this single-use link before a registration can hold a place.</p>
+  </div>
+  <form method="post" class="registration-form">
+    {% csrf_token %}
+    {{ form.token }}
+    {% if form.non_field_errors %}
+      <div class="form-summary" role="alert">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    <div class="submit-bar">
+      <span>The link expires and works only once.</span>
+      <button class="button" type="submit">Verify and continue</button>
+    </div>
+  </form>
+{% endblock %}

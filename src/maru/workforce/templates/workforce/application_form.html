@@ -1,0 +1,28 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Apply for {{ opportunity.position.title }}{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">{{ opportunity.position.department.name }}</p>
+    <h1>Apply for {{ opportunity.position.title }}</h1>
+    <p>
+      An application expresses interest. It does not assign the position or
+      grant access; organizers review onboarding requirements separately.
+    </p>
+  </div>
+  <form class="registration-form" method="post" novalidate>
+    {% csrf_token %}
+    <fieldset class="form-section">
+      <legend>Your application</legend>
+      {% if form.non_field_errors %}
+        <div class="form-summary" role="alert">{{ form.non_field_errors }}</div>
+      {% endif %}
+      {% include "registration/_field.html" with field=form.motivation %}
+    </fieldset>
+    <div class="submit-bar">
+      <a class="button secondary" href="{% url 'workforce-opportunities' opportunity.position.edition_id %}">Cancel</a>
+      <button class="button" type="submit">Submit application</button>
+    </div>
+  </form>
+{% endblock %}

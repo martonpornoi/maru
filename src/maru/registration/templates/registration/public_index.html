@@ -1,0 +1,88 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Choose a convention{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">Attendee registration</p>
+    <h1>Choose your convention</h1>
+    <p>
+      Start a registration for an open edition or return to one you already
+      submitted. Each convention keeps its own form, products, and profile data.
+    </p>
+  </div>
+
+  {% if not account %}
+    <section class="notice-card">
+      <div>
+        <strong>Registered before?</strong>
+        <p>Sign in once, then choose which convention you want to join.</p>
+      </div>
+      <a class="button secondary" href="{{ sign_in_url }}">Sign in</a>
+    </section>
+  {% endif %}
+
+  <section aria-labelledby="open-editions">
+    <div class="section-heading">
+      <div>
+        <p class="section-kicker">Available now</p>
+        <h2 id="open-editions">Open registrations</h2>
+      </div>
+      <span class="count">{{ cards|length }} edition{{ cards|length|pluralize }}</span>
+    </div>
+    {% if cards %}
+      <div class="edition-grid">
+        {% for card in cards %}
+          <article class="edition-card">
+            <p class="edition-org">{{ card.configuration.organization.name }}</p>
+            <h3>{{ card.configuration.edition.name }}</h3>
+            <p>
+              {{ card.configuration.edition.starts_on }}–{{ card.configuration.edition.ends_on }}
+              · {{ card.configuration.edition.time_zone }}
+            </p>
+            <p>
+              {{ card.configuration.products.all|length }} admission
+              option{{ card.configuration.products.all|length|pluralize }}
+            </p>
+            {% if card.already_registered %}
+              <a class="button" href="{% url 'public-registration-profile' card.configuration.edition_id %}">
+                View my registration
+              </a>
+            {% else %}
+              <a class="button" href="{% url 'public-registration-form' card.configuration.edition_id %}">
+                Register for this convention
+              </a>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>No registration is open right now</h3>
+        <p>When an organizer opens an edition, it will appear here.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if registrations %}
+    <section aria-labelledby="your-registrations">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Your history</p>
+          <h2 id="your-registrations">Your registrations</h2>
+        </div>
+      </div>
+      <div class="registration-list">
+        {% for registration in registrations %}
+          <a href="{% url 'public-registration-profile' registration.edition_id %}">
+            <span>
+              <strong>{{ registration.edition.name }}</strong>
+              <small>{{ registration.product_name_snapshot }} · {{ registration.reference }}</small>
+            </span>
+            <span class="status">{{ registration.get_state_display }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}

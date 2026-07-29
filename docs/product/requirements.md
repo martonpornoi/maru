@@ -1,0 +1,735 @@
+# Product requirements
+
+Status: Baseline  
+Last updated: 2026-07-29
+
+This document defines stable product requirements. Identifiers are used by
+architecture documents, implementation issues, tests, and release notes.
+
+## Domain terminology
+
+- **Platform account:** A person's global login and platform-level preferences.
+- **Organization:** An independently governed organizer and tenant.
+- **Convention series:** A recurring convention brand owned by an organization.
+- **Event edition:** One independently configured occurrence, such as
+  `Awoostria 2026`.
+- **Participation:** A person's relationship with an event edition, possibly in
+  several capacities.
+- **Department:** An organizational unit scoped to an organization or edition.
+- **Assignment:** A time-bounded responsibility, position, shift, or hosting
+  commitment.
+- **Archive:** A read-only-by-default historical edition and its durable records.
+
+## Functional requirements
+
+### Identity, tenancy, and participation history
+
+- **IDN-001 — One platform account:** A person must be able to use one account
+  across supported conventions without separate convention passwords.
+- **IDN-002 — Tenant isolation:** An organization may access only data shared
+  with or created for that organization. A global account must not create
+  implicit cross-organizer data access.
+- **IDN-003 — Multiple capacities:** A person may simultaneously be an attendee,
+  volunteer, staff member, host, dealer assistant, guest, or other configured
+  participant in one edition.
+- **IDN-004 — Scoped authority:** Permissions must be expressible by
+  organization, event edition, department, function, resource, and field.
+- **IDN-005 — Delegation:** Authorized leads must be able to grant limited,
+  expiring responsibility without granting broad administrator access. Root
+  authority and role changes require independent approval and cannot outlive
+  either controller's authority; authorized revocation remains immediate.
+- **IDN-006 — Purpose-partitioned person data:** Platform identity,
+  organizer relationships, edition registration profiles, restricted
+  operational contacts, and approved public renditions must remain distinct.
+  Reusing a person's data across editions requires compatible purpose, notice,
+  and an explicit user action.
+- **IDN-007 — Verified identity lifecycle:** Capacity-holding public actions
+  require a verified account unless an explicitly reviewed provisional policy
+  applies. Verification, recovery, session inventory and revocation,
+  privileged step-up, enumeration resistance, and abuse limits must use
+  expiring, single-use evidence and produce user-visible security history.
+- **IDN-008 — Scoped restrictions and appeal:** An organizer restriction must
+  state its organization or edition scope, kind, effective period,
+  attendee-safe explanation, authority, and operational consequences. It must
+  remain separate from platform login state, support reasoned revocation and
+  appeal, and never disclose one organizer's restriction to another.
+
+### Multi-convention and event editions
+
+- **EVT-001 — Multiple organizers:** One deployment must serve multiple
+  independently governed organizations. An organization is the tenant and
+  accountable organizer; it may own several convention series, each of which
+  is a recurring public brand rather than a separate authority boundary.
+- **EVT-002 — Edition as project:** Operational work must be scoped to an event
+  edition. Each edition owns configuration, dates, venue data, registration,
+  programme, staffing, communications, and reports.
+- **EVT-003 — Inheritance:** A new edition may copy selected configuration,
+  forms, roles, schedule templates, products, and documents from a prior edition
+  or an approved versioned template without sharing mutable records. Imported
+  configuration must retain provenance and require target-edition review before
+  activation.
+- **EVT-004 — Independent lifecycle:** Editions must move independently through
+  draft, preparation, live, closing, and archived states.
+- **EVT-005 — Time and locale:** Each organization must define searchable,
+  code-backed country, default-language, and time-zone suggestions, and each
+  edition must define its authoritative time zone, languages, currencies, date
+  formats, and local policy configuration. Persist IANA time-zone identifiers,
+  ISO language/country codes, and currency codes rather than display labels;
+  show human-readable names and UTC/DST offsets at data-entry boundaries.
+
+### Archival history
+
+- **ARC-001 — Personal history:** People must be able to view their historical
+  participation, including attendance level, host contributions, volunteer
+  assignments, completed shifts, staff positions, dealer involvement, and other
+  explicitly retained achievements.
+- **ARC-002 — Historical meaning:** Archived records must preserve the labels,
+  edition names, role names, and relevant status snapshots as they existed at
+  the time. Later renaming must not rewrite history.
+- **ARC-003 — Read-only archive:** An archived edition is immutable by default.
+  Corrections require explicit authority, a reason, and an audit entry.
+- **ARC-004 — Visibility:** Personal, organizer-only, and public historical
+  information must remain distinct. Users control optional public history.
+- **ARC-005 — Retention:** Archival value does not override retention rules.
+  Operational history should be retained without keeping unnecessary legal,
+  medical, HR, identity-document, or payment data.
+
+### Activity, audit, and engagement
+
+- **AUD-001 — Administrative audit:** Sensitive reads and privileged mutations
+  must record actor, action, scope, target, time, source, and outcome.
+- **AUD-002 — User-visible security history:** Users must be able to review
+  important account events such as sign-ins, credential changes, consent
+  changes, exports, and account-linking actions.
+- **AUD-003 — Operational timeline:** Authorized staff must be able to see a
+  meaningful timeline for registrations, applications, orders, assignments,
+  cases, messages, and publication actions.
+- **AUD-004 — Purpose limitation:** Engagement analytics must be separated from
+  security audit data, minimized, documented, and disabled where no justified
+  purpose exists.
+- **AUD-005 — Tamper evidence:** Audit records must not be editable through
+  normal application interfaces and must have integrity monitoring.
+
+### Internal communication
+
+- **MSG-001 — Platform inbox:** Users and authorized teams must have a searchable
+  platform inbox that replaces scattered operational Telegram groups and email
+  chains.
+- **MSG-002 — Conversation scope:** Threads may belong to an edition,
+  department, application, registration, incident, shift, programme item, or
+  another domain object.
+- **MSG-003 — Team inboxes:** Departments must support shared queues, assignment,
+  status, priority, internal notes, followers, and service expectations.
+- **MSG-004 — Audience controls:** Conversations, notes, and attachments must
+  enforce participant, department, tenant, and sensitivity boundaries.
+- **MSG-005 — Delivery preferences:** Users may receive notifications through
+  configured channels while the canonical message and read state remain inside
+  Maru.
+- **MSG-006 — Search and continuity:** Authorized replacements must be able to
+  understand prior decisions without access to former staff members' personal
+  accounts.
+- **MSG-007 — Registration service notifications:** Registration, payment,
+  wait-list, restriction, and deadline events must create a canonical,
+  localized inbox message before optional email delivery. Delivery must be
+  idempotent, retryable, preference-aware without treating operational mail as
+  marketing, and expose permanent failure to an owned staff queue.
+
+### Central announcements and external publishing
+
+- **ANN-001 — Compose once:** Staff must be able to create one canonical
+  announcement and prepare channel-specific variants.
+- **ANN-002 — Supported destinations:** Connectors should support the convention
+  website, platform inbox, email, push notifications, X, Bluesky, Telegram,
+  Barq, and future channels where supported APIs and organizer credentials are
+  available.
+- **ANN-003 — Workflow:** Announcements must support drafts, previews,
+  localization, approvals, scheduling, immediate emergency publication, and
+  cancellation.
+- **ANN-004 — Delivery state:** Each channel delivery must record attempts,
+  remote identifiers, success, failure, retry state, and the published form.
+- **ANN-005 — Adapter isolation:** External networks must be adapters. Their
+  outages, limits, removals, or API changes must not damage the canonical
+  announcement.
+- **ANN-006 — Audience targeting:** Internal announcements may target edition,
+  registration tier, role, department, venue, shift, or saved audience, subject
+  to authorization and communication preferences.
+
+### HR, staffing, and onboarding
+
+- **HR-001 — Configurable pipeline:** HR must be able to configure application,
+  review, interview, offer, acceptance, onboarding, active, inactive, and
+  offboarding stages.
+- **HR-002 — Checklists:** Onboarding must support role-specific tasks,
+  agreements, policy acknowledgements, training, certifications, system access,
+  equipment, and accountable owners.
+- **HR-003 — Organization history:** Authorized HR users must see prior
+  organization roles and relevant eligibility without exposing unrelated
+  convention data.
+- **HR-004 — Least-privilege provisioning:** Onboarding and offboarding must
+  create, review, expire, and revoke access predictably.
+- **HR-005 — Progress and reminders:** Candidates, staff members, leads, and HR
+  must see appropriate progress, blockers, deadlines, and reminders.
+- **HR-006 — Sensitive separation:** HR cases, accommodations, conduct matters,
+  and ordinary staffing records must have separate access policies.
+- **HR-007 — Positions and published opportunities:** Editions must support
+  reusable position templates, edition-owned departments and reporting
+  hierarchy, explicit headcount, several people in one position where allowed,
+  and one application opportunity per position. A published opportunity must
+  remain discoverable when filled unless an organizer explicitly withdraws it,
+  while clearly stating whether new applications are accepted.
+- **HR-008 — Reviewed onboarding evidence:** An organizer may request a
+  versioned agreement or onboarding document from a named person. The source
+  file must remain private, type/size/malware checked, separately reviewed with
+  a reason, and retained under an approved HR policy. Assignment or access may
+  depend only on an approved current requirement; an uploaded file by itself
+  grants nothing.
+
+### Programme, shifts, and timetable planning
+
+- **SCH-001 — Shared planning model:** Programme sessions, shifts, room
+  availability, venue restrictions, people, resources, rehearsals, and
+  dependencies must participate in one conflict-aware planning model.
+- **SCH-002 — Multiple views:** The same source data must support attendee,
+  participant, volunteer, department, venue, room, person, resource,
+  cross-department, review, run-of-show, digital signage, and convention-book
+  views.
+- **SCH-003 — Decision support:** Planning must surface conflicts, missing
+  qualifications, understaffing, excessive hours, unavailable people, travel or
+  turnaround constraints, dependencies, and unpublished changes.
+- **SCH-004 — Drafts and publication:** Schedules must support draft versions,
+  review, comparison, approval, publication, and revision history.
+- **SCH-005 — Personal decision view:** Volunteers must be able to compare
+  suitable open shifts against their qualifications, interests, existing
+  commitments, break needs, and preferred availability.
+- **SCH-006 — Edition outputs:** Approved timetable data must feed public APIs,
+  personal calendars, signage, staff briefings, exports, and print layouts.
+- **SCH-007 — Human override:** Authorized planners may override warnings with a
+  recorded reason; hard safety or authorization constraints cannot be silently
+  bypassed.
+
+### Querying, reporting, and export
+
+- **QRY-001 — Search-first operations:** IT, Front Desk, HR, Registration, and
+  other departments must have fast global and module-specific search.
+- **QRY-002 — Safe query builder:** Authorized users must be able to filter,
+  sort, group, aggregate, save, share, and rerun queries without writing SQL.
+- **QRY-003 — Field catalog:** Queryable fields must have human-readable names,
+  descriptions, formats, sensitivity classifications, and permission rules.
+- **QRY-004 — Role-oriented defaults:** The platform must ship useful saved
+  views and dashboards for common department questions. The registration
+  baseline must include a confirmed-attendance country breakdown and minimized
+  badge-preparation view.
+- **QRY-005 — Export formats:** Meaningful tabular data should be exportable as
+  CSV and XLSX. Stable printable artifacts should be exportable as PDF. Calendar
+  data should support iCalendar where appropriate.
+- **QRY-006 — Asynchronous exports:** Large exports must run as background jobs
+  with progress, expiration, access checks at execution and download time, and
+  an audit record.
+- **QRY-007 — Sensitive output controls:** Sensitive exports must support
+  minimization, watermarking or classification, expiry, and restricted sharing.
+- **QRY-008 — Reproducibility:** Reports must record filters, edition scope,
+  generation time, requester, data version where practical, and template
+  version.
+
+### Staff and administration experience
+
+- **UX-001 — Purpose-built console:** Django admin may support early data
+  management, but recurring staff workflows must use a role-oriented operations
+  console.
+- **UX-002 — Relevant home:** A user's home view must prioritize their assigned
+  work, deadlines, unread conversations, schedule, warnings, and recent items.
+- **UX-003 — Low interaction cost:** Common tasks must support direct search,
+  bulk actions, keyboard operation, sensible defaults, and preserved context.
+- **UX-004 — Responsive feedback:** Navigation and routine operations must feel
+  immediate. Performance budgets and representative datasets must be tested in
+  CI and release validation.
+- **UX-005 — Error recovery:** Destructive or high-impact actions require clear
+  confirmation, and reversible actions should provide undo or recovery.
+- **UX-006 — Progressive disclosure:** Simple tasks must remain simple while
+  advanced controls are available when needed.
+- **UX-007 — Accessibility:** Public and staff interfaces must target WCAG 2.2
+  AA and remain usable with keyboard and assistive technology.
+- **UX-008 — Consistency:** Statuses, filters, tables, forms, timelines, and
+  permission-denied behavior must be consistent across modules.
+- **UX-009 — Edition working context:** Staff and bootstrap-administration
+  surfaces must preserve one explicitly selected event edition and scope
+  edition-owned lists, details, counts, and choices to it by default.
+  Platform-wide records must be clearly distinguished. Cross-edition reuse must
+  be an explicit source-selection action, remain within authorized tenant
+  scope, and create independent edition-owned records.
+
+### Registration, orders, and attendee service
+
+- **REG-001 — Configurable registration:** Each edition must support
+  versioned registration periods, capacities, eligibility, pricing, questions,
+  agreements, waiting lists, and approval policies. An edition may start from a
+  blank setup, a reviewed prior edition, or an approved template, but the
+  resulting configuration is edition-owned and independently versioned.
+  Sections, questions, and products must be addable, editable, reorderable, and
+  removable while the owning configuration or template remains a draft.
+  Active, published, submitted, and financially referenced records remain
+  immutable or use explicit lifecycle commands.
+- **REG-002 — Purpose-bound forms:** Conditional forms must disclose purpose
+  and visibility, reuse only compatible data with the user's knowledge, and
+  retain the exact submitted schema version.
+- **REG-003 — Products and entitlements:** Products, variants, bundles, quotas,
+  discounts, vouchers, memberships, donations, and non-financial entitlements
+  must remain distinguishable.
+- **REG-004 — Order lifecycle:** Orders must support reservations, expiry,
+  payment attempts, changes, transfers, cancellation, partial or full refunds,
+  disputes, and reconciliation without rewriting financial history.
+- **REG-005 — Payment boundary:** Payment-card data must remain with compliant
+  payment providers. Provider messages must be authenticated, idempotent, and
+  reconciled against locally recorded intent.
+- **REG-006 — Explainable eligibility:** Staff and attendees must be able to
+  understand why an item, price, status, or action is or is not available,
+  subject to fraud and security limits.
+- **REG-007 — Attendee service view:** Authorized service staff must resolve
+  identity and see a consolidated, purpose-limited view of registration,
+  payment state, entitlements, credentials, fulfilment, and relevant contact.
+- **REG-008 — Controlled exceptions:** Waivers, manual changes, complimentary
+  items, overrides, and corrections require explicit capability, reason,
+  relevant evidence, and an attendee-visible consequence where appropriate.
+- **REG-009 — Check-in and fulfilment:** The platform must support check-in,
+  credential issuance, badge printing, item handover, reprints, revocation, and
+  reconciliation across online and authorized offline clients.
+- **REG-010 — Capacity integrity:** Concurrent sales and allocation must not
+  oversubscribe hard capacity. Holds, expiry, wait-list promotion, and manual
+  overrides must be transactional and observable.
+- **REG-011 — Public registration entry:** A person without an account must be
+  able to discover an open edition, create one platform account, and submit its
+  registration without entering a staff surface. Returning users must be able
+  to choose among open editions and see which editions they already joined.
+- **REG-012 — Edition registration profile:** Registration may collect
+  edition-owned identity, contact, address, emergency-contact, character, and
+  media fields only with field-level purpose, sensitivity, visibility, and
+  retention notice. Optional public-attendance publication must be a separate
+  edition consent, require confirmed admission, and expose only a minimized
+  rendition with approved media. A country shown publicly must be entered for
+  that purpose and must never be inferred or copied from the address field.
+  Telephone entry must pair a recognizable country code, flag, and calling
+  prefix with the local number, then store one validated canonical
+  international value.
+- **REG-013 — Profile sections and derived facts:** Organizers may group
+  edition registration questions into ordered, versioned sections. Staff-owned
+  facts such as volunteer department and special-ticket entitlement must be
+  derived from their authoritative domain records rather than attendee
+  self-assertion. Public and badge attendee-level labels must use those
+  authoritative facts and must not disclose exact price or payment evidence.
+- **REG-014 — Headless and reference clients:** Registration meaning,
+  availability, prices, purposes, and lifecycle consequences must be available
+  through versioned API contracts so a convention can replace its visual
+  frontend without forking domain rules. A bundled form may demonstrate the
+  contract, but every client command is revalidated by Maru.
+- **REG-015 — Reviewed profile reuse and amendment:** An authenticated
+  returning attendee may explicitly accept, change, or reject a clearly sourced
+  prior-profile suggestion. Submission must create an independent edition
+  snapshot; current-edition self-service changes must not mutate earlier
+  profiles or the immutable registration submission. Edition publication
+  consent must never be preselected from history.
+- **REG-016 — Structured public profile and moderated media:** Pronouns must
+  use a maintained vocabulary with conditional write-in, spoken languages must
+  use interoperable codes with a configured maximum, and attendees may record
+  multiple edition fursuits. New or changed public images must remain private
+  until an authorized reasoned review; an exact approved file may be reused
+  only by its owning account in compatible organizer scope. Public status
+  styling must include readable labels and never rely on color alone.
+- **REG-017 — Provider-backed payment evidence:** A paid reservation must use a
+  locally recorded intent and a provider-hosted checkout. Browser return is
+  never proof of payment; only an authenticated, replay-resistant, idempotent
+  provider event may confirm money. Mismatch and uncertainty must enter an
+  owned exception queue without silently changing admission.
+- **REG-018 — Operational finance evidence:** Provider payments, refunds, fees,
+  disputes, chargebacks, receipts, cancellations, and settlements must produce
+  append-only, edition-scoped operational evidence. High-risk attendee-facing
+  changes require separate proposal and approval. Maru's evidence is not a
+  statutory general ledger.
+- **REG-019 — Safe media and minor admission:** Public-profile images must be
+  type, size, decode, malware, and safe-rendition checked before moderation or
+  publication. An edition admitting minors must activate a versioned age and
+  guardian policy; required consent blocks payment and confirmation until
+  accepted.
+- **REG-020 — Credential and closure integrity:** Confirmed admission may issue
+  a revocable, minimized credential. Offline check-in must use signed,
+  time-bounded device manifests and idempotent reconciliation. Archival must
+  require reviewed readiness evidence, zero unresolved operational queues, an
+  immutable closure manifest, and a current recovery reference.
+- **REG-021 — Staff-assisted registration:** Authorized staff may create the
+  same edition registration for an exact existing account, or explicitly
+  create a new unverified account when the email has never belonged to one,
+  outside public opening or product-sale hours only with a reason and separate
+  actor/subject evidence. New-account creation requires an explicit display
+  name and policy-valid temporary password, warns the staff actor, never
+  overwrites an existing or inactive identity, and receives its own privileged
+  audit event.
+  The command must still use an active immutable configuration, validate
+  answers, age policy, eligibility, price, currency, capacity, payment
+  deadline, restrictions, and duplicate-registration rules. It may not mark a
+  paid product paid, waive payment, or silently make an incomplete profile
+  public.
+
+### Programme intake and curation
+
+- **PRG-001 — Calls for participation:** Editions must define calls, tracks,
+  formats, questions, deadlines, public fields, consent, and content policy.
+- **PRG-002 — Collaborative proposals:** Submitters may invite co-hosts,
+  retain drafts, receive requests, submit revisions, and control which profile
+  information is proposed for publication.
+- **PRG-003 — Structured review:** Review stages must support configurable
+  rubrics, conflicts of interest, optional anonymization, independent scoring,
+  discussion, moderation, and accountable decisions.
+- **PRG-004 — Decision communication:** Accept, reject, wait-list, and revision
+  decisions must use templates while preserving a canonical conversation and
+  any required acknowledgement.
+- **PRG-005 — Accepted-item advance:** Acceptance must create tracked work for
+  public copy, host confirmation, technical needs, accessibility, media
+  consent, schedule availability, files, and other configured readiness.
+- **PRG-006 — Publication separation:** Private proposal and review data must
+  remain separate from approved public programme data, even when derived from
+  the same item.
+- **PRG-007 — Delivery record:** Authorized teams may retain planned versus
+  actual time, attendance observations, show report, recording or asset state,
+  and host contribution under explicit retention policy.
+
+### Governance, planning, and readiness
+
+- **PLN-001 — Mandate and success:** An edition must record accountable
+  leadership, mandate, objectives, measures, assumptions, constraints, and
+  decision authority.
+- **PLN-002 — Connected work:** Projects, milestones, tasks, dependencies,
+  decisions, risks, issues, and change requests must link to the people,
+  departments, budget, schedule, spaces, assets, and policies they affect.
+- **PLN-003 — Ownership:** Work must have one accountable owner, optional
+  contributors, deadline, state, priority, edition scope, and escalation path.
+- **PLN-004 — Evidence-backed readiness:** Readiness must be calculated from
+  owned criteria and current evidence, never from an unexplained percentage.
+- **PLN-005 — Risk management:** Risks must record likelihood, impact,
+  treatment, owner, review date, residual status, triggers, and linked
+  contingency work.
+- **PLN-006 — Decision record:** Material decisions must retain question,
+  context, options, decider, rationale, date, consequences, and supersession.
+- **PLN-007 — Change control:** Material scope, policy, budget, venue, schedule,
+  or service changes must expose affected dependencies and required approval
+  before taking effect.
+- **PLN-008 — Handover:** Roles and departments must maintain structured
+  handover state, unresolved commitments, recurring knowledge, and acceptance
+  by a successor or accountable lead.
+
+### Finance, procurement, contracts, and sponsorship
+
+- **FIN-001 — Operational budgets:** Editions must support versioned budgets,
+  cost centers, restricted funds, forecasts, commitments, actuals, variance,
+  and responsible owners in edition currencies.
+- **FIN-002 — Approval policy:** Purchase requests, orders, expenses,
+  reimbursements, refunds, complimentary value, and write-offs must follow
+  configurable amount- and scope-based authority.
+- **FIN-003 — Procurement trail:** A procurement must connect need, quotes,
+  selection rationale, vendor, contract, purchase authorization, delivery,
+  acceptance, invoice, and dispute.
+- **FIN-004 — Expense safety:** Reimbursement workflows must collect required
+  evidence, protect bank and tax details, detect duplicates, communicate state,
+  and export approved records.
+- **FIN-005 — Contract obligations:** Contracts must expose owners, dates,
+  deliverables, renewal or termination triggers, data obligations, insurance,
+  and linked operational work without making all terms broadly visible.
+- **FIN-006 — Sponsor fulfilment:** Sponsor agreements must map promised
+  benefits to owners, deadlines, assets, approvals, delivery evidence, and
+  post-event reporting.
+- **FIN-007 — Reconciliation:** Registration, merchandise, dealer, charity,
+  auction, cash, provider, and inventory activity must produce reconcilable
+  operational ledgers and assigned exceptions.
+- **FIN-008 — Accounting boundary:** Maru must integrate with or export to an
+  authoritative accounting system and must not represent its operational
+  records as a statutory general ledger.
+
+### Venue, lodging, travel, and hospitality
+
+- **VEN-001 — Venue model:** Editions must represent sites, buildings, rooms,
+  zones, entrances, routes, capacities, access properties, service hours,
+  contacts, and versioned floor-plan references.
+- **VEN-002 — Space booking:** Programme, staff, commercial, guest, storage,
+  catering, rehearsal, and private-use bookings must share availability and
+  setup/teardown constraints.
+- **VEN-003 — Accommodation inventory:** Hotel properties, room types, nights,
+  accessible features, blocks, assignments, release dates, and provider
+  references must be manageable without storing unnecessary guest data.
+- **VEN-004 — Fair allocation:** Oversubscribed rooms or entitlements must
+  support versioned allocation policy, eligibility, randomized or scored
+  rounds, reproducible results, appeals, and controlled overrides.
+- **VEN-005 — Room groups:** Attendees may form consent-based room groups or
+  respond to organizer-supported room-share workflows without forced public
+  disclosure of personal contact details.
+- **VEN-006 — Travel and arrival:** Authorized hospitality teams must coordinate
+  guest or crew itineraries, transfers, arrival windows, accessibility needs,
+  contacts, and changes with field-level restrictions.
+- **VEN-007 — Hospitality obligations:** Catering, green rooms, lounges,
+  credentials, comps, and special guest commitments must have owners, schedule,
+  inventory, and fulfilment state.
+
+### Accreditation and physical access
+
+- **ACC-001 — Credential model:** A credential must derive edition identity,
+  role, entitlement, zone and time access, issuance state, and physical or
+  digital token from explicit policy.
+- **ACC-002 — Zone policy:** Physical access zones and exceptions must support
+  time windows, age or training requirements, escort rules, and revocation.
+- **ACC-003 — Issuance custody:** Blank stock, printed credentials, keys,
+  wristbands, radios, and similar controlled items require inventory and
+  accountable handover.
+- **ACC-004 — Verification minimization:** Scanning must reveal only the
+  decision and minimum details required for the checkpoint, not a general
+  participant dossier.
+- **ACC-005 — Revocation propagation:** Lost, replaced, expired, suspended, and
+  revoked credentials must propagate to connected verification clients and
+  reconcile after offline use.
+
+### Assets, inventory, and logistics
+
+- **LOG-001 — Asset identity:** Serialized and bulk assets must support type,
+  owner, condition, storage, current custody, value class, maintenance, and
+  edition allocation.
+- **LOG-002 — Chain of custody:** Issue, transfer, return, loss, damage, and
+  disposal must record actor, recipient, time, place, condition, and evidence
+  appropriate to risk.
+- **LOG-003 — Demand and reservation:** Departments may request and reserve
+  assets or consumables against schedule, quantity, capability, and priority,
+  with conflicts made visible.
+- **LOG-004 — Movements:** Loads, deliveries, vehicles, drivers, routes,
+  loading windows, storage, and handovers must connect to venue constraints and
+  operational time.
+- **LOG-005 — Kits and manifests:** Reusable kits, packing lists, load
+  manifests, issue sheets, labels, and return checklists must derive from
+  current asset data.
+- **LOG-006 — Supplier delivery:** Expected delivery, acceptance criteria,
+  receiver, discrepancy, corrective action, and invoice linkage must form one
+  traceable process.
+- **LOG-007 — Stock control:** Merchandise and operational stock must support
+  adjustments, counts, locations, low-stock signals, wastage, and
+  reconciliation without allowing silent quantity edits.
+
+### Safety, accessibility, welfare, and case work
+
+- **SAF-001 — Separated case work:** Medical, safeguarding, conduct, security,
+  welfare, accessibility, and general service records must use purpose-specific
+  schemas and access policies rather than one broadly visible incident table.
+- **SAF-002 — Duty routing:** Reports must route to qualified, on-duty roles
+  with acknowledgement, escalation, and handover rules. Urgent real-world
+  action must not wait for software.
+- **SAF-003 — Minimum disclosure tasks:** Restricted information must be able to
+  generate an ordinary operational task containing only the instruction needed
+  by its assignee.
+- **SAF-004 — Break glass:** Emergency access to restricted records must be
+  time-limited, reasoned, prominently logged, notified for review, and never
+  available merely because someone is a platform administrator.
+- **SAF-005 — Case integrity:** Cases must retain chronology, reporter and
+  subject communication, action ownership, evidence custody, external
+  references, decisions, closure, and amendment without silent rewriting.
+- **SAF-006 — Emergency planning:** Editions must maintain versioned response
+  plans, command roles, contacts, assembly information, participant assistance
+  needs, exercises, and offline copies.
+- **SAF-007 — Accessibility requests:** People must be able to request
+  accommodations and control appropriate sharing; coordinators must translate
+  requests into scoped delivery work across departments.
+- **SAF-008 — Public access information:** Published venue and programme
+  information must include structured access features, known barriers, content
+  or sensory notes where appropriate, and a maintained help channel.
+- **SAF-009 — Retention trigger:** Restricted case categories must have explicit
+  retention owners, triggers, holds, access review, subject-rights procedure,
+  and defensible deletion or anonymization.
+- **SAF-010 — Wellbeing constraints:** Workforce planning must support maximum
+  hours, minimum rest, lone-working rules, supervision, and individual
+  accommodations without exposing their sensitive justification.
+
+### Dealers, art, charity, merchandise, and furry-specific services
+
+- **FUR-001 — Commercial applications:** Dealer and artist applications must
+  support portfolio, categories, table needs, assistants, power, content
+  boundaries, review, wait-list, agreements, payment, and setup instructions.
+- **FUR-002 — Floor planning:** Commercial spaces must support capacity,
+  configurable table geometry, accessibility, power, adjacency constraints,
+  setup slots, assistants, and a publishable map derived from approved state.
+- **FUR-003 — Art and auction intake:** Art show and auction items must retain
+  creator or donor, provenance, rights, condition, category, reserve, display,
+  beneficiary, custody, bids, settlement, and collection.
+- **FUR-004 — Bid integrity:** Auction bidding and close must use an auditable
+  append-only record, defined tie and eligibility rules, controlled correction,
+  and reconciliation to payment and item handover.
+- **FUR-005 — Charity stewardship:** Charity beneficiaries, restrictions,
+  campaigns, donated value, collected funds, costs, settlement, evidence, and
+  public reporting must remain reconcilable.
+- **FUR-006 — Merchandise lifecycle:** Merchandise must connect design approval,
+  supplier, variant, order or preorder, stock, sales channel, pickup, refund,
+  and residual inventory.
+- **FUR-007 — Fursuit facilities:** Fursuit lounges, changing areas, storage,
+  headless zones, water, drying or repair services, parade participation, and
+  handlers must be represented as spaces, services, capacities, and staffing.
+- **FUR-008 — Themed and social activities:** Meetups, dances, photoshoots,
+  gaming, cafés, parades, competitions, and similar community activities must
+  reuse programme, capacity, queue, staffing, consent, safety, and publication
+  primitives rather than bespoke mini-apps.
+- **FUR-009 — Age and content boundaries:** Adult programming, art, vendor
+  content, and controlled zones must have explicit edition policy, age
+  verification consequence, signage, access rules, and minimum-disclosure
+  enforcement.
+- **FUR-010 — Mascot and media assets:** Character, logo, photo, recording, and
+  biography use must record owner, license or consent, scope, expiry,
+  attribution, approved rendition, and withdrawal consequences.
+
+### Knowledge, policy, forms, and support
+
+- **KNO-001 — Versioned knowledge:** Policies, runbooks, FAQs, briefings, venue
+  facts, role guides, and templates must have owners, audience, review date,
+  version, approval, and supersession.
+- **KNO-002 — Contextual delivery:** The relevant approved guidance must appear
+  beside the task or decision it governs and remain available in searchable
+  knowledge views.
+- **KNO-003 — Policy acknowledgement:** Required acknowledgements must retain
+  exact policy version, person, time, method, and any later replacement without
+  implying that reading proves understanding.
+- **KNO-004 — Form builder:** Authorized teams must create versioned,
+  conditional, localized, accessible forms from classified field types with
+  validation, purpose, visibility, and retention metadata.
+- **KNO-005 — Form-to-workflow:** A submission must create or update a typed
+  domain process, assignment, message, or case; it must not become an isolated
+  response sheet by default.
+- **KNO-006 — Service catalog:** People must be able to request help through a
+  plain-language service catalog that routes to the correct team with expected
+  response and safe escalation.
+- **KNO-007 — Handover learning:** Post-event lessons must be proposed,
+  reviewed, linked to evidence, and accepted into a reusable template or
+  knowledge item rather than copied as unverified folklore.
+
+### Workflow automation and responsible assistance
+
+- **AUT-001 — Event-driven automation:** Authorized users must define triggers,
+  conditions, delays, and typed actions over documented domain events.
+- **AUT-002 — Safe execution:** Automations require edition scope, service
+  identity, permission ceiling, idempotency, run history, rate limits, and
+  retry or dead-letter behavior.
+- **AUT-003 — Test and preview:** An automation must support sample-data tests,
+  impact preview, draft mode, and clear explanation before activation.
+- **AUT-004 — Human checkpoints:** Financial, access, disciplinary, safety,
+  publication, and other configured high-impact decisions must preserve
+  required human approval.
+- **AUT-005 — Explainable assistance:** Recommendations and generated drafts
+  must disclose relevant inputs, uncertainty, and source state; a person remains
+  accountable for consequential use.
+- **AUT-006 — No hidden profiling:** Models must not infer protected or intimate
+  traits, opaque volunteer worth, misconduct propensity, or eligibility from
+  unrelated activity.
+- **AUT-007 — Reversible rollout:** Automations must be versioned, pausable,
+  observable, and deployable to a rehearsal edition before production use.
+
+### Live operations and service delivery
+
+- **OPS-001 — Common operating picture:** Authorized live operators must see
+  current programme, staffing, venue, logistics, service demand, public
+  communication, material issues, and data freshness from one projection.
+- **OPS-002 — Run of show:** Programme and operational items must support call
+  times, setup, cues, dependencies, owners, actual times, notes, and structured
+  handover in a time-ordered view.
+- **OPS-003 — Dispatch:** Work may be offered or assigned to an available,
+  qualified duty role with acknowledgement, location, priority, escalation, and
+  completion evidence.
+- **OPS-004 — Queues and capacity:** Organizers must be able to represent
+  capacity, entry windows, observed or estimated queues, closure, and
+  attendee-facing advice without claiming false precision.
+- **OPS-005 — Change impact:** A material live change must preview affected
+  people, dependencies, outputs, and delivery destinations before publication
+  unless emergency authority records an override.
+- **OPS-006 — Shift handover:** Active roles and desks must have structured
+  open work, recent decisions, known hazards, asset custody, and acknowledgement
+  at handover.
+- **OPS-007 — Lost and found:** Items, distinguishing details, claims, custody,
+  controlled release, risky-item procedure, and disposition must be managed
+  without publishing the ownership proof.
+- **OPS-008 — Rehearsal:** Editions must support drills or simulations using
+  production-like configuration without notifying real audiences or corrupting
+  production history.
+
+### Privacy, compliance, and participant control
+
+- **PRI-001 — Data inventory:** Every stored field and derived data class must
+  have purpose, owner, sensitivity, subject, source, access policy, retention,
+  export, and deletion behavior.
+- **PRI-002 — Controller boundaries:** The platform must record which
+  organization controls or receives data for each process and must not turn one
+  platform identity into unannounced joint access.
+- **PRI-003 — Consent correctness:** Consent must be specific, informed,
+  versioned, withdrawable where applicable, and separated from processing that
+  uses another lawful basis.
+- **PRI-004 — Subject rights:** Identity verification, access, correction,
+  portability, restriction, objection, and deletion requests must have
+  documented, tracked procedures and scoped exports.
+- **PRI-005 — Minor and guardian policy:** Editions that admit minors must
+  configure age bands, guardian relationships, permissions, visibility,
+  communication, check-in, and safeguarding rules for their jurisdiction.
+- **PRI-006 — Data residency and vendors:** Deployments must inventory
+  processors, regions, transfers, agreements, subprocessors, and exit or export
+  capability.
+- **PRI-007 — De-identification:** Analytics and edition comparison should use
+  aggregate or de-identified data where person-level data is unnecessary, with
+  small-group and re-identification controls.
+- **PRI-008 — Communications preference:** Optional marketing, operational
+  service messages, direct conversations, and emergency communication must have
+  distinct purpose and preference behavior.
+- **PRI-009 — Correction, minimization, and disposal evidence:** Current data
+  may be corrected without rewriting historical submissions. Post-edition
+  corrections require proposal and review; retention actions must use approved,
+  versioned policy and create a receipt while preserving required finance,
+  safety, and audit evidence.
+
+### Integration and extension platform
+
+- **INT-001 — Stable API:** Supported domain capabilities must be available
+  through documented, versioned APIs with generated schemas and consistent
+  authorization, pagination, errors, idempotency, and deprecation policy.
+- **INT-002 — Webhooks and event feed:** Authorized consumers must receive
+  signed, replayable, scoped domain events with sequence, delivery state, retry,
+  and secret rotation.
+- **INT-003 — Connector isolation:** External systems must use replaceable
+  adapters with credential vaulting, least privilege, health, rate-limit,
+  reconciliation, and disablement behavior.
+- **INT-004 — Scoped applications:** Third-party applications require explicit
+  organization approval, declared scopes, install owner, data-use description,
+  access review, and revocation.
+- **INT-005 — Import safety:** Imports must support mapping, validation,
+  preview, duplicate strategy, partial-error reporting, provenance, and
+  reversible staging before authoritative application.
+- **INT-006 — Extension boundary:** Extensions may register typed views,
+  actions, fields, workflow handlers, report sources, and connectors only
+  through versioned contracts; they may not read arbitrary module tables.
+- **INT-007 — Exit capability:** An organizer must be able to export supported
+  records, files, schemas, configuration, audit manifests, and identifiers in a
+  documented form before ending service.
+
+## Cross-cutting requirements
+
+- **NFR-001 — Thorough testing:** Critical workflows, permission boundaries,
+  tenant isolation, concurrency, migrations, exports, and recovery must be
+  automatically tested according to `docs/quality/testing-strategy.md`.
+- **NFR-002 — Living documentation:** Product, architecture, API, operations,
+  security, and role-specific user documentation are deliverables.
+- **NFR-003 — Checkpoint continuity:** Every material change must leave a
+  repository checkpoint that allows a new maintainer or agent to resume safely.
+- **NFR-004 — Observability:** Requests, jobs, integrations, delivery attempts,
+  and domain failures must be traceable without logging unnecessary personal
+  data.
+- **NFR-005 — Degraded operation:** Critical on-site flows must define behavior
+  for slow, intermittent, or unavailable network access.
+- **NFR-006 — International operation:** Data and interfaces must support
+  Unicode, localization, edition time zones, and European address and payment
+  realities.
+- **NFR-007 — Data portability:** Organizers and users must have documented,
+  permission-controlled export and deletion processes.
+- **NFR-008 — Recoverability:** Backups, restoration, reconciliation, and
+  disaster procedures must be tested rather than assumed.
+
+## Explicit non-goals
+
+- Maru is not a general-purpose social network.
+- Maru is not a replacement for an emergency-services communication system.
+- Maru will not store payment-card details.
+- Maru will not reproduce every feature of Telegram or Discord.
+- Maru will not begin as a collection of microservices.
+- Cross-convention identity will not become cross-convention surveillance.

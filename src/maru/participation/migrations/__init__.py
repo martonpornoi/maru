@@ -1,0 +1,1 @@
+"""Participation database migrations."""

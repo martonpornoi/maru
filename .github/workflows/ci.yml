@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: maru
+          POSTGRES_USER: maru
+          POSTGRES_PASSWORD: maru
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U maru -d maru"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+
+    env:
+      MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:5432/maru
+      UV_CACHE_DIR: .uv-cache
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11.9.0"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: frontends/staff-console/pnpm-lock.yaml
+
+      - name: Install uv bootstrap
+        run: python -m pip install uv==0.11.29
+
+      - name: Install locked dependencies
+        run: uv sync --all-groups --locked
+
+      - name: Install locked Staff Console dependencies
+        working-directory: frontends/staff-console
+        run: pnpm install --frozen-lockfile
+
+      - name: Formatting
+        run: uv run ruff format --check .
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Type check
+        run: uv run mypy src
+
+      - name: Documentation
+        run: uv run python scripts/validate_docs.py
+
+      - name: Django configuration and migration drift
+        run: |
+          uv run python src/manage.py check --settings=maru.settings.local
+          uv run python src/manage.py makemigrations --check --dry-run --settings=maru.settings.local
+
+      - name: Production settings validation
+        env:
+          MARU_SETTINGS_MODULE: maru.settings.production
+          MARU_SECRET_KEY: verification-only-not-a-production-secret-at-least-50-characters
+          MARU_ALLOWED_HOSTS: maru.example.invalid
+          MARU_PUBLIC_BASE_URL: https://maru.example.invalid
+          MARU_DEFAULT_FROM_EMAIL: registration@example.com
+          MARU_EMAIL_HOST: smtp.example.com
+          MARU_EMAIL_PORT: "587"
+          MARU_EMAIL_HOST_USER: verification-user
+          MARU_EMAIL_HOST_PASSWORD: verification-password
+          MARU_EMAIL_USE_TLS: "true"
+          MARU_EMAIL_USE_SSL: "false"
+          MARU_CSRF_TRUSTED_ORIGINS: https://maru.example.invalid,https://register.maru.example.invalid
+          MARU_PAYMENT_RETURN_ORIGINS: https://register.maru.example.invalid
+          MARU_PAYMENT_PROVIDER_HOSTS: payments.example.invalid,checkout.example.invalid
+          MARU_REGISTRATION_CLIENT_ORIGINS: https://register.maru.example.invalid
+          MARU_MEDIA_SCANNER: clamav
+          MARU_MEDIA_SCANNER_HOST: scanner.internal
+          MARU_OFFLINE_MANIFEST_SECRET: verification-only-offline-secret-value
+        run: uv run python src/manage.py check --deploy
+
+      - name: OpenAPI compatibility artifact
+        run: |
+          uv run python src/manage.py spectacular --file openapi.yaml --validate --settings=maru.settings.local
+          pnpm --dir frontends/staff-console run generate:api
+          git diff --exit-code -- openapi.yaml
+          git diff --exit-code -- frontends/staff-console/src/api/schema.d.ts
+
+      - name: Staff Console
+        working-directory: frontends/staff-console
+        run: |
+          pnpm run typecheck
+          pnpm run test
+          pnpm run build
+          git diff --exit-code -- ../../src/maru/core/static/staff-console
+
+      - name: Tests and coverage
+        run: uv run pytest --cov=maru --cov-report=term-missing
+
+      - name: Dependency vulnerability audit
+        run: |
+          uv run pip-audit
+          pnpm --dir frontends/staff-console audit --prod --audit-level high

@@ -1,0 +1,29 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Upload {{ document_request.document_type.name }}{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">{{ document_request.edition.name }}</p>
+    <h1>Upload {{ document_request.document_type.name }}</h1>
+    <p>
+      Uploading provides private evidence for human review. It does not approve
+      the agreement or grant a role by itself.
+    </p>
+  </div>
+  <form class="registration-form" method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    <fieldset class="form-section restricted-section">
+      <legend>Signed document</legend>
+      {% if form.non_field_errors %}
+        <div class="form-summary" role="alert">{{ form.non_field_errors }}</div>
+      {% endif %}
+      {% include "registration/_field.html" with field=form.document %}
+      <p class="privacy-note">{{ document_request.document_type.retention_notice }}</p>
+    </fieldset>
+    <div class="submit-bar">
+      <a class="button secondary" href="{% url 'workforce-my-documents' document_request.edition_id %}">Cancel</a>
+      <button class="button" type="submit">Submit for review</button>
+    </div>
+  </form>
+{% endblock %}

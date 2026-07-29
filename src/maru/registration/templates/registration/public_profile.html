@@ -1,0 +1,169 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}{{ registration.edition.name }} profile{% endblock %}
+
+{% block content %}
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Your convention profile</p>
+      <h1>{{ registration.edition.name }}</h1>
+      <p>
+        Review this edition's registration, profile sections, roles, benefits,
+        and operational history.
+      </p>
+    </div>
+    <span class="status large">{{ registration.get_state_display }}</span>
+  </div>
+
+  <div class="profile-grid">
+    <section class="profile-card admission-card">
+      <p class="section-kicker">Admission</p>
+      <h2>{{ registration.product_name_snapshot }}</h2>
+      <dl>
+        <div><dt>Reference</dt><dd>{{ registration.reference }}</dd></div>
+        <div><dt>Status</dt><dd>{{ registration.get_state_display }}</dd></div>
+        <div><dt>Submitted</dt><dd>{{ registration.submitted_at }}</dd></div>
+        {% if registration.payment_due_at %}
+          <div><dt>Payment deadline</dt><dd>{{ registration.payment_due_at }}</dd></div>
+        {% endif %}
+        {% if waitlist_position %}
+          <div><dt>Current waitlist position</dt><dd>{{ waitlist_position }}</dd></div>
+        {% endif %}
+      </dl>
+      {% if directory_allowed %}
+        <a class="button secondary" href="{% url 'paid-attendee-directory' registration.edition_id %}">
+          Open public attendee list
+        </a>
+      {% endif %}
+      {% if profile_editable %}
+        <a class="button" href="{% url 'edit-attendee-profile' registration.edition_id %}">
+          Edit convention profile
+        </a>
+      {% endif %}
+      {% if local_demo_payment_available %}
+        <form method="post" action="{% url 'public-registration-demo-payment' registration.edition_id %}">
+          {% csrf_token %}
+          <button class="button" type="submit">Simulate payment (local only)</button>
+        </form>
+        <p class="muted">
+          This development control records a successful test-provider payment.
+          It is never enabled in production.
+        </p>
+      {% endif %}
+      <a class="button secondary" href="{% url 'workforce-opportunities' registration.edition_id %}">
+        Volunteer opportunities
+      </a>
+      <a class="button secondary" href="{% url 'workforce-my-documents' registration.edition_id %}">
+        My onboarding documents
+      </a>
+    </section>
+
+    <section class="profile-card">
+      <p class="section-kicker">Authoritative convention facts</p>
+      <h2>Roles and benefits</h2>
+      <p class="muted">
+        Volunteer departments come from assigned capacities. Ticket-holder
+        status comes from active entitlements; neither is self-entered profile text.
+      </p>
+      <div class="tag-list">
+        {% for capacity in capacities %}
+          <span>{{ capacity.label_snapshot }}</span>
+        {% endfor %}
+        {% for entitlement in entitlements %}
+          <span>{{ entitlement.label_snapshot }}</span>
+        {% endfor %}
+        {% if not capacities and not entitlements %}<span>None assigned yet</span>{% endif %}
+      </div>
+    </section>
+  </div>
+
+  {% if profile %}
+    <section class="profile-card">
+      <p class="section-kicker">Edition-owned registration profile</p>
+      <h2>Identity and contact</h2>
+      <p class="restricted-note">
+        Real name, birth date, and emergency contact are restricted and never
+        appear in Front Desk or attendee-directory projections.
+      </p>
+      <dl class="details-grid">
+        <div><dt>Display name</dt><dd>{{ profile.account.display_name }}</dd></div>
+        <div><dt>Real name</dt><dd>{{ profile.real_name }}</dd></div>
+        <div><dt>Date of birth</dt><dd>{{ profile.date_of_birth }}</dd></div>
+        <div><dt>Pronouns</dt><dd>{{ profile.pronouns }}</dd></div>
+        <div><dt>Spoken languages</dt><dd>{% if spoken_language_labels %}{{ spoken_language_labels|join:", " }}{% else %}Not supplied{% endif %}</dd></div>
+        <div><dt>Phone</dt><dd>{{ profile.phone_number }}</dd></div>
+        <div><dt>Telegram</dt><dd>{% if profile.telegram_handle %}@{{ profile.telegram_handle }}{% else %}Not supplied{% endif %}</dd></div>
+        <div><dt>Address</dt><dd>{{ profile.address_line_1 }}{% if profile.address_line_2 %}, {{ profile.address_line_2 }}{% endif %}, {{ profile.locality }}, {{ profile.region }} {{ profile.postal_code }}, {{ profile.country_code }}</dd></div>
+        <div><dt>Emergency contact</dt><dd>{{ profile.emergency_contact_name }} · {{ profile.emergency_contact_phone }}</dd></div>
+      </dl>
+    </section>
+
+    <section class="profile-card">
+      <p class="section-kicker">Optional public profile</p>
+      <h2>Bio, images, and fursuits</h2>
+      <div class="character-layout">
+        {% if profile.profile_photo %}
+          <img src="{% url 'protected-profile-photo' profile.id %}" alt="Profile for {{ profile.account.display_name }}">
+        {% endif %}
+        <dl>
+          <div><dt>Bio</dt><dd>{{ profile.bio|default:"Not supplied" }}</dd></div>
+          <div><dt>Profile image review</dt><dd>{{ profile.get_profile_photo_status_display }}</dd></div>
+          <div><dt>Public attendee list</dt><dd>{{ profile.directory_visible|yesno:"Included after payment,Not included" }}</dd></div>
+          <div><dt>Directory country</dt><dd>{{ profile.directory_country_code|default:"Not shown" }}</dd></div>
+        </dl>
+      </div>
+      {% if profile.fursuits.all %}
+        <div class="directory-grid compact-grid">
+          {% for fursuit in profile.fursuits.all %}
+            <article class="directory-card">
+              {% if fursuit.photo %}
+                <img src="{% url 'protected-fursuit-photo' fursuit.id %}" alt="{{ fursuit.name }}">
+              {% endif %}
+              <div>
+                <h3>{{ fursuit.name }}</h3>
+                {% if fursuit.species %}<span>{{ fursuit.species }}</span>{% endif %}
+                <small>{{ fursuit.get_photo_status_display }}</small>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% elif profile.brings_fursuits %}
+        <p class="muted">No active fursuit entries are available.</p>
+      {% else %}
+        <p class="muted">No fursuits are listed for this convention.</p>
+      {% endif %}
+    </section>
+  {% else %}
+    <section class="empty-state">
+      <h2>No edition profile was collected</h2>
+      <p>This older registration predates the public profile flow.</p>
+    </section>
+  {% endif %}
+
+  {% for group in submitted_groups %}
+    <section class="profile-card">
+      <p class="section-kicker">Submitted convention section</p>
+      <h2>{{ group.title }}</h2>
+      {% if group.description %}<p class="muted">{{ group.description }}</p>{% endif %}
+      <dl class="details-grid">
+        {% for answer in group.answers %}
+          <div><dt>{{ answer.label }}</dt><dd>{{ answer.value }}</dd></div>
+        {% endfor %}
+      </dl>
+    </section>
+  {% endfor %}
+
+  <section class="profile-card">
+    <p class="section-kicker">Operational history</p>
+    <h2>Registration timeline</h2>
+    <ol class="timeline">
+      {% for entry in registration.timeline.all %}
+        <li>
+          <strong>{{ entry.title }}</strong>
+          <span>{{ entry.summary }}</span>
+          <time>{{ entry.occurred_at }}</time>
+        </li>
+      {% endfor %}
+    </ol>
+  </section>
+{% endblock %}

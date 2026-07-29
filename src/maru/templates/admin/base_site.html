@@ -1,0 +1,50 @@
+{% extends "admin/base_site.html" %}
+{% load static admin_help admin_edition_context %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'core/admin-help.css' %}">
+{% endblock %}
+
+{% block nav-global %}
+  {{ block.super }}
+  {% admin_edition_context request as maru_edition_context %}
+  {% if maru_edition_context.available %}
+    <form
+      class="maru-edition-context"
+      method="post"
+      action="{% url 'admin-edition-context' %}"
+    >
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <label for="maru-edition-context">
+        <span>Convention workspace</span>
+        <select id="maru-edition-context" name="edition_id">
+          <option value="">All foundation data</option>
+          {% for edition in maru_edition_context.editions %}
+            <option
+              value="{{ edition.id }}"
+              {% if maru_edition_context.selected and edition.id == maru_edition_context.selected.id %}selected{% endif %}
+            >
+              {{ edition.name }} · {{ edition.organization.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Switch</button>
+    </form>
+    {% if request.user.is_superuser %}
+      <a href="{% url 'workforce-bootstrap-setup' %}">
+        First convention setup
+      </a>
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block content_title %}
+  {{ block.super }}
+  {% admin_page_help request.path opts.app_label opts.model_name as maru_page_help %}
+  {% if maru_page_help %}
+    <p class="maru-page-help">{{ maru_page_help }}</p>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "registration/base_public.html" %}
+{% load static %}
+
+{% block title %}Edit {{ profile.edition.name }} profile{% endblock %}
+
+{% block content %}
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Current convention profile</p>
+      <h1>Edit {{ profile.edition.name }}</h1>
+      <p>
+        Update the profile used for this convention and as a suggestion for
+        later registrations. Your submitted convention answers and older
+        convention profiles stay unchanged.
+      </p>
+    </div>
+    <a class="button secondary" href="{% url 'public-registration-profile' profile.edition_id %}">Cancel</a>
+  </div>
+
+  <form class="registration-form" method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="form-summary" role="alert">
+        <strong>Your profile was not updated.</strong>
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+
+    <fieldset class="form-section">
+      <legend>Identity and contact</legend>
+      <p class="section-description">
+        Restricted service information. These values are never part of the
+        public attendee list.
+      </p>
+      <div class="field-grid two-column">
+        {% include "registration/_field.html" with field=form.real_name %}
+        {% include "registration/_field.html" with field=form.date_of_birth %}
+        {% include "registration/_field.html" with field=form.pronoun_code %}
+        <div data-other-pronouns>
+          {% include "registration/_field.html" with field=form.other_pronouns %}
+        </div>
+        <div class="phone-field-pair">
+          {% include "registration/_field.html" with field=form.phone_region_code %}
+          {% include "registration/_field.html" with field=form.phone_number %}
+        </div>
+        {% include "registration/_field.html" with field=form.telegram_handle %}
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Address and emergency contact</legend>
+      <div class="field-grid two-column">
+        {% include "registration/_field.html" with field=form.address_line_1 %}
+        {% include "registration/_field.html" with field=form.address_line_2 %}
+        {% include "registration/_field.html" with field=form.locality %}
+        {% include "registration/_field.html" with field=form.postal_code %}
+        {% include "registration/_field.html" with field=form.region %}
+        {% include "registration/_field.html" with field=form.country_code %}
+        {% include "registration/_field.html" with field=form.emergency_contact_name %}
+        <div class="phone-field-pair">
+          {% include "registration/_field.html" with field=form.emergency_phone_region_code %}
+          {% include "registration/_field.html" with field=form.emergency_contact_phone %}
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Public profile and badge details</legend>
+      <div class="field-grid two-column">
+        {% include "registration/_field.html" with field=form.bio %}
+        <div class="language-field">
+          <label for="language-filter">Find a language</label>
+          <input id="language-filter" type="search" data-language-filter placeholder="Type a language name">
+          {% include "registration/_field.html" with field=form.spoken_language_codes %}
+          <small data-language-count aria-live="polite"></small>
+        </div>
+        {% include "registration/_field.html" with field=form.profile_photo %}
+      </div>
+      {% if profile.profile_photo %}
+        <div class="media-preview">
+          <img src="{% url 'protected-profile-photo' profile.id %}" alt="Current profile image">
+          <p>
+            Current status: <strong>{{ profile.get_profile_photo_status_display }}</strong>.
+            Uploading a replacement starts a new review. Leaving this blank
+            keeps the current file.
+          </p>
+          <label class="remove-choice">
+            {{ form.remove_profile_photo }}
+            {{ form.remove_profile_photo.label }}
+          </label>
+        </div>
+      {% endif %}
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Fursuits you are bringing</legend>
+      <div class="consent-card compact">
+        {{ form.brings_fursuits }}
+        <label for="{{ form.brings_fursuits.id_for_label }}">
+          <strong>{{ form.brings_fursuits.label }}</strong>
+          <span>{{ form.brings_fursuits.help_text }}</span>
+        </label>
+      </div>
+      {% include "registration/_fursuit_formset.html" %}
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Public attendee list</legend>
+      <div class="consent-card">
+        {{ form.directory_visible }}
+        <label for="{{ form.directory_visible.id_for_label }}">
+          <strong>{{ form.directory_visible.label }}</strong>
+          <span>{{ form.directory_visible.help_text }}</span>
+        </label>
+      </div>
+      <div class="directory-country-field" data-directory-country>
+        {% include "registration/_field.html" with field=form.directory_country_code %}
+      </div>
+    </fieldset>
+
+    <div class="submit-bar">
+      <span>Only this convention profile will change.</span>
+      <button class="button" type="submit">Save profile</button>
+    </div>
+  </form>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'registration/public-form.js' %}" defer></script>
+{% endblock %}

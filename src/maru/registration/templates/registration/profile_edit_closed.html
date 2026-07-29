@@ -1,0 +1,16 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Historical convention profile{% endblock %}
+
+{% block content %}
+  <section class="empty-state">
+    <p class="eyebrow">Historical snapshot</p>
+    <h1>{{ profile.edition.name }} can no longer be edited</h1>
+    <p>
+      Closed, archived, and cancelled convention profiles are kept as they were.
+      Your latest editable profile will still be offered as a suggestion in a
+      future registration.
+    </p>
+    <a class="button secondary" href="{% url 'public-registration-profile' profile.edition_id %}">Back to profile</a>
+  </section>
+{% endblock %}

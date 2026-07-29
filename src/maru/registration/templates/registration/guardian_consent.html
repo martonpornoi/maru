@@ -1,0 +1,48 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Guardian authorization{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">Guardian authorization</p>
+    <h1>Review the registration request</h1>
+    <p>
+      This single-use action records guardian authorization. It does not charge
+      a payment card. Capacity and payment status are decided by Maru only
+      after authorization.
+    </p>
+  </div>
+
+  {% if registration %}
+    <section class="notice-card">
+      <div>
+        <strong>Authorization recorded</strong>
+        <p>
+          Registration {{ registration.reference }} is now
+          {{ registration.get_state_display|lower }}.
+          {% if registration.payment_due_at %}
+            Payment must be completed by {{ registration.payment_due_at }}.
+          {% endif %}
+        </p>
+      </div>
+    </section>
+  {% else %}
+    <form method="post" class="registration-form" novalidate>
+      {% csrf_token %}
+      {{ form.token }}
+      {% if form.non_field_errors %}
+        <div class="form-summary" role="alert">
+          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+      {% endif %}
+      <fieldset class="form-section">
+        <legend>Authorization evidence</legend>
+        {% include "registration/_field.html" with field=form.guardian_name %}
+      </fieldset>
+      <div class="submit-bar">
+        <span>The link expires after seven days and works once.</span>
+        <button class="button" type="submit">Authorize registration</button>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}

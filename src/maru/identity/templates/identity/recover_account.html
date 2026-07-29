@@ -1,0 +1,31 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Recover your account{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">Account security</p>
+    <h1>Choose a new password</h1>
+    <p>Completing recovery signs out every existing Maru session.</p>
+  </div>
+  <form method="post" class="registration-form" novalidate>
+    {% csrf_token %}
+    {{ form.token }}
+    {% if form.non_field_errors %}
+      <div class="form-summary" role="alert">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    <fieldset class="form-section">
+      <legend>New password</legend>
+      <div class="field-grid two-column">
+        {% include "registration/_field.html" with field=form.new_password %}
+        {% include "registration/_field.html" with field=form.confirm_password %}
+      </div>
+    </fieldset>
+    <div class="submit-bar">
+      <span>The recovery link expires and works only once.</span>
+      <button class="button" type="submit">Change password</button>
+    </div>
+  </form>
+{% endblock %}

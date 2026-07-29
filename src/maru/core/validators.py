@@ -1,0 +1,68 @@
+"""Reusable validators for stable platform value types."""
+
+import re
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from django.core.exceptions import ValidationError
+
+LOWERCASE_SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+LANGUAGE_CODE_PATTERN = re.compile(
+    r"^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$"
+)
+CURRENCY_CODE_PATTERN = re.compile(r"^[A-Z]{3}$")
+
+
+def validate_lowercase_slug(value: str) -> None:
+    if not LOWERCASE_SLUG_PATTERN.fullmatch(value):
+        raise ValidationError(
+            "Use lowercase letters, numbers, and single hyphens only.",
+            code="invalid_slug",
+        )
+
+
+def validate_time_zone(value: str) -> None:
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as error:
+        raise ValidationError(
+            "Use a valid IANA time-zone identifier.",
+            code="invalid_time_zone",
+        ) from error
+
+
+def validate_language_codes(values: list[str]) -> None:
+    if not values:
+        raise ValidationError(
+            "At least one language is required.",
+            code="language_required",
+        )
+    if len(values) != len(set(values)):
+        raise ValidationError(
+            "Language codes must be unique.",
+            code="duplicate_language",
+        )
+    invalid = [value for value in values if not LANGUAGE_CODE_PATTERN.fullmatch(value)]
+    if invalid:
+        raise ValidationError(
+            f"Invalid language code: {invalid[0]}",
+            code="invalid_language",
+        )
+
+
+def validate_currency_codes(values: list[str]) -> None:
+    if not values:
+        raise ValidationError(
+            "At least one currency is required.",
+            code="currency_required",
+        )
+    if len(values) != len(set(values)):
+        raise ValidationError(
+            "Currency codes must be unique.",
+            code="duplicate_currency",
+        )
+    invalid = [value for value in values if not CURRENCY_CODE_PATTERN.fullmatch(value)]
+    if invalid:
+        raise ValidationError(
+            f"Invalid currency code: {invalid[0]}",
+            code="invalid_currency",
+        )

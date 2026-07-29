@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark light">
+    <title>Maru · Convention operations</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --background: #0b1020;
+        --surface: #131b31;
+        --surface-raised: #1a2540;
+        --text: #f7f8fc;
+        --muted: #aeb9d3;
+        --accent: #82e6c8;
+        --accent-strong: #36c9a1;
+        --border: #2c3858;
+        --shadow: rgba(0, 0, 0, 0.3);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 15% 15%, #20365a 0, transparent 35%),
+          radial-gradient(circle at 85% 85%, #153e3c 0, transparent 32%),
+          var(--background);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      main {
+        width: min(52rem, 100%);
+        padding: clamp(1.5rem, 5vw, 3.5rem);
+        border: 1px solid var(--border);
+        border-radius: 1.5rem;
+        background: color-mix(in srgb, var(--surface) 94%, transparent);
+        box-shadow: 0 1.5rem 4rem var(--shadow);
+      }
+
+      .eyebrow {
+        margin: 0 0 1rem;
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 750;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.5rem, 10vw, 5.5rem);
+        line-height: 0.95;
+        letter-spacing: -0.055em;
+      }
+
+      .intro {
+        max-width: 42rem;
+        margin: 1.5rem 0 0;
+        color: var(--muted);
+        font-size: clamp(1rem, 2.4vw, 1.2rem);
+        line-height: 1.65;
+      }
+
+      .status {
+        display: flex;
+        gap: 0.7rem;
+        align-items: center;
+        margin: 2rem 0;
+        padding: 0.9rem 1rem;
+        border: 1px solid #2b655c;
+        border-radius: 0.8rem;
+        background: #102d2b;
+      }
+
+      .status-dot {
+        width: 0.7rem;
+        height: 0.7rem;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 1rem var(--accent-strong);
+      }
+
+      nav {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 0.8rem;
+      }
+
+      a {
+        min-height: 5.5rem;
+        padding: 1rem;
+        border: 1px solid var(--border);
+        border-radius: 0.8rem;
+        color: var(--text);
+        background: var(--surface-raised);
+        text-decoration: none;
+        transition:
+          border-color 140ms ease,
+          transform 140ms ease;
+      }
+
+      a:hover,
+      a:focus-visible {
+        border-color: var(--accent);
+        outline: none;
+        transform: translateY(-2px);
+      }
+
+      a strong,
+      a span {
+        display: block;
+      }
+
+      a span {
+        margin-top: 0.35rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      footer {
+        margin-top: 2rem;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Convention operations · working foundation</p>
+      <h1>Maru is running.</h1>
+      <p class="intro">
+        Use this page to enter the local Maru environment or check its
+        supporting services. For example: open the Staff Console, inspect the
+        API contract, or verify system readiness.
+      </p>
+
+      <div class="status" role="status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <strong>Development backend online</strong>
+      </div>
+
+      <nav aria-label="Developer destinations">
+        <a href="/register/">
+          <strong>Register for a convention</strong>
+          <span>Choose an open edition, create an account, or continue as a returning attendee.</span>
+        </a>
+        <a href="/staff/">
+          <strong>Staff Console</strong>
+          <span>Open the role-oriented Danube convention workspace.</span>
+        </a>
+        <a href="/health/ready">
+          <strong>System readiness</strong>
+          <span>Verify PostgreSQL and request handling.</span>
+        </a>
+        <a href="/api/v1/schema">
+          <strong>OpenAPI schema</strong>
+          <span>Inspect the versioned API contract.</span>
+        </a>
+        <a href="/admin/">
+          <strong>Django admin</strong>
+          <span>Bootstrap administration; sign-in required.</span>
+        </a>
+      </nav>
+
+      <footer>Build {{ build_version }} · Local development environment</footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Check your email{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">Account verification</p>
+    <h1>Check your email</h1>
+    <p>
+      If the address can receive a Maru verification message, it now has a
+      single-use link. Open it, sign in, then return to
+      {{ edition.name }} registration.
+    </p>
+  </div>
+  <section class="notice-card">
+    <div>
+      <strong>No ticket is reserved yet.</strong>
+      <p>
+        This neutral response does not reveal whether an address already has
+        an account. Contact convention support if the message does not arrive.
+      </p>
+    </div>
+    <a class="button secondary" href="{% url 'public-registration-form' edition.id %}">
+      Return to registration
+    </a>
+  </section>
+{% endblock %}

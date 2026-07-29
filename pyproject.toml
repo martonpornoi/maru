@@ -1,0 +1,146 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maru"
+version = "0.1.0a0"
+description = "A multi-convention operating platform for community events"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+authors = [{ name = "Maru contributors" }]
+dependencies = [
+  "Django>=5.2.16,<5.3",
+  "djangorestframework>=3.17.1,<3.18",
+  "drf-spectacular>=0.30.0,<0.31",
+  "phonenumbers>=9,<10",
+  "Pillow>=12.1,<13",
+  "psycopg[binary,pool]>=3.3.4,<3.4",
+  "pycountry>=24.6,<25",
+]
+
+[dependency-groups]
+dev = [
+  "django-stubs[compatible-mypy]>=5.2,<5.3",
+  "djangorestframework-stubs>=3.16,<3.18",
+  "factory-boy>=3.3,<3.4",
+  "hypothesis>=6.136,<7",
+  "mypy>=1.17,<2",
+  "pip-audit>=2.9,<3",
+  "pytest>=9.1,<9.2",
+  "pytest-cov>=6.2,<8",
+  "pytest-django>=4.12,<5",
+  "pytest-xdist>=3.8,<4",
+  "ruff>=0.15.22,<0.16",
+  "time-machine>=2.19,<3",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "maru.settings.test"
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = [
+  "--strict-config",
+  "--strict-markers",
+  "--tb=short",
+]
+markers = [
+  "integration: requires PostgreSQL and exercises database integration",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["maru"]
+omit = [
+  "src/maru/*/migrations/*.py",
+  "src/maru/asgi.py",
+  "src/maru/wsgi.py",
+  "src/maru/settings/__init__.py",
+  "src/maru/settings/base.py",
+  "src/maru/settings/local.py",
+  "src/maru/settings/production.py",
+  "src/maru/settings/test.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 90
+exclude_also = [
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["src", "tests"]
+extend-exclude = ["src/**/migrations/*.py"]
+
+[tool.ruff.lint]
+select = [
+  "A",
+  "ARG",
+  "ASYNC",
+  "B",
+  "BLE",
+  "C4",
+  "DJ",
+  "DTZ",
+  "E",
+  "F",
+  "FBT",
+  "I",
+  "ICN",
+  "INP",
+  "INT",
+  "ISC",
+  "LOG",
+  "N",
+  "PERF",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "RET",
+  "RUF",
+  "S",
+  "SIM",
+  "SLOT",
+  "T10",
+  "T20",
+  "TRY",
+  "UP",
+  "W",
+]
+ignore = [
+  "ISC001",
+  "PLR0913",
+  "TRY003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["S105", "S106"]
+"tests/**/*.py" = ["S101", "S106", "ARG001", "FBT001", "PLR2004"]
+"scripts/*.py" = ["INP001", "T201"]
+"src/manage.py" = ["PLC0415", "T201"]
+"src/**/models.py" = ["RUF012"]
+"src/maru/settings/test.py" = ["S105"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["maru"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+strict = true
+warn_unreachable = true
+show_error_codes = true
+mypy_path = "src"
+exclude = ["/migrations/"]
+
+[tool.django-stubs]
+django_settings_module = "maru.settings.test"

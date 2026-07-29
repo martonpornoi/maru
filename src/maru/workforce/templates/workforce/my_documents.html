@@ -1,0 +1,44 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}My onboarding documents{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">{{ edition.name }}</p>
+    <h1>My onboarding documents</h1>
+    <p>
+      Submit only documents explicitly requested for this edition. Files remain
+      private and never become attendee-profile or registration answers.
+    </p>
+  </div>
+  <div class="directory-grid">
+    {% for item in document_requests %}
+      <article class="attendee-card">
+        <div>
+          <h2>{{ item.document_type.name }}</h2>
+          <p>{{ item.document_type.description }}</p>
+          {% if item.instructions %}<p><strong>Instructions:</strong> {{ item.instructions }}</p>{% endif %}
+          <p><strong>Status:</strong> {{ item.get_status_display }}</p>
+          {% if item.review_reason %}
+            <p><strong>Review note:</strong> {{ item.review_reason }}</p>
+          {% endif %}
+          <p class="privacy-note">{{ item.document_type.retention_notice }}</p>
+        </div>
+        {% if item.status == "requested" or item.status == "rejected" %}
+          <a class="button" href="{% url 'workforce-document-upload' edition.id item.id %}">
+            {% if item.status == "rejected" %}Replace signed PDF{% else %}Upload signed PDF{% endif %}
+          </a>
+        {% elif item.document %}
+          <a class="button secondary" href="{% url 'workforce-document-download' item.id %}">Download my submission</a>
+        {% endif %}
+      </article>
+    {% empty %}
+      <section class="notice-card">
+        <div>
+          <strong>No onboarding documents have been requested.</strong>
+          <p>A requested NDA or policy acknowledgement will appear here.</p>
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+{% endblock %}

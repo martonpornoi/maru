@@ -1,0 +1,69 @@
+.maru-page-help {
+  max-width: calc(100% - 16rem);
+  margin: -0.65rem 0 1.25rem;
+  color: var(--body-quiet-color);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+#header {
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+.maru-edition-context {
+  order: 3;
+  display: flex;
+  flex: 1 0 100%;
+  align-items: end;
+  gap: 0.65rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgb(255 255 255 / 18%);
+}
+
+.maru-edition-context label {
+  display: grid;
+  min-width: min(28rem, 80vw);
+  gap: 0.25rem;
+  color: var(--header-link-color);
+}
+
+.maru-edition-context label span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.maru-edition-context select,
+.maru-edition-context button {
+  min-height: 2.3rem;
+}
+
+.maru-edition-context select {
+  width: 100%;
+  color: var(--body-fg);
+  background: var(--body-bg);
+}
+
+@media (max-width: 767px) {
+  #header {
+    flex-wrap: nowrap;
+  }
+
+  .maru-page-help {
+    max-width: 100%;
+  }
+
+  .maru-edition-context {
+    flex: 0 0 auto;
+    width: 100%;
+    align-items: stretch;
+    box-sizing: border-box;
+  }
+
+  .maru-edition-context label {
+    min-width: 0;
+    flex: 1;
+  }
+}

@@ -1,0 +1,8003 @@
+openapi: 3.1.0
+info:
+  title: Maru API
+  version: 0.1.0
+  description: Versioned API for the Maru convention operating platform.
+paths:
+  /api/v1/me/context:
+    get:
+      operationId: identity_retrieve_my_context
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyContext'
+          description: ''
+  /api/v1/me/notification-preferences/{organization_id}:
+    get:
+      operationId: communications_retrieve_my_preference
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreference'
+          description: ''
+    put:
+      operationId: communications_update_my_preference
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotificationPreference'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreference'
+          description: ''
+  /api/v1/me/notifications:
+    get:
+      operationId: communications_list_my_notifications
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationMessage'
+          description: ''
+  /api/v1/me/notifications/{message_id}/read:
+    post:
+      operationId: communications_mark_my_notification_read
+      parameters:
+      - in: path
+        name: message_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationMessage'
+          description: ''
+  /api/v1/me/participation-history:
+    get:
+      operationId: participation_list_my_history
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipationHistory'
+          description: ''
+  /api/v1/me/post-edition-corrections:
+    get:
+      operationId: privacy_list_my_corrections
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostEditionCorrection'
+          description: ''
+    post:
+      operationId: privacy_propose_my_correction
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostEditionCorrectionCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostEditionCorrection'
+          description: ''
+  /api/v1/me/privacy-export:
+    get:
+      operationId: privacy_generate_my_export
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/me/privacy-requests:
+    get:
+      operationId: privacy_list_my_requests
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubjectRightsRequest'
+          description: ''
+    post:
+      operationId: privacy_create_my_request
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectRightsRequestCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectRightsRequest'
+          description: ''
+  /api/v1/me/restrictions:
+    get:
+      operationId: identity_list_my_restrictions
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountRestriction'
+          description: ''
+  /api/v1/me/restrictions/{restriction_id}/appeals:
+    post:
+      operationId: identity_appeal_my_restriction
+      parameters:
+      - in: path
+        name: restriction_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestrictionAppealCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestrictionAppeal'
+          description: ''
+  /api/v1/me/security-history:
+    get:
+      operationId: identity_list_my_security_history
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountSecurityEvent'
+          description: ''
+  /api/v1/me/sessions:
+    get:
+      operationId: identity_list_my_sessions
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountSession'
+          description: ''
+  /api/v1/me/sessions/{session_id}/revoke:
+    post:
+      operationId: identity_revoke_my_session
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/me/step-up:
+    post:
+      operationId: identity_complete_step_up
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StepUp'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/organizations/{organization_id}/audit-events:
+    get:
+      operationId: audit_list_security_events
+      parameters:
+      - in: query
+        name: correlation_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: outcome
+        schema:
+          enum:
+          - allow
+          - deny
+          - error
+          type: string
+          minLength: 1
+        description: |-
+          * `allow` - Allow
+          * `deny` - Deny
+          * `error` - Error
+      - in: query
+        name: principal_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: purpose
+        schema:
+          enum:
+          - security_investigation
+          - privacy_request
+          - compliance_review
+          - subject_support
+          - integrity_review
+          type: string
+          minLength: 1
+        description: |-
+          * `security_investigation` - Security investigation
+          * `privacy_request` - Privacy request
+          * `compliance_review` - Compliance review
+          * `subject_support` - Subject support
+          * `integrity_review` - Integrity review
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditEventSummary'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions:
+    get:
+      operationId: events_list_basic_editions
+      parameters:
+      - in: query
+        name: lifecycle
+        schema:
+          enum:
+          - draft
+          - preparing
+          - ready
+          - live
+          - closing
+          - archived
+          - cancelled
+          type: string
+          minLength: 1
+        description: |-
+          * `draft` - Draft
+          * `preparing` - Preparing
+          * `ready` - Ready
+          * `live` - Live
+          * `closing` - Closing
+          * `archived` - Archived
+          * `cancelled` - Cancelled
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+      - in: query
+        name: search
+        schema:
+          type: string
+          maxLength: 100
+          minLength: 1
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEditionBasicList'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}:
+    get:
+      operationId: events_retrieve_basic_edition
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionBasic'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/accreditation/me/credentials:
+    get:
+      operationId: accreditation_list_my_credentials
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Credential'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/actions:
+    get:
+      operationId: staff_list_assigned_actions
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionItem'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/closure-gates/{code}:
+    post:
+      operationId: events_review_closure_gate
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditionReadinessGateReview'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionReadinessGate'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/closure-manifest:
+    post:
+      operationId: events_generate_closure_manifest
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditionClosureManifestCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionClosureManifest'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/closure-readiness:
+    get:
+      operationId: events_get_closure_readiness
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/communication-delivery-failures:
+    get:
+      operationId: communications_list_delivery_failures
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeliveryFailure'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/credentials/{credential_id}/revoke:
+    post:
+      operationId: accreditation_revoke_credential
+      parameters:
+      - in: path
+        name: credential_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialCommand'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credential'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/offline/conflicts:
+    get:
+      operationId: accreditation_list_offline_conflicts
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OfflineOperation'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/offline/manifests:
+    post:
+      operationId: accreditation_generate_offline_manifest
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineManifest'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/participations:
+    get:
+      operationId: participation_list_staff_summaries
+      parameters:
+      - in: query
+        name: capacity
+        schema:
+          type: string
+          maxLength: 80
+          minLength: 1
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+      - in: query
+        name: search
+        schema:
+          type: string
+          maxLength: 100
+          minLength: 1
+      - in: query
+        name: status
+        schema:
+          enum:
+          - interested
+          - pending
+          - confirmed
+          - active
+          - completed
+          - cancelled
+          type: string
+          minLength: 1
+        description: |-
+          * `interested` - Interested
+          * `pending` - Pending
+          * `confirmed` - Confirmed
+          * `active` - Active
+          * `completed` - Completed
+          * `cancelled` - Cancelled
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStaffParticipationSummaryList'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/participations/{account_id}:
+    get:
+      operationId: participation_retrieve_staff_summary
+      parameters:
+      - in: path
+        name: account_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffParticipationSummary'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/privacy/corrections/{correction_id}/decision:
+    post:
+      operationId: privacy_decide_post_edition_correction
+      parameters:
+      - in: path
+        name: correction_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostEditionCorrectionDecision'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostEditionCorrection'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/privacy/registration-profile-minimization:
+    post:
+      operationId: privacy_minimize_registration_profile
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationProfileMinimize'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisposalReceipt'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/attendee-report:
+    get:
+      operationId: registration_retrieve_attendee_report
+      parameters:
+      - in: query
+        name: country_code
+        schema:
+          type: string
+          maxLength: 7
+          pattern: ^(?:[A-Za-z]{2}|unknown)$
+          minLength: 1
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: level
+        schema:
+          enum:
+          - attendee
+          - sponsor
+          - super_sponsor
+          - volunteer
+          - guest
+          type: string
+          minLength: 1
+        description: |-
+          * `attendee` - attendee
+          * `sponsor` - sponsor
+          * `super_sponsor` - super_sponsor
+          * `volunteer` - volunteer
+          * `guest` - guest
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 25
+      - in: query
+        name: search
+        schema:
+          type: string
+          maxLength: 100
+          minLength: 1
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendeeReport'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/badge-export.csv:
+    get:
+      operationId: registration_export_badge_data
+      parameters:
+      - in: query
+        name: country_code
+        schema:
+          type: string
+          maxLength: 7
+          pattern: ^(?:[A-Za-z]{2}|unknown)$
+          minLength: 1
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: level
+        schema:
+          enum:
+          - attendee
+          - sponsor
+          - super_sponsor
+          - volunteer
+          - guest
+          type: string
+          minLength: 1
+        description: |-
+          * `attendee` - attendee
+          * `sponsor` - sponsor
+          * `super_sponsor` - super_sponsor
+          * `volunteer` - volunteer
+          * `guest` - guest
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 25
+      - in: query
+        name: search
+        schema:
+          type: string
+          maxLength: 100
+          minLength: 1
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration:
+    get:
+      operationId: registration_retrieve_configuration_workspace
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationConfigurationWorkspace'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration/activate:
+    post:
+      operationId: registration_activate_configuration
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateConfiguration'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationConfiguration'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration/drafts:
+    post:
+      operationId: registration_create_configuration_draft
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConfigurationDraft'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationConfiguration'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/financial-operations/{operation_id}/approve:
+    post:
+      operationId: registration_approve_financial_operation
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: operation_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveFinancialOperation'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialOperation'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/me:
+    get:
+      operationId: registration_retrieve_my_registration
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyRegistrationWorkspace'
+          description: ''
+    post:
+      operationId: registration_submit_my_registration
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitRegistration'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfRegistration'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/me/{registration_id}/demo-payment:
+    post:
+      operationId: registration_confirm_my_demo_payment
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoPayment'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfRegistration'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/me/{registration_id}/payment-intents:
+    post:
+      operationId: registration_create_my_payment_intent
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentIntent'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntent'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntent'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/me/{registration_id}/payment-intents/{intent_id}:
+    get:
+      operationId: registration_retrieve_my_payment_intent
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: intent_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntent'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/me/{registration_id}/receipts:
+    get:
+      operationId: registration_list_my_receipts
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReceiptRecord'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/me/profile:
+    get:
+      operationId: registration_retrieve_self_attendee_profile
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfAttendeeProfile'
+          description: ''
+    put:
+      operationId: registration_update_self_attendee_profile
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSelfAttendeeProfile'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfAttendeeProfile'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/me/profile/fursuits/{fursuit_id}/photo:
+    post:
+      operationId: registration_upload_self_fursuit_photo
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: fursuit_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SelfProfileImageUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SelfProfileImageUpload'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfAttendeeProfile'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/me/profile/photo:
+    post:
+      operationId: registration_upload_self_profile_photo
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SelfProfileImageUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SelfProfileImageUpload'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfAttendeeProfile'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/payment-exceptions:
+    get:
+      operationId: registration_list_payment_exceptions
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentException'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/payment-exceptions/{exception_id}/resolve:
+    post:
+      operationId: registration_resolve_payment_exception
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: exception_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolvePaymentException'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentException'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-media-reviews:
+    get:
+      operationId: registration_list_profile_media_reviews
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfileMediaReviewItem'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-media-reviews/{media_id}:
+    post:
+      operationId: registration_review_profile_media
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: media_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileMediaReviewDecision'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileMediaReviewItem'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/reconciliation:
+    get:
+      operationId: registration_retrieve_reconciliation
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationReconciliation'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/settlements:
+    get:
+      operationId: registration_list_settlements
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SettlementBatch'
+          description: ''
+    post:
+      operationId: registration_reconcile_settlement
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReconcileSettlement'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementBatch'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/templates:
+    post:
+      operationId: registration_publish_template
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishTemplate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationTemplateSummary'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registrations:
+    get:
+      operationId: registration_list_service_summaries
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+      - in: query
+        name: search
+        schema:
+          type: string
+          maxLength: 100
+          minLength: 1
+      - in: query
+        name: state
+        schema:
+          enum:
+          - guardian_pending
+          - waitlisted
+          - payment_pending
+          - confirmed
+          - checked_in
+          - expired
+          - cancelled
+          type: string
+          minLength: 1
+        description: |-
+          * `guardian_pending` - Guardian consent pending
+          * `waitlisted` - Waitlisted
+          * `payment_pending` - Payment pending
+          * `confirmed` - Confirmed
+          * `checked_in` - Checked in
+          * `expired` - Payment expired
+          * `cancelled` - Cancelled
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStaffRegistrationList'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registrations/{registration_id}:
+    get:
+      operationId: registration_retrieve_service_summary
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffRegistration'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registrations/{registration_id}/check-in:
+    post:
+      operationId: registration_check_in
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffRegistration'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registrations/{registration_id}/credentials:
+    post:
+      operationId: accreditation_issue_credential
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialCommand'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuedCredential'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registrations/{registration_id}/financial-operations:
+    get:
+      operationId: registration_list_financial_operations
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FinancialOperation'
+          description: ''
+    post:
+      operationId: registration_propose_financial_operation
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProposeFinancialOperation'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialOperation'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registrations/{registration_id}/payment-deadline:
+    post:
+      operationId: registration_change_payment_deadline
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePaymentDeadline'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffRegistration'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/registrations/{registration_id}/waive-payment:
+    post:
+      operationId: registration_waive_payment
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: registration_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaivePayment'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffRegistration'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/restriction-appeals/{appeal_id}/decision:
+    post:
+      operationId: identity_decide_restriction_appeal
+      parameters:
+      - in: path
+        name: appeal_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffRestrictionAppealDecision'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestrictionAppeal'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/restrictions:
+    get:
+      operationId: identity_list_scoped_restrictions
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountRestriction'
+          description: ''
+    post:
+      operationId: identity_issue_scoped_restriction
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffRestrictionCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountRestriction'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/restrictions/{restriction_id}/revoke:
+    post:
+      operationId: identity_revoke_scoped_restriction
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: restriction_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffRestrictionRevoke'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountRestriction'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/transition:
+    post:
+      operationId: events_transition_edition
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditionTransitionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionTransitionResult'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/documents/me:
+    get:
+      operationId: workforce_list_my_onboarding_documents
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OnboardingDocumentRequest'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/documents/me/{document_request_id}/upload:
+    post:
+      operationId: workforce_upload_my_onboarding_document
+      parameters:
+      - in: path
+        name: document_request_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OnboardingDocumentUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OnboardingDocumentUpload'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingDocumentRequest'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/opportunities/{opportunity_id}/applications/me:
+    post:
+      operationId: workforce_submit_my_volunteer_application
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: opportunity_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerApplicationSubmit'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerApplication'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/autocomplete:
+    get:
+      operationId: events_autocomplete_basic_editions
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          maximum: 20
+          minimum: 1
+          default: 10
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: search
+        schema:
+          type: string
+          maxLength: 100
+          minLength: 1
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionAutocompleteResponse'
+          description: ''
+  /api/v1/organizations/{organization_id}/editions/bulk-transition:
+    post:
+      operationId: events_bulk_transition_editions
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditionBulkTransitionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionBulkTransitionResponse'
+          description: ''
+  /api/v1/organizations/{organization_id}/privacy-requests:
+    get:
+      operationId: privacy_list_staff_requests
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaffSubjectRightsRequest'
+          description: ''
+  /api/v1/organizations/{organization_id}/privacy-requests/{privacy_request_id}/transition:
+    post:
+      operationId: privacy_transition_staff_request
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: privacy_request_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectRightsRequestTransition'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffSubjectRightsRequest'
+          description: ''
+  /api/v1/public/accounts:
+    post:
+      operationId: identity_bootstrap_account
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountBootstrap'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/public/accounts/recovery:
+    post:
+      operationId: identity_request_recovery
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/public/accounts/recovery/complete:
+    post:
+      operationId: identity_complete_recovery
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryComplete'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/public/accounts/verify-email:
+    post:
+      operationId: identity_verify_email
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/public/csrf:
+    get:
+      operationId: identity_get_csrf_token
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/public/editions:
+    get:
+      operationId: registration_list_public_editions
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicRegistrationEdition'
+          description: ''
+  /api/v1/public/editions/{edition_id}/attendees:
+    get:
+      operationId: registration_list_public_attendees
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicAttendee'
+          description: ''
+  /api/v1/public/editions/{edition_id}/registration:
+    get:
+      operationId: registration_retrieve_public_definition
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicRegistrationDefinition'
+          description: ''
+  /api/v1/public/editions/{edition_id}/registration/profile-suggestion:
+    get:
+      operationId: registration_retrieve_self_profile_suggestion
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfProfileSuggestion'
+          description: ''
+        '204':
+          description: No response body
+  /api/v1/public/editions/{edition_id}/registration/submissions:
+    post:
+      operationId: registration_submit_headless
+      description: Complete JSON submission command for independently designed frontends.
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeadlessRegistrationSubmission'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/public/editions/{edition_id}/volunteer-opportunities:
+    get:
+      operationId: workforce_list_public_volunteer_opportunities
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VolunteerOpportunity'
+          description: ''
+  /api/v1/public/guardian-consents/accept:
+    post:
+      operationId: registration_accept_guardian_consent
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuardianConsentAccept'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/public/organizations/{organization_id}/editions/{edition_id}/offline/devices/{device_code}/check-ins:
+    post:
+      operationId: accreditation_ingest_offline_check_in
+      parameters:
+      - in: path
+        name: device_code
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfflineCheckIn'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineOperation'
+          description: ''
+  /api/v1/public/organizations/{organization_id}/payments/{provider_code}/webhook:
+    post:
+      operationId: registration_receive_payment_webhook
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: provider_code
+        schema:
+          type: string
+        required: true
+      tags:
+      - public
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/public/sessions:
+    post:
+      operationId: identity_create_public_session
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionSignIn'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /health/live:
+    get:
+      operationId: platform_liveness
+      tags:
+      - health
+      responses:
+        '200':
+          description: The process can serve requests.
+  /health/ready:
+    get:
+      operationId: platform_readiness
+      tags:
+      - health
+      responses:
+        '200':
+          description: Required dependencies are ready.
+        '503':
+          description: A required dependency is unavailable.
+components:
+  schemas:
+    AccountBootstrap:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+          maxLength: 120
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+      required:
+      - display_name
+      - email
+      - password
+    AccountRestriction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        edition_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/AccountRestrictionKindEnum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ActiveRevokedStatusEnum'
+          readOnly: true
+        attendee_message:
+          type: string
+          readOnly: true
+        effective_at:
+          type: string
+          format: date-time
+          readOnly: true
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        revoked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        appeal_status:
+          type:
+          - string
+          - 'null'
+          readOnly: true
+      required:
+      - appeal_status
+      - attendee_message
+      - edition_id
+      - effective_at
+      - expires_at
+      - id
+      - kind
+      - organization_id
+      - revoked_at
+      - status
+    AccountRestrictionKindEnum:
+      enum:
+      - registration
+      - attendance
+      - public_profile
+      - credential
+      - communication
+      type: string
+      description: |-
+        * `registration` - Registration
+        * `attendance` - Attendance
+        * `public_profile` - Public attendee profile
+        * `credential` - Credential
+        * `communication` - Communication
+    AccountSecurityEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        event_type:
+          allOf:
+          - $ref: '#/components/schemas/EventTypeEnum'
+          readOnly: true
+        event_label:
+          type: string
+        outcome:
+          allOf:
+          - $ref: '#/components/schemas/AccountSecurityEventOutcomeEnum'
+          readOnly: true
+        occurred_at:
+          type: string
+          format: date-time
+          readOnly: true
+        source_channel:
+          type: string
+          readOnly: true
+        detail_code:
+          type: string
+          readOnly: true
+      required:
+      - detail_code
+      - event_label
+      - event_type
+      - id
+      - occurred_at
+      - outcome
+      - source_channel
+    AccountSecurityEventOutcomeEnum:
+      enum:
+      - succeeded
+      - failed
+      type: string
+      description: |-
+        * `succeeded` - Succeeded
+        * `failed` - Failed
+    AccountSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        label:
+          type: string
+          readOnly: true
+        created_channel:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_seen_at:
+          type: string
+          format: date-time
+          readOnly: true
+        step_up_verified_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        active:
+          type: boolean
+        revoked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        revocation_reason:
+          type: string
+          readOnly: true
+      required:
+      - active
+      - created_at
+      - created_channel
+      - id
+      - label
+      - last_seen_at
+      - revocation_reason
+      - revoked_at
+      - step_up_verified_at
+    ActionEnum:
+      enum:
+      - begin_identity_check
+      - verify_identity
+      - complete
+      - deny
+      type: string
+      description: |-
+        * `begin_identity_check` - Begin identity check
+        * `verify_identity` - Verify identity and begin work
+        * `complete` - Complete
+        * `deny` - Deny
+    ActionItem:
+      type: object
+      properties:
+        key:
+          type: string
+        level:
+          $ref: '#/components/schemas/LevelEnum'
+        title:
+          type: string
+        summary:
+          type: string
+        object_type:
+          type: string
+        object_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        destination:
+          type: string
+        owner_label:
+          type: string
+        due_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - destination
+      - due_at
+      - key
+      - level
+      - object_id
+      - object_type
+      - owner_label
+      - summary
+      - title
+    ActivateConfiguration:
+      type: object
+      properties:
+        configuration_id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - configuration_id
+      - reason
+    ActiveRevokedStatusEnum:
+      enum:
+      - active
+      - revoked
+      type: string
+      description: |-
+        * `active` - Active
+        * `revoked` - Revoked
+    AdmissionProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        price_minor:
+          type: integer
+          readOnly: true
+        capacity:
+          type: integer
+          readOnly: true
+        position:
+          type: integer
+          readOnly: true
+        entitlement_code:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        entitlement_name:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AdmissionProductStatusEnum'
+          readOnly: true
+        sales_open_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+          description: Optional product-specific opening time.
+        sales_close_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+          description: Optional product-specific closing time.
+        required_capacity_codes:
+          readOnly: true
+          description: Optional active participation-capacity codes. A person needs
+            at least one of them to select this product.
+        eligibility_explanation:
+          type: string
+          readOnly: true
+          description: Attendee-facing explanation for a restricted offer.
+        waitlist_enabled:
+          type: boolean
+          readOnly: true
+          description: Allow an eligible person to join the waitlist when capacity
+            is full.
+        payment_window_minutes:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: Optional override for the edition's default payment deadline.
+      required:
+      - capacity
+      - code
+      - description
+      - eligibility_explanation
+      - entitlement_code
+      - entitlement_name
+      - id
+      - name
+      - payment_window_minutes
+      - position
+      - price_minor
+      - required_capacity_codes
+      - sales_close_at
+      - sales_open_at
+      - status
+      - waitlist_enabled
+    AdmissionProductStatusEnum:
+      enum:
+      - available
+      - hidden
+      type: string
+      description: |-
+        * `available` - Available
+        * `hidden` - Hidden
+    ApproveFinancialOperation:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - reason
+    AttendanceLabel:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        tone:
+          type: string
+      required:
+      - code
+      - label
+      - tone
+    AttendeeCountryBreakdown:
+      type: object
+      properties:
+        country_code:
+          type: string
+        count:
+          type: integer
+        percentage:
+          type: number
+          format: double
+      required:
+      - count
+      - country_code
+      - percentage
+    AttendeeLevelBreakdown:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        tone:
+          type: string
+        count:
+          type: integer
+      required:
+      - code
+      - count
+      - label
+      - tone
+    AttendeeReport:
+      type: object
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        status_scope:
+          type: array
+          items:
+            type: string
+        summary:
+          $ref: '#/components/schemas/AttendeeReportSummary'
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        has_next:
+          type: boolean
+        has_previous:
+          type: boolean
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendeeReportRow'
+      required:
+      - count
+      - generated_at
+      - has_next
+      - has_previous
+      - page
+      - page_size
+      - results
+      - status_scope
+      - summary
+    AttendeeReportRow:
+      type: object
+      properties:
+        registration_id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+        badge_name:
+          type: string
+        badge_name_source:
+          $ref: '#/components/schemas/BadgeNameSourceEnum'
+        display_name:
+          type: string
+        pronouns:
+          type: string
+        spoken_language_codes:
+          type: array
+          items:
+            type: string
+        spoken_languages:
+          type: array
+          items:
+            type: string
+        country_code:
+          type: string
+        registration_state:
+          type: string
+        product_name:
+          type: string
+        attendance_labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceLabel'
+        profile_photo_status:
+          type: string
+      required:
+      - attendance_labels
+      - badge_name
+      - badge_name_source
+      - country_code
+      - display_name
+      - product_name
+      - profile_photo_status
+      - pronouns
+      - reference
+      - registration_id
+      - registration_state
+      - spoken_language_codes
+      - spoken_languages
+    AttendeeReportSummary:
+      type: object
+      properties:
+        coming:
+          type: integer
+        confirmed:
+          type: integer
+        checked_in:
+          type: integer
+        countries:
+          type: integer
+        volunteers:
+          type: integer
+        approved_profile_photos:
+          type: integer
+        country_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendeeCountryBreakdown'
+        level_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendeeLevelBreakdown'
+      required:
+      - approved_profile_photos
+      - checked_in
+      - coming
+      - confirmed
+      - countries
+      - country_breakdown
+      - level_breakdown
+      - volunteers
+    AuditEventSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        occurred_at:
+          type: string
+          format: date-time
+          readOnly: true
+        principal_kind:
+          type: string
+          readOnly: true
+        principal_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        event_edition_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        capability_code:
+          type: string
+          readOnly: true
+        operation:
+          type: string
+          readOnly: true
+        target_type:
+          type: string
+          readOnly: true
+        target_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        outcome:
+          allOf:
+          - $ref: '#/components/schemas/AuditEventSummaryOutcomeEnum'
+          readOnly: true
+        reason_code:
+          type: string
+          readOnly: true
+        correlation_id:
+          type: string
+          format: uuid
+          readOnly: true
+        source_channel:
+          type: string
+          readOnly: true
+        delegated:
+          type: boolean
+          readOnly: true
+        elevated:
+          type: boolean
+          readOnly: true
+        break_glass:
+          type: boolean
+          readOnly: true
+      required:
+      - break_glass
+      - capability_code
+      - correlation_id
+      - delegated
+      - elevated
+      - event_edition_id
+      - id
+      - occurred_at
+      - operation
+      - outcome
+      - principal_id
+      - principal_kind
+      - reason_code
+      - source_channel
+      - target_id
+      - target_type
+    AuditEventSummaryOutcomeEnum:
+      enum:
+      - allow
+      - deny
+      - error
+      type: string
+      description: |-
+        * `allow` - Allow
+        * `deny` - Deny
+        * `error` - Error
+    BadgeNameSourceEnum:
+      enum:
+      - registration_answer
+      - platform_display_name
+      type: string
+      description: |-
+        * `registration_answer` - registration_answer
+        * `platform_display_name` - platform_display_name
+    CapacityContext:
+      type: object
+      properties:
+        code:
+          type: string
+          readOnly: true
+        label_snapshot:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CapacityContextStatusEnum'
+          readOnly: true
+        contribution_summary:
+          type: string
+          readOnly: true
+        public_history_visible:
+          type: boolean
+          readOnly: true
+      required:
+      - code
+      - contribution_summary
+      - label_snapshot
+      - public_history_visible
+      - status
+    CapacityContextStatusEnum:
+      enum:
+      - proposed
+      - active
+      - completed
+      - withdrawn
+      type: string
+      description: |-
+        * `proposed` - Proposed
+        * `active` - Active
+        * `completed` - Completed
+        * `withdrawn` - Withdrawn
+    ChangePaymentDeadline:
+      type: object
+      properties:
+        new_deadline:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - new_deadline
+      - reason
+    ChannelEnum:
+      enum:
+      - email
+      type: string
+      description: '* `email` - Email'
+    CheckIn:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - reason
+    ClassificationEnum:
+      enum:
+      - C1
+      - C2
+      type: string
+      description: |-
+        * `C1` - Internal
+        * `C2` - Personal
+    CodeEnum:
+      enum:
+      - privacy
+      - finance
+      - operations
+      - security
+      - jurisdiction
+      type: string
+      description: |-
+        * `privacy` - Privacy
+        * `finance` - Finance
+        * `operations` - Operations
+        * `security` - Security
+        * `jurisdiction` - Jurisdiction and safeguarding
+    ConfirmationBasisEnum:
+      enum:
+      - free
+      - provider
+      - waiver
+      type: string
+      description: |-
+        * `free` - No payment required
+        * `provider` - Payment provider
+        * `waiver` - Authorized waiver
+    CreateConfigurationDraft:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 160
+        reason:
+          type: string
+          maxLength: 500
+        source_template_id:
+          type: string
+          format: uuid
+        source_edition_id:
+          type: string
+          format: uuid
+        opens_at:
+          type: string
+          format: date-time
+        closes_at:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+          minimum: 1
+        currency:
+          type: string
+          maxLength: 3
+          minLength: 3
+        minimum_age:
+          type: integer
+          maximum: 120
+          minimum: 18
+        default_payment_window_minutes:
+          type: integer
+          maximum: 43200
+          minimum: 15
+        waitlist_enabled:
+          type: boolean
+        automatic_waitlist_promotion:
+          type: boolean
+      required:
+      - name
+      - reason
+    CreatePaymentIntent:
+      type: object
+      properties:
+        provider_account_id:
+          type: string
+          format: uuid
+        idempotency_key:
+          type: string
+          format: uuid
+        return_url:
+          type: string
+          format: uri
+          maxLength: 500
+      required:
+      - idempotency_key
+      - provider_account_id
+      - return_url
+    Credential:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        registration_id:
+          type: string
+          format: uuid
+          readOnly: true
+        public_id:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CredentialStatusEnum'
+          readOnly: true
+        issue_sequence:
+          type: integer
+          readOnly: true
+        label_snapshot:
+          type: string
+          readOnly: true
+        issued_at:
+          type: string
+          format: date-time
+          readOnly: true
+        revoked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        revocation_reason:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - issue_sequence
+      - issued_at
+      - label_snapshot
+      - public_id
+      - registration_id
+      - revocation_reason
+      - revoked_at
+      - status
+    CredentialCommand:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - reason
+    CredentialStatusEnum:
+      enum:
+      - issued
+      - replaced
+      - revoked
+      type: string
+      description: |-
+        * `issued` - Issued
+        * `replaced` - Replaced
+        * `revoked` - Revoked
+    DeliveryFailure:
+      type: object
+      properties:
+        message_id:
+          type: string
+          format: uuid
+        account_id:
+          type: string
+          format: uuid
+        message_type:
+          type: string
+        subject:
+          type: string
+        channel:
+          type: string
+        status:
+          type: string
+        attempt_count:
+          type: integer
+        safe_error_code:
+          type: string
+        last_attempt_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - account_id
+      - attempt_count
+      - channel
+      - last_attempt_at
+      - message_id
+      - message_type
+      - safe_error_code
+      - status
+      - subject
+    DemoPayment:
+      type: object
+      properties:
+        idempotency_key:
+          type: string
+          format: uuid
+      required:
+      - idempotency_key
+    DisposalReceipt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        edition_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        policy_id:
+          type: string
+          format: uuid
+          readOnly: true
+        target_type:
+          type: string
+          readOnly: true
+        target_id:
+          type: string
+          format: uuid
+          readOnly: true
+        disposition:
+          allOf:
+          - $ref: '#/components/schemas/DispositionEnum'
+          readOnly: true
+        applied_at:
+          type: string
+          format: date-time
+          readOnly: true
+        safe_result_code:
+          type: string
+          readOnly: true
+        downstream_receipts:
+          readOnly: true
+      required:
+      - applied_at
+      - disposition
+      - downstream_receipts
+      - edition_id
+      - id
+      - policy_id
+      - safe_result_code
+      - target_id
+      - target_type
+    DispositionEnum:
+      enum:
+      - delete
+      - minimize
+      - retain
+      type: string
+      description: |-
+        * `delete` - Delete
+        * `minimize` - Minimize
+        * `retain` - Retain with legal basis
+    EditionAutocomplete:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        lifecycle:
+          allOf:
+          - $ref: '#/components/schemas/EditionLifecycleEnum'
+          readOnly: true
+        starts_on:
+          type: string
+          format: date
+          readOnly: true
+      required:
+      - id
+      - lifecycle
+      - name
+      - starts_on
+    EditionAutocompleteResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EditionAutocomplete'
+          readOnly: true
+      required:
+      - results
+    EditionBasic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        series_id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          readOnly: true
+        lifecycle:
+          allOf:
+          - $ref: '#/components/schemas/EditionLifecycleEnum'
+          readOnly: true
+        time_zone:
+          type: string
+          readOnly: true
+        language_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 35
+          readOnly: true
+        currency_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 3
+          readOnly: true
+        starts_on:
+          type: string
+          format: date
+          readOnly: true
+        ends_on:
+          type: string
+          format: date
+          readOnly: true
+      required:
+      - currency_codes
+      - ends_on
+      - id
+      - language_codes
+      - lifecycle
+      - name
+      - organization_id
+      - series_id
+      - slug
+      - starts_on
+      - time_zone
+    EditionBulkTransitionRequest:
+      type: object
+      properties:
+        edition_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 25
+          minItems: 1
+        to_state:
+          $ref: '#/components/schemas/EditionLifecycleEnum'
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - edition_ids
+      - reason
+      - to_state
+    EditionBulkTransitionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EditionTransitionResult'
+          readOnly: true
+      required:
+      - results
+    EditionClosureManifest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        generated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        counts:
+          readOnly: true
+        manifest_digest:
+          type: string
+          readOnly: true
+        recovery_reference:
+          type: string
+          readOnly: true
+      required:
+      - counts
+      - generated_at
+      - id
+      - manifest_digest
+      - recovery_reference
+    EditionClosureManifestCreate:
+      type: object
+      properties:
+        recovery_reference:
+          type: string
+          maxLength: 240
+      required:
+      - recovery_reference
+    EditionContext:
+      type: object
+      properties:
+        organization_id:
+          type: string
+          format: uuid
+        organization_slug:
+          type: string
+        series_id:
+          type: string
+          format: uuid
+        series_slug:
+          type: string
+        series_name:
+          type: string
+        edition_id:
+          type: string
+          format: uuid
+        edition_slug:
+          type: string
+        edition_name:
+          type: string
+        lifecycle:
+          $ref: '#/components/schemas/EditionLifecycleEnum'
+        time_zone:
+          type: string
+        language_codes:
+          type: array
+          items:
+            type: string
+        currency_codes:
+          type: array
+          items:
+            type: string
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        participation_status:
+          type: string
+        capacities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapacityContext'
+      required:
+      - capacities
+      - currency_codes
+      - edition_id
+      - edition_name
+      - edition_slug
+      - ends_on
+      - language_codes
+      - lifecycle
+      - organization_id
+      - organization_slug
+      - participation_status
+      - series_id
+      - series_name
+      - series_slug
+      - starts_on
+      - time_zone
+    EditionLifecycleEnum:
+      enum:
+      - draft
+      - preparing
+      - ready
+      - live
+      - closing
+      - archived
+      - cancelled
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `preparing` - Preparing
+        * `ready` - Ready
+        * `live` - Live
+        * `closing` - Closing
+        * `archived` - Archived
+        * `cancelled` - Cancelled
+    EditionReadinessGate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        code:
+          allOf:
+          - $ref: '#/components/schemas/CodeEnum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/EditionReadinessGateStatusEnum'
+          readOnly: true
+        evidence_reference:
+          type: string
+          readOnly: true
+        review_summary:
+          type: string
+          readOnly: true
+        reviewed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - evidence_reference
+      - id
+      - review_summary
+      - reviewed_at
+      - status
+    EditionReadinessGateReview:
+      type: object
+      properties:
+        approve:
+          type: boolean
+        evidence_reference:
+          type: string
+          maxLength: 240
+        summary:
+          type: string
+          maxLength: 500
+      required:
+      - approve
+      - evidence_reference
+      - summary
+    EditionReadinessGateStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `approved` - Approved
+        * `rejected` - Rejected
+    EditionTransitionRequest:
+      type: object
+      properties:
+        to_state:
+          $ref: '#/components/schemas/EditionLifecycleEnum'
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - reason
+      - to_state
+    EditionTransitionResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        lifecycle:
+          allOf:
+          - $ref: '#/components/schemas/EditionLifecycleEnum'
+          readOnly: true
+        lifecycle_version:
+          type: integer
+          readOnly: true
+      required:
+      - id
+      - lifecycle
+      - lifecycle_version
+    Entitlement:
+      type: object
+      properties:
+        code:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        label_snapshot:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ActiveRevokedStatusEnum'
+          readOnly: true
+        granted_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - granted_at
+      - label_snapshot
+      - status
+    EventTypeEnum:
+      enum:
+      - sign_in
+      - sign_out
+      - credential_changed
+      - contact_verified
+      - recovery_requested
+      - recovery_completed
+      - session_revoked
+      - step_up_completed
+      - data_export
+      type: string
+      description: |-
+        * `sign_in` - Signed in
+        * `sign_out` - Signed out
+        * `credential_changed` - Credential changed
+        * `contact_verified` - Contact verified
+        * `recovery_requested` - Recovery requested
+        * `recovery_completed` - Recovery completed
+        * `session_revoked` - Session revoked
+        * `step_up_completed` - Extra sign-in check completed
+        * `data_export` - Account export
+    FieldTypeEnum:
+      enum:
+      - short_text
+      - long_text
+      - boolean
+      - single_choice
+      - multiple_choice
+      - integer
+      type: string
+      description: |-
+        * `short_text` - Short text
+        * `long_text` - Long text
+        * `boolean` - Yes or no
+        * `single_choice` - Single choice
+        * `multiple_choice` - Multiple choice
+        * `integer` - Whole number
+    FinancialOperation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        registration_id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/FinancialOperationKindEnum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/FinancialOperationStatusEnum'
+          readOnly: true
+        amount_minor:
+          type: integer
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        target_account_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        target_product_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        requested_by_id:
+          type: string
+          format: uuid
+          readOnly: true
+        requested_at:
+          type: string
+          format: date-time
+          readOnly: true
+        request_reason:
+          type: string
+          readOnly: true
+        approved_by_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        approved_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        approval_reason:
+          type: string
+          readOnly: true
+        completed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        safe_result_code:
+          type: string
+          readOnly: true
+      required:
+      - amount_minor
+      - approval_reason
+      - approved_at
+      - approved_by_id
+      - completed_at
+      - currency
+      - id
+      - kind
+      - registration_id
+      - request_reason
+      - requested_at
+      - requested_by_id
+      - safe_result_code
+      - status
+      - target_account_id
+      - target_product_id
+    FinancialOperationKindEnum:
+      enum:
+      - cancel
+      - refund
+      - transfer
+      - product_change
+      - price_adjustment
+      type: string
+      description: |-
+        * `cancel` - Cancel registration
+        * `refund` - Refund
+        * `transfer` - Transfer admission
+        * `product_change` - Change admission product
+        * `price_adjustment` - Price adjustment
+    FinancialOperationStatusEnum:
+      enum:
+      - proposed
+      - approved
+      - provider_pending
+      - completed
+      - rejected
+      - failed
+      type: string
+      description: |-
+        * `proposed` - Proposed
+        * `approved` - Approved
+        * `provider_pending` - Provider pending
+        * `completed` - Completed
+        * `rejected` - Rejected
+        * `failed` - Failed
+    GuardianConsentAccept:
+      type: object
+      properties:
+        token:
+          type: string
+          maxLength: 200
+        guardian_name:
+          type: string
+          maxLength: 200
+      required:
+      - guardian_name
+      - token
+    GuardianDetails:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        email:
+          type: string
+          format: email
+        relationship:
+          type: string
+          maxLength: 80
+        notice_version:
+          type: string
+          maxLength: 40
+      required:
+      - email
+      - name
+      - notice_version
+      - relationship
+    HeadlessFursuit:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 120
+        species:
+          type: string
+          maxLength: 120
+        reuse_from_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+      required:
+      - name
+    HeadlessProfile:
+      type: object
+      properties:
+        real_name:
+          type: string
+          maxLength: 200
+        date_of_birth:
+          type: string
+          format: date
+        address_line_1:
+          type: string
+          maxLength: 200
+        address_line_2:
+          type: string
+          maxLength: 200
+        locality:
+          type: string
+          maxLength: 120
+        postal_code:
+          type: string
+          maxLength: 32
+        region:
+          type: string
+          maxLength: 120
+        country_code:
+          type: string
+          maxLength: 2
+          pattern: ^[A-Za-z]{2}$
+        emergency_contact_name:
+          type: string
+          maxLength: 200
+        emergency_contact_phone:
+          type: string
+          maxLength: 40
+          pattern: ^[0-9+().\-\s]{7,40}$
+        phone_number:
+          type: string
+          maxLength: 40
+          pattern: ^[0-9+().\-\s]{7,40}$
+        telegram_handle:
+          oneOf:
+          - type: string
+            maxLength: 64
+            pattern: ^@?[A-Za-z0-9_]{5,32}$
+          - type: string
+            maxLength: 0
+        pronoun_code:
+          $ref: '#/components/schemas/PronounCodeEnum'
+        other_pronouns:
+          type: string
+          maxLength: 80
+        bio:
+          type: string
+          maxLength: 500
+        spoken_language_codes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpokenLanguageCodesEnum'
+          maxItems: 5
+        brings_fursuits:
+          type: boolean
+        reuse_profile_photo_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        fursuits:
+          type: array
+          items:
+            $ref: '#/components/schemas/HeadlessFursuit'
+        directory_visible:
+          type: boolean
+          default: false
+        directory_country_code:
+          oneOf:
+          - type: string
+            maxLength: 2
+            pattern: ^[A-Za-z]{2}$
+          - type: string
+            maxLength: 0
+        guardian:
+          $ref: '#/components/schemas/GuardianDetails'
+      required:
+      - address_line_1
+      - brings_fursuits
+      - country_code
+      - date_of_birth
+      - emergency_contact_name
+      - emergency_contact_phone
+      - locality
+      - phone_number
+      - postal_code
+      - pronoun_code
+      - real_name
+      - region
+      - spoken_language_codes
+    HeadlessRegistrationSubmission:
+      type: object
+      properties:
+        idempotency_key:
+          type: string
+          format: uuid
+        configuration_version:
+          type: integer
+          minimum: 1
+        product_id:
+          type: string
+          format: uuid
+        answers: {}
+        profile:
+          $ref: '#/components/schemas/HeadlessProfile'
+        collection_notice_version:
+          type: string
+          maxLength: 40
+        directory_consent_version:
+          type: string
+          maxLength: 40
+      required:
+      - answers
+      - collection_notice_version
+      - configuration_version
+      - idempotency_key
+      - product_id
+      - profile
+    IssuedCredential:
+      type: object
+      properties:
+        credential:
+          $ref: '#/components/schemas/Credential'
+        credential_token:
+          type:
+          - string
+          - 'null'
+      required:
+      - credential
+      - credential_token
+    LevelEnum:
+      enum:
+      - fyi
+      - action
+      - blocking
+      - urgent
+      type: string
+      description: |-
+        * `fyi` - fyi
+        * `action` - action
+        * `blocking` - blocking
+        * `urgent` - urgent
+    MediaKindEnum:
+      enum:
+      - profile_photo
+      - fursuit_photo
+      type: string
+      description: |-
+        * `profile_photo` - profile_photo
+        * `fursuit_photo` - fursuit_photo
+    MembershipContext:
+      type: object
+      properties:
+        organization_id:
+          type: string
+          format: uuid
+        organization_slug:
+          type: string
+        organization_name:
+          type: string
+        state:
+          allOf:
+          - $ref: '#/components/schemas/MembershipContextStateEnum'
+          readOnly: true
+        relationship_label:
+          type: string
+          readOnly: true
+      required:
+      - organization_id
+      - organization_name
+      - organization_slug
+      - relationship_label
+      - state
+    MembershipContextStateEnum:
+      enum:
+      - invited
+      - active
+      - suspended
+      - ended
+      type: string
+      description: |-
+        * `invited` - Invited
+        * `active` - Active
+        * `suspended` - Suspended
+        * `ended` - Ended
+    MyContext:
+      type: object
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        preferred_language:
+          type: string
+        memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/MembershipContext'
+        editions:
+          type: array
+          items:
+            $ref: '#/components/schemas/EditionContext'
+      required:
+      - account_id
+      - display_name
+      - editions
+      - memberships
+      - preferred_language
+    MyRegistrationWorkspace:
+      type: object
+      properties:
+        configuration:
+          oneOf:
+          - $ref: '#/components/schemas/RegistrationConfiguration'
+          - type: 'null'
+        registration:
+          oneOf:
+          - $ref: '#/components/schemas/SelfRegistration'
+          - type: 'null'
+        demo_payment_enabled:
+          type: boolean
+        server_time:
+          type: string
+          format: date-time
+      required:
+      - configuration
+      - demo_payment_enabled
+      - registration
+      - server_time
+    NotificationDelivery:
+      type: object
+      properties:
+        channel:
+          allOf:
+          - $ref: '#/components/schemas/ChannelEnum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/NotificationDeliveryStatusEnum'
+          readOnly: true
+        attempt_count:
+          type: integer
+          readOnly: true
+        safe_error_code:
+          type: string
+          readOnly: true
+        last_attempt_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        delivered_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+      required:
+      - attempt_count
+      - channel
+      - delivered_at
+      - last_attempt_at
+      - safe_error_code
+      - status
+    NotificationDeliveryStatusEnum:
+      enum:
+      - pending
+      - succeeded
+      - suppressed
+      - permanent_failed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `succeeded` - Succeeded
+        * `suppressed` - Suppressed by preference
+        * `permanent_failed` - Permanent failure
+    NotificationMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        edition_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        message_type:
+          type: string
+          readOnly: true
+        purpose:
+          allOf:
+          - $ref: '#/components/schemas/PurposeEnum'
+          readOnly: true
+        locale:
+          type: string
+          readOnly: true
+        subject:
+          type: string
+          readOnly: true
+        body:
+          type: string
+          readOnly: true
+        action_path:
+          type: string
+          readOnly: true
+        rendered_at:
+          type: string
+          format: date-time
+          readOnly: true
+        read_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        deliveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationDelivery'
+      required:
+      - action_path
+      - body
+      - deliveries
+      - edition_id
+      - id
+      - locale
+      - message_type
+      - organization_id
+      - purpose
+      - read_at
+      - rendered_at
+      - subject
+    NotificationPreference:
+      type: object
+      properties:
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        operational_email_enabled:
+          type: boolean
+        marketing_email_consent:
+          type: boolean
+        marketing_consent_version:
+          type: string
+          readOnly: true
+        marketing_consented_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+      required:
+      - marketing_consent_version
+      - marketing_consented_at
+      - organization_id
+    OfflineCheckIn:
+      type: object
+      properties:
+        operation_id:
+          type: string
+          format: uuid
+        device_sequence:
+          type: integer
+          minimum: 1
+        manifest_sequence:
+          type: integer
+          minimum: 1
+        credential_token:
+          type: string
+          maxLength: 200
+        occurred_at:
+          type: string
+          format: date-time
+        signature:
+          type: string
+          maxLength: 128
+      required:
+      - credential_token
+      - device_sequence
+      - manifest_sequence
+      - occurred_at
+      - operation_id
+      - signature
+    OfflineManifest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        sequence:
+          type: integer
+          readOnly: true
+        valid_from:
+          type: string
+          format: date-time
+          readOnly: true
+        valid_until:
+          type: string
+          format: date-time
+          readOnly: true
+        generated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        credential_count:
+          type: integer
+          readOnly: true
+        payload:
+          readOnly: true
+        payload_digest:
+          type: string
+          readOnly: true
+        signature:
+          type: string
+          readOnly: true
+      required:
+      - credential_count
+      - generated_at
+      - id
+      - payload
+      - payload_digest
+      - sequence
+      - signature
+      - valid_from
+      - valid_until
+    OfflineOperation:
+      type: object
+      properties:
+        operation_id:
+          type: string
+          format: uuid
+          readOnly: true
+        device_sequence:
+          type: integer
+          readOnly: true
+        manifest_sequence:
+          type: integer
+          readOnly: true
+        credential_public_id:
+          type: string
+          readOnly: true
+        occurred_at:
+          type: string
+          format: date-time
+          readOnly: true
+        received_at:
+          type: string
+          format: date-time
+          readOnly: true
+        outcome:
+          allOf:
+          - $ref: '#/components/schemas/OfflineOperationOutcomeEnum'
+          readOnly: true
+        safe_result_code:
+          type: string
+          readOnly: true
+      required:
+      - credential_public_id
+      - device_sequence
+      - manifest_sequence
+      - occurred_at
+      - operation_id
+      - outcome
+      - received_at
+      - safe_result_code
+    OfflineOperationOutcomeEnum:
+      enum:
+      - applied
+      - duplicate
+      - conflict
+      - rejected
+      type: string
+      description: |-
+        * `applied` - Applied
+        * `duplicate` - Duplicate
+        * `conflict` - Conflict
+        * `rejected` - Rejected
+    OnboardingDocumentRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        document_type_code:
+          type: string
+        document_type_name:
+          type: string
+        document_type_version:
+          type: integer
+        status:
+          type: string
+        instructions:
+          type: string
+        due_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        requested_at:
+          type: string
+          format: date-time
+        submitted_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        reviewed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        review_reason:
+          type: string
+        original_filename:
+          type: string
+        upload_available:
+          type: boolean
+      required:
+      - document_type_code
+      - document_type_name
+      - document_type_version
+      - due_at
+      - id
+      - instructions
+      - original_filename
+      - requested_at
+      - review_reason
+      - reviewed_at
+      - status
+      - submitted_at
+      - upload_available
+    OnboardingDocumentUpload:
+      type: object
+      properties:
+        document:
+          type: string
+          format: uri
+      required:
+      - document
+    PaginatedEditionBasicList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EditionBasic'
+    PaginatedStaffParticipationSummaryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffParticipationSummary'
+    PaginatedStaffRegistrationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffRegistration'
+    ParticipationHistory:
+      type: object
+      properties:
+        edition_id:
+          type: string
+          format: uuid
+        series_name_snapshot:
+          type: string
+          readOnly: true
+        edition_name_snapshot:
+          type: string
+          readOnly: true
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ParticipationHistoryStatusEnum'
+          readOnly: true
+        public_history_visible:
+          type: boolean
+          readOnly: true
+        capacities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapacityContext'
+      required:
+      - capacities
+      - edition_id
+      - edition_name_snapshot
+      - ends_on
+      - public_history_visible
+      - series_name_snapshot
+      - starts_on
+      - status
+    ParticipationHistoryStatusEnum:
+      enum:
+      - interested
+      - pending
+      - confirmed
+      - active
+      - completed
+      - cancelled
+      type: string
+      description: |-
+        * `interested` - Interested
+        * `pending` - Pending
+        * `confirmed` - Confirmed
+        * `active` - Active
+        * `completed` - Completed
+        * `cancelled` - Cancelled
+    PaymentException:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        edition_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        provider_name:
+          type: string
+        payment_intent_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/PaymentExceptionKindEnum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentExceptionStatusEnum'
+          readOnly: true
+        safe_summary:
+          type: string
+          readOnly: true
+        opened_at:
+          type: string
+          format: date-time
+          readOnly: true
+        resolved_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        resolution_reason:
+          type: string
+          readOnly: true
+      required:
+      - edition_id
+      - id
+      - kind
+      - opened_at
+      - payment_intent_id
+      - provider_name
+      - resolution_reason
+      - resolved_at
+      - safe_summary
+      - status
+    PaymentExceptionKindEnum:
+      enum:
+      - provider_unavailable
+      - unknown_intent
+      - amount_mismatch
+      - currency_mismatch
+      - late_success
+      - out_of_order
+      - dispute_review
+      type: string
+      description: |-
+        * `provider_unavailable` - Provider unavailable
+        * `unknown_intent` - Unknown payment intent
+        * `amount_mismatch` - Amount mismatch
+        * `currency_mismatch` - Currency mismatch
+        * `late_success` - Late success
+        * `out_of_order` - Out-of-order provider event
+        * `dispute_review` - Dispute or chargeback review
+    PaymentExceptionStatusEnum:
+      enum:
+      - open
+      - resolved
+      type: string
+      description: |-
+        * `open` - Open
+        * `resolved` - Resolved
+    PaymentIntent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        registration_id:
+          type: string
+          format: uuid
+          readOnly: true
+        provider_name:
+          type: string
+        amount_minor:
+          type: integer
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PaymentIntentStatusEnum'
+          readOnly: true
+        checkout_url:
+          type: string
+          format: uri
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+        safe_result_code:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount_minor
+      - checkout_url
+      - created_at
+      - currency
+      - expires_at
+      - id
+      - provider_name
+      - registration_id
+      - safe_result_code
+      - status
+      - updated_at
+    PaymentIntentStatusEnum:
+      enum:
+      - creating
+      - checkout_ready
+      - succeeded
+      - failed
+      - abandoned
+      - uncertain
+      - mismatch
+      - late
+      type: string
+      description: |-
+        * `creating` - Creating
+        * `checkout_ready` - Checkout ready
+        * `succeeded` - Succeeded
+        * `failed` - Failed
+        * `abandoned` - Abandoned
+        * `uncertain` - Uncertain
+        * `mismatch` - Mismatch
+        * `late` - Late success
+    PostEditionCorrection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        edition_id:
+          type: string
+          format: uuid
+          readOnly: true
+        target_type:
+          type: string
+          readOnly: true
+        target_id:
+          type: string
+          format: uuid
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PostEditionCorrectionStatusEnum'
+          readOnly: true
+        changed_fields:
+          readOnly: true
+        reason:
+          type: string
+          readOnly: true
+        requested_at:
+          type: string
+          format: date-time
+          readOnly: true
+        decided_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        decision_reason:
+          type: string
+          readOnly: true
+      required:
+      - changed_fields
+      - decided_at
+      - decision_reason
+      - edition_id
+      - id
+      - organization_id
+      - reason
+      - requested_at
+      - status
+      - target_id
+      - target_type
+    PostEditionCorrectionCreate:
+      type: object
+      properties:
+        profile_id:
+          type: string
+          format: uuid
+        changed_fields: {}
+        reason:
+          type: string
+          maxLength: 1000
+      required:
+      - changed_fields
+      - profile_id
+      - reason
+    PostEditionCorrectionDecision:
+      type: object
+      properties:
+        approve:
+          type: boolean
+        reason:
+          type: string
+          maxLength: 1000
+      required:
+      - approve
+      - reason
+    PostEditionCorrectionStatusEnum:
+      enum:
+      - proposed
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `proposed` - Proposed
+        * `approved` - Approved
+        * `rejected` - Rejected
+    ProfileMediaReviewDecision:
+      type: object
+      properties:
+        media_kind:
+          $ref: '#/components/schemas/MediaKindEnum'
+        decision:
+          $ref: '#/components/schemas/ProfileMediaReviewDecisionDecisionEnum'
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - decision
+      - media_kind
+      - reason
+    ProfileMediaReviewDecisionDecisionEnum:
+      enum:
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `approved` - approved
+        * `rejected` - rejected
+    ProfileMediaReviewItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        profile_id:
+          type: string
+          format: uuid
+        account_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        media_kind:
+          type: string
+        label:
+          type: string
+        review_status:
+          type: string
+        preview_path:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+      required:
+      - account_id
+      - display_name
+      - id
+      - label
+      - media_kind
+      - preview_path
+      - profile_id
+      - review_status
+      - submitted_at
+    ProfilePhotoActionEnum:
+      enum:
+      - keep
+      - remove
+      - reuse
+      type: string
+      description: |-
+        * `keep` - keep
+        * `remove` - remove
+        * `reuse` - reuse
+    PronounCodeEnum:
+      enum:
+      - she_her
+      - he_him
+      - they_them
+      - it_its
+      - one_ones
+      - ae_aer
+      - ey_em
+      - fae_faer
+      - xe_xem
+      - ze_hir
+      - ze_zir
+      - co_cos
+      - e_em_eir
+      - e_em_es
+      - hu_hum
+      - ne_nem
+      - ne_nir
+      - per_per
+      - s_he_hir
+      - thon_thons
+      - ve_ver
+      - vi_vir
+      - vi_vim
+      - zhe_zher
+      - ki_kin
+      - any
+      - name_only
+      - ask_me
+      - other
+      type: string
+      description: |-
+        * `she_her` - she/her
+        * `he_him` - he/him
+        * `they_them` - they/them
+        * `it_its` - it/its
+        * `one_ones` - one/one's
+        * `ae_aer` - ae/aer
+        * `ey_em` - ey/em
+        * `fae_faer` - fae/faer
+        * `xe_xem` - xe/xem
+        * `ze_hir` - ze/hir
+        * `ze_zir` - ze/zir
+        * `co_cos` - co/cos
+        * `e_em_eir` - e/em/eir
+        * `e_em_es` - e/em/es
+        * `hu_hum` - hu/hum
+        * `ne_nem` - ne/nem
+        * `ne_nir` - ne/nir
+        * `per_per` - per/per
+        * `s_he_hir` - s/he/hir
+        * `thon_thons` - thon/thons
+        * `ve_ver` - ve/ver
+        * `vi_vir` - vi/vir
+        * `vi_vim` - vi/vim
+        * `zhe_zher` - zhe/zher
+        * `ki_kin` - ki/kin
+        * `any` - Any pronouns
+        * `name_only` - Use my name
+        * `ask_me` - Ask me
+        * `other` - Other pronouns
+    ProposeFinancialOperation:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/ProposeFinancialOperationKindEnum'
+        amount_minor:
+          type: integer
+          minimum: 0
+          default: 0
+        target_account_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        target_product_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - kind
+      - reason
+    ProposeFinancialOperationKindEnum:
+      enum:
+      - cancel
+      - refund
+      type: string
+      description: |-
+        * `cancel` - Cancel registration
+        * `refund` - Refund
+    PublicAttendee:
+      type: object
+      properties:
+        display_name:
+          type: string
+        pronouns:
+          type: string
+        bio:
+          type: string
+        spoken_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicCodeLabel'
+        profile_photo_url:
+          type:
+          - string
+          - 'null'
+        country_code:
+          type: string
+        attendance_labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceLabel'
+        fursuits:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicAttendeeFursuit'
+      required:
+      - attendance_labels
+      - bio
+      - country_code
+      - display_name
+      - fursuits
+      - profile_photo_url
+      - pronouns
+      - spoken_languages
+    PublicAttendeeFursuit:
+      type: object
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        photo_url:
+          type:
+          - string
+          - 'null'
+      required:
+      - name
+      - photo_url
+      - species
+    PublicClientContract:
+      type: object
+      properties:
+        api_version:
+          type: string
+        csrf_api:
+          type: string
+        account_bootstrap_api:
+          type: string
+        session_api:
+          type: string
+        submission_api:
+          type: string
+        authentication:
+          type: string
+        browser_origin_policy:
+          type: string
+        payment_return_is_proof:
+          type: boolean
+      required:
+      - account_bootstrap_api
+      - api_version
+      - authentication
+      - browser_origin_policy
+      - csrf_api
+      - payment_return_is_proof
+      - session_api
+      - submission_api
+    PublicCodeLabel:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+      required:
+      - code
+      - label
+    PublicProductAvailability:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        price_minor:
+          type: integer
+        currency:
+          type: string
+        sales_open_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        sales_close_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        selectable:
+          type: boolean
+        availability_code:
+          type: string
+        availability_explanation:
+          type: string
+        waitlist:
+          type: boolean
+      required:
+      - availability_code
+      - availability_explanation
+      - currency
+      - description
+      - id
+      - name
+      - price_minor
+      - sales_close_at
+      - sales_open_at
+      - selectable
+      - waitlist
+    PublicProfileContract:
+      type: object
+      properties:
+        snapshot_scope:
+          type: string
+        suggestion_mode:
+          type: string
+        pronoun_choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicCodeLabel'
+        other_pronoun_code:
+          type: string
+        bio_max_length:
+          type: integer
+        language_standard:
+          type: string
+        language_choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicCodeLabel'
+        spoken_language_limit:
+          type: integer
+        fursuit_limit:
+          type: integer
+        multiple_fursuits:
+          type: boolean
+        new_media_review_status:
+          type: string
+        approved_media_reusable:
+          type: boolean
+        public_attendee_list_requires_consent:
+          type: boolean
+        public_attendee_list_requires_confirmation:
+          type: boolean
+        public_attendee_country_is_optional:
+          type: boolean
+        public_attendee_labels_are_authoritative:
+          type: boolean
+        guardian_consent_supported:
+          type: boolean
+        guardian_age_threshold:
+          type:
+          - integer
+          - 'null'
+        guardian_notice_version:
+          type: string
+      required:
+      - approved_media_reusable
+      - bio_max_length
+      - fursuit_limit
+      - guardian_age_threshold
+      - guardian_consent_supported
+      - guardian_notice_version
+      - language_choices
+      - language_standard
+      - multiple_fursuits
+      - new_media_review_status
+      - other_pronoun_code
+      - pronoun_choices
+      - public_attendee_country_is_optional
+      - public_attendee_labels_are_authoritative
+      - public_attendee_list_requires_confirmation
+      - public_attendee_list_requires_consent
+      - snapshot_scope
+      - spoken_language_limit
+      - suggestion_mode
+    PublicRegistrationDefinition:
+      type: object
+      properties:
+        edition_id:
+          type: string
+          format: uuid
+        organization_name:
+          type: string
+        series_name:
+          type: string
+        edition_name:
+          type: string
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        time_zone:
+          type: string
+        configuration_version:
+          type: integer
+        opens_at:
+          type: string
+          format: date-time
+        closes_at:
+          type: string
+          format: date-time
+        minimum_age:
+          type: integer
+        default_payment_window_minutes:
+          type: integer
+        waitlist_enabled:
+          type: boolean
+        client_contract:
+          $ref: '#/components/schemas/PublicClientContract'
+        profile_contract:
+          $ref: '#/components/schemas/PublicProfileContract'
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationSection'
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationQuestion'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProductAvailability'
+      required:
+      - client_contract
+      - closes_at
+      - configuration_version
+      - default_payment_window_minutes
+      - edition_id
+      - edition_name
+      - ends_on
+      - minimum_age
+      - opens_at
+      - organization_name
+      - products
+      - profile_contract
+      - questions
+      - sections
+      - series_name
+      - starts_on
+      - time_zone
+      - waitlist_enabled
+    PublicRegistrationEdition:
+      type: object
+      properties:
+        edition_id:
+          type: string
+          format: uuid
+        organization_name:
+          type: string
+        series_name:
+          type: string
+        edition_name:
+          type: string
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        time_zone:
+          type: string
+        registration_api_path:
+          type: string
+        registration_web_path:
+          type: string
+        attendee_api_path:
+          type: string
+        attendee_web_path:
+          type: string
+      required:
+      - attendee_api_path
+      - attendee_web_path
+      - edition_id
+      - edition_name
+      - ends_on
+      - organization_name
+      - registration_api_path
+      - registration_web_path
+      - series_name
+      - starts_on
+      - time_zone
+    PublishTemplate:
+      type: object
+      properties:
+        configuration_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          maxLength: 80
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 2000
+        series_limited:
+          type: boolean
+          default: true
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - code
+      - configuration_id
+      - name
+      - reason
+    PurposeEnum:
+      enum:
+      - operational
+      - marketing
+      - emergency
+      type: string
+      description: |-
+        * `operational` - Operational service
+        * `marketing` - Optional marketing
+        * `emergency` - Emergency
+    ReceiptRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        registration_id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/ReceiptRecordKindEnum'
+          readOnly: true
+        document_number:
+          type: string
+          readOnly: true
+        issued_at:
+          type: string
+          format: date-time
+          readOnly: true
+        amount_minor:
+          type: integer
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        description_snapshot:
+          type: string
+          readOnly: true
+      required:
+      - amount_minor
+      - currency
+      - description_snapshot
+      - document_number
+      - id
+      - issued_at
+      - kind
+      - registration_id
+    ReceiptRecordKindEnum:
+      enum:
+      - receipt
+      - credit_note
+      type: string
+      description: |-
+        * `receipt` - Receipt
+        * `credit_note` - Credit note
+    ReconcileSettlement:
+      type: object
+      properties:
+        provider_account_id:
+          type: string
+          format: uuid
+        provider_reference:
+          type: string
+          maxLength: 160
+        currency:
+          type: string
+          maxLength: 3
+          minLength: 3
+        gross_minor:
+          type: integer
+          minimum: 0
+        fee_minor:
+          type: integer
+          minimum: 0
+        refund_minor:
+          type: integer
+          minimum: 0
+        dispute_minor:
+          type: integer
+          minimum: 0
+        net_minor:
+          type: integer
+        settled_at:
+          type: string
+          format: date-time
+        ledger_entry_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 5000
+          minItems: 1
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - currency
+      - dispute_minor
+      - fee_minor
+      - gross_minor
+      - ledger_entry_ids
+      - net_minor
+      - provider_account_id
+      - provider_reference
+      - reason
+      - refund_minor
+      - settled_at
+    RecoveryComplete:
+      type: object
+      properties:
+        token:
+          type: string
+          maxLength: 200
+        new_password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+      required:
+      - new_password
+      - token
+    RecoveryRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    RegistrationConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/RegistrationConfigurationStatusEnum'
+          readOnly: true
+        source_summary:
+          allOf:
+          - $ref: '#/components/schemas/RegistrationConfigurationSource'
+          readOnly: true
+        review_required:
+          type: boolean
+          readOnly: true
+        review_note:
+          type: string
+          readOnly: true
+        opens_at:
+          type: string
+          format: date-time
+          readOnly: true
+        closes_at:
+          type: string
+          format: date-time
+          readOnly: true
+        capacity:
+          type: integer
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        minimum_age:
+          type: integer
+          readOnly: true
+          description: Absolute minimum age. Values below 18 require an enabled, reviewed
+            guardian policy before activation.
+        default_payment_window_minutes:
+          type: integer
+          readOnly: true
+          description: Time allowed to complete payment after a place is reserved
+            or offered.
+        waitlist_enabled:
+          type: boolean
+          readOnly: true
+          description: Allow eligible attendees to wait when admission capacity is
+            full.
+        automatic_waitlist_promotion:
+          type: boolean
+          readOnly: true
+          description: Offer released places to the oldest eligible waitlist entry.
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationSection'
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationQuestion'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdmissionProduct'
+      required:
+      - automatic_waitlist_promotion
+      - capacity
+      - closes_at
+      - currency
+      - default_payment_window_minutes
+      - id
+      - minimum_age
+      - name
+      - opens_at
+      - products
+      - questions
+      - review_note
+      - review_required
+      - sections
+      - source_summary
+      - status
+      - version
+      - waitlist_enabled
+    RegistrationConfigurationSource:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/RegistrationConfigurationSourceKindEnum'
+        id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        label:
+          type: string
+      required:
+      - id
+      - kind
+      - label
+    RegistrationConfigurationSourceKindEnum:
+      enum:
+      - blank
+      - template
+      - edition
+      type: string
+      description: |-
+        * `blank` - blank
+        * `template` - template
+        * `edition` - edition
+    RegistrationConfigurationStatusEnum:
+      enum:
+      - draft
+      - active
+      - retired
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `active` - Active
+        * `retired` - Retired
+    RegistrationConfigurationWorkspace:
+      type: object
+      properties:
+        active_configuration:
+          oneOf:
+          - $ref: '#/components/schemas/RegistrationConfiguration'
+          - type: 'null'
+        drafts:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationConfiguration'
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationTemplateSummary'
+        source_editions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationSourceEdition'
+        bootstrap_editor_path:
+          type: string
+      required:
+      - active_configuration
+      - bootstrap_editor_path
+      - drafts
+      - source_editions
+      - templates
+    RegistrationProfileMinimize:
+      type: object
+      properties:
+        profile_id:
+          type: string
+          format: uuid
+        policy_id:
+          type: string
+          format: uuid
+      required:
+      - policy_id
+      - profile_id
+    RegistrationQuestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        section:
+          oneOf:
+          - $ref: '#/components/schemas/RegistrationSection'
+          - type: 'null'
+        key:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        label:
+          type: string
+          readOnly: true
+        help_text:
+          type: string
+          readOnly: true
+        field_type:
+          allOf:
+          - $ref: '#/components/schemas/FieldTypeEnum'
+          readOnly: true
+        required:
+          type: boolean
+          readOnly: true
+        position:
+          type: integer
+          readOnly: true
+        options:
+          readOnly: true
+        purpose:
+          type: string
+          readOnly: true
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          readOnly: true
+        classification:
+          allOf:
+          - $ref: '#/components/schemas/ClassificationEnum'
+          readOnly: true
+        condition_question_key:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        condition_value:
+          type: string
+          readOnly: true
+      required:
+      - classification
+      - condition_question_key
+      - condition_value
+      - field_type
+      - help_text
+      - id
+      - key
+      - label
+      - options
+      - position
+      - purpose
+      - required
+      - section
+      - visibility
+    RegistrationReconciliation:
+      type: object
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationReconciliationProduct'
+      required:
+      - generated_at
+      - products
+    RegistrationReconciliationProduct:
+      type: object
+      properties:
+        product_name:
+          type: string
+        currency:
+          type: string
+        registrations:
+          type: integer
+        waitlisted:
+          type: integer
+        payment_pending:
+          type: integer
+        provider_paid:
+          type: integer
+        provider_paid_minor:
+          type: integer
+        waived:
+          type: integer
+        waived_minor:
+          type: integer
+        free_confirmed:
+          type: integer
+        expired:
+          type: integer
+        cancelled:
+          type: integer
+      required:
+      - cancelled
+      - currency
+      - expired
+      - free_confirmed
+      - payment_pending
+      - product_name
+      - provider_paid
+      - provider_paid_minor
+      - registrations
+      - waitlisted
+      - waived
+      - waived_minor
+    RegistrationSection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        key:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        title:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        position:
+          type: integer
+          readOnly: true
+      required:
+      - description
+      - id
+      - key
+      - position
+      - title
+    RegistrationSourceEdition:
+      type: object
+      properties:
+        edition_id:
+          type: string
+          format: uuid
+        edition__name:
+          type: string
+        latest_version:
+          type: integer
+      required:
+      - edition__name
+      - edition_id
+      - latest_version
+    RegistrationStateEnum:
+      enum:
+      - guardian_pending
+      - waitlisted
+      - payment_pending
+      - confirmed
+      - checked_in
+      - expired
+      - cancelled
+      type: string
+      description: |-
+        * `guardian_pending` - Guardian consent pending
+        * `waitlisted` - Waitlisted
+        * `payment_pending` - Payment pending
+        * `confirmed` - Confirmed
+        * `checked_in` - Checked in
+        * `expired` - Payment expired
+        * `cancelled` - Cancelled
+    RegistrationTemplateSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/RegistrationTemplateSummaryStatusEnum'
+          readOnly: true
+        series_name:
+          type:
+          - string
+          - 'null'
+        published_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        question_count:
+          type: integer
+        product_count:
+          type: integer
+      required:
+      - code
+      - description
+      - id
+      - name
+      - product_count
+      - published_at
+      - question_count
+      - series_name
+      - status
+      - version
+    RegistrationTemplateSummaryStatusEnum:
+      enum:
+      - draft
+      - published
+      - retired
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `published` - Published
+        * `retired` - Retired
+    RegistrationTimeline:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        sequence:
+          type: integer
+          readOnly: true
+        kind:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        summary:
+          type: string
+          readOnly: true
+        occurred_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - kind
+      - occurred_at
+      - sequence
+      - summary
+      - title
+    ResolvePaymentException:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - reason
+    RestrictionAppeal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        restriction_id:
+          type: string
+          format: uuid
+          readOnly: true
+        statement:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/RestrictionAppealStatusEnum'
+          readOnly: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        decided_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        decision_summary:
+          type: string
+          readOnly: true
+      required:
+      - decided_at
+      - decision_summary
+      - id
+      - restriction_id
+      - statement
+      - status
+      - submitted_at
+    RestrictionAppealCreate:
+      type: object
+      properties:
+        statement:
+          type: string
+          maxLength: 4000
+      required:
+      - statement
+    RestrictionAppealStatusEnum:
+      enum:
+      - open
+      - upheld
+      - resolved
+      type: string
+      description: |-
+        * `open` - Open
+        * `upheld` - Restriction upheld
+        * `resolved` - Restriction changed
+    SelfAttendeeFursuit:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        species:
+          type: string
+        photo_review_status:
+          type: string
+        photo_review_note:
+          type: string
+        photo_url:
+          type:
+          - string
+          - 'null'
+      required:
+      - id
+      - name
+      - photo_review_note
+      - photo_review_status
+      - photo_url
+      - species
+    SelfAttendeeFursuitUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reuse_from_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 120
+        species:
+          type: string
+          maxLength: 120
+        keep_photo:
+          type: boolean
+          default: true
+      required:
+      - name
+    SelfAttendeeProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        edition_id:
+          type: string
+          format: uuid
+        editable:
+          type: boolean
+        real_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        address_line_1:
+          type: string
+        address_line_2:
+          type: string
+        locality:
+          type: string
+        postal_code:
+          type: string
+        region:
+          type: string
+        country_code:
+          type: string
+        emergency_contact_name:
+          type: string
+        emergency_contact_phone:
+          type: string
+        phone_number:
+          type: string
+        telegram_handle:
+          type: string
+        pronoun_code:
+          type: string
+        other_pronouns:
+          type: string
+        pronouns:
+          type: string
+        bio:
+          type: string
+        spoken_language_codes:
+          type: array
+          items:
+            type: string
+        brings_fursuits:
+          type: boolean
+        profile_photo_review_status:
+          type: string
+        profile_photo_review_note:
+          type: string
+        profile_photo_url:
+          type:
+          - string
+          - 'null'
+        fursuits:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelfAttendeeFursuit'
+        directory_visible:
+          type: boolean
+        directory_country_code:
+          type: string
+      required:
+      - address_line_1
+      - address_line_2
+      - bio
+      - brings_fursuits
+      - country_code
+      - date_of_birth
+      - directory_country_code
+      - directory_visible
+      - editable
+      - edition_id
+      - emergency_contact_name
+      - emergency_contact_phone
+      - fursuits
+      - id
+      - locality
+      - other_pronouns
+      - phone_number
+      - postal_code
+      - profile_photo_review_note
+      - profile_photo_review_status
+      - profile_photo_url
+      - pronoun_code
+      - pronouns
+      - real_name
+      - region
+      - spoken_language_codes
+      - telegram_handle
+    SelfProfileImageUpload:
+      type: object
+      properties:
+        image:
+          type: string
+          format: uri
+      required:
+      - image
+    SelfProfileSuggestion:
+      type: object
+      properties:
+        source_profile_id:
+          type: string
+          format: uuid
+        source_edition_id:
+          type: string
+          format: uuid
+        source_edition_name:
+          type: string
+        notice:
+          type: string
+        real_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        address_line_1:
+          type: string
+        address_line_2:
+          type: string
+        locality:
+          type: string
+        postal_code:
+          type: string
+        region:
+          type: string
+        country_code:
+          type: string
+        emergency_contact_name:
+          type: string
+        emergency_contact_phone:
+          type: string
+        phone_number:
+          type: string
+        telegram_handle:
+          type: string
+        pronoun_code:
+          type: string
+        other_pronouns:
+          type: string
+        bio:
+          type: string
+        spoken_language_codes:
+          type: array
+          items:
+            type: string
+        brings_fursuits:
+          type: boolean
+        reuse_profile_photo_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        profile_photo_review_status:
+          type: string
+        profile_photo_url:
+          type:
+          - string
+          - 'null'
+        fursuits:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelfProfileSuggestionFursuit'
+        directory_visible:
+          type: boolean
+        directory_country_code:
+          type: string
+      required:
+      - address_line_1
+      - address_line_2
+      - bio
+      - brings_fursuits
+      - country_code
+      - date_of_birth
+      - directory_country_code
+      - directory_visible
+      - emergency_contact_name
+      - emergency_contact_phone
+      - fursuits
+      - locality
+      - notice
+      - other_pronouns
+      - phone_number
+      - postal_code
+      - profile_photo_review_status
+      - profile_photo_url
+      - pronoun_code
+      - real_name
+      - region
+      - reuse_profile_photo_id
+      - source_edition_id
+      - source_edition_name
+      - source_profile_id
+      - spoken_language_codes
+      - telegram_handle
+    SelfProfileSuggestionFursuit:
+      type: object
+      properties:
+        reuse_from_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        name:
+          type: string
+        species:
+          type: string
+        photo_review_status:
+          type: string
+        photo_url:
+          type:
+          - string
+          - 'null'
+      required:
+      - name
+      - photo_review_status
+      - photo_url
+      - reuse_from_id
+      - species
+    SelfRegistration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        reference:
+          type: string
+          readOnly: true
+        state:
+          allOf:
+          - $ref: '#/components/schemas/RegistrationStateEnum'
+          readOnly: true
+        product_name:
+          type: string
+        amount_minor:
+          type: integer
+        currency:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        waitlisted_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        offered_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        payment_due_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        confirmed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        checked_in_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        expired_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        cancelled_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        confirmation_basis:
+          allOf:
+          - $ref: '#/components/schemas/ConfirmationBasisEnum'
+          readOnly: true
+        entitlements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entitlement'
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationTimeline'
+          readOnly: true
+      required:
+      - amount_minor
+      - cancelled_at
+      - checked_in_at
+      - confirmation_basis
+      - confirmed_at
+      - currency
+      - entitlements
+      - expired_at
+      - id
+      - offered_at
+      - payment_due_at
+      - product_name
+      - reference
+      - state
+      - submitted_at
+      - timeline
+      - waitlisted_at
+    SessionSignIn:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+      required:
+      - email
+      - password
+    SettlementBatch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        provider_account_id:
+          type: string
+          format: uuid
+          readOnly: true
+        provider_reference:
+          type: string
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        gross_minor:
+          type: integer
+          readOnly: true
+        fee_minor:
+          type: integer
+          readOnly: true
+        refund_minor:
+          type: integer
+          readOnly: true
+        dispute_minor:
+          type: integer
+          readOnly: true
+        net_minor:
+          type: integer
+          readOnly: true
+        settled_at:
+          type: string
+          format: date-time
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/SettlementBatchStatusEnum'
+          readOnly: true
+        reconciled_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        safe_result_code:
+          type: string
+          readOnly: true
+      required:
+      - currency
+      - dispute_minor
+      - fee_minor
+      - gross_minor
+      - id
+      - net_minor
+      - provider_account_id
+      - provider_reference
+      - reconciled_at
+      - refund_minor
+      - safe_result_code
+      - settled_at
+      - status
+    SettlementBatchStatusEnum:
+      enum:
+      - open
+      - reconciled
+      - exception
+      type: string
+      description: |-
+        * `open` - Open
+        * `reconciled` - Reconciled
+        * `exception` - Exception
+    SpokenLanguageCodesEnum:
+      enum:
+      - aa
+      - ab
+      - ae
+      - af
+      - ak
+      - am
+      - an
+      - ar
+      - as
+      - av
+      - ay
+      - az
+      - ba
+      - be
+      - bg
+      - bh
+      - bi
+      - bm
+      - bn
+      - bo
+      - br
+      - bs
+      - ca
+      - ce
+      - ch
+      - co
+      - cr
+      - cs
+      - cu
+      - cv
+      - cy
+      - da
+      - de
+      - dv
+      - dz
+      - ee
+      - el
+      - en
+      - eo
+      - es
+      - et
+      - eu
+      - fa
+      - ff
+      - fi
+      - fj
+      - fo
+      - fr
+      - fy
+      - ga
+      - gd
+      - gl
+      - gn
+      - gu
+      - gv
+      - ha
+      - he
+      - hi
+      - ho
+      - hr
+      - ht
+      - hu
+      - hy
+      - hz
+      - ia
+      - id
+      - ie
+      - ig
+      - ii
+      - ik
+      - io
+      - is
+      - it
+      - iu
+      - ja
+      - jv
+      - ka
+      - kg
+      - ki
+      - kj
+      - kk
+      - kl
+      - km
+      - kn
+      - ko
+      - kr
+      - ks
+      - ku
+      - kv
+      - kw
+      - ky
+      - la
+      - lb
+      - lg
+      - li
+      - ln
+      - lo
+      - lt
+      - lu
+      - lv
+      - mg
+      - mh
+      - mi
+      - mk
+      - ml
+      - mn
+      - mr
+      - ms
+      - mt
+      - my
+      - na
+      - nb
+      - nd
+      - ne
+      - ng
+      - nl
+      - nn
+      - 'no'
+      - nr
+      - nv
+      - ny
+      - oc
+      - oj
+      - om
+      - or
+      - os
+      - pa
+      - pi
+      - pl
+      - ps
+      - pt
+      - qu
+      - rm
+      - rn
+      - ro
+      - ru
+      - rw
+      - sa
+      - sc
+      - sd
+      - se
+      - sg
+      - si
+      - sk
+      - sl
+      - sm
+      - sn
+      - so
+      - sq
+      - sr
+      - ss
+      - st
+      - su
+      - sv
+      - sw
+      - ta
+      - te
+      - tg
+      - th
+      - ti
+      - tk
+      - tl
+      - tn
+      - to
+      - tr
+      - ts
+      - tt
+      - tw
+      - ty
+      - ug
+      - uk
+      - ur
+      - uz
+      - ve
+      - vi
+      - vo
+      - wa
+      - wo
+      - xh
+      - yi
+      - yo
+      - za
+      - zh
+      - zu
+      type: string
+      description: |-
+        * `aa` - Afar
+        * `ab` - Abkhazian
+        * `ae` - Avestan
+        * `af` - Afrikaans
+        * `ak` - Akan
+        * `am` - Amharic
+        * `an` - Aragonese
+        * `ar` - Arabic
+        * `as` - Assamese
+        * `av` - Avaric
+        * `ay` - Aymara
+        * `az` - Azerbaijani
+        * `ba` - Bashkir
+        * `be` - Belarusian
+        * `bg` - Bulgarian
+        * `bh` - Bihari languages
+        * `bi` - Bislama
+        * `bm` - Bambara
+        * `bn` - Bengali
+        * `bo` - Tibetan
+        * `br` - Breton
+        * `bs` - Bosnian
+        * `ca` - Catalan
+        * `ce` - Chechen
+        * `ch` - Chamorro
+        * `co` - Corsican
+        * `cr` - Cree
+        * `cs` - Czech
+        * `cu` - Church Slavic
+        * `cv` - Chuvash
+        * `cy` - Welsh
+        * `da` - Danish
+        * `de` - German
+        * `dv` - Divehi
+        * `dz` - Dzongkha
+        * `ee` - Ewe
+        * `el` - Greek
+        * `en` - English
+        * `eo` - Esperanto
+        * `es` - Spanish
+        * `et` - Estonian
+        * `eu` - Basque
+        * `fa` - Persian
+        * `ff` - Fulah
+        * `fi` - Finnish
+        * `fj` - Fijian
+        * `fo` - Faroese
+        * `fr` - French
+        * `fy` - Western Frisian
+        * `ga` - Irish
+        * `gd` - Gaelic
+        * `gl` - Galician
+        * `gn` - Guarani
+        * `gu` - Gujarati
+        * `gv` - Manx
+        * `ha` - Hausa
+        * `he` - Hebrew
+        * `hi` - Hindi
+        * `ho` - Hiri Motu
+        * `hr` - Croatian
+        * `ht` - Haitian
+        * `hu` - Hungarian
+        * `hy` - Armenian
+        * `hz` - Herero
+        * `ia` - Interlingua
+        * `id` - Indonesian
+        * `ie` - Interlingue
+        * `ig` - Igbo
+        * `ii` - Sichuan Yi
+        * `ik` - Inupiaq
+        * `io` - Ido
+        * `is` - Icelandic
+        * `it` - Italian
+        * `iu` - Inuktitut
+        * `ja` - Japanese
+        * `jv` - Javanese
+        * `ka` - Georgian
+        * `kg` - Kongo
+        * `ki` - Kikuyu
+        * `kj` - Kuanyama
+        * `kk` - Kazakh
+        * `kl` - Kalaallisut
+        * `km` - Central Khmer
+        * `kn` - Kannada
+        * `ko` - Korean
+        * `kr` - Kanuri
+        * `ks` - Kashmiri
+        * `ku` - Kurdish
+        * `kv` - Komi
+        * `kw` - Cornish
+        * `ky` - Kirghiz
+        * `la` - Latin
+        * `lb` - Luxembourgish
+        * `lg` - Ganda
+        * `li` - Limburgan
+        * `ln` - Lingala
+        * `lo` - Lao
+        * `lt` - Lithuanian
+        * `lu` - Luba-Katanga
+        * `lv` - Latvian
+        * `mg` - Malagasy
+        * `mh` - Marshallese
+        * `mi` - Maori
+        * `mk` - Macedonian
+        * `ml` - Malayalam
+        * `mn` - Mongolian
+        * `mr` - Marathi
+        * `ms` - Malay
+        * `mt` - Maltese
+        * `my` - Burmese
+        * `na` - Nauru
+        * `nb` - Norwegian Bokmal
+        * `nd` - North Ndebele
+        * `ne` - Nepali
+        * `ng` - Ndonga
+        * `nl` - Dutch
+        * `nn` - Norwegian Nynorsk
+        * `no` - Norwegian
+        * `nr` - South Ndebele
+        * `nv` - Navajo
+        * `ny` - Chichewa
+        * `oc` - Occitan
+        * `oj` - Ojibwa
+        * `om` - Oromo
+        * `or` - Odia
+        * `os` - Ossetian
+        * `pa` - Panjabi
+        * `pi` - Pali
+        * `pl` - Polish
+        * `ps` - Pushto
+        * `pt` - Portuguese
+        * `qu` - Quechua
+        * `rm` - Romansh
+        * `rn` - Rundi
+        * `ro` - Romanian
+        * `ru` - Russian
+        * `rw` - Kinyarwanda
+        * `sa` - Sanskrit
+        * `sc` - Sardinian
+        * `sd` - Sindhi
+        * `se` - Northern Sami
+        * `sg` - Sango
+        * `si` - Sinhala
+        * `sk` - Slovak
+        * `sl` - Slovenian
+        * `sm` - Samoan
+        * `sn` - Shona
+        * `so` - Somali
+        * `sq` - Albanian
+        * `sr` - Serbian
+        * `ss` - Swati
+        * `st` - Southern Sotho
+        * `su` - Sundanese
+        * `sv` - Swedish
+        * `sw` - Swahili
+        * `ta` - Tamil
+        * `te` - Telugu
+        * `tg` - Tajik
+        * `th` - Thai
+        * `ti` - Tigrinya
+        * `tk` - Turkmen
+        * `tl` - Tagalog
+        * `tn` - Tswana
+        * `to` - Tonga
+        * `tr` - Turkish
+        * `ts` - Tsonga
+        * `tt` - Tatar
+        * `tw` - Twi
+        * `ty` - Tahitian
+        * `ug` - Uighur
+        * `uk` - Ukrainian
+        * `ur` - Urdu
+        * `uz` - Uzbek
+        * `ve` - Venda
+        * `vi` - Vietnamese
+        * `vo` - Volapuk
+        * `wa` - Walloon
+        * `wo` - Wolof
+        * `xh` - Xhosa
+        * `yi` - Yiddish
+        * `yo` - Yoruba
+        * `za` - Zhuang
+        * `zh` - Chinese
+        * `zu` - Zulu
+    StaffParticipationSummary:
+      type: object
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        participation_status:
+          type: string
+        capacity_labels:
+          type: array
+          items:
+            type: string
+          readOnly: true
+      required:
+      - account_id
+      - capacity_labels
+      - display_name
+      - participation_status
+    StaffRegistration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        reference:
+          type: string
+          readOnly: true
+        account_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        state:
+          allOf:
+          - $ref: '#/components/schemas/RegistrationStateEnum'
+          readOnly: true
+        product_name:
+          type: string
+        amount_minor:
+          type: integer
+        currency:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        waitlisted_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        offered_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        payment_due_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        confirmed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        checked_in_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        expired_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        cancelled_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        confirmation_basis:
+          allOf:
+          - $ref: '#/components/schemas/ConfirmationBasisEnum'
+          readOnly: true
+        submission_source:
+          allOf:
+          - $ref: '#/components/schemas/SubmissionSourceEnum'
+          readOnly: true
+        submitted_by_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        staff_submission_reason:
+          type: string
+          readOnly: true
+        entitlements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entitlement'
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationTimeline'
+      required:
+      - account_id
+      - amount_minor
+      - cancelled_at
+      - checked_in_at
+      - confirmation_basis
+      - confirmed_at
+      - currency
+      - display_name
+      - entitlements
+      - expired_at
+      - id
+      - offered_at
+      - payment_due_at
+      - product_name
+      - reference
+      - staff_submission_reason
+      - state
+      - submission_source
+      - submitted_at
+      - submitted_by_id
+      - timeline
+      - waitlisted_at
+    StaffRestrictionAppealDecision:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/StaffRestrictionAppealDecisionDecisionEnum'
+        summary:
+          type: string
+          maxLength: 500
+      required:
+      - decision
+      - summary
+    StaffRestrictionAppealDecisionDecisionEnum:
+      enum:
+      - uphold
+      - revoke
+      type: string
+      description: |-
+        * `uphold` - uphold
+        * `revoke` - revoke
+    StaffRestrictionCreate:
+      type: object
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/AccountRestrictionKindEnum'
+        reason_code:
+          type: string
+          maxLength: 80
+          pattern: ^[-a-zA-Z0-9_]+$
+        attendee_message:
+          type: string
+          maxLength: 320
+        internal_reference:
+          type: string
+          maxLength: 120
+        effective_at:
+          type: string
+          format: date-time
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        notify_account:
+          type: boolean
+          default: true
+      required:
+      - account_id
+      - attendee_message
+      - effective_at
+      - kind
+      - reason_code
+    StaffRestrictionRevoke:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - reason
+    StaffSubjectRightsRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        account_id:
+          type: string
+          format: uuid
+          readOnly: true
+        account_display_name:
+          type: string
+          readOnly: true
+        account_email:
+          type: string
+          format: email
+          readOnly: true
+        organization_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/SubjectRightsRequestKindEnum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/SubjectRightsRequestStatusEnum'
+          readOnly: true
+        requested_at:
+          type: string
+          format: date-time
+          readOnly: true
+        request_summary:
+          type: string
+          readOnly: true
+        identity_verified_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        completed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        safe_outcome_summary:
+          type: string
+          readOnly: true
+      required:
+      - account_display_name
+      - account_email
+      - account_id
+      - completed_at
+      - id
+      - identity_verified_at
+      - kind
+      - organization_id
+      - request_summary
+      - requested_at
+      - safe_outcome_summary
+      - status
+    StepUp:
+      type: object
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+      required:
+      - password
+    SubjectRightsRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/SubjectRightsRequestKindEnum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/SubjectRightsRequestStatusEnum'
+          readOnly: true
+        requested_at:
+          type: string
+          format: date-time
+          readOnly: true
+        request_summary:
+          type: string
+          readOnly: true
+        identity_verified_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        completed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+        safe_outcome_summary:
+          type: string
+          readOnly: true
+      required:
+      - completed_at
+      - id
+      - identity_verified_at
+      - kind
+      - organization_id
+      - request_summary
+      - requested_at
+      - safe_outcome_summary
+      - status
+    SubjectRightsRequestCreate:
+      type: object
+      properties:
+        organization_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/SubjectRightsRequestKindEnum'
+        summary:
+          type: string
+          maxLength: 1000
+      required:
+      - kind
+      - summary
+    SubjectRightsRequestKindEnum:
+      enum:
+      - access
+      - correction
+      - portability
+      - restriction
+      - objection
+      - deletion
+      type: string
+      description: |-
+        * `access` - Access
+        * `correction` - Correction
+        * `portability` - Portability
+        * `restriction` - Restriction
+        * `objection` - Objection
+        * `deletion` - Deletion
+    SubjectRightsRequestStatusEnum:
+      enum:
+      - received
+      - identity_check
+      - in_progress
+      - completed
+      - denied
+      type: string
+      description: |-
+        * `received` - Received
+        * `identity_check` - Identity check
+        * `in_progress` - In progress
+        * `completed` - Completed
+        * `denied` - Denied
+    SubjectRightsRequestTransition:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        outcome_summary:
+          type: string
+          maxLength: 1000
+      required:
+      - action
+    SubmissionSourceEnum:
+      enum:
+      - self
+      - staff_assisted
+      type: string
+      description: |-
+        * `self` - Attendee self-service
+        * `staff_assisted` - Staff-assisted registration
+    SubmitRegistration:
+      type: object
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        answers: {}
+      required:
+      - answers
+      - product_id
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+          maxLength: 200
+      required:
+      - token
+    UpdateNotificationPreference:
+      type: object
+      properties:
+        operational_email_enabled:
+          type: boolean
+        marketing_email_consent:
+          type: boolean
+        marketing_consent_version:
+          type: string
+          maxLength: 40
+      required:
+      - marketing_email_consent
+      - operational_email_enabled
+    UpdateSelfAttendeeProfile:
+      type: object
+      properties:
+        real_name:
+          type: string
+          maxLength: 200
+        date_of_birth:
+          type: string
+          format: date
+        address_line_1:
+          type: string
+          maxLength: 200
+        address_line_2:
+          type: string
+          maxLength: 200
+        locality:
+          type: string
+          maxLength: 120
+        postal_code:
+          type: string
+          maxLength: 32
+        region:
+          type: string
+          maxLength: 120
+        country_code:
+          type: string
+          maxLength: 2
+          pattern: ^[A-Za-z]{2}$
+        emergency_contact_name:
+          type: string
+          maxLength: 200
+        emergency_contact_phone:
+          type: string
+          maxLength: 40
+          pattern: ^[0-9+().\-\s]{7,40}$
+        phone_number:
+          type: string
+          maxLength: 40
+          pattern: ^[0-9+().\-\s]{7,40}$
+        telegram_handle:
+          oneOf:
+          - type: string
+            maxLength: 64
+            pattern: ^@?[A-Za-z0-9_]{5,32}$
+          - type: string
+            maxLength: 0
+        pronoun_code:
+          $ref: '#/components/schemas/PronounCodeEnum'
+        other_pronouns:
+          type: string
+          maxLength: 80
+        bio:
+          type: string
+          maxLength: 500
+        spoken_language_codes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpokenLanguageCodesEnum'
+          maxItems: 5
+        brings_fursuits:
+          type: boolean
+        profile_photo_action:
+          allOf:
+          - $ref: '#/components/schemas/ProfilePhotoActionEnum'
+          default: keep
+        reuse_profile_photo_id:
+          type: string
+          format: uuid
+        fursuits:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelfAttendeeFursuitUpdate'
+        directory_visible:
+          type: boolean
+        directory_country_code:
+          oneOf:
+          - type: string
+            maxLength: 2
+            pattern: ^[A-Za-z]{2}$
+          - type: string
+            maxLength: 0
+      required:
+      - address_line_1
+      - address_line_2
+      - brings_fursuits
+      - country_code
+      - date_of_birth
+      - directory_visible
+      - emergency_contact_name
+      - emergency_contact_phone
+      - fursuits
+      - locality
+      - phone_number
+      - postal_code
+      - pronoun_code
+      - real_name
+      - region
+      - spoken_language_codes
+    VisibilityEnum:
+      enum:
+      - attendee_and_staff
+      - registration_staff
+      type: string
+      description: |-
+        * `attendee_and_staff` - Attendee and registration staff
+        * `registration_staff` - Registration staff only
+    VolunteerApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        opportunity_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - opportunity_id
+      - status
+      - submitted_at
+    VolunteerApplicationSubmit:
+      type: object
+      properties:
+        motivation:
+          type: string
+          maxLength: 2000
+      required:
+      - motivation
+    VolunteerOpportunity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        position_code:
+          type: string
+        position_title:
+          type: string
+        department_name:
+          type: string
+        reports_to_title:
+          type:
+          - string
+          - 'null'
+        headline:
+          type: string
+        description:
+          type: string
+        headcount:
+          type: integer
+        active_assignment_count:
+          type: integer
+        is_filled:
+          type: boolean
+        accepts_applications:
+          type: boolean
+        applications_open_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        applications_close_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - accepts_applications
+      - active_assignment_count
+      - applications_close_at
+      - applications_open_at
+      - department_name
+      - description
+      - headcount
+      - headline
+      - id
+      - is_filled
+      - position_code
+      - position_title
+      - reports_to_title
+    WaivePayment:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - reason
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

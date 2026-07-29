@@ -1,0 +1,77 @@
+"""Process payment deadlines, inactive accounts, and automatic waitlist offers."""
+
+from uuid import UUID
+
+from django.core.management.base import BaseCommand, CommandParser
+from django.utils import timezone
+
+from maru.identity.services import apply_due_account_restrictions
+from maru.registration.models import RegistrationLifecycleRun
+from maru.registration.services import (
+    inspect_registration_lifecycle,
+    process_registration_lifecycle,
+)
+
+
+class Command(BaseCommand):
+    help = (
+        "Expire overdue registration reservations, cancel open registrations for "
+        "inactive accounts, and promote eligible waitlist entries."
+    )
+
+    def add_arguments(self, parser: CommandParser) -> None:
+        parser.add_argument(
+            "--edition",
+            type=UUID,
+            help="Process only one event-edition UUID.",
+        )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Report currently eligible records without changing them.",
+        )
+
+    def handle(self, *args: object, **options: object) -> None:
+        del args
+        edition_id = options.get("edition")
+        if bool(options.get("dry_run")):
+            candidates = inspect_registration_lifecycle(
+                edition_id=edition_id if isinstance(edition_id, UUID) else None
+            )
+            self.stdout.write(
+                self.style.WARNING(
+                    "Dry run: "
+                    f"{candidates.expired} would expire, "
+                    f"{candidates.inactive_cancelled} inactive-account registrations "
+                    "would be cancelled, "
+                    f"{candidates.closed_waitlist_cancelled} closed waitlist entries "
+                    f"would be cancelled ({candidates.total} total state changes). "
+                    "No state was changed and no waitlist offer was sent."
+                )
+            )
+            return
+        result = process_registration_lifecycle(
+            edition_id=edition_id if isinstance(edition_id, UUID) else None
+        )
+        restrictions_applied = apply_due_account_restrictions(
+            edition_id=edition_id if isinstance(edition_id, UUID) else None
+        )
+        RegistrationLifecycleRun.objects.create(
+            edition_id=edition_id if isinstance(edition_id, UUID) else None,
+            ran_at=timezone.now(),
+            expired=result.expired,
+            inactive_cancelled=result.inactive_cancelled,
+            closed_waitlist_cancelled=result.closed_waitlist_cancelled,
+            promoted=result.promoted,
+            restrictions_applied=restrictions_applied,
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Registration lifecycle processed: "
+                f"{result.expired} expired, "
+                f"{result.inactive_cancelled} inactive-account registrations "
+                f"cancelled, {result.closed_waitlist_cancelled} closed waitlist "
+                f"entries cancelled, {result.promoted} waitlist places offered."
+                f" {restrictions_applied} scheduled restrictions applied."
+            )
+        )

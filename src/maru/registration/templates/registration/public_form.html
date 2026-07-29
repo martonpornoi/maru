@@ -1,0 +1,335 @@
+{% extends "registration/base_public.html" %}
+{% load static registration_display %}
+
+{% block title %}{% if staff_assisted %}Add attendee{% else %}Register{% endif %} for {{ configuration.edition.name }}{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">{{ configuration.organization.name }}</p>
+    <h1>{% if staff_assisted %}Add an attendee{% else %}Register{% endif %} for {{ configuration.edition.name }}</h1>
+    <p>
+      {% if staff_assisted %}
+        Use the same registration rules for a known account outside public
+        opening hours. Price, eligibility, capacity, payment, profile, and
+        question validation still apply.
+      {% else %}
+        Choose admission, create your attendee profile, and answer the sections
+        configured for this edition. Required fields are marked with an asterisk.
+      {% endif %}
+    </p>
+  </div>
+
+  {% if staff_assisted %}
+    <section class="notice-card">
+      <div>
+        <strong>Staff-assisted registration</strong>
+        <p>
+          Signed in as {{ staff_actor.display_name }}. This action records you
+          separately from the attendee and does not mark a paid product paid.
+        </p>
+      </div>
+      <a class="button secondary" href="{% url 'staff-console' %}">Back to Staff Console</a>
+    </section>
+  {% endif %}
+
+  {% if not account and not staff_assisted %}
+    <section class="notice-card">
+      <div>
+        <strong>Already have a Maru account?</strong>
+        <p>Sign in first so this registration joins your existing convention history.</p>
+      </div>
+      <a class="button secondary" href="{{ sign_in_url }}">Sign in</a>
+    </section>
+  {% endif %}
+
+  {% if suggested_profile %}
+    <section class="notice-card suggestion-card">
+      <div>
+        <strong>We filled in suggestions from {{ suggested_profile.edition.name }}</strong>
+        <p>
+          Review every value before submitting. This creates a separate
+          {{ configuration.edition.name }} profile; changing it will never
+          rewrite the closed convention. Approved images are reused as the
+          exact already-reviewed files. Public-list consent is not carried over.
+        </p>
+      </div>
+    </section>
+  {% endif %}
+
+  <form
+    class="registration-form"
+    method="post"
+    enctype="multipart/form-data"
+    novalidate
+  >
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="form-summary" role="alert">
+        <strong>Registration was not submitted.</strong>
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    {% endif %}
+
+    {% if not account and not staff_assisted %}
+      <fieldset class="form-section">
+        <legend>Create your Maru account</legend>
+        <p class="section-description">
+          One account works across conventions. Organizer-specific profile data
+          remains attached only to this edition.
+        </p>
+        <div class="field-grid two-column">
+          {% include "registration/_field.html" with field=form.email %}
+          {% include "registration/_field.html" with field=form.display_name %}
+          {% include "registration/_field.html" with field=form.password1 %}
+          {% include "registration/_field.html" with field=form.password2 %}
+        </div>
+      </fieldset>
+    {% endif %}
+
+    {% if staff_assisted %}
+      <fieldset class="form-section restricted-section">
+        <legend>Attendee and exception evidence</legend>
+        <p class="section-description">
+          An existing account is matched only by its exact normalized email.
+          The reason remains staff-only; the attendee will see that convention
+          staff created the registration.
+        </p>
+        <div class="account-creation-warning" role="note">
+          <strong>
+            {% if account_will_be_created %}
+              ⚠ This email was not found. A new account will be created.
+            {% else %}
+              ⚠ New-email fallback
+            {% endif %}
+          </strong>
+          <p>
+            If the email has never belonged to a Maru account, the display name
+            and temporary password below become required. Existing accounts are
+            never overwritten and the new account remains distinguishable in
+            the registration audit trail.
+          </p>
+        </div>
+        <div class="field-grid">
+          {% include "registration/_field.html" with field=form.account_email %}
+          <div class="field-grid two-column new-account-fields">
+            {% include "registration/_field.html" with field=form.new_account_display_name %}
+            {% include "registration/_field.html" with field=form.new_account_password1 %}
+            {% include "registration/_field.html" with field=form.new_account_password2 %}
+          </div>
+          {% include "registration/_field.html" with field=form.staff_reason %}
+        </div>
+      </fieldset>
+    {% endif %}
+
+    <fieldset class="form-section">
+      <legend>Choose admission</legend>
+      {% for error in form.product.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      <div class="product-grid">
+        {% for choice in product_choices %}
+          {% with product=choice.product availability=choice.availability %}
+          <label class="product-card{% if not availability.selectable %} unavailable{% endif %}">
+            <input
+              type="radio"
+              name="product"
+              value="{{ product.id }}"
+              {% if not availability.selectable %}disabled{% endif %}
+              {% if form.product.value|stringformat:"s" == product.id|stringformat:"s" %}checked{% endif %}
+            >
+            <span>
+              <strong>{{ product.name }}</strong>
+              <small>{{ product.description }}</small>
+              <small>{{ availability.explanation }}</small>
+            </span>
+            <b>{{ product.price_minor|money_minor:configuration.currency }}</b>
+          </label>
+          {% endwith %}
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    {% if configuration.minor_policy.enabled %}
+      <fieldset class="form-section restricted-section">
+        <legend>Guardian authorization for minors</legend>
+        <p class="section-description">
+          Attendees younger than {{ configuration.minor_policy.minor_age_threshold }}
+          at the convention need guardian authorization. No place is reserved
+          until the guardian accepts the emailed request.
+        </p>
+        <div class="field-grid two-column">
+          {% include "registration/_field.html" with field=form.guardian_name %}
+          {% include "registration/_field.html" with field=form.guardian_email %}
+          {% include "registration/_field.html" with field=form.guardian_relationship %}
+          {{ form.guardian_notice_version }}
+        </div>
+      </fieldset>
+    {% endif %}
+
+    <fieldset class="form-section">
+      <legend>Identity and contact</legend>
+      <p class="section-description">
+        Real name and birth date are restricted. Contact details are used only
+        for registration and time-sensitive attendee service.
+      </p>
+      <div class="field-grid two-column">
+        {% include "registration/_field.html" with field=form.real_name %}
+        {% include "registration/_field.html" with field=form.date_of_birth %}
+        {% include "registration/_field.html" with field=form.pronoun_code %}
+        <div data-other-pronouns>
+          {% include "registration/_field.html" with field=form.other_pronouns %}
+        </div>
+        <div class="phone-field-pair">
+          {% include "registration/_field.html" with field=form.phone_region_code %}
+          {% include "registration/_field.html" with field=form.phone_number %}
+        </div>
+        {% include "registration/_field.html" with field=form.telegram_handle %}
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Address</legend>
+      <p class="section-description">
+        Used for registration fulfilment and required service contact. It is
+        never shown in the attendee directory.
+      </p>
+      <div class="field-grid two-column">
+        {% include "registration/_field.html" with field=form.address_line_1 %}
+        {% include "registration/_field.html" with field=form.address_line_2 %}
+        {% include "registration/_field.html" with field=form.locality %}
+        {% include "registration/_field.html" with field=form.postal_code %}
+        {% include "registration/_field.html" with field=form.region %}
+        {% include "registration/_field.html" with field=form.country_code %}
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section restricted-section">
+      <legend>Emergency contact</legend>
+      <p class="section-description">
+        Restricted information for an assigned emergency response workflow.
+        Front Desk and other attendees cannot see it.
+      </p>
+      <div class="field-grid two-column">
+        {% include "registration/_field.html" with field=form.emergency_contact_name %}
+        <div class="phone-field-pair">
+          {% include "registration/_field.html" with field=form.emergency_phone_region_code %}
+          {% include "registration/_field.html" with field=form.emergency_contact_phone %}
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Public profile and badge details</legend>
+      <p class="section-description">
+        Everything here is optional. New images stay private until an organizer
+        approves them. Spoken languages are limited to five and become
+        structured input for badge rendering.
+      </p>
+      <div class="field-grid two-column">
+        {% include "registration/_field.html" with field=form.bio %}
+        <div class="language-field">
+          <label for="language-filter">Find a language</label>
+          <input id="language-filter" type="search" data-language-filter placeholder="Type a language name">
+          {% include "registration/_field.html" with field=form.spoken_language_codes %}
+          <small data-language-count aria-live="polite"></small>
+        </div>
+        {% include "registration/_field.html" with field=form.profile_photo %}
+      </div>
+      {% if suggested_profile.profile_photo %}
+        <div class="media-preview">
+          <img src="{% url 'protected-profile-photo' suggested_profile.id %}" alt="Previously approved profile image">
+          <p>
+            {% if suggested_profile.profile_photo_status == "approved" %}
+              This exact approved image will be reused unless you upload another.
+            {% else %}
+              This earlier image is not approved for reuse. Upload it again if
+              you want it reviewed for this profile.
+            {% endif %}
+          </p>
+          {% if suggested_profile.profile_photo_status == "approved" %}
+            <label class="remove-choice">
+              {{ form.remove_profile_photo }}
+              Do not reuse this profile image
+            </label>
+          {% endif %}
+        </div>
+      {% endif %}
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Fursuits you are bringing</legend>
+      <p class="section-description">
+        Optional. Add only fursuits you expect to bring; you can change this
+        list later from your convention profile.
+      </p>
+      <div class="consent-card compact">
+        {{ form.brings_fursuits }}
+        <label for="{{ form.brings_fursuits.id_for_label }}">
+          <strong>{{ form.brings_fursuits.label }}</strong>
+          <span>{{ form.brings_fursuits.help_text }}</span>
+        </label>
+      </div>
+      {% include "registration/_fursuit_formset.html" %}
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Public attendee list</legend>
+      <p class="section-description">
+        This consent applies only to {{ configuration.edition.name }} and can be
+        withdrawn later. Your entry is not published until the registration is
+        confirmed.
+      </p>
+      <div class="consent-card">
+        {{ form.directory_visible }}
+        <label for="{{ form.directory_visible.id_for_label }}">
+          <strong>{{ form.directory_visible.label }}</strong>
+          <span>{{ form.directory_visible.help_text }}</span>
+        </label>
+      </div>
+      <div class="directory-country-field" data-directory-country>
+        {% include "registration/_field.html" with field=form.directory_country_code %}
+      </div>
+    </fieldset>
+
+    {% for group in dynamic_groups %}
+      <fieldset class="form-section dynamic-section">
+        <legend>{{ group.title }}</legend>
+        {% if group.description %}<p class="section-description">{{ group.description }}</p>{% endif %}
+        <div class="field-grid">
+          {% for field in group.fields %}
+            {% include "registration/_field.html" with field=field %}
+          {% endfor %}
+        </div>
+      </fieldset>
+    {% endfor %}
+
+    <section class="privacy-summary">
+      <h2>Before you submit</h2>
+      <p>
+        Your account login is platform-wide. The profile and answers above
+        belong only to {{ configuration.edition.name }}. A future registration
+        may show the latest profile as a suggestion, but nothing is copied or
+        saved until you review and submit it.
+      </p>
+      <p>
+        Public registration currently supports attendees aged
+        {{ configuration.minimum_age }} or older at the convention start date.
+      </p>
+      <p>
+        Paid reservations normally remain available for
+        {{ configuration.default_payment_window_minutes }} minutes. If capacity
+        is full and waiting lists are enabled, no payment is requested until a
+        place is offered.
+      </p>
+    </section>
+
+    <div class="submit-bar">
+      <span>Configuration version {{ configuration.version }}</span>
+      <button class="button" type="submit">
+        {% if staff_assisted %}Create paid registration{% else %}Submit registration{% endif %}
+      </button>
+    </div>
+  </form>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'registration/public-form.js' %}" defer></script>
+{% endblock %}

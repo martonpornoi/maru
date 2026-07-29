@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+.coverage
+.coverage.*
+coverage.json
+htmlcov/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+
+# Django and local runtime
+.env
+*.sqlite3
+media/
+staticfiles/
+var/
+
+# Build and packaging
+build/
+dist/
+*.egg-info/
+node_modules/
+.pnpm-store/
+frontends/staff-console/dist/
+*.tsbuildinfo
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local tools
+.tools/
+.uv-cache/
+.pip-audit-cache/
+.codex-*.log

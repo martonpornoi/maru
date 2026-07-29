@@ -1,0 +1,66 @@
+{{ fursuit_formset.management_form }}
+{% if fursuit_formset.non_form_errors %}
+  <div class="form-summary" role="alert">
+    {% for error in fursuit_formset.non_form_errors %}<p>{{ error }}</p>{% endfor %}
+  </div>
+{% endif %}
+<div class="fursuit-editor" data-fursuit-editor>
+  <div data-fursuit-list>
+    {% for fursuit_form in fursuit_formset.forms %}
+      <article class="fursuit-row" data-fursuit-row>
+        {{ fursuit_form.fursuit_id }}
+        {{ fursuit_form.reuse_from_id }}
+        {{ fursuit_form.keep_photo }}
+        <div class="fursuit-row-heading">
+          <strong>Fursuit <span data-fursuit-number>{{ forloop.counter }}</span></strong>
+          {% if fursuit_formset.can_delete %}
+            <label class="remove-choice">{{ fursuit_form.DELETE }} Remove</label>
+          {% endif %}
+        </div>
+        <div class="field-grid two-column">
+          {% include "registration/_field.html" with field=fursuit_form.name %}
+          {% include "registration/_field.html" with field=fursuit_form.species %}
+          {% include "registration/_field.html" with field=fursuit_form.photo %}
+        </div>
+        {% if fursuit_form.fursuit_id.value %}
+          <div class="media-preview">
+            <img src="{% url 'protected-fursuit-photo' fursuit_form.fursuit_id.value %}" alt="Current fursuit image">
+            <p>The current image is retained unless you upload a replacement.</p>
+            <label class="remove-choice">
+              {{ fursuit_form.remove_photo }}
+              {{ fursuit_form.remove_photo.label }}
+            </label>
+          </div>
+        {% elif fursuit_form.reuse_from_id.value %}
+          <div class="media-preview">
+            <img src="{% url 'protected-fursuit-photo' fursuit_form.reuse_from_id.value %}" alt="Previously approved fursuit image">
+            <p>This exact approved image will be reused.</p>
+            <label class="remove-choice">
+              {{ fursuit_form.remove_photo }}
+              Do not reuse this fursuit image
+            </label>
+          </div>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+  <template data-empty-fursuit>
+    <article class="fursuit-row" data-fursuit-row>
+      {{ fursuit_formset.empty_form.fursuit_id }}
+      {{ fursuit_formset.empty_form.reuse_from_id }}
+      {{ fursuit_formset.empty_form.keep_photo }}
+      <div class="fursuit-row-heading">
+        <strong>Fursuit <span data-fursuit-number></span></strong>
+        <label class="remove-choice">{{ fursuit_formset.empty_form.DELETE }} Remove</label>
+      </div>
+      <div class="field-grid two-column">
+        {% include "registration/_field.html" with field=fursuit_formset.empty_form.name %}
+        {% include "registration/_field.html" with field=fursuit_formset.empty_form.species %}
+        {% include "registration/_field.html" with field=fursuit_formset.empty_form.photo %}
+      </div>
+    </article>
+  </template>
+  <button class="button secondary" type="button" data-add-fursuit>
+    Add another fursuit
+  </button>
+</div>

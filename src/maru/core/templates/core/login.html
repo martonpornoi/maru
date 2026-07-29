@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Sign in · Maru Staff Console</title>
+    <style>
+      :root {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        color: #18201c;
+        background: #f1eee5;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 1.25rem;
+        background:
+          radial-gradient(circle at 15% 5%, #f7cba8 0, transparent 35%),
+          radial-gradient(circle at 90% 90%, #bdd8cd 0, transparent 32%),
+          #f1eee5;
+      }
+
+      main {
+        width: min(29rem, 100%);
+        padding: clamp(1.5rem, 6vw, 2.75rem);
+        border: 1px solid #d2cec2;
+        border-radius: 1.4rem;
+        background: rgba(255, 254, 249, 0.94);
+        box-shadow: 0 1.5rem 4rem rgba(46, 53, 48, 0.13);
+      }
+
+      .mark {
+        display: inline-grid;
+        width: 2.8rem;
+        height: 2.8rem;
+        place-items: center;
+        border-radius: 0.85rem;
+        color: white;
+        background: #225d4d;
+        font-size: 1.2rem;
+        font-weight: 800;
+      }
+
+      h1 {
+        margin: 1.3rem 0 0.5rem;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 2.25rem;
+        letter-spacing: -0.035em;
+      }
+
+      .intro,
+      .note {
+        color: #5e6962;
+        line-height: 1.55;
+      }
+
+      .note {
+        margin-top: 1.4rem;
+        font-size: 0.82rem;
+      }
+
+      label {
+        display: block;
+        margin-top: 1.1rem;
+        font-size: 0.84rem;
+        font-weight: 720;
+      }
+
+      input {
+        width: 100%;
+        margin-top: 0.4rem;
+        padding: 0.8rem 0.9rem;
+        border: 1px solid #b8beb9;
+        border-radius: 0.65rem;
+        color: inherit;
+        background: white;
+        font: inherit;
+      }
+
+      input:focus {
+        border-color: #225d4d;
+        outline: 3px solid #b9ddd2;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 1.4rem;
+        padding: 0.85rem 1rem;
+        border: 0;
+        border-radius: 0.65rem;
+        color: white;
+        background: #225d4d;
+        font: inherit;
+        font-weight: 760;
+        cursor: pointer;
+      }
+
+      button:hover { background: #18493d; }
+
+      .errorlist {
+        padding: 0.75rem 0.9rem;
+        border-left: 4px solid #a83e32;
+        color: #7b2d25;
+        background: #f8e6e1;
+        list-style: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <span class="mark" aria-hidden="true">M</span>
+      <h1>Welcome back</h1>
+      <p class="intro">
+        Use this page to open the convention workspaces assigned to an account.
+        For example: sign in as a chair to manage registration or as an
+        attendee to complete it.
+      </p>
+
+      {% if form.non_field_errors %}
+        {{ form.non_field_errors }}
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <label for="{{ form.username.id_for_label }}">Email address</label>
+        {{ form.username }}
+        {{ form.username.errors }}
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {{ form.password.errors }}
+        <button type="submit">Open Staff Console</button>
+      </form>
+
+      <p class="note">
+        Local bootstrap sign-in. For the Danube walkthrough use
+        <strong>danube.convention-chair@demo.maru.invalid</strong> and the
+        password supplied when the demo dataset was seeded.
+      </p>
+    </main>
+  </body>
+</html>
