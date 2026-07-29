@@ -29,6 +29,21 @@ revalidates identity, configuration version, policy acceptance, conditional
 answers, eligibility, price, capacity, deadline, payment, and state
 transitions; the frontend never becomes authoritative.
 
+Maru's stable platform surfaces now use the project's owned cat-in-a-box mark
+and accessible navy, gold, and ivory identity. Canonical assets and palette
+tokens live in `maru.core`; Staff Console, bootstrap administration, local
+entry/sign-in, and the registration reference client share the identity while
+annual convention sites remain independently themeable. No legacy runtime
+media or application implementation was imported.
+
+The earlier owned Maru prototype has been consolidated as a behavior reference.
+Its useful programme revision, timetable layer/projection, volunteer shift,
+venue reuse, announcement, credentialed-feed, import-preview, and archive
+lessons now map to stable requirements and implementation-ready backlog
+acceptance. ADR 0021 forbids carrying forward its global-project, email
+allowlist, cross-domain-save, URL-secret, arbitrary-color, and excess-PII
+assumptions.
+
 The local/test-only v5 demonstration fixture now gives every one of the 63 Maru
 models registered in Django admin at least one safe synthetic example. Its
 registration and account inspection pages expose readable person dossiers:
@@ -180,6 +195,8 @@ and store a validated E.164 value.
   searchable language/country/IANA time-zone entry; draft-item removal;
   structured E.164 telephone input; and explicit audited staff account
   creation.
+- ADR 0021: accessible owned platform identity, replaceable seasonal clients,
+  and behavior-only use of the legacy prototype.
 
 ## Implemented production-safety boundary
 
@@ -234,7 +251,7 @@ and store a validated E.164 value.
 
 ## Verification
 
-- 390 backend tests pass against PostgreSQL 17.
+- 395 backend tests pass against PostgreSQL 17.
 - Branch-aware coverage is 90.08%, above the 90% gate; declarative migration
   files are omitted from coverage measurement.
 - Ruff formatting and lint pass.
@@ -248,6 +265,11 @@ and store a validated E.164 value.
   types regenerate successfully.
 - Thirteen Staff Console tests, TypeScript typecheck, and Vite production build
   pass.
+- Brand integrity tests verify static discovery and original image dimensions,
+  deployable manifest paths, palette consistency, platform template metadata,
+  and approved WCAG AA text pairs. Browser QA verifies the home, sign-in, and
+  bootstrap-admin identity with no console error or horizontal overflow,
+  including a 375-pixel mobile home view.
 - Python and production frontend dependency audits report no known
   vulnerabilities; the local Maru package is correctly skipped as non-PyPI.
 - PostgreSQL restore rehearsal succeeds into
@@ -270,7 +292,7 @@ and store a validated E.164 value.
 - The active local `maru_walkthrough` database applied organizations 0002
   successfully; `marucon` retained `en` and `Europe/Vienna` as its default
   locale values.
-- Documentation validation passes 96 Markdown files and 180 unique requirement
+- Documentation validation passes 100 Markdown files and 183 unique requirement
   identifiers.
 
 ## Known limits and production gates
@@ -293,6 +315,10 @@ and store a validated E.164 value.
   ending/replacement, approval notifications, and purpose-built hierarchy UX
   remain. The current assignment admin verifies a distinct authorized
   approver identity but is not yet a separately authenticated approval inbox.
+- Programme proposals, the shared schedule, shift commitments, reusable venue
+  catalogue, announcements, and credentialed read projections remain future
+  modules/slices. The legacy capability map supplies acceptance input but is
+  not evidence that those capabilities are implemented.
 - Staff-created accounts currently use an explicitly supplied temporary
   password. A production-grade expiring invitation/password-setup delivery
   flow remains before organizers should use this fallback with real people.
@@ -326,7 +352,9 @@ deployment and governance gates pass.
 7. Rehearse the clean convention/workforce walkthrough with the first partner,
    including browser bootstrap and missing-account staff intake; then build a
    separately authenticated approval inbox, expiring account-invitation flow,
-   and the highest-value purpose-built workforce queues.
+   and the highest-value purpose-built workforce queues. Use the consolidated
+   capability map to select, rather than bulk-port, later programme, schedule,
+   shift, venue, announcement, and projection slices.
 8. Add asynchronous expiring exports and physical badge layout/printing only
    when the first partner's volume and fulfilment process require them.
 
@@ -334,7 +362,8 @@ deployment and governance gates pass.
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `REGISTRATION_TODO.md`, requirements
 REG-001 through REG-021, HR-007/008, QRY-001 through QRY-008, IDN-007/008,
-MSG-007, PRI-009, ADRs 0013 through 0020, the
+MSG-007, PRI-009, UX-010, ADRs 0013 through 0021, the platform-brand and
+legacy-capability-map product documents, the
 registration/workforce/identity/communications/accreditation/privacy module
 docs, and both registration and clean-onboarding runbooks.
 

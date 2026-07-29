@@ -1,0 +1,57 @@
+:root {
+  --maru-navy-50: #f1f4f8;
+  --maru-navy-100: #e1e7ef;
+  --maru-navy-200: #c3cedd;
+  --maru-navy-300: #9caec4;
+  --maru-navy-400: #728dae;
+  --maru-navy-500: #4d6f98;
+  --maru-navy-600: #365781;
+  --maru-navy-700: #28446a;
+  --maru-navy-800: #183052;
+  --maru-navy-900: #071b3a;
+  --maru-navy-950: #030d1d;
+  --maru-gold-50: #fbf7ee;
+  --maru-gold-100: #f7ecd6;
+  --maru-gold-200: #eedab2;
+  --maru-gold-300: #e3c486;
+  --maru-gold-400: #d5ad5c;
+  --maru-gold-500: #c7943c;
+  --maru-gold-600: #b9822e;
+  --maru-gold-700: #956822;
+  --maru-gold-800: #77511a;
+  --maru-gold-900: #5c3c12;
+  --maru-gold-950: #321f09;
+  --maru-ivory-50: #fffcf6;
+  --maru-ivory-100: #fffaf0;
+  --maru-ivory-200: #faf3e3;
+  --maru-ivory-300: #f5e9d2;
+  --maru-ivory-400: #e9d9ba;
+  --maru-ivory-500: #decba8;
+  --maru-ivory-600: #c2ab82;
+  --maru-ivory-700: #9b815d;
+  --maru-ivory-800: #675943;
+  --maru-ivory-900: #3f3527;
+  --maru-ivory-950: #211b13;
+  --maru-brand-ink: var(--maru-navy-900);
+  --maru-brand-accent: var(--maru-gold-600);
+  --maru-brand-paper: var(--maru-ivory-200);
+  --maru-brand-surface: var(--maru-ivory-100);
+  --maru-brand-border: var(--maru-ivory-500);
+  --maru-brand-muted: var(--maru-ivory-800);
+  --maru-focus-ring: var(--maru-gold-600);
+}
+
+.maru-brand-wordmark,
+.maru-brand-mark {
+  display: block;
+  height: auto;
+  object-fit: contain;
+}
+
+.maru-brand-wordmark {
+  max-width: 100%;
+}
+
+.maru-brand-mark {
+  aspect-ratio: 1;
+}

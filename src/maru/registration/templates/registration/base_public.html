@@ -5,13 +5,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
     <title>{% block title %}Registration{% endblock %} · Maru</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="apple-touch-icon" href="{% static 'core/brand/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'core/brand/site.webmanifest' %}">
+    <link rel="stylesheet" href="{% static 'core/brand.css' %}">
     <link rel="stylesheet" href="{% static 'registration/public.css' %}">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
     <header class="site-header">
-      <a class="brand" href="/">Maru</a>
+      <a class="brand" href="/" aria-label="Maru home">
+        <img
+          class="maru-brand-wordmark"
+          src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+          alt="Maru Convention Planning"
+        >
+      </a>
       <nav aria-label="Registration navigation">
         <a href="{% url 'public-registration-index' %}">Conventions</a>
         {% if request.user.is_authenticated %}

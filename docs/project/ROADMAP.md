@@ -115,6 +115,14 @@ command. Qualifications, availability,
 shifts, work records, purpose-built approval UI, and the programme/schedule
 side of this phase remain.
 
+The reviewed legacy prototype supplies behavior-level acceptance input for
+this phase: proposal revision history; an explicit approved-to-programme
+transition; service days, layers, recurrence and ordered groups; shared
+attendee/person/department/venue/print projections; conflict explanations;
+and transactional volunteer demand, claim, confirmation, removal, lock and
+completion states. These are to be implemented in current owning modules and
+must not import the prototype's global-project or cross-domain-save design.
+
 ## Phase 4: Operational platform
 
 Outcomes:
@@ -129,6 +137,13 @@ Outcomes:
 
 Exit criterion: Core onsite departments can operate from Maru without parallel
 spreadsheets being their authoritative source.
+
+Behavior-level inputs retained from the legacy prototype include reusable
+venue facts with explicit edition selection and overrides, canonical scheduled
+announcements with per-channel delivery evidence, credentialed minimized read
+projections, rotation/access telemetry, preview-first imports, and archive
+views. Current tenancy, authorization, privacy, audit, connector, and closure
+requirements remain authoritative.
 
 ## Phase 5: Extended convention ecosystem
 

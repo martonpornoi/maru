@@ -90,7 +90,11 @@ function Icon({
 function LoadingScreen() {
   return (
     <main className="center-state" aria-live="polite">
-      <span className="brand-mark">M</span>
+      <img
+        className="brand-mark"
+        src="/static/core/brand/maru_square_logo_no_text.png"
+        alt="Maru"
+      />
       <div className="loading-line" />
       <p>Opening your convention workspace…</p>
     </main>
@@ -100,7 +104,11 @@ function LoadingScreen() {
 function ErrorScreen({ message }: { message: string }) {
   return (
     <main className="center-state">
-      <span className="brand-mark">M</span>
+      <img
+        className="brand-mark"
+        src="/static/core/brand/maru_square_logo_no_text.png"
+        alt="Maru"
+      />
       <h1>We couldn’t open your workspace</h1>
       <PageHelp
         purpose="This page explains why the workspace could not load."
@@ -117,7 +125,11 @@ function ErrorScreen({ message }: { message: string }) {
 function EmptyContext({ context }: { context: MyContext }) {
   return (
     <main className="center-state">
-      <span className="brand-mark">M</span>
+      <img
+        className="brand-mark"
+        src="/static/core/brand/maru_square_logo_no_text.png"
+        alt="Maru"
+      />
       <p className="eyebrow">Signed in as {context.display_name}</p>
       <h1>No convention workspace yet</h1>
       <PageHelp
@@ -152,7 +164,11 @@ function Sidebar({
   return (
     <aside className="sidebar">
       <a className="brand" href="/staff/" aria-label="Maru Staff Console home">
-        <span className="brand-mark">M</span>
+        <img
+          className="brand-mark"
+          src="/static/core/brand/maru_square_logo_no_text.png"
+          alt=""
+        />
         <span>
           <strong>Maru</strong>
           <small>Staff Console</small>

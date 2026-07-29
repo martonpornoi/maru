@@ -25,6 +25,7 @@ export default defineConfig({
     proxy: {
       "/accounts": "http://127.0.0.1:8000",
       "/api": "http://127.0.0.1:8000",
+      "/static": "http://127.0.0.1:8000",
       "/staff": "http://127.0.0.1:8000"
     }
   },

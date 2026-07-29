@@ -18,9 +18,16 @@ NFR-001, NFR-004, NFR-006, and NFR-008.
 - liveness, database readiness, and build identity endpoints
 - browser-friendly development landing page
 - consistent bootstrap-administration branding, safety mixins, and navigation
+- canonical platform brand assets, accessible palette tokens, and application
+  metadata
 
 It does not own tenant context, business rules, permissions, audit, or a generic
 `utils` collection.
+
+The platform identity is defined in
+[`../product/platform-brand.md`](../product/platform-brand.md) under ADR 0021.
+It supports Maru's stable operational shell; convention-owned seasonal
+frontends remain replaceable clients.
 
 ## Bootstrap administration
 

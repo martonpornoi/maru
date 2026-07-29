@@ -1,22 +1,28 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="dark light">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
     <title>Maru · Convention operations</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="apple-touch-icon" href="{% static 'core/brand/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'core/brand/site.webmanifest' %}">
+    <link rel="stylesheet" href="{% static 'core/brand.css' %}">
     <style>
       :root {
-        color-scheme: dark;
-        --background: #0b1020;
-        --surface: #131b31;
-        --surface-raised: #1a2540;
-        --text: #f7f8fc;
-        --muted: #aeb9d3;
-        --accent: #82e6c8;
-        --accent-strong: #36c9a1;
-        --border: #2c3858;
-        --shadow: rgba(0, 0, 0, 0.3);
+        color-scheme: light;
+        --background: var(--maru-navy-950);
+        --surface: var(--maru-ivory-200);
+        --surface-raised: var(--maru-ivory-50);
+        --text: var(--maru-navy-900);
+        --muted: var(--maru-ivory-800);
+        --accent: var(--maru-gold-600);
+        --accent-strong: var(--maru-gold-800);
+        --border: var(--maru-ivory-500);
+        --shadow: rgb(3 13 29 / 35%);
       }
 
       * {
@@ -31,8 +37,8 @@
         padding: 2rem;
         color: var(--text);
         background:
-          radial-gradient(circle at 15% 15%, #20365a 0, transparent 35%),
-          radial-gradient(circle at 85% 85%, #153e3c 0, transparent 32%),
+          radial-gradient(circle at 15% 15%, rgb(185 130 46 / 28%) 0, transparent 35%),
+          radial-gradient(circle at 85% 85%, rgb(54 87 129 / 42%) 0, transparent 32%),
           var(--background);
         font-family:
           Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
@@ -44,13 +50,21 @@
         padding: clamp(1.5rem, 5vw, 3.5rem);
         border: 1px solid var(--border);
         border-radius: 1.5rem;
-        background: color-mix(in srgb, var(--surface) 94%, transparent);
+        background: color-mix(in srgb, var(--surface) 97%, transparent);
         box-shadow: 0 1.5rem 4rem var(--shadow);
+      }
+
+      .home-brand {
+        display: block;
+        width: min(22rem, 86%);
+        margin-bottom: 1.8rem;
+        border: 1px solid var(--border);
+        border-radius: 0.9rem;
       }
 
       .eyebrow {
         margin: 0 0 1rem;
-        color: var(--accent);
+        color: var(--accent-strong);
         font-size: 0.78rem;
         font-weight: 750;
         letter-spacing: 0.12em;
@@ -78,9 +92,9 @@
         align-items: center;
         margin: 2rem 0;
         padding: 0.9rem 1rem;
-        border: 1px solid #2b655c;
+        border: 1px solid var(--maru-gold-300);
         border-radius: 0.8rem;
-        background: #102d2b;
+        background: var(--maru-gold-100);
       }
 
       .status-dot {
@@ -89,7 +103,7 @@
         flex: 0 0 auto;
         border-radius: 50%;
         background: var(--accent);
-        box-shadow: 0 0 1rem var(--accent-strong);
+        box-shadow: 0 0 0 0.24rem var(--maru-gold-200);
       }
 
       nav {
@@ -114,7 +128,8 @@
       a:hover,
       a:focus-visible {
         border-color: var(--accent);
-        outline: none;
+        outline: 3px solid var(--maru-gold-300);
+        outline-offset: 2px;
         transform: translateY(-2px);
       }
 
@@ -139,6 +154,11 @@
   </head>
   <body>
     <main>
+      <img
+        class="home-brand maru-brand-wordmark"
+        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+        alt="Maru Convention Planning"
+      >
       <p class="eyebrow">Convention operations · working foundation</p>
       <h1>Maru is running.</h1>
       <p class="intro">

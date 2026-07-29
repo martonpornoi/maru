@@ -1,3 +1,75 @@
+:root,
+html[data-theme="light"] {
+  color-scheme: light;
+  --primary: var(--maru-navy-900);
+  --secondary: var(--maru-gold-600);
+  --accent: var(--maru-gold-100);
+  --primary-fg: var(--maru-ivory-100);
+  --body-fg: var(--maru-navy-900);
+  --body-bg: var(--maru-ivory-200);
+  --body-quiet-color: var(--maru-ivory-800);
+  --body-loud-color: var(--maru-navy-900);
+  --header-color: var(--maru-ivory-100);
+  --header-branding-color: var(--maru-ivory-100);
+  --header-bg: var(--maru-navy-900);
+  --header-link-color: var(--maru-ivory-100);
+  --breadcrumbs-fg: var(--maru-navy-900);
+  --breadcrumbs-link-fg: var(--maru-gold-900);
+  --breadcrumbs-bg: var(--maru-gold-200);
+  --link-fg: var(--maru-gold-900);
+  --link-hover-color: var(--maru-navy-900);
+  --link-selected-fg: var(--maru-navy-800);
+  --hairline-color: var(--maru-ivory-500);
+  --border-color: var(--maru-ivory-500);
+  --darkened-bg: var(--maru-ivory-300);
+  --selected-bg: var(--maru-gold-100);
+  --selected-row: var(--maru-gold-50);
+  --button-fg: var(--maru-ivory-100);
+  --button-bg: var(--maru-navy-900);
+  --button-hover-bg: var(--maru-navy-800);
+  --default-button-bg: var(--maru-navy-900);
+  --default-button-hover-bg: var(--maru-navy-800);
+}
+
+html[data-theme="dark"] {
+  --primary: var(--maru-gold-300);
+  --secondary: var(--maru-gold-600);
+  --accent: var(--maru-gold-200);
+  --body-fg: var(--maru-ivory-100);
+  --body-bg: var(--maru-navy-950);
+  --body-quiet-color: var(--maru-navy-200);
+  --body-loud-color: var(--maru-ivory-50);
+  --header-bg: var(--maru-navy-900);
+  --breadcrumbs-bg: var(--maru-navy-800);
+  --link-fg: var(--maru-gold-300);
+  --link-hover-color: var(--maru-gold-100);
+  --hairline-color: var(--maru-navy-700);
+  --border-color: var(--maru-navy-600);
+  --darkened-bg: var(--maru-navy-900);
+  --selected-bg: var(--maru-navy-800);
+  --selected-row: var(--maru-navy-900);
+}
+
+.maru-admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--header-link-color);
+  text-decoration: none;
+}
+
+.maru-admin-brand img {
+  width: min(12rem, 36vw);
+  border: 1px solid var(--maru-gold-400);
+  border-radius: 0.55rem;
+}
+
+.maru-admin-brand span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
 .maru-page-help {
   max-width: calc(100% - 16rem);
   margin: -0.65rem 0 1.25rem;

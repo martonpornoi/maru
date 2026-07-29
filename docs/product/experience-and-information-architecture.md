@@ -22,6 +22,21 @@ All surfaces use the same domain APIs, authorization decisions, messages,
 published schedule, and activity trail. A focused client is not a separate
 account or source of truth.
 
+## Platform identity and annual themes
+
+Maru's stable operational shell uses the owned navy, gold, and ivory identity
+documented in [`platform-brand.md`](platform-brand.md). The same identity
+connects bootstrap administration, Staff Console, local account entry, and the
+bundled public reference client without implying that every convention must
+look alike.
+
+An annual convention website is a replaceable client. Its team may change
+artwork, color, layout, interaction, and editorial presentation while
+consuming the same versioned APIs. It must preserve accessible semantics and
+cannot override Maru's authorization, availability, price, capacity, payment,
+or lifecycle decisions. Edition artwork is convention content, not a mutation
+of the platform identity.
+
 ## Public registration
 
 The local entry page offers `Register for a convention` without requiring an

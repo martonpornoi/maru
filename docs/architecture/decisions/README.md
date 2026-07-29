@@ -25,6 +25,7 @@ the system.
 | [0018](0018-attendee-directory-labels-and-reporting-preset.md) | Accepted | Separately consented public country, authoritative attendee labels, and minimized badge reporting |
 | [0019](0019-staff-assisted-registration-and-workforce-onboarding.md) | Accepted | Clean organizer bootstrap, staff-assisted registration, reviewed onboarding documents, and position-driven access |
 | [0020](0020-guided-bootstrap-and-localized-data-entry.md) | Accepted | Guided first-authority setup, organizer/series identity, code-backed locale entry, draft removal, and explicit staff account creation |
+| [0021](0021-platform-brand-and-legacy-reference.md) | Accepted | Accessible platform brand and behavior-only use of the legacy Maru prototype |
 
 New ADRs use the next four-digit number and contain:
 

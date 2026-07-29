@@ -1,15 +1,21 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
     <title>Sign in · Maru Staff Console</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="apple-touch-icon" href="{% static 'core/brand/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'core/brand/site.webmanifest' %}">
+    <link rel="stylesheet" href="{% static 'core/brand.css' %}">
     <style>
       :root {
         font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-        color: #18201c;
-        background: #f1eee5;
+        color: var(--maru-navy-900);
+        background: var(--maru-ivory-200);
       }
 
       * { box-sizing: border-box; }
@@ -21,30 +27,24 @@
         place-items: center;
         padding: 1.25rem;
         background:
-          radial-gradient(circle at 15% 5%, #f7cba8 0, transparent 35%),
-          radial-gradient(circle at 90% 90%, #bdd8cd 0, transparent 32%),
-          #f1eee5;
+          radial-gradient(circle at 15% 5%, var(--maru-gold-200) 0, transparent 35%),
+          radial-gradient(circle at 90% 90%, var(--maru-navy-200) 0, transparent 32%),
+          var(--maru-ivory-200);
       }
 
       main {
         width: min(29rem, 100%);
         padding: clamp(1.5rem, 6vw, 2.75rem);
-        border: 1px solid #d2cec2;
+        border: 1px solid var(--maru-ivory-500);
         border-radius: 1.4rem;
-        background: rgba(255, 254, 249, 0.94);
-        box-shadow: 0 1.5rem 4rem rgba(46, 53, 48, 0.13);
+        background: rgb(255 250 240 / 96%);
+        box-shadow: 0 1.5rem 4rem rgb(3 13 29 / 16%);
       }
 
       .mark {
-        display: inline-grid;
-        width: 2.8rem;
-        height: 2.8rem;
-        place-items: center;
-        border-radius: 0.85rem;
-        color: white;
-        background: #225d4d;
-        font-size: 1.2rem;
-        font-weight: 800;
+        width: 5rem;
+        border: 1px solid var(--maru-ivory-500);
+        border-radius: 1rem;
       }
 
       h1 {
@@ -56,7 +56,7 @@
 
       .intro,
       .note {
-        color: #5e6962;
+        color: var(--maru-ivory-800);
         line-height: 1.55;
       }
 
@@ -76,16 +76,16 @@
         width: 100%;
         margin-top: 0.4rem;
         padding: 0.8rem 0.9rem;
-        border: 1px solid #b8beb9;
+        border: 1px solid var(--maru-ivory-600);
         border-radius: 0.65rem;
         color: inherit;
-        background: white;
+        background: var(--maru-ivory-50);
         font: inherit;
       }
 
       input:focus {
-        border-color: #225d4d;
-        outline: 3px solid #b9ddd2;
+        border-color: var(--maru-navy-900);
+        outline: 3px solid var(--maru-gold-300);
       }
 
       button {
@@ -94,14 +94,14 @@
         padding: 0.85rem 1rem;
         border: 0;
         border-radius: 0.65rem;
-        color: white;
-        background: #225d4d;
+        color: var(--maru-ivory-100);
+        background: var(--maru-navy-900);
         font: inherit;
         font-weight: 760;
         cursor: pointer;
       }
 
-      button:hover { background: #18493d; }
+      button:hover { background: var(--maru-navy-800); }
 
       .errorlist {
         padding: 0.75rem 0.9rem;
@@ -114,7 +114,11 @@
   </head>
   <body>
     <main>
-      <span class="mark" aria-hidden="true">M</span>
+      <img
+        class="mark maru-brand-mark"
+        src="{% static 'core/brand/maru_square_logo_no_text.png' %}"
+        alt="Maru"
+      >
       <h1>Welcome back</h1>
       <p class="intro">
         Use this page to open the convention workspaces assigned to an account.

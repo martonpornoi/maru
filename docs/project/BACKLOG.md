@@ -293,6 +293,86 @@ incident template.
 **Accept:** a simulated database outage and worker poison item produce an
 actionable alert, safe degraded response, and documented recovery evidence.
 
+## Consolidated future slices
+
+These items retain useful behavior learned from the owned legacy prototype.
+ADR 0021 and the current module boundaries govern their implementation; the
+prototype is an acceptance reference, not a code dependency.
+
+### MARU-PRG-001 — Proposal-to-programme lifecycle (`P1`)
+
+**Requirements:** PRG-001 through PRG-007, AUD-003, SCH-001
+**Deliver:** versioned proposal submissions, accountable review/revision
+requests, decisions, and an explicit accepted-item transition into separately
+authorized programme readiness work.
+
+**Accept:**
+
+- every submitted revision and decision remains attributable and immutable;
+- co-host access cannot reveal other proposals or private review data;
+- advancement is idempotent and cannot occur as a model/admin save side
+  effect; and
+- public projections contain approved programme fields only.
+
+### MARU-SCH-001 — Shared versioned timetable (`P1`)
+
+**Requirements:** SCH-001 through SCH-008, VEN-001, VEN-002
+**Deliver:** edition-local service days, precision, ordered layers and groups,
+recurring occurrences, draft/publication versions, room assignment, conflict
+explanations, and attendee/person/department/venue/print projections.
+
+**Accept:**
+
+- all projections derive from one approved schedule version;
+- person, room, combined-space, availability, setup, travel, rest, resource,
+  and staffing conflicts are tested;
+- locks and publication do not mutate historical versions; and
+- reasoned warning overrides cannot bypass hard authorization or safety rules.
+
+### MARU-HR-002 — Volunteer shift commitments (`P1`)
+
+**Requirements:** HR-009, SCH-003, SCH-005, AUD-003
+**Deliver:** separate shift demand and claimed, confirmed, removed, locked, and
+completed commitments with qualification, availability, overlap, break,
+capacity, and privacy-aware suitability explanations.
+
+**Accept:**
+
+- concurrent claims cannot exceed demand;
+- volunteers see their own commitment state without seeing other applicants'
+  private records;
+- coordinators receive only fields justified by staffing work; and
+- removal and completion preserve history and update future capacity
+  transactionally.
+
+### MARU-VEN-001 — Reusable venue catalogue (`P2`)
+
+**Requirements:** VEN-001, VEN-002, VEN-008, PRI-001
+**Deliver:** stable organization-owned properties, spaces, room combinations,
+and governed floor-plan references with explicit edition selection and
+edition-local names, opening, blocks, availability, and overrides.
+
+**Accept:** omitting a property from an edition creates no implicit use;
+combined spaces cannot conflict with components; an override does not rewrite
+the source catalogue or another edition; and floor-plan access is authorized
+and audited.
+
+### MARU-INT-002 — Publication and read-projection credentials (`P1`)
+
+**Requirements:** ANN-001 through ANN-006, INT-003, INT-008, QRY-007
+**Deliver:** canonical versioned announcements, scheduled approval,
+per-destination delivery evidence, and typed minimized website, timetable,
+profile, shift, and signage projections using expiring, rotatable, revocable
+credentials.
+
+**Accept:**
+
+- connector failure cannot erase or mutate canonical approved content;
+- a credential is scoped to one tenant, audience, projection, and lifetime;
+- rotation supports overlap and one-time secret display without routine URL
+  credentials; and
+- access telemetry excludes secrets and unauthorized personal fields.
+
 ## Foundation release acceptance
 
 V00–V02 are complete only when:

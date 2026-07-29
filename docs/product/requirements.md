@@ -183,6 +183,11 @@ architecture documents, implementation issues, tests, and release notes.
   a reason, and retained under an approved HR policy. Assignment or access may
   depend only on an approved current requirement; an uploaded file by itself
   grants nothing.
+- **HR-009 — Shift demand and commitment lifecycle:** Edition staffing must
+  distinguish required headcount, suitable open work, a person's claim,
+  organizer confirmation, removal, completion, and a locked coverage plan.
+  Capacity and overlap checks must be transactional; volunteers see their own
+  commitment state without gaining access to other volunteers' private records.
 
 ### Programme, shifts, and timetable planning
 
@@ -206,6 +211,11 @@ architecture documents, implementation issues, tests, and release notes.
 - **SCH-007 — Human override:** Authorized planners may override warnings with a
   recorded reason; hard safety or authorization constraints cannot be silently
   bypassed.
+- **SCH-008 — Service days, layers, groups, and projections:** Editions must
+  define service-day windows and scheduling precision, order and lock
+  visibility layers, group related or recurring items with explicit sequence,
+  and derive interactive, API, print, signage, person, room, and staff
+  projections from the same approved schedule version.
 
 ### Querying, reporting, and export
 
@@ -257,6 +267,12 @@ architecture documents, implementation issues, tests, and release notes.
   Platform-wide records must be clearly distinguished. Cross-edition reuse must
   be an explicit source-selection action, remain within authorized tenant
   scope, and create independent edition-owned records.
+- **UX-010 — Platform identity and seasonal theming:** Maru's own operational
+  surfaces must use one documented, accessible platform identity and asset
+  source. Convention-owned public clients may replace layout, animation,
+  artwork, and annual theme without forking domain rules. Semantic state must
+  remain readable without color, and organizer assets remain separately owned,
+  governed, and withdrawable.
 
 ### Registration, orders, and attendee service
 
@@ -465,6 +481,12 @@ architecture documents, implementation issues, tests, and release notes.
 - **VEN-007 — Hospitality obligations:** Catering, green rooms, lounges,
   credentials, comps, and special guest commitments must have owners, schedule,
   inventory, and fulfilment state.
+- **VEN-008 — Reusable venue facts and edition overrides:** Stable properties,
+  buildings, rooms, combinations, capacities, equipment, and floor-plan
+  references may be reused across editions. An edition must explicitly select
+  them, then own local display names, blocks, availability windows, and
+  operational restrictions without mutating the reusable source. Schedule
+  placement outside an applicable hard availability window must fail.
 
 ### Accreditation and physical access
 
@@ -702,6 +724,12 @@ architecture documents, implementation issues, tests, and release notes.
 - **INT-007 — Exit capability:** An organizer must be able to export supported
   records, files, schemas, configuration, audit manifests, and identifiers in a
   documented form before ending service.
+- **INT-008 — Credentialed read projections:** Website, timetable, signage, and
+  other read consumers must use least-privilege, organization- and
+  edition-scoped credentials with declared projection type, expiry, rotation,
+  revocation, health, and access evidence. Raw secrets are shown only at issue
+  or rotation time and must not become durable application data or routine URL
+  content.
 
 ## Cross-cutting requirements
 

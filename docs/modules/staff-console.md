@@ -13,6 +13,12 @@ Source lives in `frontends/staff-console`. Django serves the production bundle
 at `/staff/` during the bootstrap deployment phase. Business behavior and
 authorization remain in the versioned API.
 
+The shell uses Maru's canonical navy, gold, and ivory platform identity and
+owned square mark. The source bundle repeats the documented palette so the
+standalone Vite development server works without a Django template; automated
+checks keep those anchors aligned with `maru.core`. Convention-owned annual
+public clients may use independent seasonal themes.
+
 ## Implemented experience
 
 - local session sign-in for any active platform account;
