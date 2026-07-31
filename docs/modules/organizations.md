@@ -1,14 +1,15 @@
 # Organizations module
 
 Status: Implemented tenant, brand, localization bootstrap, Page 1 inventory,
-complete Page 2 Draft creation, and Page 3 record management
+complete Page 2 Draft creation, Page 3 record management, and Page 4
+organization-scoped convention-series creation
 Last updated: 2026-07-31
 
 ## Purpose and requirements
 
 `maru.organizations` owns tenant structure and recurring-series continuity for
 IDN-002, IDN-011, IDN-012, EVT-001, EVT-003, EVT-005, UX-014, UX-015,
-UX-016, and UX-017.
+UX-016, UX-017, and UX-018.
 
 ## Owned data and invariants
 
@@ -59,11 +60,26 @@ non-browser clients.
 - `delete_empty_draft_organization(...)`, the atomic platform-only command that
   requires exact-name confirmation and acknowledgement and can remove only a
   Draft whose protected relationship graph is empty.
+- `create_convention_series(...)`, the atomic platform-only command that locks
+  a non-Closed parent, accepts typed `ConventionSeriesCreationDetails`,
+  normalizes the required name, generates a collision-safe slug within that
+  organization, validates the complete series, and appends its audit event.
 
-Generic unscoped organization APIs remain absent. Pages 2 and 3 are narrowly
+Generic unscoped organization APIs remain absent. Pages 2 through 4 are narrowly
 scoped server-rendered platform commands, not public or organizer APIs. They
 create no membership, governance, convention, participation, registration, or
 workforce relationships.
+
+## Convention series creation fields
+
+Only the recurring public brand name is required. Description, website,
+contact email, and initial availability are optional; Active is the default
+and means available for future editions, not published. Organization and slug
+come from code-owned scope. Series slugs are stable, bounded, and
+case-insensitively unique within one organization, so two organizations may
+reuse the same recognizable slug while same-tenant collisions receive numeric
+suffixes. Draft, Active, and Suspended parents may prepare a series; Closed
+parents cannot.
 
 ## Organization profile fields
 
@@ -141,12 +157,19 @@ Page 3 tests cover linked records, compact navigation, complete profile
 updates, code-owned slug/lifecycle, no-op saves, safe error states, service
 authorization, audit value minimization, exact deletion confirmation,
 Draft/relationship guards, and atomic update/delete rollback.
+Page 4 tests cover empty and populated organization-scoped series projections,
+contextual navigation, denied-before-lookup authorization, unknown and Closed
+parents, name-only and complete optional creation, crafted-scope resistance,
+per-tenant slug collision/fallback/bounds, repeated service validation,
+value-minimized atomic audit and rollback, safe database failures, and the
+absence of edition or people-relationship side effects.
 
 ## Limitations
 
-Executive Board provisioning/backfill, lifecycle transitions, slug migration,
-publication, processors, invitations, ownership transfer, closure/data exit,
-and a convention-owned organizer console are not implemented. Per IDN-012, the
+Executive Board provisioning/backfill, organization and series lifecycle
+transitions, series record editing, slug migration, publication, edition
+creation, processors, invitations, ownership transfer, closure/data exit, and
+a convention-owned organizer console are not implemented. Per IDN-012, the
 later governance workflow must establish an Executive Board before activation
 and extend Page 3 property editing to active Executive Board authority;
 platform administration remains non-participating.

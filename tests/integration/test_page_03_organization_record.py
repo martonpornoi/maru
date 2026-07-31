@@ -74,6 +74,7 @@ def test_inventory_and_record_use_compact_navigation_and_record_link() -> None:
     assert "synthetic-maru" in content
     assert "Save changes" in content
     assert "Delete organization" in content
+    assert "autofocus" not in content
     assert 'name="slug"' not in content
     assert 'name="lifecycle"' not in content
     assert str(organization.id) not in content

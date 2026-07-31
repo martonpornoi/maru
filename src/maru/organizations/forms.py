@@ -13,7 +13,65 @@ from maru.core.localization import (
     grouped_time_zone_choices,
 )
 from maru.organizations.models import Organization
-from maru.organizations.services import OrganizationCreationDetails
+from maru.organizations.services import (
+    ConventionSeriesCreationDetails,
+    OrganizationCreationDetails,
+)
+
+
+class ConventionSeriesCreationForm(forms.Form):
+    name = forms.CharField(
+        label="Convention series name",
+        max_length=160,
+        strip=True,
+        help_text=(
+            "The recurring public convention name. This is the only required field."
+        ),
+        widget=forms.TextInput(attrs={"autocomplete": "off", "autofocus": True}),
+    )
+    description = forms.CharField(
+        label="Public description",
+        required=False,
+        max_length=2000,
+        help_text="A short description of this convention brand across editions.",
+        widget=forms.Textarea(attrs={"rows": 5}),
+    )
+    website_url = forms.URLField(
+        label="Website",
+        required=False,
+        assume_scheme="https",
+        help_text="The convention series website, including https://.",
+    )
+    contact_email = forms.EmailField(
+        label="Public contact email",
+        required=False,
+        help_text="A general convention mailbox, not an account login.",
+    )
+    availability = forms.ChoiceField(
+        required=False,
+        choices=(("active", "Active"), ("inactive", "Inactive")),
+        initial="active",
+        help_text=(
+            "Active makes the brand available for future editions. It does not "
+            "publish anything or create an edition."
+        ),
+    )
+
+    def clean_name(self) -> str:
+        return " ".join(self.cleaned_data["name"].split())
+
+    def creation_details(self) -> ConventionSeriesCreationDetails:
+        """Return typed command input after successful form validation."""
+
+        if not self.is_valid():
+            raise ValueError("Validate the series form before reading details.")
+        return ConventionSeriesCreationDetails(
+            name=str(self.cleaned_data["name"]),
+            description=str(self.cleaned_data.get("description", "")),
+            website_url=str(self.cleaned_data.get("website_url", "")),
+            contact_email=str(self.cleaned_data.get("contact_email", "")),
+            is_active=self.cleaned_data.get("availability", "active") != "inactive",
+        )
 
 
 class OrganizationCreationForm(forms.Form):
@@ -177,7 +235,7 @@ class OrganizationCreationForm(forms.Form):
     ) -> OrganizationCreationForm:
         """Build the shared complete-profile form for an existing record."""
 
-        return cls(
+        form = cls(
             data=data,
             initial={
                 "name": organization.name,
@@ -197,6 +255,8 @@ class OrganizationCreationForm(forms.Form):
                 "default_time_zone": organization.default_time_zone,
             },
         )
+        form.fields["name"].widget.attrs.pop("autofocus", None)
+        return form
 
 
 class OrganizationDeletionForm(forms.Form):

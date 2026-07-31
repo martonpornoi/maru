@@ -1,6 +1,6 @@
 # Page 3 contract: Organization record
 
-- Status: Implemented and verified; owner inspection pending
+- Status: Implemented, verified, and accepted
 - Branch: `codex/page-03-organization-record`
 - Route: `/admin/organizations/<slug>/`
 - Requirements: IDN-002, IDN-011, IDN-012, EVT-005, UX-013, UX-014,

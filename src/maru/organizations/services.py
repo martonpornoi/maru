@@ -11,10 +11,13 @@ from django.utils.text import slugify
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.identity.models import Account
-from maru.organizations.models import Organization
+from maru.organizations.models import ConventionSeries, Organization
 
 MAX_ORGANIZATION_NAME_LENGTH = 160
 MAX_ORGANIZATION_SLUG_LENGTH = 80
+MAX_SERIES_NAME_LENGTH = 160
+MAX_SERIES_DESCRIPTION_LENGTH = 2000
+MAX_SERIES_SLUG_LENGTH = 80
 MAX_SLUG_CANDIDATES = 10_000
 
 ORGANIZATION_CREATION_FIELDS = (
@@ -43,6 +46,16 @@ ORGANIZATION_PROFILE_FIELDS = tuple(
     if field_name not in {"slug", "lifecycle"}
 )
 
+CONVENTION_SERIES_CREATION_FIELDS = (
+    "organization",
+    "name",
+    "slug",
+    "description",
+    "website_url",
+    "contact_email",
+    "is_active",
+)
+
 
 @dataclass(frozen=True, slots=True)
 class OrganizationCreationDetails:
@@ -61,6 +74,15 @@ class OrganizationCreationDetails:
     country_code: str = ""
     default_language_codes: tuple[str, ...] = ("en",)
     default_time_zone: str = "UTC"
+
+
+@dataclass(frozen=True, slots=True)
+class ConventionSeriesCreationDetails:
+    name: str
+    description: str = ""
+    website_url: str = ""
+    contact_email: str = ""
+    is_active: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +120,12 @@ def _normalize_organization_name(name: str) -> str:
 def _slug_candidate(base: str, number: int) -> str:
     suffix = "" if number == 1 else f"-{number}"
     stem = base[: MAX_ORGANIZATION_SLUG_LENGTH - len(suffix)].rstrip("-")
+    return f"{stem}{suffix}"
+
+
+def _series_slug_candidate(base: str, number: int) -> str:
+    suffix = "" if number == 1 else f"-{number}"
+    stem = base[: MAX_SERIES_SLUG_LENGTH - len(suffix)].rstrip("-")
     return f"{stem}{suffix}"
 
 
@@ -142,6 +170,129 @@ def _create_with_generated_slug(
         {"name": "Maru could not generate an available organization URL name."},
         code="organization_slug_unavailable",
     )
+
+
+def _normalize_series_details(
+    details: ConventionSeriesCreationDetails,
+) -> ConventionSeriesCreationDetails:
+    name = " ".join(details.name.split())
+    if not name:
+        raise ValidationError(
+            {"name": "Enter a convention series name."},
+            code="series_name_required",
+        )
+    if len(name) > MAX_SERIES_NAME_LENGTH:
+        raise ValidationError(
+            {
+                "name": (
+                    "Ensure this value has at most "
+                    f"{MAX_SERIES_NAME_LENGTH} characters."
+                )
+            },
+            code="series_name_too_long",
+        )
+    description = details.description.strip()
+    if len(description) > MAX_SERIES_DESCRIPTION_LENGTH:
+        raise ValidationError(
+            {
+                "description": (
+                    "Ensure this value has at most "
+                    f"{MAX_SERIES_DESCRIPTION_LENGTH} characters."
+                )
+            },
+            code="series_description_too_long",
+        )
+    return replace(
+        details,
+        name=name,
+        description=description,
+        website_url=details.website_url.strip(),
+        contact_email=details.contact_email.strip(),
+    )
+
+
+def _create_series_with_generated_slug(
+    *,
+    organization: Organization,
+    details: ConventionSeriesCreationDetails,
+) -> ConventionSeries:
+    base = slugify(details.name)[:MAX_SERIES_SLUG_LENGTH].strip("-") or "series"
+    for number in range(1, MAX_SLUG_CANDIDATES + 1):
+        candidate = _series_slug_candidate(base, number)
+        scoped_slug = ConventionSeries.objects.filter(
+            organization=organization,
+            slug__iexact=candidate,
+        )
+        if scoped_slug.exists():
+            continue
+        try:
+            with transaction.atomic():
+                return ConventionSeries.objects.create(
+                    organization=organization,
+                    name=details.name,
+                    slug=candidate,
+                    description=details.description,
+                    website_url=details.website_url,
+                    contact_email=details.contact_email,
+                    is_active=details.is_active,
+                )
+        except (IntegrityError, ValidationError):
+            if scoped_slug.exists():
+                continue
+            raise
+    raise ValidationError(
+        {"name": "Maru could not generate an available series URL name."},
+        code="series_slug_unavailable",
+    )
+
+
+@transaction.atomic
+def create_convention_series(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    details: ConventionSeriesCreationDetails,
+    correlation_id: UUID,
+    source_channel: str = "service",
+) -> ConventionSeries:
+    """Create one recurring brand beneath a non-closed organization."""
+
+    if not actor.is_active or not actor.is_platform_administrator:
+        raise PermissionDenied("Platform administration is required.")
+
+    organization = Organization.objects.select_for_update().get(id=organization_id)
+    if organization.lifecycle == Organization.Lifecycle.CLOSED:
+        raise ValidationError(
+            "A Closed organization cannot create a convention series.",
+            code="series_parent_closed",
+        )
+    normalized_details = _normalize_series_details(details)
+    series = _create_series_with_generated_slug(
+        organization=organization,
+        details=normalized_details,
+    )
+    append_audit(
+        AuditRecord(
+            principal_kind="account",
+            principal_id=actor.id,
+            principal_context_id=None,
+            organization_id=organization.id,
+            event_edition_id=None,
+            capability_code="organizations.create_series",
+            operation="organizations.convention_series.create",
+            target_type="organizations.conventionseries",
+            target_id=series.id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code="platform_administration",
+            correlation_id=correlation_id,
+            request_id=correlation_id,
+            source_channel=source_channel,
+            obligations=("audit",),
+            changed_fields=CONVENTION_SERIES_CREATION_FIELDS,
+            retention_class="security-standard",
+        )
+    )
+    return series
 
 
 @transaction.atomic

@@ -68,7 +68,8 @@ No migration is introduced by Page 3. If the page cannot load, check PostgreSQL
 and `/health/ready`, then retry. Do not modify the preserved databases while
 diagnosing the controlled rebuild.
 
-## Next page gate
+## Next page
 
-The owner should inspect and accept Page 3 before Page 4 defines the creation
-of a Convention Series.
+Page 3 is accepted. Its organization-scoped Convention series section and Page
+4 creation action are documented in
+[`page-04-create-convention-series.md`](page-04-create-convention-series.md).

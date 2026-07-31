@@ -5,6 +5,7 @@ from django.urls import path
 
 from maru.core.views import (
     baseline_administration_home,
+    baseline_create_convention_series,
     baseline_create_organization,
     baseline_delete_organization,
     baseline_organization_record,
@@ -35,6 +36,11 @@ urlpatterns = [
         "admin/organizations/<slug:organization_slug>/",
         baseline_organization_record,
         name="baseline-organization-record",
+    ),
+    path(
+        "admin/organizations/<slug:organization_slug>/series/new/",
+        baseline_create_convention_series,
+        name="baseline-create-convention-series",
     ),
     path(
         "admin/organizations/<slug:organization_slug>/delete/",

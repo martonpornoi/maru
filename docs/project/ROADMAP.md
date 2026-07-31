@@ -9,11 +9,12 @@ ADR 0030 temporarily reduces the default browser experience to Sign in and one
 minimal administration home while retaining the tested backend and APIs. ADR
 0031 restores Page 1 as a platform-administrator-only organization inventory
 without adding convention participation. ADR 0032 adds the name-only audited
-Draft command, ADR 0033 expands Page 2 with the complete optional profile, and
+Draft command, ADR 0033 expands Page 2 with the complete optional profile,
 ADR 0034 adds the linked Page 3 record, compact one-row
 **Organizations**/**+ Add** navigation, audited profile updates, and protected
-empty-Draft deletion. All retain the no-governance and no-convention
-side-effect boundary. The
+empty-Draft deletion, and ADR 0035 adds organization-scoped Page 4 convention
+series creation. All retain the no-governance and no-participation side-effect
+boundary. The
 phase descriptions below are capability evidence and future outcomes, not a
 list of currently mounted pages. Pages return only after UX-013's contract is
 approved and verified one at a time.
@@ -79,13 +80,15 @@ projections beyond the implemented registration actions remain before this
 phase is treated as complete across the whole product.
 
 The controlled rebuild now exposes Page 1 organization inventory, complete
-Page 2 Draft creation, and Page 3 organization records for maintaining public
-identity, legal/imprint, contact, and locale defaults. A confirmed empty Draft
-can be deleted, but any protected relationship refuses deletion. Activation,
-Executive Board provisioning, convention series, and event edition pages remain
-behind their own future contracts. Draft organizations created during this
-interval must be brought under the IDN-012 Executive Board invariant before
-activation.
+Page 2 Draft creation, Page 3 organization records for maintaining public
+identity, legal/imprint, contact, and locale defaults, and Page 4 creation of a
+recurring public convention brand nested under its selected organization. A
+confirmed empty Draft can be deleted, but a created series or any other
+protected relationship refuses deletion. Series creation generates scoped
+identity and audit evidence only; series record editing, event edition
+creation, activation, and Executive Board provisioning remain behind their own
+future contracts. Draft organizations created during this interval must be
+brought under the IDN-012 Executive Board invariant before activation.
 
 ## Phase 2: Registration vertical slice
 

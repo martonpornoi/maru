@@ -39,6 +39,7 @@ the system.
 | [0032](0032-minimal-draft-organization-creation.md) | Partially superseded | Name-only audited Draft creation remains; ADR 0033 expands the optional profile and navigation |
 | [0033](0033-complete-organization-creation-and-platform-navigation.md) | Partially superseded | Complete optional organization profile remains; ADR 0034 compacts its navigation and restores editing |
 | [0034](0034-organization-record-management.md) | Accepted | Purpose-built organization editing, compact navigation, and protected empty-Draft deletion |
+| [0035](0035-organization-scoped-series-creation.md) | Accepted | Purpose-built convention-series creation nested under an organization record |
 
 New ADRs use the next four-digit number and contain:
 

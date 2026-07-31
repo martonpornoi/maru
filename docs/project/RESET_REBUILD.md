@@ -1,7 +1,7 @@
 # Controlled reset and page-by-page rebuild
 
-Status: Pages 1 and 2 accepted; Page 3 Organization record implemented with
-verification and owner inspection pending
+Status: Pages 1 through 3 accepted; Page 4 Create convention series implemented
+with verification complete and product-owner inspection pending
 Last updated: 2026-07-31
 
 This ledger preserves the current Maru implementation while the product
@@ -212,7 +212,34 @@ Checklist:
 - [x] Run the complete backend, schema, frontend-preservation, migration, and
   documentation quality gates.
 - [x] Update `CURRENT.md` and add the append-only Page 3 checkpoint.
-- [ ] Obtain product-owner acceptance before beginning Page 4.
+- [x] Obtain product-owner acceptance before beginning Page 4.
+
+### Page 4: Create convention series
+
+- Branch: `codex/page-04-create-convention-series`
+- Route: `/admin/organizations/<organization_slug>/series/new/`
+- Contract:
+  [`../product/page-contracts/04-create-convention-series.md`](../product/page-contracts/04-create-convention-series.md)
+- Requirements: IDN-011, EVT-001, EVT-003, UX-013, UX-014, UX-017,
+  UX-018, AUD-001, AUD-002, PRI-001
+- Decision: ADR 0035
+
+Checklist:
+
+- [x] Obtain product-owner acceptance of Page 3 before defining Page 4.
+- [x] Lock the parent, field, availability, slug, authorization, audit, side
+  effect, failure, and responsive contract before implementation.
+- [x] Show organization-scoped series empty/populated states and **+ Add
+  series** on Page 3.
+- [x] Implement the name-only creation path and complete optional series
+  identity fields without accepting parent or slug from POST.
+- [x] Prove scoped collision handling, Closed refusal, atomic audit, rollback,
+  and absence of relationship side effects.
+- [x] Inspect desktop and 390-pixel Page 3/Page 4 layouts without creating a
+  live MaruCon series.
+- [x] Run complete quality gates, update current state, and add the append-only
+  Page 4 checkpoint.
+- [ ] Obtain product-owner acceptance before beginning Page 5.
 
 ### Page-by-page contract
 
@@ -245,15 +272,15 @@ Accepted initial sequence after the baseline decision:
 13. Registration template and edition form.
 14. Attendee self-registration.
 
-Pages 1 and 2 have been accepted. Page 3 has been approved and implemented.
-The later order records the agreed journey but does not pre-approve a Page 4
+Pages 1 through 3 have been accepted. Page 4 has been approved and implemented.
+The later order records the agreed journey but does not pre-approve a Page 5
 contract or implementation.
 
 ## Resume point
 
-The recovery snapshot and durable pre-reset branch remain available. Page 3 is
+The recovery snapshot and durable pre-reset branch remain available. Page 4 is
 implemented on its dedicated branch and introduces no migration;
 `maru_rebuild_empty` remains migrated through `organizations.0004`. It contains
 the platform administrator and owner-created MaruCon Draft only. Resume by
-obtaining owner inspection of Page 3. Do not design or implement Page 4 Create
-convention series before that response.
+obtaining owner inspection of Page 4. Do not design or implement Page 5
+Convention-series record before that response.

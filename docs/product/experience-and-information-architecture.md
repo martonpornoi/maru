@@ -1,26 +1,35 @@
 # Experience and information architecture
 
-Status: Page 1 platform administration home mounted; broader model preserved as
-page-by-page backlog
+Status: Pages 1–4 mounted through organization-scoped convention-series
+creation; broader model preserved as page-by-page backlog
 Last updated: 2026-07-31
 
 ## Current executable experience
 
-ADR 0030 established the two-page baseline. ADR 0031 restores the first
-reviewed page:
+ADR 0030 established the two-page baseline. ADRs 0031–0035 restore the first
+reviewed setup journey:
 
 1. Sign in at `/accounts/login/`.
 2. An authenticated, active-platform-administrator-only organization inventory
    at `/admin/`.
+3. Complete optional Draft organization creation at
+   `/admin/organizations/new/`.
+4. A linked organization profile, protected empty-Draft deletion, and nested
+   convention-series inventory at `/admin/organizations/<slug>/`.
+5. Convention-series creation for that selected organization at
+   `/admin/organizations/<slug>/series/new/`.
 
-The home shows the signed-in identity, POST-only sign-out, organization name,
-slug, lifecycle, series count, and edition count. Its zero-record state names
-the next page without presenting an unfinished action. It explains that the
-administrator operates Maru but does not participate in a convention. It has
-no global menu, edition selector, setup sequence, Django model directory,
-embedded application, registration, volunteer, or convention-owned operational
-content. `/` redirects to `/admin/`; previous HTML routes return 404. Health
-and versioned APIs remain mounted as backend contracts.
+The shared Platform administration navigation remains one **Organizations**
+row with adjacent compact organization **+ Add**. Convention series stays
+nested beneath its accountable tenant and does not become a second global
+website/menu. The pages explain that the administrator operates Maru but does
+not participate in a convention. Series creation requires only the recurring
+brand name, keeps organization and slug code-owned, and does not create a dated
+edition or people relationship. The mounted experience still has no edition
+selector, setup sequence, Django model directory, embedded application,
+registration, volunteer, or convention-owned operational content. `/`
+redirects to `/admin/`; previous HTML routes return 404. Health and versioned
+APIs remain mounted as backend contracts.
 
 Every later page requires UX-013's page contract and product-owner inspection
 before another page begins. Preserved source does not make a page current.

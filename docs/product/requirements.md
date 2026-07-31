@@ -399,6 +399,18 @@ architecture documents, implementation issues, tests, and release notes.
   and show a safe retry state. Once IDN-012 governance is introduced, active
   Executive Board authority must receive the same property-editing path without
   granting the platform administrator convention participation.
+- **UX-018 — Organization-scoped convention-series creation:** An organization
+  record must show its convention series and a contextual action to create one
+  beneath that organization. Page 4 must require only the recurring public
+  brand name; description, website, public contact email, and initial
+  active/inactive availability are optional or safely defaulted. The parent
+  organization and collision-safe bounded slug are code-owned. Creation must
+  repeat active platform-administrator authorization, lock and verify the
+  organization is not Closed, validate the complete series, and atomically
+  append value-minimized audit evidence. It must not create an edition,
+  membership, authority, participation, registration, governance, or workforce
+  record. Denied, unknown-parent, validation, persistence, and audit failures
+  must disclose no cross-tenant data and leave no partial series.
 
 ### Registration, orders, and attendee service
 

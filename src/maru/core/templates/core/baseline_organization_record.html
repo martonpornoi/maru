@@ -66,6 +66,68 @@
             </p>
           </header>
 
+          <section class="baseline-panel" aria-labelledby="convention-series-title">
+            <div class="baseline-panel-heading">
+              <div>
+                <p class="baseline-kicker">Recurring convention brands</p>
+                <h2 id="convention-series-title">Convention series</h2>
+              </div>
+              <div class="baseline-panel-actions">
+                <span class="baseline-count">
+                  {{ series|length }} series
+                </span>
+                {% if organization.lifecycle != "closed" %}
+                  <a
+                    class="baseline-primary-link"
+                    href="{% url 'baseline-create-convention-series' organization.slug %}"
+                  >+ Add series</a>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if series %}
+              <div class="baseline-table-wrap">
+                <table class="baseline-table">
+                  <caption class="baseline-visually-hidden">
+                    Convention series owned by {{ organization.name }}
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Convention series</th>
+                      <th scope="col">Availability</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for convention_series in series %}
+                      <tr>
+                        <th scope="row" data-label="Convention series">
+                          <strong class="baseline-record-name">{{ convention_series.name }}</strong>
+                          <span class="baseline-record-slug">{{ convention_series.slug }}</span>
+                        </th>
+                        <td data-label="Availability">
+                          {% if convention_series.is_active %}Active{% else %}Inactive{% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% elif organization.lifecycle == "closed" %}
+              <div class="baseline-state">
+                <h3>No convention series</h3>
+                <p>A Closed organization cannot add a new convention series.</p>
+              </div>
+            {% else %}
+              <div class="baseline-state" data-state="empty">
+                <h3>No convention series yet</h3>
+                <p>
+                  Add the recurring public convention identity next. A dated
+                  event edition is created on its own later page.
+                </p>
+              </div>
+            {% endif %}
+          </section>
+
           {% if form.non_field_errors %}
             <div class="baseline-errors" role="alert">
               {{ form.non_field_errors }}

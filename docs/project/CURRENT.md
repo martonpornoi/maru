@@ -1,13 +1,13 @@
 # Current project state
 
 Last updated: 2026-07-31
-Phase: Page 3 Organization record implemented; product-owner inspection is the
-gate before Page 4 Create convention series
+Phase: Page 4 Create convention series implemented; product-owner inspection
+is the gate before Page 5 Convention-series record
 Implementation status: The default browser exposes Sign in, the platform
 organization inventory, complete optional Draft creation, linked organization
-records, audited profile editing, and protected empty-Draft deletion; the
-tested backend/API foundation and previous experience remain preserved but
-unmounted
+records, audited profile editing, protected empty-Draft deletion, and nested
+convention-series creation; the tested backend/API foundation and previous
+experience remain preserved but unmounted
 
 ## Current outcome
 
@@ -24,11 +24,11 @@ The complete pre-reset state is also durable as commit `548f15a` on
 `codex/pre-reset-20260731`. The owner selected the empty-experience option and
 implementation continues on `codex/page-by-page-rebuild`.
 
-The product owner accepted the empty baseline, Page 1, and revised Page 2.
-After Page 2 inspection, the owner requested the preserved one-row model/add
-navigation and organization modification/deletion. Page 3 is implemented on
-`codex/page-03-organization-record` under ADR 0034, IDN-012, and UX-017. The
-default `maru.baseline_urls` experience now exposes:
+The product owner accepted the empty baseline and Pages 1 through 3. Page 4 is
+implemented on `codex/page-04-create-convention-series` under ADR 0035 and
+UX-018, using the preserved Convention Series vocabulary inside the reviewed
+organization-scoped journey. The default `maru.baseline_urls` experience now
+exposes:
 
 - `/accounts/login/`: the only unauthenticated HTML page;
 - `/admin/`: the only authenticated HTML page, restricted to active platform
@@ -37,6 +37,8 @@ default `maru.baseline_urls` experience now exposes:
   creation form that keeps organization name as its sole required value;
 - `/admin/organizations/<slug>/`: the platform-administrator-only complete
   organization record and profile-update form;
+- `/admin/organizations/<slug>/series/new/`: the platform-administrator-only
+  convention-series creation form scoped to that organization;
 - POST `/admin/organizations/<slug>/delete/`: confirmed deletion restricted to
   an empty Draft with no protected relationship;
 - `/`: a redirect to `/admin/`; and
@@ -44,7 +46,7 @@ default `maru.baseline_urls` experience now exposes:
 
 The administration home contains Maru identity, the signed-in name, Sign out,
 the organization inventory, its empty/populated/failure states, and a clear
-platform-access-not-participation boundary. Pages 1 through 3 share one focused
+platform-access-not-participation boundary. Pages 1 through 4 share one focused
 Platform administration row with **Organizations** and an adjacent compact
 **+ Add** action.
 The inventory shows only organization identity, lifecycle, series count, and
@@ -78,6 +80,18 @@ edition, membership, authority, participation, registration, workforce,
 communication, or other related record refuses deletion. Delete plus its
 UUID-only audit evidence are atomic. Closure and data exit remain future
 workflows.
+
+Page 3 now presents an organization-scoped Convention series section before
+the long profile, with empty/populated states and **+ Add series** unless the
+parent is Closed. Page 4 carries over the preserved series name, description,
+website, contact email, and availability vocabulary while taking the parent
+only from the authorized URL and generating its bounded stable slug in code.
+Only name is required; availability defaults Active and means eligible for a
+future edition, not published. The service repeats platform authorization,
+locks and refuses a Closed parent, validates the complete model, and atomically
+audits field names without values. It creates no edition, governance,
+membership, authority, participation, registration, volunteer, onboarding, or
+workforce record. Page 5 will own existing-series changes.
 
 The isolated `maru_rebuild_empty` PostgreSQL database is migrated through
 organizations `0004` and contains exactly one account, active platform
@@ -243,25 +257,28 @@ excludes images/contact data and automated tests use a synthetic miniature.
 - ADR 0034 partially supersedes ADR 0033's navigation layout and edit deferral,
   adding the linked Page 3 record, audited profile changes, and confirmed
   protected empty-Draft deletion.
+- ADR 0035 supersedes ADR 0020 only for the current series-creation browser
+  adapter, nesting Page 4 under Page 3 and keeping organization/slug code-owned.
 
 ## Verification
 
-- 496 backend tests pass against PostgreSQL 17; 57 focused Page 1–3 checks
+- 518 backend tests pass against PostgreSQL 17; 79 focused Page 1–4 checks
   pass.
-- Branch-aware coverage is 90.14%, above the required 90% gate.
-- Ruff format/lint pass for 257 files and strict mypy passes for 182 source
+- Branch-aware coverage is 90.23%, above the required 90% gate.
+- Ruff format/lint pass for 258 files and strict mypy passes for 182 source
   files.
 - Django system check, production-shaped deployment check, and migration drift
   check pass.
 - OpenAPI 3.1 generation/validation and generated TypeScript types pass.
-- Browser QA covers the one-row navigation, linked MaruCon inventory name,
-  prepopulated profile, Save changes action, and separate guarded danger zone at
-  desktop and 390-by-844. Page 3 has no horizontal overflow. Neither form was
-  submitted; MaruCon remains unchanged.
+- Browser QA covers Page 3's one-row navigation and series empty state plus
+  Page 4's parent context, one required name, optional fields, Active default,
+  boundary text, and actions at desktop and 390-by-844. Both pages have no
+  horizontal overflow. The live form was not submitted; MaruCon remains
+  unchanged with zero series.
 - The preserved frontend still passes 20 component tests, TypeScript
   typecheck/generated-contract validation, and its Vite production build, but
   it is not mounted by the baseline.
-- Documentation validation passes for 134 Markdown files and 188 unique
+- Documentation validation passes for 138 Markdown files and 188 unique
   requirement identifiers.
 - Fresh migration apply passed through organizations `0004`, identity `0010`,
   and registration `0030` on `maru_rebuild_empty`; the existing MaruCon Draft
@@ -280,6 +297,9 @@ excludes images/contact data and automated tests use a synthetic miniature.
 - Page 3 deletion is intentionally unavailable once any protected related
   record exists. Such organizations require the future closure/data-exit
   workflow rather than cascading deletion.
+- Page 4 creates identity only. Series editing, deactivation, transfer,
+  publication, deletion/closure, and dated edition creation remain Page 5 and
+  later reviewed workflows.
 - The verified recovery copy remains in the operating system's temporary
   directory and can eventually be cleaned, but the same pre-reset state is now
   durable in Git commit `548f15a` and branch `codex/pre-reset-20260731`.
@@ -317,14 +337,14 @@ production-approved until these deployment and governance gates pass.
 
 ## Smallest sensible next actions
 
-1. Inspect MaruCon through its linked Page 3 record, including the compact
-   navigation, complete prepopulated profile, and guarded deletion section;
-   accept or revise it without deleting the owner-created record.
-2. Do not design or implement Page 4 before that response.
-3. After Page 3 acceptance, write the Page 4 Create convention series contract.
-   It must define series identity, ownership under the selected organization,
-   minimum required data, Draft/active behavior, navigation, authorization,
-   audit, and failure states before implementation.
+1. Inspect Page 3's MaruCon Convention series section and Page 4 at
+   `/admin/organizations/marucon/series/new/`; accept or revise them without
+   submitting the live form unless a real MaruCon series is now wanted.
+2. Do not design or implement Page 5 before that response.
+3. After Page 4 acceptance, write the Page 5 Convention-series record contract.
+   It must define stable identity, editing/deactivation, history protection,
+   organization ownership, authorization, audit, and failure states before
+   implementation.
 4. Use the retained `marucon_rehearsal` database and role accounts for
    education, permission review, and usability feedback; turn findings into
    stable requirements before extending the hierarchy editor.
@@ -343,8 +363,8 @@ production-approved until these deployment and governance gates pass.
 
 Read `AGENTS.md`, this file, `RESET_REBUILD.md`, `ROADMAP.md`,
 `MARUCON_ADMIN_SCENARIO.md`, requirements IDN-009 through IDN-012, UX-009
-through UX-017, REG-001 through REG-022, HR-007/008/010, ADRs 0017 through
-0034, the Page 1 through Page 3 contracts, and the authorization, events,
+through UX-018, REG-001 through REG-022, HR-007/008/010, ADRs 0017 through
+0035, the Page 1 through Page 4 contracts, and the authorization, events,
 organizations, Convention work, registration, workforce, and demo-data module
 documents.
 

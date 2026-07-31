@@ -23,10 +23,15 @@ from rest_framework.response import Response
 
 from maru.events.admin_context import selected_admin_edition
 from maru.identity.models import Account
-from maru.organizations.forms import OrganizationCreationForm, OrganizationDeletionForm
-from maru.organizations.models import Organization
+from maru.organizations.forms import (
+    ConventionSeriesCreationForm,
+    OrganizationCreationForm,
+    OrganizationDeletionForm,
+)
+from maru.organizations.models import ConventionSeries, Organization
 from maru.organizations.queries import platform_organization_inventory
 from maru.organizations.services import (
+    create_convention_series,
     create_draft_organization,
     delete_empty_draft_organization,
     update_organization_profile,
@@ -133,7 +138,11 @@ def _organization_for_record(slug: str) -> Organization:
 
 
 def _add_validation_errors(
-    form: OrganizationCreationForm | OrganizationDeletionForm,
+    form: (
+        ConventionSeriesCreationForm
+        | OrganizationCreationForm
+        | OrganizationDeletionForm
+    ),
     error: ValidationError,
 ) -> None:
     if hasattr(error, "message_dict"):
@@ -143,6 +152,16 @@ def _add_validation_errors(
                 form.add_error(target, field_error)
     else:
         form.add_error(None, error)
+
+
+def _series_for_organization(
+    organization: Organization,
+) -> list[ConventionSeries]:
+    return list(
+        ConventionSeries.objects.filter(organization=organization).order_by(
+            "name", "id"
+        )
+    )
 
 
 @login_required(login_url="staff-login")
@@ -155,6 +174,7 @@ def baseline_organization_record(
     actor = _require_platform_administrator(request)
     try:
         organization = _organization_for_record(organization_slug)
+        series = _series_for_organization(organization)
     except DatabaseError:
         logger.exception("Unable to load the organization record")
         return TemplateResponse(
@@ -207,6 +227,7 @@ def baseline_organization_record(
         "core/baseline_organization_record.html",
         {
             "organization": organization,
+            "series": series,
             "form": form,
             "deletion_form": deletion_form,
             "organization_record_load_failed": False,
@@ -226,6 +247,7 @@ def baseline_delete_organization(
     actor = _require_platform_administrator(request)
     try:
         organization = _organization_for_record(organization_slug)
+        series = _series_for_organization(organization)
     except DatabaseError:
         logger.exception("Unable to load the organization for deletion")
         return TemplateResponse(
@@ -270,9 +292,85 @@ def baseline_delete_organization(
         "core/baseline_organization_record.html",
         {
             "organization": organization,
+            "series": series,
             "form": form,
             "deletion_form": deletion_form,
             "organization_record_load_failed": False,
+        },
+        status=status,
+    )
+
+
+@login_required(login_url="staff-login")
+def baseline_create_convention_series(
+    request: HttpRequest,
+    organization_slug: str,
+) -> HttpResponse:
+    """Create one recurring convention identity beneath an organization."""
+
+    actor = _require_platform_administrator(request)
+    try:
+        organization = _organization_for_record(organization_slug)
+    except DatabaseError:
+        logger.exception("Unable to load the organization for series creation")
+        return TemplateResponse(
+            request,
+            "core/baseline_create_convention_series.html",
+            {"series_creation_load_failed": True},
+            status=503,
+        )
+
+    if organization.lifecycle == Organization.Lifecycle.CLOSED:
+        return TemplateResponse(
+            request,
+            "core/baseline_create_convention_series.html",
+            {
+                "organization": organization,
+                "series_creation_blocked": True,
+                "series_creation_load_failed": False,
+            },
+            status=409,
+        )
+
+    form = ConventionSeriesCreationForm(request.POST or None)
+    status = 200
+    if request.method == "POST" and form.is_valid():
+        try:
+            series = create_convention_series(
+                actor=actor,
+                organization_id=organization.id,
+                details=form.creation_details(),
+                correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+                source_channel="web",
+            )
+        except ValidationError as error:
+            _add_validation_errors(form, error)
+        except (Organization.DoesNotExist, DatabaseError):
+            logger.exception("Unable to create the convention series")
+            form.add_error(
+                None,
+                "The convention series could not be created. Try again after "
+                "the database is available.",
+            )
+            status = 503
+        else:
+            messages.success(
+                request,
+                f"{series.name} was created as a convention series.",
+            )
+            return redirect(
+                "baseline-organization-record",
+                organization_slug=organization.slug,
+            )
+
+    return TemplateResponse(
+        request,
+        "core/baseline_create_convention_series.html",
+        {
+            "organization": organization,
+            "form": form,
+            "series_creation_blocked": False,
+            "series_creation_load_failed": False,
         },
         status=status,
     )

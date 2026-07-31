@@ -1,0 +1,131 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
+    <title>Create convention series · Maru</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
+  </head>
+  <body>
+    <header class="baseline-header">
+      <img
+        class="baseline-logo"
+        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+        alt="Maru"
+      >
+      <div class="baseline-account">
+        <span>{{ request.user.display_name }}</span>
+        <form method="post" action="{% url 'staff-logout' %}">
+          {% csrf_token %}
+          <button class="baseline-link-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+
+    <div class="baseline-admin-layout">
+      {% include "core/_baseline_admin_navigation.html" with current_admin_page="organizations" %}
+
+      <main class="baseline-page baseline-page--form" data-page="create-convention-series">
+        {% if series_creation_load_failed %}
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">Convention series</p>
+            <h1>Organization unavailable</h1>
+          </header>
+          <div class="baseline-state baseline-state--error" role="alert">
+            <h2>The organization could not be loaded</h2>
+            <p>
+              Try again after the database is available. No convention series
+              was created.
+            </p>
+          </div>
+        {% else %}
+          <a
+            class="baseline-back-link"
+            href="{% url 'baseline-organization-record' organization.slug %}"
+          >← {{ organization.name }}</a>
+
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">{{ organization.name }}</p>
+            <h1>Create convention series</h1>
+            <p class="baseline-intro">
+              Add the public convention identity that continues across event
+              editions. It remains owned by this organization.
+            </p>
+          </header>
+
+          {% if series_creation_blocked %}
+            <div class="baseline-state baseline-state--error" role="alert">
+              <h2>Series creation is unavailable</h2>
+              <p>
+                {{ organization.name }} is Closed. Closed organizations retain
+                their history but cannot add a new convention series.
+              </p>
+            </div>
+          {% else %}
+            {% if form.non_field_errors %}
+              <div class="baseline-errors" role="alert">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <form method="post" class="baseline-form" novalidate>
+              {% csrf_token %}
+
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="series-identity-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Recurring brand</p>
+                  <h2 id="series-identity-title">Convention identity</h2>
+                  <p>
+                    Start with the recognizable name. Maru creates its stable
+                    URL name within {{ organization.name }}.
+                  </p>
+                </div>
+                {% include "core/_baseline_form_field.html" with field=form.name %}
+                {% include "core/_baseline_form_field.html" with field=form.description %}
+              </section>
+
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="series-contact-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Public details</p>
+                  <h2 id="series-contact-title">Contact and availability</h2>
+                  <p>
+                    These values describe the brand. Entering them does not
+                    publish a website or open registration.
+                  </p>
+                </div>
+                <div class="baseline-field-grid">
+                  {% include "core/_baseline_form_field.html" with field=form.website_url %}
+                  {% include "core/_baseline_form_field.html" with field=form.contact_email %}
+                </div>
+                {% include "core/_baseline_form_field.html" with field=form.availability %}
+              </section>
+
+              <aside class="baseline-boundary" aria-labelledby="series-boundary-title">
+                <p class="baseline-kicker">What this step creates</p>
+                <h2 id="series-boundary-title">One recurring brand, no edition</h2>
+                <p>
+                  This series is not another organization. Creation does not
+                  create dates, a venue, an event edition, governance, access,
+                  membership, registration, staffing, or participation, and it
+                  does not make this platform account part of the convention.
+                </p>
+              </aside>
+
+              <div class="baseline-form-actions baseline-form-actions--sticky">
+                <button type="submit">Create convention series</button>
+                <a
+                  class="baseline-secondary-link"
+                  href="{% url 'baseline-organization-record' organization.slug %}"
+                >Cancel</a>
+              </div>
+            </form>
+          {% endif %}
+        {% endif %}
+      </main>
+    </div>
+  </body>
+</html>
