@@ -17,12 +17,14 @@ permission-controlled operational record.
 - PostgreSQL as the system of record
 - A modular monolith with strongly enforced module boundaries
 - Versioned REST APIs and generated OpenAPI clients
-- React/TypeScript convention workflows embedded in Django administration and
-  separately deployable future clients
+- Preserved React/TypeScript convention workflows and separately deployable
+  future clients; ADR 0030 deliberately leaves them unmounted during the
+  page-by-page experience rebuild
 - Background workers for delivery, exports, imports, and other slow operations
 
-Reflex is not part of the platform core. Django's administration shell combines
-specialist records with purpose-built React/TypeScript Convention work.
+Reflex is not part of the platform core. The current browser baseline contains
+only Sign in and an empty administration home while the product is rebuilt one
+page at a time.
 
 ## Local quick start
 
@@ -32,18 +34,30 @@ repository root:
 ```powershell
 uv sync --all-groups
 docker compose up -d postgres
+$env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/maru_rebuild_empty"
 uv run python src/manage.py migrate
 uv run python src/manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>. For an empty database, create one bootstrap
-administrator with:
+Open <http://127.0.0.1:8000/>. The current experience deliberately exposes only
+Sign in and an empty `/admin/` home. For a new empty database, create one
+bootstrap administrator with:
 
 ```powershell
 uv run python src/manage.py createsuperuser
 ```
 
-Alternatively, populate a comprehensive, synthetic two-convention dataset:
+The local baseline prepared during ADR 0030 uses:
+
+```text
+Username: admin
+Email: admin@maru.local
+Password: M4rucon-Rehearsal-2031!
+```
+
+These are local-only credentials. The preserved demo and Marucon fixtures may
+still populate backend reference data, but their former browser pages are not
+mounted in the current baseline. The synthetic fixture command remains:
 
 ```powershell
 uv run python src/manage.py seed_demo_data
@@ -53,16 +67,9 @@ The demo administrator is `demo.admin@maru.invalid`. Every synthetic account
 uses the documented local-only password `Z7!maru-demo-fixture-2026`. The
 fixture is local-only, idempotent, uses reserved `.invalid` addresses, and
 must never be used as production data or credentials.
-Open <http://127.0.0.1:8000/admin/> as
-`danube.convention-chair@demo.maru.invalid` for the Danube 2026 cockpit and
-registration operations, or `danube.standard-attendee@demo.maru.invalid` for a
-fresh attendee registration walkthrough.
-Open <http://127.0.0.1:8000/register/> without signing in to choose a convention,
-create a synthetic attendee account, and complete the public registration
-profile.
 See [development setup](docs/development/setup.md) for configuration, checks,
-troubleshooting, fixture details, and the clean-database admin-first Marucon
-rehearsal.
+troubleshooting, fixture details, the empty-experience runbook, and preserved
+rehearsals.
 
 ## Product principles
 
@@ -101,6 +108,8 @@ rehearsal.
 - [Registration operations and tester runbook](docs/operations/registration-runbook.md)
 - [Clean convention and volunteer onboarding walkthrough](docs/operations/clean-convention-onboarding-walkthrough.md)
 - [Marucon admin-first educational rehearsal](docs/operations/marucon-admin-rehearsal.md)
+- [Empty-experience baseline](docs/operations/empty-experience-baseline.md)
+- [Controlled reset ledger](docs/project/RESET_REBUILD.md)
 - [Registration implementation backlog](docs/project/REGISTRATION_TODO.md)
 - [Research landscape](docs/research/landscape-2026-07.md)
 - [Testing strategy](docs/quality/testing-strategy.md)

@@ -328,6 +328,18 @@ architecture documents, implementation issues, tests, and release notes.
   specialist records and embedded convention workflows remain below the same
   URL hierarchy. Former `/manage/`, `/staff/`, and `/admin/records/` entry
   points must not host or redirect to alternate interfaces.
+- **UX-013 — Controlled experience rebuild:** Maru may enter an explicit
+  page-by-page rebuild state without discarding its tested domain, security,
+  audit, migration, or API foundation. In that state the default browser
+  experience exposes only local Sign in and one authenticated empty
+  administration home; prior administration, specialist-record, registration,
+  volunteer, and convention-work pages are not mounted. Health and versioned
+  API contracts remain available for backend verification. Reintroducing a
+  page requires an agreed purpose, navigation place, minimum information,
+  authorization boundary, empty/loading/success/denied/failure behavior,
+  desktop and narrow evidence, automated tests, and updated documentation.
+  No later page may be treated as current merely because its preserved code or
+  API still exists.
 
 ### Registration, orders, and attendee service
 

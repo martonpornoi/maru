@@ -1,18 +1,18 @@
 # Embedded Convention work
 
-Status: API-backed convention workflows embedded in the original `/admin/`
-shell
+Status: Preserved and tested, but not mounted during the ADR 0030 rebuild
 Last updated: 2026-07-31
 
 ## Purpose and requirements
 
-Convention work is Maru's authenticated planning, setup, and operations area
-under ADR 0006, ADR 0023, ADR 0026, and ADR 0027. It implements UX-001 through
-UX-012, IDN-009, HR-010, and INT-001 with a coherent edition workspace while retaining
-specialist Django records in the same administration product.
+This module preserves the pre-reset API-backed Convention work implementation
+under ADRs 0006, 0023, 0026, and 0027. ADR 0030 supersedes it as a mounted
+browser experience. Its source, generated client, tests, and backend contracts
+remain evidence; no route or menu currently exposes it.
 
-Source lives in `frontends/staff-console`. Django serves the production bundle
-inside the original Django administration shell at `/admin/workspace/`.
+Source lives in `frontends/staff-console`. The preserved URL configuration can
+serve the bundle at `/admin/workspace/` for regression tests, but the default
+`maru.baseline_urls` configuration returns 404 there.
 Business behavior and authorization remain in the versioned API. The original
 permission-filtered Django index stays at `/admin/`, and existing model routes
 remain below it. `/manage/`, `/staff/`, and `/admin/records/` are not alternate
@@ -24,7 +24,7 @@ standalone Vite development server works without a Django template; automated
 checks keep those anchors aligned with `maru.core`. Convention-owned annual
 public clients may use independent seasonal themes.
 
-## Implemented experience
+## Preserved pre-reset experience
 
 - local session sign-in for any active platform account;
 - active-edition selection with remembered context;

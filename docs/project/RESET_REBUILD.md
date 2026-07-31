@@ -1,6 +1,7 @@
 # Controlled reset and page-by-page rebuild
 
-Status: Preservation snapshot verified; baseline choice required
+Status: Empty-experience baseline implemented and verified; owner acceptance
+pending
 Last updated: 2026-07-31
 
 This ledger preserves the current Maru implementation while the product
@@ -63,19 +64,51 @@ Verified snapshot inventory:
 
 ### Baseline decision
 
-- [ ] Choose **empty experience** or **empty codebase**:
+- [x] Choose **empty experience** or **empty codebase**:
   - Empty experience: retain the tested Django/domain/security foundation but
     expose only sign-in and one minimal administration home. Reintroduce pages
     one at a time. This is the recommended baseline.
   - Empty codebase: create a new minimal Django project and re-earn every
     domain behavior, migration, permission, and operational guarantee from the
     preserved evidence.
-- [ ] Define the only routes and records visible in the baseline.
-- [ ] Decide whether the rebuild happens in this working tree, a new branch,
+- [x] Define the only routes and records visible in the baseline.
+- [x] Decide whether the rebuild happens in this working tree, a new branch,
   or a sibling worktree.
-- [ ] Define a new empty PostgreSQL database name; do not reuse or erase
+- [x] Define a new empty PostgreSQL database name; do not reuse or erase
   `maru` or `marucon_rehearsal`.
-- [ ] Add a superseding ADR before changing the accepted UI architecture.
+- [x] Add a superseding ADR before changing the accepted UI architecture.
+
+Selected baseline:
+
+- experience: empty experience over the preserved backend;
+- branch: `codex/page-by-page-rebuild`;
+- database: `maru_rebuild_empty`;
+- unauthenticated page: `/accounts/login/`;
+- authenticated page: `/admin/` for active staff accounts;
+- `/`: redirect to `/admin/`;
+- retained non-page contracts: health, build, schema, and versioned APIs; and
+- architecture: ADR 0030 and UX-013.
+
+### Baseline delivery
+
+- [x] Preserve the complete pre-reset state as commit `548f15a` on
+  `codex/pre-reset-20260731`.
+- [x] Create and switch to `codex/page-by-page-rebuild`.
+- [x] Add UX-013 and superseding ADR 0030 before changing routes.
+- [x] Make `maru.baseline_urls` the default browser surface.
+- [x] Implement only focused Sign in and the staff-only empty administration
+  home.
+- [x] Leave previous HTML pages unmounted while retaining health and versioned
+  APIs.
+- [x] Create `maru_rebuild_empty`, migrate it, and create only the first
+  administrator.
+- [x] Confirm zero organization, series, edition, registration, department,
+  and position records.
+- [x] Inspect desktop and 390-pixel layouts with no horizontal overflow.
+- [x] Run the complete backend, schema, frontend-preservation, migration, and
+  documentation quality gates.
+- [x] Update `CURRENT.md` and add the append-only baseline checkpoint.
+- [ ] Obtain product-owner acceptance before designing the next page.
 
 ### Page-by-page contract
 
@@ -109,7 +142,7 @@ pre-approve later pages.
 
 ## Resume point
 
-The recovery snapshot and Preservation checklist are complete. Obtain the
-product owner's explicit choice between an empty experience and an empty
-codebase. Do not reset, delete, move, or overwrite the current working tree
-before that choice.
+The recovery snapshot, durable pre-reset branch, baseline choice, requirement,
+ADR, implementation, empty database, browser inspection, and quality gate are
+complete. The running server uses `maru_rebuild_empty`. Do not start the next
+page until the product owner has inspected and accepted this baseline.

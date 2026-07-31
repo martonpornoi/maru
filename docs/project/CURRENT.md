@@ -1,12 +1,11 @@
 # Current project state
 
 Last updated: 2026-07-31
-Phase: Current implementation preserved; controlled page-by-page reset awaits
-the product owner's baseline choice
-Implementation status: Repository-controlled registration, reporting,
-workforce onboarding, guided setup, management navigation, and closeout
-evidence workflows are functional; external provider, infrastructure, load,
-policy, and partner go/no-go gates remain
+Phase: Controlled empty-experience baseline implemented; product-owner
+inspection is the gate before the next page
+Implementation status: The default browser exposes only Sign in and an empty
+staff administration home; the tested backend/API foundation and previous
+experience remain preserved but unmounted
 
 ## Current outcome
 
@@ -19,18 +18,42 @@ The recovery folder includes a verified complete Git bundle, a binary-safe
 tracked-change patch, the full repository-owned working-tree copy, Git status,
 inventory, and SHA-256 manifests. Regenerable environments/caches are excluded.
 
-No application code, working-tree history, or PostgreSQL data has been reset.
-The next implementation action is deliberately blocked on one product choice:
-retain the tested backend and expose an empty administration experience, or
-create an empty codebase and re-earn every behavior. The crash-safe checklist
-and page contract are in `docs/project/RESET_REBUILD.md`.
+The complete pre-reset state is also durable as commit `548f15a` on
+`codex/pre-reset-20260731`. The owner selected the empty-experience option and
+implementation continues on `codex/page-by-page-rebuild`.
+
+The default `maru.baseline_urls` experience now exposes:
+
+- `/accounts/login/`: the only unauthenticated HTML page;
+- `/admin/`: the only authenticated HTML page, restricted to active staff;
+- `/`: a redirect to `/admin/`; and
+- POST `/accounts/logout/`: an action, not a content page.
+
+The administration home contains Maru identity, the signed-in name, Sign out,
+and one `Nothing here yet` message. It has no menu, setup guidance, edition
+selector, recent actions, Django model directory, embedded application,
+registration, volunteer, or convention content. Previous HTML routes are not
+mounted and return 404. Health, build, schema, and versioned APIs remain
+available.
+
+The isolated `maru_rebuild_empty` PostgreSQL database contains migrated schema
+and exactly one record: the first active staff superuser, `admin`. It contains
+zero organizations, series, editions, registration configurations,
+registrations, departments, and positions. The `maru` and
+`marucon_rehearsal` databases remain unchanged.
+
+## Preserved backend and pre-reset experience
+
+The following capabilities remain implemented and tested, but descriptions of
+their pages refer to preserved source rather than the currently mounted
+experience.
 
 Maru is an executable Django/PostgreSQL modular monolith with versioned APIs,
 React/TypeScript convention workflows embedded in Django administration, and a
 neutral reference registration frontend.
 
-`/admin/` is the canonical authenticated home and again renders the original
-Django administration index. One collapsible sidebar exposes Convention work
+In the preserved pre-reset URL configuration, `/admin/` rendered the original
+Django administration index. One collapsible sidebar exposed Convention work
 and the permission-filtered specialist record directory on the index,
 workflow pages, and model pages. Existing model paths such as
 `/admin/identity/account/add/` remain stable. API-backed workflows render
@@ -40,7 +63,8 @@ the same compact record-oriented modules, fields, tables, buttons, spacing,
 and responsive language as specialist record pages. `/manage/`, `/staff/`, and
 `/admin/records/` do not redirect or host alternate interfaces.
 
-An active account may reach the administration home and embedded workflows,
+In that preserved experience, an active account could reach the administration
+home and embedded workflows,
 but Django model pages retain staff/model permissions and API operations retain
 Maru's scoped capabilities. A workspace-less account remains in a safe empty
 state; an eligible active superuser receives the guarded one-time
@@ -48,7 +72,7 @@ convention-leadership ceremony contextually in Setup guide. The former global
 Quick Start strip is removed. Staff status does not silently grant convention
 capabilities.
 
-Convention work provides:
+Preserved Convention work provides:
 
 - one shared administration navigation rather than nested global menus;
 - a separate Forms area for attendee registration, staff-assisted intake,
@@ -148,35 +172,37 @@ excludes images/contact data and automated tests use a synthetic miniature.
   local public-roster import, and the minimized hierarchy projection.
 - ADR 0029 adds reviewed, versioned profile extension fields and append-only
   values while keeping submitted answers and authoritative benefits immutable.
+- ADR 0030 supersedes ADRs 0026 and 0027 for the mounted browser experience,
+  retaining the backend while reducing the default HTML surface to Sign in and
+  one empty staff home.
 
 ## Verification
 
-- 431 backend tests pass against PostgreSQL 17.
-- Branch-aware coverage is 90.10%, above the required 90% gate.
-- Ruff format/lint and strict mypy pass for 178 source files.
+- 443 backend tests pass against PostgreSQL 17, including 12 dedicated
+  empty-experience baseline checks.
+- Branch-aware coverage is 90.11%, above the required 90% gate.
+- Ruff format/lint and strict mypy pass for 179 source files.
 - Django system check, production-shaped deployment check, and migration drift
   check pass.
 - OpenAPI 3.1 generation/validation and generated TypeScript types pass.
-- 20 Convention work tests, TypeScript typecheck, and the Vite production
-  build pass.
-- Browser QA covers the original `/admin/` index and single sidebar, embedded
-  `/admin/workspace/` workflows without nested navigation, desktop and
-  390-pixel responsive behavior, Forms, access sharing/search, workspace-less
-  administrator behavior, contextual first-authority ceremony, edition
-  readiness, the real Marucon hierarchy, handle login, hidden staff questions,
-  and restricted Infinity admission. No visible UUID, horizontal overflow, or
-  runtime console error remained.
-- Documentation validation passes for 117 Markdown files and 186 unique
+- Browser QA covers the real Sign in and empty administration home at default
+  1280-pixel and explicit 390-pixel viewports, successful handle login,
+  POST-only sign-out, absence of the old navigation, and 404 responses for old
+  pages. No horizontal overflow or runtime console warning/error remained.
+- The preserved frontend still passes 20 component tests, TypeScript
+  typecheck/generated-contract validation, and its Vite production build, but
+  it is not mounted by the baseline.
+- Documentation validation passes for 120 Markdown files and 186 unique
   requirement identifiers.
-- Fresh and existing-database migration apply passed for login handles,
-  profile extensions, append-only/scope guards, and provenance guards.
+- Fresh migration apply passed through identity `0009` and registration `0030`
+  on `maru_rebuild_empty`; existing-database migration evidence remains in the
+  pre-reset checkpoint.
 
 ## Known limits and production gates
 
-- The recovery copy is in the operating system's temporary directory as
-  requested. It is verified but can eventually be cleaned by the operating
-  system; move it to durable storage before intentionally destroying the
-  current working tree.
+- The verified recovery copy remains in the operating system's temporary
+  directory and can eventually be cleaned, but the same pre-reset state is now
+  durable in Git commit `548f15a` and branch `codex/pre-reset-20260731`.
 
 - No concrete payment vendor has been selected or certified. Production
   endpoint, credentials, webhook secret, sandbox evidence, and
@@ -211,33 +237,31 @@ production-approved until these deployment and governance gates pass.
 
 ## Smallest sensible next actions
 
-1. Choose the reset baseline in `RESET_REBUILD.md`: the recommended empty
-   experience over the existing tested backend, or a genuinely empty codebase.
-2. Choose whether the rebuild uses this working tree, a new branch, or a
-   sibling worktree, then create a new empty database without altering `maru`
-   or `marucon_rehearsal`.
-3. Add a superseding UI-architecture ADR and implement only Sign in plus the
-   agreed empty administration home before designing the next page.
-4. Use the retained `marucon_rehearsal` database and role accounts for
+1. Have the product owner inspect and accept Sign in and the empty
+   administration home. Do not begin another page before that response.
+2. If accepted, write the page contract for the first-administrator/platform
+   state page: purpose, placement, information, actions, authorization, states,
+   responsive evidence, tests, and docs.
+3. Use the retained `marucon_rehearsal` database and role accounts for
    education, permission review, and usability feedback; turn findings into
    stable requirements before extending the hierarchy editor.
-5. Select the first partner, jurisdiction, hosted payment provider,
+4. Select the first partner, jurisdiction, hosted payment provider,
    SMTP/storage/scanner topology, forecast, and named operational owners.
-6. Certify provider and infrastructure failure paths, representative load,
+5. Certify provider and infrastructure failure paths, representative load,
    backups/restores, secret rotation, offline arrival, and closure.
-7. Provision independently approved retention, minor, refund, restriction,
+6. Provision independently approved retention, minor, refund, restriction,
    and readiness policies.
-8. Build badge layout/batch-printing only after the first partner confirms its
+7. Build badge layout/batch-printing only after the first partner confirms its
    printer, stock, fulfillment, and visual-template requirements.
-9. Prioritize the next purpose-built setup/approval screen from real partner
+8. Prioritize the next purpose-built setup/approval screen from real partner
    testing rather than exposing command-owned raw records.
 
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `RESET_REBUILD.md`, `ROADMAP.md`,
 `MARUCON_ADMIN_SCENARIO.md`,
-requirements IDN-009/010, UX-009 through UX-012, REG-001 through REG-022,
-HR-007/008/010, ADRs 0017 through 0029, and the authorization, events,
+requirements IDN-009/010, UX-009 through UX-013, REG-001 through REG-022,
+HR-007/008/010, ADRs 0017 through 0030, and the authorization, events,
 Convention work, registration, workforce, and demo-data module documents.
 
 Do not trust selected-edition state as authority; expose Django Groups as a

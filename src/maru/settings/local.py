@@ -14,14 +14,6 @@ SECRET_KEY = os.environ.get(
 )
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
 
-REST_FRAMEWORK = {
-    **REST_FRAMEWORK,  # noqa: F405
-    "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",
-    ],
-}
-
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 MARU_MEDIA_SCANNER = os.environ.get(
     "MARU_MEDIA_SCANNER",

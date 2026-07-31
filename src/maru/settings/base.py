@@ -48,7 +48,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "maru.urls"
+ROOT_URLCONF = "maru.baseline_urls"
 
 TEMPLATES = [
     {

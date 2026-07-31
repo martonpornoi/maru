@@ -1,10 +1,32 @@
 # Experience and information architecture
 
-Status: Unified `/admin/` shell and registration reference experience
+Status: Controlled empty-experience baseline; broader model preserved as
+page-by-page backlog
 Last updated: 2026-07-31
 
-Maru is one platform expressed through several focused surfaces. It must not
-become one enormous menu containing every department's nouns.
+## Current executable experience
+
+ADR 0030 resets the default browser experience to two pages:
+
+1. Sign in at `/accounts/login/`.
+2. An authenticated, active-staff-only empty administration home at `/admin/`.
+
+The home shows the signed-in identity, POST-only sign-out, and one explicit
+empty-state message. It has no global menu, edition selector, setup sequence,
+recent actions, Django model directory, embedded application, registration,
+volunteer, or convention content. `/` redirects to `/admin/`; previous HTML
+routes return 404. Health and versioned APIs remain mounted as backend
+contracts.
+
+Every later page requires UX-013's page contract and product-owner inspection
+before another page begins. Preserved source does not make a page current.
+
+## Preserved target model
+
+The material below remains product evidence and a possible future direction,
+not a description of currently mounted pages. Maru is one platform expressed
+through focused surfaces and must not become one enormous menu containing every
+department's nouns.
 
 ## Experience model
 

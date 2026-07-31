@@ -1,6 +1,6 @@
 # Core module
 
-Status: Implemented foundation  
+Status: Implemented backend foundation with ADR 0030 empty browser baseline
 Last updated: 2026-07-31
 
 ## Purpose and requirements
@@ -16,9 +16,10 @@ NFR-001, NFR-004, NFR-006, and NFR-008.
 - allowlisted structured JSON logging
 - RFC 9457-style DRF problem responses
 - liveness, database readiness, and build identity endpoints
-- browser-friendly development landing page
-- one consistent `/admin/` shell for convention workflows and specialist
-  records, plus administration safety mixins and navigation
+- an ADR 0030 root redirect, focused local sign-in, and empty staff-only
+  administration home
+- preserved administration safety mixins and previous shell implementation,
+  not mounted in the current default experience
 - canonical platform brand assets, accessible palette tokens, and application
   metadata
 
@@ -30,9 +31,22 @@ The platform identity is defined in
 It supports Maru's stable operational shell; convention-owned seasonal
 frontends remain replaceable clients.
 
-## Administration
+## Current browser baseline
 
-The original Django administration index is the canonical `/admin/` home.
+`maru.baseline_urls` is the default URL configuration. `/` redirects to
+`/admin/`; `/accounts/login/` is the only unauthenticated HTML page; and
+`/admin/` is the only authenticated HTML page. The home requires an active
+staff account and contains no record or workflow navigation. Sign-out is a
+POST action. Previous HTML routes are not mounted and return 404.
+
+Health, build, schema, and versioned APIs remain mounted. Automated backend
+tests may select the preserved URL configuration, but that does not make its
+pages part of the product.
+
+## Preserved administration implementation
+
+Before ADR 0030, the original Django administration index was the canonical
+`/admin/` home.
 API-backed Convention work is embedded inside the same base template at
 `/admin/workspace/`; the embedded application does not render another global
 menu or workspace selector. Its inner pages use the same record-oriented

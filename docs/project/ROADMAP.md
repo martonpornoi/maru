@@ -3,6 +3,14 @@
 The roadmap is outcome-based. Dates are intentionally omitted until a team and
 first convention partner are known.
 
+## Current rebuild discipline
+
+ADR 0030 temporarily reduces the default browser experience to Sign in and one
+empty administration home while retaining the tested backend and APIs. The
+phase descriptions below are capability evidence and future outcomes, not a
+list of currently mounted pages. Pages return only after UX-013's contract is
+approved and verified one at a time.
+
 ## Phase 0: Discovery and risk framing
 
 Outcomes:
@@ -39,7 +47,8 @@ Outcomes:
 Exit criterion: Automated tests demonstrate tenant isolation and edition
 scoping through API, queries, administration, and audit.
 
-Repository status: the original `/admin/` shell with embedded Convention work,
+Repository status: the backend foundation and preserved former `/admin/` shell
+with embedded Convention work,
 generated API types,
 reference dataset, authority/audit/outbox spine, supervised worker, and recovery
 drill are implemented. Verified identity, session security, scoped restrictions,
@@ -57,7 +66,8 @@ audited reads and denials; the explicit operator command remains a recovery
 fallback. Authorized
 leaders can also move editions through valid, explained lifecycle transitions
 without directly editing lifecycle fields.
-Broad user/staff activity
+ADR 0030 leaves those former browser pages unmounted during the controlled
+rebuild. Broad user/staff activity
 projections beyond the implemented registration actions remain before this
 phase is treated as complete across the whole product.
 

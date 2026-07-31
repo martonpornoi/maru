@@ -34,6 +34,7 @@ the system.
 | [0027](0027-record-oriented-convention-work.md) | Accepted | Record-oriented embedded workflows and contextual Setup guide without global Quick Start |
 | [0028](0028-login-handles-and-workforce-structure.md) | Accepted | Human login handles, local public-roster boundary, and minimized workforce hierarchy |
 | [0029](0029-append-only-registration-profile-extensions.md) | Accepted | Versioned profile-extension fields with append-only permission-aware values |
+| [0030](0030-controlled-empty-experience-rebuild.md) | Accepted | Default two-page browser baseline with preserved backend/API foundation and page-by-page reintroduction |
 
 New ADRs use the next four-digit number and contain:
 

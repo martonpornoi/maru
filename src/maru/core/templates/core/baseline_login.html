@@ -1,0 +1,45 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
+    <title>Sign in · Maru</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
+  </head>
+  <body>
+    <main class="baseline-card baseline-card--login">
+      <img
+        class="baseline-logo"
+        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+        alt="Maru"
+      >
+      <h1>Sign in</h1>
+      <p class="baseline-intro">Use your Maru account to continue.</p>
+
+      {% if form.non_field_errors %}
+        <div class="baseline-errors" role="alert">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <form method="post" class="baseline-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <label for="{{ form.username.id_for_label }}">Email or username</label>
+        {{ form.username }}
+        {{ form.username.errors }}
+
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {{ form.password.errors }}
+
+        <button type="submit">Sign in</button>
+      </form>
+    </main>
+  </body>
+</html>

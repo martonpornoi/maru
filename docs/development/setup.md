@@ -1,6 +1,6 @@
 # Development setup
 
-Status: Baseline  
+Status: Empty-experience rebuild baseline
 Last updated: 2026-07-31
 
 ## Prerequisites
@@ -19,11 +19,15 @@ interpreter with `uv python find` and do not run Maru on Python 3.9.
 ```powershell
 uv sync --all-groups
 docker compose up -d postgres
+$env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/maru_rebuild_empty"
 uv run python src/manage.py migrate
 uv run python src/manage.py runserver
 ```
 
-Local defaults connect to `postgresql://maru:maru@127.0.0.1:5432/maru`.
+ADR 0030's verified baseline uses the separately named
+`maru_rebuild_empty` database. Local defaults still connect to
+`postgresql://maru:maru@127.0.0.1:5432/maru` when the environment variable is
+omitted, so keep `MARU_DATABASE_URL` set in the server terminal.
 Override settings with environment variables described in `.env.example`.
 Maru does not automatically read `.env`; a shell or supervised runtime supplies
 configuration.
@@ -37,21 +41,37 @@ administrator when a minimal setup is enough:
 uv run python src/manage.py createsuperuser
 ```
 
-The account uses its email address or optional unique login handle to sign in at
-<http://127.0.0.1:8000/admin/>. The original administration home contains one
-sidebar for Convention work and permission-filtered specialist records. A
-workspace-less superuser can open the guarded convention-leadership ceremony
-under **Convention work → Setup guide**. The former global Quick Start strip is
-removed.
-`/manage/`, `/staff/`, and `/admin/records/` are intentionally not alternate
-entry points. Local password authentication is not the production identity
-system.
+The account uses its email address or optional unique login handle to sign in
+at <http://127.0.0.1:8000/admin/>. The current default browser experience has
+no menu, setup guide, convention workspace, specialist records, public
+registration, or volunteer pages. It contains only Sign in and the empty
+administration home. Local password authentication is not the production
+identity system.
 
-After creating an Organization, Convention Series, Event Edition, and a
-separate Chair account through their specialist record pages, open Convention
-work and complete **Establish convention leadership**. It requires the current
-administrator password, exact organization slug, distinct Chair, and a reason,
-then offers **Start planning** for the Draft-to-Preparing transition.
+The verified local baseline contains only:
+
+```text
+Database: maru_rebuild_empty
+Username: admin
+Email: admin@maru.local
+Password: M4rucon-Rehearsal-2031!
+```
+
+See the
+[empty-experience runbook](../operations/empty-experience-baseline.md). Do not
+add an organization or other record until its page contract is approved.
+
+### Preserved pre-reset workflows
+
+The domain services, APIs, fixtures, and former browser implementation remain
+in the repository as tested evidence during the rebuild. The following
+commands are operator/recovery references; their old HTML pages are not mounted
+by default.
+
+In the preserved pre-reset URL configuration, an operator could create an
+Organization, Convention Series, Event Edition, and separate Chair through
+specialist record pages, then complete **Establish convention leadership** in
+Convention work. Those pages are not mounted in the current baseline.
 
 The equivalent command remains available for recovery and automation:
 
@@ -88,10 +108,8 @@ must be acknowledged explicitly on every network import. To rehearse without
 public personal data, pass `--roster-file` with synthetic semantic HTML.
 Automated tests use only such a synthetic miniature.
 
-Public attendee registration starts at
-<http://127.0.0.1:8000/register/>. It does not require an existing account:
-choose an edition whose registration window is open, then create an account and
-edition-owned profile in the same form. An existing email must sign in first.
+The former public registration pages are intentionally unmounted during the
+page-by-page rebuild. Registration APIs and services remain preserved.
 
 ## Synthetic demonstration data
 
@@ -137,19 +155,14 @@ remain future modules. Registration is a real vertical with a local/test-only
 payment adapter. See
 [`demo-data.md`](../modules/demo-data.md) for the exact boundary.
 
-Open <http://127.0.0.1:8000/admin/> and use
-`danube.convention-chair@demo.maru.invalid` with
-`Z7!maru-demo-fixture-2026` for the featured Danube 2026 cockpit, registration
-configuration, Reports, and Front Desk queue. Use
-`danube.standard-attendee@demo.maru.invalid` for a fresh attendee registration.
-Other convention-chair, staff, volunteer, and attendee accounts intentionally
-receive different safe views according to their relationships and
-capabilities.
+Those persona accounts and records remain useful for backend permission tests,
+but the former cockpit, reports, Front Desk, and attendee pages are not current
+browser routes.
 
-## Embedded Convention work development
+## Preserved Convention work frontend
 
-The production bundle is checked into Django's app static directory. To
-regenerate it and verify the separate frontend:
+The bundle is checked into Django's app static directory but is not mounted by
+the ADR 0030 baseline. To verify the preserved source while it remains:
 
 ```powershell
 cd frontends/staff-console

@@ -5,9 +5,11 @@ from typing import Any
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db import connection
 from django.db.utils import DatabaseError
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -17,6 +19,22 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from maru.events.admin_context import selected_admin_edition
+
+
+def baseline_root(request: HttpRequest) -> HttpResponse:
+    """Send the deliberately empty browser experience to its only home."""
+
+    del request
+    return redirect("baseline-admin-home")
+
+
+@login_required(login_url="staff-login")
+def baseline_administration_home(request: HttpRequest) -> HttpResponse:
+    """Render the page-by-page rebuild's intentionally empty staff home."""
+
+    if not request.user.is_active or not request.user.is_staff:
+        raise PermissionDenied
+    return TemplateResponse(request, "core/baseline_admin_home.html")
 
 
 def platform_home(request: HttpRequest) -> TemplateResponse:

@@ -3,6 +3,7 @@
 from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
+from django.urls.resolvers import URLPattern, URLResolver
 from drf_spectacular.views import SpectacularAPIView
 
 from maru.accreditation.api import (
@@ -145,7 +146,7 @@ from maru.workforce.views import (
     volunteer_opportunities,
 )
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path("", platform_home, name="platform-home"),
     path(
         "register/",
@@ -887,4 +888,15 @@ urlpatterns = [
         StaffRegistrationProfileMinimizeView.as_view(),
         name="api-registration-profile-minimization",
     ),
+]
+
+# ADR 0030 keeps the tested API and operational endpoints available while the
+# default browser experience is rebuilt one page at a time. The preserved HTML
+# routes above remain testable recovery evidence but are not mounted by
+# ``maru.baseline_urls``.
+PLATFORM_URLPATTERNS = [
+    pattern for pattern in urlpatterns if str(pattern.pattern).startswith("health/")
+]
+API_URLPATTERNS = [
+    pattern for pattern in urlpatterns if str(pattern.pattern).startswith("api/")
 ]

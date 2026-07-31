@@ -1,0 +1,179 @@
+:root {
+  color: #071b3a;
+  background: #faf7f0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: #faf7f0;
+}
+
+.baseline-header {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem clamp(1rem, 4vw, 2.5rem);
+  border-bottom: 1px solid #d9d3c7;
+  background: #fff;
+}
+
+.baseline-logo {
+  display: block;
+  width: 8.5rem;
+  max-width: 45vw;
+  height: auto;
+}
+
+.baseline-card {
+  width: min(36rem, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.baseline-card--login {
+  margin-top: clamp(3rem, 12vh, 8rem);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border: 1px solid #d9d3c7;
+  background: #fff;
+}
+
+.baseline-card--home {
+  margin-top: clamp(3rem, 10vh, 7rem);
+}
+
+h1 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: clamp(2rem, 7vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.baseline-intro {
+  max-width: 32rem;
+  margin: 0;
+  color: #45536a;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.baseline-kicker {
+  margin: 0;
+  color: #6b5840;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.baseline-form {
+  margin-top: 1.75rem;
+}
+
+.baseline-form label {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.baseline-form input {
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid #9ba3af;
+  border-radius: 0.25rem;
+  color: inherit;
+  background: #fff;
+  font: inherit;
+}
+
+.baseline-form input:focus,
+button:focus-visible {
+  outline: 3px solid #b9822e;
+  outline-offset: 2px;
+}
+
+.baseline-form button {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #071b3a;
+  border-radius: 0.25rem;
+  color: #fff;
+  background: #071b3a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.baseline-errors {
+  margin-top: 1.25rem;
+  padding: 0.75rem 1rem;
+  border-left: 0.25rem solid #9e3028;
+  color: #76241e;
+  background: #f9e8e5;
+}
+
+.baseline-errors ul,
+.errorlist {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.baseline-account {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: #45536a;
+  font-size: 0.9rem;
+}
+
+.baseline-account form {
+  margin: 0;
+}
+
+.baseline-link-button {
+  padding: 0;
+  border: 0;
+  color: #071b3a;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 32rem) {
+  .baseline-header {
+    align-items: flex-start;
+  }
+
+  .baseline-account {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 0.35rem;
+    text-align: right;
+  }
+
+  .baseline-card--login,
+  .baseline-card--home {
+    margin-top: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}

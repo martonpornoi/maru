@@ -14,6 +14,7 @@ DEMO_PAYMENT_ADAPTER_ENABLED = True
 
 SECRET_KEY = "tests-only-secret-key-never-valid-outside-the-test-suite"
 ALLOWED_HOSTS = ["testserver"]
+ROOT_URLCONF = "maru.urls"
 
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",

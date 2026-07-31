@@ -1,13 +1,17 @@
 # Architecture overview
 
-Status: Baseline  
-Last updated: 2026-07-26
+Status: Backend baseline with controlled empty browser experience
+Last updated: 2026-07-31
 
 ## System shape
 
 Maru is an API-first modular monolith. One Django deployment may host multiple
 organizations and event editions, while separate clients consume versioned
 APIs.
+
+ADR 0030 currently mounts only Sign in and an empty administration home as
+HTML. The richer clients in the diagram are preserved targets or backend API
+consumers until reintroduced through the page-by-page contract.
 
 ```text
 Attendee web ─┐

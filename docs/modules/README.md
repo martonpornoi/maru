@@ -2,6 +2,12 @@
 
 Only modules with executable behavior appear here.
 
+ADR 0030 retains these backend modules but mounts only Sign in and an empty
+administration home. References in module documents to Convention work,
+Specialist records, registration pages, or other HTML surfaces describe the
+preserved pre-reset implementation unless the paragraph explicitly identifies
+the current baseline.
+
 - [`core`](core.md) - platform-neutral runtime primitives
 - [`identity`](identity.md) - platform account boundary
 - [`organizations`](organizations.md) - tenant, series, and membership
@@ -20,8 +26,8 @@ Only modules with executable behavior appear here.
   check-in
 - [`privacy operations`](privacyops.md) - subject rights, historical
   corrections, retention, and disposal evidence
-- [`Convention work`](staff-console.md) - React/TypeScript workflows embedded
-  in the original administration shell
+- [`Convention work`](staff-console.md) - preserved React/TypeScript workflows,
+  currently unmounted
 - [`demo data`](demo-data.md) - local-only synthetic cross-module fixture
 - [`Marucon admin-first rehearsal`](../operations/marucon-admin-rehearsal.md) -
   clean-database educational scenario with bounded public-roster import
