@@ -2,11 +2,12 @@
 
 import logging
 from typing import Any
+from uuid import UUID
 
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection
 from django.db.utils import DatabaseError
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
@@ -21,9 +22,21 @@ from rest_framework.response import Response
 
 from maru.events.admin_context import selected_admin_edition
 from maru.identity.models import Account
+from maru.organizations.forms import OrganizationCreationForm
 from maru.organizations.queries import platform_organization_inventory
+from maru.organizations.services import create_draft_organization
 
 logger = logging.getLogger(__name__)
+
+
+def _require_platform_administrator(request: HttpRequest) -> Account:
+    if (
+        not isinstance(request.user, Account)
+        or not request.user.is_active
+        or not request.user.is_platform_administrator
+    ):
+        raise PermissionDenied
+    return request.user
 
 
 def baseline_root(request: HttpRequest) -> HttpResponse:
@@ -37,12 +50,7 @@ def baseline_root(request: HttpRequest) -> HttpResponse:
 def baseline_administration_home(request: HttpRequest) -> HttpResponse:
     """Render the platform-wide organization inventory for its administrators."""
 
-    if (
-        not isinstance(request.user, Account)
-        or not request.user.is_active
-        or not request.user.is_platform_administrator
-    ):
-        raise PermissionDenied
+    _require_platform_administrator(request)
 
     load_failed = False
     status = 200
@@ -61,6 +69,46 @@ def baseline_administration_home(request: HttpRequest) -> HttpResponse:
             "organizations": organizations,
             "organization_inventory_load_failed": load_failed,
         },
+        status=status,
+    )
+
+
+@login_required(login_url="staff-login")
+def baseline_create_organization(request: HttpRequest) -> HttpResponse:
+    """Create the minimum draft organization record for later completion."""
+
+    actor = _require_platform_administrator(request)
+    form = OrganizationCreationForm(request.POST or None)
+    status = 200
+    if request.method == "POST" and form.is_valid():
+        try:
+            organization = create_draft_organization(
+                actor=actor,
+                name=form.cleaned_data["name"],
+                correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+                source_channel="web",
+            )
+        except ValidationError as error:
+            form.add_error("name", error.messages[0])
+        except DatabaseError:
+            logger.exception("Unable to create a draft organization")
+            form.add_error(
+                None,
+                "The organization could not be created. Try again after the "
+                "database is available.",
+            )
+            status = 503
+        else:
+            messages.success(
+                request,
+                f"{organization.name} was created as a draft.",
+            )
+            return redirect("baseline-admin-home")
+
+    return TemplateResponse(
+        request,
+        "core/baseline_create_organization.html",
+        {"form": form},
         status=status,
     )
 

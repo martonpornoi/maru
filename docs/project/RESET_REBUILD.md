@@ -1,7 +1,7 @@
 # Controlled reset and page-by-page rebuild
 
-Status: Baseline accepted; Page 1 Platform administration home implemented
-with verification and owner inspection pending
+Status: Page 1 accepted; Page 2 Create organization implemented with
+verification and owner inspection pending
 Last updated: 2026-07-31
 
 This ledger preserves the current Maru implementation while the product
@@ -142,7 +142,40 @@ Checklist:
 - [x] Run the complete backend, schema, frontend-preservation, migration, and
   documentation quality gates.
 - [x] Update `CURRENT.md` and add the append-only Page 1 checkpoint.
-- [ ] Obtain product-owner acceptance before beginning Page 2.
+- [x] Obtain product-owner acceptance before beginning Page 2.
+
+### Page 2: Create organization
+
+- Branch: `codex/page-02-create-organization`
+- Route: `/admin/organizations/new/`
+- Contract:
+  [`../product/page-contracts/02-create-organization.md`](../product/page-contracts/02-create-organization.md)
+- Requirements: IDN-002, IDN-011, IDN-012, UX-013, UX-015, AUD-001,
+  AUD-002
+- Decision: ADR 0032
+
+Checklist:
+
+- [x] Agree that only the recognizable organization name is necessary at
+  creation time.
+- [x] Record the future Executive Board invariant and property-editing boundary
+  without creating placeholder governance in Page 2.
+- [x] Add the name-only form and platform-administrator-only route.
+- [x] Normalize the name and generate an 80-character-bounded,
+  collision-safe slug with a non-ASCII fallback.
+- [x] Create Draft with code-owned English and UTC defaults and blank optional
+  properties.
+- [x] Commit the organization and its successful audit evidence atomically.
+- [x] Prove no membership, authority, board, series, edition, participation,
+  registration, or workforce side effects.
+- [x] Apply `organizations.0003` to `maru_rebuild_empty` without touching the
+  preserved databases.
+- [x] Inspect the desktop and 390-pixel Page 2 layouts with no horizontal
+  overflow or browser runtime warning/error.
+- [x] Run the complete backend, schema, frontend-preservation, migration, and
+  documentation quality gates.
+- [x] Update `CURRENT.md` and add the append-only Page 2 checkpoint.
+- [ ] Obtain product-owner acceptance before beginning Page 3.
 
 ### Page-by-page contract
 
@@ -175,12 +208,14 @@ Accepted initial sequence after the baseline decision:
 13. Registration template and edition form.
 14. Attendee self-registration.
 
-Only Page 1 is approved for implementation. The later order records the agreed
-journey but does not pre-approve a page contract or implementation.
+Pages 1 and 2 have been approved for implementation. The later order records
+the agreed journey but does not pre-approve a Page 3 contract or
+implementation.
 
 ## Resume point
 
-The recovery snapshot, durable pre-reset branch, baseline choice, requirement,
-ADR, implementation, empty database, browser inspection, and quality gate are
-complete. The running server uses `maru_rebuild_empty`. Do not start the next
-page until the product owner has inspected and accepted this baseline.
+The recovery snapshot and durable pre-reset branch remain available. Page 2 is
+implemented on its dedicated branch and `maru_rebuild_empty` is migrated
+through `organizations.0003`. Resume by completing any unchecked Page 2 gates,
+then obtain owner acceptance. Do not design or implement Page 3 before that
+response.

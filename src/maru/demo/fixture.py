@@ -874,6 +874,7 @@ class _DemoSeeder:
         organization = Organization.objects.filter(pk=object_id).first()
         created = organization is None
         organization_values = {
+            "lifecycle": Organization.Lifecycle.ACTIVE,
             "legal_name": spec.organization_name.removesuffix(" (Demo)"),
             "description": (
                 f"Synthetic accountable organizer for the {spec.series_name} "

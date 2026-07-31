@@ -77,6 +77,14 @@ architecture documents, implementation issues, tests, and release notes.
   Platform oversight must not silently create any of those relationships, and
   restricted case access remains subject to SAF-004 rather than following from
   platform-administrator status.
+- **IDN-012 — Organization representation:** Every organization must have an
+  Executive Board as its accountable representation root. Once that governance
+  structure is introduced, only active Executive Board authority and platform
+  administration may modify organization properties. Provisioning that board
+  must not turn the platform administrator into an organization member or
+  convention participant. Organization records created before the governance
+  page exists remain drafts and must be brought into that invariant when the
+  later workflow is implemented.
 
 ### Multi-convention and event editions
 
@@ -357,6 +365,16 @@ architecture documents, implementation issues, tests, and release notes.
   series count, and edition count when records exist, and fail read-only with a
   safe error when the inventory is unavailable. It must not introduce a
   convention selector, setup strip, unfinished link, or convention-owned data.
+- **UX-015 — Minimal organization creation:** Page 2 of the controlled rebuild
+  must let an active platform administrator create a draft organization from
+  its name alone. Maru generates a collision-safe stable slug and applies
+  code-owned locale defaults. Creation is atomic and audited and must not create
+  organization membership, convention authority, an Executive Board, a series,
+  an edition, or participation. Validation remains on the form, a successful
+  creation returns to the organization inventory, and database failure leaves
+  no partial organization. The later Organization record owns legal identity,
+  imprint, contacts, locale review, activation, governance, and property
+  editing.
 
 ### Registration, orders, and attendee service
 

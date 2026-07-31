@@ -53,6 +53,7 @@ class OrganizationFactory(factory.django.DjangoModelFactory[Organization]):
 
     slug = factory.Sequence(lambda number: f"organizer-{number}")
     name = factory.Sequence(lambda number: f"Synthetic Organizer {number}")
+    lifecycle = Organization.Lifecycle.ACTIVE
     default_language_codes = factory.LazyFunction(lambda: ["en"])
     default_time_zone = "Europe/Budapest"
 

@@ -23,6 +23,7 @@ def default_organization_languages() -> list[str]:
 
 class Organization(UUIDTimeStampedModel):
     class Lifecycle(models.TextChoices):
+        DRAFT = "draft", "Draft"
         ACTIVE = "active", "Active"
         SUSPENDED = "suspended", "Suspended"
         CLOSED = "closed", "Closed"
@@ -32,7 +33,7 @@ class Organization(UUIDTimeStampedModel):
     lifecycle = models.CharField(
         max_length=20,
         choices=Lifecycle,
-        default=Lifecycle.ACTIVE,
+        default=Lifecycle.DRAFT,
     )
     legal_name = models.CharField(
         max_length=200,

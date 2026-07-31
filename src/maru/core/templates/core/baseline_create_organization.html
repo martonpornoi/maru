@@ -1,0 +1,87 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
+    <title>Create organization · Maru</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
+  </head>
+  <body>
+    <header class="baseline-header">
+      <img
+        class="baseline-logo"
+        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+        alt="Maru"
+      >
+      <div class="baseline-account">
+        <span>{{ request.user.display_name }}</span>
+        <form method="post" action="{% url 'staff-logout' %}">
+          {% csrf_token %}
+          <button class="baseline-link-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="baseline-page baseline-page--form" data-page="create-organization">
+      <a class="baseline-back-link" href="{% url 'baseline-admin-home' %}">
+        Back to organizations
+      </a>
+
+      <header class="baseline-page-heading">
+        <p class="baseline-kicker">Platform administration</p>
+        <h1>Create organization</h1>
+        <p class="baseline-intro">
+          Start with the name people recognize. Maru will generate its stable
+          URL name and keep the organization as a draft until later setup is
+          complete.
+        </p>
+      </header>
+
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="organization-form-title">
+        <h2 id="organization-form-title">Organization identity</h2>
+
+        {% if form.non_field_errors %}
+          <div class="baseline-errors" role="alert">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <form method="post" class="baseline-form" novalidate>
+          {% csrf_token %}
+
+          <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+          {{ form.name }}
+          {% if form.name.errors %}
+            <div class="baseline-field-errors" role="alert">
+              {{ form.name.errors }}
+            </div>
+          {% endif %}
+          <p class="baseline-help" id="organization-name-help">
+            {{ form.name.help_text }}
+          </p>
+
+          <div class="baseline-form-actions">
+            <button type="submit">Create organization</button>
+            <a class="baseline-secondary-link" href="{% url 'baseline-admin-home' %}">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </section>
+
+      <aside class="baseline-boundary" aria-labelledby="creation-boundary-title">
+        <p class="baseline-kicker">Creation boundary</p>
+        <h2 id="creation-boundary-title">A draft, not a convention</h2>
+        <p>
+          This creates only the organization record. It does not make this
+          platform account a member and does not create a board, convention
+          series, event edition, or participant.
+        </p>
+      </aside>
+    </main>
+  </body>
+</html>

@@ -663,6 +663,7 @@ def seed_marucon_rehearsal(
         slug="marucon-organizers",
         defaults={
             "name": "Marucon Organizers",
+            "lifecycle": Organization.Lifecycle.ACTIVE,
             "description": (
                 "Local educational organizer created by the Marucon rehearsal."
             ),

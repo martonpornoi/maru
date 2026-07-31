@@ -12,6 +12,31 @@ from maru.core.localization import (
 from maru.organizations.models import Organization
 
 
+class OrganizationCreationForm(forms.Form):
+    name = forms.CharField(
+        label="Organization name",
+        max_length=160,
+        strip=True,
+        help_text=(
+            "Use the name people will recognize. Legal details can be added "
+            "on the Organization page later."
+        ),
+        widget=forms.TextInput(
+            attrs={
+                "aria-describedby": "organization-name-help",
+                "autocomplete": "off",
+                "autofocus": True,
+            }
+        ),
+    )
+
+    def clean_name(self) -> str:
+        name = " ".join(self.cleaned_data["name"].split())
+        if not name:
+            raise forms.ValidationError("Enter an organization name.")
+        return name
+
+
 class OrganizationAdminForm(forms.ModelForm):  # type: ignore[type-arg]
     default_language_codes = forms.MultipleChoiceField(
         label="Default languages",

@@ -1,18 +1,21 @@
 # Organizations module
 
-Status: Implemented tenant, brand, localization bootstrap, and Page 1 platform inventory
+Status: Implemented tenant, brand, localization bootstrap, Page 1 inventory,
+and Page 2 draft creation
 Last updated: 2026-07-31
 
 ## Purpose and requirements
 
 `maru.organizations` owns tenant structure and recurring-series continuity for
-IDN-002, IDN-011, EVT-001, EVT-003, and UX-014.
+IDN-002, IDN-011, IDN-012, EVT-001, EVT-003, UX-014, and UX-015.
 
 ## Owned data and invariants
 
 - `Organization`: the independently governed tenant/data-controller boundary,
   with UUID, slug, public and optional legal identity, lifecycle, contact,
-  primary country, ordered default languages, and time-zone default.
+  primary country, ordered default languages, and time-zone default. New
+  records default to Draft; operational demo builders request Active
+  explicitly.
 - `ConventionSeries`: a recurring public convention brand within exactly one
   organization, with its own description, contact, and website.
 - `OrganizationMembership`: one organizer-owned account relationship with
@@ -45,10 +48,14 @@ non-browser clients.
 - `memberships_for_account(account)`, a self-scoped query.
 - `platform_organization_inventory()`, the C1 name, slug, lifecycle, series
   count, and edition-count projection used only after platform authorization.
+- `create_draft_organization(...)`, the atomic platform-only command that
+  normalizes a name, generates a collision-safe slug, creates one Draft tenant,
+  and appends its successful audit event.
 
-Generic unscoped organization API and mutation commands are intentionally
-absent. The platform inventory is a server-rendered read contract, not a public
-or organizer API.
+Generic unscoped organization APIs remain absent. Page 2 is a narrowly scoped
+server-rendered platform command, not a public or organizer API. It creates no
+membership, governance, convention, participation, registration, or workforce
+relationships.
 
 ## Permissions and sensitivity
 
@@ -85,10 +92,17 @@ PostgreSQL tests cover case-insensitive scoped uniqueness, protected deletion,
 two-tenant synthetic data, localization normalization/validation, readable
 language/time-zone/telephone choices, and self-context non-disclosure.
 Page tests additionally cover membership rejection plus empty, populated,
-denied, and safe database-failure inventory states without relationship side
-effects.
+denied, and safe database-failure inventory states. Page 2 tests cover
+name-only creation, normalization, Unicode fallback and bounded slug
+generation, collision handling, Draft defaults, repeated service
+authorization, atomic auditing and rollback, one-time confirmation, and the
+absence of relationship side effects.
 
 ## Limitations
 
-Organization lifecycle transitions, processors, invitations, ownership
-transfer, and a purpose-built organizer setup console are not implemented.
+Organization property editing, Executive Board provisioning/backfill,
+lifecycle transitions, processors, invitations, ownership transfer, and a
+purpose-built organizer setup console are not implemented. Per IDN-012, the
+later governance workflow must establish an Executive Board before activation;
+only active Executive Board authority and platform administration may then
+modify organization properties.

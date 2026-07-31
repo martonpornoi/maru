@@ -36,6 +36,7 @@ the system.
 | [0029](0029-append-only-registration-profile-extensions.md) | Accepted | Versioned profile-extension fields with append-only permission-aware values |
 | [0030](0030-controlled-empty-experience-rebuild.md) | Accepted | Default two-page browser baseline with preserved backend/API foundation and page-by-page reintroduction |
 | [0031](0031-non-participating-platform-administration.md) | Accepted | Explicit non-participating platform administrator and read-only organization inventory |
+| [0032](0032-minimal-draft-organization-creation.md) | Accepted | Name-only, audited creation of draft organizations without implicit governance or participation |
 
 New ADRs use the next four-digit number and contain:
 

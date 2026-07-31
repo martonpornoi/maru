@@ -1,6 +1,6 @@
 # Page 1 contract: Platform administration home
 
-- Status: Implemented and verified; owner inspection pending
+- Status: Implemented, verified, and accepted
 - Branch: `codex/page-01-platform-home`
 - Route: `/admin/`
 - Requirements: IDN-011, UX-005 through UX-008, UX-013, UX-014
@@ -21,8 +21,9 @@ not a member or participant of any listed convention.
 convention selector, setup strip, secondary shell, or links to preserved pages.
 Sign out remains in the existing header.
 
-The organization-creation route belongs to Page 2. Until Page 2 exists, the
-empty state names that next step without rendering an unavailable control.
+The organization-creation route belongs to Page 2. After Page 1 was accepted,
+Page 2 added a visible **Create organization** action without making the
+inventory itself editable.
 
 ## Information and actions
 
@@ -50,7 +51,8 @@ assignment. Restricted records remain governed by SAF-004.
 
 ## Page states
 
-- **Empty:** zero organizations, a direct explanation, and the name of Page 2.
+- **Empty:** zero organizations, a direct explanation, and the Page 2 creation
+  action.
 - **Populated:** stable alphabetical rows with lifecycle and related counts.
 - **Loading:** the page is server-rendered atomically; partial stale rows or a
   decorative indefinite loading state are not rendered.
@@ -82,4 +84,4 @@ usable before Page 2 creates live records.
 - focused and complete automated quality gates; and
 - updated current state, module documentation, and append-only checkpoint.
 
-Owner acceptance is required before Page 2 begins.
+The owner accepted Page 1 before Page 2 implementation began.

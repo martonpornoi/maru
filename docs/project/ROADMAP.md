@@ -8,7 +8,9 @@ first convention partner are known.
 ADR 0030 temporarily reduces the default browser experience to Sign in and one
 minimal administration home while retaining the tested backend and APIs. ADR
 0031 restores Page 1 as a platform-administrator-only organization inventory
-without adding convention participation or mutation. The
+without adding convention participation. ADR 0032 adds Page 2 as a name-only,
+audited Draft organization command without governance or convention side
+effects. The
 phase descriptions below are capability evidence and future outcomes, not a
 list of currently mounted pages. Pages return only after UX-013's contract is
 approved and verified one at a time.
@@ -72,6 +74,12 @@ ADR 0030 leaves those former browser pages unmounted during the controlled
 rebuild. Broad user/staff activity
 projections beyond the implemented registration actions remain before this
 phase is treated as complete across the whole product.
+
+The controlled rebuild now exposes Page 1 organization inventory and Page 2
+draft creation. Organization property editing, activation, Executive Board
+provisioning, convention series, and event edition pages remain behind their
+own future contracts. Draft organizations created during this interval must be
+brought under the IDN-012 Executive Board invariant before activation.
 
 ## Phase 2: Registration vertical slice
 

@@ -27,6 +27,16 @@
     </header>
 
     <main class="baseline-page" data-page="platform-administration-home">
+      {% if messages %}
+        <div class="baseline-messages" aria-live="polite">
+          {% for message in messages %}
+            <div class="baseline-notice baseline-notice--success" role="status">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <header class="baseline-page-heading">
         <p class="baseline-kicker">Platform administration</p>
         <h1>Organizations</h1>
@@ -43,9 +53,14 @@
             <p class="baseline-kicker">Convention organizers</p>
             <h2 id="organization-inventory-title">Organization inventory</h2>
           </div>
-          <span class="baseline-count">
-            {{ organizations|length }} organization{{ organizations|length|pluralize }}
-          </span>
+          <div class="baseline-panel-actions">
+            <span class="baseline-count">
+              {{ organizations|length }} organization{{ organizations|length|pluralize }}
+            </span>
+            <a class="baseline-primary-link" href="{% url 'baseline-create-organization' %}">
+              Create organization
+            </a>
+          </div>
         </div>
 
         {% if organization_inventory_load_failed %}
@@ -89,8 +104,8 @@
           <div class="baseline-state" data-state="empty">
             <h3>No organizations yet</h3>
             <p>
-              Creating the first organization is the next page in this
-              rebuild. No incomplete or unavailable action is shown here.
+              Create the accountable organizer first. Series, editions, legal
+              details, and governance are completed on their own later pages.
             </p>
           </div>
         {% endif %}
