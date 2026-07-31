@@ -6,7 +6,8 @@ Last updated: 2026-07-31
 ## Purpose and requirements
 
 `maru.workforce` owns the first executable HR-007 and HR-008 slice defined by
-ADR 0019. It turns an edition responsibility into explicit structure:
+ADR 0019 and applies IDN-011's non-participation boundary. It turns an edition
+responsibility into explicit structure:
 
 ```text
 department hierarchy
@@ -22,6 +23,11 @@ answer, an uploaded file, or a profile label. Authority remains owned by
 `maru.authorization`; convention participation remains owned by
 `maru.participation`.
 
+A platform administrator may initiate or review bootstrap work as an attributed
+actor, but cannot be the subject of a volunteer application, onboarding request,
+or position assignment. Those model boundaries reject the platform-only
+account classification.
+
 ## Empty-organization bootstrap
 
 An empty organization cannot use its own scoped permission commands before it
@@ -29,19 +35,22 @@ has a controller. Convention work's **Establish convention leadership**
 ceremony is therefore a one-shot, trust-on-first-use exception.
 It requires:
 
-- an existing active Django superuser as bootstrap controller;
+- an existing active platform administrator as bootstrap controller;
 - a different active account as Convention Chair;
 - an active organization and matching non-closed edition;
 - an exact repeated organization slug and reason;
 - no existing grants, role assignments, or role bundles in the organization.
 
-It creates organization-scoped authority-controller roles for both people,
-edition-scoped Convention Chair authority, the first leadership department and
-chair position, and ten furry-convention position templates. A second run
-fails closed.
+It creates organization-scoped authority-controller and edition-scoped
+Convention Chair authority only for the distinct Chair account, plus the first
+leadership department, chair position, and ten furry-convention position
+templates. The platform administrator remains an attributed actor and receives
+no organizer membership, convention role, participation, or workforce
+position. A second run fails closed.
 
 The ceremony appears contextually in Convention work's **Setup guide** only to
-an active superuser while an eligible organizer has no authority records. It lists recognizable
+an active platform administrator while an eligible organizer has no authority
+records. It lists recognizable
 organization, edition, and Chair labels, requires the controller's current
 password, exact organization slug, and a permanent reason, and delegates to
 the same atomic service as the command. Candidate account reads, denied

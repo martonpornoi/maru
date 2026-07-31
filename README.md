@@ -22,9 +22,9 @@ permission-controlled operational record.
   page-by-page experience rebuild
 - Background workers for delivery, exports, imports, and other slow operations
 
-Reflex is not part of the platform core. The current browser baseline contains
-only Sign in and an empty administration home while the product is rebuilt one
-page at a time.
+Reflex is not part of the platform core. The current browser experience
+contains Sign in and Page 1, a read-only platform organization inventory,
+while the product is rebuilt one reviewed page at a time.
 
 ## Local quick start
 
@@ -40,7 +40,8 @@ uv run python src/manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/>. The current experience deliberately exposes only
-Sign in and an empty `/admin/` home. For a new empty database, create one
+Sign in and the platform-administrator-only `/admin/` organization inventory.
+For a new empty database, create one
 bootstrap administrator with:
 
 ```powershell
@@ -109,6 +110,7 @@ rehearsals.
 - [Clean convention and volunteer onboarding walkthrough](docs/operations/clean-convention-onboarding-walkthrough.md)
 - [Marucon admin-first educational rehearsal](docs/operations/marucon-admin-rehearsal.md)
 - [Empty-experience baseline](docs/operations/empty-experience-baseline.md)
+- [Page 1 platform-administration runbook](docs/operations/page-01-platform-home.md)
 - [Controlled reset ledger](docs/project/RESET_REBUILD.md)
 - [Registration implementation backlog](docs/project/REGISTRATION_TODO.md)
 - [Research landscape](docs/research/landscape-2026-07.md)

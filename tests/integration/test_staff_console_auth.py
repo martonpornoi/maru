@@ -101,14 +101,13 @@ def test_bootstrap_admin_without_a_workspace_can_open_admin_workspace() -> None:
     assert b"/static/staff-console/app.js" in response.content
 
 
-def test_bootstrap_admin_with_a_workspace_can_open_admin_workspace() -> None:
-    administrator = AccountFactory(
+def test_ordinary_staff_with_a_workspace_can_open_admin_workspace() -> None:
+    staff_account = AccountFactory(
         is_staff=True,
-        is_superuser=True,
     )
-    ParticipationFactory(account=administrator)
+    ParticipationFactory(account=staff_account)
     client = APIClient()
-    client.force_login(administrator)
+    client.force_login(staff_account)
 
     response = client.get(reverse("management-console"))
 

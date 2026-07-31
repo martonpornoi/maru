@@ -195,6 +195,9 @@ def _authority_outlives(
     requested_expiry: datetime | None,
     at: datetime,
 ) -> bool:
+    if principal.is_active and principal.is_platform_administrator:
+        return True
+
     scope = (
         Q(edition__isnull=True)
         if edition_id is None

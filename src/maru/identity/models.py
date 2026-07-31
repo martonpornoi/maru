@@ -43,6 +43,13 @@ def validate_login_handle(value: str) -> None:
 class Account(AbstractBaseUser, PermissionsMixin):
     """One platform login, separate from organizer-owned person records."""
 
+    class Kind(models.TextChoices):
+        PERSON = "person", "Person"
+        PLATFORM_ADMINISTRATOR = (
+            "platform_administrator",
+            "Platform administrator",
+        )
+
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     email = models.EmailField(unique=True)
     login_handle = models.CharField(
@@ -55,6 +62,11 @@ class Account(AbstractBaseUser, PermissionsMixin):
     )
     display_name = models.CharField(max_length=120, blank=True)
     preferred_language = models.CharField(max_length=35, default="en")
+    account_kind = models.CharField(
+        max_length=32,
+        choices=Kind,
+        default=Kind.PERSON,
+    )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     email_verified_at = models.DateTimeField(null=True, blank=True)
@@ -82,6 +94,20 @@ class Account(AbstractBaseUser, PermissionsMixin):
                 condition=~models.Q(email=""),
                 name="account_email_not_empty",
             ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(account_kind="platform_administrator")
+                    | (models.Q(is_staff=True) & models.Q(is_superuser=True))
+                ),
+                name="account_platform_admin_has_privileges",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(is_superuser=False)
+                    | models.Q(account_kind="platform_administrator")
+                ),
+                name="account_superuser_is_platform_admin",
+            ),
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -95,6 +121,12 @@ class Account(AbstractBaseUser, PermissionsMixin):
     @property
     def has_verified_email(self) -> bool:
         return self.email_verified_at is not None
+
+    @property
+    def is_platform_administrator(self) -> bool:
+        """Identify platform operators without implying convention participation."""
+
+        return self.account_kind == self.Kind.PLATFORM_ADMINISTRATOR
 
 
 class AccountSecurityEvent(UUIDTimeStampedModel):

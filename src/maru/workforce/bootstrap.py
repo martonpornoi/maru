@@ -238,15 +238,17 @@ def bootstrap_organization_workforce(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> dict[str, int]:
-    """Establish the first two controllers and starter catalog exactly once."""
+    """Establish the first human controller and starter catalog exactly once."""
 
     normalized_reason = reason.strip()
     if not normalized_reason:
         raise ValidationError("A bootstrap reason is required.")
     organization = Organization.objects.select_for_update().get(pk=organization.pk)
     edition = EventEdition.objects.select_for_update().get(pk=edition.pk)
-    if not controller.is_active or not controller.is_superuser:
-        raise ValidationError("The bootstrap controller must be an active superuser.")
+    if not controller.is_active or not controller.is_platform_administrator:
+        raise ValidationError(
+            "The bootstrap controller must be an active platform administrator."
+        )
     if not chair.is_active or chair.id == controller.id:
         raise ValidationError("Choose a distinct active convention chair account.")
     if organization.lifecycle != Organization.Lifecycle.ACTIVE:
@@ -305,59 +307,28 @@ def bootstrap_organization_workforce(
         )
 
     controller_role = roles["convention-chair"]
-    for recipient, approver in (
-        (controller, chair),
-        (chair, controller),
-    ):
-        RoleAssignment.objects.create(
-            organization=organization,
-            edition=None,
-            principal=recipient,
-            role_bundle=authority_role,
-            effective_from=now,
-            granted_by=controller,
-            approved_by=approver,
-            reason=f"Initial authority controller: {normalized_reason}"[:240],
-        )
-    for recipient, approver, assignment_reason in (
-        (
-            controller,
-            chair,
-            "Initial organization bootstrap controller",
-        ),
-        (
-            chair,
-            controller,
-            "Initial convention chair",
-        ),
-    ):
-        RoleAssignment.objects.create(
-            organization=organization,
-            edition=edition,
-            principal=recipient,
-            role_bundle=controller_role,
-            effective_from=now,
-            granted_by=controller,
-            approved_by=approver,
-            reason=f"{assignment_reason}: {normalized_reason}"[:240],
-        )
-
-    _membership(
+    RoleAssignment.objects.create(
         organization=organization,
-        account=controller,
-        label="Bootstrap controller",
+        edition=None,
+        principal=chair,
+        role_bundle=authority_role,
+        effective_from=now,
+        granted_by=controller,
+        approved_by=controller,
+        reason=f"Initial authority controller: {normalized_reason}"[:240],
     )
-    _membership(
+    RoleAssignment.objects.create(
         organization=organization,
-        account=chair,
-        label="Convention Chair",
-    )
-    _participation(
         edition=edition,
-        account=controller,
-        label="Bootstrap Controller",
-        code="bootstrap-controller",
+        principal=chair,
+        role_bundle=controller_role,
+        effective_from=now,
+        granted_by=controller,
+        approved_by=controller,
+        reason=f"Initial convention chair: {normalized_reason}"[:240],
     )
+
+    _membership(organization=organization, account=chair, label="Convention Chair")
     _, chair_capacity = _participation(
         edition=edition,
         account=chair,
@@ -435,6 +406,6 @@ def bootstrap_organization_workforce(
         "position_templates": len(templates),
         "departments": 1,
         "positions": 1,
-        "role_assignments": 4,
+        "role_assignments": 2,
         "position_assignments": 1,
     }

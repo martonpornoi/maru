@@ -6,7 +6,9 @@ first convention partner are known.
 ## Current rebuild discipline
 
 ADR 0030 temporarily reduces the default browser experience to Sign in and one
-empty administration home while retaining the tested backend and APIs. The
+minimal administration home while retaining the tested backend and APIs. ADR
+0031 restores Page 1 as a platform-administrator-only organization inventory
+without adding convention participation or mutation. The
 phase descriptions below are capability evidence and future outcomes, not a
 list of currently mounted pages. Pages return only after UX-013's contract is
 approved and verified one at a time.

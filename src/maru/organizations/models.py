@@ -14,6 +14,7 @@ from maru.core.localization import (
 )
 from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug, validate_time_zone
+from maru.identity.policies import validate_convention_subject
 
 
 def default_organization_languages() -> list[str]:
@@ -162,6 +163,16 @@ class OrganizationMembership(UUIDTimeStampedModel):
                 name="one_membership_per_account_and_organization",
             ),
         ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.account_id:
+            validate_convention_subject(self.account)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.account_id:
+            validate_convention_subject(self.account)
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         relationship = self.relationship_label or self.get_state_display()

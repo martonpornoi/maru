@@ -6,8 +6,18 @@ Last updated: 2026-07-30
 ## Purpose and requirements
 
 `maru.authorization` is the deny-by-default authority boundary for IDN-002,
-IDN-004, IDN-005, IDN-009, QRY-003, ADR 0003, and ADR 0023. A membership or
+IDN-004, IDN-005, IDN-009, IDN-011, QRY-003, ADR 0003, and ADR 0023. A membership or
 familiar role name never grants broad access by itself.
+
+Platform administration is a separate principal purpose under ADR 0031.
+Capability grants and role assignments reject a platform administrator as
+their convention-scoped recipient; the account may still be retained as the
+attributed actor, approver, or revoker of an exceptional platform operation.
+Active platform administrators receive explicit platform-policy decisions for
+code-owned non-self capabilities without stored tenant grants. Capability
+declarations marked as requiring break-glass deny that ordinary platform path;
+self capabilities remain relationship-bound. Existing sensitive and privileged
+operations retain their reason, approval, and audit obligations.
 
 ## Owned data and invariants
 

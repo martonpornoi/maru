@@ -1,7 +1,7 @@
 # Controlled reset and page-by-page rebuild
 
-Status: Empty-experience baseline implemented and verified; owner acceptance
-pending
+Status: Baseline accepted; Page 1 Platform administration home implemented
+with verification and owner inspection pending
 Last updated: 2026-07-31
 
 This ledger preserves the current Maru implementation while the product
@@ -108,7 +108,41 @@ Selected baseline:
 - [x] Run the complete backend, schema, frontend-preservation, migration, and
   documentation quality gates.
 - [x] Update `CURRENT.md` and add the append-only baseline checkpoint.
-- [ ] Obtain product-owner acceptance before designing the next page.
+- [x] Obtain product-owner acceptance before designing the next page.
+
+### Page 1: Platform administration home
+
+- Branch: `codex/page-01-platform-home`
+- Route: `/admin/`
+- Contract:
+  [`../product/page-contracts/01-platform-administration-home.md`](../product/page-contracts/01-platform-administration-home.md)
+- Requirements: IDN-011, UX-013, UX-014
+- Decision: ADR 0031
+
+Checklist:
+
+- [x] Agree that the Maru administrator is platform authority and not a
+  convention participant.
+- [x] Define the page purpose, placement, information, authorization, states,
+  responsive behavior, tests, and non-goals before delivery.
+- [x] Add an explicit platform-administrator account classification rather than
+  relying on account creation order.
+- [x] Reject platform administrators as convention membership, authority,
+  participation, registration, volunteer, onboarding, and workforce subjects.
+- [x] Replace the empty `/admin/` home with the read-only organization
+  inventory.
+- [x] Implement empty, populated, denied, and safe database-failure states.
+- [x] Apply migration `identity.0010` to `maru_rebuild_empty` and verify the
+  existing first administrator classification.
+- [ ] Obtain supported 390-pixel visual evidence with no horizontal overflow;
+  do not bypass the in-app browser URL security policy.
+- [x] Inspect the 1280-pixel desktop layout with no horizontal overflow or
+  browser runtime warnings; supported 390-pixel evidence remains pending after
+  the in-app browser rejected the temporary narrow-frame method.
+- [x] Run the complete backend, schema, frontend-preservation, migration, and
+  documentation quality gates.
+- [x] Update `CURRENT.md` and add the append-only Page 1 checkpoint.
+- [ ] Obtain product-owner acceptance before beginning Page 2.
 
 ### Page-by-page contract
 
@@ -124,21 +158,25 @@ been inspected in the running application. For every page, record:
 - automated behavior, permission, and tenant-isolation tests; and
 - affected requirements, ADRs, module docs, and operator guidance.
 
-Proposed initial sequence after the baseline decision:
+Accepted initial sequence after the baseline decision:
 
 1. Sign in.
 2. Empty administration home.
-3. First administrator and platform state.
-4. Organization record.
-5. Convention series record.
-6. Edition record and edition selector.
-7. Person/account record.
-8. Organization structure.
-9. Registration template and edition form.
-10. Attendee self-registration.
+3. Platform administration home (Page 1; implemented on its dedicated branch).
+4. Create organization (Page 2).
+5. Organization record (Page 3).
+6. Create convention series (Page 4).
+7. Convention-series record (Page 5).
+8. Create event edition (Page 6).
+9. Edition home (Page 7).
+10. Establish first human convention authority (Page 8).
+11. Person/account record.
+12. Organization structure.
+13. Registration template and edition form.
+14. Attendee self-registration.
 
-The sequence is provisional. It exists to make discussion concrete, not to
-pre-approve later pages.
+Only Page 1 is approved for implementation. The later order records the agreed
+journey but does not pre-approve a page contract or implementation.
 
 ## Resume point
 

@@ -1,6 +1,6 @@
 # Core module
 
-Status: Implemented backend foundation with ADR 0030 empty browser baseline
+Status: Implemented backend foundation with ADR 0031 Page 1 platform home
 Last updated: 2026-07-31
 
 ## Purpose and requirements
@@ -16,8 +16,8 @@ NFR-001, NFR-004, NFR-006, and NFR-008.
 - allowlisted structured JSON logging
 - RFC 9457-style DRF problem responses
 - liveness, database readiness, and build identity endpoints
-- an ADR 0030 root redirect, focused local sign-in, and empty staff-only
-  administration home
+- an ADR 0030 root redirect and focused local sign-in;
+- the ADR 0031 platform-administrator-only organization inventory at `/admin/`;
 - preserved administration safety mixins and previous shell implementation,
   not mounted in the current default experience
 - canonical platform brand assets, accessible palette tokens, and application
@@ -36,8 +36,14 @@ frontends remain replaceable clients.
 `maru.baseline_urls` is the default URL configuration. `/` redirects to
 `/admin/`; `/accounts/login/` is the only unauthenticated HTML page; and
 `/admin/` is the only authenticated HTML page. The home requires an active
-staff account and contains no record or workflow navigation. Sign-out is a
-POST action. Previous HTML routes are not mounted and return 404.
+platform administrator and shows only the C1 organization inventory described
+by UX-014. It performs no mutation and creates no convention relationship.
+Sign-out is a POST action. Previous HTML routes are not mounted and return 404.
+
+The home renders empty and populated states atomically. A database query failure
+produces a safe read-only `503` page and server exception log without exposing
+the database message. The Page 2 organization-creation route is not mounted and
+Page 1 does not present an unfinished action.
 
 Health, build, schema, and versioned APIs remain mounted. Automated backend
 tests may select the preserved URL configuration, but that does not make its
@@ -108,7 +114,9 @@ projection, not the public response.
 ## Tests
 
 Unit tests cover strict environment parsing, validators, request correlation,
-safe log output, problem response shape, and health/build behavior.
+safe log output, problem response shape, and health/build behavior. Integration
+tests cover Page 1 authorization, organization counts, non-participation side
+effects, and safe failure behavior.
 
 ## Limitations
 

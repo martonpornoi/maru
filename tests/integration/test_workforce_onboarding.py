@@ -130,9 +130,13 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
     )
 
     assert created["position_templates"] >= 10
-    assert RoleAssignment.objects.filter(
+    assert not RoleAssignment.objects.filter(
         organization=organization,
         principal=controller,
+    ).exists()
+    assert RoleAssignment.objects.filter(
+        organization=organization,
+        principal=chair,
         edition__isnull=True,
     ).exists()
     with pytest.raises(ValidationError, match="already has authority"):

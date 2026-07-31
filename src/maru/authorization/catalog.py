@@ -27,6 +27,7 @@ class Capability:
     sensitivity_ceiling: Sensitivity = Sensitivity.INTERNAL
     delegable: bool = False
     allow_self: bool = False
+    requires_break_glass: bool = False
     obligations: frozenset[str] = frozenset()
 
 

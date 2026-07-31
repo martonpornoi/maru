@@ -2,8 +2,9 @@
 
 Only modules with executable behavior appear here.
 
-ADR 0030 retains these backend modules but mounts only Sign in and an empty
-administration home. References in module documents to Convention work,
+ADR 0030 retains these backend modules; ADR 0031 currently mounts Sign in and
+Page 1's read-only platform organization inventory. References in module
+documents to Convention work,
 Specialist records, registration pages, or other HTML surfaces describe the
 preserved pre-reset implementation unless the paragraph explicitly identifies
 the current baseline.

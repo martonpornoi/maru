@@ -68,6 +68,15 @@ architecture documents, implementation issues, tests, and release notes.
   and slashes used by convention communities; leading/trailing whitespace,
   control characters, and identifiers that look like email addresses are not
   allowed.
+- **IDN-011 — Non-participating platform administration:** Platform
+  administrators must be explicitly classified independently of account age or
+  record ordering. They may inventory and provision platform tenants and act as
+  attributed operators, but must not be subjects of organization membership,
+  convention capability or role grants, edition participation, registration,
+  volunteer applications, onboarding requests, or workforce assignments.
+  Platform oversight must not silently create any of those relationships, and
+  restricted case access remains subject to SAF-004 rather than following from
+  platform-administrator status.
 
 ### Multi-convention and event editions
 
@@ -340,6 +349,14 @@ architecture documents, implementation issues, tests, and release notes.
   desktop and narrow evidence, automated tests, and updated documentation.
   No later page may be treated as current merely because its preserved code or
   API still exists.
+- **UX-014 — Platform administration home:** The first page restored after the
+  controlled baseline must make `/admin/` a platform-wide organization
+  inventory available only to active platform administrators. It must explain
+  that platform access is not convention participation, show an honest empty
+  state when no organization exists, show only organization identity, lifecycle,
+  series count, and edition count when records exist, and fail read-only with a
+  safe error when the inventory is unavailable. It must not introduce a
+  convention selector, setup strip, unfinished link, or convention-owned data.
 
 ### Registration, orders, and attendee service
 

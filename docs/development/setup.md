@@ -42,11 +42,12 @@ uv run python src/manage.py createsuperuser
 ```
 
 The account uses its email address or optional unique login handle to sign in
-at <http://127.0.0.1:8000/admin/>. The current default browser experience has
-no menu, setup guide, convention workspace, specialist records, public
-registration, or volunteer pages. It contains only Sign in and the empty
-administration home. Local password authentication is not the production
-identity system.
+at <http://127.0.0.1:8000/admin/>. A superuser is explicitly classified as a
+non-participating platform administrator. The current default browser
+experience has no menu, setup guide, convention workspace, specialist records,
+public registration, or volunteer pages. It contains Sign in and Page 1's
+read-only organization inventory. Local password authentication is not the
+production identity system.
 
 The verified local baseline contains only:
 

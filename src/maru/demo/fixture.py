@@ -838,6 +838,11 @@ class _DemoSeeder:
                 is_active=True,
                 is_staff=is_staff,
                 is_superuser=is_superuser,
+                account_kind=(
+                    Account.Kind.PLATFORM_ADMINISTRATOR
+                    if is_superuser
+                    else Account.Kind.PERSON
+                ),
                 email_verified_at=datetime(2024, 1, 1, 12, tzinfo=UTC),
                 password=self.password_hash,
                 date_joined=datetime(2024, 1, 1, 12, tzinfo=UTC),

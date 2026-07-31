@@ -6,7 +6,7 @@ Last updated: 2026-07-27
 ## Purpose and requirements
 
 `maru.participation` owns a person's relationship with an edition and durable
-capacity labels for IDN-003 and ARC-001 through ARC-004.
+capacity labels for IDN-003, IDN-011, and ARC-001 through ARC-004.
 
 ## Owned data and invariants
 
@@ -17,6 +17,9 @@ capacity labels for IDN-003 and ARC-001 through ARC-004.
 - multiple stable capacity codes and historical labels;
 - proposed, active, completed, or withdrawn capacity state;
 - contribution summary and opt-in public-history flags.
+
+Platform administrators are operational actors rather than convention people;
+participation validation rejects that account classification before saving.
 
 PostgreSQL triggers reject organization/edition mismatches and any ordinary
 participation or capacity mutation after edition archive. Uniqueness exists at

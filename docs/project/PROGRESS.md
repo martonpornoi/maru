@@ -13,7 +13,7 @@ checkpoint files preserve milestone evidence; `BACKLOG.md` defines acceptance.
 | V00 engineering foundation | Complete | PostgreSQL, settings, CI, API conventions, 36-test checkpoint |
 | V01 organization and edition kernel | Complete | Scope/archive guards, self APIs, 79-test checkpoint |
 | V02 authority, audit, and effects | Worker boundary complete; activity projections remain | dual-control authority, endpoint isolation, audit, supervised outbox, metrics/replay, restore drill, 246 tests |
-| V03 browser experience | Controlled empty baseline; prior unified shell preserved but unmounted; next page requires product-owner approval | ADR 0030, UX-013, `maru.baseline_urls`, `maru_rebuild_empty`, preserved commit `548f15a` |
+| V03 browser experience | Page 1 platform organization inventory implemented on its dedicated branch; owner inspection gates Page 2 | ADR 0030/0031, UX-013/014, IDN-011, `codex/page-01-platform-home`, `maru_rebuild_empty` |
 | Registration milestone | Repository safety boundary delivered; target deployment/load/policy gates and selected product gaps remain | ADRs 0007, 0009-0017, 369 backend tests, restore rehearsal, registration runbook |
 | V04-V24 | Planned, with selected registration work delivered early | Ordered in `DELIVERY_PLAN.md` |
 

@@ -9,7 +9,7 @@ Last updated: 2026-07-31
 registration state, staff-assisted intake evidence, provider-neutral payment and operational finance evidence,
 admission entitlements, direct check-in evidence, and audience-specific
 operational timelines. The implemented vertical covers EVT-002, EVT-003,
-AUD-002, ACT-001, IDN-006 and REG-001 through REG-022.
+AUD-002, ACT-001, IDN-006, IDN-011, and REG-001 through REG-022.
 
 ADR 0007 governs configuration reuse. ADR 0009 governs public registration and
 the edition-owned profile foundation. ADR 0010 governs headless clients and
@@ -24,6 +24,9 @@ arrival, and closure. ADR 0018 adds the separately consented public-country
 field, authoritative public attendee labels, and the first minimized
 attendee-reporting preset. Registration data is always owned by one
 organization and event edition.
+Registration validation rejects a platform administrator as its attendee
+subject. The account may still be retained separately as the attributed actor
+of a permitted staff-assisted or platform operation.
 ADR 0019 adds staff-assisted registration while preserving the ordinary
 policy, capacity, price, and payment lifecycle. ADR 0020 adds explicit,
 audited account creation when the entered email has never belonged to an

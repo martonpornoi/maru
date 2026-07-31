@@ -1,8 +1,19 @@
 import pytest
+from django.db import DatabaseError
 from django.test import override_settings
 from rest_framework.test import APIClient
 
-from tests.factories import AccountFactory
+from maru.authorization.models import CapabilityGrant, RoleAssignment
+from maru.organizations.models import OrganizationMembership
+from maru.participation.models import Participation
+from maru.registration.models import Registration
+from maru.workforce.models import PositionAssignment, VolunteerApplication
+from tests.factories import (
+    AccountFactory,
+    ConventionSeriesFactory,
+    EventEditionFactory,
+    OrganizationFactory,
+)
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -35,7 +46,7 @@ def test_baseline_sign_in_is_plain_and_focused() -> None:
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")
-def test_first_administrator_reaches_an_empty_home() -> None:
+def test_platform_administrator_reaches_the_platform_home() -> None:
     password = "Baseline local password 927!"
     administrator = AccountFactory(
         display_name="Maru Administrator",
@@ -59,9 +70,10 @@ def test_first_administrator_reaches_an_empty_home() -> None:
     assert response.status_code == 200
     assert response.request["PATH_INFO"] == "/admin/"
     content = response.content.decode()
-    assert 'data-page="empty-admin-home"' in content
-    assert "Nothing here yet" in content
-    assert "one page" in content
+    assert 'data-page="platform-administration-home"' in content
+    assert "Organizations" in content
+    assert "No organizations yet" in content
+    assert "Platform access, not participation" in content
     assert "Maru Administrator" in content
     assert "Convention work" not in content
     assert "Specialist records" not in content
@@ -70,14 +82,68 @@ def test_first_administrator_reaches_an_empty_home() -> None:
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")
-def test_non_staff_account_is_denied_the_empty_admin_home() -> None:
-    account = AccountFactory(is_staff=False)
+@pytest.mark.parametrize("is_staff", [False, True])
+def test_non_platform_account_is_denied_the_platform_home(is_staff: bool) -> None:
+    account = AccountFactory(is_staff=is_staff)
     client = APIClient()
     client.force_login(account)
 
     response = client.get("/admin/")
 
     assert response.status_code == 403
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_platform_home_lists_organizations_without_creating_relationships() -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    organization = OrganizationFactory(name="Marucon Organizers", slug="marucon")
+    series = ConventionSeriesFactory(organization=organization, name="Marucon")
+    EventEditionFactory(
+        organization=organization,
+        series=series,
+        name="Marucon 2031",
+    )
+    client = APIClient()
+    client.force_login(administrator)
+
+    response = client.get("/admin/")
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Marucon Organizers" in content
+    assert "Marucon 2031" not in content
+    assert ">1</td>" in content
+    assert OrganizationMembership.objects.filter(account=administrator).count() == 0
+    assert Participation.objects.filter(account=administrator).count() == 0
+    assert Registration.objects.filter(account=administrator).count() == 0
+    assert CapabilityGrant.objects.filter(principal=administrator).count() == 0
+    assert RoleAssignment.objects.filter(principal=administrator).count() == 0
+    assert VolunteerApplication.objects.filter(account=administrator).count() == 0
+    assert PositionAssignment.objects.filter(account=administrator).count() == 0
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_platform_home_has_a_safe_database_failure_state(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+
+    def unavailable_inventory() -> None:
+        raise DatabaseError("synthetic unavailable database")
+
+    monkeypatch.setattr(
+        "maru.core.views.platform_organization_inventory",
+        unavailable_inventory,
+    )
+    client = APIClient()
+    client.force_login(administrator)
+
+    response = client.get("/admin/")
+
+    assert response.status_code == 503
+    content = response.content.decode()
+    assert "Organizations could not be loaded" in content
+    assert "no convention data was changed" in content
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")

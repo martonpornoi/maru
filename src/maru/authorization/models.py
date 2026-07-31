@@ -10,6 +10,7 @@ from django.db import models
 
 from maru.authorization.catalog import ScopeLevel, capability
 from maru.core.models import UUIDTimeStampedModel
+from maru.identity.policies import validate_convention_subject
 
 ROLE_CODE_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 
@@ -113,6 +114,8 @@ class CapabilityGrant(UUIDTimeStampedModel):
 
     def clean(self) -> None:
         super().clean()
+        if self.principal_id:
+            validate_convention_subject(self.principal, field_name="principal")
         definition = capability(self.capability_code)
         if definition is not None:
             if definition.maximum_scope is ScopeLevel.RESOURCE:
@@ -260,6 +263,8 @@ class RoleAssignment(UUIDTimeStampedModel):
 
     def clean(self) -> None:
         super().clean()
+        if self.principal_id:
+            validate_convention_subject(self.principal, field_name="principal")
         if (
             self.role_bundle_id
             and self.organization_id

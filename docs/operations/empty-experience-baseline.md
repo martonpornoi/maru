@@ -1,10 +1,11 @@
 # Empty-experience baseline
 
-Status: Executable local baseline
+Status: Historical accepted baseline; superseded by Page 1
 Last updated: 2026-07-31
 
-ADR 0030 deliberately exposes only Sign in and one empty administration home.
-Use this environment to approve the shell before adding the first real page.
+ADR 0030 deliberately exposed only Sign in and one empty administration home.
+The owner accepted that baseline. ADR 0031 and the
+[Page 1 runbook](page-01-platform-home.md) now describe the executable home.
 
 ## Current local environment
 
@@ -20,7 +21,8 @@ account.
 
 The database contains one account and no organizations, convention series,
 editions, registration configurations, registrations, departments, or
-positions. The first account is an active staff superuser.
+positions. After identity migration `0010`, the first account is explicitly an
+active `platform_administrator` as described by the Page 1 runbook.
 
 ## Start the baseline
 
@@ -34,7 +36,7 @@ uv run python src/manage.py runserver
 
 Open <http://127.0.0.1:8000/admin/> and sign in as `admin`.
 
-Expected behavior:
+Historical baseline behavior before Page 1:
 
 - `/` redirects to `/admin/`;
 - an anonymous `/admin/` request redirects to `/accounts/login/`;
@@ -54,7 +56,6 @@ page-by-page rebuild until a later checkpoint explicitly changes that.
 
 ## Next page gate
 
-Do not add a menu or placeholder destinations. The next page starts only after
-the product owner accepts this baseline and agrees its purpose, placement,
-minimum information, actions, authorization, states, responsive behavior,
-tests, and documentation in `docs/project/RESET_REBUILD.md`.
+The baseline gate is complete. Continue with the per-page gates in
+`docs/project/RESET_REBUILD.md`; do not restore the old shell or use this
+historical runbook as the current UI contract.

@@ -50,6 +50,15 @@ body {
   margin-top: clamp(3rem, 10vh, 7rem);
 }
 
+.baseline-page {
+  width: min(68rem, calc(100% - 2rem));
+  margin: clamp(2.5rem, 7vh, 5rem) auto 4rem;
+}
+
+.baseline-page-heading {
+  max-width: 44rem;
+}
+
 h1 {
   margin: 1.5rem 0 0.5rem;
   font-size: clamp(2rem, 7vw, 3rem);
@@ -72,6 +81,122 @@ h1 {
   font-weight: 750;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.baseline-panel,
+.baseline-boundary {
+  margin-top: 2.25rem;
+  border: 1px solid #d9d3c7;
+  background: #fff;
+}
+
+.baseline-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e5e0d7;
+}
+
+.baseline-panel h2,
+.baseline-boundary h2 {
+  margin: 0.35rem 0 0;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.baseline-count {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  color: #45536a;
+  background: #f0ede6;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.baseline-state {
+  padding: clamp(1.5rem, 5vw, 3rem);
+}
+
+.baseline-state h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.baseline-state p,
+.baseline-boundary p {
+  max-width: 42rem;
+  margin: 0.5rem 0 0;
+  color: #45536a;
+  line-height: 1.6;
+}
+
+.baseline-state--error {
+  border-left: 0.3rem solid #9e3028;
+  color: #76241e;
+  background: #f9e8e5;
+}
+
+.baseline-table-wrap {
+  overflow-x: auto;
+}
+
+.baseline-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.baseline-table th,
+.baseline-table td {
+  padding: 0.9rem 1.5rem;
+  border-bottom: 1px solid #e5e0d7;
+  vertical-align: top;
+}
+
+.baseline-table tbody tr:last-child th,
+.baseline-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.baseline-table thead th {
+  color: #45536a;
+  background: #faf9f6;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.baseline-record-name,
+.baseline-record-slug {
+  display: block;
+}
+
+.baseline-record-slug {
+  margin-top: 0.2rem;
+  color: #68758a;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.baseline-boundary {
+  padding: 1.25rem 1.5rem;
+  border-left: 0.3rem solid #b9822e;
+}
+
+.baseline-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .baseline-form {
@@ -167,6 +292,60 @@ button:focus-visible {
   .baseline-card--login,
   .baseline-card--home {
     margin-top: 2rem;
+  }
+
+  .baseline-page {
+    margin-top: 2rem;
+  }
+
+  .baseline-panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .baseline-table-wrap {
+    overflow: visible;
+  }
+
+  .baseline-table,
+  .baseline-table tbody,
+  .baseline-table tr,
+  .baseline-table th,
+  .baseline-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .baseline-table thead {
+    display: none;
+  }
+
+  .baseline-table tr {
+    padding: 0.8rem 1.25rem;
+    border-bottom: 1px solid #e5e0d7;
+  }
+
+  .baseline-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .baseline-table th,
+  .baseline-table td {
+    display: grid;
+    grid-template-columns: minmax(5.5rem, 0.4fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+    border: 0;
+  }
+
+  .baseline-table th::before,
+  .baseline-table td::before {
+    content: attr(data-label);
+    color: #68758a;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 }
 

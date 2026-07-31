@@ -23,18 +23,19 @@ the system.
 | [0016](0016-minors-media-and-privacy-operations.md) | Accepted | Versioned minor policy, safe media pipeline, and evidence-bearing privacy operations |
 | [0017](0017-credentials-offline-check-in-and-closure.md) | Accepted | Revocable credentials, signed bounded offline check-in, and gated edition closure |
 | [0018](0018-attendee-directory-labels-and-reporting-preset.md) | Accepted | Separately consented public country, authoritative attendee labels, and minimized badge reporting |
-| [0019](0019-staff-assisted-registration-and-workforce-onboarding.md) | Accepted | Clean organizer bootstrap, staff-assisted registration, reviewed onboarding documents, and position-driven access |
-| [0020](0020-guided-bootstrap-and-localized-data-entry.md) | Partially superseded | Organizer/series identity, code-backed locale entry, draft removal, explicit staff account creation, and the superseded first-authority web adapter |
+| [0019](0019-staff-assisted-registration-and-workforce-onboarding.md) | Partially superseded | Staff-assisted registration and workforce onboarding remain; ADR 0031 removes convention relationships from the platform bootstrap controller |
+| [0020](0020-guided-bootstrap-and-localized-data-entry.md) | Partially superseded | Organizer/series identity, locale entry, draft removal, and staff account creation remain; later ADRs replace the web adapter and controller participation |
 | [0021](0021-platform-brand-and-legacy-reference.md) | Accepted | Accessible platform brand and behavior-only use of the legacy Maru prototype |
 | [0022](0022-ordered-admin-quick-start.md) | Superseded | Ordered global Quick Start; ADR 0024 replaces its command-only first-authority experience and ADR 0027 moves guidance out of global chrome |
 | [0023](0023-unified-management-console-and-access-sharing.md) | Partially superseded | Contextual role sharing and a forms hub remain; ADR 0026 replaces its React shell and route placement |
-| [0024](0024-guarded-first-authority-and-lifecycle-console.md) | Accepted | Guarded one-time first-authority ceremony and reasoned edition lifecycle controls in the Management Console |
+| [0024](0024-guarded-first-authority-and-lifecycle-console.md) | Partially superseded | The guarded ceremony and lifecycle controls remain; ADR 0031 removes convention relationships from its platform controller |
 | [0025](0025-single-admin-namespace.md) | Superseded | React-at-`/admin/` route placement and compatibility redirects, replaced by ADR 0026 |
 | [0026](0026-original-admin-shell-with-embedded-workflows.md) | Accepted | Original `/admin/` shell and menu with embedded API-backed workflows and no standalone management routes |
 | [0027](0027-record-oriented-convention-work.md) | Accepted | Record-oriented embedded workflows and contextual Setup guide without global Quick Start |
 | [0028](0028-login-handles-and-workforce-structure.md) | Accepted | Human login handles, local public-roster boundary, and minimized workforce hierarchy |
 | [0029](0029-append-only-registration-profile-extensions.md) | Accepted | Versioned profile-extension fields with append-only permission-aware values |
 | [0030](0030-controlled-empty-experience-rebuild.md) | Accepted | Default two-page browser baseline with preserved backend/API foundation and page-by-page reintroduction |
+| [0031](0031-non-participating-platform-administration.md) | Accepted | Explicit non-participating platform administrator and read-only organization inventory |
 
 New ADRs use the next four-digit number and contain:
 

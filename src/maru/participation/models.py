@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from maru.core.models import UUIDTimeStampedModel
+from maru.identity.policies import validate_convention_subject
 
 CAPACITY_CODE_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 
@@ -64,6 +65,8 @@ class Participation(UUIDTimeStampedModel):
 
     def clean(self) -> None:
         super().clean()
+        if self.account_id:
+            validate_convention_subject(self.account)
         if (
             self.edition_id
             and self.organization_id

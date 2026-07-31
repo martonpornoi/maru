@@ -16,6 +16,7 @@ from django.db.models.functions import Lower
 
 from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_currency_codes, validate_lowercase_slug
+from maru.identity.policies import validate_convention_subject
 from maru.participation.models import validate_capacity_code
 from maru.registration.profile_choices import (
     MAX_BIO_LENGTH,
@@ -899,6 +900,8 @@ class Registration(UUIDTimeStampedModel):
 
     def clean(self) -> None:
         super().clean()
+        if self.account_id:
+            validate_convention_subject(self.account)
         if (
             self.edition_id
             and self.organization_id

@@ -26,13 +26,84 @@
       </div>
     </header>
 
-    <main class="baseline-card baseline-card--home" data-page="empty-admin-home">
-      <p class="baseline-kicker">Administration</p>
-      <h1>Nothing here yet</h1>
-      <p class="baseline-intro">
-        This workspace is intentionally empty. We will add and review one page
-        at a time.
-      </p>
+    <main class="baseline-page" data-page="platform-administration-home">
+      <header class="baseline-page-heading">
+        <p class="baseline-kicker">Platform administration</p>
+        <h1>Organizations</h1>
+        <p class="baseline-intro">
+          This is Maru's platform-wide view. Your administrator account can
+          oversee conventions without becoming a member or participant in any
+          of them.
+        </p>
+      </header>
+
+      <section class="baseline-panel" aria-labelledby="organization-inventory-title">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">Convention organizers</p>
+            <h2 id="organization-inventory-title">Organization inventory</h2>
+          </div>
+          <span class="baseline-count">
+            {{ organizations|length }} organization{{ organizations|length|pluralize }}
+          </span>
+        </div>
+
+        {% if organization_inventory_load_failed %}
+          <div class="baseline-state baseline-state--error" role="alert">
+            <h3>Organizations could not be loaded</h3>
+            <p>
+              Maru kept this page read-only. Try again after the database is
+              available; no convention data was changed.
+            </p>
+          </div>
+        {% elif organizations %}
+          <div class="baseline-table-wrap">
+            <table class="baseline-table">
+              <caption class="baseline-visually-hidden">
+                Organizations configured in this Maru installation
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Organization</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Series</th>
+                  <th scope="col">Editions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for organization in organizations %}
+                  <tr>
+                    <th scope="row" data-label="Organization">
+                      <span class="baseline-record-name">{{ organization.name }}</span>
+                      <span class="baseline-record-slug">{{ organization.slug }}</span>
+                    </th>
+                    <td data-label="Status">{{ organization.get_lifecycle_display }}</td>
+                    <td data-label="Series">{{ organization.series_count }}</td>
+                    <td data-label="Editions">{{ organization.edition_count }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="baseline-state" data-state="empty">
+            <h3>No organizations yet</h3>
+            <p>
+              Creating the first organization is the next page in this
+              rebuild. No incomplete or unavailable action is shown here.
+            </p>
+          </div>
+        {% endif %}
+      </section>
+
+      <aside class="baseline-boundary" aria-labelledby="platform-boundary-title">
+        <p class="baseline-kicker">Account boundary</p>
+        <h2 id="platform-boundary-title">Platform access, not participation</h2>
+        <p>
+          This account operates Maru itself. It does not appear in convention
+          membership, registration, staffing, volunteer, or attendee records.
+        </p>
+      </aside>
     </main>
   </body>
 </html>

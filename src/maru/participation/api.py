@@ -20,6 +20,7 @@ from maru.authorization.enforcement import (
 )
 from maru.authorization.policy import PolicyDecision, ResourceScope, decide
 from maru.core.pagination import StandardPageNumberPagination
+from maru.events.queries import platform_editions
 from maru.identity.models import Account
 from maru.organizations.queries import memberships_for_account
 from maru.participation.models import Participation, ParticipationCapacity
@@ -45,15 +46,54 @@ class MyContextView(APIView):
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
 
+        if account.is_platform_administrator:
+            editions: object = [
+                {
+                    "organization_id": edition.organization_id,
+                    "organization_slug": edition.organization.slug,
+                    "series_id": edition.series_id,
+                    "series_slug": edition.series.slug,
+                    "series_name": edition.series.name,
+                    "edition_id": edition.id,
+                    "edition_slug": edition.slug,
+                    "edition_name": edition.name,
+                    "lifecycle": edition.lifecycle,
+                    "time_zone": edition.time_zone,
+                    "language_codes": edition.language_codes,
+                    "currency_codes": edition.currency_codes,
+                    "starts_on": edition.starts_on,
+                    "ends_on": edition.ends_on,
+                    "participation_status": "not_participating",
+                    "capacities": [],
+                    "can_transition": decide(
+                        principal=account,
+                        capability_code="events.transition",
+                        resource=ResourceScope(
+                            organization_id=edition.organization_id,
+                            edition_id=edition.id,
+                        ),
+                    ).allowed,
+                }
+                for edition in platform_editions()
+            ]
+            memberships: object = []
+        else:
+            editions = participations_for_account(account)
+            memberships = memberships_for_account(account)
+
         payload = {
             "account_id": account.id,
             "display_name": account.display_name,
             "preferred_language": account.preferred_language,
             "can_access_advanced_records": account.is_staff,
-            "can_bootstrap_convention": account.is_active and account.is_superuser,
-            "memberships": memberships_for_account(account),
-            "editions": participations_for_account(account),
+            "can_bootstrap_convention": (
+                account.is_active and account.is_platform_administrator
+            ),
+            "memberships": memberships,
+            "editions": editions,
         }
+        if account.is_platform_administrator:
+            return Response(payload)
         serializer = MyContextSerializer(payload, context={"account": account})
         return Response(serializer.data)
 

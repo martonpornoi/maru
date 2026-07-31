@@ -42,6 +42,8 @@ class AccountFactory(factory.django.DjangoModelFactory[Account]):
         *args: Any,
         **kwargs: Any,
     ) -> Account:
+        if kwargs.get("is_superuser") and "account_kind" not in kwargs:
+            kwargs["account_kind"] = Account.Kind.PLATFORM_ADMINISTRATOR
         return model_class.objects.create_user(*args, **kwargs)
 
 

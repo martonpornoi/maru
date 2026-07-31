@@ -38,6 +38,7 @@ class AccountAdmin(UserAdmin):  # type: ignore[type-arg]
         "person",
         "login_handle",
         "email",
+        "account_kind",
         "preferred_language",
         "convention_record_count",
         "restriction_state",
@@ -52,6 +53,7 @@ class AccountAdmin(UserAdmin):  # type: ignore[type-arg]
         "is_active",
         "is_staff",
         "is_superuser",
+        "account_kind",
         "preferred_language",
         "email_verified_at",
     )
@@ -63,6 +65,7 @@ class AccountAdmin(UserAdmin):  # type: ignore[type-arg]
         "date_joined",
         "last_login",
         "email_verified_at",
+        "account_kind",
         "organizer_relationships",
         "registration_history",
     )
@@ -76,6 +79,7 @@ class AccountAdmin(UserAdmin):  # type: ignore[type-arg]
             "Bootstrap administration access",
             {
                 "fields": (
+                    "account_kind",
                     "is_active",
                     "is_staff",
                     "is_superuser",

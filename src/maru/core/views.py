@@ -1,5 +1,6 @@
-"""Minimal operational and build endpoints."""
+"""Minimal browser, operational, and build endpoints."""
 
+import logging
 from typing import Any
 
 from django.conf import settings
@@ -19,6 +20,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from maru.events.admin_context import selected_admin_edition
+from maru.identity.models import Account
+from maru.organizations.queries import platform_organization_inventory
+
+logger = logging.getLogger(__name__)
 
 
 def baseline_root(request: HttpRequest) -> HttpResponse:
@@ -30,11 +35,34 @@ def baseline_root(request: HttpRequest) -> HttpResponse:
 
 @login_required(login_url="staff-login")
 def baseline_administration_home(request: HttpRequest) -> HttpResponse:
-    """Render the page-by-page rebuild's intentionally empty staff home."""
+    """Render the platform-wide organization inventory for its administrators."""
 
-    if not request.user.is_active or not request.user.is_staff:
+    if (
+        not isinstance(request.user, Account)
+        or not request.user.is_active
+        or not request.user.is_platform_administrator
+    ):
         raise PermissionDenied
-    return TemplateResponse(request, "core/baseline_admin_home.html")
+
+    load_failed = False
+    status = 200
+    try:
+        organizations = list(platform_organization_inventory())
+    except DatabaseError:
+        logger.exception("Unable to load the platform organization inventory")
+        organizations = []
+        load_failed = True
+        status = 503
+
+    return TemplateResponse(
+        request,
+        "core/baseline_admin_home.html",
+        {
+            "organizations": organizations,
+            "organization_inventory_load_failed": load_failed,
+        },
+        status=status,
+    )
 
 
 def platform_home(request: HttpRequest) -> TemplateResponse:

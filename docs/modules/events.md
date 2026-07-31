@@ -26,8 +26,14 @@ governed by the application database role.
 
 ## Commands and API
 
-`transition_edition` requires an exact `events.transition` edition grant, locks
-the row, validates a state-machine edge, requires a reason, increments the
+`platform_editions()` is the explicit C1 identity query used only after a
+platform-administrator boundary has been established. The preserved context
+API labels those rows `not_participating`, returns no capacities, and creates no
+edition relationship for the administrator.
+
+`transition_edition` requires an exact `events.transition` edition grant or an
+explicit platform-administration policy decision, locks the row, validates a
+state-machine edge, requires a reason, increments the
 aggregate version, records the transition, and finalizes participation label
 snapshots before archiving.
 

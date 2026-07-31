@@ -1,22 +1,26 @@
 # Experience and information architecture
 
-Status: Controlled empty-experience baseline; broader model preserved as
+Status: Page 1 platform administration home mounted; broader model preserved as
 page-by-page backlog
 Last updated: 2026-07-31
 
 ## Current executable experience
 
-ADR 0030 resets the default browser experience to two pages:
+ADR 0030 established the two-page baseline. ADR 0031 restores the first
+reviewed page:
 
 1. Sign in at `/accounts/login/`.
-2. An authenticated, active-staff-only empty administration home at `/admin/`.
+2. An authenticated, active-platform-administrator-only organization inventory
+   at `/admin/`.
 
-The home shows the signed-in identity, POST-only sign-out, and one explicit
-empty-state message. It has no global menu, edition selector, setup sequence,
-recent actions, Django model directory, embedded application, registration,
-volunteer, or convention content. `/` redirects to `/admin/`; previous HTML
-routes return 404. Health and versioned APIs remain mounted as backend
-contracts.
+The home shows the signed-in identity, POST-only sign-out, organization name,
+slug, lifecycle, series count, and edition count. Its zero-record state names
+the next page without presenting an unfinished action. It explains that the
+administrator operates Maru but does not participate in a convention. It has
+no global menu, edition selector, setup sequence, Django model directory,
+embedded application, registration, volunteer, or convention-owned operational
+content. `/` redirects to `/admin/`; previous HTML routes return 404. Health
+and versioned APIs remain mounted as backend contracts.
 
 Every later page requires UX-013's page contract and product-owner inspection
 before another page begins. Preserved source does not make a page current.

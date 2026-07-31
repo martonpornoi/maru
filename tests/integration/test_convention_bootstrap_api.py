@@ -151,7 +151,7 @@ def test_browser_bootstrap_requires_password_confirmation_and_is_one_shot() -> N
         "position_templates": 10,
         "departments": 1,
         "positions": 1,
-        "role_assignments": 4,
+        "role_assignments": 2,
         "position_assignments": 1,
     }
     assert RoleBundle.objects.filter(organization=edition.organization).count() == 11
@@ -162,8 +162,15 @@ def test_browser_bootstrap_requires_password_confirmation_and_is_one_shot() -> N
         edition=edition,
         code="convention-chair",
     ).exists()
-    assert Participation.objects.filter(edition=edition, account=controller).exists()
+    assert not Participation.objects.filter(
+        edition=edition,
+        account=controller,
+    ).exists()
     assert Participation.objects.filter(edition=edition, account=chair).exists()
+    assert not RoleAssignment.objects.filter(
+        organization=edition.organization,
+        principal=controller,
+    ).exists()
     assert (
         AuditEvent.objects.get(
             correlation_id=created_id,

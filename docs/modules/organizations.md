@@ -1,12 +1,12 @@
 # Organizations module
 
-Status: Implemented tenant, brand, and localization bootstrap  
-Last updated: 2026-07-29
+Status: Implemented tenant, brand, localization bootstrap, and Page 1 platform inventory
+Last updated: 2026-07-31
 
 ## Purpose and requirements
 
 `maru.organizations` owns tenant structure and recurring-series continuity for
-IDN-002, EVT-001, and EVT-003.
+IDN-002, IDN-011, EVT-001, EVT-003, and UX-014.
 
 ## Owned data and invariants
 
@@ -17,6 +17,10 @@ IDN-002, EVT-001, and EVT-003.
   organization, with its own description, contact, and website.
 - `OrganizationMembership`: one organizer-owned account relationship with
   invited, active, suspended, or ended state.
+
+A platform administrator is not an organizer relationship. Membership
+validation rejects that account classification while still allowing the
+administrator to be attributed as the actor of later platform provisioning.
 
 Organization slug is globally case-insensitively unique. Series slug is
 case-insensitively unique within its organization. Protected relationships
@@ -39,9 +43,12 @@ non-browser clients.
 
 - models for owned aggregates;
 - `memberships_for_account(account)`, a self-scoped query.
+- `platform_organization_inventory()`, the C1 name, slug, lifecycle, series
+  count, and edition-count projection used only after platform authorization.
 
 Generic unscoped organization API and mutation commands are intentionally
-absent until V02 policy enforcement.
+absent. The platform inventory is a server-rendered read contract, not a public
+or organizer API.
 
 ## Permissions and sensitivity
 
@@ -77,6 +84,9 @@ Organization closure and data exit need a future reasoned workflow.
 PostgreSQL tests cover case-insensitive scoped uniqueness, protected deletion,
 two-tenant synthetic data, localization normalization/validation, readable
 language/time-zone/telephone choices, and self-context non-disclosure.
+Page tests additionally cover membership rejection plus empty, populated,
+denied, and safe database-failure inventory states without relationship side
+effects.
 
 ## Limitations
 

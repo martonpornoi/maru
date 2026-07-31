@@ -42,9 +42,12 @@ class AccountManager(BaseUserManager["Account"]):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("account_kind", "platform_administrator")
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("A superuser must have is_staff=True")
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("A superuser must have is_superuser=True")
+        if extra_fields.get("account_kind") != "platform_administrator":
+            raise ValueError("A superuser must be a platform administrator")
         return self.create_user(email, password, **extra_fields)

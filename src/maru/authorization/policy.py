@@ -111,6 +111,19 @@ def decide(
             reason_code="self_relationship",
         )
 
+    if (
+        principal.is_active
+        and principal.is_platform_administrator
+        and not definition.allow_self
+        and not definition.requires_break_glass
+    ):
+        return PolicyDecision(
+            allowed=True,
+            fields=permitted_fields,
+            obligations=definition.obligations,
+            reason_code="platform_administration",
+        )
+
     evaluation_time = at or timezone.now()
     direct_grants = CapabilityGrant.objects.filter(
         _active_at(evaluation_time),

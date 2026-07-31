@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug
+from maru.identity.policies import validate_convention_subject
 from maru.participation.models import validate_capacity_code
 
 MAX_ONBOARDING_DOCUMENT_BYTES = 10 * 1024 * 1024
@@ -584,6 +585,16 @@ class VolunteerApplication(UUIDTimeStampedModel):
             )
         ]
 
+    def clean(self) -> None:
+        super().clean()
+        if self.account_id:
+            validate_convention_subject(self.account)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.account_id:
+            validate_convention_subject(self.account)
+        super().save(*args, **kwargs)
+
     def __str__(self) -> str:
         return f"{self.account} — {self.opportunity.position.title}"
 
@@ -668,6 +679,8 @@ class OnboardingDocumentRequest(UUIDTimeStampedModel):
 
     def clean(self) -> None:
         super().clean()
+        if self.account_id:
+            validate_convention_subject(self.account)
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError("The document request must match its edition.")
         if self.document_type_id and (
@@ -769,6 +782,8 @@ class PositionAssignment(UUIDTimeStampedModel):
 
     def clean(self) -> None:
         super().clean()
+        if self.account_id:
+            validate_convention_subject(self.account)
         if self.position_id and (
             self.position.organization_id != self.organization_id
             or self.position.edition_id != self.edition_id

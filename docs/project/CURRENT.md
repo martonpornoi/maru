@@ -1,11 +1,11 @@
 # Current project state
 
 Last updated: 2026-07-31
-Phase: Controlled empty-experience baseline implemented; product-owner
-inspection is the gate before the next page
-Implementation status: The default browser exposes only Sign in and an empty
-staff administration home; the tested backend/API foundation and previous
-experience remain preserved but unmounted
+Phase: Page 1 Platform administration home implemented; product-owner
+inspection is the gate before Page 2
+Implementation status: The default browser exposes Sign in and a read-only
+platform organization inventory; the tested backend/API foundation and
+previous experience remain preserved but unmounted
 
 ## Current outcome
 
@@ -22,25 +22,40 @@ The complete pre-reset state is also durable as commit `548f15a` on
 `codex/pre-reset-20260731`. The owner selected the empty-experience option and
 implementation continues on `codex/page-by-page-rebuild`.
 
-The default `maru.baseline_urls` experience now exposes:
+The product owner accepted the empty baseline. Page 1 is implemented on
+`codex/page-01-platform-home` under ADR 0031, IDN-011, and UX-014. The default
+`maru.baseline_urls` experience now exposes:
 
 - `/accounts/login/`: the only unauthenticated HTML page;
-- `/admin/`: the only authenticated HTML page, restricted to active staff;
+- `/admin/`: the only authenticated HTML page, restricted to active platform
+  administrators;
 - `/`: a redirect to `/admin/`; and
 - POST `/accounts/logout/`: an action, not a content page.
 
 The administration home contains Maru identity, the signed-in name, Sign out,
-and one `Nothing here yet` message. It has no menu, setup guidance, edition
-selector, recent actions, Django model directory, embedded application,
-registration, volunteer, or convention content. Previous HTML routes are not
-mounted and return 404. Health, build, schema, and versioned APIs remain
-available.
+the organization inventory, its empty/populated/failure states, and a clear
+platform-access-not-participation boundary. It shows only organization identity,
+lifecycle, series count, and edition count. It has no menu, create action,
+setup guidance, edition selector, Django model directory, embedded application,
+registration, volunteer, or convention-owned operational content. Previous
+HTML routes are not mounted and return 404. Health, build, schema, and
+versioned APIs remain available.
 
-The isolated `maru_rebuild_empty` PostgreSQL database contains migrated schema
-and exactly one record: the first active staff superuser, `admin`. It contains
-zero organizations, series, editions, registration configurations,
-registrations, departments, and positions. The `maru` and
-`marucon_rehearsal` databases remain unchanged.
+The isolated `maru_rebuild_empty` PostgreSQL database is migrated through
+identity `0010` and contains exactly one account: active platform administrator
+`admin`. It contains zero organizations, series, editions, memberships,
+participations, registration configurations, registrations, volunteer
+applications, departments, positions, and workforce assignments. The `maru`
+and `marucon_rehearsal` databases remain unchanged.
+
+All application superusers are now explicitly classified as platform
+administrators rather than inferred from record order. They receive global
+platform-policy decisions without stored convention grants, may be attributed
+actors, and are rejected as convention membership, authority, participation,
+registration, volunteer, onboarding, or workforce subjects. The one-shot
+bootstrap therefore appoints only the distinct human Chair; the platform
+administrator remains outside the convention. Self-only and future
+break-glass-required capabilities do not follow from platform status.
 
 ## Preserved backend and pre-reset experience
 
@@ -175,26 +190,34 @@ excludes images/contact data and automated tests use a synthetic miniature.
 - ADR 0030 supersedes ADRs 0026 and 0027 for the mounted browser experience,
   retaining the backend while reducing the default HTML surface to Sign in and
   one empty staff home.
+- ADR 0031 restores Page 1 as a platform-administrator-only organization
+  inventory, explicitly separates platform authority from convention
+  participation, and supersedes the platform-controller participation portions
+  of ADRs 0019, 0020, and 0024.
 
 ## Verification
 
-- 443 backend tests pass against PostgreSQL 17, including 12 dedicated
-  empty-experience baseline checks.
-- Branch-aware coverage is 90.11%, above the required 90% gate.
-- Ruff format/lint and strict mypy pass for 179 source files.
+- 454 backend tests pass against PostgreSQL 17, including 23 focused Page 1 and
+  platform-administrator checks.
+- Branch-aware coverage is 90.05%, above the required 90% gate.
+- Ruff format/lint and strict mypy pass for 181 source files.
 - Django system check, production-shaped deployment check, and migration drift
   check pass.
 - OpenAPI 3.1 generation/validation and generated TypeScript types pass.
-- Browser QA covers the real Sign in and empty administration home at default
-  1280-pixel and explicit 390-pixel viewports, successful handle login,
-  POST-only sign-out, absence of the old navigation, and 404 responses for old
-  pages. No horizontal overflow or runtime console warning/error remained.
+- Browser QA covers successful handle login and the real Page 1 empty state at
+  1280 pixels. The expected headings, region, complementary account boundary,
+  and POST-only sign-out are present; old navigation and unfinished actions are
+  absent; no horizontal overflow or runtime console warning/error remained.
+  The in-app browser blocked the temporary narrow-frame method under its URL
+  security policy, so Page 1 does not claim fresh 390-pixel visual evidence;
+  responsive CSS and automated assertions are present, and supported narrow
+  browser inspection remains before owner acceptance.
 - The preserved frontend still passes 20 component tests, TypeScript
   typecheck/generated-contract validation, and its Vite production build, but
   it is not mounted by the baseline.
-- Documentation validation passes for 120 Markdown files and 186 unique
+- Documentation validation passes for 124 Markdown files and 187 unique
   requirement identifiers.
-- Fresh migration apply passed through identity `0009` and registration `0030`
+- Fresh migration apply passed through identity `0010` and registration `0030`
   on `maru_rebuild_empty`; existing-database migration evidence remains in the
   pre-reset checkpoint.
 
@@ -237,31 +260,33 @@ production-approved until these deployment and governance gates pass.
 
 ## Smallest sensible next actions
 
-1. Have the product owner inspect and accept Sign in and the empty
-   administration home. Do not begin another page before that response.
-2. If accepted, write the page contract for the first-administrator/platform
-   state page: purpose, placement, information, actions, authorization, states,
-   responsive evidence, tests, and docs.
-3. Use the retained `marucon_rehearsal` database and role accounts for
+1. Have the product owner inspect and accept Page 1 at `/admin/`. Do not begin
+   Page 2 before that response.
+2. Obtain fresh supported 390-pixel visual evidence if the owner wants that
+   check before acceptance; do not bypass the browser URL security policy.
+3. After acceptance, write the Page 2 contract for
+   `/admin/organizations/new/` on `codex/page-02-create-organization` before
+   mounting the route.
+4. Use the retained `marucon_rehearsal` database and role accounts for
    education, permission review, and usability feedback; turn findings into
    stable requirements before extending the hierarchy editor.
-4. Select the first partner, jurisdiction, hosted payment provider,
+5. Select the first partner, jurisdiction, hosted payment provider,
    SMTP/storage/scanner topology, forecast, and named operational owners.
-5. Certify provider and infrastructure failure paths, representative load,
+6. Certify provider and infrastructure failure paths, representative load,
    backups/restores, secret rotation, offline arrival, and closure.
-6. Provision independently approved retention, minor, refund, restriction,
+7. Provision independently approved retention, minor, refund, restriction,
    and readiness policies.
-7. Build badge layout/batch-printing only after the first partner confirms its
+8. Build badge layout/batch-printing only after the first partner confirms its
    printer, stock, fulfillment, and visual-template requirements.
-8. Prioritize the next purpose-built setup/approval screen from real partner
+9. Prioritize the next purpose-built setup/approval screen from real partner
    testing rather than exposing command-owned raw records.
 
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `RESET_REBUILD.md`, `ROADMAP.md`,
 `MARUCON_ADMIN_SCENARIO.md`,
-requirements IDN-009/010, UX-009 through UX-013, REG-001 through REG-022,
-HR-007/008/010, ADRs 0017 through 0030, and the authorization, events,
+requirements IDN-009 through IDN-011, UX-009 through UX-014, REG-001 through
+REG-022, HR-007/008/010, ADRs 0017 through 0031, the Page 1 contract, and the authorization, events,
 Convention work, registration, workforce, and demo-data module documents.
 
 Do not trust selected-edition state as authority; expose Django Groups as a

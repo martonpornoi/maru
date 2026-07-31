@@ -1,12 +1,13 @@
 # Identity module
 
-Status: Verified identity lifecycle, human login handles, session controls, and scoped restrictions implemented
+Status: Verified identity lifecycle, explicit platform administrators, human login handles, session controls, and scoped restrictions implemented
 Last updated: 2026-07-31
 
 ## Purpose and requirements
 
 `maru.identity` owns the authentication-facing platform account and assurance
-boundary for IDN-001, IDN-006 through IDN-008, IDN-010, AUD-002, and PRI-001. It does
+boundary for IDN-001, IDN-006 through IDN-008, IDN-010, IDN-011, AUD-002,
+and PRI-001. It does
 not own organizer profiles, participation, applications, HR, orders, finance,
 or conduct cases. ADR 0013 defines verified identity and scoped restrictions.
 
@@ -14,6 +15,7 @@ or conduct cases. ADR 0013 defines verified identity and scoped restrictions.
 
 - opaque UUID account ID;
 - normalized case-folded email and optional human login handle;
+- explicit `person` or `platform_administrator` account classification;
 - display name and preferred language;
 - active/staff state and Django authentication timestamps;
 - password verifier and Django permission relations required for bootstrap
@@ -31,6 +33,14 @@ handles. Local sign-in accepts either exact email or handle without changing
 email's role as the account bootstrap/recovery address. Missing and ambiguous
 identifiers follow the same password-hasher timing path.
 The string representation does not expose email by default.
+
+All application superusers are explicitly classified as platform
+administrators, and that classification requires staff and superuser
+privileges. Existing superusers are migrated to it. The classification is not
+inferred from account age, email, or display name. Platform administrators may
+be attributed actors for platform work, but subject models reject them as
+organization members, convention authority recipients, participants,
+registrants, volunteers, onboarding subjects, or workforce assignees.
 
 ## Public contracts
 
