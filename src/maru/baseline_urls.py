@@ -6,6 +6,8 @@ from django.urls import path
 from maru.core.views import (
     baseline_administration_home,
     baseline_create_organization,
+    baseline_delete_organization,
+    baseline_organization_record,
     baseline_root,
 )
 from maru.identity.forms import EmailOrHandleAuthenticationForm
@@ -28,6 +30,16 @@ urlpatterns = [
         "admin/organizations/new/",
         baseline_create_organization,
         name="baseline-create-organization",
+    ),
+    path(
+        "admin/organizations/<slug:organization_slug>/",
+        baseline_organization_record,
+        name="baseline-organization-record",
+    ),
+    path(
+        "admin/organizations/<slug:organization_slug>/delete/",
+        baseline_delete_organization,
+        name="baseline-delete-organization",
     ),
     *PLATFORM_URLPATTERNS,
     *API_URLPATTERNS,

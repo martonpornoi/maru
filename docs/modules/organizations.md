@@ -1,14 +1,14 @@
 # Organizations module
 
 Status: Implemented tenant, brand, localization bootstrap, Page 1 inventory,
-and complete Page 2 Draft creation
+complete Page 2 Draft creation, and Page 3 record management
 Last updated: 2026-07-31
 
 ## Purpose and requirements
 
 `maru.organizations` owns tenant structure and recurring-series continuity for
 IDN-002, IDN-011, IDN-012, EVT-001, EVT-003, EVT-005, UX-014, UX-015,
-and UX-016.
+UX-016, and UX-017.
 
 ## Owned data and invariants
 
@@ -53,11 +53,17 @@ non-browser clients.
   accepts typed `OrganizationCreationDetails`, normalizes the required name,
   generates a collision-safe slug, validates the complete model, creates one
   Draft tenant, and appends its successful audit event.
+- `update_organization_profile(...)`, the atomic platform-only command that
+  locks an existing organization, updates only changed complete-profile fields,
+  keeps slug/lifecycle code-owned, and audits field names without values.
+- `delete_empty_draft_organization(...)`, the atomic platform-only command that
+  requires exact-name confirmation and acknowledgement and can remove only a
+  Draft whose protected relationship graph is empty.
 
-Generic unscoped organization APIs remain absent. Page 2 is a narrowly scoped
-server-rendered platform command, not a public or organizer API. It creates no
-membership, governance, convention, participation, registration, or workforce
-relationships.
+Generic unscoped organization APIs remain absent. Pages 2 and 3 are narrowly
+scoped server-rendered platform commands, not public or organizer APIs. They
+create no membership, governance, convention, participation, registration, or
+workforce relationships.
 
 ## Organization profile fields
 
@@ -88,9 +94,11 @@ The complete legal, address, representative, registration, tax, contact, and
 imprint profile is C1 until an explicit publication workflow exists. Its
 purpose is accountable organizer setup and future legal publication; its source
 is platform administration or later active Executive Board authority. It is
-retained with the organization legal record, reviewed on closure, exported with
-the organization record, and not subject to ordinary deletion. Audit records
-name changed fields but do not copy their values.
+retained with the organization legal record, reviewed on closure, and exported
+with the organization record. Audit records name changed fields but do not copy
+their values. An empty Draft may be deleted before it owns related data; once
+any protected relationship exists, retention and a future closure workflow take
+precedence.
 
 ## Dependencies and consumers
 
@@ -104,16 +112,18 @@ name changed fields but do not copy their values.
 Organization, convention-series, and membership lists use names and
 relationship labels instead of UUIDs. They support scoped search, lifecycle
 and relationship filters, stable ordering, related-record counts, autocomplete
-selection, grouped forms, and collapsed technical identifiers. Ordinary
-deletion is disabled to preserve protected tenant and history relationships.
+selection, grouped forms, and collapsed technical identifiers.
 Organization and edition forms use searchable, bounded language and time-zone
 choices. The organization form also explains the tenant/organizer role; the
-series form explains recurring-brand continuity.
+series form explains recurring-brand continuity. Generic administration
+deletion remains disabled; the purpose-built Page 3 command handles only
+confirmed empty Drafts.
 
 ## Failure and retention
 
-Tenant reparenting and cascaded deletion are not ordinary operations.
-Organization closure and data exit need a future reasoned workflow.
+Tenant reparenting and cascaded deletion are not ordinary operations. The
+empty-Draft command never cascades; protected relationships refuse it.
+Organization closure and data exit still need a future reasoned workflow.
 
 ## Tests
 
@@ -127,12 +137,16 @@ validator, normalization, Unicode fallback and bounded slug generation,
 collision handling, code-owned Draft/defaults, repeated service authorization
 and model validation, atomic auditing and rollback, safe audit metadata,
 one-time confirmation, and the absence of relationship side effects.
+Page 3 tests cover linked records, compact navigation, complete profile
+updates, code-owned slug/lifecycle, no-op saves, safe error states, service
+authorization, audit value minimization, exact deletion confirmation,
+Draft/relationship guards, and atomic update/delete rollback.
 
 ## Limitations
 
-Organization property editing for an existing record, Executive Board
-provisioning/backfill, lifecycle transitions, publication, processors,
-invitations, ownership transfer, and a purpose-built organizer setup console
-are not implemented. Per IDN-012, the later governance workflow must establish
-an Executive Board before activation; only active Executive Board authority and
-platform administration may then modify organization properties.
+Executive Board provisioning/backfill, lifecycle transitions, slug migration,
+publication, processors, invitations, ownership transfer, closure/data exit,
+and a convention-owned organizer console are not implemented. Per IDN-012, the
+later governance workflow must establish an Executive Board before activation
+and extend Page 3 property editing to active Executive Board authority;
+platform administration remains non-participating.

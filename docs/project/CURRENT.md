@@ -1,12 +1,13 @@
 # Current project state
 
 Last updated: 2026-07-31
-Phase: Page 2 Create organization implemented; product-owner inspection is the
-gate before Page 3
+Phase: Page 3 Organization record implemented; product-owner inspection is the
+gate before Page 4 Create convention series
 Implementation status: The default browser exposes Sign in, the platform
-organization inventory, persistent Organizations/+ Add navigation, and
-complete optional Draft organization creation; the tested backend/API
-foundation and previous experience remain preserved but unmounted
+organization inventory, complete optional Draft creation, linked organization
+records, audited profile editing, and protected empty-Draft deletion; the
+tested backend/API foundation and previous experience remain preserved but
+unmounted
 
 ## Current outcome
 
@@ -23,24 +24,29 @@ The complete pre-reset state is also durable as commit `548f15a` on
 `codex/pre-reset-20260731`. The owner selected the empty-experience option and
 implementation continues on `codex/page-by-page-rebuild`.
 
-The product owner accepted the empty baseline and Page 1. After inspecting the
-first Page 2 version, the owner required stable side navigation and a complete
-optional organization profile. Revised Page 2 is implemented on
-`codex/page-02-create-organization` under ADRs 0032/0033, IDN-012, and
-UX-015/016. The default `maru.baseline_urls` experience now exposes:
+The product owner accepted the empty baseline, Page 1, and revised Page 2.
+After Page 2 inspection, the owner requested the preserved one-row model/add
+navigation and organization modification/deletion. Page 3 is implemented on
+`codex/page-03-organization-record` under ADR 0034, IDN-012, and UX-017. The
+default `maru.baseline_urls` experience now exposes:
 
 - `/accounts/login/`: the only unauthenticated HTML page;
 - `/admin/`: the only authenticated HTML page, restricted to active platform
   administrators;
 - `/admin/organizations/new/`: the platform-administrator-only complete
   creation form that keeps organization name as its sole required value;
+- `/admin/organizations/<slug>/`: the platform-administrator-only complete
+  organization record and profile-update form;
+- POST `/admin/organizations/<slug>/delete/`: confirmed deletion restricted to
+  an empty Draft with no protected relationship;
 - `/`: a redirect to `/admin/`; and
 - POST `/accounts/logout/`: an action, not a content page.
 
 The administration home contains Maru identity, the signed-in name, Sign out,
 the organization inventory, its empty/populated/failure states, and a clear
-platform-access-not-participation boundary. Page 1 and Page 2 share a focused
-Platform administration side navigation with **Organizations** and **+ Add**.
+platform-access-not-participation boundary. Pages 1 through 3 share one focused
+Platform administration row with **Organizations** and an adjacent compact
+**+ Add** action.
 The inventory shows only organization identity, lifecycle, series count, and
 edition count. It has no setup guidance, edition selector, Django model
 directory, embedded application, registration, volunteer, or convention-owned
@@ -59,6 +65,19 @@ registration, or workforce record. IDN-012 requires a later workflow to
 provision or backfill Executive Board representation before activation and to
 restrict property editing to active Executive Board authority and platform
 administration.
+
+Page 3 links each inventory name to its organization record and prepopulates
+the complete Page 2 profile. Saving locks and reloads the record, repeats
+platform authorization, normalizes and validates the profile, and changes
+neither stable slug nor lifecycle. Only actual changed fields are written and
+audited; their values are excluded, and an unchanged save writes and audits
+nothing. Deletion is a separate POST requiring the current name exactly and an
+explicit acknowledgement. It succeeds only for Draft lifecycle and cannot
+cascade: every direct organization relationship is protected, so a series,
+edition, membership, authority, participation, registration, workforce,
+communication, or other related record refuses deletion. Delete plus its
+UUID-only audit evidence are atomic. Closure and data exit remain future
+workflows.
 
 The isolated `maru_rebuild_empty` PostgreSQL database is migrated through
 organizations `0004` and contains exactly one account, active platform
@@ -221,27 +240,28 @@ excludes images/contact data and automated tests use a synthetic miniature.
 - ADR 0033 supersedes ADR 0032 only for Page 2 presentation and optional field
   scope, adding shared Organizations/+ Add navigation and the complete initial
   legal/imprint, contact, and locale profile.
+- ADR 0034 partially supersedes ADR 0033's navigation layout and edit deferral,
+  adding the linked Page 3 record, audited profile changes, and confirmed
+  protected empty-Draft deletion.
 
 ## Verification
 
-- 482 backend tests pass against PostgreSQL 17; 56 focused Page 2,
-  empty-baseline, and tenant-model checks are collected.
-- Branch-aware coverage is 90.13%, above the required 90% gate.
-- Ruff format/lint pass for 256 files and strict mypy passes for 182 source
+- 496 backend tests pass against PostgreSQL 17; 57 focused Page 1–3 checks
+  pass.
+- Branch-aware coverage is 90.14%, above the required 90% gate.
+- Ruff format/lint pass for 257 files and strict mypy passes for 182 source
   files.
 - Django system check, production-shaped deployment check, and migration drift
   check pass.
 - OpenAPI 3.1 generation/validation and generated TypeScript types pass.
-- Browser QA covers successful handle login, both shared navigation
-  destinations, Page 2 initial and optional-field validation states, and the
-  populated MaruCon inventory at desktop and 390-by-844. The complete labelled
-  form, privacy and Draft boundaries, and POST-only sign-out are present. Page 1
-  and Page 2 have no horizontal overflow or runtime console warning/error.
-  Browser validation added no sample organization.
+- Browser QA covers the one-row navigation, linked MaruCon inventory name,
+  prepopulated profile, Save changes action, and separate guarded danger zone at
+  desktop and 390-by-844. Page 3 has no horizontal overflow. Neither form was
+  submitted; MaruCon remains unchanged.
 - The preserved frontend still passes 20 component tests, TypeScript
   typecheck/generated-contract validation, and its Vite production build, but
   it is not mounted by the baseline.
-- Documentation validation passes for 130 Markdown files and 188 unique
+- Documentation validation passes for 134 Markdown files and 188 unique
   requirement identifiers.
 - Fresh migration apply passed through organizations `0004`, identity `0010`,
   and registration `0030` on `maru_rebuild_empty`; the existing MaruCon Draft
@@ -252,11 +272,14 @@ excludes images/contact data and automated tests use a synthetic miniature.
 
 - Page 2 intentionally permits Draft organizations without an Executive Board.
   No controlled-browser activation exists. The later governance workflow must
-  provision or backfill representation and enforce IDN-012 before activation or
-  organization-property editing.
+  provision or backfill representation and enforce IDN-012 before activation,
+  then extend Page 3 property editing to active Executive Board authority.
 - MaruCon was created before the complete profile fields were added, so those
-  values are blank. Page 2 remains a creation command; Page 3 must provide
-  authorized editing for that existing organization.
+  values are blank. Page 3 now provides authorized editing for that existing
+  organization; browser QA deliberately did not fill or delete it.
+- Page 3 deletion is intentionally unavailable once any protected related
+  record exists. Such organizations require the future closure/data-exit
+  workflow rather than cascading deletion.
 - The verified recovery copy remains in the operating system's temporary
   directory and can eventually be cleaned, but the same pre-reset state is now
   durable in Git commit `548f15a` and branch `codex/pre-reset-20260731`.
@@ -294,14 +317,14 @@ production-approved until these deployment and governance gates pass.
 
 ## Smallest sensible next actions
 
-1. Inspect revised Page 2 through **+ Add** at `/admin/`, including the shared
-   side navigation and optional public, legal/imprint, contact, and locale
-   sections; accept or revise it.
-2. Do not design or implement Page 3 before that response.
-3. After Page 2 acceptance, write the Page 3 Organization record contract. It
-   must load MaruCon's complete profile, distinguish display from editing, and
-   define the platform-administrator/Executive-Board edit boundary before
-   implementation.
+1. Inspect MaruCon through its linked Page 3 record, including the compact
+   navigation, complete prepopulated profile, and guarded deletion section;
+   accept or revise it without deleting the owner-created record.
+2. Do not design or implement Page 4 before that response.
+3. After Page 3 acceptance, write the Page 4 Create convention series contract.
+   It must define series identity, ownership under the selected organization,
+   minimum required data, Draft/active behavior, navigation, authorization,
+   audit, and failure states before implementation.
 4. Use the retained `marucon_rehearsal` database and role accounts for
    education, permission review, and usability feedback; turn findings into
    stable requirements before extending the hierarchy editor.
@@ -320,8 +343,8 @@ production-approved until these deployment and governance gates pass.
 
 Read `AGENTS.md`, this file, `RESET_REBUILD.md`, `ROADMAP.md`,
 `MARUCON_ADMIN_SCENARIO.md`, requirements IDN-009 through IDN-012, UX-009
-through UX-016, REG-001 through REG-022, HR-007/008/010, ADRs 0017 through
-0033, the Page 1 and Page 2 contracts, and the authorization, events,
+through UX-017, REG-001 through REG-022, HR-007/008/010, ADRs 0017 through
+0034, the Page 1 through Page 3 contracts, and the authorization, events,
 organizations, Convention work, registration, workforce, and demo-data module
 documents.
 

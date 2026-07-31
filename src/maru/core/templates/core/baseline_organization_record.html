@@ -1,0 +1,142 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
+    <title>{% if organization %}{{ organization.name }}{% else %}Organization unavailable{% endif %} · Maru</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
+  </head>
+  <body>
+    <header class="baseline-header">
+      <img
+        class="baseline-logo"
+        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+        alt="Maru"
+      >
+      <div class="baseline-account">
+        <span>{{ request.user.display_name }}</span>
+        <form method="post" action="{% url 'staff-logout' %}">
+          {% csrf_token %}
+          <button class="baseline-link-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+
+    <div class="baseline-admin-layout">
+      {% include "core/_baseline_admin_navigation.html" with current_admin_page="organizations" %}
+
+      <main class="baseline-page baseline-page--form" data-page="organization-record">
+        {% if organization_record_load_failed %}
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">Organizations</p>
+            <h1>Organization unavailable</h1>
+          </header>
+          <div class="baseline-state baseline-state--error" role="alert">
+            <h2>The organization could not be loaded</h2>
+            <p>
+              Try again after the database is available. No organization data
+              was changed.
+            </p>
+          </div>
+        {% else %}
+          {% if messages %}
+            <div class="baseline-messages" aria-live="polite">
+              {% for message in messages %}
+                <div class="baseline-notice baseline-notice--success" role="status">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">Organization record</p>
+            <h1>{{ organization.name }}</h1>
+            <p class="baseline-intro">
+              Maintain the accountable organizer profile here. Convention
+              series and governance remain separate steps.
+            </p>
+            <p class="baseline-record-meta">
+              <span>Status: <strong>{{ organization.get_lifecycle_display }}</strong></span>
+              <span>Stable URL name: <code>{{ organization.slug }}</code></span>
+            </p>
+          </header>
+
+          {% if form.non_field_errors %}
+            <div class="baseline-errors" role="alert">
+              {{ form.non_field_errors }}
+            </div>
+          {% endif %}
+
+          <form method="post" class="baseline-form" novalidate>
+            {% csrf_token %}
+            {% include "core/_baseline_organization_profile_fields.html" %}
+
+            <aside class="baseline-boundary" aria-labelledby="profile-boundary-title">
+              <p class="baseline-kicker">Record boundary</p>
+              <h2 id="profile-boundary-title">Stable identity and Draft status</h2>
+              <p>
+                Saving changes does not change this organization's URL name or
+                lifecycle, create a convention series or Executive Board, or
+                make this platform account a participant.
+              </p>
+            </aside>
+
+            <div class="baseline-form-actions baseline-form-actions--sticky">
+              <button type="submit">Save changes</button>
+              <a class="baseline-secondary-link" href="{% url 'baseline-admin-home' %}">
+                Back to organizations
+              </a>
+            </div>
+          </form>
+
+          <section class="baseline-panel baseline-danger-zone" aria-labelledby="delete-organization-title">
+            <p class="baseline-kicker">Danger zone</p>
+            <h2 id="delete-organization-title">Delete organization</h2>
+            <p>
+              Only an empty Draft can be deleted. Once it has a series,
+              governance, people, registration, or other related history, Maru
+              keeps it and requires a future closure workflow.
+            </p>
+
+            {% if deletion_form.non_field_errors %}
+              <div class="baseline-errors" role="alert">
+                {{ deletion_form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <form
+              method="post"
+              action="{% url 'baseline-delete-organization' organization.slug %}"
+              class="baseline-form baseline-danger-form"
+              novalidate
+            >
+              {% csrf_token %}
+              {% include "core/_baseline_form_field.html" with field=deletion_form.confirmation_name %}
+              <div class="baseline-checkbox-field{% if deletion_form.acknowledge.errors %} baseline-field--error{% endif %}">
+                {{ deletion_form.acknowledge }}
+                <div>
+                  <label for="{{ deletion_form.acknowledge.id_for_label }}">
+                    {{ deletion_form.acknowledge.label }}
+                  </label>
+                  {% if deletion_form.acknowledge.errors %}
+                    <div class="baseline-field-errors">
+                      {{ deletion_form.acknowledge.errors }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="baseline-form-actions">
+                <button type="submit">Delete organization</button>
+              </div>
+            </form>
+          </section>
+        {% endif %}
+      </main>
+    </div>
+  </body>
+</html>

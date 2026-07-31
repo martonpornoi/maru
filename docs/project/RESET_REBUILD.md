@@ -1,6 +1,6 @@
 # Controlled reset and page-by-page rebuild
 
-Status: Page 1 accepted; Page 2 Create organization implemented with
+Status: Pages 1 and 2 accepted; Page 3 Organization record implemented with
 verification and owner inspection pending
 Last updated: 2026-07-31
 
@@ -180,7 +180,39 @@ Checklist:
 - [x] Run the complete backend, schema, frontend-preservation, migration, and
   documentation quality gates.
 - [x] Update `CURRENT.md` and add the append-only Page 2 checkpoint.
-- [ ] Obtain product-owner acceptance before beginning Page 3.
+- [x] Obtain product-owner acceptance before beginning Page 3.
+
+### Page 3: Organization record
+
+- Branch: `codex/page-03-organization-record`
+- Route: `/admin/organizations/<slug>/`
+- Contract:
+  [`../product/page-contracts/03-organization-record.md`](../product/page-contracts/03-organization-record.md)
+- Requirements: IDN-002, IDN-011, IDN-012, EVT-005, UX-013, UX-014,
+  UX-016, UX-017, AUD-001, AUD-002, PRI-001
+- Decision: ADR 0034
+
+Checklist:
+
+- [x] Inherit the preserved administration pattern as one **Organizations**
+  row with an adjacent compact **+ Add** action.
+- [x] Link each Page 1 organization name to a purpose-built Page 3 record.
+- [x] Prepopulate and update the complete Page 2 profile while keeping slug and
+  lifecycle code-owned.
+- [x] Audit only actual changed fields and make a no-op save write nothing.
+- [x] Add separately posted exact-name and acknowledgement deletion.
+- [x] Restrict deletion to Draft and rely on protected domain relationships to
+  prevent any cascade into convention or people history.
+- [x] Prove platform authorization before lookup and repeat it in both services.
+- [x] Prove update and deletion rollback on database/audit failure.
+- [x] Inspect desktop and 390-pixel Page 3 layouts with no horizontal overflow,
+  without submitting either MaruCon form.
+- [x] Verify MaruCon remains Draft with blank optional profile, zero
+  series/editions, and only its original creation audit event.
+- [x] Run the complete backend, schema, frontend-preservation, migration, and
+  documentation quality gates.
+- [x] Update `CURRENT.md` and add the append-only Page 3 checkpoint.
+- [ ] Obtain product-owner acceptance before beginning Page 4.
 
 ### Page-by-page contract
 
@@ -213,15 +245,15 @@ Accepted initial sequence after the baseline decision:
 13. Registration template and edition form.
 14. Attendee self-registration.
 
-Pages 1 and 2 have been approved for implementation. The later order records
-the agreed journey but does not pre-approve a Page 3 contract or
-implementation.
+Pages 1 and 2 have been accepted. Page 3 has been approved and implemented.
+The later order records the agreed journey but does not pre-approve a Page 4
+contract or implementation.
 
 ## Resume point
 
-The recovery snapshot and durable pre-reset branch remain available. Revised
-Page 2 is implemented on its dedicated branch and `maru_rebuild_empty` is
-migrated through `organizations.0004`. It contains the platform administrator
-and owner-created MaruCon Draft only. Resume by completing any unchecked Page 2
-gates, then obtain owner acceptance. Do not design or implement Page 3 before
-that response.
+The recovery snapshot and durable pre-reset branch remain available. Page 3 is
+implemented on its dedicated branch and introduces no migration;
+`maru_rebuild_empty` remains migrated through `organizations.0004`. It contains
+the platform administrator and owner-created MaruCon Draft only. Resume by
+obtaining owner inspection of Page 3. Do not design or implement Page 4 Create
+convention series before that response.

@@ -48,62 +48,7 @@
         <form method="post" class="baseline-form" novalidate>
           {% csrf_token %}
 
-          <section class="baseline-panel baseline-form-panel" aria-labelledby="public-identity-title">
-            <div class="baseline-section-heading">
-              <p class="baseline-kicker">Public identity</p>
-              <h2 id="public-identity-title">How people know the organization</h2>
-            </div>
-            {% include "core/_baseline_form_field.html" with field=form.name %}
-            {% include "core/_baseline_form_field.html" with field=form.description %}
-          </section>
-
-          <section class="baseline-panel baseline-form-panel" aria-labelledby="legal-identity-title">
-            <div class="baseline-section-heading">
-              <p class="baseline-kicker">Legal identity and imprint</p>
-              <h2 id="legal-identity-title">Official organization details</h2>
-              <p>
-                These details remain private to authorized administration until
-                a separate publication workflow exists.
-              </p>
-            </div>
-            <div class="baseline-field-grid">
-              {% include "core/_baseline_form_field.html" with field=form.legal_name %}
-              {% include "core/_baseline_form_field.html" with field=form.legal_representative %}
-              {% include "core/_baseline_form_field.html" with field=form.registration_authority %}
-              {% include "core/_baseline_form_field.html" with field=form.registration_identifier %}
-              {% include "core/_baseline_form_field.html" with field=form.tax_identifier %}
-            </div>
-            {% include "core/_baseline_form_field.html" with field=form.legal_address %}
-            {% include "core/_baseline_form_field.html" with field=form.imprint_text %}
-          </section>
-
-          <section class="baseline-panel baseline-form-panel" aria-labelledby="contact-title">
-            <div class="baseline-section-heading">
-              <p class="baseline-kicker">Public contact</p>
-              <h2 id="contact-title">How people reach the organization</h2>
-            </div>
-            <div class="baseline-field-grid">
-              {% include "core/_baseline_form_field.html" with field=form.website_url %}
-              {% include "core/_baseline_form_field.html" with field=form.contact_email %}
-              {% include "core/_baseline_form_field.html" with field=form.contact_phone %}
-            </div>
-          </section>
-
-          <section class="baseline-panel baseline-form-panel" aria-labelledby="defaults-title">
-            <div class="baseline-section-heading">
-              <p class="baseline-kicker">Operating defaults</p>
-              <h2 id="defaults-title">Starting locale for future conventions</h2>
-              <p>
-                These choices suggest values for later editions; each edition
-                will still own its authoritative locale configuration.
-              </p>
-            </div>
-            <div class="baseline-field-grid baseline-field-grid--locale">
-              {% include "core/_baseline_form_field.html" with field=form.country_code %}
-              {% include "core/_baseline_form_field.html" with field=form.default_time_zone %}
-            </div>
-            {% include "core/_baseline_form_field.html" with field=form.default_language_codes %}
-          </section>
+          {% include "core/_baseline_organization_profile_fields.html" %}
 
           <aside class="baseline-boundary" aria-labelledby="creation-boundary-title">
             <p class="baseline-kicker">Status after creation</p>

@@ -37,7 +37,8 @@ the system.
 | [0030](0030-controlled-empty-experience-rebuild.md) | Accepted | Default two-page browser baseline with preserved backend/API foundation and page-by-page reintroduction |
 | [0031](0031-non-participating-platform-administration.md) | Accepted | Explicit non-participating platform administrator and read-only organization inventory |
 | [0032](0032-minimal-draft-organization-creation.md) | Partially superseded | Name-only audited Draft creation remains; ADR 0033 expands the optional profile and navigation |
-| [0033](0033-complete-organization-creation-and-platform-navigation.md) | Accepted | Complete optional organization profile and persistent Platform administration navigation |
+| [0033](0033-complete-organization-creation-and-platform-navigation.md) | Partially superseded | Complete optional organization profile remains; ADR 0034 compacts its navigation and restores editing |
+| [0034](0034-organization-record-management.md) | Accepted | Purpose-built organization editing, compact navigation, and protected empty-Draft deletion |
 
 New ADRs use the next four-digit number and contain:
 

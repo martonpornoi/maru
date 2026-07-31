@@ -17,15 +17,15 @@ not a member or participant of any listed convention.
 
 ## Placement and navigation
 
-`/admin/` remains the canonical authenticated home. ADR 0033 adds a focused
-**Platform administration** side navigation shared with Page 2. It contains
-only **Organizations** and **+ Add**; it is not a convention selector, setup
-strip, second shell, or link to preserved pages. Sign out remains in the
-existing header.
+`/admin/` remains the canonical authenticated home. ADR 0034 refines the
+focused **Platform administration** side navigation shared with Pages 2 and 3.
+One row contains the primary **Organizations** inventory link and a compact
+adjacent **+ Add** action; it is not a convention selector, setup strip, second
+shell, or link to preserved pages. Sign out remains in the existing header.
 
 The organization-creation route belongs to Page 2. **+ Add** exposes it as a
-stable administration destination without making the inventory itself
-editable.
+stable administration action. Each inventory organization name links to its
+purpose-built Page 3 record; the inventory itself remains read-only.
 
 ## Information and actions
 
@@ -83,7 +83,8 @@ usable before Page 2 creates live records.
   convention subject;
 - empty, populated, and database-failure behavior;
 - desktop and narrow browser inspection with no overflow or runtime errors;
-- shared navigation with correct current-page state;
+- one-row shared navigation with correct current-action state and linked
+  organization names;
 - focused and complete automated quality gates; and
 - updated current state, module documentation, and append-only checkpoint.
 

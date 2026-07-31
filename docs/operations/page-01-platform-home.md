@@ -42,10 +42,12 @@ Open <http://127.0.0.1:8000/admin/> and sign in as `admin`.
 
 - anonymous `/admin/` redirects to Sign in;
 - the active platform administrator sees **Organizations**;
-- the page shows the persistent **Organizations** and **+ Add** side navigation;
+- the page shows one **Organizations** row with a compact adjacent **+ Add**
+  action;
 - an empty database shows **No organizations yet** and zero organizations;
 - the page explains **Platform access, not participation**;
 - **+ Add** opens `/admin/organizations/new/`;
+- each organization name opens its `/admin/organizations/<slug>/` record;
 - an ordinary account, including ordinary staff, receives `403`;
 - the old administration and Convention work HTML routes remain `404`; and
 - health and versioned JSON APIs remain available.

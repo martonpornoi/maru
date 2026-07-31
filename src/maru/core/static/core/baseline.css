@@ -80,8 +80,13 @@ body {
 
 .baseline-sidebar nav {
   display: grid;
-  gap: 0.35rem;
   margin-top: 1rem;
+}
+
+.baseline-sidebar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
 }
 
 .baseline-sidebar-link {
@@ -102,7 +107,26 @@ body {
   background: #f5f1e8;
 }
 
-.baseline-sidebar-link:focus-visible {
+.baseline-sidebar-add {
+  display: flex;
+  align-items: center;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid transparent;
+  color: #071b3a;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.baseline-sidebar-add:hover,
+.baseline-sidebar-add[aria-current="page"] {
+  border-color: #d9d3c7;
+  background: #f5f1e8;
+}
+
+.baseline-sidebar-link:focus-visible,
+.baseline-sidebar-add:focus-visible {
   outline: 3px solid #b9822e;
   outline-offset: 2px;
 }
@@ -276,6 +300,16 @@ h1 {
 .baseline-record-name,
 .baseline-record-slug {
   display: block;
+}
+
+a.baseline-record-name {
+  color: #071b3a;
+  font-weight: 750;
+}
+
+a.baseline-record-name:focus-visible {
+  outline: 3px solid #b9822e;
+  outline-offset: 2px;
 }
 
 .baseline-record-slug {
@@ -462,6 +496,56 @@ button:focus-visible {
   background: #fff;
 }
 
+.baseline-record-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 1rem 0 0;
+  color: #45536a;
+  font-size: 0.9rem;
+}
+
+.baseline-record-meta code {
+  color: #071b3a;
+}
+
+.baseline-danger-zone {
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border-left: 0.3rem solid #9e3028;
+}
+
+.baseline-danger-zone h2 {
+  margin-top: 0.35rem;
+}
+
+.baseline-danger-zone > p {
+  max-width: 42rem;
+  color: #45536a;
+  line-height: 1.55;
+}
+
+.baseline-danger-form button {
+  border-color: #76241e;
+  background: #76241e;
+}
+
+.baseline-checkbox-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.baseline-checkbox-field input {
+  width: auto;
+  margin: 0.2rem 0 0;
+}
+
+.baseline-checkbox-field label {
+  line-height: 1.45;
+}
+
 .baseline-account {
   display: flex;
   align-items: center;
@@ -583,8 +667,7 @@ button:focus-visible {
   }
 
   .baseline-sidebar nav {
-    display: flex;
-    flex-wrap: wrap;
+    display: block;
   }
 
   .baseline-field-grid {

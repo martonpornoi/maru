@@ -386,6 +386,19 @@ architecture documents, implementation issues, tests, and release notes.
   Legal/imprint details are organization-owned C1 data, are not published merely
   by entering them, and must be audited by field name without copying their
   values into audit metadata.
+- **UX-017 — Organization record management:** The organization inventory must
+  link each organization name to one record page, and the shared Platform
+  administration navigation must present **Organizations** and a compact
+  adjacent **+ Add** action on one row. An active platform administrator may
+  update the organization's complete profile without changing its stable slug
+  or lifecycle. A deletion action must require exact-name confirmation and an
+  explicit acknowledgement, be separately posted and audited, and succeed only
+  for a Draft organization that has no related series, editions, membership,
+  authority, participation, registration, workforce, communication, or other
+  protected records. Validation or persistence failure must retain the record
+  and show a safe retry state. Once IDN-012 governance is introduced, active
+  Executive Board authority must receive the same property-editing path without
+  granting the platform administrator convention participation.
 
 ### Registration, orders, and attendee service
 

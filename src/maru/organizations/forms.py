@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from django import forms
 
 from maru.core.localization import (
@@ -164,6 +167,67 @@ class OrganizationCreationForm(forms.Form):
             ),
             default_time_zone=str(self.cleaned_data.get("default_time_zone") or "UTC"),
         )
+
+    @classmethod
+    def for_organization(
+        cls,
+        organization: Organization,
+        *,
+        data: Mapping[str, Any] | None = None,
+    ) -> OrganizationCreationForm:
+        """Build the shared complete-profile form for an existing record."""
+
+        return cls(
+            data=data,
+            initial={
+                "name": organization.name,
+                "description": organization.description,
+                "legal_name": organization.legal_name,
+                "legal_address": organization.legal_address,
+                "legal_representative": organization.legal_representative,
+                "registration_authority": organization.registration_authority,
+                "registration_identifier": organization.registration_identifier,
+                "tax_identifier": organization.tax_identifier,
+                "imprint_text": organization.imprint_text,
+                "website_url": organization.website_url,
+                "contact_email": organization.contact_email,
+                "contact_phone": organization.contact_phone,
+                "country_code": organization.country_code,
+                "default_language_codes": organization.default_language_codes,
+                "default_time_zone": organization.default_time_zone,
+            },
+        )
+
+
+class OrganizationDeletionForm(forms.Form):
+    confirmation_name = forms.CharField(
+        label="Organization name",
+        max_length=160,
+        strip=False,
+        help_text="Enter the current organization name exactly, including capitals.",
+        widget=forms.TextInput(attrs={"autocomplete": "off"}),
+    )
+    acknowledge = forms.BooleanField(
+        label="I understand this permanently deletes the empty Draft organization.",
+    )
+
+    def __init__(
+        self,
+        *args: Any,
+        organization: Organization,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.organization = organization
+
+    def clean_confirmation_name(self) -> str:
+        confirmation_name = str(self.cleaned_data["confirmation_name"])
+        if confirmation_name != self.organization.name:
+            raise forms.ValidationError(
+                "Enter the organization name exactly as shown above.",
+                code="organization_delete_name_mismatch",
+            )
+        return confirmation_name
 
 
 class OrganizationAdminForm(forms.ModelForm):  # type: ignore[type-arg]

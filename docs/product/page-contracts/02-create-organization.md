@@ -1,11 +1,11 @@
 # Page 2 contract: Create organization
 
-- Status: Revised, implemented, and verified; owner inspection pending
+- Status: Revised, implemented, verified, and accepted
 - Branch: `codex/page-02-create-organization`
 - Route: `/admin/organizations/new/`
 - Requirements: IDN-002, IDN-011, IDN-012, EVT-005, UX-013, UX-015,
   UX-016, AUD-001, AUD-002, PRI-001
-- Decisions: ADR 0032 and superseding ADR 0033
+- Decisions: ADRs 0032, 0033, and navigation refinement ADR 0034
 
 ## Purpose and primary user
 
@@ -19,19 +19,20 @@ Only the name is required.
 
 ## Placement and navigation
 
-Page 1 and Page 2 share a persistent **Platform administration** side
-navigation:
+Pages 1 through 3 share a persistent **Platform administration** navigation
+row:
 
-- **Organizations** links to `/admin/`; and
-- **+ Add** links to `/admin/organizations/new/`.
+- **Organizations** is the primary link to `/admin/`; and
+- a compact adjacent **+ Add** action links to
+  `/admin/organizations/new/`.
 
 The current destination uses `aria-current="page"`. The navigation remains
 visible beside the content on desktop and becomes a compact horizontal block at
 narrow widths. Page 1 does not render a second competing creation button.
 
 On success the browser redirects to `/admin/`, where the new Draft row and a
-one-time success confirmation are visible. Existing organization rows do not
-become edit links until Page 3 exists.
+one-time success confirmation are visible. The organization name links to its
+Page 3 record.
 
 ## Information and actions
 
@@ -107,7 +108,8 @@ imprint value is copied into audit metadata.
 The intended data subject is the organization. A representative name can also
 identify a person, so access remains platform/authorized-organizer only until a
 separate publication action exists. Retention follows the organization legal
-record and must be reviewed on closure; normal deletion is unavailable.
+record and must be reviewed on closure. ADR 0034 permits deletion only while
+the record is an empty Draft with no protected relationships.
 
 ## Page states
 
@@ -133,7 +135,7 @@ desktop.
 
 ## Acceptance checks
 
-- persistent **Organizations** and **+ Add** navigation on Page 1 and Page 2;
+- one-row **Organizations** and adjacent **+ Add** navigation on Pages 1–3;
 - active platform-administrator GET and POST;
 - anonymous redirect and ordinary/staff denial;
 - name-only submission with code-owned defaults;
@@ -151,9 +153,10 @@ desktop.
 
 ## Explicit non-goals
 
-- Editing the already-created MaruCon record; that remains Page 3.
+- Editing or safely deleting the already-created MaruCon record; that belongs
+  to Page 3.
 - Publishing imprint or contact information.
-- Organization activation, suspension, closure, transfer, or deletion.
+- Organization activation, suspension, closure, or transfer.
 - Executive Board creation or appointment.
 - Convention series or event edition creation.
 - Organizer membership, access sharing, workforce, or participation.

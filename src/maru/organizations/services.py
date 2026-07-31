@@ -5,6 +5,7 @@ from uuid import UUID
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models.deletion import ProtectedError, RestrictedError
 from django.utils.text import slugify
 
 from maru.audit.models import AuditEvent
@@ -36,6 +37,12 @@ ORGANIZATION_CREATION_FIELDS = (
     "default_time_zone",
 )
 
+ORGANIZATION_PROFILE_FIELDS = tuple(
+    field_name
+    for field_name in ORGANIZATION_CREATION_FIELDS
+    if field_name not in {"slug", "lifecycle"}
+)
+
 
 @dataclass(frozen=True, slots=True)
 class OrganizationCreationDetails:
@@ -54,6 +61,18 @@ class OrganizationCreationDetails:
     country_code: str = ""
     default_language_codes: tuple[str, ...] = ("en",)
     default_time_zone: str = "UTC"
+
+
+@dataclass(frozen=True, slots=True)
+class OrganizationUpdateResult:
+    organization: Organization
+    changed_fields: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class DeletedOrganization:
+    id: UUID
+    name: str
 
 
 def _normalize_organization_name(name: str) -> str:
@@ -165,3 +184,150 @@ def create_draft_organization(
         )
     )
     return organization
+
+
+def _profile_values(details: OrganizationCreationDetails) -> dict[str, object]:
+    return {
+        "name": details.name,
+        "description": details.description,
+        "legal_name": details.legal_name,
+        "legal_address": details.legal_address,
+        "legal_representative": details.legal_representative,
+        "registration_authority": details.registration_authority,
+        "registration_identifier": details.registration_identifier,
+        "tax_identifier": details.tax_identifier,
+        "imprint_text": details.imprint_text,
+        "website_url": details.website_url,
+        "contact_email": details.contact_email,
+        "contact_phone": details.contact_phone,
+        "country_code": details.country_code,
+        "default_language_codes": list(details.default_language_codes) or ["en"],
+        "default_time_zone": details.default_time_zone or "UTC",
+    }
+
+
+@transaction.atomic
+def update_organization_profile(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    details: OrganizationCreationDetails,
+    correlation_id: UUID,
+    source_channel: str = "service",
+) -> OrganizationUpdateResult:
+    """Update code-independent profile fields without changing tenant identity."""
+
+    if not actor.is_active or not actor.is_platform_administrator:
+        raise PermissionDenied("Platform administration is required.")
+
+    organization = Organization.objects.select_for_update().get(id=organization_id)
+    normalized_details = replace(
+        details,
+        name=_normalize_organization_name(details.name),
+    )
+    values = _profile_values(normalized_details)
+    changed_fields = tuple(
+        field_name
+        for field_name in ORGANIZATION_PROFILE_FIELDS
+        if getattr(organization, field_name) != values[field_name]
+    )
+    if not changed_fields:
+        return OrganizationUpdateResult(
+            organization=organization,
+            changed_fields=(),
+        )
+
+    for field_name in changed_fields:
+        setattr(organization, field_name, values[field_name])
+    organization.save(update_fields=(*changed_fields, "updated_at"))
+    append_audit(
+        AuditRecord(
+            principal_kind="account",
+            principal_id=actor.id,
+            principal_context_id=None,
+            organization_id=organization.id,
+            event_edition_id=None,
+            capability_code="organizations.change",
+            operation="organizations.organization.update",
+            target_type="organizations.organization",
+            target_id=organization.id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code="platform_administration",
+            correlation_id=correlation_id,
+            request_id=correlation_id,
+            source_channel=source_channel,
+            obligations=("audit",),
+            changed_fields=changed_fields,
+            retention_class="security-standard",
+        )
+    )
+    return OrganizationUpdateResult(
+        organization=organization,
+        changed_fields=changed_fields,
+    )
+
+
+@transaction.atomic
+def delete_empty_draft_organization(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    confirmation_name: str,
+    acknowledged: bool,
+    correlation_id: UUID,
+    source_channel: str = "service",
+) -> DeletedOrganization:
+    """Delete one unused Draft; protected domain history always wins."""
+
+    if not actor.is_active or not actor.is_platform_administrator:
+        raise PermissionDenied("Platform administration is required.")
+
+    organization = Organization.objects.select_for_update().get(id=organization_id)
+    if organization.lifecycle != Organization.Lifecycle.DRAFT:
+        raise ValidationError(
+            "Only an empty Draft organization can be deleted.",
+            code="organization_delete_not_draft",
+        )
+    if confirmation_name != organization.name:
+        raise ValidationError(
+            "Enter the organization name exactly as shown above.",
+            code="organization_delete_name_mismatch",
+        )
+    if not acknowledged:
+        raise ValidationError(
+            "Acknowledge the permanent deletion before continuing.",
+            code="organization_delete_acknowledgement_required",
+        )
+
+    deleted = DeletedOrganization(id=organization.id, name=organization.name)
+    try:
+        organization.delete()
+    except (ProtectedError, RestrictedError) as error:
+        raise ValidationError(
+            "This organization has related records and cannot be deleted. "
+            "Keep it for history and use a later closure workflow.",
+            code="organization_delete_protected",
+        ) from error
+
+    append_audit(
+        AuditRecord(
+            principal_kind="account",
+            principal_id=actor.id,
+            principal_context_id=None,
+            organization_id=deleted.id,
+            event_edition_id=None,
+            capability_code="organizations.delete",
+            operation="organizations.organization.delete",
+            target_type="organizations.organization",
+            target_id=deleted.id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code="empty_draft_removed",
+            correlation_id=correlation_id,
+            request_id=correlation_id,
+            source_channel=source_channel,
+            obligations=("audit",),
+            changed_fields=("record",),
+            retention_class="security-standard",
+        )
+    )
+    return deleted

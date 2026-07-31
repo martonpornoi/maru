@@ -6,7 +6,8 @@ Last updated: 2026-07-31
 ADRs 0032 and 0033 define the first platform mutation in the controlled
 rebuild. Page 2 creates one Draft organization from one required name, accepts
 the complete optional organization profile, and deliberately creates no
-convention, governance, membership, or participation records.
+convention, governance, membership, or participation records. ADR 0034 places
+its **+ Add** action beside **Organizations** on one navigation row.
 
 ## Current local environment
 
@@ -40,7 +41,8 @@ Open <http://127.0.0.1:8000/admin/>, sign in as `admin`, and select
 
 ## Expected behavior
 
-- the side navigation shows **Organizations** and **+ Add** on both pages;
+- one navigation row shows **Organizations** and adjacent **+ Add** on Pages
+  1–3;
 - only **Organization name** is required;
 - optional sections accept public identity, legal address and imprint,
   representative and registry references, website/email/telephone, primary
@@ -49,7 +51,7 @@ Open <http://127.0.0.1:8000/admin/>, sign in as `admin`, and select
 - the resulting organization has Draft lifecycle, English and UTC defaults,
   and blank omitted properties;
 - success returns to `/admin/`, shows the Draft row, and shows a one-time
-  confirmation;
+  confirmation; the row name opens its Page 3 record;
 - the platform administrator is recorded as audit actor only;
 - no membership, Executive Board, authority, convention series, event edition,
   participation, registration, or workforce record is created; and
@@ -57,7 +59,7 @@ Open <http://127.0.0.1:8000/admin/>, sign in as `admin`, and select
   accounts receive `403`.
 
 This temporary Draft state is intentional. Lifecycle and slug are not form
-fields and cannot be overridden by crafted POST data. Page 3 will edit an
+fields and cannot be overridden by crafted POST data. Page 3 now edits an
 existing organization such as MaruCon. A later governance workflow must
 provision or backfill the Executive Board before activation and enforce the
 editing rule in IDN-012.
@@ -76,7 +78,8 @@ columns. Neither migration rewrites existing organization values; the existing
 MaruCon Draft remains intact. Demo and rehearsal builders continue to request
 Active explicitly.
 
-## Next page gate
+## Next page
 
-The owner should inspect and accept Page 2 before Page 3, the Organization
-record, receives a contract or implementation.
+Page 3 is documented in
+[`page-03-organization-record.md`](page-03-organization-record.md). It maintains
+the complete profile and can delete only a confirmed empty Draft.

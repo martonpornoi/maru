@@ -1,19 +1,22 @@
 <aside class="baseline-sidebar">
   <p class="baseline-kicker">Platform administration</p>
   <nav aria-label="Platform administration">
-    <a
-      class="baseline-sidebar-link"
-      href="{% url 'baseline-admin-home' %}"
-      {% if current_admin_page == "organizations" %}aria-current="page"{% endif %}
-    >
-      Organizations
-    </a>
-    <a
-      class="baseline-sidebar-link"
-      href="{% url 'baseline-create-organization' %}"
-      {% if current_admin_page == "add-organization" %}aria-current="page"{% endif %}
-    >
-      + Add
-    </a>
+    <div class="baseline-sidebar-row">
+      <a
+        class="baseline-sidebar-link"
+        href="{% url 'baseline-admin-home' %}"
+        {% if current_admin_page == "organizations" %}aria-current="page"{% endif %}
+      >
+        Organizations
+      </a>
+      <a
+        class="baseline-sidebar-add"
+        href="{% url 'baseline-create-organization' %}"
+        aria-label="Add organization"
+        {% if current_admin_page == "add-organization" %}aria-current="page"{% endif %}
+      >
+        + Add
+      </a>
+    </div>
   </nav>
 </aside>

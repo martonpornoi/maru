@@ -87,7 +87,12 @@
                 {% for organization in organizations %}
                   <tr>
                     <th scope="row" data-label="Organization">
-                      <span class="baseline-record-name">{{ organization.name }}</span>
+                      <a
+                        class="baseline-record-name"
+                        href="{% url 'baseline-organization-record' organization.slug %}"
+                      >
+                        {{ organization.name }}
+                      </a>
                       <span class="baseline-record-slug">{{ organization.slug }}</span>
                     </th>
                     <td data-label="Status">{{ organization.get_lifecycle_display }}</td>
