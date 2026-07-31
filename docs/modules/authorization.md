@@ -1,13 +1,13 @@
 # Authorization module
 
-Status: Implemented V02 authority-management boundary  
-Last updated: 2026-07-27
+Status: Implemented authority boundary with human access sharing
+Last updated: 2026-07-30
 
 ## Purpose and requirements
 
 `maru.authorization` is the deny-by-default authority boundary for IDN-002,
-IDN-004, IDN-005, QRY-003, and ADR 0003. A membership or familiar role name
-never grants broad access by itself.
+IDN-004, IDN-005, IDN-009, QRY-003, ADR 0003, and ADR 0023. A membership or
+familiar role name never grants broad access by itself.
 
 ## Owned data and invariants
 
@@ -83,7 +83,41 @@ transition demonstrate edition-scoped privileged mutation. Unknown
 capabilities, expired/revoked grants, another tenant, another edition, missing
 delegation authority, and wider delegation deny with safe reason codes.
 
-## Bootstrap administration
+## Convention work access workspace
+
+An authorized controller can open the edition access workspace from the
+administration sidebar or any embedded Convention work area:
+
+- `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/access`
+  returns the latest shareable role-bundle versions and active organization-
+  or selected-edition assignments;
+- `POST` to the same route exact-matches one active account email and assigns a
+  named role under independent approval;
+- `PATCH .../access/assignments/{assignment_id}` atomically revokes the old
+  assignment and creates the replacement immutable role assignment; and
+- `DELETE .../access/assignments/{assignment_id}` immediately revokes an
+  assignment with a mandatory reason.
+
+The workspace requires `authorization.manage_roles`; change and removal also
+require `authorization.revoke`, which the API reports separately so the client
+does not offer unsupported controls. It excludes the non-shareable
+`authority-controller` role. Every query is scoped by trusted organization and
+edition route values before records are returned. Sensitive workspace reads
+and all underlying authority mutations are audited.
+
+The UI calls role bundles “groups” because Front Desk, Registration, Board,
+Treasurer, and similar convention teams are familiar sharing concepts. They
+remain complete scoped roles, not Django Groups or page-local allowlists.
+People are shown by display name and exact email; assignment UUIDs are
+transport identities and are not rendered as primary labels.
+
+Access sharing is not a workforce appointment. It does not fill a position,
+check an NDA, add hierarchy/reporting relationships, create staff or volunteer
+capacities, or publish an official role. Use the workforce position-assignment
+workflow when those consequences are required; use access sharing for a
+reasoned system-access assignment.
+
+## Specialist records
 
 Capability grants, role-bundle versions, and role assignments are searchable,
 filterable inspection pages. Lists show the person, human-readable role or
@@ -92,7 +126,8 @@ delegation, capability summaries, and assignment counts as appropriate.
 Exact dates, actor, approver, revoker, issuance reason, and revocation reason
 remain in record detail.
 
-These records are command-owned and therefore view-only in Django admin. The
+These records are command-owned and therefore view-only in specialist Django
+records. The
 generic Django `Group` model is not exposed; it would create an unsafe second
 authorization vocabulary beside Maru's scoped capabilities and immutable role
 versions.
@@ -110,6 +145,10 @@ independent approval, recipient self-approval denial, controller expiry
 ceilings, immutable role versioning, unsafe capability rejection, duplicate
 authority, cross-tenant target hiding, immediate revocation, persistent
 provenance, and audit/event/outbox rollback.
+Access-workspace integration tests additionally cover deny-without-disclosure,
+human group labels, latest-version selection, organization/edition isolation,
+exact-email matching, independent approval, unknown-account rejection,
+atomic replacement, immediate removal, and cross-tenant assignment hiding.
 
 ## Limitations
 

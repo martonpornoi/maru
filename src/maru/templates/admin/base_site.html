@@ -15,6 +15,11 @@
   <link rel="manifest" href="{% static 'core/brand/site.webmanifest' %}">
 {% endblock %}
 
+{% block responsive %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'core/admin-responsive.css' %}">
+{% endblock %}
+
 {% block branding %}
   <div id="site-name">
     <a class="maru-admin-brand" href="{% url 'admin:index' %}">
@@ -23,7 +28,10 @@
         src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
         alt="Maru Convention Planning"
       >
-      <span>Bootstrap administration</span>
+      <span>Administration</span>
+    </a>
+    <a class="maru-admin-surface" href="{% url 'management-console' %}">
+      Convention work
     </a>
   </div>
 {% endblock %}
@@ -55,11 +63,6 @@
       </label>
       <button type="submit">Switch</button>
     </form>
-    {% if request.user.is_superuser %}
-      <a href="{% url 'workforce-bootstrap-setup' %}">
-        First convention setup
-      </a>
-    {% endif %}
   {% endif %}
 {% endblock %}
 

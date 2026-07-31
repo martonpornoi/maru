@@ -1,6 +1,6 @@
 # ADR 0008: Persistent edition working context
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0023
 - Date: 2026-07-27
 - Requirements: IDN-002, IDN-004, EVT-002, EVT-003, UX-003, UX-006, UX-008,
   UX-009, REG-001
@@ -40,9 +40,11 @@ session.
 - A selected edition is a navigation and query-minimization context, never
   proof of authority. APIs and commands continue to authorize trusted
   organization and edition scope independently.
-- An active Django staff account with no convention participation is routed
-  from `/staff/` to bootstrap administration. A non-administrator with no
-  participation continues to receive the safe empty-workspace state.
+- An active Django staff account with no convention participation originally
+  routed from `/staff/` to bootstrap administration. ADR 0023 supersedes that
+  visible-surface behavior: every authenticated account now remains in the
+  Management Console's safe empty-workspace state, where Django staff may
+  follow an explicit Advanced records link.
 
 ## Consequences
 

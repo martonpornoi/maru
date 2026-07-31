@@ -176,7 +176,7 @@ STARTER_POSITIONS = (
         "Contributes to the edition without broad staff access.",
         500,
         ("volunteer",),
-        ("events.view_basic",),
+        ("events.view_basic", "workforce.view_structure"),
     ),
 )
 
@@ -243,6 +243,8 @@ def bootstrap_organization_workforce(
     normalized_reason = reason.strip()
     if not normalized_reason:
         raise ValidationError("A bootstrap reason is required.")
+    organization = Organization.objects.select_for_update().get(pk=organization.pk)
+    edition = EventEdition.objects.select_for_update().get(pk=edition.pk)
     if not controller.is_active or not controller.is_superuser:
         raise ValidationError("The bootstrap controller must be an active superuser.")
     if not chair.is_active or chair.id == controller.id:

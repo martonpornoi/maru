@@ -265,7 +265,7 @@ def staff_assisted_registration(
             form.add_error(None, message)
         else:
             return redirect(
-                f"{reverse('staff-console')}?registration={result.registration.id}"
+                f"{reverse('management-console')}?registration={result.registration.id}"
             )
     products = list(
         configuration.products.filter(

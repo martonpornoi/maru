@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <meta name="theme-color" content="#071B3A">
-    <title>Sign in · Maru Staff Console</title>
+    <title>Sign in · Maru Administration</title>
     <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
     <link rel="apple-touch-icon" href="{% static 'core/brand/apple-touch-icon.png' %}">
     <link rel="manifest" href="{% static 'core/brand/site.webmanifest' %}">
@@ -133,19 +133,18 @@
       <form method="post">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ next }}">
-        <label for="{{ form.username.id_for_label }}">Email address</label>
+        <label for="{{ form.username.id_for_label }}">Email address or username</label>
         {{ form.username }}
         {{ form.username.errors }}
         <label for="{{ form.password.id_for_label }}">Password</label>
         {{ form.password }}
         {{ form.password.errors }}
-        <button type="submit">Open Staff Console</button>
+        <button type="submit">Open Administration</button>
       </form>
 
       <p class="note">
-        Local bootstrap sign-in. For the Danube walkthrough use
-        <strong>danube.convention-chair@demo.maru.invalid</strong> and the
-        password supplied when the demo dataset was seeded.
+        Use the email address or username assigned to this account. Shared
+        rehearsal credentials are for local and test environments only.
       </p>
     </main>
   </body>

@@ -1,7 +1,7 @@
 # Registration module
 
-Status: Registration, staff-assisted intake, reporting, provider-payment, finance, media, minor, credential, and closure boundaries implemented  
-Last updated: 2026-07-29
+Status: Registration, extensible profiles, staff-assisted intake, reporting, provider-payment, finance, media, minor, credential, and closure boundaries implemented
+Last updated: 2026-07-31
 
 ## Purpose and requirements
 
@@ -9,7 +9,7 @@ Last updated: 2026-07-29
 registration state, staff-assisted intake evidence, provider-neutral payment and operational finance evidence,
 admission entitlements, direct check-in evidence, and audience-specific
 operational timelines. The implemented vertical covers EVT-002, EVT-003,
-AUD-002, ACT-001, IDN-006 and REG-001 through REG-021.
+AUD-002, ACT-001, IDN-006 and REG-001 through REG-022.
 
 ADR 0007 governs configuration reuse. ADR 0009 governs public registration and
 the edition-owned profile foundation. ADR 0010 governs headless clients and
@@ -28,6 +28,9 @@ ADR 0019 adds staff-assisted registration while preserving the ordinary
 policy, capacity, price, and payment lifecycle. ADR 0020 adds explicit,
 audited account creation when the entered email has never belonged to an
 account.
+ADR 0029 adds reviewed, append-only post-submission profile extensions without
+rewriting immutable registration answers or duplicating authoritative ticket,
+payment, capacity, restriction, or role facts.
 
 ## Configuration and templates
 
@@ -65,6 +68,10 @@ C3/C4 convention-defined questions are intentionally unavailable. The fixed
 registration profile is the purpose-specific exception: legal name, date of
 birth, address, and emergency contact have an explicit policy registry,
 restricted workflow, and edition-owned retention boundary.
+Public and attendee-self projections include only
+`attendee_and_staff` questions. Staff-assisted intake may additionally complete
+`registration_staff` questions. Unknown or staff-only answer keys are rejected
+at the service boundary rather than merely hidden by the browser.
 
 Admission products support edition-phase sale windows, active
 participation-capacity eligibility, attendee-facing eligibility explanations,
@@ -82,6 +89,8 @@ Bootstrap editing is available at:
 /admin/registration/registration/
 /admin/registration/registrationsubmission/
 /admin/registration/attendeeregistrationprofile/
+/admin/registration/registrationprofileextensionfield/
+/admin/registration/registrationprofileextensionvaluerevision/
 ```
 
 Sections, questions, and products are inline on draft records. A question can
@@ -112,8 +121,10 @@ and ticket/payment history. These views are an inspection and navigation aid;
 workflow-owned status, finance, restriction, and authority records remain
 read-only and must change through their application services.
 
-Authorized staff can use `/staff/registration-assist/<edition_id>/` from
-Commerce outside public configuration and product sale windows. An exact
+Authorized staff can use `/admin/registration-assist/<edition_id>/` from the
+Convention work Registration section outside public configuration and product
+sale windows. It is the only staff-assisted intake route; former `/manage/...`
+and `/staff/...` aliases are removed. An exact
 normalized email match uses the existing active account. If the email has
 never belonged to an account, the form visibly enters an explicit new-account
 fallback and requires a display name and policy-valid temporary password.
@@ -166,6 +177,29 @@ The profile is editable by its owning active account while the edition has not
 ended and is neither archived nor cancelled. Edits increment a separate
 profile aggregate, append an attendee timeline item, audit the command, and
 publish an outbox event. They never update `RegistrationSubmission`.
+
+### Post-submission profile extensions
+
+An organizer may add a reviewed, versioned edition profile field after
+registration opens. Definitions record key, version, purpose, classification,
+attendee visibility, writer policy, source provenance, reviewer, and lifecycle
+state. An active definition is immutable; corrections create a new version and
+retire the old version.
+
+Each write appends a `RegistrationProfileExtensionValueRevision` with a stable
+field key and increasing sequence. Attendee writes are allowed only for the
+owning registration and an attendee-visible `attendee` or
+`attendee_and_staff` field. Registration staff may write
+`registration_staff` or shared fields with `registration.register_on_behalf`
+and a mandatory reason. Staff-only definitions and values are absent from the
+attendee projection. Database triggers enforce edition scope, reviewed active
+definitions, active-definition immutability, and append-only values.
+
+The Marucon rehearsal includes an attendee/staff address-detail field and a
+staff-only identity-check field. It deliberately does not create an
+`Infinity-holder` checkbox: Infinity eligibility, selected product, and active
+entitlement remain authoritative domain records. Reserved extension-key
+prefixes reject attempts to copy those facts into free-form profile fields.
 
 Public-list participation is a separate versioned edition opt-in. The list is
 anonymous/public, but a row appears only after registration reaches confirmed
@@ -290,13 +324,13 @@ safe-rendition encoding before entering moderation. Safety evidence follows
 approved exact-file reuse; disposal removes storage only when no protected
 reference remains.
 
-## Staff Console experience
+## Embedded Convention work experience
 
 `My registration` renders the active edition-specific product and question
 configuration. Conditional questions appear from the attendee's answers. After
 submission it becomes a status, entitlement, and operational-history view.
 
-`Commerce` provides two capability-scoped projections:
+`Registration` provides two capability-scoped projections:
 
 - configuration managers see active provenance, questions, products, copy from
   template, copy from edition, draft review/activation, publication, and a link
@@ -304,7 +338,7 @@ submission it becomes a status, entitlement, and operational-history view.
 - registration service staff see a minimized attendee queue, payment state,
   active entitlements, operational timeline, and check-in action.
 
-Commerce also links authorized organizers to staff-assisted registration,
+Registration also links authorized organizers to staff-assisted registration,
 workforce hierarchy administration, onboarding-document review, and the public
 opportunity preview.
 
@@ -354,6 +388,7 @@ Attendee:
 - `GET|PUT .../registration/me/profile`
 - `POST .../registration/me/profile/photo`
 - `POST .../registration/me/profile/fursuits/{fursuit_id}/photo`
+- `GET|POST .../registrations/me/profile-extensions`
 
 Staff:
 
@@ -362,6 +397,7 @@ Staff:
 - `POST .../registrations/{registration_id}/check-in`
 - `POST .../registrations/{registration_id}/payment-deadline`
 - `POST .../registrations/{registration_id}/waive-payment`
+- `GET|POST .../registrations/{registration_id}/profile-extensions`
 - `GET|POST .../registrations/{registration_id}/financial-operations`
 - `POST .../registration/financial-operations/{operation_id}/approve`
 - `GET .../registration/reconciliation`
@@ -414,6 +450,8 @@ The module defines:
 
 Self capabilities require the current account as resource owner and an edition
 participation. Staff capabilities require explicit edition-scoped authority.
+Profile-extension self writes require `registration.manage_self_profile`;
+staff writes require `registration.register_on_behalf` and a reason.
 Sensitive service-list and detail reads are audited.
 Self-profile and suggestion reads use a relationship-derived restricted-data
 projection and are audited. Media queue and preview reads are edition-scoped
@@ -485,6 +523,10 @@ Integration coverage includes:
 - profile and photo tenant/edition isolation;
 - explicit prior-profile suggestion and cross-edition snapshot isolation;
 - current-profile edit without registration-submission mutation;
+- attendee/shared/staff-only profile-extension reads and writes without
+  registration-submission mutation;
+- append-only extension value revisions, reviewed versioned definitions,
+  tenant isolation, reserved authoritative keys, and database guards;
 - controlled pronoun write-in and five-language maximum;
 - multiple fursuits and database scope/retention guards;
 - public attendee field minimization and consent withdrawal;
@@ -516,12 +558,12 @@ Integration coverage includes:
 - closure readiness counts, reviewed gates, immutable manifest, and stale
   manifest rejection.
 
-The Staff Console tests cover convention-defined conditional questions,
+The Convention work tests cover convention-defined conditional questions,
 permission-denied states, reconciliation rendering, controlled exception
 controls, and reasoned profile-image review. Desktop and 390-pixel mobile
 browser walkthroughs cover the public chooser, account creation form,
 submitted/editable profile, returning suggestion, public attendee list, and
-Staff Console registration journey with no runtime console errors.
+embedded Convention work registration journey with no runtime console errors.
 
 ## Limits
 
@@ -536,7 +578,8 @@ transactions oversubscribe the tested boundary.
 Transfer, product change, and price adjustment are intentionally unavailable.
 Badge layout/printing and stock custody, friendly form studio, staff
 registration on behalf, attendee-accepted transfer, broader catalog,
-organization-independent platform privacy requests, and retention-policy
+organization-independent platform privacy requests, a visual extension-field
+builder beyond specialist records, and retention-policy
 dual-control provisioning remain product work.
 
 Every partner still needs privacy, finance, safeguarding, security,

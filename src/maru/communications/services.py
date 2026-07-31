@@ -298,10 +298,10 @@ def deliver_restriction_notification(
                     restriction.attendee_message,
                     "",
                     "You can review the restriction and submit an appeal in Maru.",
-                    "Review account security: /staff/",
+                    "Review account security: /admin/workspace/?view=security",
                 )
             ),
-            "action_path": "/staff/",
+            "action_path": "/admin/workspace/?view=security",
             "rendered_at": timezone.now(),
         },
     )

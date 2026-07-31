@@ -14,6 +14,10 @@ from maru.accreditation.api import (
     StaffOfflineManifestView,
 )
 from maru.audit.api import AuditEventListView
+from maru.authorization.api import (
+    EditionAccessAssignmentView,
+    EditionAccessWorkspaceView,
+)
 from maru.communications.api import (
     MyNotificationListView,
     MyNotificationPreferenceView,
@@ -21,11 +25,13 @@ from maru.communications.api import (
     StaffDeliveryFailureListView,
 )
 from maru.core.views import (
+    administration_index,
+    administration_workspace,
     build_info,
     liveness,
     platform_home,
     readiness,
-    staff_console,
+    removed_administration_route,
 )
 from maru.events.admin_context import change_admin_edition_context
 from maru.events.api import (
@@ -55,6 +61,7 @@ from maru.identity.api import (
     StaffRestrictionListCreateView,
     StaffRestrictionRevokeView,
 )
+from maru.identity.forms import EmailOrHandleAuthenticationForm
 from maru.identity.views import recover_account, verify_email
 from maru.participation.api import (
     EditionParticipationDetailView,
@@ -79,6 +86,7 @@ from maru.registration.api import (
     MyRegistrationDemoPaymentView,
     MyRegistrationPaymentIntentStatusView,
     MyRegistrationPaymentIntentView,
+    MyRegistrationProfileExtensionsView,
     MyRegistrationReceiptListView,
     MyRegistrationView,
     PaymentProviderWebhookView,
@@ -105,6 +113,7 @@ from maru.registration.api import (
     StaffRegistrationDetailView,
     StaffRegistrationListView,
     StaffRegistrationPaymentDeadlineView,
+    StaffRegistrationProfileExtensionsView,
     StaffRegistrationWaivePaymentView,
     StaffSettlementListCreateView,
 )
@@ -121,14 +130,15 @@ from maru.registration.public_views import (
     staff_assisted_registration,
 )
 from maru.workforce.api import (
+    ConventionBootstrapWorkspaceView,
     MyOnboardingDocumentListView,
     MyOnboardingDocumentUploadView,
     MyVolunteerApplicationCreateView,
     PublicVolunteerOpportunityListView,
+    WorkforceStructureView,
 )
 from maru.workforce.views import (
     apply_for_opportunity,
-    bootstrap_convention_setup,
     download_onboarding_document,
     my_onboarding_documents,
     upload_onboarding_document_view,
@@ -158,9 +168,9 @@ urlpatterns = [
         name="public-registration-demo-payment",
     ),
     path(
-        "staff/registration-assist/<uuid:edition_id>/",
+        "admin/registration-assist/<uuid:edition_id>/",
         staff_assisted_registration,
-        name="staff-assisted-registration",
+        name="management-assisted-registration",
     ),
     path(
         "volunteer/<uuid:edition_id>/",
@@ -212,11 +222,11 @@ urlpatterns = [
         guardian_consent,
         name="guardian-consent",
     ),
-    path("staff/", staff_console, name="staff-console"),
     path(
         "accounts/login/",
         LoginView.as_view(
             template_name="core/login.html",
+            authentication_form=EmailOrHandleAuthenticationForm,
             redirect_authenticated_user=True,
         ),
         name="staff-login",
@@ -234,10 +244,12 @@ urlpatterns = [
         name="admin-edition-context",
     ),
     path(
-        "admin/workforce/bootstrap/",
-        bootstrap_convention_setup,
-        name="workforce-bootstrap-setup",
+        "admin/workspace/",
+        administration_workspace,
+        name="management-console",
     ),
+    path("admin/records/", removed_administration_route),
+    path("admin/", administration_index),
     path("admin/", admin.site.urls),
     path("health/live", liveness, name="health-live"),
     path("health/ready", readiness, name="health-ready"),
@@ -248,6 +260,31 @@ urlpatterns = [
         "api/v1/public/editions/<uuid:edition_id>/volunteer-opportunities",
         PublicVolunteerOpportunityListView.as_view(),
         name="api-public-volunteer-opportunity-list",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registrations/me/profile-extensions"
+        ),
+        MyRegistrationProfileExtensionsView.as_view(),
+        name="api-my-registration-profile-extensions",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/structure"
+        ),
+        WorkforceStructureView.as_view(),
+        name="api-workforce-structure",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registrations/"
+            "<uuid:registration_id>/profile-extensions"
+        ),
+        StaffRegistrationProfileExtensionsView.as_view(),
+        name="api-staff-registration-profile-extensions",
     ),
     path(
         (
@@ -452,6 +489,11 @@ urlpatterns = [
         name="api-my-participation-history",
     ),
     path(
+        "api/v1/management/convention-bootstrap",
+        ConventionBootstrapWorkspaceView.as_view(),
+        name="api-convention-bootstrap",
+    ),
+    path(
         "api/v1/organizations/<uuid:organization_id>/editions",
         EditionListView.as_view(),
         name="api-edition-list",
@@ -515,6 +557,23 @@ urlpatterns = [
         ),
         EditionParticipationListView.as_view(),
         name="api-edition-participation-list",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/access"
+        ),
+        EditionAccessWorkspaceView.as_view(),
+        name="api-edition-access-workspace",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/access/assignments/"
+            "<uuid:assignment_id>"
+        ),
+        EditionAccessAssignmentView.as_view(),
+        name="api-edition-access-assignment",
     ),
     path(
         (

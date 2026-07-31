@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/v1/management/convention-bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["workforce_retrieve_convention_bootstrap_workspace"];
+        put?: never;
+        post: operations["workforce_create_convention_bootstrap"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/context": {
         parameters: {
             query?: never;
@@ -274,6 +290,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["authorization_retrieve_access_workspace"];
+        put?: never;
+        post: operations["authorization_assign_access_group"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/access/assignments/{assignment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["authorization_revoke_access_assignment"];
+        options?: never;
+        head?: never;
+        patch: operations["authorization_replace_access_assignment"];
         trace?: never;
     };
     "/api/v1/organizations/{organization_id}/editions/{edition_id}/accreditation/me/credentials": {
@@ -916,6 +964,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registrations/{registration_id}/profile-extensions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Reasoned registration-staff projection and profile-field write. */
+        get: operations["registration_retrieve_staff_profile_extensions"];
+        put?: never;
+        /** @description Reasoned registration-staff projection and profile-field write. */
+        post: operations["registration_write_staff_profile_extension"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/editions/{edition_id}/registrations/{registration_id}/waive-payment": {
         parameters: {
             query?: never;
@@ -926,6 +992,24 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["registration_waive_payment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registrations/me/profile-extensions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Current post-submission profile fields visible to the registration owner. */
+        get: operations["registration_retrieve_my_profile_extensions"];
+        put?: never;
+        /** @description Current post-submission profile fields visible to the registration owner. */
+        post: operations["registration_write_my_profile_extension"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1038,6 +1122,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["workforce_submit_my_volunteer_application"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return the current, human-readable edition organization hierarchy. */
+        get: operations["workforce_retrieve_structure"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1385,6 +1486,52 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccessAssignment: {
+            /** Format: uuid */
+            id: string;
+            person_display_name: string;
+            /** Format: email */
+            person_email: string;
+            group_code: string;
+            group_name: string;
+            scope_label: string;
+            status: string;
+            /** Format: date-time */
+            effective_from: string;
+            /** Format: date-time */
+            expires_at: string | null;
+            granted_by_name: string;
+            approved_by_name: string;
+        };
+        AccessAssignmentCreate: {
+            /** Format: email */
+            person_email: string;
+            group_code: string;
+            /** Format: email */
+            approver_email: string;
+            /** Format: date-time */
+            expires_at?: string | null;
+            reason: string;
+        };
+        AccessCapability: {
+            code: string;
+            label: string;
+            description: string;
+        };
+        AccessGroup: {
+            code: string;
+            name: string;
+            description: string;
+            capability_count: number;
+            capabilities: components["schemas"]["AccessCapability"][];
+        };
+        AccessWorkspace: {
+            organization_name: string;
+            edition_name: string;
+            can_revoke_assignments: boolean;
+            groups: components["schemas"]["AccessGroup"][];
+            assignments: components["schemas"]["AccessAssignment"][];
+        };
         AccountBootstrap: {
             /** Format: email */
             email: string;
@@ -1667,6 +1814,69 @@ export interface components {
          * @enum {string}
          */
         ConfirmationBasisEnum: "free" | "provider" | "waiver";
+        ConventionBootstrapChair: {
+            /** Format: email */
+            email: string;
+            display_name: string;
+        };
+        ConventionBootstrapCreated: {
+            role_bundles: number;
+            position_templates: number;
+            departments: number;
+            positions: number;
+            role_assignments: number;
+            position_assignments: number;
+        };
+        ConventionBootstrapEdition: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organization_id: string;
+            slug: string;
+            name: string;
+            lifecycle: string;
+            /** Format: date */
+            starts_on: string;
+            /** Format: date */
+            ends_on: string;
+        };
+        ConventionBootstrapOrganization: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            status: components["schemas"]["ConventionBootstrapOrganizationStatusEnum"];
+        };
+        /**
+         * @description * `eligible` - eligible
+         *     * `established` - established
+         * @enum {string}
+         */
+        ConventionBootstrapOrganizationStatusEnum: "eligible" | "established";
+        ConventionBootstrapRequest: {
+            /** Format: uuid */
+            organization_id: string;
+            /** Format: uuid */
+            edition_id: string;
+            /** Format: email */
+            chair_email: string;
+            reason: string;
+            confirm_organization: string;
+            controller_password: string;
+        };
+        ConventionBootstrapResult: {
+            organization: components["schemas"]["ConventionBootstrapOrganization"];
+            edition: components["schemas"]["ConventionBootstrapEdition"];
+            chair: components["schemas"]["ConventionBootstrapChair"];
+            created: components["schemas"]["ConventionBootstrapCreated"];
+        };
+        ConventionBootstrapWorkspace: {
+            /** Format: email */
+            controller_email: string;
+            organizations: components["schemas"]["ConventionBootstrapOrganization"][];
+            editions: components["schemas"]["ConventionBootstrapEdition"][];
+            chairs: components["schemas"]["ConventionBootstrapChair"][];
+        };
         CreateConfigurationDraft: {
             name: string;
             reason: string;
@@ -1830,6 +2040,7 @@ export interface components {
             ends_on: string;
             participation_status: string;
             capacities: components["schemas"]["CapacityContext"][];
+            readonly can_transition: boolean;
         };
         /**
          * @description * `draft` - Draft
@@ -2044,6 +2255,8 @@ export interface components {
             account_id: string;
             display_name: string;
             preferred_language: string;
+            can_access_advanced_records: boolean;
+            can_bootstrap_convention: boolean;
             memberships: components["schemas"]["MembershipContext"][];
             editions: components["schemas"]["EditionContext"][];
         };
@@ -2238,6 +2451,14 @@ export interface components {
          * @enum {string}
          */
         ParticipationHistoryStatusEnum: "interested" | "pending" | "confirmed" | "active" | "completed" | "cancelled";
+        PatchedAccessAssignmentReplace: {
+            group_code?: string;
+            /** Format: email */
+            approver_email?: string;
+            /** Format: date-time */
+            expires_at?: string | null;
+            reason?: string;
+        };
         PaymentException: {
             /** Format: uuid */
             readonly id: string;
@@ -2339,6 +2560,29 @@ export interface components {
          * @enum {string}
          */
         PostEditionCorrectionStatusEnum: "proposed" | "approved" | "rejected";
+        ProfileExtensionField: {
+            /** Format: uuid */
+            id: string;
+            key: string;
+            version: number;
+            label: string;
+            help_text: string;
+            field_type: string;
+            options: string[];
+            purpose: string;
+            classification: string;
+            required: boolean;
+            writer_policy: string;
+            can_write: boolean;
+            current_value: unknown | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        ProfileExtensionWorkspace: {
+            /** Format: uuid */
+            registration_id: string;
+            fields: components["schemas"]["ProfileExtensionField"][];
+        };
         ProfileMediaReviewDecision: {
             media_kind: components["schemas"]["MediaKindEnum"];
             decision: components["schemas"]["ProfileMediaReviewDecisionDecisionEnum"];
@@ -3331,6 +3575,50 @@ export interface components {
         WaivePayment: {
             reason: string;
         };
+        WorkforceStructure: {
+            organization_name: string;
+            edition_name: string;
+            departments: components["schemas"]["WorkforceStructureDepartment"][];
+        };
+        WorkforceStructureDepartment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            parent_id: string | null;
+            code: string;
+            name: string;
+            description: string;
+            positions: components["schemas"]["WorkforceStructurePosition"][];
+        };
+        WorkforceStructureHolder: {
+            /** Format: uuid */
+            assignment_id: string;
+            display_name: string;
+            login_handle: string;
+            other_roles: components["schemas"]["WorkforceStructureRole"][];
+        };
+        WorkforceStructurePosition: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            reports_to_id: string | null;
+            code: string;
+            title: string;
+            description: string;
+            headcount: number;
+            status: string;
+            holders: components["schemas"]["WorkforceStructureHolder"][];
+        };
+        WorkforceStructureRole: {
+            department_name: string;
+            position_title: string;
+        };
+        WriteProfileExtensionValue: {
+            /** Format: uuid */
+            field_id: string;
+            value: unknown;
+            reason?: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -3340,6 +3628,48 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    workforce_retrieve_convention_bootstrap_workspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConventionBootstrapWorkspace"];
+                };
+            };
+        };
+    };
+    workforce_create_convention_bootstrap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConventionBootstrapRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConventionBootstrapResult"];
+                };
+            };
+        };
+    };
     identity_retrieve_my_context: {
         parameters: {
             query?: never;
@@ -3792,6 +4122,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EditionBasic"];
+                };
+            };
+        };
+    };
+    authorization_retrieve_access_workspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessWorkspace"];
+                };
+            };
+        };
+    };
+    authorization_assign_access_group: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessAssignmentCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessWorkspace"];
+                };
+            };
+        };
+    };
+    authorization_revoke_access_assignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    authorization_replace_access_assignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAccessAssignmentReplace"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessWorkspace"];
                 };
             };
         };
@@ -4937,6 +5364,56 @@ export interface operations {
             };
         };
     };
+    registration_retrieve_staff_profile_extensions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileExtensionWorkspace"];
+                };
+            };
+        };
+    };
+    registration_write_staff_profile_extension: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WriteProfileExtensionValue"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileExtensionWorkspace"];
+                };
+            };
+        };
+    };
     registration_waive_payment: {
         parameters: {
             query?: never;
@@ -4960,6 +5437,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaffRegistration"];
+                };
+            };
+        };
+    };
+    registration_retrieve_my_profile_extensions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileExtensionWorkspace"];
+                };
+            };
+        };
+    };
+    registration_write_my_profile_extension: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WriteProfileExtensionValue"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileExtensionWorkspace"];
                 };
             };
         };
@@ -5165,6 +5690,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VolunteerApplication"];
+                };
+            };
+        };
+    };
+    workforce_retrieve_structure: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforceStructure"];
                 };
             };
         };

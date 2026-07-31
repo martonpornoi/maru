@@ -1,6 +1,6 @@
 # Delivery progress
 
-Last updated: 2026-07-28
+Last updated: 2026-07-31
 
 This is the compact progress ledger. `CURRENT.md` explains the handoff;
 checkpoint files preserve milestone evidence; `BACKLOG.md` defines acceptance.
@@ -13,7 +13,7 @@ checkpoint files preserve milestone evidence; `BACKLOG.md` defines acceptance.
 | V00 engineering foundation | Complete | PostgreSQL, settings, CI, API conventions, 36-test checkpoint |
 | V01 organization and edition kernel | Complete | Scope/archive guards, self APIs, 79-test checkpoint |
 | V02 authority, audit, and effects | Worker boundary complete; activity projections remain | dual-control authority, endpoint isolation, audit, supervised outbox, metrics/replay, restore drill, 246 tests |
-| V03 unified shell | Registration-aware Staff Console and attendee inbox foundation; broader search/team inbox remain | ADRs 0006/0015, generated API types, People/My registration/Commerce/Security, 12 frontend tests |
+| V03 unified shell | Record-oriented `/admin/` home and menu with embedded Convention work, specialist records, access sharing, forms, organization structure, profile extensions, and closeout review; broader search/team inbox remain | ADRs 0006/0015/0023/0026-0029, generated API types, one collapsible navigation, Marucon educational rehearsal, 20 frontend tests |
 | Registration milestone | Repository safety boundary delivered; target deployment/load/policy gates and selected product gaps remain | ADRs 0007, 0009-0017, 369 backend tests, restore rehearsal, registration runbook |
 | V04-V24 | Planned, with selected registration work delivered early | Ordered in `DELIVERY_PLAN.md` |
 
@@ -42,10 +42,10 @@ checkpoint files preserve milestone evidence; `BACKLOG.md` defines acceptance.
 Django 5.2.16 / Python 3.12.13 / PostgreSQL 17
 Ruff format: pass
 Ruff lint: pass
-strict mypy: pass (152 source files)
-pytest: 369 passed
-branch-aware coverage: 90.03%
-Staff Console: 12 tests, generated types, typecheck and production build pass
+strict mypy: pass (178 source files)
+pytest: 431 passed
+branch-aware coverage: 90.10%
+Convention work: 20 tests, generated types, typecheck and production build pass
 Django checks: pass
 production deployment check: pass
 migration apply/drift: pass

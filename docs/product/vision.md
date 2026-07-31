@@ -46,7 +46,7 @@ merely places unrelated tools behind one menu.
 ### One platform, many purpose-built surfaces
 
 One login and one data model do not require one enormous interface. Attendee
-web, staff console, mobile, kiosk, signage, and on-site relay are projections of
+web, administration, mobile, kiosk, signage, and on-site relay are projections of
 the same authorized source of truth.
 
 ### One source of truth, not one point of failure

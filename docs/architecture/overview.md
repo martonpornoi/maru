@@ -11,7 +11,7 @@ APIs.
 
 ```text
 Attendee web ─┐
-Staff console ├── Versioned REST API ── Django modular monolith
+Administration / Convention work ├── Versioned REST API ── Django modular monolith
 Mobile app   ─┤                              │
 Kiosks       ─┤                    PostgreSQL system of record
 Signage      ─┘                              │

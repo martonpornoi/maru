@@ -1,7 +1,7 @@
 # Synthetic demonstration data
 
-Status: Implemented local-development support  
-Last updated: 2026-07-29
+Status: Implemented synthetic fixture and bounded admin-first rehearsal support
+Last updated: 2026-07-31
 
 ## Purpose and requirements
 
@@ -32,8 +32,8 @@ settings do not expose its management command.
   participation;
 - multiple capacities per person with explicit public-history opt-ins for
   selected public roles;
-- four immutable role-bundle versions per organizer and organization- or
-  edition-scoped assignments; and
+- four legacy authority examples plus ten familiar furry-convention access
+  groups per organizer, with organization- or edition-scoped assignments;
 - distinct Danube and Aurora registration sections, questions, and products;
 - two immutable published registration templates;
 - reviewed active 2026 full-demo configurations with volunteer, early-bird,
@@ -44,7 +44,8 @@ settings do not expose its management command.
   checked in, expired, and cancelled;
 - immutable submitted-answer snapshots, complete edition-owned profiles,
   multiple fursuits, a guardian request, internal staff-only comments, active
-  entitlements, an Infinity ticket holder, and online check-in;
+  entitlements, an Infinity ticket holder, reviewed profile-extension
+  definitions and append-only values, and online check-in;
 - directory consent examples and restricted contact, address, age,
   emergency-contact, Telegram, pronoun, language, bio, and fursuit data;
 - multiple internal and separately consented public country codes plus
@@ -86,6 +87,9 @@ accounts are highlighted in the command output for authorized API exploration.
 `danube.standard-attendee@demo.maru.invalid` is highlighted for the unregistered
 Danube attendee walkthrough. Use `danube.convention-chair@demo.maru.invalid`
 for configuration and Front Desk views.
+The chair can open **Manage access** with Front Desk, Registration, Board,
+Treasurer, and the other starter groups already populated. A separate synthetic
+Board Chair has approval authority for a two-person sharing rehearsal.
 All fixture accounts use the static local-only password
 `Z7!maru-demo-fixture-2026` on first creation.
 
@@ -100,6 +104,37 @@ uv run python src/manage.py seed_demo_data --reset-passwords
 The optional `--password` argument supports deliberate local test overrides.
 The default is intentionally public and must never be reused for any real
 account or environment.
+
+## Marucon admin-first rehearsal
+
+`seed_marucon_rehearsal` is a separate local/test-only educational scenario.
+It requires a clean account table so the deterministic `admin` superuser is
+truthfully the first account. It creates Marucon Organizers, the Marucon
+series, the preparing Marucon 2031 edition, the initial dual-control Chair,
+nested workforce structure, active appointments, a published registration
+template, an inherited active registration configuration, and reviewed
+post-submission profile extension fields.
+
+The network form requires explicit acknowledgement:
+
+```powershell
+uv run python src/manage.py seed_marucon_rehearsal --accept-public-roster
+```
+
+Only public handles, department names/descriptions, and role labels are
+imported from the configured HTTPS Awoostria page. The adapter ignores
+recruiting-call headings and never imports images or contact data. It generates
+collision-safe `.invalid` emails and assigns the documented local-only shared
+password `M4rucon-Rehearsal-2031!`. Automated tests never fetch or check in the
+live roster; `--roster-file` drives the same scenario with synthetic semantic
+HTML.
+
+The command is atomic and idempotent for fixture-owned rows. It refuses a
+non-empty account table owned by another fixture rather than deleting,
+renumbering, or pretending its administrator was first. The educational smoke
+test covers handle sign-in, hierarchy visibility, multiple roles, inherited
+registration, hidden staff questions, authoritative Infinity eligibility, and
+rerun stability.
 
 ## Safety and failure behavior
 
@@ -117,8 +152,13 @@ account or environment.
   rewriting its historical state. V5 enriches only untouched synthetic
   current-profile defaults with varied reporting countries and the new
   consent-version/public-country example.
-- Lifecycle state is advanced only through `transition_edition`, preserving its
-  authorization, audit, event, outbox, version, and archive behavior.
+- Lifecycle state is advanced through `transition_edition`, preserving its
+  authorization, audit, event, outbox, and version behavior. Because archived
+  examples and their synthetic readiness/manifest evidence are built in one
+  atomic fixture, the local/test-only command temporarily disables the archive
+  gate during that construction. It still installs complete deterministic
+  readiness and manifest rows before commit; production settings cannot expose
+  the command.
 
 The synthetic accounts deliberately share one password for convenient role
 exploration. The default is checked into source and
@@ -131,8 +171,11 @@ The fixture distinguishes organizational relationships, participation
 capacities, and executable authority:
 
 - board oversight is organization-scoped;
-- edition directors can view, transition, and read minimized participant
-  summaries for their assigned editions;
+- edition directors can view, transition, read minimized participant
+  summaries, and the featured Chair has organization-scoped role-management
+  and immediate-revocation authority;
+- the Board Chair has organization-scoped role-management authority for
+  independent sharing approval;
 - operations staff can view edition metadata and minimized participant
   summaries;
 - volunteers receive edition-scoped basic metadata access; and
@@ -159,6 +202,8 @@ The integration test runs the command twice and verifies:
 - representative and overlapping capacities;
 - shared identity without tenant collapse;
 - an executable edition-director policy decision;
+- familiar Convention work access groups, current assignments, exact-person
+  display, chair revocation authority, and independent approval authority;
 - password authentication;
 - idempotency; and
 - refusal under production settings.
@@ -169,10 +214,11 @@ implemented.
 
 ## Limitations
 
-Departments, positions, applications, onboarding, shifts, programme items,
-dealer tables, accommodation, cases, assets, and lost-and-found belong to later
-vertical slices. The fixture uses durable capacity codes and summaries for
-those not-yet-implemented domains. Provider, mail, media, credential, and
-offline records are intentionally inert synthetic evidence: `.invalid` hosts,
-disabled provider accounts, hashed placeholder tokens, and no reusable secret
-or real stored image are included.
+Qualifications, availability, shifts, programme items, dealer tables,
+accommodation, cases, assets, and lost-and-found belong to later vertical
+slices. The fixture includes the implemented departments, positions,
+opportunities, applications, onboarding agreements, and position assignments,
+and uses durable capacity codes for other not-yet-implemented domains.
+Provider, mail, media, credential, and offline records are intentionally inert
+synthetic evidence: `.invalid` hosts, disabled provider accounts, hashed
+placeholder tokens, and no reusable secret or real stored image are included.

@@ -100,7 +100,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "identity.Account"
-LOGIN_REDIRECT_URL = "/staff/"
+AUTHENTICATION_BACKENDS = [
+    "maru.identity.backends.EmailOrHandleBackend",
+]
+LOGIN_REDIRECT_URL = "/admin/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 REST_FRAMEWORK = {

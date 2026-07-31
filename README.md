@@ -17,12 +17,12 @@ permission-controlled operational record.
 - PostgreSQL as the system of record
 - A modular monolith with strongly enforced module boundaries
 - Versioned REST APIs and generated OpenAPI clients
-- React/TypeScript Staff Console and separately deployable future clients
+- React/TypeScript convention workflows embedded in Django administration and
+  separately deployable future clients
 - Background workers for delivery, exports, imports, and other slow operations
 
-Reflex is not part of the platform core. Django's built-in admin bootstraps data
-management; the first purpose-built React/TypeScript Staff Console is now
-available.
+Reflex is not part of the platform core. Django's administration shell combines
+specialist records with purpose-built React/TypeScript Convention work.
 
 ## Local quick start
 
@@ -53,7 +53,7 @@ The demo administrator is `demo.admin@maru.invalid`. Every synthetic account
 uses the documented local-only password `Z7!maru-demo-fixture-2026`. The
 fixture is local-only, idempotent, uses reserved `.invalid` addresses, and
 must never be used as production data or credentials.
-Open <http://127.0.0.1:8000/staff/> as
+Open <http://127.0.0.1:8000/admin/> as
 `danube.convention-chair@demo.maru.invalid` for the Danube 2026 cockpit and
 registration operations, or `danube.standard-attendee@demo.maru.invalid` for a
 fresh attendee registration walkthrough.
@@ -61,7 +61,8 @@ Open <http://127.0.0.1:8000/register/> without signing in to choose a convention
 create a synthetic attendee account, and complete the public registration
 profile.
 See [development setup](docs/development/setup.md) for configuration, checks,
-troubleshooting, and fixture details.
+troubleshooting, fixture details, and the clean-database admin-first Marucon
+rehearsal.
 
 ## Product principles
 
@@ -99,6 +100,7 @@ troubleshooting, and fixture details.
 - [Observability and operational readiness](docs/operations/observability-and-readiness.md)
 - [Registration operations and tester runbook](docs/operations/registration-runbook.md)
 - [Clean convention and volunteer onboarding walkthrough](docs/operations/clean-convention-onboarding-walkthrough.md)
+- [Marucon admin-first educational rehearsal](docs/operations/marucon-admin-rehearsal.md)
 - [Registration implementation backlog](docs/project/REGISTRATION_TODO.md)
 - [Research landscape](docs/research/landscape-2026-07.md)
 - [Testing strategy](docs/quality/testing-strategy.md)

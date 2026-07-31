@@ -29,6 +29,18 @@ html[data-theme="light"] {
   --button-hover-bg: var(--maru-navy-800);
   --default-button-bg: var(--maru-navy-900);
   --default-button-hover-bg: var(--maru-navy-800);
+  --maru-foundation-bg: #e7f0ff;
+  --maru-foundation-border: #6d91c7;
+  --maru-people-bg: #e6f5ef;
+  --maru-people-border: #4d947c;
+  --maru-registration-bg: #fff0d2;
+  --maru-registration-border: #b9822e;
+  --maru-attendee-bg: #f1eafa;
+  --maru-attendee-border: #8a6aae;
+  --maru-governance-bg: #f9e9ed;
+  --maru-governance-border: #a96678;
+  --maru-platform-bg: var(--maru-ivory-300);
+  --maru-platform-border: var(--maru-ivory-800);
 }
 
 html[data-theme="dark"] {
@@ -48,6 +60,18 @@ html[data-theme="dark"] {
   --darkened-bg: var(--maru-navy-900);
   --selected-bg: var(--maru-navy-800);
   --selected-row: var(--maru-navy-900);
+  --maru-foundation-bg: #142e54;
+  --maru-foundation-border: #89a9d8;
+  --maru-people-bg: #143b35;
+  --maru-people-border: #71b7a0;
+  --maru-registration-bg: #483619;
+  --maru-registration-border: #d5a656;
+  --maru-attendee-bg: #36294b;
+  --maru-attendee-border: #ad8bd2;
+  --maru-governance-bg: #462731;
+  --maru-governance-border: #cc8498;
+  --maru-platform-bg: var(--maru-navy-800);
+  --maru-platform-border: var(--maru-navy-300);
 }
 
 .maru-admin-brand {
@@ -70,12 +94,317 @@ html[data-theme="dark"] {
   letter-spacing: 0.04em;
 }
 
+.maru-admin-surface {
+  display: inline-block;
+  margin: 0.35rem 0 0 0.15rem;
+  color: var(--maru-gold-200);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.maru-admin-surface:hover,
+.maru-admin-surface:focus-visible {
+  color: var(--maru-gold-50);
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.maru-admin-nav-section {
+  border-bottom: 1px solid var(--hairline-color);
+}
+
+.maru-admin-nav-section > summary {
+  padding: 0.75rem;
+  color: var(--body-quiet-color);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.maru-admin-nav-section > summary:hover,
+.maru-admin-nav-section > summary:focus-visible {
+  color: var(--body-fg);
+  background: var(--darkened-bg);
+}
+
+.maru-admin-nav-section ul {
+  display: grid;
+  gap: 0.18rem;
+  margin: 0 0 0.75rem;
+  padding: 0 0.75rem;
+  list-style: none;
+}
+
+.maru-admin-nav-section li a {
+  display: block;
+  padding: 0.42rem 0.55rem;
+  border-radius: 0.35rem;
+  color: var(--body-fg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.maru-admin-nav-section li a:hover,
+.maru-admin-nav-section li a:focus-visible {
+  color: var(--body-fg);
+  background: var(--selected-bg);
+}
+
+.maru-admin-record-nav #nav-filter {
+  width: calc(100% - 1.5rem);
+  margin: 0 0.75rem 0.75rem;
+}
+
+.maru-admin-workspaces {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.2rem;
+  border: 1px solid var(--maru-attendee-border);
+  border-radius: 0.7rem;
+  background: var(--maru-attendee-bg);
+}
+
+.maru-admin-workspaces h2,
+.maru-admin-workspaces p {
+  margin: 0;
+}
+
+.maru-admin-workspaces p {
+  margin-top: 0.35rem;
+}
+
+.maru-admin-workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.maru-admin-workspace-grid a {
+  display: grid;
+  gap: 0.25rem;
+  min-height: 5rem;
+  padding: 0.85rem;
+  border: 1px solid var(--maru-attendee-border);
+  border-radius: 0.55rem;
+  color: var(--body-fg);
+  background: var(--body-bg);
+  text-decoration: none;
+}
+
+.maru-admin-workspace-grid a:hover,
+.maru-admin-workspace-grid a:focus-visible {
+  border-color: var(--link-fg);
+  box-shadow: 0 0.35rem 1rem rgb(3 13 29 / 10%);
+}
+
+.maru-admin-workspace-grid strong {
+  color: var(--link-fg);
+}
+
+.maru-admin-workspace-grid span {
+  color: var(--body-quiet-color);
+  line-height: 1.4;
+}
+
 .maru-page-help {
   max-width: calc(100% - 16rem);
   margin: -0.65rem 0 1.25rem;
   color: var(--body-quiet-color);
   font-size: 0.84rem;
   line-height: 1.55;
+}
+
+.maru-admin-directory h2 {
+  color: var(--maru-navy-900);
+}
+
+.maru-admin-directory p {
+  color: var(--body-quiet-color);
+  line-height: 1.55;
+}
+
+.maru-admin-directory {
+  margin: 0 0 1rem;
+}
+
+.maru-admin-directory h2 {
+  margin-bottom: 0.25rem;
+}
+
+.maru-admin-directory p {
+  margin-top: 0;
+}
+
+.maru-admin-group-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.65rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.maru-admin-group-legend li {
+  padding: 0.75rem;
+  border: 1px solid var(--maru-group-border);
+  border-radius: 0.65rem;
+  background: var(--maru-group-bg);
+}
+
+.maru-admin-group-legend strong,
+.maru-admin-group-legend span {
+  display: block;
+}
+
+.maru-admin-group-legend strong {
+  margin-bottom: 0.2rem;
+  color: var(--body-fg);
+}
+
+.maru-admin-group-legend span {
+  color: var(--body-quiet-color);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.maru-admin-group-legend__foundation,
+.maru-admin-app--foundation {
+  --maru-group-bg: var(--maru-foundation-bg);
+  --maru-group-border: var(--maru-foundation-border);
+}
+
+.maru-admin-group-legend__people-access,
+.maru-admin-app--people-access {
+  --maru-group-bg: var(--maru-people-bg);
+  --maru-group-border: var(--maru-people-border);
+}
+
+.maru-admin-group-legend__registration-finance,
+.maru-admin-app--registration-finance {
+  --maru-group-bg: var(--maru-registration-bg);
+  --maru-group-border: var(--maru-registration-border);
+}
+
+.maru-admin-group-legend__attendee-operations,
+.maru-admin-app--attendee-operations {
+  --maru-group-bg: var(--maru-attendee-bg);
+  --maru-group-border: var(--maru-attendee-border);
+}
+
+.maru-admin-group-legend__governance,
+.maru-admin-app--governance {
+  --maru-group-bg: var(--maru-governance-bg);
+  --maru-group-border: var(--maru-governance-border);
+}
+
+.maru-admin-app--platform {
+  --maru-group-bg: var(--maru-platform-bg);
+  --maru-group-border: var(--maru-platform-border);
+}
+
+.maru-admin-app-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.maru-admin-app {
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid var(--maru-group-border);
+  border-radius: 0.8rem;
+  background: var(--body-bg);
+}
+
+.maru-admin-app__header {
+  padding: 1rem;
+  background: var(--maru-group-bg);
+}
+
+.maru-admin-app__header h3 {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 1.1rem;
+}
+
+.maru-admin-app__header p {
+  max-width: 70rem;
+  margin: 0;
+  color: var(--body-quiet-color);
+  line-height: 1.45;
+}
+
+.maru-admin-app__group {
+  color: var(--body-quiet-color);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.maru-admin-model-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.maru-admin-model-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--hairline-color);
+}
+
+.maru-admin-model-list__purpose > a,
+.maru-admin-model-list__purpose > strong {
+  font-weight: 750;
+}
+
+.maru-admin-model-list__purpose p {
+  max-width: 72rem;
+  margin: 0.25rem 0 0;
+  color: var(--body-quiet-color);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.maru-admin-model-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+
+#nav-sidebar .app-organizations,
+#nav-sidebar .app-events {
+  border-left: 0.3rem solid var(--maru-foundation-border);
+}
+
+#nav-sidebar .app-identity,
+#nav-sidebar .app-participation,
+#nav-sidebar .app-authorization,
+#nav-sidebar .app-workforce {
+  border-left: 0.3rem solid var(--maru-people-border);
+}
+
+#nav-sidebar .app-registration {
+  border-left: 0.3rem solid var(--maru-registration-border);
+}
+
+#nav-sidebar .app-communications,
+#nav-sidebar .app-accreditation {
+  border-left: 0.3rem solid var(--maru-attendee-border);
+}
+
+#nav-sidebar .app-privacyops {
+  border-left: 0.3rem solid var(--maru-governance-border);
 }
 
 #header {
@@ -137,5 +466,17 @@ html[data-theme="dark"] {
   .maru-edition-context label {
     min-width: 0;
     flex: 1;
+  }
+
+  .maru-admin-model-list > li {
+    grid-template-columns: 1fr;
+  }
+
+  .maru-admin-model-list__actions {
+    justify-content: start;
+  }
+
+  .maru-admin-workspace-grid {
+    grid-template-columns: 1fr;
   }
 }

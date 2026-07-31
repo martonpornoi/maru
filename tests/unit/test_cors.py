@@ -33,7 +33,7 @@ def test_registration_client_cors_allows_only_exact_configured_api_origin() -> N
 
     non_api = middleware(
         RequestFactory().get(
-            "/staff/",
+            "/admin/workspace/",
             HTTP_ORIGIN="https://register.example",
         )
     )

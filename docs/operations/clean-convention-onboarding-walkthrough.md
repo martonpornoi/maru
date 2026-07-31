@@ -1,7 +1,7 @@
 # Clean convention and volunteer onboarding walkthrough
 
 Status: Executable local rehearsal  
-Last updated: 2026-07-29
+Last updated: 2026-07-31
 
 This walkthrough starts with an empty, separately named local database. It
 does not use `seed_demo_data`, and it does not delete or modify an existing
@@ -18,7 +18,9 @@ uv run python src/manage.py createsuperuser
 uv run python src/manage.py runserver
 ```
 
-Sign in at <http://127.0.0.1:8000/admin/>. Keep this first account as the
+Sign in at <http://127.0.0.1:8000/admin/>. A workspace-less bootstrap
+administrator sees the original administration home, Convention work, and the
+complete permission-filtered record directory. Keep this first account as the
 bootstrap controller; do not share it with the Convention Chair.
 
 Use a different new database name if `maru_walkthrough` already exists. Keep
@@ -28,7 +30,7 @@ so cleanup can be deliberate after the rehearsal.
 
 ## 2. Create the convention structure and people
 
-In bootstrap admin:
+From the original `/admin/` home:
 
 1. create an Organization at `/admin/organizations/organization/add/`;
 2. create its Convention Series at
@@ -41,25 +43,32 @@ Use lowercase stable slugs. Keep the edition in a non-closed lifecycle.
 The attendee may already have an account, but you no longer need to create one
 in bootstrap admin before staff-assisted registration.
 
+The home keeps the complete alphabetical record directory. The setup
+dependency order is available contextually under **Convention work → Setup
+guide**; it is guidance, not a readiness or completion tracker. All records
+remain editable through their ordinary pages.
+
 ## 3. Establish the first Chairman and starter templates
 
-In bootstrap administration, choose **First convention setup**:
+After creating the organization, series, edition, and separate Chair account,
+return to <http://127.0.0.1:8000/admin/>. The guarded **Establish convention
+leadership** panel is available under **Convention work → Setup guide**.
 
-1. choose the organization and its matching edition;
-2. choose the separate Chair account;
-3. record why this initial authority is being established;
+1. select the organization and matching first edition;
+2. type or select the exact Chair account email;
+3. enter the permanent reason for establishing the first authority;
 4. type the organization slug exactly;
-5. confirm the logged-in superuser's current password; and
-6. submit once.
+5. confirm the signed-in administrator's current password; and
+6. submit **Establish leadership**.
 
-The wizard creates the Chair position and starter template catalog through the
-same audited one-shot service as the operator command. Repeating it is expected
-to fail, and an organization with existing authority is omitted.
+Maru refreshes the newly created convention workspace and opens Setup guide.
+Review the lifecycle explanation, enter a reason, and select **Start
+planning**. This moves Draft to Preparing; it does not open registration or
+mark the convention as currently running.
 
-No command line is needed for this normal path after the environment,
-migrations, and first superuser have been prepared. For operator recovery or
-automation, the equivalent PowerShell fallback is below. The database
-assignment and Python invocation must be separate statements:
+The command remains a recovery fallback. If the browser ceremony is
+unavailable, the database assignment and Python invocation must be separate
+PowerShell statements:
 
 ```powershell
 $env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/maru_walkthrough"
@@ -72,7 +81,10 @@ $env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/maru_walkthrough
   --confirm-organization YOUR_ORGANIZATION_SLUG
 ```
 
-The command prints the same created counts.
+Both paths establish the same audited controller and Chair authority,
+leadership department/position, and starter position templates. Repeating
+either path is expected to fail. The browser path is a guarded one-time
+ceremony, not an ordinary editable record.
 
 ## 4. Create and activate the registration form
 
@@ -85,14 +97,15 @@ Open `/admin/registration/registrationconfiguration/add/`.
 4. add at least one section/question and one paid admission product;
 5. verify each question purpose and visibility and each product's price,
    capacity, sales window, entitlement, and payment window; and
-6. open Staff Console `/staff/`, select the edition, open Commerce, and
-   activate the reviewed draft with a meaningful reason.
+6. return to `/admin/`, select the edition, open Registration, and activate
+   the reviewed draft with a meaningful reason.
 
 The public dates may deliberately be in the future for this rehearsal.
 
 ## 5. Staff-register the attendee outside opening hours
 
-From Staff Console Commerce choose **Add attendee outside public hours**.
+From `/admin/`, open **Convention work → Registration**, then choose **Add
+attendee outside public hours**.
 
 1. enter the attendee email;
 2. if it exact-matches an active Maru account, verify that person is intended;
@@ -116,7 +129,7 @@ must say `Payment pending`; staff assistance never marks a paid ticket paid.
 
 ## 6. Open the NDA upload
 
-In bootstrap admin:
+In the **Specialist records** section of `/admin/`:
 
 1. create an active version of **Volunteer NDA** at
    `/admin/workforce/onboardingdocumenttype/add/`;
@@ -154,7 +167,7 @@ Sign back in as the bootstrap administrator.
 2. open the exact PDF through its protected download;
 3. compare the account, agreement version, signature, and expected file;
 4. set Approved and record a review reason;
-5. open Staff Console Commerce;
+5. open **Convention work → Registration** from `/admin/`;
 6. find the pending profile and fursuit images; and
 7. approve or reject each with its own reason.
 
@@ -163,7 +176,7 @@ the owner.
 
 ## 9. Create the department, position, hierarchy, and public opening
 
-In Workforce bootstrap admin:
+In the **Workforce** specialist records:
 
 1. create a department, optionally under Convention Leadership;
 2. create a position from a starter template such as Registration Lead;
@@ -190,18 +203,24 @@ Maru refuses activation when the NDA is missing, headcount is full, controllers
 are identical or unauthorized, or scope does not agree. Success creates the
 exact role assignment and edition capacities in one transaction.
 
+Do not replace this step with Convention work's **Manage access** drawer.
+That drawer is useful for direct, reasoned system access to groups such as
+Front Desk or Registration, but it does not fill a position, verify an NDA,
+enforce headcount, wire reporting hierarchy, or create official convention
+capacities.
+
 For shared or production use, the named approver must actually review the
 appointment. The current bootstrap selector is a rehearsal interface, not a
 substitute for the planned separate approval inbox and step-up.
 
 ## 11. Verify the resulting user access
 
-Sign in as the attendee and open `/staff/`.
+Sign in as the attendee and open `/admin/`.
 
 For a Registration Lead example:
 
 1. select the convention edition;
-2. open Commerce;
+2. open Registration;
 3. verify the registration service queue is available;
 4. open a safe attendee summary; and
 5. verify an operation outside the assigned template remains denied.
@@ -212,8 +231,8 @@ profile claims.
 
 ## 12. Useful negative tests
 
+- revisit the leadership ceremony and expect a read-only completion summary;
 - repeat `bootstrap_convention` and expect rejection;
-- enter the wrong password in **First convention setup** and expect no records;
 - staff-register an email that has never existed and verify the warning,
   account, `payment_pending` registration, and account-creation audit;
 - enter an inactive account email and expect rejection rather than replacement;

@@ -1,19 +1,19 @@
 # Identity module
 
-Status: Verified identity lifecycle, session controls, and scoped restrictions implemented  
-Last updated: 2026-07-28
+Status: Verified identity lifecycle, human login handles, session controls, and scoped restrictions implemented
+Last updated: 2026-07-31
 
 ## Purpose and requirements
 
 `maru.identity` owns the authentication-facing platform account and assurance
-boundary for IDN-001, IDN-006 through IDN-008, AUD-002, and PRI-001. It does
+boundary for IDN-001, IDN-006 through IDN-008, IDN-010, AUD-002, and PRI-001. It does
 not own organizer profiles, participation, applications, HR, orders, finance,
 or conduct cases. ADR 0013 defines verified identity and scoped restrictions.
 
 ## Owned data and invariants
 
 - opaque UUID account ID;
-- normalized case-folded email used by bootstrap authentication;
+- normalized case-folded email and optional human login handle;
 - display name and preferred language;
 - active/staff state and Django authentication timestamps;
 - password verifier and Django permission relations required for bootstrap
@@ -25,6 +25,11 @@ or conduct cases. ADR 0013 defines verified identity and scoped restrictions.
 - organizer/edition-scoped restrictions with consequence and appeal evidence.
 
 Email is non-empty and case-insensitively unique at the PostgreSQL boundary.
+The optional login handle is also case-insensitively unique, is stripped before
+storage, and rejects control characters while retaining printable public
+handles. Local sign-in accepts either exact email or handle without changing
+email's role as the account bootstrap/recovery address. Missing and ambiguous
+identifiers follow the same password-hasher timing path.
 The string representation does not expose email by default.
 
 ## Public contracts
@@ -77,8 +82,8 @@ evidence is read-only there. Operational restriction commands require explicit
 tenant/edition capabilities; privileged changes require recent step-up in
 production.
 
-The bootstrap account list identifies people by display name with email as a
-fallback, supports direct display-name/email search and access-state filters,
+The specialist account list identifies people by display name or login handle
+with email as a fallback, supports direct display-name/handle/email search and access-state filters,
 and keeps UUID and authentication timestamps in a collapsed technical section.
 It does not expose Django groups or per-user Django permissions as an
 alternative to Maru's scoped authority model.

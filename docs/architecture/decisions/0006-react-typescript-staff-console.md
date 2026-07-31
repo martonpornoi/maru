@@ -1,6 +1,6 @@
 # ADR 0006: React and TypeScript for the Staff Console
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0023 (separate visible console only)
 - Date: 2026-07-27
 - Requirements: UX-001, UX-002, UX-003, UX-004, UX-006, UX-007, UX-008,
   INT-001

@@ -1520,6 +1520,307 @@ class RegistrationSubmission(UUIDTimeStampedModel):
         )
 
 
+class ProfileExtensionWriter(models.TextChoices):
+    ATTENDEE = "attendee", "Attendee"
+    REGISTRATION_STAFF = "registration_staff", "Registration staff"
+    ATTENDEE_AND_STAFF = "attendee_and_staff", "Attendee and registration staff"
+
+
+class ProfileExtensionReviewStatus(models.TextChoices):
+    PENDING = "pending", "Pending review"
+    APPROVED = "approved", "Approved"
+    REJECTED = "rejected", "Rejected"
+
+
+class ProfileExtensionStatus(models.TextChoices):
+    DRAFT = "draft", "Draft"
+    ACTIVE = "active", "Active"
+    RETIRED = "retired", "Retired"
+
+
+class RegistrationProfileExtensionField(UUIDTimeStampedModel):
+    """Versioned current-profile field separate from immutable submissions."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="registration_profile_extension_fields",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="registration_profile_extension_fields",
+    )
+    key = models.SlugField(max_length=80, validators=[validate_lowercase_slug])
+    version = models.PositiveIntegerField(default=1)
+    supersedes = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="superseded_by",
+    )
+    label = models.CharField(max_length=200)
+    help_text = models.TextField(blank=True)
+    field_type = models.CharField(max_length=24, choices=QuestionFieldType)
+    options = models.JSONField(default=list, blank=True)
+    purpose = models.CharField(max_length=240)
+    classification = models.CharField(
+        max_length=2,
+        choices=QuestionClassification,
+        default=QuestionClassification.PERSONAL,
+    )
+    attendee_visible = models.BooleanField(default=True)
+    writer_policy = models.CharField(
+        max_length=30,
+        choices=ProfileExtensionWriter,
+        default=ProfileExtensionWriter.ATTENDEE_AND_STAFF,
+    )
+    required = models.BooleanField(default=False)
+    position = models.PositiveIntegerField(default=0)
+    source_template = models.ForeignKey(
+        RegistrationTemplate,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="profile_extension_field_copies",
+    )
+    source_prior_edition = models.ForeignKey(
+        "events.EventEdition",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="profile_extension_field_copies",
+    )
+    review_status = models.CharField(
+        max_length=16,
+        choices=ProfileExtensionReviewStatus,
+        default=ProfileExtensionReviewStatus.PENDING,
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=ProfileExtensionStatus,
+        default=ProfileExtensionStatus.DRAFT,
+    )
+    created_by = models.ForeignKey(
+        "identity.Account",
+        on_delete=models.PROTECT,
+        related_name="registration_profile_extension_fields_created",
+    )
+    approved_by = models.ForeignKey(
+        "identity.Account",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="registration_profile_extension_fields_approved",
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("edition_id", "position", "key", "-version", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("edition", "key", "version"),
+                name="registration_profile_extension_field_version_unique",
+            ),
+            models.UniqueConstraint(
+                fields=("edition", "key"),
+                condition=Q(status="active"),
+                name="registration_one_active_profile_extension_field",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        _validate_question_options(field_type=self.field_type, options=self.options)
+        if self.edition_id and self.edition.organization_id != self.organization_id:
+            raise ValidationError("The profile field must match its edition scope.")
+        if self.source_template_id and self.source_prior_edition_id:
+            raise ValidationError(
+                "Choose either template or prior-edition provenance, not both."
+            )
+        if self.source_template_id:
+            source_template = self.source_template
+            if (
+                source_template is None
+                or source_template.organization_id != self.organization_id
+                or (
+                    source_template.series_id is not None
+                    and source_template.series_id != self.edition.series_id
+                )
+                or source_template.status != TemplateStatus.PUBLISHED
+            ):
+                raise ValidationError(
+                    {"source_template": "Choose an applicable published template."}
+                )
+        if self.source_prior_edition_id:
+            source_edition = self.source_prior_edition
+            if (
+                source_edition is None
+                or source_edition.organization_id != self.organization_id
+                or source_edition.id == self.edition_id
+                or source_edition.starts_on >= self.edition.starts_on
+            ):
+                raise ValidationError(
+                    {
+                        "source_prior_edition": (
+                            "Choose an earlier edition in the same organization."
+                        )
+                    }
+                )
+        if (
+            self.writer_policy
+            in {
+                ProfileExtensionWriter.ATTENDEE,
+                ProfileExtensionWriter.ATTENDEE_AND_STAFF,
+            }
+            and not self.attendee_visible
+        ):
+            raise ValidationError(
+                {
+                    "attendee_visible": (
+                        "An attendee-writable profile field must be visible "
+                        "to attendees."
+                    )
+                }
+            )
+        if self.status == ProfileExtensionStatus.ACTIVE and (
+            self.review_status != ProfileExtensionReviewStatus.APPROVED
+            or self.approved_by_id is None
+            or self.approved_at is None
+        ):
+            raise ValidationError(
+                "An active profile field requires recorded approval.",
+                code="profile_extension_approval_required",
+            )
+        if self.supersedes_id:
+            previous = self.supersedes
+            if (
+                previous is None
+                or previous.edition_id != self.edition_id
+                or previous.key != self.key
+                or previous.version >= self.version
+            ):
+                raise ValidationError(
+                    {
+                        "supersedes": (
+                            "A superseded field must be an earlier version of the "
+                            "same edition key."
+                        )
+                    }
+                )
+        reserved_prefixes = (
+            "infinity",
+            "admission",
+            "entitlement",
+            "payment",
+            "role",
+            "capacity",
+            "restriction",
+        )
+        if self.key.startswith(reserved_prefixes):
+            raise ValidationError(
+                {"key": "Use the authoritative Maru domain record for this fact."},
+                code="authoritative_profile_extension_key",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.key = self.key.lower()
+        if not self._state.adding:
+            current = type(self).objects.filter(pk=self.pk).values("status").first()
+            if current and current["status"] == ProfileExtensionStatus.ACTIVE:
+                update_fields = set(kwargs.get("update_fields") or ())
+                if self.status != ProfileExtensionStatus.RETIRED or (
+                    update_fields and not update_fields <= {"status", "updated_at"}
+                ):
+                    raise ValidationError(
+                        "Active profile field versions are immutable.",
+                        code="immutable_profile_extension_field",
+                    )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Profile extension fields use versioning and retirement.",
+            code="protected_profile_extension_field",
+        )
+
+    def __str__(self) -> str:
+        return f"{self.label} v{self.version} — {self.edition.name}"
+
+
+class RegistrationProfileExtensionValueRevision(UUIDTimeStampedModel):
+    """One append-only value revision for a registration profile extension."""
+
+    registration = models.ForeignKey(
+        Registration,
+        on_delete=models.PROTECT,
+        related_name="profile_extension_value_revisions",
+    )
+    organization_id = models.UUIDField()
+    edition_id = models.UUIDField()
+    field = models.ForeignKey(
+        RegistrationProfileExtensionField,
+        on_delete=models.PROTECT,
+        related_name="value_revisions",
+    )
+    field_key = models.SlugField(max_length=80, validators=[validate_lowercase_slug])
+    sequence = models.PositiveIntegerField()
+    value = models.JSONField()
+    actor = models.ForeignKey(
+        "identity.Account",
+        on_delete=models.PROTECT,
+        related_name="registration_profile_extension_value_revisions",
+    )
+    source_channel = models.CharField(max_length=40)
+    reason = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ("registration_id", "field_key", "sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("registration", "field_key", "sequence"),
+                name="registration_profile_extension_value_revision_unique",
+            )
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.registration_id and (
+            self.registration.organization_id != self.organization_id
+            or self.registration.edition_id != self.edition_id
+        ):
+            raise ValidationError("The value revision must match its registration.")
+        if self.field_id and (
+            self.field.organization_id != self.organization_id
+            or self.field.edition_id != self.edition_id
+            or self.field.key != self.field_key
+        ):
+            raise ValidationError("The value revision must match its field scope.")
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Profile extension value revisions are append-only.",
+                code="immutable_profile_extension_value_revision",
+            )
+        self.field_key = self.field_key.lower()
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Profile extension value revisions require the retention workflow.",
+            code="protected_profile_extension_value_revision",
+        )
+
+    def __str__(self) -> str:
+        return f"{self.registration.reference}: {self.field_key} r{self.sequence}"
+
+
 class RegistrationCommandReceipt(UUIDTimeStampedModel):
     """Idempotency evidence for one headless registration command."""
 

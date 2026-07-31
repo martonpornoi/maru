@@ -12,6 +12,7 @@ from django.db import models
 from django.db.models import Q
 from django.http import HttpRequest
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString, mark_safe
 
@@ -41,6 +42,8 @@ from maru.registration.models import (
     RegistrationAdjustment,
     RegistrationConfiguration,
     RegistrationLifecycleRun,
+    RegistrationProfileExtensionField,
+    RegistrationProfileExtensionValueRevision,
     RegistrationQuestion,
     RegistrationSection,
     RegistrationSubmission,
@@ -1473,6 +1476,122 @@ class GuardianConsentAdmin(
     list_filter = ("status", "expires_at", "decided_at")
     search_fields = ("registration__reference", "guardian_email", "guardian_name")
     exclude = ("token_digest",)
+
+
+@admin.register(RegistrationProfileExtensionField)
+class RegistrationProfileExtensionFieldAdmin(
+    NoDeleteAdminMixin,
+    EditionContextAdmin,
+):
+    list_display = (
+        "label",
+        "key",
+        "version",
+        "edition",
+        "writer_policy",
+        "required",
+        "review_status",
+        "status",
+    )
+    list_filter = (
+        "status",
+        "review_status",
+        "writer_policy",
+        "classification",
+        "required",
+        "edition",
+    )
+    search_fields = ("label", "key", "purpose", "edition__name")
+    ordering = ("edition", "position", "key", "-version")
+    readonly_fields = ("created_by", "approved_by", "approved_at", "created_at")
+    fieldsets = (
+        (
+            "Edition field",
+            {
+                "fields": (
+                    "organization",
+                    "edition",
+                    "key",
+                    "version",
+                    "supersedes",
+                    "label",
+                    "help_text",
+                    "field_type",
+                    "options",
+                    "required",
+                    "position",
+                )
+            },
+        ),
+        (
+            "Purpose and writers",
+            {
+                "fields": (
+                    "purpose",
+                    "classification",
+                    "attendee_visible",
+                    "writer_policy",
+                )
+            },
+        ),
+        (
+            "Provenance and approval",
+            {
+                "fields": (
+                    "source_template",
+                    "source_prior_edition",
+                    "review_status",
+                    "status",
+                    "created_by",
+                    "approved_by",
+                    "approved_at",
+                    "created_at",
+                )
+            },
+        ),
+    )
+
+    @override
+    def save_model(
+        self,
+        request: HttpRequest,
+        obj: RegistrationProfileExtensionField,
+        form: forms.ModelForm[Any],
+        change: bool,
+    ) -> None:
+        del form, change
+        account = request.user
+        if not isinstance(account, Account):
+            raise TypeError("Authenticated principal is not a platform account")
+        if obj._state.adding:
+            obj.created_by = account
+        if obj.status == "active" and obj.review_status == "approved":
+            obj.approved_by = obj.approved_by or account
+            obj.approved_at = obj.approved_at or timezone.now()
+        obj.save()
+
+
+@admin.register(RegistrationProfileExtensionValueRevision)
+class RegistrationProfileExtensionValueRevisionAdmin(
+    ReadOnlyAdminMixin,
+    EditionContextAdmin,
+):
+    list_display = (
+        "registration",
+        "field_key",
+        "sequence",
+        "actor",
+        "source_channel",
+        "created_at",
+    )
+    list_filter = ("field_key", "source_channel", "created_at")
+    search_fields = (
+        "registration__reference",
+        "field_key",
+        "actor__display_name",
+        "actor__email",
+    )
+    list_select_related = ("registration", "field", "actor")
 
 
 def _register_read_only_operational_model(

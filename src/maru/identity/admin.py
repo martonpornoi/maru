@@ -36,6 +36,7 @@ class AccountAdmin(UserAdmin):  # type: ignore[type-arg]
     ordering = ("display_name", "email")
     list_display = (
         "person",
+        "login_handle",
         "email",
         "preferred_language",
         "convention_record_count",
@@ -46,7 +47,7 @@ class AccountAdmin(UserAdmin):  # type: ignore[type-arg]
         "is_superuser",
         "date_joined",
     )
-    list_display_links = ("person", "email")
+    list_display_links = ("person", "login_handle", "email")
     list_filter = (
         "is_active",
         "is_staff",
@@ -54,7 +55,7 @@ class AccountAdmin(UserAdmin):  # type: ignore[type-arg]
         "preferred_language",
         "email_verified_at",
     )
-    search_fields = ("email", "display_name")
+    search_fields = ("email", "login_handle", "display_name")
     date_hierarchy = "date_joined"
     list_per_page = 50
     readonly_fields = (
@@ -66,7 +67,7 @@ class AccountAdmin(UserAdmin):  # type: ignore[type-arg]
         "registration_history",
     )
     fieldsets = (
-        ("Sign-in", {"fields": ("email", "password")}),
+        ("Sign-in", {"fields": ("email", "login_handle", "password")}),
         (
             "Profile",
             {"fields": ("display_name", "preferred_language", "email_verified_at")},
@@ -110,6 +111,7 @@ class AccountAdmin(UserAdmin):  # type: ignore[type-arg]
                 "classes": ("wide",),
                 "fields": (
                     "email",
+                    "login_handle",
                     "display_name",
                     "password1",
                     "password2",

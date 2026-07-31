@@ -26,7 +26,7 @@
       <nav aria-label="Registration navigation">
         <a href="{% url 'public-registration-index' %}">Conventions</a>
         {% if request.user.is_authenticated %}
-          <a href="/staff/">My Maru</a>
+          <a href="{% url 'management-console' %}?view=my-registration">My Maru</a>
           <form method="post" action="{% url 'staff-logout' %}">
             {% csrf_token %}
             <button type="submit">Sign out</button>

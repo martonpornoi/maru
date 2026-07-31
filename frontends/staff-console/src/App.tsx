@@ -9,18 +9,32 @@ import {
 import {
   activateRegistrationConfiguration,
   ApiError,
+  type AccessAssignment,
+  type AccessGroup,
+  type AccessWorkspace,
   type ActionItem,
+  type AssignAccessInput,
+  assignAccessGroup,
   type AttendeeReport,
   type AttendeeReportFilters,
   badgeExportPath,
   changeRegistrationPaymentDeadline,
   checkInRegistration,
+  type ClosureReadiness,
   confirmMyDemoPayment,
+  createConventionBootstrap,
   createRegistrationDraft,
+  type ConventionBootstrapResult,
+  type ConventionBootstrapWorkspace,
   type EditionContext,
+  type EditionTransitionResult,
   loadActions,
+  loadAccessWorkspace,
   loadAttendeeReport,
+  loadClosureReadiness,
+  loadConventionBootstrapWorkspace,
   loadMyContext,
+  loadMyProfileExtensions,
   loadMyRegistration,
   loadParticipations,
   loadProfileMediaReviews,
@@ -28,22 +42,35 @@ import {
   loadRegistrationReconciliation,
   loadSecurityHistory,
   loadStaffRegistrations,
+  loadWorkforceStructure,
   type MyContext,
   type MyRegistrationWorkspace,
   type Participation,
   type ParticipationFilters,
   type ParticipationPage,
   type ProfileMediaReviewItem,
+  type ProfileExtensionField,
+  type ProfileExtensionWorkspace,
   type RegistrationConfigurationWorkspace,
   type RegistrationReconciliation,
   type RegistrationQuestion,
+  type ReadinessGate,
+  type ReadinessGateCode,
+  type ReplaceAccessInput,
+  reviewReadinessGate,
   type SecurityEvent,
   type StaffRegistration,
   type StaffRegistrationPage,
+  type WorkforceStructure,
+  type WorkforceStructureDepartment,
   publishRegistrationTemplate,
+  replaceAccessAssignment,
   reviewProfileMedia,
+  revokeAccessAssignment,
   submitMyRegistration,
+  transitionEdition,
   waiveRegistrationPayment,
+  writeMyProfileExtension,
 } from "./api/client";
 import {
   capacityCounts,
@@ -59,19 +86,107 @@ import {
 type Destination =
   | "today"
   | "my-registration"
+  | "structure"
   | "people"
   | "commerce"
   | "reports"
-  | "security";
+  | "security"
+  | "setup";
 
 const upcomingDestinations = [
   "Work",
   "Plan",
   "Programme",
-  "Workforce",
   "Communications",
   "Operations",
 ];
+
+const destinationLabels: Record<Destination, string> = {
+  today: "Today",
+  "my-registration": "My registration",
+  structure: "Organization structure",
+  people: "People",
+  commerce: "Registration",
+  reports: "Reports & badges",
+  security: "Security history",
+  setup: "Setup guide",
+};
+
+const recommendedGroups: Record<Destination, string[]> = {
+  today: ["convention-chair", "vice-chair", "board-member"],
+  "my-registration": [],
+  structure: [
+    "convention-chair",
+    "vice-chair",
+    "board-member",
+    "department-lead",
+    "staff-member",
+    "volunteer",
+  ],
+  people: ["department-lead", "staff-member", "board-member"],
+  commerce: [
+    "registration-lead",
+    "front-desk",
+    "treasurer",
+    "media-moderator",
+  ],
+  reports: ["registration-lead", "treasurer", "board-member"],
+  security: [],
+  setup: ["convention-chair", "vice-chair", "board-member"],
+};
+
+const readinessGateDefinitions: Array<{
+  code: ReadinessGateCode;
+  label: string;
+  purpose: string;
+}> = [
+  {
+    code: "privacy",
+    label: "Privacy",
+    purpose: "Confirm retention, access, and data-rights work is accounted for.",
+  },
+  {
+    code: "finance",
+    label: "Finance",
+    purpose: "Confirm payments, refunds, disputes, and reconciliation are resolved.",
+  },
+  {
+    code: "operations",
+    label: "Operations",
+    purpose: "Confirm operational queues and convention follow-up are complete.",
+  },
+  {
+    code: "security",
+    label: "Security",
+    purpose: "Confirm security incidents and credential concerns are resolved.",
+  },
+  {
+    code: "jurisdiction",
+    label: "Jurisdiction & safeguarding",
+    purpose: "Confirm legal, safety, and safeguarding obligations are resolved.",
+  },
+];
+
+function requestedDestination(): Destination {
+  const value = new URLSearchParams(window.location.search).get("view");
+  return value && value in destinationLabels ? (value as Destination) : "today";
+}
+
+function accessWasRequested(): boolean {
+  return new URLSearchParams(window.location.search).get("access") === "1";
+}
+
+function accountLabel(context: MyContext): string {
+  return context.display_name.trim() || "Signed-in account";
+}
+
+function isAdminEmbedded(): boolean {
+  return document.getElementById("root")?.dataset.mode === "admin-embedded";
+}
+
+function selectedAdminEditionId(): string | undefined {
+  return document.getElementById("root")?.dataset.selectedEdition || undefined;
+}
 
 function Icon({
   children,
@@ -122,7 +237,322 @@ function ErrorScreen({ message }: { message: string }) {
   );
 }
 
-function EmptyContext({ context }: { context: MyContext }) {
+function ConventionBootstrapPanel({
+  context,
+  organizationId,
+  onCompleted,
+}: {
+  context: MyContext;
+  organizationId?: string;
+  onCompleted: (result: ConventionBootstrapResult) => Promise<void>;
+}) {
+  const [workspace, setWorkspace] = useState<ConventionBootstrapWorkspace>();
+  const [organization, setOrganization] = useState("");
+  const [edition, setEdition] = useState("");
+  const [chairEmail, setChairEmail] = useState("");
+  const [reason, setReason] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+
+  useEffect(() => {
+    setError(undefined);
+    void loadConventionBootstrapWorkspace()
+      .then((loaded) => {
+        setWorkspace(loaded);
+        const eligible = loaded.organizations.filter(
+          (item) => item.status === "eligible",
+        );
+        const initialOrganization =
+          eligible.find((item) => item.id === organizationId) ?? eligible[0];
+        if (!initialOrganization) return;
+        setOrganization(initialOrganization.id);
+        setEdition(
+          loaded.editions.find(
+            (item) => item.organization_id === initialOrganization.id,
+          )?.id ?? "",
+        );
+        setChairEmail(loaded.chairs[0]?.email ?? "");
+      })
+      .catch((caught: unknown) => {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "Convention leadership setup could not be loaded.",
+        );
+      });
+  }, [organizationId]);
+
+  const eligibleOrganizations =
+    workspace?.organizations.filter((item) => item.status === "eligible") ?? [];
+  const selectedOrganization = workspace?.organizations.find(
+    (item) => item.id === organization,
+  );
+  const availableEditions =
+    workspace?.editions.filter((item) => item.organization_id === organization) ??
+    [];
+  const currentOrganization = workspace?.organizations.find(
+    (item) => item.id === organizationId,
+  );
+  const ready = Boolean(
+    selectedOrganization &&
+      edition &&
+      chairEmail.trim() &&
+      reason.trim() &&
+      confirmation.trim() &&
+      password,
+  );
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ready || !selectedOrganization) return;
+    setBusy(true);
+    setError(undefined);
+    try {
+      const result = await createConventionBootstrap({
+        organization_id: selectedOrganization.id,
+        edition_id: edition,
+        chair_email: chairEmail.trim(),
+        reason: reason.trim(),
+        confirm_organization: confirmation.trim(),
+        controller_password: password,
+      });
+      setPassword("");
+      await onCompleted(result);
+    } catch (caught: unknown) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Convention leadership could not be established.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!workspace && !error) {
+    return (
+      <section className="panel bootstrap-ceremony" aria-live="polite">
+        <p className="muted-copy">Checking first-leadership prerequisites…</p>
+      </section>
+    );
+  }
+
+  if (
+    organizationId &&
+    currentOrganization?.status === "established" &&
+    eligibleOrganizations.length === 0
+  ) {
+    return (
+      <section className="panel bootstrap-ceremony completed-ceremony">
+        <div className="ceremony-status" aria-hidden="true">✓</div>
+        <div>
+          <p className="section-kicker">Initial authority</p>
+          <h2>Convention leadership established</h2>
+          <p className="muted-copy">
+            This one-time trust ceremony is complete. Further leadership and
+            access changes use Manage access and the independently approved
+            workforce appointment workflow.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (workspace && eligibleOrganizations.length === 0) {
+    return (
+      <section className="panel bootstrap-ceremony">
+        <p className="section-kicker">Initial authority</p>
+        <h2>No organization is waiting for leadership setup</h2>
+        <p className="muted-copy">
+          Create an active organization, a non-closed edition, and a distinct
+          Chair account in Specialist records, or use ordinary access management
+          for an organizer that already has authority.
+        </p>
+        <a className="secondary-button" href="/admin/">
+          Open Specialist records
+        </a>
+      </section>
+    );
+  }
+
+  return (
+    <section className="panel bootstrap-ceremony">
+      <div className="panel-heading">
+        <div>
+          <p className="section-kicker">One-time guarded action</p>
+          <h2>Establish convention leadership</h2>
+          <p className="muted-copy">
+            This creates the first two authority controllers, appoints the
+            Convention Chair, and installs the starter convention roles and
+            position templates. It cannot be repeated for this organizer.
+          </p>
+        </div>
+        <span className="quiet-badge">Current password required</span>
+      </div>
+      <div className="ceremony-warning">
+        <strong>Before continuing</strong>
+        <span>
+          The Chair must be a separate active account. Maru records the
+          administrator, Chair, reason, scope, server time, and created authority
+          as permanent audit evidence.
+        </span>
+      </div>
+      <form className="bootstrap-form" onSubmit={submit}>
+        <div className="form-field">
+          <label htmlFor="bootstrap-organization">Organization</label>
+          <select
+            id="bootstrap-organization"
+            value={organization}
+            onChange={(event) => {
+              const nextOrganization = event.target.value;
+              setOrganization(nextOrganization);
+              setEdition(
+                workspace?.editions.find(
+                  (item) => item.organization_id === nextOrganization,
+                )?.id ?? "",
+              );
+              setConfirmation("");
+            }}
+          >
+            {eligibleOrganizations.map((item) => (
+              <option value={item.id} key={item.id}>
+                {item.name} ({item.slug})
+              </option>
+            ))}
+          </select>
+          <small>The independently governed organizer receiving first authority.</small>
+        </div>
+        <div className="form-field">
+          <label htmlFor="bootstrap-edition">First event edition</label>
+          <select
+            id="bootstrap-edition"
+            value={edition}
+            onChange={(event) => setEdition(event.target.value)}
+          >
+            {availableEditions.map((item) => (
+              <option value={item.id} key={item.id}>
+                {item.name} · {lifecycleLabel(item.lifecycle)}
+              </option>
+            ))}
+          </select>
+          <small>The non-closed edition led by the first Chair.</small>
+        </div>
+        <div className="form-field">
+          <label htmlFor="bootstrap-chair">Convention Chair account email</label>
+          <input
+            id="bootstrap-chair"
+            type="email"
+            list="bootstrap-chair-options"
+            value={chairEmail}
+            onChange={(event) => setChairEmail(event.target.value)}
+            autoComplete="off"
+          />
+          <datalist id="bootstrap-chair-options">
+            {workspace?.chairs.map((chair) => (
+              <option value={chair.email} key={chair.email}>
+                {chair.display_name || chair.email}
+              </option>
+            ))}
+          </datalist>
+          <small>Type or select the exact email of a distinct active account.</small>
+        </div>
+        <div className="form-field full-field">
+          <label htmlFor="bootstrap-reason">Permanent reason</label>
+          <textarea
+            id="bootstrap-reason"
+            rows={3}
+            maxLength={500}
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+          />
+          <small>Explain why these people are establishing initial authority.</small>
+        </div>
+        <div className="form-field">
+          <label htmlFor="bootstrap-confirmation">
+            Type {selectedOrganization?.slug ?? "the organization slug"} to confirm
+          </label>
+          <input
+            id="bootstrap-confirmation"
+            value={confirmation}
+            onChange={(event) => setConfirmation(event.target.value)}
+            autoComplete="off"
+          />
+          <small>This prevents choosing the wrong organizer.</small>
+        </div>
+        <div className="form-field">
+          <label htmlFor="bootstrap-password">
+            Confirm the password for {accountLabel(context)}
+          </label>
+          <input
+            id="bootstrap-password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
+          />
+          <small>The password is checked for this action and is never stored.</small>
+        </div>
+        {error && <p className="form-error full-field" role="alert">{error}</p>}
+        <div className="form-actions full-field">
+          <button className="primary-button" disabled={!ready || busy}>
+            {busy ? "Establishing leadership…" : "Establish leadership"}
+          </button>
+          <span>
+            Signed in as {workspace?.controller_email ?? accountLabel(context)}
+          </span>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function EmptyContext({
+  context,
+  onBootstrapped,
+}: {
+  context: MyContext;
+  onBootstrapped: (result: ConventionBootstrapResult) => Promise<void>;
+}) {
+  if (context.can_bootstrap_convention) {
+    return (
+      <main className="bootstrap-page">
+        <header className="bootstrap-page-heading">
+          <img
+            className="brand-mark"
+            src="/static/core/brand/maru_square_logo_no_text.png"
+            alt="Maru"
+          />
+          <div>
+            <p className="eyebrow">Administration Quick Start</p>
+            <h1>Prepare your first convention workspace</h1>
+            <p>
+              Organization, edition, and Chair records already live in Specialist
+              records. This guarded step connects them with accountable authority.
+            </p>
+          </div>
+        </header>
+        <ConventionBootstrapPanel
+          context={context}
+          onCompleted={onBootstrapped}
+        />
+        <div className="bootstrap-page-actions">
+          <a className="secondary-button" href="/admin/">
+            Open Specialist records
+          </a>
+          <button
+            className="text-button"
+            onClick={() =>
+              document.querySelector<HTMLFormElement>("#maru-logout-form")?.submit()
+            }
+          >
+            Sign out
+          </button>
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="center-state">
       <img
@@ -130,7 +560,7 @@ function EmptyContext({ context }: { context: MyContext }) {
         src="/static/core/brand/maru_square_logo_no_text.png"
         alt="Maru"
       />
-      <p className="eyebrow">Signed in as {context.display_name}</p>
+      <p className="eyebrow">Signed in as {accountLabel(context)}</p>
       <h1>No convention workspace yet</h1>
       <PageHelp
         purpose="This page shows when your account has no convention relationship."
@@ -140,6 +570,11 @@ function EmptyContext({ context }: { context: MyContext }) {
         Your account is active, but it is not participating in an event edition.
         Ask an organizer to add the appropriate relationship.
       </p>
+      {context.can_access_advanced_records && (
+        <a className="primary-button" href="/admin/">
+          Open Specialist records
+        </a>
+      )}
       <button
         className="secondary-button"
         onClick={() =>
@@ -156,14 +591,20 @@ function Sidebar({
   destination,
   edition,
   onNavigate,
+  canManageAccess,
+  canAccessAdvancedRecords,
+  onOpenAccess,
 }: {
   destination: Destination;
   edition: EditionContext;
   onNavigate: (destination: Destination) => void;
+  canManageAccess: boolean;
+  canAccessAdvancedRecords: boolean;
+  onOpenAccess: () => void;
 }) {
   return (
     <aside className="sidebar">
-      <a className="brand" href="/staff/" aria-label="Maru Staff Console home">
+      <a className="brand" href="/admin/" aria-label="Maru administration home">
         <img
           className="brand-mark"
           src="/static/core/brand/maru_square_logo_no_text.png"
@@ -171,79 +612,118 @@ function Sidebar({
         />
         <span>
           <strong>Maru</strong>
-          <small>Staff Console</small>
+          <small>Convention work</small>
         </span>
       </a>
 
-      <nav className="primary-nav" aria-label="Staff Console">
-        <p className="nav-heading">Workspace</p>
-        <button
-          className={destination === "today" ? "nav-item active" : "nav-item"}
-          aria-current={destination === "today" ? "page" : undefined}
-          onClick={() => onNavigate("today")}
-        >
-          <Icon>◌</Icon> Today
-        </button>
-        <button
-          className={
-            destination === "my-registration" ? "nav-item active" : "nav-item"
-          }
-          aria-current={destination === "my-registration" ? "page" : undefined}
-          onClick={() => onNavigate("my-registration")}
-        >
-          <Icon>◇</Icon> My registration
-        </button>
-        <button
-          className={destination === "people" ? "nav-item active" : "nav-item"}
-          aria-current={destination === "people" ? "page" : undefined}
-          onClick={() => onNavigate("people")}
-        >
-          <Icon>◎</Icon> People
-        </button>
-        <button
-          className={destination === "commerce" ? "nav-item active" : "nav-item"}
-          aria-current={destination === "commerce" ? "page" : undefined}
-          onClick={() => onNavigate("commerce")}
-        >
-          <Icon>▣</Icon> Commerce
-        </button>
-        <button
-          className={destination === "reports" ? "nav-item active" : "nav-item"}
-          aria-current={destination === "reports" ? "page" : undefined}
-          onClick={() => onNavigate("reports")}
-        >
-          <Icon>▥</Icon> Reports
-        </button>
-        <button
-          className={destination === "security" ? "nav-item active" : "nav-item"}
-          aria-current={destination === "security" ? "page" : undefined}
-          onClick={() => onNavigate("security")}
-        >
-          <Icon>◈</Icon> Security
-        </button>
-        {upcomingDestinations.map((label) => (
-          <span
-            className="nav-item disabled"
-            aria-disabled="true"
-            title="Planned for a later Maru milestone"
-            key={label}
+      <nav className="primary-nav" aria-label="Convention work">
+        <details className="nav-section" open>
+          <summary>Overview</summary>
+          <button
+            className={destination === "today" ? "nav-item active" : "nav-item"}
+            aria-current={destination === "today" ? "page" : undefined}
+            onClick={() => onNavigate("today")}
           >
-            <Icon>·</Icon> {label}
-            <small>soon</small>
-          </span>
-        ))}
+            <Icon>◌</Icon> Today
+          </button>
+          <button
+            className={
+              destination === "my-registration" ? "nav-item active" : "nav-item"
+            }
+            aria-current={destination === "my-registration" ? "page" : undefined}
+            onClick={() => onNavigate("my-registration")}
+          >
+            <Icon>◇</Icon> My registration
+          </button>
+          <button
+            className={destination === "structure" ? "nav-item active" : "nav-item"}
+            aria-current={destination === "structure" ? "page" : undefined}
+            onClick={() => onNavigate("structure")}
+          >
+            <Icon>├</Icon> Organization structure
+          </button>
+        </details>
+
+        <details className="nav-section" open>
+          <summary>People &amp; access</summary>
+          <button
+            className={destination === "people" ? "nav-item active" : "nav-item"}
+            aria-current={destination === "people" ? "page" : undefined}
+            onClick={() => onNavigate("people")}
+          >
+            <Icon>◎</Icon> People
+          </button>
+          {canManageAccess && (
+            <button className="nav-item" onClick={onOpenAccess}>
+              <Icon>⌁</Icon> Access
+            </button>
+          )}
+        </details>
+
+        <details className="nav-section" open>
+          <summary>Registration &amp; attendees</summary>
+          <button
+            className={destination === "commerce" ? "nav-item active" : "nav-item"}
+            aria-current={destination === "commerce" ? "page" : undefined}
+            onClick={() => onNavigate("commerce")}
+          >
+            <Icon>▣</Icon> Registration
+          </button>
+          <button
+            className={destination === "reports" ? "nav-item active" : "nav-item"}
+            aria-current={destination === "reports" ? "page" : undefined}
+            onClick={() => onNavigate("reports")}
+          >
+            <Icon>▥</Icon> Reports &amp; badges
+          </button>
+        </details>
+
+        <details className="nav-section">
+          <summary>Convention setup</summary>
+          <button
+            className={destination === "setup" ? "nav-item active" : "nav-item"}
+            aria-current={destination === "setup" ? "page" : undefined}
+            onClick={() => onNavigate("setup")}
+          >
+            <Icon>✓</Icon> Setup guide
+          </button>
+          {canAccessAdvancedRecords && (
+            <a className="nav-item" href="/admin/">
+              <Icon>↗</Icon> Specialist records
+            </a>
+          )}
+        </details>
+
+        <details className="nav-section">
+          <summary>My account</summary>
+          <button
+            className={destination === "security" ? "nav-item active" : "nav-item"}
+            aria-current={destination === "security" ? "page" : undefined}
+            onClick={() => onNavigate("security")}
+          >
+            <Icon>◈</Icon> Security history
+          </button>
+        </details>
+
+        <details className="nav-section planned">
+          <summary>Planned modules</summary>
+          {upcomingDestinations.map((label) => (
+            <span
+              className="nav-item disabled"
+              aria-disabled="true"
+              title="Planned for a later Maru milestone"
+              key={label}
+            >
+              <Icon>·</Icon> {label}
+              <small>soon</small>
+            </span>
+          ))}
+        </details>
       </nav>
 
       <div className="sidebar-foot">
-        <button
-          type="submit"
-          form="maru-admin-context-form"
-          name="edition_id"
-          value={edition.edition_id}
-        >
-          Bootstrap admin <span aria-hidden="true">↗</span>
-        </button>
-        <span>Maru foundation · local</span>
+        <span>{edition.edition_name}</span>
+        <small>Maru · local</small>
       </div>
     </aside>
   );
@@ -253,10 +733,14 @@ function Topbar({
   context,
   edition,
   onEditionChange,
+  canManageAccess,
+  onOpenAccess,
 }: {
   context: MyContext;
   edition: EditionContext;
   onEditionChange: (edition: EditionContext) => void;
+  canManageAccess: boolean;
+  onOpenAccess: () => void;
 }) {
   return (
     <header className="topbar">
@@ -280,11 +764,16 @@ function Topbar({
         </select>
       </label>
       <div className="account-menu">
+        {canManageAccess && (
+          <button className="secondary-button access-button" onClick={onOpenAccess}>
+            Manage access
+          </button>
+        )}
         <span className="avatar" aria-hidden="true">
           {context.display_name.trim().charAt(0).toUpperCase() || "M"}
         </span>
         <span className="account-name">
-          <strong>{context.display_name}</strong>
+          <strong>{accountLabel(context)}</strong>
           <small>{primaryCapacity(edition)}</small>
         </span>
         <button
@@ -342,7 +831,7 @@ function TodayView({
 }) {
   const countdown = daysUntil(edition.starts_on);
   const roleCounts = capacityCounts(people?.results ?? []).slice(0, 6);
-  const firstName = context.display_name.split(" ")[0] || context.display_name;
+  const firstName = context.display_name.trim().split(" ")[0] || "there";
 
   return (
     <div className="view">
@@ -482,6 +971,63 @@ function TodayView({
           )}
         </section>
       </div>
+
+      <section className="forms-section" aria-labelledby="forms-heading">
+        <div className="panel-heading">
+          <div>
+            <p className="section-kicker">Published workflows</p>
+            <h2 id="forms-heading">Forms</h2>
+            <p className="muted-copy">
+              Registration, applications, and document requests for this
+              convention stay together here. Newly published forms will appear
+              in this section.
+            </p>
+          </div>
+        </div>
+        <div className="form-card-grid">
+          <button className="form-link-card" onClick={() => onNavigate("my-registration")}>
+            <span className="form-card-icon" aria-hidden="true">◇</span>
+            <span>
+              <strong>Attendee registration</strong>
+              <small>Open your registration and payment status</small>
+            </span>
+            <span aria-hidden="true">→</span>
+          </button>
+          <a
+            className="form-link-card"
+            href={`/admin/registration-assist/${edition.edition_id}/`}
+          >
+            <span className="form-card-icon" aria-hidden="true">+</span>
+            <span>
+              <strong>Registration staff intake</strong>
+              <small>Add an attendee outside public opening hours</small>
+            </span>
+            <span aria-hidden="true">↗</span>
+          </a>
+          <a
+            className="form-link-card"
+            href={`/volunteer/${edition.edition_id}/`}
+          >
+            <span className="form-card-icon" aria-hidden="true">♡</span>
+            <span>
+              <strong>Volunteer applications</strong>
+              <small>Apply for published convention positions</small>
+            </span>
+            <span aria-hidden="true">↗</span>
+          </a>
+          <a
+            className="form-link-card"
+            href={`/volunteer/${edition.edition_id}/documents/`}
+          >
+            <span className="form-card-icon" aria-hidden="true">▤</span>
+            <span>
+              <strong>Onboarding documents</strong>
+              <small>Submit requested agreements and files</small>
+            </span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
     </div>
   );
 }
@@ -531,6 +1077,197 @@ function PersonDrawer({
           outside this view.
         </p>
       </aside>
+    </div>
+  );
+}
+
+function DepartmentBranch({
+  department,
+  departments,
+  visited,
+}: {
+  department: WorkforceStructureDepartment;
+  departments: WorkforceStructureDepartment[];
+  visited: ReadonlySet<string>;
+}) {
+  if (visited.has(department.id)) return null;
+  const nextVisited = new Set(visited);
+  nextVisited.add(department.id);
+  const children = departments.filter(
+    (candidate) => candidate.parent_id === department.id,
+  );
+  return (
+    <li className="structure-branch">
+      <section className="panel structure-department">
+        <div className="panel-heading">
+          <div>
+            <p className="section-kicker">
+              {department.parent_id ? "Subdepartment" : "Top-level department"}
+            </p>
+            <h2>{department.name}</h2>
+          </div>
+          <span className="quiet-badge">
+            {department.positions.length} position
+            {department.positions.length === 1 ? "" : "s"}
+          </span>
+        </div>
+        {department.description && (
+          <p className="muted-copy">{department.description}</p>
+        )}
+        {department.positions.length ? (
+          <div className="structure-positions">
+            {department.positions.map((position) => (
+              <article className="structure-position" key={position.id}>
+                <header>
+                  <div>
+                    <h3>{position.title}</h3>
+                    {position.description && <p>{position.description}</p>}
+                  </div>
+                  <span className="status-pill">
+                    {position.holders.length}/{position.headcount}
+                  </span>
+                </header>
+                {position.holders.length ? (
+                  <ul className="structure-holders">
+                    {position.holders.map((holder) => (
+                      <li key={holder.assignment_id}>
+                        <span>
+                          <strong>{holder.display_name}</strong>
+                          {holder.login_handle &&
+                            holder.login_handle !== holder.display_name && (
+                              <small>@{holder.login_handle}</small>
+                            )}
+                        </span>
+                        {holder.other_roles.length > 0 && (
+                          <span
+                            className="quiet-badge"
+                            title={holder.other_roles
+                              .map(
+                                (role) =>
+                                  `${role.position_title} · ${role.department_name}`,
+                              )
+                              .join("\n")}
+                          >
+                            +{holder.other_roles.length} other role
+                            {holder.other_roles.length === 1 ? "" : "s"}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="muted-copy">No active holder.</p>
+                )}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="muted-copy">No current positions.</p>
+        )}
+      </section>
+      {children.length > 0 && (
+        <ol className="structure-children">
+          {children.map((child) => (
+            <DepartmentBranch
+              key={child.id}
+              department={child}
+              departments={departments}
+              visited={nextVisited}
+            />
+          ))}
+        </ol>
+      )}
+    </li>
+  );
+}
+
+function StructureView({ edition }: { edition: EditionContext }) {
+  const [structure, setStructure] = useState<WorkforceStructure>();
+  const [denied, setDenied] = useState(false);
+  const [error, setError] = useState<string>();
+
+  useEffect(() => {
+    setStructure(undefined);
+    setDenied(false);
+    setError(undefined);
+    void loadWorkforceStructure(edition)
+      .then(setStructure)
+      .catch((caught: unknown) => {
+        if (caught instanceof ApiError && caught.status === 403) {
+          setDenied(true);
+          return;
+        }
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "The organization structure could not be loaded.",
+        );
+      });
+  }, [edition]);
+
+  const roots =
+    structure?.departments.filter(
+      (department) =>
+        department.parent_id === null ||
+        !structure.departments.some(
+          (candidate) => candidate.id === department.parent_id,
+        ),
+    ) ?? [];
+
+  return (
+    <div className="view">
+      <div className="page-heading compact">
+        <div>
+          <p className="eyebrow">People &amp; responsibilities</p>
+          <h1>Organization structure</h1>
+          <PageHelp
+            purpose="Use this page to understand departments, reporting relationships, and current position holders."
+            examples="find a department lead or see another role held by the same volunteer"
+          />
+        </div>
+      </div>
+      {denied && (
+        <section className="panel">
+          <h2>Structure is not available to this account</h2>
+          <p className="muted-copy">
+            Ask an organizer for an edition role that can view the organization
+            structure.
+          </p>
+        </section>
+      )}
+      {error && <p className="form-error" role="alert">{error}</p>}
+      {!structure && !denied && !error && (
+        <section className="panel">
+          <p className="muted-copy">Loading organization structure…</p>
+        </section>
+      )}
+      {structure && (
+        <>
+          <p className="structure-context">
+            {structure.organization_name} · {structure.edition_name}
+          </p>
+          {roots.length ? (
+            <ol className="structure-tree">
+              {roots.map((department) => (
+                <DepartmentBranch
+                  key={department.id}
+                  department={department}
+                  departments={structure.departments}
+                  visited={new Set()}
+                />
+              ))}
+            </ol>
+          ) : (
+            <section className="panel">
+              <h2>No departments yet</h2>
+              <p className="muted-copy">
+                Create the first department and its positions in Specialist
+                records.
+              </p>
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -1185,6 +1922,230 @@ function RegistrationQuestionField({
   );
 }
 
+function ProfileExtensionInput({
+  field,
+  value,
+  onChange,
+}: {
+  field: ProfileExtensionField;
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const common = {
+    id: `profile-extension-${field.id}`,
+    disabled: !field.can_write,
+  };
+  if (field.field_type === "boolean") {
+    return (
+      <select
+        {...common}
+        value={value === true ? "true" : value === false ? "false" : ""}
+        onChange={(event) =>
+          onChange(
+            event.target.value === ""
+              ? undefined
+              : event.target.value === "true",
+          )
+        }
+      >
+        <option value="">Choose</option>
+        <option value="true">Yes</option>
+        <option value="false">No</option>
+      </select>
+    );
+  }
+  if (field.field_type === "single_choice") {
+    return (
+      <select
+        {...common}
+        value={typeof value === "string" ? value : ""}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        <option value="">Choose</option>
+        {field.options.map((option) => (
+          <option value={option} key={option}>{option}</option>
+        ))}
+      </select>
+    );
+  }
+  if (field.field_type === "multiple_choice") {
+    const selected = Array.isArray(value) ? value : [];
+    return (
+      <div className="checkbox-list" id={common.id}>
+        {field.options.map((option) => (
+          <label key={option}>
+            <input
+              type="checkbox"
+              disabled={common.disabled}
+              checked={selected.includes(option)}
+              onChange={(event) =>
+                onChange(
+                  event.target.checked
+                    ? [...selected, option]
+                    : selected.filter((item) => item !== option),
+                )
+              }
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    );
+  }
+  if (field.field_type === "long_text") {
+    return (
+      <textarea
+        {...common}
+        rows={4}
+        value={typeof value === "string" ? value : ""}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    );
+  }
+  return (
+    <input
+      {...common}
+      type={field.field_type === "integer" ? "number" : "text"}
+      value={
+        typeof value === "string" || typeof value === "number"
+          ? value
+          : ""
+      }
+      onChange={(event) =>
+        onChange(
+          field.field_type === "integer" && event.target.value !== ""
+            ? Number(event.target.value)
+            : event.target.value,
+        )
+      }
+    />
+  );
+}
+
+function ProfileExtensionsPanel({ edition }: { edition: EditionContext }) {
+  const [workspace, setWorkspace] = useState<ProfileExtensionWorkspace>();
+  const [drafts, setDrafts] = useState<Record<string, unknown>>({});
+  const [busyField, setBusyField] = useState<string>();
+  const [error, setError] = useState<string>();
+
+  useEffect(() => {
+    setWorkspace(undefined);
+    setDrafts({});
+    setError(undefined);
+    void loadMyProfileExtensions(edition)
+      .then((loaded) => {
+        setWorkspace(loaded);
+        setDrafts(
+          Object.fromEntries(
+            loaded.fields.map((field) => [field.id, field.current_value]),
+          ),
+        );
+      })
+      .catch((caught: unknown) =>
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "Additional profile fields could not be loaded.",
+        ),
+      );
+  }, [edition]);
+
+  async function save(field: ProfileExtensionField) {
+    setBusyField(field.id);
+    setError(undefined);
+    try {
+      const loaded = await writeMyProfileExtension(
+        edition,
+        field.id,
+        drafts[field.id],
+      );
+      setWorkspace(loaded);
+      setDrafts(
+        Object.fromEntries(
+          loaded.fields.map((item) => [item.id, item.current_value]),
+        ),
+      );
+    } catch (caught: unknown) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The profile detail could not be saved.",
+      );
+    } finally {
+      setBusyField(undefined);
+    }
+  }
+
+  if (!workspace && !error) {
+    return (
+      <section className="panel profile-extensions-panel">
+        <p className="muted-copy">Checking for additional profile details…</p>
+      </section>
+    );
+  }
+  if (error && !workspace) return null;
+  if (!workspace?.fields.length) {
+    return (
+      <section className="panel profile-extensions-panel">
+        <div className="panel-heading">
+          <h2>Additional profile details</h2>
+        </div>
+        <p className="muted-copy">
+          This convention has not requested any additional current information.
+        </p>
+      </section>
+    );
+  }
+  return (
+    <section className="panel profile-extensions-panel">
+      <div className="panel-heading">
+        <div>
+          <p className="section-kicker">Current information</p>
+          <h2>Additional profile details</h2>
+        </div>
+        <span className="quiet-badge">Submission stays unchanged</span>
+      </div>
+      <p className="muted-copy">
+        Organizers can request a missing detail after registration. Saving here
+        adds a revision to your current profile; it never rewrites the form you
+        originally submitted.
+      </p>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      <div className="profile-extension-fields">
+        {workspace.fields.map((field) => (
+          <div className="form-field" key={field.id}>
+            <label htmlFor={`profile-extension-${field.id}`}>
+              {field.label}{field.required ? " *" : ""}
+            </label>
+            <ProfileExtensionInput
+              field={field}
+              value={drafts[field.id]}
+              onChange={(value) =>
+                setDrafts((current) => ({ ...current, [field.id]: value }))
+              }
+            />
+            <small>
+              {field.help_text ? `${field.help_text} ` : ""}
+              Purpose: {field.purpose}
+              {!field.can_write ? " Registration staff maintains this field." : ""}
+            </small>
+            {field.can_write && (
+              <button
+                type="button"
+                className="secondary-button"
+                disabled={busyField !== undefined}
+                onClick={() => void save(field)}
+              >
+                {busyField === field.id ? "Saving…" : "Save detail"}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function MyRegistrationView({ edition }: { edition: EditionContext }) {
   const [workspace, setWorkspace] = useState<MyRegistrationWorkspace>();
   const [loading, setLoading] = useState(true);
@@ -1364,6 +2325,7 @@ function MyRegistrationView({ edition }: { edition: EditionContext }) {
             </ol>
           </section>
         </div>
+        <ProfileExtensionsPanel edition={edition} />
       </div>
     );
   }
@@ -1479,7 +2441,7 @@ function RegistrationTimeline({
   );
 }
 
-function CommerceView({ edition }: { edition: EditionContext }) {
+function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
   const [configuration, setConfiguration] =
     useState<RegistrationConfigurationWorkspace>();
   const [configurationDenied, setConfigurationDenied] = useState(false);
@@ -1820,7 +2782,7 @@ function CommerceView({ edition }: { edition: EditionContext }) {
       <div className="page-heading compact">
         <div>
           <p className="eyebrow">Registration and attendee service</p>
-          <h1>Commerce</h1>
+          <h1>Registration</h1>
           <PageHelp
             purpose="Use this page to configure registration and serve attendees through arrival."
             examples="copy last year’s setup, activate a reviewed draft, or check in a paid attendee"
@@ -1878,14 +2840,14 @@ function CommerceView({ edition }: { edition: EditionContext }) {
             <div className="template-tools">
               <a
                 className="secondary-button"
-                href={`/staff/registration-assist/${edition.edition_id}/`}
+                href={`/admin/registration-assist/${edition.edition_id}/`}
               >
                 Add attendee outside public hours
               </a>
               <a
                 href={`/admin/workforce/position/?edition__id__exact=${edition.edition_id}`}
               >
-                Manage hierarchy and positions in bootstrap admin ↗
+                Manage hierarchy and positions in administration ↗
               </a>
               <a
                 href={`/admin/workforce/onboardingdocumentrequest/?edition__id__exact=${edition.edition_id}`}
@@ -2380,6 +3342,1016 @@ function CommerceView({ edition }: { edition: EditionContext }) {
   );
 }
 
+function ReadinessGateCard({
+  definition,
+  gate,
+  busy,
+  onReview,
+}: {
+  definition: (typeof readinessGateDefinitions)[number];
+  gate?: ReadinessGate;
+  busy: boolean;
+  onReview: (
+    code: ReadinessGateCode,
+    approve: boolean,
+    evidenceReference: string,
+    summary: string,
+  ) => Promise<void>;
+}) {
+  const [evidenceReference, setEvidenceReference] = useState(
+    gate?.evidence_reference ?? "",
+  );
+  const [summary, setSummary] = useState(gate?.review_summary ?? "");
+  const ready = Boolean(evidenceReference.trim() && summary.trim());
+
+  useEffect(() => {
+    setEvidenceReference(gate?.evidence_reference ?? "");
+    setSummary(gate?.review_summary ?? "");
+  }, [gate?.evidence_reference, gate?.review_summary]);
+
+  return (
+    <details className="readiness-gate" open={gate?.status !== "approved"}>
+      <summary>
+        <span>
+          <strong>{definition.label}</strong>
+          <small>{definition.purpose}</small>
+        </span>
+        <span className={`status-pill ${gate?.status ?? "pending"}`}>
+          {lifecycleLabel(gate?.status ?? "pending")}
+        </span>
+      </summary>
+      <div className="readiness-gate-body">
+        <label>
+          <span>Evidence reference</span>
+          <input
+            value={evidenceReference}
+            onChange={(event) => setEvidenceReference(event.target.value)}
+            maxLength={240}
+            placeholder="For example: Finance reconciliation report 2027-04-12"
+            aria-label={`${definition.label} evidence reference`}
+          />
+          <small>
+            Use a readable report name, ticket, checklist, or secure document
+            link. This is not an organization ID.
+          </small>
+        </label>
+        <label>
+          <span>Review summary</span>
+          <textarea
+            value={summary}
+            onChange={(event) => setSummary(event.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="What was checked, and what did the evidence show?"
+            aria-label={`${definition.label} review summary`}
+          />
+        </label>
+        <p className="privacy-note">
+          Maru records the signed-in reviewer and current server time
+          automatically.
+        </p>
+        {gate?.reviewed_at && (
+          <p className="muted-copy">
+            Last reviewed {formatDateTime(gate.reviewed_at)}.
+          </p>
+        )}
+        <div className="button-row">
+          <button
+            className="primary-button"
+            type="button"
+            disabled={busy || !ready}
+            onClick={() =>
+              void onReview(
+                definition.code,
+                true,
+                evidenceReference.trim(),
+                summary.trim(),
+              )
+            }
+          >
+            Approve gate
+          </button>
+          <button
+            className="secondary-button"
+            type="button"
+            disabled={busy || !ready}
+            onClick={() =>
+              void onReview(
+                definition.code,
+                false,
+                evidenceReference.trim(),
+                summary.trim(),
+              )
+            }
+          >
+            Record not ready
+          </button>
+        </div>
+      </div>
+    </details>
+  );
+}
+
+type LifecycleAction = {
+  to: EditionContext["lifecycle"];
+  label: string;
+  consequence: string;
+  dangerous?: boolean;
+};
+
+const lifecycleActions: Record<
+  EditionContext["lifecycle"],
+  LifecycleAction[]
+> = {
+  draft: [
+    {
+      to: "preparing",
+      label: "Start planning",
+      consequence:
+        "Makes this edition an active planning workspace while configuration remains editable.",
+    },
+    {
+      to: "cancelled",
+      label: "Cancel edition",
+      consequence:
+        "Permanently closes this edition. A cancelled edition cannot return to planning.",
+      dangerous: true,
+    },
+  ],
+  preparing: [
+    {
+      to: "ready",
+      label: "Mark ready",
+      consequence:
+        "Records that leadership considers the convention prepared for operation.",
+    },
+    {
+      to: "draft",
+      label: "Return to draft",
+      consequence:
+        "Moves the edition back to early configuration without deleting existing records.",
+    },
+    {
+      to: "cancelled",
+      label: "Cancel edition",
+      consequence:
+        "Permanently closes this edition. A cancelled edition cannot return to planning.",
+      dangerous: true,
+    },
+  ],
+  ready: [
+    {
+      to: "live",
+      label: "Go live",
+      consequence:
+        "Marks the convention as currently operating. Use this when event operations begin.",
+    },
+    {
+      to: "preparing",
+      label: "Return to preparation",
+      consequence:
+        "Reopens preparation because the edition is not yet ready to operate.",
+    },
+    {
+      to: "cancelled",
+      label: "Cancel edition",
+      consequence:
+        "Permanently closes this edition. A cancelled edition cannot return to planning.",
+      dangerous: true,
+    },
+  ],
+  live: [
+    {
+      to: "closing",
+      label: "Begin closeout",
+      consequence:
+        "Ends live operation and starts finance, privacy, security, and operational closeout.",
+    },
+  ],
+  closing: [
+    {
+      to: "archived",
+      label: "Archive edition",
+      consequence:
+        "Makes historical edition records read-only. All five readiness gates must be approved.",
+      dangerous: true,
+    },
+  ],
+  archived: [],
+  cancelled: [],
+};
+
+function EditionLifecyclePanel({
+  edition,
+  bootstrapJustCompleted,
+  onTransitioned,
+}: {
+  edition: EditionContext;
+  bootstrapJustCompleted: boolean;
+  onTransitioned: (result: EditionTransitionResult) => void;
+}) {
+  const actions = lifecycleActions[edition.lifecycle];
+  const [target, setTarget] = useState<EditionContext["lifecycle"]>(
+    actions[0]?.to ?? edition.lifecycle,
+  );
+  const [reason, setReason] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  const [success, setSuccess] = useState<string>();
+
+  useEffect(() => {
+    const nextActions = lifecycleActions[edition.lifecycle];
+    setTarget(nextActions[0]?.to ?? edition.lifecycle);
+    setReason("");
+    setConfirmed(false);
+    setError(undefined);
+  }, [edition.edition_id, edition.lifecycle]);
+
+  const selectedAction = actions.find((action) => action.to === target);
+  const ready = Boolean(
+    selectedAction &&
+      reason.trim() &&
+      (!selectedAction.dangerous || confirmed),
+  );
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedAction || !ready) return;
+    setBusy(true);
+    setError(undefined);
+    setSuccess(undefined);
+    try {
+      const result = await transitionEdition(edition, target, reason.trim());
+      setSuccess(
+        `${edition.edition_name} is now ${lifecycleLabel(result.lifecycle)}.`,
+      );
+      onTransitioned(result);
+    } catch (caught: unknown) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The edition lifecycle could not be changed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="panel lifecycle-panel" aria-labelledby="lifecycle-heading">
+      <div className="panel-heading">
+        <div>
+          <p className="section-kicker">Edition lifecycle</p>
+          <h2 id="lifecycle-heading">Convention state</h2>
+          <p className="muted-copy">
+            Lifecycle describes the convention’s operational phase. Registration
+            opening and ticket sales are configured separately.
+          </p>
+        </div>
+        <StatusPill lifecycle={edition.lifecycle} />
+      </div>
+      {bootstrapJustCompleted && edition.lifecycle === "draft" && (
+        <div className="success-notice" role="status">
+          <strong>Leadership established.</strong>
+          <span>
+            The next appropriate step is Start planning. This makes the edition
+            an active workspace; it does not open registration or mark the event
+            as currently running.
+          </span>
+        </div>
+      )}
+      {!edition.can_transition ? (
+        <div className="permission-state compact-permission">
+          <span className="permission-lock" aria-hidden="true">◇</span>
+          <h3>Lifecycle changes are restricted</h3>
+          <p>
+            Ask a convention leader to assign a group with edition lifecycle
+            authority.
+          </p>
+        </div>
+      ) : actions.length === 0 ? (
+        <p className="muted-copy">
+          {edition.lifecycle === "archived"
+            ? "This historical edition is archived and has no further lifecycle actions."
+            : "This edition was cancelled and has no further lifecycle actions."}
+        </p>
+      ) : (
+        <form className="lifecycle-form" onSubmit={submit}>
+          <div className="form-field">
+            <label htmlFor="lifecycle-target">Next state</label>
+            <select
+              id="lifecycle-target"
+              value={target}
+              onChange={(event) => {
+                setTarget(
+                  event.target.value as EditionContext["lifecycle"],
+                );
+                setConfirmed(false);
+              }}
+            >
+              {actions.map((action) => (
+                <option value={action.to} key={action.to}>
+                  {action.label} · {lifecycleLabel(action.to)}
+                </option>
+              ))}
+            </select>
+          </div>
+          {selectedAction && (
+            <div
+              className={
+                selectedAction.dangerous
+                  ? "transition-consequence dangerous-consequence"
+                  : "transition-consequence"
+              }
+            >
+              <strong>{selectedAction.label}</strong>
+              <span>{selectedAction.consequence}</span>
+            </div>
+          )}
+          <div className="form-field">
+            <label htmlFor="lifecycle-reason">Reason for this transition</label>
+            <textarea
+              id="lifecycle-reason"
+              rows={3}
+              maxLength={500}
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+            />
+            <small>The signed-in actor, server time, reason, and state change are audited.</small>
+          </div>
+          {selectedAction?.dangerous && (
+            <label className="impact-confirmation">
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(event) => setConfirmed(event.target.checked)}
+              />
+              <span>I understand this transition is terminal and cannot be undone.</span>
+            </label>
+          )}
+          {error && <p className="form-error" role="alert">{error}</p>}
+          {success && <p className="success-copy" role="status">{success}</p>}
+          <div className="form-actions">
+            <button
+              className={
+                selectedAction?.dangerous ? "danger-button" : "primary-button"
+              }
+              disabled={!ready || busy}
+            >
+              {busy ? "Recording transition…" : selectedAction?.label}
+            </button>
+          </div>
+        </form>
+      )}
+    </section>
+  );
+}
+
+function SetupView({
+  context,
+  edition,
+  canAccessAdvancedRecords,
+  canBootstrapConvention,
+  bootstrapJustCompleted,
+  onBootstrapped,
+  onTransitioned,
+}: {
+  context: MyContext;
+  edition: EditionContext;
+  canAccessAdvancedRecords: boolean;
+  canBootstrapConvention: boolean;
+  bootstrapJustCompleted: boolean;
+  onBootstrapped: (result: ConventionBootstrapResult) => Promise<void>;
+  onTransitioned: (result: EditionTransitionResult) => void;
+}) {
+  const [readiness, setReadiness] = useState<ClosureReadiness>();
+  const [readinessDenied, setReadinessDenied] = useState(false);
+  const [readinessError, setReadinessError] = useState<string>();
+  const [reviewingGate, setReviewingGate] = useState<ReadinessGateCode>();
+
+  useEffect(() => {
+    setReadiness(undefined);
+    setReadinessDenied(false);
+    setReadinessError(undefined);
+    loadClosureReadiness(edition)
+      .then(setReadiness)
+      .catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 403) {
+          setReadinessDenied(true);
+          return;
+        }
+        setReadinessError(
+          error instanceof Error
+            ? error.message
+            : "Readiness evidence could not be loaded.",
+        );
+      });
+  }, [edition]);
+
+  async function reviewGate(
+    code: ReadinessGateCode,
+    approve: boolean,
+    evidenceReference: string,
+    summary: string,
+  ) {
+    setReviewingGate(code);
+    setReadinessError(undefined);
+    try {
+      const reviewed = await reviewReadinessGate(edition, code, {
+        approve,
+        evidence_reference: evidenceReference,
+        summary,
+      });
+      setReadiness((current) => {
+        if (!current) return current;
+        const remaining = current.gates.filter((gate) => gate.code !== code);
+        return { ...current, gates: [...remaining, reviewed] };
+      });
+    } catch (error) {
+      setReadinessError(
+        error instanceof Error
+          ? error.message
+          : "The readiness decision could not be recorded.",
+      );
+    } finally {
+      setReviewingGate(undefined);
+    }
+  }
+
+  const steps = [
+    {
+      title: "Organization",
+      summary: "Set the legal organizer, working languages, and default time zone.",
+      href: "/admin/organizations/organization/",
+    },
+    {
+      title: "Convention series",
+      summary: "Define the recurring convention identity shared by its editions.",
+      href: "/admin/organizations/conventionseries/",
+    },
+    {
+      title: "Event edition",
+      summary: "Create the dated convention occurrence, venue, locale, and currency.",
+      href: "/admin/events/eventedition/",
+    },
+    {
+      title: "Registration",
+      summary: "Prepare products, form questions, opening windows, and payment rules.",
+      href: "/admin/registration/registrationconfiguration/",
+    },
+    {
+      title: "Teams & access",
+      summary: "Assign accountable groups and people for this convention.",
+      action: "access",
+    },
+    {
+      title: "Edition closeout readiness",
+      summary:
+        "Review privacy, finance, operations, security, and safeguarding evidence before archive.",
+      href: "#readiness-review",
+    },
+  ];
+
+  return (
+    <div className="view">
+      <div className="page-heading compact">
+        <div>
+          <p className="eyebrow">Convention setup</p>
+          <h1>Setup guide</h1>
+          <PageHelp
+            purpose="Use this ordered guide for the settings that normally change only while a convention is being prepared."
+            examples="create the edition before building its registration form"
+          />
+        </div>
+      </div>
+      {canBootstrapConvention && (
+        <ConventionBootstrapPanel
+          context={context}
+          organizationId={edition.organization_id}
+          onCompleted={onBootstrapped}
+        />
+      )}
+      <EditionLifecyclePanel
+        edition={edition}
+        bootstrapJustCompleted={bootstrapJustCompleted}
+        onTransitioned={onTransitioned}
+      />
+      {!canAccessAdvancedRecords ? (
+        <section className="permission-state">
+          <span className="permission-lock" aria-hidden="true">◇</span>
+          <h2>Advanced setup is restricted</h2>
+          <p>
+            You can use your recurring workspaces, but account staff status is
+            required for low-frequency convention records.
+          </p>
+        </section>
+      ) : (
+        <>
+          <ol className="setup-steps">
+            {steps.map((step, index) => (
+              <li key={step.title}>
+                <span className="setup-step-number">{index + 1}</span>
+                <div>
+                  <strong>{step.title}</strong>
+                  <p>{step.summary}</p>
+                </div>
+                {step.href ? (
+                  <a className="secondary-button" href={step.href}>
+                    Open <span aria-hidden="true">↗</span>
+                  </a>
+                ) : (
+                  <span className="quiet-badge">Use Manage access</span>
+                )}
+              </li>
+            ))}
+          </ol>
+          <section className="setup-note">
+            <div>
+              <p className="section-kicker">Occasional maintenance</p>
+              <h2>Specialist records</h2>
+              <p>
+                The record directory holds specialist and historical data that
+                should not clutter everyday convention work.
+              </p>
+            </div>
+            <a className="primary-button" href="/admin/">
+              Browse specialist records
+            </a>
+          </section>
+        </>
+      )}
+      <section
+        className="panel readiness-review"
+        id="readiness-review"
+        aria-labelledby="readiness-heading"
+      >
+        <div className="panel-heading">
+          <div>
+            <p className="section-kicker">Accountable closeout</p>
+            <h2 id="readiness-heading">Edition readiness review</h2>
+            <p className="muted-copy">
+              These five checks preserve the evidence behind a decision to
+              archive an edition. They are not IDs or ordinary configuration
+              fields.
+            </p>
+          </div>
+          {readiness && (
+            <span className="quiet-badge">
+              {
+                readiness.gates.filter((gate) => gate.status === "approved")
+                  .length
+              }{" "}
+              of {readinessGateDefinitions.length} approved
+            </span>
+          )}
+        </div>
+        {readinessError && (
+          <p className="form-error" role="alert">{readinessError}</p>
+        )}
+        {readinessDenied ? (
+          <div className="permission-state compact-permission">
+            <span className="permission-lock" aria-hidden="true">â—‡</span>
+            <h3>Readiness review is restricted</h3>
+            <p>
+              Ask a convention leader to assign a group with edition lifecycle
+              authority.
+            </p>
+          </div>
+        ) : readiness ? (
+          <div className="readiness-gates">
+            {readinessGateDefinitions.map((definition) => (
+              <ReadinessGateCard
+                key={definition.code}
+                definition={definition}
+                gate={readiness.gates.find(
+                  (gate) => gate.code === definition.code,
+                )}
+                busy={reviewingGate === definition.code}
+                onReview={reviewGate}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="muted-copy">Loading readiness evidenceâ€¦</p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function recommendedForPage(
+  group: AccessGroup,
+  destination: Destination,
+): boolean {
+  return recommendedGroups[destination].includes(group.code);
+}
+
+function AccessAssignmentCard({
+  assignment,
+  groups,
+  canModify,
+  busy,
+  onReplace,
+  onRevoke,
+}: {
+  assignment: AccessAssignment;
+  groups: AccessGroup[];
+  canModify: boolean;
+  busy: boolean;
+  onReplace: (assignmentId: string, input: ReplaceAccessInput) => Promise<void>;
+  onRevoke: (assignmentId: string, reason: string) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [groupCode, setGroupCode] = useState(assignment.group_code);
+  const [approverEmail, setApproverEmail] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [reason, setReason] = useState("");
+
+  async function submitReplacement(event: FormEvent) {
+    event.preventDefault();
+    try {
+      await onReplace(assignment.id, {
+        group_code: groupCode,
+        approver_email: approverEmail.trim(),
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+        reason: reason.trim(),
+      });
+      setEditing(false);
+      setApproverEmail("");
+      setReason("");
+    } catch {
+      // The drawer-level error keeps the form intact so the operator can correct it.
+    }
+  }
+
+  async function submitRevocation(event: FormEvent) {
+    event.preventDefault();
+    try {
+      await onRevoke(assignment.id, reason.trim());
+      setRemoving(false);
+      setReason("");
+    } catch {
+      // The drawer-level error keeps the reason available for correction.
+    }
+  }
+
+  return (
+    <article className="access-assignment">
+      <div className="access-person">
+        <span className="avatar" aria-hidden="true">
+          {assignment.person_display_name.charAt(0).toUpperCase()}
+        </span>
+        <span>
+          <strong>{assignment.person_display_name}</strong>
+          <small>{assignment.person_email}</small>
+        </span>
+      </div>
+      <div className="access-group-summary">
+        <strong>{assignment.group_name}</strong>
+        <small>
+          {assignment.scope_label}
+          {assignment.expires_at
+            ? ` · until ${formatDateTime(assignment.expires_at)}`
+            : " · no expiry"}
+        </small>
+      </div>
+      {canModify && !editing && !removing && (
+        <div className="access-card-actions">
+          <button className="text-button" onClick={() => setEditing(true)}>
+            Change
+          </button>
+          <button className="text-button danger-text" onClick={() => setRemoving(true)}>
+            Remove
+          </button>
+        </div>
+      )}
+      {editing && (
+        <form className="access-inline-form" onSubmit={submitReplacement}>
+          <label>
+            <span>Group</span>
+            <select
+              value={groupCode}
+              onChange={(event) => setGroupCode(event.target.value)}
+              required
+            >
+              {groups.map((group) => (
+                <option key={group.code} value={group.code}>{group.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Independent approver email</span>
+            <input
+              type="email"
+              value={approverEmail}
+              onChange={(event) => setApproverEmail(event.target.value)}
+              required
+            />
+          </label>
+          <label>
+            <span>Expires (optional)</span>
+            <input
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(event) => setExpiresAt(event.target.value)}
+            />
+          </label>
+          <label className="wide-field">
+            <span>Reason for changing access</span>
+            <input
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              maxLength={240}
+              required
+            />
+          </label>
+          <div className="access-inline-actions">
+            <button className="primary-button" type="submit" disabled={busy}>
+              Save change
+            </button>
+            <button className="text-button" type="button" onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+      {removing && (
+        <form className="access-inline-form revoke-form" onSubmit={submitRevocation}>
+          <label className="wide-field">
+            <span>Reason for removing access</span>
+            <input
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              maxLength={240}
+              required
+            />
+          </label>
+          <div className="access-inline-actions">
+            <button className="danger-button" type="submit" disabled={busy}>
+              Remove access
+            </button>
+            <button className="text-button" type="button" onClick={() => setRemoving(false)}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+    </article>
+  );
+}
+
+function AccessDrawer({
+  workspace,
+  destination,
+  busy,
+  error,
+  onClose,
+  onAssign,
+  onReplace,
+  onRevoke,
+}: {
+  workspace: AccessWorkspace;
+  destination: Destination;
+  busy: boolean;
+  error?: string;
+  onClose: () => void;
+  onAssign: (input: AssignAccessInput) => Promise<void>;
+  onReplace: (assignmentId: string, input: ReplaceAccessInput) => Promise<void>;
+  onRevoke: (assignmentId: string, reason: string) => Promise<void>;
+}) {
+  const orderedGroups = [...workspace.groups].sort((left, right) => {
+    const recommendation =
+      Number(recommendedForPage(right, destination)) -
+      Number(recommendedForPage(left, destination));
+    return recommendation || left.name.localeCompare(right.name);
+  });
+  const [personEmail, setPersonEmail] = useState("");
+  const [groupCode, setGroupCode] = useState(
+    orderedGroups.find((group) => recommendedForPage(group, destination))?.code ??
+      orderedGroups[0]?.code ??
+      "",
+  );
+  const [approverEmail, setApproverEmail] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [reason, setReason] = useState("");
+  const [assignmentSearch, setAssignmentSearch] = useState("");
+  const normalizedAssignmentSearch = assignmentSearch.trim().toLocaleLowerCase();
+  const visibleAssignments = workspace.assignments.filter((assignment) =>
+    [
+      assignment.person_display_name,
+      assignment.person_email,
+      assignment.group_name,
+      assignment.scope_label,
+    ].some((value) =>
+      value.toLocaleLowerCase().includes(normalizedAssignmentSearch),
+    ),
+  );
+
+  async function submitAssignment(event: FormEvent) {
+    event.preventDefault();
+    try {
+      await onAssign({
+        person_email: personEmail.trim(),
+        group_code: groupCode,
+        approver_email: approverEmail.trim(),
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+        reason: reason.trim(),
+      });
+      setPersonEmail("");
+      setReason("");
+    } catch {
+      // The drawer-level error keeps the form intact so the operator can correct it.
+    }
+  }
+
+  return (
+    <div className="drawer-scrim access-scrim" onMouseDown={onClose}>
+      <aside
+        className="access-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="access-heading"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button className="drawer-close" onClick={onClose} aria-label="Close">
+          ×
+        </button>
+        <p className="section-kicker">People &amp; groups</p>
+        <h2 id="access-heading">Access to {destinationLabels[destination]}</h2>
+        <p className="muted-copy">
+          Assign a convention group to an existing account by exact email.
+          Groups grant real capabilities across {workspace.edition_name}; the
+          recommendations below are guidance for this page, not page-only
+          permissions.
+        </p>
+        <div className="access-safety-note">
+          <strong>Two-person approval protects powerful access.</strong>
+          <span>
+            Enter a different authorized person as approver. Every add
+            {workspace.can_revoke_assignments ? ", change, and removal" : ""} is
+            recorded with its reason.
+          </span>
+        </div>
+        <div className="access-safety-note access-purpose-note">
+          <strong>Access is not a workforce appointment.</strong>
+          <span>
+            Use a position assignment when someone must fill a hierarchy role,
+            satisfy an NDA, receive capacities, or appear with an official
+            convention title. Sharing here grants only the selected system
+            capabilities.
+          </span>
+        </div>
+        {error && <p className="form-error" role="alert">{error}</p>}
+
+        <form className="access-share-form" onSubmit={submitAssignment}>
+          <h3>Add a person</h3>
+          <label className="wide-field">
+            <span>Existing account email</span>
+            <input
+              type="email"
+              aria-label="Existing account email"
+              aria-describedby="access-person-email-help"
+              value={personEmail}
+              onChange={(event) => setPersonEmail(event.target.value)}
+              placeholder="person@example.com"
+              required
+            />
+            <small id="access-person-email-help">
+              Maru matches this exact email; it never guesses a person.
+            </small>
+          </label>
+          <label>
+            <span>Group</span>
+            <select
+              value={groupCode}
+              onChange={(event) => setGroupCode(event.target.value)}
+              required
+            >
+              {orderedGroups.map((group) => (
+                <option value={group.code} key={group.code}>
+                  {recommendedForPage(group, destination) ? "Recommended · " : ""}
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Independent approver email</span>
+            <input
+              type="email"
+              value={approverEmail}
+              onChange={(event) => setApproverEmail(event.target.value)}
+              placeholder="approver@example.com"
+              required
+            />
+          </label>
+          <label>
+            <span>Expires (optional)</span>
+            <input
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(event) => setExpiresAt(event.target.value)}
+            />
+          </label>
+          <label className="wide-field">
+            <span>Reason</span>
+            <input
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Why this person needs this access"
+              maxLength={240}
+              required
+            />
+          </label>
+          <button className="primary-button" type="submit" disabled={busy}>
+            {busy ? "Saving…" : "Share access"}
+          </button>
+        </form>
+
+        <section className="access-groups" aria-labelledby="groups-heading">
+          <div className="panel-heading">
+            <div>
+              <p className="section-kicker">Reusable access groups</p>
+              <h3 id="groups-heading">What each group can do</h3>
+            </div>
+          </div>
+          {orderedGroups.map((group) => (
+            <details className="access-group" key={group.code}>
+              <summary>
+                <span>
+                  <strong>{group.name}</strong>
+                  <small>{group.description}</small>
+                </span>
+                <span className="quiet-badge">
+                  {recommendedForPage(group, destination)
+                    ? "Recommended here"
+                    : `${group.capability_count} permission${
+                        group.capability_count === 1 ? "" : "s"
+                      }`}
+                </span>
+              </summary>
+              <ul>
+                {group.capabilities.map((capability) => (
+                  <li key={capability.code}>
+                    <strong>{capability.label}</strong>
+                    <span>{capability.description}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </section>
+
+        <section className="access-assignments" aria-labelledby="assignments-heading">
+          <div className="panel-heading">
+            <div>
+              <p className="section-kicker">Current access</p>
+              <h3 id="assignments-heading">People with assigned groups</h3>
+            </div>
+            <span className="quiet-badge">
+              {visibleAssignments.length === workspace.assignments.length
+                ? `${workspace.assignments.length} assignments`
+                : `${visibleAssignments.length} of ${workspace.assignments.length}`}
+            </span>
+          </div>
+          <label className="access-assignment-search">
+            <span className="sr-only">Find a person or group</span>
+            <Icon>⌕</Icon>
+            <input
+              type="search"
+              value={assignmentSearch}
+              onChange={(event) => setAssignmentSearch(event.target.value)}
+              placeholder="Find a person, email, or group"
+              aria-label="Find a person or group"
+            />
+          </label>
+          {visibleAssignments.length ? (
+            visibleAssignments.map((assignment) => (
+              <AccessAssignmentCard
+                key={assignment.id}
+                assignment={assignment}
+                groups={workspace.groups}
+                canModify={workspace.can_revoke_assignments}
+                busy={busy}
+                onReplace={onReplace}
+                onRevoke={onRevoke}
+              />
+            ))
+          ) : (
+            <p className="muted-copy">
+              {workspace.assignments.length
+                ? "No current assignment matches that search."
+                : "No access groups have been assigned at this convention scope."}
+            </p>
+          )}
+        </section>
+      </aside>
+    </div>
+  );
+}
+
 function SecurityView() {
   const [events, setEvents] = useState<SecurityEvent[]>();
   const [error, setError] = useState<string>();
@@ -2435,27 +4407,40 @@ function SecurityView() {
   );
 }
 
-export default function App() {
+export default function App({
+  embeddedInAdmin = isAdminEmbedded(),
+}: {
+  embeddedInAdmin?: boolean;
+} = {}) {
   const [context, setContext] = useState<MyContext>();
   const [edition, setEdition] = useState<EditionContext>();
-  const [destination, setDestination] = useState<Destination>("today");
+  const [destination, setDestination] = useState<Destination>(
+    requestedDestination,
+  );
   const [people, setPeople] = useState<ParticipationPage>();
   const [peopleDenied, setPeopleDenied] = useState(false);
   const [peopleLoading, setPeopleLoading] = useState(false);
   const [actions, setActions] = useState<ActionItem[]>([]);
   const [actionsDenied, setActionsDenied] = useState(false);
+  const [accessWorkspace, setAccessWorkspace] = useState<AccessWorkspace>();
+  const [accessOpen, setAccessOpen] = useState(false);
+  const [accessBusy, setAccessBusy] = useState(false);
+  const [accessError, setAccessError] = useState<string>();
   const [filters, setFilters] = useState<ParticipationFilters>({ page: 1 });
   const [fatalError, setFatalError] = useState<string>();
+  const [bootstrapJustCompleted, setBootstrapJustCompleted] = useState(false);
 
   useEffect(() => {
     void loadMyContext()
       .then((loaded) => {
         setContext(loaded);
-        setEdition(chooseInitialEdition(loaded.editions));
+        setEdition(
+          chooseInitialEdition(loaded.editions, selectedAdminEditionId()),
+        );
       })
       .catch((error: unknown) => {
         if (error instanceof ApiError && [401, 403].includes(error.status)) {
-          window.location.assign("/accounts/login/?next=/staff/");
+          window.location.assign("/accounts/login/?next=/admin/workspace/");
           return;
         }
         setFatalError(
@@ -2500,9 +4485,80 @@ export default function App() {
       });
   }, [edition]);
 
+  useEffect(() => {
+    if (!edition) return;
+    setAccessWorkspace(undefined);
+    setAccessOpen(false);
+    setAccessError(undefined);
+    void loadAccessWorkspace(edition)
+      .then((workspace) => {
+        setAccessWorkspace(workspace);
+        if (accessWasRequested()) setAccessOpen(true);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 403) {
+          return;
+        }
+        setAccessError(
+          error instanceof Error
+            ? error.message
+            : "Access settings could not be loaded.",
+        );
+      });
+  }, [edition]);
+
+  async function completeBootstrap(
+    result: ConventionBootstrapResult,
+  ): Promise<void> {
+    const loaded = await loadMyContext();
+    const bootstrappedEdition = loaded.editions.find(
+      (candidate) => candidate.edition_id === result.edition.id,
+    );
+    if (!bootstrappedEdition) {
+      throw new Error(
+        "Leadership was established, but the new convention workspace could not be loaded.",
+      );
+    }
+    window.localStorage.setItem(
+      "maru.staff.edition",
+      bootstrappedEdition.edition_id,
+    );
+    window.history.replaceState({}, "", "/admin/workspace/?view=setup");
+    setContext(loaded);
+    setEdition(bootstrappedEdition);
+    setDestination("setup");
+    setBootstrapJustCompleted(true);
+  }
+
+  function recordLifecycleTransition(result: EditionTransitionResult) {
+    setEdition((current) =>
+      current && current.edition_id === result.id
+        ? { ...current, lifecycle: result.lifecycle }
+        : current,
+    );
+    setContext((current) =>
+      current
+        ? {
+            ...current,
+            editions: current.editions.map((item) =>
+              item.edition_id === result.id
+                ? { ...item, lifecycle: result.lifecycle }
+                : item,
+            ),
+          }
+        : current,
+    );
+    setBootstrapJustCompleted(false);
+  }
+
   if (fatalError) return <ErrorScreen message={fatalError} />;
   if (!context) return <LoadingScreen />;
-  if (!edition) return <EmptyContext context={context} />;
+  if (!edition) {
+    return (
+      <EmptyContext context={context} onBootstrapped={completeBootstrap} />
+    );
+  }
+  const activeEdition = edition;
 
   function changeEdition(next: EditionContext) {
     window.localStorage.setItem("maru.staff.edition", next.edition_id);
@@ -2510,6 +4566,141 @@ export default function App() {
     setFilters({ page: 1 });
     setPeople(undefined);
     setActions([]);
+    setAccessWorkspace(undefined);
+    setAccessOpen(false);
+    setAccessError(undefined);
+    setBootstrapJustCompleted(false);
+  }
+
+  async function assignAccess(input: AssignAccessInput): Promise<void> {
+    setAccessBusy(true);
+    setAccessError(undefined);
+    try {
+      setAccessWorkspace(await assignAccessGroup(activeEdition, input));
+    } catch (error: unknown) {
+      setAccessError(
+        error instanceof Error ? error.message : "Access could not be shared.",
+      );
+      throw error;
+    } finally {
+      setAccessBusy(false);
+    }
+  }
+
+  async function replaceAccess(
+    assignmentId: string,
+    input: ReplaceAccessInput,
+  ): Promise<void> {
+    setAccessBusy(true);
+    setAccessError(undefined);
+    try {
+      setAccessWorkspace(
+        await replaceAccessAssignment(activeEdition, assignmentId, input),
+      );
+    } catch (error: unknown) {
+      setAccessError(
+        error instanceof Error ? error.message : "Access could not be changed.",
+      );
+      throw error;
+    } finally {
+      setAccessBusy(false);
+    }
+  }
+
+  async function revokeAccess(
+    assignmentId: string,
+    reason: string,
+  ): Promise<void> {
+    setAccessBusy(true);
+    setAccessError(undefined);
+    try {
+      setAccessWorkspace(
+        await revokeAccessAssignment(activeEdition, assignmentId, reason),
+      );
+    } catch (error: unknown) {
+      setAccessError(
+        error instanceof Error ? error.message : "Access could not be removed.",
+      );
+      throw error;
+    } finally {
+      setAccessBusy(false);
+    }
+  }
+
+  const destinationContent = (
+    <>
+      {destination === "today" && (
+        <TodayView
+          context={context}
+          edition={edition}
+          people={people}
+          peopleDenied={peopleDenied}
+          actions={actions}
+          actionsDenied={actionsDenied}
+          onNavigate={setDestination}
+        />
+      )}
+      {destination === "my-registration" && (
+        <MyRegistrationView edition={edition} />
+      )}
+      {destination === "structure" && <StructureView edition={edition} />}
+      {destination === "people" && (
+        <PeopleView
+          page={people}
+          denied={peopleDenied}
+          loading={peopleLoading}
+          filters={filters}
+          onApplyFilters={setFilters}
+          onPage={(page) => setFilters((current) => ({ ...current, page }))}
+        />
+      )}
+      {destination === "commerce" && (
+        <RegistrationOperationsView edition={edition} />
+      )}
+      {destination === "reports" && <ReportsView edition={edition} />}
+      {destination === "security" && <SecurityView />}
+      {destination === "setup" && (
+        <SetupView
+          context={context}
+          edition={edition}
+          canAccessAdvancedRecords={context.can_access_advanced_records}
+          canBootstrapConvention={context.can_bootstrap_convention}
+          bootstrapJustCompleted={bootstrapJustCompleted}
+          onBootstrapped={completeBootstrap}
+          onTransitioned={recordLifecycleTransition}
+        />
+      )}
+    </>
+  );
+  const accessDrawer = accessOpen && accessWorkspace && (
+    <AccessDrawer
+      workspace={accessWorkspace}
+      destination={destination}
+      busy={accessBusy}
+      error={accessError}
+      onClose={() => setAccessOpen(false)}
+      onAssign={assignAccess}
+      onReplace={replaceAccess}
+      onRevoke={revokeAccess}
+    />
+  );
+
+  if (embeddedInAdmin) {
+    return (
+      <div className="admin-embedded-shell">
+        {!context.can_access_advanced_records && (
+          <Topbar
+            context={context}
+            edition={edition}
+            onEditionChange={changeEdition}
+            canManageAccess={Boolean(accessWorkspace)}
+            onOpenAccess={() => setAccessOpen(true)}
+          />
+        )}
+        <main id="main-content">{destinationContent}</main>
+        {accessDrawer}
+      </div>
+    );
   }
 
   return (
@@ -2519,43 +4710,21 @@ export default function App() {
         destination={destination}
         edition={edition}
         onNavigate={setDestination}
+        canManageAccess={Boolean(accessWorkspace)}
+        canAccessAdvancedRecords={context.can_access_advanced_records}
+        onOpenAccess={() => setAccessOpen(true)}
       />
       <div className="workspace">
         <Topbar
           context={context}
           edition={edition}
           onEditionChange={changeEdition}
+          canManageAccess={Boolean(accessWorkspace)}
+          onOpenAccess={() => setAccessOpen(true)}
         />
-        <main id="main-content">
-          {destination === "today" && (
-            <TodayView
-              context={context}
-              edition={edition}
-              people={people}
-              peopleDenied={peopleDenied}
-              actions={actions}
-              actionsDenied={actionsDenied}
-              onNavigate={setDestination}
-            />
-          )}
-          {destination === "my-registration" && (
-            <MyRegistrationView edition={edition} />
-          )}
-          {destination === "people" && (
-            <PeopleView
-              page={people}
-              denied={peopleDenied}
-              loading={peopleLoading}
-              filters={filters}
-              onApplyFilters={setFilters}
-              onPage={(page) => setFilters((current) => ({ ...current, page }))}
-            />
-          )}
-          {destination === "commerce" && <CommerceView edition={edition} />}
-          {destination === "reports" && <ReportsView edition={edition} />}
-          {destination === "security" && <SecurityView />}
-        </main>
+        <main id="main-content">{destinationContent}</main>
       </div>
+      {accessDrawer}
     </div>
   );
 }

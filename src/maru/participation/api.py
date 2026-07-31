@@ -49,10 +49,12 @@ class MyContextView(APIView):
             "account_id": account.id,
             "display_name": account.display_name,
             "preferred_language": account.preferred_language,
+            "can_access_advanced_records": account.is_staff,
+            "can_bootstrap_convention": account.is_active and account.is_superuser,
             "memberships": memberships_for_account(account),
             "editions": participations_for_account(account),
         }
-        serializer = MyContextSerializer(payload)
+        serializer = MyContextSerializer(payload, context={"account": account})
         return Response(serializer.data)
 
 

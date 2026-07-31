@@ -46,7 +46,7 @@ spreadsheet.
 ## Implemented registration preset
 
 The first code-owned preset is `registration.attendee_report.v1`, exposed in
-the Staff Console Reports destination and guarded by
+the Convention work Reports & badges destination and guarded by
 `registration.view_attendee_reporting`.
 
 - Grain: one confirmed or checked-in edition registration.

@@ -57,6 +57,7 @@ def test_self_context_cannot_leak_other_tenant() -> None:
     payload = response.json()
     serialized = str(payload)
     assert payload["account_id"] == str(world.primary_account.id)
+    assert payload["can_access_advanced_records"] is False
     assert payload["memberships"][0]["organization_id"] == str(
         world.primary_organization.id
     )

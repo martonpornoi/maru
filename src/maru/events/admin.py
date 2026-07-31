@@ -261,16 +261,46 @@ class EditionLifecycleTransitionAdmin(
 
 
 @admin.register(EditionReadinessGate)
-class EditionReadinessGateAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
+class EditionReadinessGateAdmin(
+    ReadOnlyAdminMixin,
+    EditionContextAdmin,
+):
     list_display = (
         "edition",
         "code",
         "status",
         "evidence_reference",
+        "reviewer",
         "reviewed_at",
     )
-    list_filter = ("organization_id", "edition", "code", "status")
+    list_filter = ("edition", "code", "status", "reviewed_at")
     search_fields = ("edition__name", "evidence_reference", "review_summary")
+    list_select_related = ("edition",)
+
+    def get_queryset(
+        self,
+        request: HttpRequest,
+    ) -> QuerySet[EditionReadinessGate]:
+        queryset = cast(
+            QuerySet[EditionReadinessGate],
+            super().get_queryset(request),
+        )
+        return queryset.annotate(
+            _reviewer_display_name=Subquery(
+                Account.objects.filter(id=OuterRef("reviewed_by_id")).values(
+                    "display_name"
+                )[:1]
+            )
+        )
+
+    @admin.display(description="Reviewed by", ordering="_reviewer_display_name")
+    def reviewer(self, obj: EditionReadinessGate) -> str:
+        display_name = str(getattr(obj, "_reviewer_display_name", "")).strip()
+        if display_name:
+            return display_name
+        if obj.reviewed_by_id:
+            return "Account no longer available"
+        return "Not reviewed"
 
 
 @admin.register(EditionClosureManifest)

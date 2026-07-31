@@ -262,7 +262,7 @@ def test_staff_assistance_creates_audited_new_account_without_admin_detour() -> 
     )
 
     response = client.post(
-        reverse("staff-assisted-registration", args=(edition.id,)),
+        reverse("management-assisted-registration", args=(edition.id,)),
         payload,
     )
 
@@ -297,7 +297,9 @@ def test_staff_assistance_explains_new_account_fields() -> None:
     client = Client()
     client.force_login(actor)
 
-    response = client.get(reverse("staff-assisted-registration", args=(edition.id,)))
+    response = client.get(
+        reverse("management-assisted-registration", args=(edition.id,))
+    )
 
     content = response.content.decode()
     assert response.status_code == 200

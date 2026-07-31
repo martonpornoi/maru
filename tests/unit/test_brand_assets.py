@@ -19,7 +19,6 @@ EXPECTED_IMAGES = {
 PLATFORM_TEMPLATES = (
     "src/maru/core/templates/core/home.html",
     "src/maru/core/templates/core/login.html",
-    "src/maru/core/templates/core/staff_console.html",
     "src/maru/registration/templates/registration/base_public.html",
     "src/maru/templates/admin/base_site.html",
 )

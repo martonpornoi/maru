@@ -34,18 +34,29 @@ Outcomes:
 - audit foundation and transactional outbox;
 - OpenAPI conventions and generated client;
 - reference convention test dataset;
-- initial staff console shell.
+- initial administration shell with embedded convention workflows.
 
 Exit criterion: Automated tests demonstrate tenant isolation and edition
 scoping through API, queries, administration, and audit.
 
-Repository status: the initial Staff Console shell, generated API types,
+Repository status: the original `/admin/` shell with embedded Convention work,
+generated API types,
 reference dataset, authority/audit/outbox spine, supervised worker, and recovery
 drill are implemented. Verified identity, session security, scoped restrictions,
 service notification delivery, safe media processing, privacy operations, and
 closure evidence now extend that foundation. Guided tenant/series metadata,
-searchable ISO/IANA locale setup, and a password-confirmed browser adapter for
-the one-shot first-authority service reduce clean-environment operator error.
+searchable ISO/IANA locale setup and a contextual Setup guide reduce
+clean-environment operator error without occupying global administration
+chrome. One collapsible administration navigation, record-oriented Convention
+work inner pages, a separate Forms home section, integrated specialist records,
+and exact-person convention-group access sharing replace the visible
+staff/admin split without introducing page ACLs or Django Groups.
+The exceptional one-shot first-authority service now has a password-confirmed,
+exact-scope-confirmed ceremony in the canonical `/admin/` workspace with
+audited reads and denials; the explicit operator command remains a recovery
+fallback. Authorized
+leaders can also move editions through valid, explained lifecycle transitions
+without directly editing lifecycle fields.
 Broad user/staff activity
 projections beyond the implemented registration actions remain before this
 phase is treated as complete across the whole product.
@@ -77,10 +88,17 @@ suggestions, current-edition profile self-service, structured
 pronoun/language/fursuit data, separately consented public country and
 authoritative attendee labels, minimized public attendee list, staff
 reconciliation, attendance/country reporting, and badge-data CSV are
-implemented. Staff-assisted intake can exact-match an active identity or
+implemented. The `/admin/` workspace now provides the five-gate closeout review
+without raw organization/reviewer IDs or manual timestamps; the corresponding
+Advanced-record table is inspection-only. Staff-assisted intake can
+exact-match an active identity or
 explicitly and atomically create a previously unseen unverified account; draft
 form items are removable, and telephone entry is country-aware with E.164
-storage.
+storage. Reviewed post-submission profile extensions let attendees or
+registration staff append missing edition information under per-field writer
+policy without changing the immutable submission. Authoritative Infinity,
+payment, entitlement, capacity, role, and restriction facts cannot be
+reintroduced as extension fields.
 
 The repository-controlled safety boundary is complete, but the phase exit
 criterion is not an automatic production approval. A concrete provider and
@@ -109,9 +127,12 @@ Repository status: the first workforce onboarding slice is implemented:
 one-shot empty-organization chair bootstrap, reusable furry-convention
 position templates, edition department/reporting hierarchy, publishable
 position opportunities, applications, reviewed PDF agreements, headcount, and
-dual-controlled role/capacity activation. The one-shot bootstrap is now
-available through a password-confirmed superuser form as well as its operator
-command. Qualifications, availability,
+dual-controlled role/capacity activation. The one-shot bootstrap is available
+as a guarded `/admin/` ceremony and an operator fallback, and is placed in
+context by the Setup guide. A minimized Organization structure page shows
+nested departments, positions, several holders, and multi-department roles
+under exact edition scope.
+Qualifications, availability,
 shifts, work records, purpose-built approval UI, and the programme/schedule
 side of this phase remain.
 

@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'staff-console/app.css' %}">
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} maru-admin-workspace-page{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div
+    id="root"
+    data-mode="admin-embedded"
+    data-selected-edition="{{ selected_admin_edition_id }}"
+  ></div>
+  <noscript>
+    <p>The convention workflows require JavaScript.</p>
+  </noscript>
+  <form
+    id="maru-logout-form"
+    method="post"
+    action="{% url 'staff-logout' %}"
+    hidden
+  >
+    {% csrf_token %}
+  </form>
+  <form
+    id="maru-admin-context-form"
+    method="post"
+    action="{% url 'admin-edition-context' %}"
+    hidden
+  >
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  </form>
+  <script type="module" src="{% static 'staff-console/app.js' %}"></script>
+{% endblock %}

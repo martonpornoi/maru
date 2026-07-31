@@ -61,6 +61,39 @@ class RegistrationQuestionSerializer(serializers.ModelSerializer[RegistrationQue
         read_only_fields = fields
 
 
+class ProfileExtensionFieldSerializer(serializers.Serializer[dict[str, object]]):
+    id = serializers.UUIDField()
+    key = serializers.CharField()
+    version = serializers.IntegerField()
+    label = serializers.CharField()  # type: ignore[assignment]
+    help_text = serializers.CharField(allow_blank=True)  # type: ignore[assignment]
+    field_type = serializers.CharField()
+    options = serializers.ListField(child=serializers.CharField())
+    purpose = serializers.CharField()
+    classification = serializers.CharField()
+    required = serializers.BooleanField()  # type: ignore[assignment]
+    writer_policy = serializers.CharField()
+    can_write = serializers.BooleanField()
+    current_value = serializers.JSONField(allow_null=True)
+    updated_at = serializers.DateTimeField(allow_null=True)
+
+
+class ProfileExtensionWorkspaceSerializer(serializers.Serializer[dict[str, object]]):
+    registration_id = serializers.UUIDField()
+    fields = ProfileExtensionFieldSerializer(many=True)  # type: ignore[assignment]
+
+
+class WriteProfileExtensionValueSerializer(serializers.Serializer[dict[str, object]]):
+    field_id = serializers.UUIDField()
+    value = serializers.JSONField()
+    reason = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=500,
+        trim_whitespace=True,
+    )
+
+
 class AdmissionProductSerializer(serializers.ModelSerializer[AdmissionProduct]):
     class Meta:
         model = AdmissionProduct

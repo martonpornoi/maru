@@ -1,0 +1,61 @@
+{% load i18n %}
+<button
+  class="sticky toggle-nav-sidebar"
+  id="toggle-nav-sidebar"
+  aria-label="{% translate 'Toggle navigation' %}"
+></button>
+<nav class="sticky" id="nav-sidebar" aria-label="Administration">
+  <details class="maru-admin-nav-section" open>
+    <summary>Convention work</summary>
+    <ul>
+      <li><a href="{% url 'management-console' %}">Today</a></li>
+      <li>
+        <a href="{% url 'management-console' %}?view=structure">
+          Organization structure
+        </a>
+      </li>
+      <li><a href="{% url 'management-console' %}?view=people">People</a></li>
+      <li>
+        <a href="{% url 'management-console' %}?view=my-registration">
+          My registration
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'management-console' %}?view=commerce">
+          Registration
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'management-console' %}?view=reports">
+          Reports &amp; badges
+        </a>
+      </li>
+      <li><a href="{% url 'management-console' %}?view=setup">Setup guide</a></li>
+      <li>
+        <a href="{% url 'management-console' %}?view=security">
+          Security history
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'management-console' %}?view=setup&amp;access=1">
+          Manage access
+        </a>
+      </li>
+    </ul>
+  </details>
+  {% if available_apps %}
+    <details
+      class="maru-admin-nav-section maru-admin-record-nav"
+      {% if request.resolver_match.url_name != "management-console" %}open{% endif %}
+    >
+      <summary>Specialist records</summary>
+      <input
+        type="search"
+        id="nav-filter"
+        placeholder="{% translate 'Filter record types…' %}"
+        aria-label="{% translate 'Filter record types' %}"
+      >
+      {% include "admin/app_list.html" with app_list=available_apps show_changelinks=False %}
+    </details>
+  {% endif %}
+</nav>

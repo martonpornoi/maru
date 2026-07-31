@@ -51,11 +51,16 @@ from maru.registration.models import (
     MediaSafetyReceipt,
     MinorRegistrationPolicy,
     PaymentAttempt,
+    ProfileExtensionStatus,
+    ProfileExtensionWriter,
     QuestionFieldType,
+    QuestionVisibility,
     Registration,
     RegistrationAdjustment,
     RegistrationCommandReceipt,
     RegistrationConfiguration,
+    RegistrationProfileExtensionField,
+    RegistrationProfileExtensionValueRevision,
     RegistrationQuestion,
     RegistrationSection,
     RegistrationSubmission,
@@ -955,6 +960,7 @@ def validate_registration_answers(
     *,
     questions: Iterable[RegistrationQuestion],
     answers: object,
+    include_staff_questions: bool = False,
 ) -> tuple[dict[str, object], list[dict[str, object]]]:
     if not isinstance(answers, dict) or any(
         not isinstance(key, str) for key in answers
@@ -963,7 +969,12 @@ def validate_registration_answers(
             {"answers": "Registration answers must be an object."},
             code="invalid_registration_answers",
         )
-    question_list = list(questions)
+    question_list = [
+        question
+        for question in questions
+        if include_staff_questions
+        or question.visibility == QuestionVisibility.ATTENDEE_AND_STAFF
+    ]
     known_keys = {question.key for question in question_list}
     unknown_keys = set(answers).difference(known_keys)
     if unknown_keys:
@@ -1010,6 +1021,216 @@ def validate_registration_answers(
             )
         normalized[question.key] = value
     return normalized, schema
+
+
+def _normalize_profile_extension_value(
+    field: RegistrationProfileExtensionField,
+    value: object,
+) -> object:
+    if field.field_type in {
+        QuestionFieldType.SHORT_TEXT,
+        QuestionFieldType.LONG_TEXT,
+    }:
+        if not isinstance(value, str):
+            raise ValidationError(
+                {"value": "Enter text for this profile field."},
+                code="invalid_profile_extension_value",
+            )
+        normalized = value.strip()
+        maximum = (
+            MAX_LONG_ANSWER_LENGTH
+            if field.field_type == QuestionFieldType.LONG_TEXT
+            else MAX_SHORT_ANSWER_LENGTH
+        )
+        if len(normalized) > maximum:
+            raise ValidationError(
+                {"value": f"Use no more than {maximum} characters."},
+                code="profile_extension_value_too_long",
+            )
+        return normalized
+    if field.field_type == QuestionFieldType.BOOLEAN:
+        if not isinstance(value, bool):
+            raise ValidationError(
+                {"value": "Choose yes or no."},
+                code="invalid_profile_extension_value",
+            )
+        return value
+    if field.field_type == QuestionFieldType.INTEGER:
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ValidationError(
+                {"value": "Enter a whole number."},
+                code="invalid_profile_extension_value",
+            )
+        return value
+    if field.field_type == QuestionFieldType.SINGLE_CHOICE:
+        if not isinstance(value, str) or value not in field.options:
+            raise ValidationError(
+                {"value": "Choose one of the available options."},
+                code="invalid_profile_extension_value",
+            )
+        return value
+    if field.field_type == QuestionFieldType.MULTIPLE_CHOICE:
+        if (
+            not isinstance(value, list)
+            or any(not isinstance(item, str) for item in value)
+            or len(set(value)) != len(value)
+            or any(item not in field.options for item in value)
+        ):
+            raise ValidationError(
+                {"value": "Choose only available options without duplicates."},
+                code="invalid_profile_extension_value",
+            )
+        return value
+    raise ValidationError(
+        {"value": "This profile field type is unavailable."},
+        code="unsupported_profile_extension_field",
+    )
+
+
+def current_profile_extension_values(
+    *,
+    registration: Registration,
+) -> dict[str, RegistrationProfileExtensionValueRevision]:
+    """Project the newest append-only revision for each stable field key."""
+
+    current: dict[str, RegistrationProfileExtensionValueRevision] = {}
+    revisions = (
+        RegistrationProfileExtensionValueRevision.objects.filter(
+            registration=registration,
+            organization_id=registration.organization_id,
+            edition_id=registration.edition_id,
+        )
+        .select_related("field", "actor")
+        .order_by("field_key", "sequence", "id")
+    )
+    for revision in revisions:
+        current[revision.field_key] = revision
+    return current
+
+
+@transaction.atomic
+def write_registration_profile_extension_value(
+    *,
+    registration: Registration,
+    field: RegistrationProfileExtensionField,
+    actor: Account,
+    value: object,
+    correlation_id: UUID,
+    source_channel: str,
+    reason: str = "",
+) -> RegistrationProfileExtensionValueRevision:
+    """Append one authorized current-profile value without rewriting submission."""
+
+    locked_registration = (
+        Registration.objects.select_for_update()
+        .select_related("account", "edition")
+        .get(
+            id=registration.id,
+            organization_id=registration.organization_id,
+            edition_id=registration.edition_id,
+        )
+    )
+    scoped_field = RegistrationProfileExtensionField.objects.get(
+        id=field.id,
+        organization_id=locked_registration.organization_id,
+        edition_id=locked_registration.edition_id,
+        status=ProfileExtensionStatus.ACTIVE,
+    )
+    is_self = actor.id == locked_registration.account_id
+    if is_self:
+        if not scoped_field.attendee_visible or scoped_field.writer_policy not in {
+            ProfileExtensionWriter.ATTENDEE,
+            ProfileExtensionWriter.ATTENDEE_AND_STAFF,
+        }:
+            raise AuthorizationDenied(
+                "This profile field is staff-managed.",
+                reason_code="profile_extension_staff_managed",
+            )
+        obligations = _require_decision(
+            actor=actor,
+            capability_code=MANAGE_SELF_PROFILE,
+            organization_id=locked_registration.organization_id,
+            edition_id=locked_registration.edition_id,
+            owner_account_id=locked_registration.account_id,
+            operation="registration.profile_extension.write",
+            target_type="registration.profile_extension",
+            target_id=scoped_field.id,
+            correlation_id=correlation_id,
+            source_channel=source_channel,
+        )
+        reason_code = "attendee_profile_extension"
+        normalized_reason = ""
+    else:
+        if scoped_field.writer_policy not in {
+            ProfileExtensionWriter.REGISTRATION_STAFF,
+            ProfileExtensionWriter.ATTENDEE_AND_STAFF,
+        }:
+            raise AuthorizationDenied(
+                "This profile field is attendee-managed.",
+                reason_code="profile_extension_attendee_managed",
+            )
+        normalized_reason = reason.strip()
+        if not normalized_reason:
+            raise ValidationError(
+                {"reason": "Staff changes require a reason."},
+                code="profile_extension_staff_reason_required",
+            )
+        obligations = _require_decision(
+            actor=actor,
+            capability_code=REGISTER_ON_BEHALF,
+            organization_id=locked_registration.organization_id,
+            edition_id=locked_registration.edition_id,
+            operation="registration.profile_extension.write",
+            target_type="registration.profile_extension",
+            target_id=scoped_field.id,
+            correlation_id=correlation_id,
+            source_channel=source_channel,
+        )
+        reason_code = "staff_profile_extension"
+
+    normalized_value = _normalize_profile_extension_value(scoped_field, value)
+    if scoped_field.required and normalized_value in ("", []):
+        raise ValidationError(
+            {"value": "This profile field is required."},
+            code="required_profile_extension_value",
+        )
+    last_sequence = (
+        RegistrationProfileExtensionValueRevision.objects.filter(
+            registration=locked_registration,
+            field_key=scoped_field.key,
+        ).aggregate(maximum=Max("sequence"))["maximum"]
+        or 0
+    )
+    revision = RegistrationProfileExtensionValueRevision.objects.create(
+        registration=locked_registration,
+        organization_id=locked_registration.organization_id,
+        edition_id=locked_registration.edition_id,
+        field=scoped_field,
+        field_key=scoped_field.key,
+        sequence=last_sequence + 1,
+        value=normalized_value,
+        actor=actor,
+        source_channel=source_channel,
+        reason=normalized_reason,
+    )
+    append_audit(
+        _audit_record(
+            actor=actor,
+            capability_code=(MANAGE_SELF_PROFILE if is_self else REGISTER_ON_BEHALF),
+            operation="registration.profile_extension.write",
+            organization_id=locked_registration.organization_id,
+            edition_id=locked_registration.edition_id,
+            target_type="registration.profile_extension_value_revision",
+            target_id=revision.id,
+            correlation_id=correlation_id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code=reason_code,
+            obligations=obligations,
+            changed_fields=(scoped_field.key,),
+            source_channel=source_channel,
+        )
+    )
+    return revision
 
 
 def _append_timeline(
@@ -1298,6 +1519,7 @@ def submit_registration(
         normalized_answers, schema = validate_registration_answers(
             questions=configuration.questions.all(),
             answers=answers,
+            include_staff_questions=subject_account is not None,
         )
         registration_id = uuid4()
         capacity_reached = (

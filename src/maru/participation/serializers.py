@@ -2,7 +2,9 @@
 
 from rest_framework import serializers
 
+from maru.authorization.policy import ResourceScope, decide
 from maru.events.models import EventEdition
+from maru.identity.models import Account
 from maru.organizations.models import OrganizationMembership
 from maru.participation.models import Participation, ParticipationCapacity
 
@@ -63,6 +65,7 @@ class EditionContextSerializer(serializers.ModelSerializer[Participation]):
     ends_on = serializers.DateField(source="edition.ends_on")
     participation_status = serializers.CharField(source="status")
     capacities = CapacityContextSerializer(many=True)
+    can_transition = serializers.SerializerMethodField()
 
     class Meta:
         model = Participation
@@ -83,8 +86,22 @@ class EditionContextSerializer(serializers.ModelSerializer[Participation]):
             "ends_on",
             "participation_status",
             "capacities",
+            "can_transition",
         )
         read_only_fields = fields
+
+    def get_can_transition(self, obj: Participation) -> bool:
+        account = self.context.get("account")
+        if not isinstance(account, Account):
+            return False
+        return decide(
+            principal=account,
+            capability_code="events.transition",
+            resource=ResourceScope(
+                organization_id=obj.organization_id,
+                edition_id=obj.edition_id,
+            ),
+        ).allowed
 
 
 class ParticipationHistorySerializer(serializers.ModelSerializer[Participation]):
@@ -112,6 +129,8 @@ class MyContextSerializer(serializers.Serializer[dict[str, object]]):
     account_id = serializers.UUIDField()
     display_name = serializers.CharField()
     preferred_language = serializers.CharField()
+    can_access_advanced_records = serializers.BooleanField()
+    can_bootstrap_convention = serializers.BooleanField()
     memberships = MembershipContextSerializer(many=True)
     editions = EditionContextSerializer(many=True)
 

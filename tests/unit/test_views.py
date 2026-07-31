@@ -16,7 +16,8 @@ def test_platform_home_is_a_browser_friendly_start_page() -> None:
     assert 'href="/health/ready"' in content
     assert 'href="/api/v1/schema"' in content
     assert 'href="/admin/"' in content
-    assert 'href="/staff/"' in content
+    assert 'href="/admin/records/"' not in content
+    assert 'href="/manage/"' not in content
 
 
 def test_liveness_does_not_touch_dependencies() -> None:

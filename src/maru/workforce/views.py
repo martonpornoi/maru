@@ -5,10 +5,8 @@ from __future__ import annotations
 from typing import cast
 from uuid import UUID
 
-from django.contrib import admin, messages
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.http import FileResponse, Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -19,10 +17,7 @@ from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import ResourceScope, decide
 from maru.events.models import EventEdition
 from maru.identity.models import Account
-from maru.organizations.models import Organization
-from maru.workforce.bootstrap import bootstrap_organization_workforce
 from maru.workforce.forms import (
-    ConventionBootstrapForm,
     OnboardingDocumentUploadForm,
     VolunteerApplicationForm,
 )
@@ -39,55 +34,6 @@ from maru.workforce.services import (
 
 def _account(request: HttpRequest) -> Account | None:
     return request.user if isinstance(request.user, Account) else None
-
-
-@staff_member_required
-def bootstrap_convention_setup(request: HttpRequest) -> HttpResponse:
-    """One-shot, password-confirmed web client for the first authority service."""
-
-    controller = _account(request)
-    if controller is None or not controller.is_active or not controller.is_superuser:
-        raise PermissionDenied
-    form = ConventionBootstrapForm(
-        request.POST or None,
-        controller=controller,
-    )
-    if request.method == "POST" and form.is_valid():
-        organization = cast(Organization, form.cleaned_data["organization"])
-        edition = cast(EventEdition, form.cleaned_data["edition"])
-        chair = cast(Account, form.cleaned_data["chair"])
-        try:
-            created = bootstrap_organization_workforce(
-                organization=organization,
-                edition=edition,
-                controller=controller,
-                chair=chair,
-                reason=cast(str, form.cleaned_data["reason"]),
-                correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
-                source_channel="bootstrap_admin",
-            )
-        except ValidationError as error:
-            form.add_error(None, error.messages[0])
-        else:
-            messages.success(
-                request,
-                (
-                    f"First convention setup completed for {edition.name}: "
-                    f"{created['position_templates']} position templates and "
-                    f"{created['role_assignments']} initial role assignments created."
-                ),
-            )
-            return redirect("admin:index")
-    context = {
-        **admin.site.each_context(request),
-        "title": "First convention setup",
-        "form": form,
-    }
-    return TemplateResponse(
-        request,
-        "workforce/bootstrap_setup.html",
-        context,
-    )
 
 
 def volunteer_opportunities(

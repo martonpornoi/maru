@@ -25,6 +25,138 @@ export type ProfileMediaReviewItem =
   components["schemas"]["ProfileMediaReviewItem"];
 export type AttendeeReport = components["schemas"]["AttendeeReport"];
 export type AttendeeReportRow = components["schemas"]["AttendeeReportRow"];
+export type AccessWorkspace = components["schemas"]["AccessWorkspace"];
+export type AccessGroup = components["schemas"]["AccessGroup"];
+export type AccessAssignment = components["schemas"]["AccessAssignment"];
+export type ConventionBootstrapOrganization = {
+  id: string;
+  slug: string;
+  name: string;
+  status: "eligible" | "established";
+};
+export type ConventionBootstrapEdition = {
+  id: string;
+  organization_id: string;
+  slug: string;
+  name: string;
+  lifecycle: EditionContext["lifecycle"];
+  starts_on: string;
+  ends_on: string;
+};
+export type ConventionBootstrapChair = {
+  email: string;
+  display_name: string;
+};
+export type ConventionBootstrapWorkspace = {
+  controller_email: string;
+  organizations: ConventionBootstrapOrganization[];
+  editions: ConventionBootstrapEdition[];
+  chairs: ConventionBootstrapChair[];
+};
+export type ConventionBootstrapInput = {
+  organization_id: string;
+  edition_id: string;
+  chair_email: string;
+  reason: string;
+  confirm_organization: string;
+  controller_password: string;
+};
+export type ConventionBootstrapResult = {
+  organization: ConventionBootstrapOrganization;
+  edition: ConventionBootstrapEdition;
+  chair: ConventionBootstrapChair;
+  created: {
+    role_bundles: number;
+    position_templates: number;
+    departments: number;
+    positions: number;
+    role_assignments: number;
+    position_assignments: number;
+  };
+};
+export type EditionTransitionResult = {
+  id: string;
+  lifecycle: EditionContext["lifecycle"];
+  lifecycle_version: number;
+};
+export type ReadinessGateCode =
+  | "privacy"
+  | "finance"
+  | "operations"
+  | "security"
+  | "jurisdiction";
+export type ReadinessGate = {
+  id: string;
+  code: ReadinessGateCode;
+  status: "pending" | "approved" | "rejected";
+  evidence_reference: string;
+  review_summary: string;
+  reviewed_at: string | null;
+};
+export type ClosureReadiness = {
+  counts: Record<string, number>;
+  gates: ReadinessGate[];
+  manifest: unknown | null;
+};
+export type WorkforceStructureRole = {
+  department_name: string;
+  position_title: string;
+};
+export type WorkforceStructureHolder = {
+  assignment_id: string;
+  display_name: string;
+  login_handle: string;
+  other_roles: WorkforceStructureRole[];
+};
+export type WorkforceStructurePosition = {
+  id: string;
+  reports_to_id: string | null;
+  code: string;
+  title: string;
+  description: string;
+  headcount: number;
+  status: string;
+  holders: WorkforceStructureHolder[];
+};
+export type WorkforceStructureDepartment = {
+  id: string;
+  parent_id: string | null;
+  code: string;
+  name: string;
+  description: string;
+  positions: WorkforceStructurePosition[];
+};
+export type WorkforceStructure = {
+  organization_name: string;
+  edition_name: string;
+  departments: WorkforceStructureDepartment[];
+};
+export type ProfileExtensionField = {
+  id: string;
+  key: string;
+  version: number;
+  label: string;
+  help_text: string;
+  field_type:
+    | "short_text"
+    | "long_text"
+    | "boolean"
+    | "single_choice"
+    | "multiple_choice"
+    | "integer";
+  options: string[];
+  purpose: string;
+  classification: string;
+  required: boolean;
+  writer_policy: string;
+  can_write: boolean;
+  current_value: unknown | null;
+  updated_at: string | null;
+};
+export type ProfileExtensionWorkspace = {
+  registration_id: string;
+  fields: ProfileExtensionField[];
+};
 
 type Problem = {
   code?: string;
@@ -91,6 +223,24 @@ export function loadMyContext(): Promise<MyContext> {
   return requestJson<MyContext>("/api/v1/me/context");
 }
 
+export function loadConventionBootstrapWorkspace(): Promise<ConventionBootstrapWorkspace> {
+  return requestJson<ConventionBootstrapWorkspace>(
+    "/api/v1/management/convention-bootstrap",
+  );
+}
+
+export function createConventionBootstrap(
+  input: ConventionBootstrapInput,
+): Promise<ConventionBootstrapResult> {
+  return requestJson<ConventionBootstrapResult>(
+    "/api/v1/management/convention-bootstrap",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
+}
+
 export type ParticipationFilters = {
   search?: string;
   status?: string;
@@ -126,6 +276,115 @@ function editionApiPath(edition: EditionContext): string {
   return (
     `/api/v1/organizations/${edition.organization_id}` +
     `/editions/${edition.edition_id}`
+  );
+}
+
+export function loadWorkforceStructure(
+  edition: EditionContext,
+): Promise<WorkforceStructure> {
+  return requestJson<WorkforceStructure>(
+    `${editionApiPath(edition)}/workforce/structure`,
+  );
+}
+
+export function transitionEdition(
+  edition: EditionContext,
+  toState: EditionContext["lifecycle"],
+  reason: string,
+): Promise<EditionTransitionResult> {
+  return requestJson<EditionTransitionResult>(
+    `${editionApiPath(edition)}/transition`,
+    {
+      method: "POST",
+      body: JSON.stringify({ to_state: toState, reason }),
+    },
+  );
+}
+
+export type AssignAccessInput = {
+  person_email: string;
+  group_code: string;
+  approver_email: string;
+  expires_at?: string | null;
+  reason: string;
+};
+
+export type ReplaceAccessInput = {
+  group_code: string;
+  approver_email: string;
+  expires_at?: string | null;
+  reason: string;
+};
+
+export function loadAccessWorkspace(
+  edition: EditionContext,
+): Promise<AccessWorkspace> {
+  return requestJson<AccessWorkspace>(`${editionApiPath(edition)}/access`);
+}
+
+export function loadClosureReadiness(
+  edition: EditionContext,
+): Promise<ClosureReadiness> {
+  return requestJson<ClosureReadiness>(
+    `${editionApiPath(edition)}/closure-readiness`,
+  );
+}
+
+export type ReviewReadinessGateInput = {
+  approve: boolean;
+  evidence_reference: string;
+  summary: string;
+};
+
+export function reviewReadinessGate(
+  edition: EditionContext,
+  code: ReadinessGateCode,
+  input: ReviewReadinessGateInput,
+): Promise<ReadinessGate> {
+  return requestJson<ReadinessGate>(
+    `${editionApiPath(edition)}/closure-gates/${code}`,
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
+}
+
+export function assignAccessGroup(
+  edition: EditionContext,
+  input: AssignAccessInput,
+): Promise<AccessWorkspace> {
+  return requestJson<AccessWorkspace>(`${editionApiPath(edition)}/access`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function replaceAccessAssignment(
+  edition: EditionContext,
+  assignmentId: string,
+  input: ReplaceAccessInput,
+): Promise<AccessWorkspace> {
+  return requestJson<AccessWorkspace>(
+    `${editionApiPath(edition)}/access/assignments/${assignmentId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    },
+  );
+}
+
+export function revokeAccessAssignment(
+  edition: EditionContext,
+  assignmentId: string,
+  reason: string,
+): Promise<AccessWorkspace> {
+  return requestJson<AccessWorkspace>(
+    `${editionApiPath(edition)}/access/assignments/${assignmentId}`,
+    {
+      method: "DELETE",
+      body: JSON.stringify({ reason }),
+    },
   );
 }
 
@@ -213,6 +472,28 @@ export function loadMyRegistration(
 ): Promise<MyRegistrationWorkspace> {
   return requestJson<MyRegistrationWorkspace>(
     `${editionApiPath(edition)}/registration/me`,
+  );
+}
+
+export function loadMyProfileExtensions(
+  edition: EditionContext,
+): Promise<ProfileExtensionWorkspace> {
+  return requestJson<ProfileExtensionWorkspace>(
+    `${editionApiPath(edition)}/registrations/me/profile-extensions`,
+  );
+}
+
+export function writeMyProfileExtension(
+  edition: EditionContext,
+  fieldId: string,
+  value: unknown,
+): Promise<ProfileExtensionWorkspace> {
+  return requestJson<ProfileExtensionWorkspace>(
+    `${editionApiPath(edition)}/registrations/me/profile-extensions`,
+    {
+      method: "POST",
+      body: JSON.stringify({ field_id: fieldId, value }),
+    },
   );
 }
 

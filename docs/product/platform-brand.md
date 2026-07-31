@@ -1,15 +1,15 @@
 # Maru platform brand
 
 Status: Implemented platform identity
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 Requirements: UX-007, UX-008, UX-010, REG-014, FUR-010
 Decision: ADR 0021
 
 ## Purpose and boundary
 
-This identity belongs to Maru's own operational shell: Staff Console,
-bootstrap administration, local entry and sign-in, application metadata, and
-the bundled registration reference client.
+This identity belongs to Maru's own operational shell: Convention work,
+specialist records, local entry and sign-in, application metadata, and the
+bundled registration reference client.
 
 It is not a mandatory annual convention theme. A convention may build a
 colorful seasonal registration or public website over the same versioned APIs.
@@ -63,7 +63,7 @@ The original anchors remain exact:
 | Muted brown | `#675943` |
 
 `core/brand.css` defines navy, gold, and ivory scales from 50 through 950 plus
-semantic aliases. Staff Console duplicates those values in its source bundle
+semantic aliases. Convention work duplicates those values in its source bundle
 so standalone Vite development does not depend on a Django template.
 
 Approved text combinations include:
@@ -95,5 +95,5 @@ alone.
 
 Automated tests verify asset discovery, dimensions, manifest paths, palette
 anchors, cross-bundle token consistency, template metadata, and the approved
-contrast pairs. Frontend build verification confirms the Staff Console still
+contrast pairs. Frontend build verification confirms Convention work still
 produces fixed Django-hosted assets.

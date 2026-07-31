@@ -1,7 +1,7 @@
 # Development setup
 
 Status: Baseline  
-Last updated: 2026-07-27
+Last updated: 2026-07-31
 
 ## Prerequisites
 
@@ -9,7 +9,7 @@ Last updated: 2026-07-27
 - [uv](https://docs.astral.sh/uv/)
 - Docker with Compose for the PostgreSQL development service
 - Git
-- Node 22.12 or newer and pnpm for Staff Console development
+- Node 22.12 or newer and pnpm for embedded Convention work development
 
 The system `python` on some Windows machines may be older. Verify the selected
 interpreter with `uv python find` and do not run Maru on Python 3.9.
@@ -37,15 +37,23 @@ administrator when a minimal setup is enough:
 uv run python src/manage.py createsuperuser
 ```
 
-The account uses its email address to sign in at
-<http://127.0.0.1:8000/admin/> or <http://127.0.0.1:8000/staff/>. Django admin
-is a bootstrap data interface. The Staff Console is the first product
-workspace; local password authentication is still not the production identity
+The account uses its email address or optional unique login handle to sign in at
+<http://127.0.0.1:8000/admin/>. The original administration home contains one
+sidebar for Convention work and permission-filtered specialist records. A
+workspace-less superuser can open the guarded convention-leadership ceremony
+under **Convention work → Setup guide**. The former global Quick Start strip is
+removed.
+`/manage/`, `/staff/`, and `/admin/records/` are intentionally not alternate
+entry points. Local password authentication is not the production identity
 system.
 
 After creating an Organization, Convention Series, Event Edition, and a
-separate Chair account in bootstrap admin, establish the first scoped
-controllers and furry-convention position templates once:
+separate Chair account through their specialist record pages, open Convention
+work and complete **Establish convention leadership**. It requires the current
+administrator password, exact organization slug, distinct Chair, and a reason,
+then offers **Start planning** for the Draft-to-Preparing transition.
+
+The equivalent command remains available for recovery and automation:
 
 ```powershell
 uv run python src/manage.py bootstrap_convention `
@@ -60,6 +68,25 @@ uv run python src/manage.py bootstrap_convention `
 See the
 [clean convention onboarding walkthrough](../operations/clean-convention-onboarding-walkthrough.md)
 for the complete no-demo-database rehearsal.
+
+### Admin-first Marucon rehearsal
+
+Use a new, separately named empty database. The command refuses a database
+whose first account is not its deterministic administrator, never resets an
+existing database, and imports only public handles, department descriptions,
+and role labels. Images and contact data are excluded.
+
+```powershell
+$env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/marucon_rehearsal"
+uv run python src/manage.py migrate
+uv run python src/manage.py seed_marucon_rehearsal --accept-public-roster
+```
+
+The output reports the `admin` login, Chair handle, counts, registration URL,
+and shared local-only password `M4rucon-Rehearsal-2031!`. The external source
+must be acknowledged explicitly on every network import. To rehearse without
+public personal data, pass `--roster-file` with synthetic semantic HTML.
+Automated tests use only such a synthetic miniature.
 
 Public attendee registration starts at
 <http://127.0.0.1:8000/register/>. It does not require an existing account:
@@ -110,7 +137,7 @@ remain future modules. Registration is a real vertical with a local/test-only
 payment adapter. See
 [`demo-data.md`](../modules/demo-data.md) for the exact boundary.
 
-Open <http://127.0.0.1:8000/staff/> and use
+Open <http://127.0.0.1:8000/admin/> and use
 `danube.convention-chair@demo.maru.invalid` with
 `Z7!maru-demo-fixture-2026` for the featured Danube 2026 cockpit, registration
 configuration, Reports, and Front Desk queue. Use
@@ -119,7 +146,7 @@ Other convention-chair, staff, volunteer, and attendee accounts intentionally
 receive different safe views according to their relationships and
 capabilities.
 
-## Staff Console development
+## Embedded Convention work development
 
 The production bundle is checked into Django's app static directory. To
 regenerate it and verify the separate frontend:
@@ -134,9 +161,10 @@ pnpm run build
 cd ../..
 ```
 
-Run `pnpm dev` for the Vite loop; it proxies API, account, and staff routes to
-Django on port 8000. Restart a Django development process that was already
-running before the Staff Console static directory was first created.
+Run `pnpm dev` for the Vite loop; it proxies API, account, administration, and
+static routes to Django on port 8000. Restart a Django development process that
+was already running before the Convention work static directory was first
+created.
 
 ## Checks
 

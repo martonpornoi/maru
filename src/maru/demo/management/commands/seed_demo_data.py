@@ -7,6 +7,7 @@ from typing import Any
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError, CommandParser
+from django.test.utils import override_settings
 
 from maru.demo.constants import DEMO_ACCOUNT_PASSWORD
 from maru.demo.fixture import DemoDataConflictError, seed_demo_data
@@ -51,10 +52,15 @@ class Command(BaseCommand):
             ) from error
 
         try:
-            summary = seed_demo_data(
-                password=password,
-                reset_passwords=options["reset_passwords"],
-            )
+            # Archived demo editions install their synthetic closure evidence
+            # later in the same atomic fixture. The command is local/test-only,
+            # so allow that bounded construction order without weakening normal
+            # lifecycle transitions.
+            with override_settings(ENFORCE_EDITION_CLOSURE_GATES=False):
+                summary = seed_demo_data(
+                    password=password,
+                    reset_passwords=options["reset_passwords"],
+                )
         except DemoDataConflictError as error:
             raise CommandError(str(error)) from error
 

@@ -7,11 +7,50 @@ from tests.factories import AccountFactory, ParticipationFactory
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
-def test_staff_console_redirects_anonymous_users_to_local_login() -> None:
-    response = APIClient().get("/staff/")
+@pytest.mark.parametrize("path", ["/staff/", "/manage/", "/admin/records/"])
+def test_standalone_console_routes_are_removed(path: str) -> None:
+    response = APIClient().get(path)
 
-    assert response.status_code == 302
-    assert response["Location"] == "/accounts/login/?next=/staff/"
+    assert response.status_code == 404
+
+
+def test_admin_is_the_preferred_authenticated_route() -> None:
+    anonymous = APIClient().get("/admin/")
+    assert anonymous.status_code == 302
+    assert anonymous["Location"] == "/accounts/login/?next=/admin/"
+
+    account = AccountFactory()
+    client = APIClient()
+    client.force_login(account)
+    response = client.get("/admin/")
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Convention work" in content
+    assert "All administration areas" in content
+    assert "Specialist records" not in content
+    assert "/static/staff-console/app.js" not in content
+
+
+def test_workflows_are_embedded_under_the_original_admin_shell() -> None:
+    anonymous = APIClient().get(reverse("management-console"))
+    assert anonymous.status_code == 302
+    assert anonymous["Location"] == ("/accounts/login/?next=/admin/workspace/")
+
+    account = AccountFactory()
+    client = APIClient()
+    client.force_login(account)
+    response = client.get(reverse("management-console"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'data-mode="admin-embedded"' in content
+    assert "/static/staff-console/app.css" in content
+    assert "/static/staff-console/app.js" in content
+    assert "csrf-token" in content
+    assert "Convention work" in content
+    assert content.count('aria-label="Administration"') == 1
+    assert 'aria-label="Management Console"' not in content
 
 
 def test_local_login_explains_why_and_how_to_use_it() -> None:
@@ -23,21 +62,32 @@ def test_local_login_explains_why_and_how_to_use_it() -> None:
     assert "For example:" in content
 
 
-def test_any_active_platform_account_can_open_staff_console() -> None:
+def test_any_active_platform_account_can_open_original_admin_index() -> None:
     account = AccountFactory()
     client = APIClient()
     client.force_login(account)
 
-    response = client.get("/staff/")
+    response = client.get("/admin/")
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "/static/staff-console/app.css" in content
-    assert "/static/staff-console/app.js" in content
-    assert "csrf-token" in content
+    assert "Convention work" in content
+    assert "This account has no specialist record permissions" in content
 
 
-def test_bootstrap_admin_without_a_workspace_lands_in_admin() -> None:
+def test_specialist_record_pages_keep_the_django_staff_boundary() -> None:
+    account = AccountFactory(is_staff=False)
+    client = APIClient()
+    client.force_login(account)
+
+    path = reverse("admin:identity_account_changelist")
+    response = client.get(path)
+
+    assert response.status_code == 302
+    assert response["Location"] == f"/admin/login/?next={path}"
+
+
+def test_bootstrap_admin_without_a_workspace_can_open_admin_workspace() -> None:
     administrator = AccountFactory(
         is_staff=True,
         is_superuser=True,
@@ -45,13 +95,13 @@ def test_bootstrap_admin_without_a_workspace_lands_in_admin() -> None:
     client = APIClient()
     client.force_login(administrator)
 
-    response = client.get("/staff/")
+    response = client.get(reverse("management-console"))
 
-    assert response.status_code == 302
-    assert response["Location"] == reverse("admin:index")
+    assert response.status_code == 200
+    assert b"/static/staff-console/app.js" in response.content
 
 
-def test_bootstrap_admin_with_a_workspace_can_open_staff_console() -> None:
+def test_bootstrap_admin_with_a_workspace_can_open_admin_workspace() -> None:
     administrator = AccountFactory(
         is_staff=True,
         is_superuser=True,
@@ -60,7 +110,7 @@ def test_bootstrap_admin_with_a_workspace_can_open_staff_console() -> None:
     client = APIClient()
     client.force_login(administrator)
 
-    response = client.get("/staff/")
+    response = client.get(reverse("management-console"))
 
     assert response.status_code == 200
     content = response.content.decode()
@@ -69,7 +119,7 @@ def test_bootstrap_admin_with_a_workspace_can_open_staff_console() -> None:
     assert f'action="{reverse("admin-edition-context")}"' in content
 
 
-def test_local_login_lands_workspace_less_admin_in_bootstrap_admin() -> None:
+def test_local_login_lands_workspace_less_admin_in_admin_workspace() -> None:
     password = "Safe local password 927!"
     administrator = AccountFactory(
         is_staff=True,
@@ -84,14 +134,14 @@ def test_local_login_lands_workspace_less_admin_in_bootstrap_admin() -> None:
         {
             "username": administrator.email,
             "password": password,
-            "next": "/staff/",
+            "next": "/admin/",
         },
         follow=True,
     )
 
     assert response.status_code == 200
-    assert response.request["PATH_INFO"] == reverse("admin:index")
-    assert "Bootstrap administration" in response.content.decode()
+    assert response.request["PATH_INFO"] == "/admin/"
+    assert "Convention work" in response.content.decode()
 
 
 def test_local_login_accepts_non_admin_platform_account() -> None:
@@ -106,10 +156,10 @@ def test_local_login_accepts_non_admin_platform_account() -> None:
         {
             "username": account.email,
             "password": password,
-            "next": "/staff/",
+            "next": "/admin/",
         },
     )
 
     assert response.status_code == 302
-    assert response["Location"] == "/staff/"
+    assert response["Location"] == "/admin/"
     assert client.session["_auth_user_id"] == str(account.id)

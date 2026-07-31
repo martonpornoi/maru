@@ -10,9 +10,9 @@ the system.
 | [0003](0003-capability-and-scope-authorization.md) | Accepted | Capability, scope, relationship, and field authorization |
 | [0004](0004-bounded-offline-relay.md) | Accepted | Bounded offline relay for venue-critical workflows |
 | [0005](0005-transactional-outbox.md) | Accepted | Transactional outbox and idempotent asynchronous work |
-| [0006](0006-react-typescript-staff-console.md) | Accepted | React and TypeScript for the separate Staff Console |
+| [0006](0006-react-typescript-staff-console.md) | Partially superseded | React and TypeScript for the API-backed operations frontend; ADR 0023 unifies the visible management experience |
 | [0007](0007-copy-on-write-registration-configuration.md) | Accepted | Copy-on-write registration configuration and templates |
-| [0008](0008-persistent-edition-working-context.md) | Accepted | Persistent edition working context across staff and bootstrap administration |
+| [0008](0008-persistent-edition-working-context.md) | Partially superseded | Persistent edition working context; ADR 0023 replaces the workspace-less staff redirect |
 | [0009](0009-public-registration-and-edition-profile.md) | Accepted | Public registration and purpose-partitioned edition profiles |
 | [0010](0010-headless-registration-and-reference-client.md) | Accepted | Headless registration contract and neutral reference client |
 | [0011](0011-registration-offers-reservations-and-waitlists.md) | Accepted | Phased offers, payment reservations, waitlists, and controlled exceptions |
@@ -24,8 +24,16 @@ the system.
 | [0017](0017-credentials-offline-check-in-and-closure.md) | Accepted | Revocable credentials, signed bounded offline check-in, and gated edition closure |
 | [0018](0018-attendee-directory-labels-and-reporting-preset.md) | Accepted | Separately consented public country, authoritative attendee labels, and minimized badge reporting |
 | [0019](0019-staff-assisted-registration-and-workforce-onboarding.md) | Accepted | Clean organizer bootstrap, staff-assisted registration, reviewed onboarding documents, and position-driven access |
-| [0020](0020-guided-bootstrap-and-localized-data-entry.md) | Accepted | Guided first-authority setup, organizer/series identity, code-backed locale entry, draft removal, and explicit staff account creation |
+| [0020](0020-guided-bootstrap-and-localized-data-entry.md) | Partially superseded | Organizer/series identity, code-backed locale entry, draft removal, explicit staff account creation, and the superseded first-authority web adapter |
 | [0021](0021-platform-brand-and-legacy-reference.md) | Accepted | Accessible platform brand and behavior-only use of the legacy Maru prototype |
+| [0022](0022-ordered-admin-quick-start.md) | Superseded | Ordered global Quick Start; ADR 0024 replaces its command-only first-authority experience and ADR 0027 moves guidance out of global chrome |
+| [0023](0023-unified-management-console-and-access-sharing.md) | Partially superseded | Contextual role sharing and a forms hub remain; ADR 0026 replaces its React shell and route placement |
+| [0024](0024-guarded-first-authority-and-lifecycle-console.md) | Accepted | Guarded one-time first-authority ceremony and reasoned edition lifecycle controls in the Management Console |
+| [0025](0025-single-admin-namespace.md) | Superseded | React-at-`/admin/` route placement and compatibility redirects, replaced by ADR 0026 |
+| [0026](0026-original-admin-shell-with-embedded-workflows.md) | Accepted | Original `/admin/` shell and menu with embedded API-backed workflows and no standalone management routes |
+| [0027](0027-record-oriented-convention-work.md) | Accepted | Record-oriented embedded workflows and contextual Setup guide without global Quick Start |
+| [0028](0028-login-handles-and-workforce-structure.md) | Accepted | Human login handles, local public-roster boundary, and minimized workforce hierarchy |
+| [0029](0029-append-only-registration-profile-extensions.md) | Accepted | Versioned profile-extension fields with append-only permission-aware values |
 
 New ADRs use the next four-digit number and contain:
 

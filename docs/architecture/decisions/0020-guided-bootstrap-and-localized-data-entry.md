@@ -1,6 +1,6 @@
 # ADR 0020: Guided bootstrap and localized data entry
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0022 (web first-authority adapter only)
 - Date: 2026-07-29
 - Requirements: IDN-001, IDN-002, IDN-007, EVT-001, EVT-005, AUD-001,
   AUD-002, REG-001, REG-008, REG-012, REG-021, UX-003, UX-005, UX-006,

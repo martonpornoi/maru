@@ -8,7 +8,6 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from django import forms
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -37,7 +36,6 @@ from maru.registration.services import (
     update_attendee_profile,
 )
 from maru.workforce.bootstrap import bootstrap_organization_workforce
-from maru.workforce.forms import ConventionBootstrapForm
 from maru.workforce.models import (
     Department,
     OnboardingDocumentRequest,
@@ -210,7 +208,9 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
 
     client = Client()
     client.force_login(controller)
-    assisted_page = client.get(f"/staff/registration-assist/{edition.id}/")
+    assisted_page = client.get(
+        reverse("management-assisted-registration", args=(edition.id,))
+    )
     assert assisted_page.status_code == 200
     assert b"outside public" in assisted_page.content
 
@@ -556,66 +556,3 @@ def test_bootstrap_command_covers_success_and_safe_refusals() -> None:
                 "chair_email": "missing-chair@example.invalid",
             },
         )
-
-
-def test_superuser_can_complete_first_convention_setup_in_admin() -> None:
-    controller = AccountFactory(
-        email="web-bootstrap-admin@example.invalid",
-        is_staff=True,
-        is_superuser=True,
-    )
-    chair = AccountFactory(email="web-bootstrap-chair@example.invalid")
-    edition = EventEditionFactory(
-        slug="web-bootstrap-2030",
-        series__organization__slug="web-bootstrap-organization",
-    )
-    client = Client()
-    client.force_login(controller)
-    post_data = {
-        "organization": str(edition.organization_id),
-        "edition": str(edition.id),
-        "chair": str(chair.id),
-        "reason": "Establish accountable leadership through the web wizard.",
-        "confirm_organization": edition.organization.slug,
-        "controller_password": "synthetic-password",
-    }
-
-    page = client.get(reverse("workforce-bootstrap-setup"))
-    assert page.status_code == 200
-    assert "First convention setup" in page.content.decode()
-    assert 'name="controller_email"' not in page.content.decode()
-
-    wrong_password = client.post(
-        reverse("workforce-bootstrap-setup"),
-        {**post_data, "controller_password": "not-the-controller-password"},
-    )
-    assert wrong_password.status_code == 200
-    assert "administrator password is incorrect" in wrong_password.content.decode()
-    assert not RoleAssignment.objects.filter(organization=edition.organization).exists()
-
-    created = client.post(
-        reverse("workforce-bootstrap-setup"),
-        post_data,
-    )
-
-    assert created.status_code == 302
-    assert (
-        RoleAssignment.objects.filter(
-            organization=edition.organization,
-            principal=chair,
-        ).count()
-        == 2
-    )
-    assert Position.objects.filter(
-        edition=edition,
-        code="convention-chair",
-    ).exists()
-
-    repeated_form = ConventionBootstrapForm(controller=controller)
-    organization_field = repeated_form.fields["organization"]
-    assert isinstance(organization_field, forms.ModelChoiceField)
-    assert not organization_field.queryset.filter(id=edition.organization_id).exists()
-
-    ordinary_staff = AccountFactory(is_staff=True, is_superuser=False)
-    client.force_login(ordinary_staff)
-    assert client.get(reverse("workforce-bootstrap-setup")).status_code == 403

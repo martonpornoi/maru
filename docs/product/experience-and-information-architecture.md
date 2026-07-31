@@ -1,7 +1,7 @@
 # Experience and information architecture
 
-Status: Baseline with registration profile and attendee-reporting reference experience  
-Last updated: 2026-07-29
+Status: Unified `/admin/` shell and registration reference experience
+Last updated: 2026-07-31
 
 Maru is one platform expressed through several focused surfaces. It must not
 become one enormous menu containing every department's nouns.
@@ -12,7 +12,7 @@ become one enormous menu containing every department's nouns.
 One identity and notification center
 |
 +-- My Maru             personal participation and actions
-+-- Staff Console       authorized planning and operations
++-- Administration      setup, specialist records, access, and operations
 +-- Now Mode            live, time-critical execution
 +-- Public Experience   programme, information, registration, content
 +-- Focused clients     check-in, kiosk, signage, scanner, relay
@@ -26,7 +26,7 @@ account or source of truth.
 
 Maru's stable operational shell uses the owned navy, gold, and ivory identity
 documented in [`platform-brand.md`](platform-brand.md). The same identity
-connects bootstrap administration, Staff Console, local account entry, and the
+connects Convention work, specialist records, local account entry, and the
 bundled public reference client without implying that every convention must
 look alike.
 
@@ -91,13 +91,36 @@ resource identity and resolve safely for authorized viewers.
 Archived editions are visually distinct and read-only by default. A correction
 requires a separate, reasoned action rather than an ordinary edit button.
 
-The implemented Staff Console and bootstrap administration preserve an
+The implemented `/admin/` shell and its embedded Convention work preserve an
 explicitly selected event edition. Edition-owned lists, details, counts, normal
-relationship choices, and new-record defaults follow that context. Bootstrap
-administration also offers `All foundation data` for first-time platform setup.
+relationship choices, and new-record defaults follow that context. Specialist
+records also offer `All foundation data` for first-time platform setup.
 Cross-edition reuse appears only in purpose-named workflows such as
 registration template or source-edition selection; it never silently mixes
 routine operational rows.
+
+The original `/admin/` home keeps the complete alphabetical directory for
+returning operators. ADR 0027 removes the former global Quick Start strip.
+Organization, series, edition, Chair identity, guarded first authority,
+registration, workforce, and readiness guidance is contextual inside
+Convention work's **Setup guide**. An eligible workspace-less superuser
+completes the password-confirmed, exact-scope-confirmed leadership ceremony
+there; after completion it becomes a read-only explanation rather than a
+permanent action. The guide is not a readiness checklist and ordinary
+navigation never grants access or marks work complete.
+
+The canonical `/admin/` shell has one collapsible sidebar with Convention work
+and Specialist records sections. The embedded workflows do not render another
+global navigation or workspace selector; their headings, modules, fields,
+tables, buttons, and responsive spacing follow the same language as specialist
+record pages. Convention work's Today page keeps published form-driven
+workflows in a separate Forms section rather than scattering registration,
+volunteer applications, and onboarding documents through unrelated menus.
+Existing model pages remain inside the same `/admin/` hierarchy and use the
+same sidebar. `/manage/`, `/staff/`, and `/admin/records/` are removed rather
+than redirected. Setup guide also presents the current edition lifecycle,
+valid next states, consequences, reason entry, and stronger confirmation for
+terminal transitions; registration opening remains separate.
 
 ## My Maru
 
@@ -138,24 +161,46 @@ Global identity attributes, organizer-specific relationships, edition answers,
 public profile, emergency or accommodation data, consents, linked identities,
 sessions, exports, and deletion requests are visibly separated.
 
-## Staff Console
+## Administration and Convention work
 
-Navigation is organized around work:
+The original administration shell provides one collapsible global menu:
 
-- **Today:** assignments, deadlines, approvals, alerts, recent changes
-- **Work:** tasks, requests, decisions, risks, projects, handovers
-- **People:** participation, teams, onboarding, qualifications, access
-- **Plan:** milestones, readiness, budget, suppliers, spaces, assets
-- **Programme:** proposals, review, sessions, people, publication
-- **Workforce:** demand, shifts, availability, dispatch, attendance
-- **Commerce:** registration, orders, fulfilment, dealers, merchandise
-- **Communications:** inboxes, content, announcements, signage, knowledge
-- **Operations:** run-of-show, service desk, incidents, logistics, live map
-- **Reports:** dashboards, saved questions, exports, reconciliation
-- **Settings:** edition policy, workflows, fields, integrations, access
+- **Convention work:** Today, People, Organization structure, My registration,
+  Registration, Reports & badges, Setup guide, Security history, and Manage
+  access; and
+- **Specialist records:** the complete permission-filtered Django record
+  directory, with its existing model routes.
 
-Modules register destinations, actions, search providers, dashboard cards, and
-permission requirements. The shell remains consistent.
+Convention work is embedded inside this shell. The Django header provides
+edition context and account actions without a second menu or duplicated
+selector. Modules may
+register actions, search providers, dashboard cards, and permission
+requirements without creating another global navigation.
+
+### Access sharing
+
+Every active Convention work page offers **Manage access** only when the
+operator holds role-management authority in the selected edition. The same
+entry is present in the administration sidebar. The sharing workspace resembles
+familiar collaboration tools while retaining Maru's stronger invariants:
+
+- a person is exact-matched by an existing active account email and shown by
+  display name plus email;
+- familiar groups such as Front Desk, Registration, Board, Treasurer, and
+  department roles are immutable scoped role bundles, not Django Groups;
+- current page context may recommend groups but never creates a page-local ACL;
+- add and change require a reason, optional expiry, and distinct authorized
+  approver;
+- change is an atomic revoke-and-reassign operation;
+- removal is immediate, reasoned, and available only with revocation authority;
+  and
+- names, labels, slugs, and references lead the UI while UUIDs remain internal
+  transport identities unless exact technical evidence is necessary.
+
+Sharing a group grants system capabilities only. A formal volunteer or staff
+appointment still uses the workforce position workflow so NDA evidence,
+headcount, reporting hierarchy, capacities, and official convention role
+remain connected.
 
 The implemented Reports destination starts with one purpose-built
 registration preset: attendance totals, country and attendee-level

@@ -66,9 +66,13 @@ from maru.registration.models import (
     PaymentException,
     PaymentIntent,
     PaymentProviderAccount,
+    ProfileExtensionStatus,
+    ProfileExtensionWriter,
+    QuestionVisibility,
     ReceiptRecord,
     Registration,
     RegistrationConfiguration,
+    RegistrationProfileExtensionField,
     RegistrationTemplate,
     RegistrationTimelineEntry,
     SettlementBatch,
@@ -121,6 +125,7 @@ from maru.registration.serializers import (
     MyRegistrationWorkspaceSerializer,
     PaymentExceptionSerializer,
     PaymentIntentSerializer,
+    ProfileExtensionWorkspaceSerializer,
     ProfileMediaReviewDecisionSerializer,
     ProfileMediaReviewItemSerializer,
     ProposeFinancialOperationSerializer,
@@ -145,6 +150,7 @@ from maru.registration.serializers import (
     SubmitRegistrationSerializer,
     UpdateSelfAttendeeProfileSerializer,
     WaivePaymentSerializer,
+    WriteProfileExtensionValueSerializer,
 )
 from maru.registration.services import (
     AttendeeFursuitInput,
@@ -153,6 +159,7 @@ from maru.registration.services import (
     check_in_registration,
     confirm_demo_payment,
     create_configuration_draft,
+    current_profile_extension_values,
     extend_payment_deadline,
     latest_profile_suggestion,
     profile_is_editable,
@@ -162,6 +169,7 @@ from maru.registration.services import (
     submit_registration,
     update_attendee_profile,
     waive_registration_payment,
+    write_registration_profile_extension_value,
 )
 
 MANAGE_CONFIGURATION = "registration.manage_configuration"
@@ -171,6 +179,7 @@ VIEW_PAYMENT_SUMMARY = "registration.view_payment_summary"
 VIEW_ATTENDEE_REPORTING = "registration.view_attendee_reporting"
 MODERATE_PUBLIC_PROFILE = "registration.moderate_public_profile"
 VIEW_SELF_PROFILE = "registration.view_self_profile"
+REGISTER_ON_BEHALF = "registration.register_on_behalf"
 
 
 def _open_public_configurations() -> QuerySet[RegistrationConfiguration]:
@@ -341,7 +350,9 @@ class PublicRegistrationDefinitionView(APIView):
                 ),
             },
             "sections": configuration.sections.all(),
-            "questions": configuration.questions.all(),
+            "questions": configuration.questions.filter(
+                visibility=QuestionVisibility.ATTENDEE_AND_STAFF
+            ),
             "products": products,
         }
         return Response(PublicRegistrationDefinitionSerializer(payload).data)
@@ -1537,6 +1548,294 @@ class RegistrationTemplatePublishView(APIView):
             RegistrationTemplateSummarySerializer(template).data,
             status=201,
         )
+
+
+def _profile_extension_registration(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    account: Account | None = None,
+    registration_id: UUID | None = None,
+) -> Registration:
+    queryset = Registration.objects.filter(
+        organization_id=organization_id,
+        edition_id=edition_id,
+    ).select_related("account")
+    if account is not None:
+        queryset = queryset.filter(account=account)
+    if registration_id is not None:
+        queryset = queryset.filter(id=registration_id)
+    registration = queryset.first()
+    if registration is None:
+        raise NotFound(
+            "The registration profile is unavailable.",
+            code="registration_unavailable",
+        )
+    return registration
+
+
+def _profile_extension_workspace_payload(
+    *,
+    registration: Registration,
+    staff_view: bool,
+) -> dict[str, object]:
+    fields = RegistrationProfileExtensionField.objects.filter(
+        organization_id=registration.organization_id,
+        edition_id=registration.edition_id,
+        status=ProfileExtensionStatus.ACTIVE,
+    )
+    if not staff_view:
+        fields = fields.filter(attendee_visible=True)
+    current_values = current_profile_extension_values(registration=registration)
+    payload_fields = []
+    for field in fields.order_by("position", "key", "id"):
+        revision = current_values.get(field.key)
+        can_write = (
+            field.writer_policy
+            in {
+                ProfileExtensionWriter.REGISTRATION_STAFF,
+                ProfileExtensionWriter.ATTENDEE_AND_STAFF,
+            }
+            if staff_view
+            else field.writer_policy
+            in {
+                ProfileExtensionWriter.ATTENDEE,
+                ProfileExtensionWriter.ATTENDEE_AND_STAFF,
+            }
+        )
+        payload_fields.append(
+            {
+                "id": field.id,
+                "key": field.key,
+                "version": field.version,
+                "label": field.label,
+                "help_text": field.help_text,
+                "field_type": field.field_type,
+                "options": field.options,
+                "purpose": field.purpose,
+                "classification": field.classification,
+                "required": field.required,
+                "writer_policy": field.writer_policy,
+                "can_write": can_write,
+                "current_value": revision.value if revision is not None else None,
+                "updated_at": revision.created_at if revision is not None else None,
+            }
+        )
+    return {
+        "registration_id": registration.id,
+        "fields": payload_fields,
+    }
+
+
+class MyRegistrationProfileExtensionsView(APIView):
+    """Current post-submission profile fields visible to the registration owner."""
+
+    @extend_schema(
+        operation_id="registration_retrieve_my_profile_extensions",
+        responses=ProfileExtensionWorkspaceSerializer,
+    )
+    def get(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> Response:
+        account = _account(request)
+        registration = _profile_extension_registration(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            account=account,
+        )
+        decision = _scope_decision(
+            account=account,
+            capability_code=VIEW_SELF_PROFILE,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            owner_account_id=account.id,
+        )
+        if not decision.allowed:
+            raise PermissionDenied(
+                "Your registration profile is unavailable.",
+                code=decision.reason_code,
+            )
+        payload = _profile_extension_workspace_payload(
+            registration=registration,
+            staff_view=False,
+        )
+        return Response(ProfileExtensionWorkspaceSerializer(payload).data)
+
+    @extend_schema(
+        operation_id="registration_write_my_profile_extension",
+        request=WriteProfileExtensionValueSerializer,
+        responses=ProfileExtensionWorkspaceSerializer,
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> Response:
+        account = _account(request)
+        registration = _profile_extension_registration(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            account=account,
+        )
+        serializer = WriteProfileExtensionValueSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        field = RegistrationProfileExtensionField.objects.filter(
+            id=serializer.validated_data["field_id"],
+            organization_id=organization_id,
+            edition_id=edition_id,
+            status=ProfileExtensionStatus.ACTIVE,
+            attendee_visible=True,
+        ).first()
+        if field is None:
+            raise NotFound(
+                "The profile field is unavailable.",
+                code="profile_extension_field_unavailable",
+            )
+        try:
+            write_registration_profile_extension_value(
+                registration=registration,
+                field=field,
+                actor=account,
+                value=serializer.validated_data["value"],
+                correlation_id=_correlation_id(request),
+                source_channel="api",
+            )
+        except AuthorizationDenied as error:
+            raise PermissionDenied(str(error), code=error.reason_code) from error
+        except DjangoValidationError as error:
+            raise ApiValidationError(
+                error.message_dict if hasattr(error, "message_dict") else error.messages
+            ) from error
+        payload = _profile_extension_workspace_payload(
+            registration=registration,
+            staff_view=False,
+        )
+        return Response(ProfileExtensionWorkspaceSerializer(payload).data)
+
+
+class StaffRegistrationProfileExtensionsView(APIView):
+    """Reasoned registration-staff projection and profile-field write."""
+
+    def _registration_and_decision(
+        self,
+        *,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        registration_id: UUID,
+    ) -> tuple[Account, Registration, PolicyDecision]:
+        account = _account(request)
+        decision = _scope_decision(
+            account=account,
+            capability_code=VIEW_SERVICE,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        if not decision.allowed:
+            raise PermissionDenied(
+                "The registration profile is unavailable.",
+                code=decision.reason_code,
+            )
+        registration = _profile_extension_registration(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            registration_id=registration_id,
+        )
+        return account, registration, decision
+
+    @extend_schema(
+        operation_id="registration_retrieve_staff_profile_extensions",
+        responses=ProfileExtensionWorkspaceSerializer,
+    )
+    def get(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        registration_id: UUID,
+    ) -> Response:
+        account, registration, decision = self._registration_and_decision(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            registration_id=registration_id,
+        )
+        correlation_id = _correlation_id(request)
+        _read_audit(
+            account=account,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            correlation_id=correlation_id,
+            capability_code=VIEW_SERVICE,
+            operation="registration.profile_extensions.retrieve",
+            target_type="registration.registration",
+            target_id=registration.id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code=decision.reason_code,
+            obligations=decision.obligations,
+        )
+        payload = _profile_extension_workspace_payload(
+            registration=registration,
+            staff_view=True,
+        )
+        return Response(ProfileExtensionWorkspaceSerializer(payload).data)
+
+    @extend_schema(
+        operation_id="registration_write_staff_profile_extension",
+        request=WriteProfileExtensionValueSerializer,
+        responses=ProfileExtensionWorkspaceSerializer,
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        registration_id: UUID,
+    ) -> Response:
+        account, registration, _ = self._registration_and_decision(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            registration_id=registration_id,
+        )
+        serializer = WriteProfileExtensionValueSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        field = RegistrationProfileExtensionField.objects.filter(
+            id=serializer.validated_data["field_id"],
+            organization_id=organization_id,
+            edition_id=edition_id,
+            status=ProfileExtensionStatus.ACTIVE,
+        ).first()
+        if field is None:
+            raise NotFound(
+                "The profile field is unavailable.",
+                code="profile_extension_field_unavailable",
+            )
+        try:
+            write_registration_profile_extension_value(
+                registration=registration,
+                field=field,
+                actor=account,
+                value=serializer.validated_data["value"],
+                correlation_id=_correlation_id(request),
+                source_channel="api",
+                reason=str(serializer.validated_data.get("reason", "")),
+            )
+        except AuthorizationDenied as error:
+            raise PermissionDenied(str(error), code=error.reason_code) from error
+        except DjangoValidationError as error:
+            raise ApiValidationError(
+                error.message_dict if hasattr(error, "message_dict") else error.messages
+            ) from error
+        payload = _profile_extension_workspace_payload(
+            registration=registration,
+            staff_view=True,
+        )
+        return Response(ProfileExtensionWorkspaceSerializer(payload).data)
 
 
 class MyRegistrationView(APIView):

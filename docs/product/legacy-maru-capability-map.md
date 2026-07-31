@@ -40,7 +40,7 @@ migration, template, database, or personal/runtime media was copied.
 | Token rotation, one-time display, health and access logs | INT-003, INT-008, AUD-001 | Retain as required operational behavior with credential vaulting and safe telemetry. |
 | Read-only closed-project snapshots | ARC-001 through ARC-005, REG-020 | Current closure manifest and archive gates are stronger. Never freeze unnecessary email, notes or sensitive media merely for convenience. |
 | Account CSV import preview and rejected-row download | INT-005, QRY-005, QRY-007 | Reuse preview and all-or-nothing safety where identity import is approved; do not revive an email allowlist. |
-| Edition-aware sidebar context | UX-001 through UX-009, ADR 0008 | Already implemented as explicit edition working context in Staff Console and bootstrap administration. |
+| Edition-aware sidebar context | UX-001 through UX-009, ADR 0008 | Already implemented as explicit edition working context in the `/admin/` shell, embedded Convention work, and specialist records. |
 | Demo journeys with hosts, volunteers and scheduled work | NFR-001 through NFR-003, OPS-008 | Extend the synthetic fixture when each owning module ships; never use production personal data. |
 | Navy, gold and ivory identity assets | UX-010, FUR-010, ADR 0021 | Adopted for Maru platform surfaces with accessible tonal scales. |
 

@@ -6,12 +6,6 @@ from maru.identity.models import Account
 from maru.participation.models import Participation
 
 
-def has_convention_workspace(account: Account) -> bool:
-    """Return whether an account has any edition participation."""
-
-    return Participation.objects.filter(account=account).exists()
-
-
 def participations_for_account(account: Account) -> QuerySet[Participation]:
     return (
         Participation.objects.filter(account=account)

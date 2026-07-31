@@ -65,7 +65,7 @@ delegation/expiry, audit, outbox retry, and cross-tenant resistance end to end.
 
 ### V03: Unified shell and action center
 
-**Outcome:** a user enters one coherent My Maru or Staff Console context and can
+**Outcome:** a user enters one coherent My Maru or Convention work context and can
 act on assigned work rather than hunt through modules.
 
 Includes frontend selection ADR, generated API client, organization/edition

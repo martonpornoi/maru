@@ -5,9 +5,9 @@ from django.contrib.auth.models import Group
 from django.db import models
 from django.http import HttpRequest
 
-admin.site.site_header = "Maru administration"
-admin.site.site_title = "Maru administration"
-admin.site.index_title = "Bootstrap administration"
+admin.site.site_header = "Maru Administration"
+admin.site.site_title = "Maru Administration"
+admin.site.index_title = "Administration"
 admin.site.empty_value_display = "—"
 
 # Maru authorization is capability- and scope-based. Django groups would be a

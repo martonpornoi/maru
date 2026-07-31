@@ -31,11 +31,16 @@ from maru.registration.models import (
     Entitlement,
     MinorRegistrationPolicy,
     PaymentAttempt,
+    ProfileExtensionReviewStatus,
+    ProfileExtensionStatus,
+    ProfileExtensionWriter,
     QuestionClassification,
     QuestionFieldType,
     QuestionVisibility,
     Registration,
     RegistrationConfiguration,
+    RegistrationProfileExtensionField,
+    RegistrationProfileExtensionValueRevision,
     RegistrationQuestion,
     RegistrationSection,
     RegistrationSubmission,
@@ -51,6 +56,7 @@ from maru.registration.profile_policy import (
     DIRECTORY_CONSENT_VERSION,
 )
 from maru.registration.services import activate_configuration
+from maru.workforce.bootstrap import STARTER_POSITIONS
 
 DEMO_NAMESPACE = UUID("6c4b5775-8251-4f11-98e1-b29e09d8fbe6")
 CURRENT_DEMO_CONFIGURATION_VERSION = 2
@@ -1112,19 +1118,63 @@ class _DemoSeeder:
             )
         self._own("role_assignments", assignment.id, created=created)
 
+    def _starter_role_bundle(
+        self,
+        *,
+        convention: ConventionSpec,
+        organization: Organization,
+        code: str,
+        name: str,
+        capability_codes: tuple[str, ...],
+    ) -> RoleBundle:
+        object_id = _stable_id(
+            "starter-role-bundle",
+            f"{convention.key}.{code}.v1",
+        )
+        collision = RoleBundle.objects.filter(
+            organization=organization,
+            code=code,
+            version=1,
+        ).first()
+        if collision is not None and collision.id != object_id:
+            raise DemoDataConflictError(
+                f"Starter role {code!r} version 1 already exists outside the fixture."
+            )
+        role = RoleBundle.objects.filter(pk=object_id).first()
+        created = role is None
+        if role is None:
+            role = RoleBundle.objects.create(
+                id=object_id,
+                organization=organization,
+                code=code,
+                name=name,
+                version=1,
+                capability_codes=list(capability_codes),
+            )
+        elif tuple(role.capability_codes) != capability_codes:
+            raise DemoDataConflictError(
+                f"Immutable starter role {code!r} has unexpected capabilities."
+            )
+        self._own("role_bundles", role.id, created=created)
+        return role
+
     def _capability_grant(
         self,
         *,
         convention: ConventionSpec,
         organization: Organization,
-        edition: EventEdition,
+        edition: EventEdition | None,
         account: Account,
         capability_code: str,
         granted_by: Account,
     ) -> None:
         object_id = _stable_id(
             "capability-grant",
-            f"{convention.key}.{edition.id}.{account.id}.{capability_code}",
+            (
+                f"{convention.key}."
+                f"{edition.id if edition is not None else 'organization'}."
+                f"{account.id}.{capability_code}"
+            ),
         )
         grant = CapabilityGrant.objects.filter(pk=object_id).first()
         created = grant is None
@@ -1142,7 +1192,7 @@ class _DemoSeeder:
             )
         elif (
             grant.organization_id != organization.id
-            or grant.edition_id != edition.id
+            or grant.edition_id != (edition.id if edition is not None else None)
             or grant.principal_id != account.id
             or grant.capability_code != capability_code
         ):
@@ -2504,6 +2554,92 @@ class _DemoSeeder:
         )
         return registration
 
+    def _profile_extension_example(
+        self,
+        *,
+        convention: ConventionSpec,
+        edition: EventEdition,
+        administrator: Account,
+        registration: Registration,
+    ) -> None:
+        """Populate the versioned extension catalog and one current value."""
+
+        field_id = _stable_id(
+            "registration-profile-extension-field",
+            f"{convention.key}.{edition.id}.arrival-detail.v1",
+        )
+        field = RegistrationProfileExtensionField.objects.filter(id=field_id).first()
+        field_created = field is None
+        if field is None:
+            field = RegistrationProfileExtensionField.objects.create(
+                id=field_id,
+                organization=edition.organization,
+                edition=edition,
+                key="arrival-detail",
+                version=1,
+                label="Additional arrival detail",
+                help_text="Synthetic attendee/staff completion example.",
+                field_type=QuestionFieldType.SHORT_TEXT,
+                purpose="Complete a missing current arrival detail.",
+                classification=QuestionClassification.PERSONAL,
+                attendee_visible=True,
+                writer_policy=ProfileExtensionWriter.ATTENDEE_AND_STAFF,
+                required=False,
+                position=10,
+                review_status=ProfileExtensionReviewStatus.APPROVED,
+                status=ProfileExtensionStatus.ACTIVE,
+                created_by=administrator,
+                approved_by=administrator,
+                approved_at=datetime(2026, 6, 13, 9, tzinfo=UTC),
+            )
+        elif (
+            field.organization_id != edition.organization_id
+            or field.edition_id != edition.id
+            or field.key != "arrival-detail"
+        ):
+            raise DemoDataConflictError(
+                f"Stable profile extension field {field_id} has unexpected scope."
+            )
+        self._own(
+            "registration_profile_extension_fields",
+            field.id,
+            created=field_created,
+        )
+
+        revision_id = _stable_id(
+            "registration-profile-extension-value",
+            f"{registration.id}.arrival-detail.1",
+        )
+        revision = RegistrationProfileExtensionValueRevision.objects.filter(
+            id=revision_id
+        ).first()
+        revision_created = revision is None
+        if revision is None:
+            revision = RegistrationProfileExtensionValueRevision.objects.create(
+                id=revision_id,
+                registration=registration,
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+                field=field,
+                field_key=field.key,
+                sequence=1,
+                value="Synthetic arrival detail",
+                actor=registration.account,
+                source_channel="demo_seed",
+                reason="",
+            )
+        elif (
+            revision.registration_id != registration.id or revision.field_id != field.id
+        ):
+            raise DemoDataConflictError(
+                f"Stable profile extension revision {revision_id} has unexpected scope."
+            )
+        self._own(
+            "registration_profile_extension_value_revisions",
+            revision.id,
+            created=revision_created,
+        )
+
     def _advance_lifecycle(
         self,
         *,
@@ -2564,6 +2700,7 @@ class _DemoSeeder:
             is_superuser=True,
         )
         personas = _personas()
+        personas_by_key = {persona.key: persona for persona in personas}
         demo_organization_ids: set[UUID] = set()
         demo_edition_ids: set[UUID] = set()
 
@@ -2588,6 +2725,16 @@ class _DemoSeeder:
                     authority=authority,
                 )
                 for authority in ROLE_DEFINITIONS
+            }
+            starter_roles = {
+                position.code: self._starter_role_bundle(
+                    convention=convention,
+                    organization=organization,
+                    code=position.code,
+                    name=position.name,
+                    capability_codes=position.capability_codes,
+                )
+                for position in STARTER_POSITIONS
             }
             accounts: dict[str, Account] = {}
 
@@ -2680,6 +2827,42 @@ class _DemoSeeder:
                             )
 
             lifecycle_actor = accounts["convention-chair"]
+            for persona_key, role_code in (
+                ("convention-chair", "convention-chair"),
+                ("board-chair", "board-member"),
+                ("registration-lead", "registration-lead"),
+                ("front-desk-volunteer", "front-desk"),
+                ("treasurer", "treasurer"),
+            ):
+                self._role_assignment(
+                    convention=convention,
+                    persona=personas_by_key[persona_key],
+                    organization=organization,
+                    edition=editions["current"],
+                    account=accounts[persona_key],
+                    role=starter_roles[role_code],
+                    granted_by=administrator,
+                )
+            for capability_code in (
+                "authorization.manage_roles",
+                "authorization.revoke",
+            ):
+                self._capability_grant(
+                    convention=convention,
+                    organization=organization,
+                    edition=None,
+                    account=lifecycle_actor,
+                    capability_code=capability_code,
+                    granted_by=administrator,
+                )
+            self._capability_grant(
+                convention=convention,
+                organization=organization,
+                edition=None,
+                account=accounts["board-chair"],
+                capability_code="authorization.manage_roles",
+                granted_by=administrator,
+            )
             for capability_code in (
                 "registration.manage_configuration",
                 "registration.view_service_summary",
@@ -2831,6 +3014,12 @@ class _DemoSeeder:
                     state=state,
                     product_code=product_code,
                 )
+            self._profile_extension_example(
+                convention=convention,
+                edition=editions["current"],
+                administrator=administrator,
+                registration=registrations["sponsor-attendee"],
+            )
             for edition_spec in convention.editions:
                 self._advance_lifecycle(
                     edition=editions[edition_spec.key],
@@ -2915,6 +3104,16 @@ class _DemoSeeder:
                 ),
                 "registration_submissions": (
                     RegistrationSubmission.objects.filter(
+                        organization_id__in=demo_organization_ids
+                    ).count()
+                ),
+                "registration_profile_extension_fields": (
+                    RegistrationProfileExtensionField.objects.filter(
+                        organization_id__in=demo_organization_ids
+                    ).count()
+                ),
+                "registration_profile_extension_value_revisions": (
+                    RegistrationProfileExtensionValueRevision.objects.filter(
                         organization_id__in=demo_organization_ids
                     ).count()
                 ),

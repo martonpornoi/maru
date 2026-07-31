@@ -8,6 +8,8 @@ const context = {
   account_id: "11111111-1111-4111-8111-111111111111",
   display_name: "Danube Convention Chair (Demo)",
   preferred_language: "hu",
+  can_access_advanced_records: true,
+  can_bootstrap_convention: false,
   memberships: [
     {
       organization_id: "22222222-2222-4222-8222-222222222222",
@@ -34,6 +36,7 @@ const context = {
       starts_on: "2026-08-13",
       ends_on: "2026-08-16",
       participation_status: "active",
+      can_transition: true,
       capacities: [
         {
           code: "staff",
@@ -53,6 +56,70 @@ const context = {
     },
   ],
 } as const;
+
+const accessWorkspace = {
+  organization_name: "Pannon Paws Foundation (Demo)",
+  edition_name: "Danube Furry Convention 2026",
+  can_revoke_assignments: true,
+  groups: [
+    {
+      code: "board-member",
+      name: "Board",
+      description: "Oversee convention preparation and accountable decisions.",
+      capability_count: 1,
+      capabilities: [
+        {
+          code: "events.view_basic",
+          label: "Events · View Basic",
+          description: "View convention edition details.",
+        },
+      ],
+    },
+    {
+      code: "front-desk",
+      name: "Front Desk",
+      description: "Serve attendees through arrival and check-in.",
+      capability_count: 1,
+      capabilities: [
+        {
+          code: "participation.view_staff_summary",
+          label: "Participation · View Staff Summary",
+          description: "View minimized participant summaries.",
+        },
+      ],
+    },
+  ],
+  assignments: [
+    {
+      id: "abababab-abab-4bab-8bab-abababababab",
+      person_display_name: "Front Desk Coordinator",
+      person_email: "front-desk@example.invalid",
+      group_code: "front-desk",
+      group_name: "Front Desk",
+      scope_label: "Danube Furry Convention 2026",
+      status: "Active",
+      effective_from: "2026-07-27T09:00:00Z",
+      expires_at: null,
+      granted_by_name: "Danube Convention Chair (Demo)",
+      approved_by_name: "Board Approver",
+    },
+  ],
+};
+
+const closureReadiness = {
+  counts: {},
+  gates: [
+    {
+      id: "90909090-9090-4090-8090-909090909090",
+      code: "finance",
+      status: "approved",
+      evidence_reference: "Finance reconciliation report 2026-08-31",
+      review_summary: "All payments, refunds, and disputes were reconciled.",
+      reviewed_at: "2026-09-01T09:30:00Z",
+    },
+  ],
+  manifest: null,
+};
 
 const people = {
   count: 2,
@@ -243,8 +310,12 @@ function jsonResponse(payload: object, status = 200): Promise<Response> {
   );
 }
 
-describe("Staff Console", () => {
+describe("Management Console", () => {
   beforeEach(() => {
+    window.history.replaceState({}, "", "/admin/workspace/");
+    const root = document.getElementById("root");
+    if (root) delete root.dataset.mode;
+    window.localStorage.clear();
     vi.stubGlobal(
       "fetch",
       vi.fn((input: RequestInfo | URL) => {
@@ -252,6 +323,19 @@ describe("Staff Console", () => {
         if (url === "/api/v1/me/context") return jsonResponse(context);
         if (url.includes("/participations?")) return jsonResponse(people);
         if (url.endsWith("/actions")) return jsonResponse(actions);
+        if (url.endsWith("/access")) return jsonResponse(accessWorkspace);
+        if (url.endsWith("/closure-readiness")) {
+          return jsonResponse(closureReadiness);
+        }
+        if (url.includes("/closure-gates/")) {
+          return jsonResponse({
+            ...closureReadiness.gates[0],
+            code: url.split("/").at(-1),
+          });
+        }
+        if (url.includes("/access/assignments/")) {
+          return jsonResponse(accessWorkspace);
+        }
         if (url === "/api/v1/me/security-history") return jsonResponse([]);
         if (url.endsWith("/registration/me")) {
           return jsonResponse({
@@ -298,6 +382,207 @@ describe("Staff Console", () => {
     );
   });
 
+  it("keeps a workspace-less administrator in the unified console", async () => {
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
+      if (String(input) === "/api/v1/me/context") {
+        return jsonResponse({
+          ...context,
+          can_bootstrap_convention: false,
+          memberships: [],
+          editions: [],
+        });
+      }
+      return jsonResponse({ detail: "Unknown test request" }, 404);
+    });
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: "No convention workspace yet" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open Specialist records" }),
+    ).toHaveAttribute("href", "/admin/");
+  });
+
+  it("establishes first leadership and starts planning without the command line", async () => {
+    const user = userEvent.setup();
+    let bootstrapped = false;
+    const bootstrapWorkspace = {
+      controller_email: "bootstrap-admin@example.invalid",
+      organizations: [
+        {
+          id: context.editions[0].organization_id,
+          slug: "pannon-paws-foundation",
+          name: "Pannon Paws Foundation",
+          status: "eligible",
+        },
+      ],
+      editions: [
+        {
+          id: context.editions[0].edition_id,
+          organization_id: context.editions[0].organization_id,
+          slug: context.editions[0].edition_slug,
+          name: context.editions[0].edition_name,
+          lifecycle: "draft",
+          starts_on: context.editions[0].starts_on,
+          ends_on: context.editions[0].ends_on,
+        },
+      ],
+      chairs: [
+        {
+          email: "chair@example.invalid",
+          display_name: "Convention Chair",
+        },
+      ],
+    };
+    vi.mocked(fetch).mockImplementation(
+      (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url === "/api/v1/me/context") {
+          if (bootstrapped) {
+            return jsonResponse({
+              ...context,
+              can_bootstrap_convention: true,
+              editions: [{ ...context.editions[0], lifecycle: "draft" }],
+            });
+          }
+          return jsonResponse({
+            ...context,
+            can_bootstrap_convention: true,
+            memberships: [],
+            editions: [],
+          });
+        }
+        if (url === "/api/v1/management/convention-bootstrap") {
+          if (init?.method === "POST") {
+            bootstrapped = true;
+            return jsonResponse(
+              {
+                organization: {
+                  ...bootstrapWorkspace.organizations[0],
+                  status: "established",
+                },
+                edition: bootstrapWorkspace.editions[0],
+                chair: bootstrapWorkspace.chairs[0],
+                created: {
+                  role_bundles: 11,
+                  position_templates: 10,
+                  departments: 1,
+                  positions: 1,
+                  role_assignments: 4,
+                  position_assignments: 1,
+                },
+              },
+              201,
+            );
+          }
+          return jsonResponse(
+            bootstrapped
+              ? {
+                  ...bootstrapWorkspace,
+                  organizations: [
+                    {
+                      ...bootstrapWorkspace.organizations[0],
+                      status: "established",
+                    },
+                  ],
+                }
+              : bootstrapWorkspace,
+          );
+        }
+        if (url.endsWith("/transition") && init?.method === "POST") {
+          return jsonResponse({
+            id: context.editions[0].edition_id,
+            lifecycle: "preparing",
+            lifecycle_version: 1,
+          });
+        }
+        if (url.includes("/participations?")) return jsonResponse(people);
+        if (url.endsWith("/actions")) return jsonResponse(actions);
+        if (url.endsWith("/access")) return jsonResponse(accessWorkspace);
+        if (url.endsWith("/closure-readiness")) {
+          return jsonResponse(closureReadiness);
+        }
+        return jsonResponse({ detail: "Unknown test request" }, 404);
+      },
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Prepare your first convention workspace",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "Establish convention leadership",
+      }),
+    ).toBeInTheDocument();
+    await user.clear(
+      screen.getByLabelText("Convention Chair account email"),
+    );
+    await user.type(
+      screen.getByLabelText("Convention Chair account email"),
+      "chair@example.invalid",
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "Permanent reason" }),
+      "Establish accountable convention leadership.",
+    );
+    await user.type(
+      screen.getByRole("textbox", {
+        name: "Type pannon-paws-foundation to confirm",
+      }),
+      "pannon-paws-foundation",
+    );
+    await user.type(
+      screen.getByLabelText(
+        "Confirm the password for Danube Convention Chair (Demo)",
+      ),
+      "correct-controller-password",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Establish leadership" }),
+    );
+
+    expect(
+      await screen.findByText("Leadership established."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Convention state" }),
+    ).toBeInTheDocument();
+    await user.type(
+      screen.getByRole("textbox", { name: "Reason for this transition" }),
+      "Begin convention planning.",
+    );
+    await user.click(screen.getByRole("button", { name: "Start planning" }));
+
+    expect(
+      await screen.findByText(
+        "Danube Furry Convention 2026 is now Preparing.",
+      ),
+    ).toBeInTheDocument();
+    const bootstrapCall = vi.mocked(fetch).mock.calls.find(
+      ([url, init]) =>
+        String(url) === "/api/v1/management/convention-bootstrap" &&
+        init?.method === "POST",
+    );
+    expect(JSON.parse(String(bootstrapCall?.[1]?.body))).toMatchObject({
+      chair_email: "chair@example.invalid",
+      confirm_organization: "pannon-paws-foundation",
+      controller_password: "correct-controller-password",
+    });
+    const transitionCall = vi.mocked(fetch).mock.calls.find(
+      ([url, init]) => String(url).endsWith("/transition") && init?.method === "POST",
+    );
+    expect(JSON.parse(String(transitionCall?.[1]?.body))).toEqual({
+      to_state: "preparing",
+      reason: "Begin convention planning.",
+    });
+  });
+
   it("opens the active convention as a useful, honest cockpit", async () => {
     render(<App />);
 
@@ -314,14 +599,34 @@ describe("Staff Console", () => {
       .toBeInTheDocument();
     expect(screen.getByText("Convention Chair", { selector: ".role-chip" }))
       .toBeInTheDocument();
-    const adminButton = screen.getByRole("button", {
-      name: "Bootstrap admin",
-    });
-    expect(adminButton).toHaveAttribute("form", "maru-admin-context-form");
-    expect(adminButton).toHaveAttribute(
-      "value",
+    expect(
+      screen.getByRole("link", { name: "Maru administration home" }),
+    ).toHaveAttribute("href", "/admin/");
+    expect(screen.getByRole("heading", { name: "Forms" })).toBeInTheDocument();
+    expect(screen.getByText("Registration staff intake")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Registration staff intake/ }),
+    ).toHaveAttribute(
+      "href",
+      `/admin/registration-assist/${context.editions[0].edition_id}/`,
+    );
+    expect(document.body.textContent).not.toContain(
       "44444444-4444-4444-8444-444444444444",
     );
+  });
+
+  it("embeds convention work without a second global navigation menu", async () => {
+    render(<App embeddedInAdmin />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Danube Furry Convention 2026",
+      }),
+    ).toBeInTheDocument();
+    expect(document.querySelector(".primary-nav")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("combobox", { name: "Convention workspace" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders convention-specific questions and conditional fields", async () => {
@@ -375,21 +680,22 @@ describe("Staff Console", () => {
       ),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Commerce" }));
+    await user.click(screen.getByRole("button", { name: "Registration" }));
     expect(
       await screen.findByText(
         "Use this page to configure registration and serve attendees through arrival.",
       ),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Reports" }));
+    await user.click(screen.getByRole("button", { name: "Reports & badges" }));
     expect(
       await screen.findByText(
         "Use this page to answer attendance questions and prepare a minimized badge-data file.",
       ),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Security" }));
+    await user.click(screen.getByText("My account"));
+    await user.click(screen.getByRole("button", { name: "Security history" }));
     expect(
       await screen.findByText(
         "Use this page to review important events for your Maru account.",
@@ -404,7 +710,7 @@ describe("Staff Console", () => {
       name: "Danube Furry Convention 2026",
     });
 
-    await user.click(screen.getByRole("button", { name: "Reports" }));
+    await user.click(screen.getByRole("button", { name: "Reports & badges" }));
 
     expect(
       await screen.findByRole("heading", { name: "Attendees and badges" }),
@@ -475,7 +781,7 @@ describe("Staff Console", () => {
     await screen.findByRole("heading", {
       name: "Danube Furry Convention 2026",
     });
-    await user.click(screen.getByRole("button", { name: "Commerce" }));
+    await user.click(screen.getByRole("button", { name: "Registration" }));
 
     expect(
       await screen.findByRole("heading", { name: "Images awaiting review" }),
@@ -495,6 +801,124 @@ describe("Staff Console", () => {
         expect.objectContaining({
           method: "POST",
           body: expect.stringContaining("Suitable profile image."),
+        }),
+      );
+    });
+  });
+
+  it("keeps low-frequency setup in a collapsible ordered guide", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", {
+      name: "Danube Furry Convention 2026",
+    });
+
+    const setupSection = screen.getByText("Convention setup").closest("details");
+    expect(setupSection).not.toHaveAttribute("open");
+    await user.click(screen.getByText("Convention setup"));
+    await user.click(screen.getByRole("button", { name: "Setup guide" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Setup guide" }),
+    ).toBeInTheDocument();
+    const steps = screen.getAllByRole("listitem");
+    expect(steps.some((step) => step.textContent?.includes("Organization")))
+      .toBe(true);
+    expect(
+      screen.getByRole("link", { name: "Browse specialist records" }),
+    ).toHaveAttribute("href", "/admin/");
+  });
+
+  it("records readiness evidence without asking for IDs or a review time", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", {
+      name: "Danube Furry Convention 2026",
+    });
+
+    await user.click(screen.getByText("Convention setup"));
+    await user.click(screen.getByRole("button", { name: "Setup guide" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Edition readiness review" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Organization id")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Reviewed at")).not.toBeInTheDocument();
+    expect(
+      screen.getAllByText(/signed-in reviewer and current server time/).length,
+    ).toBeGreaterThan(0);
+
+    await user.type(
+      screen.getByRole("textbox", {
+        name: "Privacy evidence reference",
+      }),
+      "Privacy closeout checklist 2026",
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "Privacy review summary" }),
+      "Retention and access work is complete.",
+    );
+    await user.click(screen.getAllByRole("button", { name: "Approve gate" })[0]);
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/closure-gates/privacy"),
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining("Privacy closeout checklist 2026"),
+        }),
+      );
+    });
+  });
+
+  it("shares named group access with an exact person and independent approver", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", {
+      name: "Danube Furry Convention 2026",
+    });
+
+    await user.click(await screen.findByRole("button", { name: "Manage access" }));
+    const drawer = screen.getByRole("dialog", { name: "Access to Today" });
+    expect(
+      within(drawer).getByText("Front Desk Coordinator"),
+    ).toBeInTheDocument();
+    expect(within(drawer).getByText("Recommended · Board")).toBeInTheDocument();
+    const assignmentSearch = within(drawer).getByRole("searchbox", {
+      name: "Find a person or group",
+    });
+    await user.type(assignmentSearch, "no matching person");
+    expect(
+      within(drawer).getByText("No current assignment matches that search."),
+    ).toBeInTheDocument();
+    await user.clear(assignmentSearch);
+
+    await user.type(
+      within(drawer).getByRole("textbox", { name: "Existing account email" }),
+      "helper@example.invalid",
+    );
+    await user.selectOptions(
+      within(drawer).getByRole("combobox", { name: "Group" }),
+      "front-desk",
+    );
+    await user.type(
+      within(drawer).getByRole("textbox", {
+        name: "Independent approver email",
+      }),
+      "approver@example.invalid",
+    );
+    await user.type(
+      within(drawer).getByRole("textbox", { name: "Reason" }),
+      "Front Desk shift coverage.",
+    );
+    await user.click(within(drawer).getByRole("button", { name: "Share access" }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringMatching(/\/access$/),
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining("helper@example.invalid"),
         }),
       );
     });

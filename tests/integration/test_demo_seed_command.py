@@ -49,7 +49,9 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert result["totals"]["organizations"] == 2
     assert result["totals"]["convention_series"] == 2
     assert result["totals"]["event_editions"] == 6
-    assert result["totals"]["role_bundles"] == 8
+    assert result["totals"]["role_bundles"] == 28
+    assert result["totals"]["role_assignments"] == 158
+    assert result["totals"]["capability_grants"] == 58
     assert result["totals"]["participations"] >= 150
     assert result["totals"]["participation_capacities"] >= 400
     assert result["totals"]["lifecycle_transitions"] == 12
@@ -132,6 +134,19 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     )
     assert decision.allowed
     assert decision.reason_code == "role_assignment"
+    for capability_code in (
+        "authorization.manage_roles",
+        "authorization.revoke",
+    ):
+        access_decision = decide(
+            principal=danube_chair,
+            capability_code=capability_code,
+            resource=ResourceScope(
+                organization_id=danube_current.organization_id,
+                edition_id=danube_current.id,
+            ),
+        )
+        assert access_decision.allowed
     assert RoleBundle.objects.filter(
         organization=danube_current.organization,
         code="demo-director",
@@ -250,6 +265,32 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     danube_chair.refresh_from_db()
     assert danube_chair.check_password(DEMO_PASSWORD)
     assert AttendeeFursuit.objects.filter(id=legacy_fursuit_id).exists()
+
+    access_client = Client()
+    access_client.force_login(danube_chair)
+    access_response = access_client.get(
+        reverse(
+            "api-edition-access-workspace",
+            kwargs={
+                "organization_id": danube_current.organization_id,
+                "edition_id": danube_current.id,
+            },
+        )
+    )
+    assert access_response.status_code == 200
+    access_payload = access_response.json()
+    assert access_payload["can_revoke_assignments"] is True
+    assert {group["name"] for group in access_payload["groups"]} >= {
+        "Board",
+        "Front Desk",
+        "Registration",
+        "Treasurer",
+    }
+    assert any(
+        assignment["person_email"] == "danube.front-desk-volunteer@demo.maru.invalid"
+        and assignment["group_name"] == "Front Desk"
+        for assignment in access_payload["assignments"]
+    )
 
 
 def test_demo_seed_refuses_nonlocal_settings(monkeypatch: pytest.MonkeyPatch) -> None:

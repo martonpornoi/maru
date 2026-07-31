@@ -13,9 +13,14 @@ from maru.authorization.admin import (
     _term_label,
 )
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
+from maru.core.templatetags.admin_help import (
+    FUNCTION_GROUP_BY_APP,
+    MODEL_PAGE_HELP,
+)
 from maru.events.models import (
     ArchiveAmendment,
     EditionLifecycleTransition,
+    EditionReadinessGate,
     EventEdition,
 )
 from maru.identity.models import Account, AccountSecurityEvent
@@ -115,6 +120,33 @@ def test_participation_admin_is_human_readable_and_searchable() -> None:
     assert "River Wolf" not in search_content
 
 
+def test_readiness_gate_admin_is_read_only_and_hides_account_ids() -> None:
+    client, _ = _admin_client()
+    reference = create_reference_convention()
+    reviewer = AccountFactory(display_name="Finance Reviewer")
+    EditionReadinessGate.objects.create(
+        organization_id=reference.primary_organization.id,
+        edition=reference.current_edition,
+        code=EditionReadinessGate.Code.FINANCE,
+        status=EditionReadinessGate.Status.APPROVED,
+        evidence_reference="Finance reconciliation report 2030-08-31",
+        review_summary="Payments, refunds, and disputes were reconciled.",
+        reviewed_by_id=reviewer.id,
+        reviewed_at=timezone.now(),
+    )
+
+    changelist = client.get(reverse("admin:events_editionreadinessgate_changelist"))
+
+    assert changelist.status_code == 200
+    content = changelist.content.decode()
+    assert "Finance Reviewer" in content
+    assert str(reviewer.id) not in content
+    assert "Add edition readiness gate" not in content
+
+    add_response = client.get(reverse("admin:events_editionreadinessgate_add"))
+    assert add_response.status_code == 403
+
+
 def test_admin_branding_and_domain_language_are_clear() -> None:
     client, _ = _admin_client()
 
@@ -122,12 +154,95 @@ def test_admin_branding_and_domain_language_are_clear() -> None:
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Maru administration" in content
-    assert "Bootstrap administration" in content
-    assert "Use this bootstrap area" in content
+    assert "Maru Administration" in content
+    assert "Convention work" in content
+    assert "Specialist records" in content
+    assert content.count('aria-label="Administration"') == 1
+    assert content.index("/static/admin/css/responsive.css") < content.index(
+        "/static/core/admin-responsive.css"
+    )
+    assert "Manage access" in content
+    assert f"{reverse('management-console')}?view=setup&amp;access=1" in content
+    assert "Quick start" not in content
+    assert 'class="maru-admin-quick-start"' not in content
+    assert "All administration areas" in content
+    assert "Foundation" in content
+    assert "People &amp; access" in content
+    assert "Registration &amp; finance" in content
+    assert "Attendee operations" in content
+    assert "Governance &amp; privacy" in content
+    assert "Use this administration home" in content
     assert "For example:" in content
     assert "Participation capacities" in content
+    assert "First convention setup" not in content
     assert "/admin/auth/group/" not in content
+
+
+def test_global_quick_start_is_absent_from_other_admin_views() -> None:
+    client, _ = _admin_client()
+
+    response = client.get(reverse("admin:identity_account_changelist"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'class="maru-admin-quick-start"' not in content
+    assert "Build a convention in a safe order" not in content
+    assert "Open guide" not in content
+    assert "All administration areas" not in content
+
+
+def test_admin_home_preserves_the_alphabetical_directory() -> None:
+    client, _ = _admin_client()
+
+    response = client.get(reverse("admin:index"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Quick start" not in content
+    assert "All administration areas" in content
+    assert f"{reverse('management-console')}?view=setup" in content
+    assert reverse("management-console") in content
+
+    app_list = response.context["app_list"]
+    app_names = [app["name"] for app in app_list]
+    assert app_names == sorted(app_names, key=lambda value: str(value).casefold())
+    for app in app_list:
+        model_names = [model["name"] for model in app["models"]]
+        assert model_names == sorted(
+            model_names,
+            key=lambda value: str(value).casefold(),
+        )
+
+
+def test_descriptive_directory_covers_every_registered_menu_item() -> None:
+    client, _ = _admin_client()
+
+    response = client.get(reverse("admin:index"))
+
+    registered_models = {
+        (model._meta.app_label, model._meta.model_name)
+        for model in admin.site._registry
+        if model._meta.app_label != "auth"
+    }
+    registered_apps = {app_label for app_label, _ in registered_models}
+    assert registered_models <= MODEL_PAGE_HELP.keys()
+    assert registered_apps <= FUNCTION_GROUP_BY_APP.keys()
+    assert all("For example:" in MODEL_PAGE_HELP[key] for key in registered_models)
+
+    content = response.content.decode()
+    assert "maru-admin-app--foundation" in content
+    assert "maru-admin-app--people-access" in content
+    assert "maru-admin-app--registration-finance" in content
+    assert "maru-admin-app--attendee-operations" in content
+    assert "maru-admin-app--governance" in content
+
+
+def test_removed_first_convention_setup_route_is_not_available() -> None:
+    client, _ = _admin_client()
+
+    response = client.get("/admin/workforce/bootstrap/")
+
+    assert response.status_code == 404
 
 
 def test_admin_app_change_and_login_pages_explain_their_purpose() -> None:

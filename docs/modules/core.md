@@ -1,7 +1,7 @@
 # Core module
 
 Status: Implemented foundation  
-Last updated: 2026-07-27
+Last updated: 2026-07-31
 
 ## Purpose and requirements
 
@@ -17,7 +17,8 @@ NFR-001, NFR-004, NFR-006, and NFR-008.
 - RFC 9457-style DRF problem responses
 - liveness, database readiness, and build identity endpoints
 - browser-friendly development landing page
-- consistent bootstrap-administration branding, safety mixins, and navigation
+- one consistent `/admin/` shell for convention workflows and specialist
+  records, plus administration safety mixins and navigation
 - canonical platform brand assets, accessible palette tokens, and application
   metadata
 
@@ -29,11 +30,18 @@ The platform identity is defined in
 It supports Maru's stable operational shell; convention-owned seasonal
 frontends remain replaceable clients.
 
-## Bootstrap administration
+## Administration
 
-The temporary Django administration surface is branded as Maru bootstrap
-administration. Shared admin mixins remove destructive bulk deletion and make
-command-owned records view-only. Django's generic `Group` page is hidden
+The original Django administration index is the canonical `/admin/` home.
+API-backed Convention work is embedded inside the same base template at
+`/admin/workspace/`; the embedded application does not render another global
+menu or workspace selector. Its inner pages use the same record-oriented
+heading, module, form, table, button, spacing, and responsive language as
+specialist record pages. Existing model URLs remain under `/admin/`. Shared admin mixins remove
+destructive bulk deletion and make command-owned records view-only. One
+collapsible sidebar links recurring work, contextual access sharing, and the
+permission-filtered specialist record directory.
+Django's generic `Group` page is hidden
 because Maru authority is expressed through scoped capabilities and versioned
 role bundles, not a parallel unscoped role system.
 
@@ -44,10 +52,19 @@ The header also hosts the ADR 0008 convention-workspace selector. Event-owned
 modules declare their scope explicitly; the shared shell does not infer tenant
 ownership or treat the selected edition as authorization.
 
-An authenticated Django staff account that has no edition participation is
-routed from `/staff/` to `/admin/`, where `All foundation data` remains
-available for first-time setup. Active non-administrators without a workspace
-retain the Staff Console's safe empty state.
+The administration home keeps Django's complete alphabetical application/model
+list. ADR 0027 removes the former global Quick Start because it consumed every
+administration page's top chrome. Dependency guidance and the guarded
+first-authority ceremony remain contextually in Convention work's **Setup
+guide**; record existence still does not prove approval, authority, readiness,
+or completion.
+
+Every active authenticated account enters at `/admin/`. A workspace-less
+bootstrap superuser can open the guarded leadership ceremony through
+Convention work; active non-administrators without a workspace retain the safe
+empty state. Ordinary Django record pages remain staff/model-permission
+protected. Platform staff status does not grant convention capabilities.
+Removed `/manage/`, `/staff/`, and `/admin/records/` paths do not redirect.
 
 ## Public contracts
 

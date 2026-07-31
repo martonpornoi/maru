@@ -22,6 +22,7 @@ from maru.registration.availability import assess_product_availability
 from maru.registration.models import (
     AdmissionProduct,
     QuestionFieldType,
+    QuestionVisibility,
     RegistrationConfiguration,
     RegistrationQuestion,
 )
@@ -525,11 +526,17 @@ class PublicRegistrationForm(AttendeeProfileForm):
         configuration: RegistrationConfiguration,
         include_account_fields: bool,
         account: Account | None = None,
+        include_staff_questions: bool = False,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, configuration=configuration, **kwargs)
+        questions = configuration.questions.select_related("section")
+        if not include_staff_questions:
+            questions = questions.filter(
+                visibility=QuestionVisibility.ATTENDEE_AND_STAFF
+            )
         self.dynamic_questions = list(
-            configuration.questions.select_related("section").order_by(
+            questions.order_by(
                 "section__position",
                 "position",
                 "id",
@@ -693,6 +700,7 @@ class StaffAssistedRegistrationForm(PublicRegistrationForm):
             configuration=configuration,
             include_account_fields=False,
             account=account,
+            include_staff_questions=True,
             **kwargs,
         )
         self.account = account

@@ -1,7 +1,7 @@
 # Registration operations and tester runbook
 
 Status: Repository-controlled safety workflows implemented; deployment approval required  
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 This is the step-by-step operating procedure for preparing, opening, running,
 testing, closing, and archiving one Maru registration edition. The built-in
@@ -41,8 +41,8 @@ Cancellation and refund require two different authorized people.
 
 ### 2.1 Select the working edition
 
-In the Staff Console or bootstrap administration, select the exact organization
-and edition. The edition context helps navigation but is never authorization.
+In the `/admin/` shell, select the exact organization and edition. The edition
+context helps navigation but is never authorization.
 Confirm:
 
 - edition name, time zone, currency, locale, and lifecycle;
@@ -236,7 +236,7 @@ Registration becomes discoverable only when the edition and active
 configuration are open and the selected offer is in its own window.
 
 An authorized registration lead may deliberately create a registration
-outside those windows through Staff Console Commerce. Maru exact-matches an
+outside those windows through Convention work → Registration. Maru exact-matches an
 active account by normalized email. If none exists, staff sees a warning and
 must explicitly supply the new account's display name and temporary password.
 Transfer that password through a separate secure channel; the new account is
@@ -443,7 +443,8 @@ recipient-acceptance and repricing workflows.
 
 ## 11. Attendance reporting and badge preparation
 
-Use Staff Console **Reports > Attendees and badges** for the selected edition.
+Use Convention work **Reports & badges > Attendees and badges** for the
+selected edition.
 Access requires the edition-scoped
 `registration.view_attendee_reporting` capability.
 
@@ -529,7 +530,7 @@ Minimum pre-launch test matrix:
 | Database restore | Counts and migrations reconcile from fresh target |
 
 Automated coverage is under `tests/integration/`, with generated API schema and
-Staff Console component tests. Production acceptance must also use the selected
+Convention work component tests. Production acceptance must also use the selected
 provider, SMTP server, ClamAV, object store, relay devices, browsers, assistive
 technology, printers, representative volume, and actual on-call staff.
 
@@ -551,7 +552,12 @@ owned.
 5. Run and record backup/restore and forward-reconciliation evidence.
 6. Have independent owners review the `privacy`, `finance`, `operations`,
    `security`, and `jurisdiction` readiness gates. Each decision needs an
-   evidence reference and summary.
+   evidence reference and summary. Open **Convention work → Convention
+   setup → Setup guide → Edition readiness review**. Use a readable report
+   name, controlled ticket/checklist reference, or secure document link as the
+   evidence reference. Do not enter organization/account IDs or a timestamp:
+   Maru uses the selected convention workspace, signed-in reviewer, and current
+   server time automatically.
 7. Read closure readiness. Every named count must be zero.
 8. Generate the immutable closure manifest with the recovery reference.
 9. Transition to archived. Maru rechecks that gates remain approved and

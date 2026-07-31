@@ -34,6 +34,15 @@ snapshots before archiving.
 It then writes a correlated security audit event and a versioned domain event
 plus outbox message in the same transaction.
 
+Convention work's Setup guide presents the current state, only the valid
+next lifecycle edges, a plain-language consequence, and a mandatory reason.
+Cancellation and archival also require an explicit terminal-action
+acknowledgement. The context projection says whether the signed-in person holds
+`events.transition`; hiding a control is informational only and the command,
+API policy, readiness checks, row lock, audit, and database triggers remain
+authoritative. Registration activation and sales windows are separate from
+edition lifecycle.
+
 - `GET /api/v1/organizations/{organization_id}/editions/{edition_id}`
 - `GET /api/v1/organizations/{organization_id}/editions`
 - `GET /api/v1/organizations/{organization_id}/editions/autocomplete`
@@ -54,6 +63,21 @@ every edition before making any change. The command preserves input order in
 its result and commits all target transitions, audits, domain events, and
 outbox messages atomically.
 
+Edition closeout uses:
+
+- `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/closure-readiness`;
+- `POST /api/v1/organizations/{organization_id}/editions/{edition_id}/closure-gates/{code}`;
+  and
+- `POST /api/v1/organizations/{organization_id}/editions/{edition_id}/closure-manifest`.
+
+The Convention work setup guide is the human readiness-review workflow.
+The operator chooses one of the five named gates and supplies a readable
+evidence reference plus a review summary. Maru takes organization and edition
+scope from the selected workspace and records the signed-in reviewer and
+server time automatically. The evidence reference should be a recognizable
+report name, controlled ticket/checklist reference, or secure document link;
+it is not a database ID.
+
 ## Permission and sensitivity
 
 Edition public metadata can eventually become C0 only through publication.
@@ -72,6 +96,12 @@ Edition language and time-zone fields use the same searchable reference
 choices as organization defaults. They store stable ISO language codes and an
 IANA time-zone identifier. Labels show language names and current UTC standard
 and daylight-saving offsets; labels are presentation only.
+
+Readiness-gate records are read-only in Specialist records. Their list shows the
+reviewer by display name and does not offer an Add form. Creation and
+replacement must pass through the capability-checked, audited Convention
+work/API workflow so raw organization IDs, reviewer IDs, or manual
+timestamps cannot bypass the domain service.
 
 ADR 0008 adds a persistent bootstrap-administration convention-workspace
 selector. Once an edition is selected, edition-owned lists, direct object

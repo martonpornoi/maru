@@ -4,7 +4,13 @@ const activeLifecycles = new Set(["preparing", "ready", "live", "closing"]);
 
 export function chooseInitialEdition(
   editions: EditionContext[],
+  preferredEditionId?: string,
 ): EditionContext | undefined {
+  const preferredEdition = editions.find(
+    (edition) => edition.edition_id === preferredEditionId,
+  );
+  if (preferredEdition) return preferredEdition;
+
   const remembered = window.localStorage.getItem("maru.staff.edition");
   const rememberedEdition = editions.find(
     (edition) => edition.edition_id === remembered,

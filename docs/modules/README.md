@@ -20,8 +20,11 @@ Only modules with executable behavior appear here.
   check-in
 - [`privacy operations`](privacyops.md) - subject rights, historical
   corrections, retention, and disposal evidence
-- [`Staff Console`](staff-console.md) - separate React/TypeScript staff workspace
+- [`Convention work`](staff-console.md) - React/TypeScript workflows embedded
+  in the original administration shell
 - [`demo data`](demo-data.md) - local-only synthetic cross-module fixture
+- [`Marucon admin-first rehearsal`](../operations/marucon-admin-rehearsal.md) -
+  clean-database educational scenario with bounded public-roster import
 
 Target modules that have not been implemented remain in the architecture and
 delivery plan, not as empty Django applications.

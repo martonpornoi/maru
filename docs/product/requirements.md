@@ -1,7 +1,7 @@
 # Product requirements
 
 Status: Baseline  
-Last updated: 2026-07-29
+Last updated: 2026-07-31
 
 This document defines stable product requirements. Identifiers are used by
 architecture documents, implementation issues, tests, and release notes.
@@ -53,6 +53,21 @@ architecture documents, implementation issues, tests, and release notes.
   attendee-safe explanation, authority, and operational consequences. It must
   remain separate from platform login state, support reasoned revocation and
   appeal, and never disclose one organizer's restriction to another.
+- **IDN-009 — Human access sharing:** Authorized controllers must be able to
+  review and manage access using human-readable people and role-group names.
+  Adding or changing access must select an exact individual, immutable role
+  version, tenant/edition scope, effective term, reason, and independent
+  approver; removal must remain immediate and reasoned. Contextual sharing
+  controls may recommend roles but must not create page-local ACLs, expose
+  unauthorized identities, or grant beyond either controller's authority.
+- **IDN-010 — Human login aliases:** A platform account may have one
+  case-insensitively unique human login handle in addition to its normalized
+  email. Local sign-in must accept either exact identifier without revealing
+  which identifier exists, while account recovery and verified contact remain
+  email based. Handles may contain Unicode, spaces, underscores, apostrophes,
+  and slashes used by convention communities; leading/trailing whitespace,
+  control characters, and identifiers that look like email addresses are not
+  allowed.
 
 ### Multi-convention and event editions
 
@@ -69,7 +84,10 @@ architecture documents, implementation issues, tests, and release notes.
   configuration must retain provenance and require target-edition review before
   activation.
 - **EVT-004 — Independent lifecycle:** Editions must move independently through
-  draft, preparation, live, closing, and archived states.
+  draft, preparation, ready, live, closing, archived, and cancelled states.
+  Authorized leaders must be able to review the current state, valid next
+  states, and consequences in embedded Convention work; every transition
+  requires a reason and terminal transitions require explicit confirmation.
 - **EVT-005 — Time and locale:** Each organization must define searchable,
   code-backed country, default-language, and time-zone suggestions, and each
   edition must define its authoritative time zone, languages, currencies, date
@@ -188,6 +206,13 @@ architecture documents, implementation issues, tests, and release notes.
   organizer confirmation, removal, completion, and a locked coverage plan.
   Capacity and overlap checks must be transactional; volunteers see their own
   commitment state without gaining access to other volunteers' private records.
+- **HR-010 — Workforce structure projection:** Authorized edition participants
+  must be able to understand the department and reporting hierarchy on a
+  separate, responsive page. The projection must support nested departments,
+  several leads or deputies, multi-holder positions, and one person holding
+  positions in several departments. It exposes only public operational names,
+  position labels, and reporting relationships; email, HR evidence, account
+  state, technical identifiers, and unrelated organizer data remain excluded.
 
 ### Programme, shifts, and timetable planning
 
@@ -273,6 +298,36 @@ architecture documents, implementation issues, tests, and release notes.
   artwork, and annual theme without forking domain rules. Semantic state must
   remain readable without color, and organizer assets remain separately owned,
   governed, and withdrawable.
+- **UX-011 — Contextual bootstrap guidance:** Convention work's Setup guide
+  must give new organizers one concise, ordered convention-creation path while
+  preserving the complete administration directory for later changes. The
+  setup path must distinguish organizer-, series-, edition-, and ongoing
+  tasks, respect model permissions, and must not imply that navigation order
+  grants authority or proves setup completion. It must not occupy the global
+  administration header or repeat on every record page. When an active
+  organization has no authority records, an active bootstrap superuser may use
+  a one-time, password-confirmed, exact-scope-confirmed ceremony in the
+  canonical `/admin/` workspace that delegates to the audited bootstrap
+  service; it must become a read-only completion explanation after authority
+  exists.
+- **UX-012 — Unified management console:** Recurring operations, setup
+  navigation, access management, forms, and specialist records must appear as
+  sections of the original `/admin/` shell with one collapsible,
+  permission-aware global navigation. API-backed workflows may be embedded
+  inside that shell, but must not render a second global menu or a visually
+  competing application shell. Embedded inner pages use the same
+  record-oriented title, help, module, form, table, button, spacing, and
+  responsive patterns as specialist record pages. Each operation
+  has one canonical workflow; Django records remain part of the same product
+  rather than a competing console. User-facing pages prefer
+  names, slugs, references, and labels over UUIDs, retaining technical
+  identifiers only where audit, integration, or support work genuinely needs
+  them. Command-owned evidence workflows must derive trusted scope, actor, and
+  server time rather than asking operators to copy technical IDs or manually
+  author audit timestamps. `/admin/` is the canonical authenticated home;
+  specialist records and embedded convention workflows remain below the same
+  URL hierarchy. Former `/manage/`, `/staff/`, and `/admin/records/` entry
+  points must not host or redirect to alternate interfaces.
 
 ### Registration, orders, and attendee service
 
@@ -383,6 +438,17 @@ architecture documents, implementation issues, tests, and release notes.
   deadline, restrictions, and duplicate-registration rules. It may not mark a
   paid product paid, waive payment, or silently make an incomplete profile
   public.
+- **REG-022 — Post-submission profile extensions:** An organizer may add
+  versioned, edition-owned profile fields after registrations exist without
+  changing the immutable submitted form or its schema snapshot. Every field
+  defines type, purpose, classification, attendee visibility, who may write
+  it (attendee, registration staff, or both), source provenance, review state,
+  and retirement. Values are append-only revisions with actor, time, source,
+  reason where staff acts, and audit evidence. Attendees can read and update
+  only their visible permitted fields; authorized staff can update only fields
+  permitted to staff in the exact tenant/edition scope. Staff-owned facts such
+  as Infinity-ticket status remain authoritative entitlements rather than
+  profile answers.
 
 ### Programme intake and curation
 

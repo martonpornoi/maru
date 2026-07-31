@@ -13,12 +13,46 @@ from django.utils import timezone
 from maru.core.models import UUIDTimeStampedModel
 from maru.identity.managers import AccountManager
 
+ASCII_CONTROL_LIMIT = 32
+ASCII_DELETE = 127
+
+
+def validate_login_handle(value: str) -> None:
+    """Keep human aliases printable while preserving public roster spelling."""
+
+    if "@" in value:
+        raise ValidationError(
+            "A login username cannot contain @; use an email address instead.",
+            code="login_handle_email_ambiguity",
+        )
+    if any(character.isspace() and character not in {" "} for character in value):
+        raise ValidationError(
+            "A login username cannot contain control whitespace.",
+            code="login_handle_control_whitespace",
+        )
+    if any(
+        ord(character) < ASCII_CONTROL_LIMIT or ord(character) == ASCII_DELETE
+        for character in value
+    ):
+        raise ValidationError(
+            "A login username cannot contain control characters.",
+            code="login_handle_control_character",
+        )
+
 
 class Account(AbstractBaseUser, PermissionsMixin):
     """One platform login, separate from organizer-owned person records."""
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     email = models.EmailField(unique=True)
+    login_handle = models.CharField(
+        max_length=120,
+        blank=True,
+        validators=(validate_login_handle,),
+        help_text=(
+            "Optional human sign-in name. It is unique without regard to letter case."
+        ),
+    )
     display_name = models.CharField(max_length=120, blank=True)
     preferred_language = models.CharField(max_length=35, default="en")
     is_staff = models.BooleanField(default=False)
@@ -39,6 +73,11 @@ class Account(AbstractBaseUser, PermissionsMixin):
                 Lower("email"),
                 name="account_email_case_insensitive_unique",
             ),
+            models.UniqueConstraint(
+                Lower("login_handle"),
+                condition=~models.Q(login_handle=""),
+                name="account_login_handle_case_insensitive_unique",
+            ),
             models.CheckConstraint(
                 condition=~models.Q(email=""),
                 name="account_email_not_empty",
@@ -47,10 +86,11 @@ class Account(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         self.email = AccountManager.normalize_login_email(self.email)
+        self.login_handle = self.login_handle.strip()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return self.display_name or str(self.id)
+        return self.display_name or self.login_handle or str(self.id)
 
     @property
     def has_verified_email(self) -> bool:
