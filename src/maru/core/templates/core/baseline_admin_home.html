@@ -26,7 +26,10 @@
       </div>
     </header>
 
-    <main class="baseline-page" data-page="platform-administration-home">
+    <div class="baseline-admin-layout">
+      {% include "core/_baseline_admin_navigation.html" with current_admin_page="organizations" %}
+
+      <main class="baseline-page" data-page="platform-administration-home">
       {% if messages %}
         <div class="baseline-messages" aria-live="polite">
           {% for message in messages %}
@@ -53,14 +56,9 @@
             <p class="baseline-kicker">Convention organizers</p>
             <h2 id="organization-inventory-title">Organization inventory</h2>
           </div>
-          <div class="baseline-panel-actions">
-            <span class="baseline-count">
-              {{ organizations|length }} organization{{ organizations|length|pluralize }}
-            </span>
-            <a class="baseline-primary-link" href="{% url 'baseline-create-organization' %}">
-              Create organization
-            </a>
-          </div>
+          <span class="baseline-count">
+            {{ organizations|length }} organization{{ organizations|length|pluralize }}
+          </span>
         </div>
 
         {% if organization_inventory_load_failed %}
@@ -119,6 +117,7 @@
           membership, registration, staffing, volunteer, or attendee records.
         </p>
       </aside>
-    </main>
+      </main>
+    </div>
   </body>
 </html>

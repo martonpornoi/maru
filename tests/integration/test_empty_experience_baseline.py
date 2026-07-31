@@ -72,6 +72,10 @@ def test_platform_administrator_reaches_the_platform_home() -> None:
     content = response.content.decode()
     assert 'data-page="platform-administration-home"' in content
     assert "Organizations" in content
+    assert 'aria-label="Platform administration"' in content
+    assert 'href="/admin/organizations/new/"' in content
+    assert "+ Add" in content
+    assert 'aria-current="page"' in content
     assert "No organizations yet" in content
     assert "Platform access, not participation" in content
     assert "Maru Administrator" in content

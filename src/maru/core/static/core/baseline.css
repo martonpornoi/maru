@@ -55,12 +55,64 @@ body {
   margin: clamp(2.5rem, 7vh, 5rem) auto 4rem;
 }
 
+.baseline-admin-layout {
+  display: grid;
+  width: min(88rem, calc(100% - 2rem));
+  grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  margin: clamp(2.5rem, 7vh, 5rem) auto 4rem;
+}
+
+.baseline-admin-layout .baseline-page {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.baseline-sidebar {
+  position: sticky;
+  top: 2rem;
+  align-self: start;
+  padding: 1.25rem;
+  border: 1px solid #d9d3c7;
+  background: #fff;
+}
+
+.baseline-sidebar nav {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.baseline-sidebar-link {
+  display: block;
+  padding: 0.7rem 0.75rem;
+  border-left: 0.2rem solid transparent;
+  color: #071b3a;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.baseline-sidebar-link:hover {
+  background: #f5f1e8;
+}
+
+.baseline-sidebar-link[aria-current="page"] {
+  border-left-color: #b9822e;
+  background: #f5f1e8;
+}
+
+.baseline-sidebar-link:focus-visible {
+  outline: 3px solid #b9822e;
+  outline-offset: 2px;
+}
+
 .baseline-page-heading {
   max-width: 44rem;
 }
 
 .baseline-page--form {
-  width: min(46rem, calc(100% - 2rem));
+  max-width: 64rem;
 }
 
 h1 {
@@ -263,14 +315,53 @@ h1 {
   margin: 0;
 }
 
+.baseline-section-heading {
+  margin-bottom: 1.5rem;
+}
+
+.baseline-section-heading h2 {
+  margin-top: 0.35rem;
+}
+
+.baseline-section-heading p:last-child {
+  max-width: 42rem;
+  margin: 0.55rem 0 0;
+  color: #45536a;
+  line-height: 1.55;
+}
+
+.baseline-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.25rem;
+}
+
+.baseline-field-grid--locale {
+  align-items: start;
+}
+
+.baseline-field {
+  min-width: 0;
+  margin-top: 1.25rem;
+}
+
+.baseline-field:first-child {
+  margin-top: 0;
+}
+
+.baseline-field-grid .baseline-field:nth-child(2) {
+  margin-top: 0;
+}
+
 .baseline-form label {
   display: block;
-  margin-top: 1rem;
   font-size: 0.9rem;
   font-weight: 700;
 }
 
-.baseline-form input {
+.baseline-form input,
+.baseline-form select,
+.baseline-form textarea {
   width: 100%;
   margin-top: 0.4rem;
   padding: 0.75rem 0.8rem;
@@ -281,7 +372,19 @@ h1 {
   font: inherit;
 }
 
+.baseline-form textarea {
+  min-height: 7rem;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.baseline-form select[multiple] {
+  min-height: 12rem;
+}
+
 .baseline-form input:focus,
+.baseline-form select:focus,
+.baseline-form textarea:focus,
 button:focus-visible {
   outline: 3px solid #b9822e;
   outline-offset: 2px;
@@ -319,6 +422,20 @@ button:focus-visible {
   color: #76241e;
 }
 
+.baseline-field--error input,
+.baseline-field--error select,
+.baseline-field--error textarea {
+  border-color: #9e3028;
+}
+
+.baseline-required {
+  margin-left: 0.35rem;
+  color: #76241e;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .baseline-help {
   margin: 0.55rem 0 0;
   color: #45536a;
@@ -336,6 +453,13 @@ button:focus-visible {
 .baseline-form-actions button {
   width: auto;
   margin-top: 0;
+}
+
+.baseline-form-actions--sticky {
+  justify-content: flex-end;
+  padding: 1rem;
+  border: 1px solid #d9d3c7;
+  background: #fff;
 }
 
 .baseline-account {
@@ -445,6 +569,30 @@ button:focus-visible {
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+}
+
+@media (max-width: 52rem) {
+  .baseline-admin-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .baseline-sidebar {
+    position: static;
+  }
+
+  .baseline-sidebar nav {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .baseline-field-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .baseline-field-grid .baseline-field:nth-child(2) {
+    margin-top: 1.25rem;
   }
 }
 

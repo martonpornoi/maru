@@ -3,8 +3,9 @@
 Status: Executable local Page 2
 Last updated: 2026-07-31
 
-ADR 0032 adds the first platform mutation to the controlled rebuild. It creates
-one draft organization from one required name and deliberately creates no
+ADRs 0032 and 0033 define the first platform mutation in the controlled
+rebuild. Page 2 creates one Draft organization from one required name, accepts
+the complete optional organization profile, and deliberately creates no
 convention, governance, membership, or participation records.
 
 ## Current local environment
@@ -18,8 +19,10 @@ Account kind: platform_administrator
 ```
 
 The password is local test data. Never reuse it in a deployment or real
-account. The `maru` and `marucon_rehearsal` databases are not the controlled
-rebuild database and must not be reset or migrated for this page.
+account. The controlled database currently contains the owner-created Draft
+organization `MaruCon`. The `maru` and `marucon_rehearsal` databases are not
+the controlled rebuild database and must not be reset or migrated for this
+page.
 
 ## Start Page 2
 
@@ -32,15 +35,19 @@ uv run python src/manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/admin/>, sign in as `admin`, and select
-**Create organization**. The direct route is
+**+ Add**. The direct route is
 <http://127.0.0.1:8000/admin/organizations/new/>.
 
 ## Expected behavior
 
-- only **Organization name** is editable and required;
+- the side navigation shows **Organizations** and **+ Add** on both pages;
+- only **Organization name** is required;
+- optional sections accept public identity, legal address and imprint,
+  representative and registry references, website/email/telephone, primary
+  country, default languages, and default time zone;
 - Maru normalizes whitespace and generates a stable, collision-safe slug;
 - the resulting organization has Draft lifecycle, English and UTC defaults,
-  and blank optional properties;
+  and blank omitted properties;
 - success returns to `/admin/`, shows the Draft row, and shows a one-time
   confirmation;
 - the platform administrator is recorded as audit actor only;
@@ -49,9 +56,11 @@ Open <http://127.0.0.1:8000/admin/>, sign in as `admin`, and select
 - anonymous users are sent to Sign in while ordinary and Django-staff-only
   accounts receive `403`.
 
-This temporary draft state is intentional. Page 3 will own organization
-properties. A later governance workflow must provision or backfill the
-Executive Board before activation and enforce the editing rule in IDN-012.
+This temporary Draft state is intentional. Lifecycle and slug are not form
+fields and cannot be overridden by crafted POST data. Page 3 will edit an
+existing organization such as MaruCon. A later governance workflow must
+provision or backfill the Executive Board before activation and enforce the
+editing rule in IDN-012.
 
 ## Failure and recovery
 
@@ -61,9 +70,11 @@ organization and successful audit event share one transaction, so neither can
 survive alone. Check PostgreSQL and `/health/ready`, then retry.
 
 Migration `organizations.0003_organization_draft_lifecycle` changes the default
-for newly constructed organizations to Draft. It does not rewrite existing
-organization rows. Demo and rehearsal builders continue to request Active
-explicitly.
+for newly constructed organizations to Draft. Migration
+`organizations.0004_organization_complete_profile` adds blank optional profile
+columns. Neither migration rewrites existing organization values; the existing
+MaruCon Draft remains intact. Demo and rehearsal builders continue to request
+Active explicitly.
 
 ## Next page gate
 

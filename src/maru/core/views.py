@@ -84,12 +84,18 @@ def baseline_create_organization(request: HttpRequest) -> HttpResponse:
         try:
             organization = create_draft_organization(
                 actor=actor,
-                name=form.cleaned_data["name"],
+                details=form.creation_details(),
                 correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
                 source_channel="web",
             )
         except ValidationError as error:
-            form.add_error("name", error.messages[0])
+            if hasattr(error, "message_dict"):
+                for field_name, field_errors in error.message_dict.items():
+                    target = field_name if field_name in form.fields else None
+                    for field_error in field_errors:
+                        form.add_error(target, field_error)
+            else:
+                form.add_error(None, error)
         except DatabaseError:
             logger.exception("Unable to create a draft organization")
             form.add_error(

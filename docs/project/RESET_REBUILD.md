@@ -134,11 +134,10 @@ Checklist:
 - [x] Implement empty, populated, denied, and safe database-failure states.
 - [x] Apply migration `identity.0010` to `maru_rebuild_empty` and verify the
   existing first administrator classification.
-- [ ] Obtain supported 390-pixel visual evidence with no horizontal overflow;
-  do not bypass the in-app browser URL security policy.
+- [x] Obtain supported 390-pixel visual evidence with no horizontal overflow,
+  including the populated MaruCon inventory and shared side navigation.
 - [x] Inspect the 1280-pixel desktop layout with no horizontal overflow or
-  browser runtime warnings; supported 390-pixel evidence remains pending after
-  the in-app browser rejected the temporary narrow-frame method.
+  browser runtime warnings.
 - [x] Run the complete backend, schema, frontend-preservation, migration, and
   documentation quality gates.
 - [x] Update `CURRENT.md` and add the append-only Page 1 checkpoint.
@@ -150,9 +149,9 @@ Checklist:
 - Route: `/admin/organizations/new/`
 - Contract:
   [`../product/page-contracts/02-create-organization.md`](../product/page-contracts/02-create-organization.md)
-- Requirements: IDN-002, IDN-011, IDN-012, UX-013, UX-015, AUD-001,
-  AUD-002
-- Decision: ADR 0032
+- Requirements: IDN-002, IDN-011, IDN-012, EVT-005, UX-013, UX-015,
+  UX-016, AUD-001, AUD-002, PRI-001
+- Decisions: ADR 0032 and superseding ADR 0033
 
 Checklist:
 
@@ -160,7 +159,12 @@ Checklist:
   creation time.
 - [x] Record the future Executive Board invariant and property-editing boundary
   without creating placeholder governance in Page 2.
-- [x] Add the name-only form and platform-administrator-only route.
+- [x] Add the platform-administrator-only route with name as its only required
+  field.
+- [x] After owner inspection, add persistent **Organizations** and **+ Add**
+  side navigation to Page 1 and Page 2.
+- [x] After owner inspection, expand Page 2 with the complete optional public,
+  legal/imprint, contact, and locale profile.
 - [x] Normalize the name and generate an 80-character-bounded,
   collision-safe slug with a non-ASCII fallback.
 - [x] Create Draft with code-owned English and UTC defaults and blank optional
@@ -168,8 +172,9 @@ Checklist:
 - [x] Commit the organization and its successful audit evidence atomically.
 - [x] Prove no membership, authority, board, series, edition, participation,
   registration, or workforce side effects.
-- [x] Apply `organizations.0003` to `maru_rebuild_empty` without touching the
-  preserved databases.
+- [x] Apply `organizations.0003` and additive `organizations.0004` to
+  `maru_rebuild_empty` without touching the preserved databases or rewriting
+  the owner-created MaruCon Draft.
 - [x] Inspect the desktop and 390-pixel Page 2 layouts with no horizontal
   overflow or browser runtime warning/error.
 - [x] Run the complete backend, schema, frontend-preservation, migration, and
@@ -214,8 +219,9 @@ implementation.
 
 ## Resume point
 
-The recovery snapshot and durable pre-reset branch remain available. Page 2 is
-implemented on its dedicated branch and `maru_rebuild_empty` is migrated
-through `organizations.0003`. Resume by completing any unchecked Page 2 gates,
-then obtain owner acceptance. Do not design or implement Page 3 before that
-response.
+The recovery snapshot and durable pre-reset branch remain available. Revised
+Page 2 is implemented on its dedicated branch and `maru_rebuild_empty` is
+migrated through `organizations.0004`. It contains the platform administrator
+and owner-created MaruCon Draft only. Resume by completing any unchecked Page 2
+gates, then obtain owner acceptance. Do not design or implement Page 3 before
+that response.

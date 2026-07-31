@@ -1,0 +1,17 @@
+<div class="baseline-field{% if field.errors %} baseline-field--error{% endif %}">
+  <label for="{{ field.id_for_label }}">
+    {{ field.label }}
+    {% if field.field.required %}<span class="baseline-required">Required</span>{% endif %}
+  </label>
+  {{ field }}
+  {% if field.errors %}
+    <div class="baseline-field-errors" role="alert">
+      {{ field.errors }}
+    </div>
+  {% endif %}
+  {% if field.help_text %}
+    <p class="baseline-help" id="{{ field.id_for_label }}_helptext">
+      {{ field.help_text }}
+    </p>
+  {% endif %}
+</div>

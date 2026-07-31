@@ -1,5 +1,6 @@
 """Audited platform commands for organization provisioning."""
 
+from dataclasses import dataclass, replace
 from uuid import UUID
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -14,6 +15,45 @@ from maru.organizations.models import Organization
 MAX_ORGANIZATION_NAME_LENGTH = 160
 MAX_ORGANIZATION_SLUG_LENGTH = 80
 MAX_SLUG_CANDIDATES = 10_000
+
+ORGANIZATION_CREATION_FIELDS = (
+    "name",
+    "slug",
+    "lifecycle",
+    "description",
+    "legal_name",
+    "legal_address",
+    "legal_representative",
+    "registration_authority",
+    "registration_identifier",
+    "tax_identifier",
+    "imprint_text",
+    "website_url",
+    "contact_email",
+    "contact_phone",
+    "country_code",
+    "default_language_codes",
+    "default_time_zone",
+)
+
+
+@dataclass(frozen=True, slots=True)
+class OrganizationCreationDetails:
+    name: str
+    description: str = ""
+    legal_name: str = ""
+    legal_address: str = ""
+    legal_representative: str = ""
+    registration_authority: str = ""
+    registration_identifier: str = ""
+    tax_identifier: str = ""
+    imprint_text: str = ""
+    website_url: str = ""
+    contact_email: str = ""
+    contact_phone: str = ""
+    country_code: str = ""
+    default_language_codes: tuple[str, ...] = ("en",)
+    default_time_zone: str = "UTC"
 
 
 def _normalize_organization_name(name: str) -> str:
@@ -42,8 +82,13 @@ def _slug_candidate(base: str, number: int) -> str:
     return f"{stem}{suffix}"
 
 
-def _create_with_generated_slug(*, name: str) -> Organization:
-    base = slugify(name)[:MAX_ORGANIZATION_SLUG_LENGTH].strip("-") or "organization"
+def _create_with_generated_slug(
+    *, details: OrganizationCreationDetails
+) -> Organization:
+    base = (
+        slugify(details.name)[:MAX_ORGANIZATION_SLUG_LENGTH].strip("-")
+        or "organization"
+    )
     for number in range(1, MAX_SLUG_CANDIDATES + 1):
         candidate = _slug_candidate(base, number)
         if Organization.objects.filter(slug__iexact=candidate).exists():
@@ -51,9 +96,24 @@ def _create_with_generated_slug(*, name: str) -> Organization:
         try:
             with transaction.atomic():
                 return Organization.objects.create(
-                    name=name,
+                    name=details.name,
                     slug=candidate,
                     lifecycle=Organization.Lifecycle.DRAFT,
+                    description=details.description,
+                    legal_name=details.legal_name,
+                    legal_address=details.legal_address,
+                    legal_representative=details.legal_representative,
+                    registration_authority=details.registration_authority,
+                    registration_identifier=details.registration_identifier,
+                    tax_identifier=details.tax_identifier,
+                    imprint_text=details.imprint_text,
+                    website_url=details.website_url,
+                    contact_email=details.contact_email,
+                    contact_phone=details.contact_phone,
+                    country_code=details.country_code,
+                    default_language_codes=list(details.default_language_codes)
+                    or ["en"],
+                    default_time_zone=details.default_time_zone or "UTC",
                 )
         except (IntegrityError, ValidationError):
             if Organization.objects.filter(slug__iexact=candidate).exists():
@@ -69,7 +129,7 @@ def _create_with_generated_slug(*, name: str) -> Organization:
 def create_draft_organization(
     *,
     actor: Account,
-    name: str,
+    details: OrganizationCreationDetails,
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> Organization:
@@ -78,8 +138,11 @@ def create_draft_organization(
     if not actor.is_active or not actor.is_platform_administrator:
         raise PermissionDenied("Platform administration is required.")
 
-    normalized_name = _normalize_organization_name(name)
-    organization = _create_with_generated_slug(name=normalized_name)
+    normalized_details = replace(
+        details,
+        name=_normalize_organization_name(details.name),
+    )
+    organization = _create_with_generated_slug(details=normalized_details)
     append_audit(
         AuditRecord(
             principal_kind="account",
@@ -97,7 +160,7 @@ def create_draft_organization(
             request_id=correlation_id,
             source_channel=source_channel,
             obligations=("audit",),
-            changed_fields=("name", "slug", "lifecycle"),
+            changed_fields=ORGANIZATION_CREATION_FIELDS,
             retention_class="security-standard",
         )
     )

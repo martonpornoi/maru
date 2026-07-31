@@ -1,41 +1,82 @@
 # Page 2 contract: Create organization
 
-- Status: Implemented and verified; owner inspection pending
+- Status: Revised, implemented, and verified; owner inspection pending
 - Branch: `codex/page-02-create-organization`
 - Route: `/admin/organizations/new/`
-- Requirements: IDN-002, IDN-011, IDN-012, UX-013, UX-015, AUD-001,
-  AUD-002
-- Decision: ADR 0032
+- Requirements: IDN-002, IDN-011, IDN-012, EVT-005, UX-013, UX-015,
+  UX-016, AUD-001, AUD-002, PRI-001
+- Decisions: ADR 0032 and superseding ADR 0033
 
 ## Purpose and primary user
 
-Let an active Maru platform administrator create the tenant record that later
-pages will complete with accountable governance and convention setup.
+Let an active Maru platform administrator create a complete Draft organization
+record without creating or joining a convention.
 
-The page answers one question: "What is this organization called?" It does not
-ask the operator to complete legal identity, imprint, contacts, locale,
-governance, series, edition, or convention staffing prematurely.
+The page supports two honest paths: enter only the recognizable organization
+name when nothing else is known, or capture the organization's available
+public, legal, imprint, contact, and locale details in the same creation step.
+Only the name is required.
 
 ## Placement and navigation
 
-Page 1 exposes a visible **Create organization** action in the organization
-inventory. Page 2 stays within the same minimal Maru administration shell and
-provides a clear **Back to organizations** path.
+Page 1 and Page 2 share a persistent **Platform administration** side
+navigation:
+
+- **Organizations** links to `/admin/`; and
+- **+ Add** links to `/admin/organizations/new/`.
+
+The current destination uses `aria-current="page"`. The navigation remains
+visible beside the content on desktop and becomes a compact horizontal block at
+narrow widths. Page 1 does not render a second competing creation button.
 
 On success the browser redirects to `/admin/`, where the new Draft row and a
-one-time success confirmation are visible. Page 3 will later make organization
-rows navigable; Page 2 must not link to a record page that does not exist.
+one-time success confirmation are visible. Existing organization rows do not
+become edit links until Page 3 exists.
 
 ## Information and actions
 
-The form contains one editable field:
+### Public identity
 
 - **Organization name** — required, trimmed, internal whitespace normalized,
   maximum 160 characters.
+- **Description** — optional public-facing summary, maximum 2,000 characters.
 
-The page explains that Maru generates the URL slug and creates a Draft record.
-It offers **Create organization** and **Cancel**. Submission creates no other
-domain record.
+### Legal identity and imprint
+
+- **Registered legal name** — optional, maximum 200 characters.
+- **Legal address** — optional formatted postal address, maximum 1,000
+  characters.
+- **Responsible representative** — optional printable person or office label,
+  maximum 200 characters; this is not an Executive Board appointment.
+- **Registration authority** — optional register or authority name, maximum 200
+  characters.
+- **Registration identifier** — optional registry identifier, maximum 120
+  characters.
+- **Tax identifier** — optional jurisdiction-specific identifier, maximum 120
+  characters.
+- **Additional imprint text** — optional bounded legal wording not covered by
+  the structured fields, maximum 5,000 characters.
+
+These values are organization-owned C1 information and are not published by
+being entered. The form warns against placing sensitive case, payment, or
+identity-document data in the free-text field.
+
+### Public contact
+
+- **Website** — optional HTTP(S) URL.
+- **Contact email** — optional general organization mailbox.
+- **Contact telephone** — optional international E.164 number.
+
+### Operating defaults
+
+- **Primary operating country** — optional ISO-backed selection.
+- **Default languages** — optional ordered ISO-backed selection; English is the
+  code-owned fallback.
+- **Default time zone** — optional IANA-backed selection; UTC is the code-owned
+  fallback.
+
+The page visibly states that the generated slug is code-owned and the resulting
+status is Draft. It offers **Create organization** and **Cancel**.
 
 ## Defaults and resulting state
 
@@ -43,71 +84,76 @@ The command derives a lowercase ASCII slug from the name. An empty derived
 slug falls back to `organization`; collisions receive `-2`, `-3`, and so on
 without exceeding the 80-character limit.
 
-The organization begins with:
+The organization begins with Draft lifecycle. Omitted language and time-zone
+values become `en` and `UTC`; all other optional properties remain blank.
+Active is not selectable until the Executive Board governance workflow exists.
 
-- lifecycle `draft`;
-- default language `en`;
-- default time zone `UTC`; and
-- blank optional legal name, description, website, contact, and country.
+The administrator is the attributed creator in audit only. Creation produces
+no membership, authority, Executive Board, participant, attendee, volunteer,
+series, edition, registration, or workforce record.
 
-The administrator is the attributed creator in audit only. It does not become
-a member, authority holder, participant, attendee, volunteer, or staff member.
-Page 2 deliberately creates no Executive Board. IDN-012 and ADR 0032 require
-the later governance workflow to provision or backfill that representation
-before activation and to reserve organization-property editing for the active
-Executive Board and platform administration.
-
-## Authorization and data boundary
+## Authorization, privacy, and audit
 
 Only an authenticated, active `platform_administrator` may load or submit the
 route. Anonymous visitors are sent to Sign in. Ordinary accounts, including
-accounts with Django staff status, receive `403` without learning whether a
-submitted name or slug already exists.
+Django staff accounts, receive `403` without learning whether a submitted name
+or slug exists.
 
-The creation service repeats the authorization check so a caller cannot bypass
-the view. The organization and successful audit event are committed atomically.
+The service repeats authorization and model validation. The organization and
+successful audit event commit atomically. Audit `changed_fields` identifies the
+properties written but no legal, contact, representative, tax, address, or
+imprint value is copied into audit metadata.
+
+The intended data subject is the organization. A representative name can also
+identify a person, so access remains platform/authorized-organizer only until a
+separate publication action exists. Retention follows the organization legal
+record and must be reviewed on closure; normal deletion is unavailable.
 
 ## Page states
 
-- **Initial:** empty name field, concise explanation, enabled create and cancel
-  actions.
-- **Validation:** field-local message, submitted safe value retained, no
+- **Initial:** all sections visible, name focused, optional values empty, English
+  and UTC selected, and Draft explained.
+- **Validation:** field-local messages and safe submitted values retained; no
   organization or success audit created.
-- **Success:** redirect to the populated inventory, Draft row visible, one-time
+- **Success:** redirect to the inventory, Draft row visible, one-time
   confirmation rendered.
 - **Denied:** `403` with no tenant-name or inventory disclosure and no mutation.
 - **Failure:** same form with a generic `503` alert and retry guidance; no
   partial organization or success audit survives.
-- **Loading:** ordinary browser form submission; the server never renders an
-  invented partial record.
+- **Loading:** ordinary browser submission; no invented partial record.
 
 ## Responsive and accessibility evidence
 
-The page uses one `h1`, a programmatic label, an associated error message,
-visible keyboard focus, an alert for form-wide failure, semantic links and
-buttons, and text-independent visual meaning. The single-column form must fit
+The page uses one `h1`, programmatically labelled form sections, programmatic
+field labels, associated help and error messages, visible keyboard focus, a
+form-wide alert, semantic links and buttons, and text-independent meaning. The
+side navigation identifies the current page. The form and navigation must fit
 without horizontal overflow at 390 pixels and remain comfortably bounded on
 desktop.
 
 ## Acceptance checks
 
-- active platform administrator GET and POST;
-- anonymous redirect and ordinary/staff account denial;
-- one-field required and maximum-length validation;
-- name normalization and collision-safe slug generation;
-- draft lifecycle and code-owned defaults;
-- atomic audit success and rollback on audit/database failure;
-- no membership, authority, participation, board, series, edition, volunteer,
-  registration, or workforce side effects;
-- Page 1 navigation and one-time success feedback;
-- desktop and supported narrow browser inspection; and
+- persistent **Organizations** and **+ Add** navigation on Page 1 and Page 2;
+- active platform-administrator GET and POST;
+- anonymous redirect and ordinary/staff denial;
+- name-only submission with code-owned defaults;
+- complete-profile submission and persistence;
+- URL, email, telephone, country, language, time-zone, and length validation;
+- normalized name and collision-safe bounded slug;
+- Draft-only lifecycle;
+- atomic audit success and rollback on database/audit failure;
+- audit field names without copied sensitive values;
+- no membership, authority, board, series, edition, volunteer, registration,
+  participation, or workforce side effects;
+- existing Draft records migrate with blank optional values;
+- desktop and 390-pixel browser inspection; and
 - focused plus complete quality gates and updated handoff documentation.
 
 ## Explicit non-goals
 
-- Organization record or property editing;
-- legal profile, imprint, address, registration identifiers, or publication;
-- organization activation, suspension, closure, transfer, or deletion;
-- Executive Board creation or appointment;
-- convention series or event edition creation; and
-- organizer membership, access sharing, workforce, or participation.
+- Editing the already-created MaruCon record; that remains Page 3.
+- Publishing imprint or contact information.
+- Organization activation, suspension, closure, transfer, or deletion.
+- Executive Board creation or appointment.
+- Convention series or event edition creation.
+- Organizer membership, access sharing, workforce, or participation.

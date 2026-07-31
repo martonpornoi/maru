@@ -372,9 +372,20 @@ architecture documents, implementation issues, tests, and release notes.
   organization membership, convention authority, an Executive Board, a series,
   an edition, or participation. Validation remains on the form, a successful
   creation returns to the organization inventory, and database failure leaves
-  no partial organization. The later Organization record owns legal identity,
-  imprint, contacts, locale review, activation, governance, and property
-  editing.
+  no partial organization. Name remains the only required operator-supplied
+  value even when Page 2 also accepts the optional complete profile in UX-016.
+- **UX-016 — Complete organization setup and navigation:** Page 1 and Page 2
+  must share a persistent Platform administration side navigation containing
+  **Organizations** and **+ Add**, with the current destination identified.
+  Page 2 must let the platform administrator complete public identity, legal
+  identity and address, representative and registration references, contact
+  channels, additional imprint wording, primary country, default languages,
+  and default time zone during initial creation. Only organization name is
+  required; omitted properties keep safe blank or code-owned defaults. The page
+  must make Draft status and the no-governance/no-convention boundary explicit.
+  Legal/imprint details are organization-owned C1 data, are not published merely
+  by entering them, and must be audited by field name without copying their
+  values into audit metadata.
 
 ### Registration, orders, and attendee service
 

@@ -20,10 +20,11 @@ Account kind: platform_administrator
 The password is local test data. Never reuse it in a deployment or real
 account.
 
-The database contains one account and no organizations, convention series,
-editions, memberships, participation, registrations, volunteer applications,
-or workforce assignments. The `maru` and `marucon_rehearsal` databases are not
-the Page 1 database and must not be reset.
+The database contains the platform administrator and the owner-created Draft
+organization `MaruCon`. It contains no convention series, editions,
+memberships, participation, registrations, volunteer applications, or
+workforce assignments. The `maru` and `marucon_rehearsal` databases are not the
+controlled rebuild database and must not be reset.
 
 ## Start Page 1
 
@@ -41,10 +42,10 @@ Open <http://127.0.0.1:8000/admin/> and sign in as `admin`.
 
 - anonymous `/admin/` redirects to Sign in;
 - the active platform administrator sees **Organizations**;
-- the empty database shows **No organizations yet**, zero organizations, and
-  the Page 2 **Create organization** action;
+- the page shows the persistent **Organizations** and **+ Add** side navigation;
+- an empty database shows **No organizations yet** and zero organizations;
 - the page explains **Platform access, not participation**;
-- **Create organization** opens `/admin/organizations/new/`;
+- **+ Add** opens `/admin/organizations/new/`;
 - an ordinary account, including ordinary staff, receives `403`;
 - the old administration and Convention work HTML routes remain `404`; and
 - health and versioned JSON APIs remain available.
@@ -70,5 +71,5 @@ must be removed without disturbing the preserved backend.
 ## Next page
 
 Page 2 is documented in
-[`page-02-create-organization.md`](page-02-create-organization.md). It creates
-only a draft tenant record and then returns to this inventory.
+[`page-02-create-organization.md`](page-02-create-organization.md). It creates a
+complete optional Draft organization profile and returns to this inventory.

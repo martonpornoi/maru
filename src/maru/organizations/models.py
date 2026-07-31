@@ -4,7 +4,7 @@ from typing import Any
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
-from django.core.validators import EmailValidator
+from django.core.validators import EmailValidator, RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
 
@@ -53,6 +53,47 @@ class Organization(UUIDTimeStampedModel):
         blank=True,
         validators=(EmailValidator(),),
         help_text="General organizer contact; not an account login.",
+    )
+    contact_phone = models.CharField(
+        max_length=16,
+        blank=True,
+        validators=(
+            RegexValidator(
+                regex=r"^\+[1-9]\d{6,14}$",
+                message="Enter an international telephone number such as +431234567.",
+            ),
+        ),
+        help_text="Optional public contact number stored in E.164 format.",
+    )
+    legal_address = models.TextField(
+        max_length=1000,
+        blank=True,
+        help_text="Formatted registered postal address for legal notices.",
+    )
+    legal_representative = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Printable representative or responsible office for the imprint.",
+    )
+    registration_authority = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Public register or authority maintaining the organization record.",
+    )
+    registration_identifier = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text="Public association, company, charity, or registry identifier.",
+    )
+    tax_identifier = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text="Tax identifier only where it belongs in the public legal profile.",
+    )
+    imprint_text = models.TextField(
+        max_length=5000,
+        blank=True,
+        help_text="Additional jurisdiction-specific public imprint wording.",
     )
     country_code = models.CharField(
         max_length=2,
