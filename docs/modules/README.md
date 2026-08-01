@@ -2,8 +2,11 @@
 
 Only modules with executable behavior appear here.
 
-ADR 0030 retains these backend modules; ADR 0031 currently mounts Sign in and
-Page 1's read-only platform organization inventory. References in module
+ADR 0030 retains these backend modules; the controlled interface currently
+mounts Sign in and Pages 1–4 through convention-series creation. ADR 0037 and
+`docs/project/PRODUCTION_CONSOLIDATION.md` distinguish mounted, API-only,
+preserved/unmounted, partial, absent, and deployment-gated capabilities.
+References in module
 documents to Convention work,
 Specialist records, registration pages, or other HTML surfaces describe the
 preserved pre-reset implementation unless the paragraph explicitly identifies

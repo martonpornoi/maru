@@ -258,6 +258,24 @@ architecture documents, implementation issues, tests, and release notes.
   visibility layers, group related or recurring items with explicit sequence,
   and derive interactive, API, print, signage, person, room, and staff
   projections from the same approved schedule version.
+- **SCH-009 — Three-phase work envelopes:** Every scheduled programme or
+  operational item must distinguish preparation, effective delivery, and
+  teardown intervals, with an invariant ordering of preparation start,
+  effective start, effective end, and teardown end. Effective delivery in a
+  selected space conflicts with every room-occupying phase of another item.
+  The preceding item's teardown may overlap the following item's preparation
+  in the same space as one visible turnover window; person, qualification,
+  exclusive-equipment, composite-space, and hard-availability conflicts remain
+  independently enforced. Every move or accepted warning records the old and
+  new envelope, actor, reason where required, and schedule version.
+- **SCH-010 — Access-controlled planning layers:** A schedule item must support
+  separately authorized layers for released programme copy, room operations,
+  setup and teardown work, technical riders and cues, security and crowd
+  planning, logistics, staffing demand, multimedia, accessibility delivery,
+  and departmental discussion. Layers share the item's stable identity and
+  timing but retain their own visibility, edit authority, ownership, history,
+  and publication rules. A comment or shift layer must not silently alter the
+  approved public schedule.
 
 ### Querying, reporting, and export
 
@@ -423,6 +441,18 @@ architecture documents, implementation issues, tests, and release notes.
   narrow layouts must stack without horizontal overflow. Navigation context
   never grants authority, lists another tenant's records, or accepts or
   reparents tenant ownership.
+- **UX-020 — Effective-access header:** Every mounted management record and
+  workflow must show a concise, computed summary of who may view, edit,
+  comment, approve, or administer it at the current scope. The explanation is
+  derived from platform authority, capability grants, role assignments,
+  department relationships, resource ownership, field ceilings, lifecycle,
+  and exceptional access; it is not a manually maintained page ACL label.
+  Named people are shown only to viewers already authorized to see that
+  relationship. An authorized **Manage access** action edits the underlying
+  audited assignments in context, while denied users receive an explanation
+  that does not disclose protected principals. Platform administration does
+  not imply convention participation, and restricted-case access continues to
+  require its separate reasoned or break-glass policy.
 
 ### Registration, orders, and attendee service
 
@@ -544,6 +574,16 @@ architecture documents, implementation issues, tests, and release notes.
   permitted to staff in the exact tenant/edition scope. Staff-owned facts such
   as Infinity-ticket status remain authoritative entitlements rather than
   profile answers.
+- **REG-023 — One registration, separate applications:** An account may have at
+  most one attendee registration in an edition. Hosting a panel, performing,
+  DJing, volunteering, operating a Maid Café service, submitting conbook or Art
+  Show material, applying as a dealer, and similar contribution processes are
+  separate typed applications and must not create duplicate registrations or
+  overload the attendee form. An application may require an eligible
+  registration and may create a programme item, allocation, assignment,
+  artwork, document, or other typed record only through an explicit accepted
+  transition. Application state alone grants no ticket, payment state,
+  convention role, or access.
 
 ### Programme intake and curation
 
@@ -689,6 +729,16 @@ architecture documents, implementation issues, tests, and release notes.
 - **LOG-007 — Stock control:** Merchandise and operational stock must support
   adjustments, counts, locations, low-stock signals, wastage, and
   reconciliation without allowing silent quantity edits.
+- **LOG-008 — Storage containment and whereabouts:** Year-round storage sites,
+  containers, boxes, vehicles, loading areas, venue staging areas, and rooms
+  must form a validated, acyclic containment and movement graph. The current
+  location and custody of a tracked box, asset, or stock lot are projections of
+  append-only receive, pack, move, load, unload, handover, count, and return
+  events rather than freely editable fields. Movements record responsible
+  actors, source, destination, time, edition allocation where applicable,
+  condition or discrepancy, and manifest evidence. Maru may track equipment
+  and vehicles for a documented operational purpose, but must not silently
+  track volunteers' personal location.
 
 ### Safety, accessibility, welfare, and case work
 
@@ -781,6 +831,24 @@ architecture documents, implementation issues, tests, and release notes.
 - **KNO-007 — Handover learning:** Post-event lessons must be proposed,
   reviewed, linked to evidence, and accepted into a reusable template or
   knowledge item rather than copied as unverified folklore.
+- **KNO-008 — Governed document library:** Public, ticketed, internal,
+  department-confidential, restricted, and legally held documents must retain
+  owner, purpose, applicability, classification, immutable versions, approval,
+  effective and review dates, supersession, retention, download policy, and
+  acknowledgements where required. NDAs, policies, event-type guidance,
+  department runbooks, venue documents, and internal records use the same
+  library without exposing confidential source files through public
+  renditions. Search, API delivery, and exports must enforce the viewer's
+  current scope and field policy at request and download time.
+- **KNO-009 — Typed application portfolio:** Editions must configure multiple
+  versioned application types from the shared form vocabulary, each with a
+  plain-language purpose, owning departments, eligibility, cardinality,
+  deadline, applicant and staff edit windows, field-level writer and audience,
+  review workflow, decision states, retention, and target-domain adapter.
+  Answers retain schema version, provenance, editor, and revision history.
+  Generic response sheets are not the source of truth after a submission
+  advances into its typed programme, commercial, artwork, workforce, document,
+  or service record.
 
 ### Workflow automation and responsible assistance
 
@@ -913,6 +981,14 @@ architecture documents, implementation issues, tests, and release notes.
   permission-controlled export and deletion processes.
 - **NFR-008 — Recoverability:** Backups, restoration, reconciliation, and
   disaster procedures must be tested rather than assumed.
+- **NFR-009 — Explicit input contracts:** Every operator, participant, import,
+  and API input must have a documented type, format, length or range, null and
+  blank meaning, normalization, classification, writer policy, lifecycle rule,
+  and actionable validation error. Domain services repeat security-critical
+  validation inside transactions and databases enforce durable invariants
+  where practical. Unknown fields, tenant identifiers supplied in place of
+  trusted scope, unsafe files, ambiguous local times, impossible containment,
+  and silent truncation must be rejected.
 
 ## Explicit non-goals
 

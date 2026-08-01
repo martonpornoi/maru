@@ -1,7 +1,7 @@
 # Architecture overview
 
-Status: Backend baseline with Page 1 platform administration experience
-Last updated: 2026-07-31
+Status: Target architecture with a Pages 1–4 mounted administration baseline
+Last updated: 2026-08-01
 
 ## System shape
 
@@ -9,10 +9,12 @@ Maru is an API-first modular monolith. One Django deployment may host multiple
 organizations and event editions, while separate clients consume versioned
 APIs.
 
-ADR 0030 reduced HTML to Sign in and a controlled home. ADR 0031 now mounts
-Page 1's read-only organization inventory for explicitly classified platform
-administrators. The richer clients in the diagram are preserved targets or
-backend API consumers until reintroduced through the page-by-page contract.
+ADR 0030 reduced HTML to a controlled rebuild. Pages 1–4 now mount organization
+inventory, organization creation and record management, and convention-series
+creation for explicitly classified platform administrators. ADR 0037 delivers
+the remaining system as executable vertical milestones. The richer clients in
+the diagram are preserved targets, API consumers, or absent capabilities until
+the live ledger in `docs/project/PRODUCTION_CONSOLIDATION.md` says otherwise.
 
 ```text
 Attendee web ─┐

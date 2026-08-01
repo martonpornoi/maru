@@ -1,16 +1,34 @@
 # Current project state
 
 Last updated: 2026-08-01
-Phase: Page 4 Create convention series and progressive navigation revision
-implemented; product-owner inspection is the gate before Page 5
-Convention-series record
+Phase: Production consolidation M0; branch and executable-journey plan created,
+with the edition workspace spine next
 Implementation status: The default browser exposes Sign in, the platform
 organization inventory, complete optional Draft creation, linked organization
 records, audited profile editing, protected empty-Draft deletion, and nested
 convention-series creation; the tested backend/API foundation and previous
-experience remain preserved but unmounted
+experience remain preserved but unmounted; timetable, venue, logistics,
+generic applications, governed documents, and team conversations do not yet
+have current domain modules
 
 ## Current outcome
+
+On 2026-08-01 the product owner replaced the isolated-page pause cadence with
+an Awoostria-first production-consolidation mandate. Work now continues on
+`codex/production-consolidation` from Page 4 commit `327a7d6`. ADR 0037 keeps
+the accepted Pages 1 through 4 as the management-shell grammar, retains the
+modern modular/security/API kernel, treats both unrelated remote legacy
+branches as behavior-only research, and delivers complete convention journeys
+as vertical milestones. The platform administrator remains non-participating.
+
+`docs/project/PRODUCTION_CONSOLIDATION.md` is the crash-safe master checklist
+and honest capability ledger. It distinguishes Mounted, API-only,
+Preserved/unmounted, Partial, Absent, and Deployment-gated work. Requirements
+now explicitly cover effective-access headers, one registration plus separate
+typed applications, three-phase schedule work envelopes and layers, storage
+containment and movements, a governed document library, a typed application
+portfolio, and explicit input contracts. Public Awoostria research is recorded
+without copying personal roster data.
 
 On 2026-07-31 the product owner requested a controlled restart because repeated
 administration-shell reorganizations had not produced a coherent experience.
@@ -288,8 +306,9 @@ excludes images/contact data and automated tests use a synthetic miniature.
 - The preserved frontend still passes 20 component tests, TypeScript
   typecheck/generated-contract validation, and its Vite production build, but
   it is not mounted by the baseline.
-- Documentation validation passes for 140 Markdown files and 188 unique
-  requirement identifiers.
+- Documentation validation passes for 143 Markdown files and 195 unique
+  requirement identifiers after the production-consolidation requirements,
+  ADR, research note, and live capability ledger were added.
 - Fresh migration apply passed through organizations `0004`, identity `0010`,
   and registration `0030` on `maru_rebuild_empty`; the existing MaruCon Draft
   retained its values, and broader existing-database evidence remains in the
@@ -309,7 +328,7 @@ excludes images/contact data and automated tests use a synthetic miniature.
   workflow rather than cascading deletion.
 - Page 4 creates identity only. Series editing, deactivation, transfer,
   publication, deletion/closure, and dated edition creation remain Page 5 and
-  later reviewed workflows.
+  the M1 edition-workspace milestone.
 - The verified recovery copy remains in the operating system's temporary
   directory and can eventually be cleaned, but the same pre-reset state is now
   durable in Git commit `548f15a` and branch `codex/pre-reset-20260731`.
@@ -330,8 +349,11 @@ excludes images/contact data and automated tests use a synthetic miniature.
   unavailable until their full finance workflows exist.
 - Workforce qualifications, availability, shifts, work records, assignment
   ending/replacement, approval notifications, and richer hierarchy UX remain.
-- Programme, timetable, venue catalogue, team inboxes, announcements, and
-  credentialed read projections remain planned modules.
+- Generic applications, programme, timetable, venue catalogue, logistics,
+  governed documents, team inboxes, announcements, and credentialed read
+  projections remain absent current modules. Their requirements and order are
+  stable in the production-consolidation plan, but documentation must not imply
+  they are implemented.
 - Access sharing currently assigns existing accounts only. Staff-assisted
   registration can explicitly create an unverified account, but a
   production-grade expiring invitation/password-setup flow remains required.
@@ -347,34 +369,39 @@ production-approved until these deployment and governance gates pass.
 
 ## Smallest sensible next actions
 
-1. Inspect Page 3's MaruCon Convention series section and Page 4 at
-   `/admin/organizations/marucon/series/new/`; accept or revise them without
-   submitting the live form unless a real MaruCon series is now wanted.
-2. Do not design or implement Page 5 before that response.
-3. After Page 4 acceptance, write the Page 5 Convention-series record contract.
-   It must define stable identity, editing/deactivation, history protection,
-   organization ownership, authorization, audit, and failure states before
-   implementation.
-4. Use the retained `marucon_rehearsal` database and role accounts for
+1. Commit the M0 documentation checkpoint after validation.
+2. Implement M1 Page 5 Convention-series record, Page 6 audited edition
+   creation, and Page 7 edition record/context as one executable journey.
+3. Share edition creation between HTML and API through one transactional,
+   tenant-scoped, audited application service; add human activity and outbox
+   evidence before mounting downstream domains.
+4. Add the first truthful effective-access header, labeling platform authority
+   separately from participation; do not claim department-level scope until
+   authorization scope v2 exists.
+5. Implement organization representation and department/resource authorization
+   before mounting department mutation pages.
+6. Use the retained `marucon_rehearsal` database and role accounts for
    education, permission review, and usability feedback; turn findings into
    stable requirements before extending the hierarchy editor.
-5. Select the first partner, jurisdiction, hosted payment provider,
+7. After the spine, deliver the panel proposal -> accepted programme item ->
+   three-phase venue placement -> released timetable vertical described in the
+   master checklist.
+8. Select the first partner, jurisdiction, hosted payment provider,
    SMTP/storage/scanner topology, forecast, and named operational owners.
-6. Certify provider and infrastructure failure paths, representative load,
+9. Certify provider and infrastructure failure paths, representative load,
    backups/restores, secret rotation, offline arrival, and closure.
-7. Provision independently approved retention, minor, refund, restriction,
+10. Provision independently approved retention, minor, refund, restriction,
    and readiness policies.
-8. Build badge layout/batch-printing only after the first partner confirms its
+11. Build badge layout/batch-printing only after the first partner confirms its
    printer, stock, fulfillment, and visual-template requirements.
-9. Prioritize the next purpose-built setup/approval screen from real partner
-   testing rather than exposing command-owned raw records.
 
 ## Resume instructions
 
-Read `AGENTS.md`, this file, `RESET_REBUILD.md`, `ROADMAP.md`,
+Read `AGENTS.md`, this file, `PRODUCTION_CONSOLIDATION.md`, ADR 0037,
+`RESET_REBUILD.md`, `ROADMAP.md`,
 `MARUCON_ADMIN_SCENARIO.md`, requirements IDN-009 through IDN-012, UX-009
-through UX-019, REG-001 through REG-022, HR-007/008/010, ADRs 0017 through
-0036, the Page 1 through Page 4 contracts, and the authorization, events,
+through UX-020, REG-001 through REG-023, HR-007/008/010, SCH-001 through
+SCH-010, ADRs 0017 through 0037, the Page 1 through Page 4 contracts, and the authorization, events,
 organizations, Convention work, registration, workforce, and demo-data module
 documents.
 

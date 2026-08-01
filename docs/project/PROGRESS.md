@@ -1,9 +1,13 @@
 # Delivery progress
 
-Last updated: 2026-07-31
+Status: Historical implementation ledger; not the current mounted-capability source
+Last updated: 2026-08-01
 
-This is the compact progress ledger. `CURRENT.md` explains the handoff;
-checkpoint files preserve milestone evidence; `BACKLOG.md` defines acceptance.
+This ledger preserves the sequence and verification of earlier milestones. Its
+summary stopped tracking the controlled rebuild after Page 1 and must not be
+used to infer the running interface. `CURRENT.md` explains the current handoff,
+and `PRODUCTION_CONSOLIDATION.md` is the live capability ledger and execution
+checklist. Checkpoint files preserve milestone evidence.
 
 ## Summary
 

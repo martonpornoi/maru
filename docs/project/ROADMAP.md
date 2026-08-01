@@ -3,7 +3,7 @@
 The roadmap is outcome-based. Dates are intentionally omitted until a team and
 first convention partner are known.
 
-## Current rebuild discipline
+## Current production-consolidation discipline
 
 ADR 0030 temporarily reduces the default browser experience to Sign in and one
 minimal administration home while retaining the tested backend and APIs. ADR
@@ -18,8 +18,13 @@ global while selected-organization pages appear in a named contextual section,
 and the desktop sidebar aligns to ordinary viewport padding. All retain the
 no-governance and no-participation side-effect boundary. The
 phase descriptions below are capability evidence and future outcomes, not a
-list of currently mounted pages. Pages return only after UX-013's contract is
-approved and verified one at a time.
+list of currently mounted pages. ADR 0037 now groups page contracts into
+executable vertical milestones so that complete journeys can advance without a
+mandatory pause after every isolated page. Each page still requires UX-013's
+scope, states, authorization, navigation, test, documentation, desktop, and
+narrow-viewport evidence. `PRODUCTION_CONSOLIDATION.md` is the authoritative
+mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
+milestone checklist.
 
 ## Phase 0: Discovery and risk framing
 

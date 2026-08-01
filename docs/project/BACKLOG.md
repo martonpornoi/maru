@@ -1,7 +1,12 @@
 # Implementation backlog
 
-Status: Ready for foundation implementation  
-Last updated: 2026-07-26
+Status: Historical V00–V02 acceptance backlog; foundation is implemented
+Last updated: 2026-08-01
+
+This file preserves the original foundation acceptance contracts and is not
+the current work queue. Use `PRODUCTION_CONSOLIDATION.md` for mounted,
+API-only, preserved/unmounted, partial, absent, and deployment-gated status and
+for the current milestone order.
 
 This backlog makes V00–V02 executable. Later slices remain in the delivery plan
 until their discovery and predecessor contracts are ready.

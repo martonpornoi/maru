@@ -118,10 +118,12 @@ rehearsals.
 - [Documentation standards](docs/quality/documentation-standards.md)
 - [Development setup](docs/development/setup.md)
 - [Current project state](docs/project/CURRENT.md)
+- [Production consolidation and live capability ledger](docs/project/PRODUCTION_CONSOLIDATION.md)
 - [Roadmap](docs/project/ROADMAP.md)
 - [Delivery plan](docs/project/DELIVERY_PLAN.md)
 - [Implementation backlog](docs/project/BACKLOG.md)
 - [Progress matrix](docs/project/PROGRESS.md)
+- [Awoostria reference operating-model research](docs/research/awoostria-reference-2026-08.md)
 - [Checkpoint system](docs/checkpoints/README.md)
 
 The product/architecture baseline and repository-controlled registration
