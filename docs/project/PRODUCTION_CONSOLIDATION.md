@@ -5,7 +5,7 @@ authority-provenance hardening next
 Branch: `codex/full-platform-consolidation`
 Base: `327a7d63574d0118356a0fd11ca5a316d78b2aed`  
 Started: 2026-08-01  
-Decisions: ADRs 0037–0043
+Decisions: ADRs 0037–0044
 
 This is the crash-safe delivery map for turning the retained Maru foundation
 into one understandable convention operating platform. Update this file after
@@ -593,6 +593,14 @@ not production approval.
   scoped live browser smoke.
 - [ ] Record and enforce exact actor/approver authority-source provenance for
   root grant and role issuance.
+  - [x] Accept ADR 0044's typed append-only issuance ledger, deterministic
+    source selection, non-cyclic Board ceremony, no-rebinding semantics, staged
+    reconciliation, and fail-closed activation contract.
+  - [ ] Implement additive issuance/control schema and source-aware writers.
+  - [ ] Backfill provable Board/delegation evidence and reconcile effective
+    ordinary legacy authority without inference.
+  - [ ] Activate dynamic lineage policy, database completeness guards,
+    downgrade fence, readiness, recovery, and complete verification.
 - [ ] Effective-access query/header and audited contextual assignment editor.
 - [ ] Cross-domain, access-aware human activity workspace resolving safe actor
   and target labels. Pages 5/7 already provide bounded aggregate record
@@ -707,7 +715,7 @@ count.
 
 1. Read `docs/project/CURRENT.md`.
 2. Read this file and find the first unchecked item in the active milestone.
-3. Read ADRs 0037–0043 and the page/domain contract being changed, including
+3. Read ADRs 0037–0044 and the page/domain contract being changed, including
    Page 8 for representation work.
 4. Run `git status --short --branch`; do not discard unrelated changes.
 5. Confirm the latest local checkpoint/commit and test result in `CURRENT.md`.

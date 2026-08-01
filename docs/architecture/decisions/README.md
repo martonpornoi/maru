@@ -48,6 +48,7 @@ the system.
 | [0041](0041-exact-department-and-typed-resource-authorization-scope.md) | Accepted | Add exact department and typed-resource scope with trusted resolved targets and no implicit department-tree inheritance |
 | [0042](0042-synthetic-only-educational-fixtures.md) | Accepted | Retire live public-roster rehearsal imports and require deterministic synthetic people for fixtures, tests, and tutorials |
 | [0043](0043-global-emergency-executive-board-controller-containment.md) | Accepted | Contain a compromised controller across every organization, suspend Boards that lose quorum, and deactivate the global account atomically |
+| [0044](0044-exact-authority-issuance-provenance.md) | Accepted | Pin immutable actor and approver authority sources, propagate controller loss, and preserve a non-cyclic initial Executive Board root |
 
 New ADRs use the next four-digit number and contain:
 

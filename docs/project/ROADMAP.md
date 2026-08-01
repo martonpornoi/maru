@@ -49,6 +49,10 @@ Its contextual access editor remains unmounted, and exact actor/approver
 authority-source provenance remains a production gate. ADR 0042 makes repository fixtures synthetic-
 only and removes the public-roster rehearsal implementation. ADR 0043 adds
 global platform emergency containment when a Board controller must be removed.
+ADR 0044 accepts exact actor/approver authority-source lineage, deterministic
+least-authority pinning, a non-cyclic initial Board ceremony, and staged legacy
+reconciliation. Its implementation is the active production gate before the
+contextual department editor.
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current

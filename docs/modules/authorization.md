@@ -9,7 +9,7 @@ Last updated: 2026-08-01
 
 `maru.authorization` is the deny-by-default authority boundary for IDN-002,
 IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, QRY-003, UX-020, UX-024,
-ADR 0003, ADR 0023, ADR 0040, and ADR 0041. A membership or familiar role name never
+ADR 0003, ADR 0023, ADR 0040, ADR 0041, and ADR 0044. A membership or familiar role name never
 grants broad access by itself.
 
 Platform administration is a separate principal purpose under ADR 0031.
@@ -191,9 +191,11 @@ permission protected.
 
 `check_scope_v2_readiness` emits a count-only JSON report. Migration-data
 `status` is intentionally separate from `production_status`: the latter stays
-blocked until a later accepted decision records the exact authority sources
-through which ordinary actors and approvers issued root authority. No current
-claim describes ADR 0041 as solving that independent IDN-005 invariant.
+blocked until ADR 0044's implementation records the exact authority sources
+through which ordinary actors and approvers issued root authority. ADR 0044 is
+accepted but its schema, writers, reconciliation, dynamic policy, and activation
+guards are not implemented yet. No current claim describes ADR 0041 as solving
+that independent IDN-005 invariant.
 
 The edition list/search/count/autocomplete API requires organization scope and
 filters the tenant before evaluation. An edition-only grant can retrieve its

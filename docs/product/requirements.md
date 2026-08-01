@@ -37,7 +37,10 @@ architecture documents, implementation issues, tests, and release notes.
 - **IDN-005 — Delegation:** Authorized leads must be able to grant limited,
   expiring responsibility without granting broad administrator access. Root
   authority and role changes require independent approval and cannot outlive
-  either controller's authority; authorized revocation remains immediate.
+  either controller's authority. Each controller's exact authority source must
+  be retained immutably; expiry, revocation, or invalidation of a pinned source
+  makes dependent current authority ineffective without silently rebinding to
+  another source. Authorized revocation remains immediate.
 - **IDN-006 — Purpose-partitioned person data:** Platform identity,
   organizer relationships, edition registration profiles, restricted
   operational contacts, and approved public renditions must remain distinct.

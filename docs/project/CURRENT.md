@@ -49,6 +49,13 @@ repository-controlled fixture synthetic and deletes the public-roster
 rehearsal implementation while retaining a fail-closed compatibility command.
 ADR 0043 adds platform-only emergency containment across every organization of
 one compromised controller; it is not routine Board-term management.
+ADR 0044 now accepts immutable, pinned actor/approver source lineage for root
+grants, role-bundle versions, and role assignments. It keeps initial Executive
+Board activation non-cyclic through explicit platform-bootstrap and accepted-
+appointment ceremony controls, forbids generic platform issuance, denies
+silent source rebinding, and requires staged legacy reconciliation before
+fail-closed activation. The schema and runtime implementation have not started
+yet; scope-v2 readiness therefore remains correct to report production blocked.
 
 The canonical management routes are:
 
@@ -507,6 +514,7 @@ individual module. The complete operator procedure is in
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `PRODUCTION_CONSOLIDATION.md`, ADRs 0037–0043, the
+new ADR 0044,
 Page 1–8 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
 `docs/modules/activity.md`, organization/events/authorization/audit/effects
 module docs, and the M1 migration runbook. Run `git status --short --branch`
