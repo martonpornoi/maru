@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
+from maru.authorization.issuance import create_executive_board_issuance
 from maru.authorization.models import RoleAssignment, RoleBundle
 from maru.authorization.policy import (
     PolicyDecision,
@@ -661,6 +662,35 @@ def _lock_activation_memberships(
     return memberships
 
 
+def _record_initial_activation(
+    *,
+    representation: OrganizationRepresentation,
+    organization: Organization,
+    actor: Account,
+    activated_at: datetime,
+    reason: str,
+) -> None:
+    """Persist the code-owned activation facts before provenance controls."""
+
+    representation.state = OrganizationRepresentation.State.ACTIVE
+    representation.activated_by = actor
+    representation.activated_at = activated_at
+    representation.activation_reason = reason
+    representation.aggregate_version += 1
+    representation.save(
+        update_fields=(
+            "state",
+            "activated_by",
+            "activated_at",
+            "activation_reason",
+            "aggregate_version",
+            "updated_at",
+        )
+    )
+    organization.lifecycle = Organization.Lifecycle.ACTIVE
+    organization.save(update_fields=("lifecycle", "updated_at"))
+
+
 @transaction.atomic
 def activate_executive_board(
     *,
@@ -760,8 +790,10 @@ def activate_executive_board(
         controllers=controllers,
         reason=normalized_reason,
     )
+    assignment_controls: list[tuple[RoleAssignment, RepresentationAppointment]] = []
     for index, appointment in enumerate(controllers):
-        approver = controllers[(index + 1) % len(controllers)].account
+        approver_appointment = controllers[(index + 1) % len(controllers)]
+        approver = approver_appointment.account
         assignment = RoleAssignment.objects.create(
             organization=organization,
             edition=None,
@@ -812,24 +844,31 @@ def activate_executive_board(
             changed_fields=("role_assignment",),
             source_channel=source_channel,
         )
+        assignment_controls.append((assignment, approver_appointment))
 
-    representation.state = OrganizationRepresentation.State.ACTIVE
-    representation.activated_by = actor
-    representation.activated_at = activated_at
-    representation.activation_reason = normalized_reason
-    representation.aggregate_version += 1
-    representation.save(
-        update_fields=(
-            "state",
-            "activated_by",
-            "activated_at",
-            "activation_reason",
-            "aggregate_version",
-            "updated_at",
-        )
+    _record_initial_activation(
+        representation=representation,
+        organization=organization,
+        actor=actor,
+        activated_at=activated_at,
+        reason=normalized_reason,
     )
-    organization.lifecycle = Organization.Lifecycle.ACTIVE
-    organization.save(update_fields=("lifecycle", "updated_at"))
+    create_executive_board_issuance(
+        target=role_bundle,
+        representation=representation,
+        actor=actor,
+        approver_appointment=controllers[0],
+        evaluated_at=activated_at,
+    )
+    for assignment, approver_appointment in assignment_controls:
+        create_executive_board_issuance(
+            target=assignment,
+            representation=representation,
+            actor=actor,
+            approver_appointment=approver_appointment,
+            evaluated_at=activated_at,
+        )
+
     audit = _audit(
         actor=actor,
         organization_id=organization.id,

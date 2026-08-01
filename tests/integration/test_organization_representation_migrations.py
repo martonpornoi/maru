@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib import import_module
 from uuid import uuid4
 
 import pytest
@@ -41,10 +42,6 @@ ORGANIZATIONS_BEFORE_HARDENING = (
 ORGANIZATIONS_AFTER_HARDENING = (
     "organizations",
     "0011_emergency_controller_removal_integrity",
-)
-ORGANIZATIONS_BEFORE_EMERGENCY_HARDENING = (
-    "organizations",
-    "0010_executive_board_authority_hardening",
 )
 ORGANIZATIONS_BEFORE_FIX_FORWARD = (
     "organizations",
@@ -218,11 +215,28 @@ def test_emergency_integrity_downgrade_fence_rejects_surviving_evidence() -> Non
     )
 
     try:
-        with pytest.raises(
-            RuntimeError,
-            match="Cannot reverse emergency Executive Board integrity",
+        migration = import_module(
+            "maru.organizations.migrations.0011_emergency_controller_removal_integrity"
+        )
+        historical_apps = (
+            MigrationExecutor(connection)
+            .loader.project_state([ORGANIZATIONS_AFTER_HARDENING])
+            .apps
+        )
+        # The later authority-provenance migration has its own non-empty
+        # downgrade fence and is reversed first by a whole-graph plan. Exercise
+        # this migration's independent reverse preflight directly.
+        with (
+            pytest.raises(
+                RuntimeError,
+                match="Cannot reverse emergency Executive Board integrity",
+            ),
+            connection.schema_editor() as schema_editor,
         ):
-            _migrate(ORGANIZATIONS_BEFORE_EMERGENCY_HARDENING)
+            migration.refuse_emergency_governance_downgrade(
+                historical_apps,
+                schema_editor,
+            )
     finally:
         _restore_current_graph()
 

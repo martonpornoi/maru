@@ -1,8 +1,9 @@
 # Current project state
 
 Last updated: 2026-08-01
-Phase: Production consolidation M2.2 authorization scope v2 locally verified;
-M2.3 exact authority-provenance hardening next
+Phase: Production consolidation M2.3 authority-provenance schema, compatible
+writers, provable-only backfill, and readiness locally verified; irreversible
+exact-lineage activation next
 Branch: `codex/full-platform-consolidation`
 
 ## Current outcome
@@ -43,19 +44,24 @@ append-only grant and role issuance, one-way evidence-complete revocation,
 bounded delegation, exact Position bindings, and the ordered authorization
 `0004` → workforce `0004` → authorization `0005` integrity path are present.
 The privacy-minimized readiness command separates migration-data readiness
-from production readiness; production remains blocked until exact actor and
-approver authority-source provenance is designed and stored. ADR 0042 makes every
+from production readiness; production remains blocked until ADR 0044's
+exact-lineage activation gates are installed. ADR 0042 makes every
 repository-controlled fixture synthetic and deletes the public-roster
 rehearsal implementation while retaining a fail-closed compatibility command.
 ADR 0043 adds platform-only emergency containment across every organization of
 one compromised controller; it is not routine Board-term management.
-ADR 0044 now accepts immutable, pinned actor/approver source lineage for root
+ADR 0044 accepts immutable, pinned actor/approver source lineage for root
 grants, role-bundle versions, and role assignments. It keeps initial Executive
 Board activation non-cyclic through explicit platform-bootstrap and accepted-
 appointment ceremony controls, forbids generic platform issuance, denies
 silent source rebinding, and requires staged legacy reconciliation before
-fail-closed activation. The schema and runtime implementation have not started
-yet; scope-v2 readiness therefore remains correct to report production blocked.
+fail-closed activation. Authorization `0006`, compatible Board/ordinary/
+delegated writers, recursive current and historical validation, the count-only
+readiness graph, and the dry-run-by-default provable-only Board/delegation
+backfill are implemented and locally verified. Ordinary legacy authority is
+never inferred. Production remains blocked until effective legacy rows are
+deliberately recreated and the dormant completeness guards, exact policy
+switch, activation marker, and downgrade fence are installed.
 
 The canonical management routes are:
 
@@ -388,6 +394,40 @@ Current scope-v2 evidence is:
   client stability, Staff Console typecheck/19 tests/production build, and
   whitespace checks pass.
 
+Current exact authority-provenance evidence is:
+
+- authorization `0006` adds typed append-only issuance/control tables,
+  monotonic ordinals, exact target/basis/attribution/source/scope/horizon
+  guards, immutable history, clean-empty reverse, and nonempty downgrade
+  refusal;
+- Executive Board activation, direct grants, immutable role definitions, role
+  assignments, and delegation write their exact evidence in the target/audit/
+  event/outbox transaction, while platform status is excluded from ordinary
+  organizer authority;
+- recursive current and historical evaluation is bounded and cycle-safe,
+  selects the least-authority source deterministically, and never silently
+  rebinds a dependent record to an equivalent source;
+- `check_authority_provenance_readiness` reports only stable aggregate blocker
+  and review counts. Zero data blockers do not change its blocked production
+  status while exact policy, completeness, and fence gates remain unresolved;
+- `backfill_provable_authority_provenance` is read-only by default, requires
+  both apply and stopped-writer acknowledgement to mutate, handles exact
+  active/suspended/ended Board history and parent-first delegation, is
+  idempotent, and leaves ordinary legacy authority untouched; and
+- the database also rejects concurrent actor/approver controls that reuse one
+  principal for an issuance; a two-connection regression proves exactly one
+  competing transaction commits; and
+- the root combined PostgreSQL provenance gate passes 168 tests in 227.48
+  seconds. The focused backfill and readiness gates pass 24 and eight tests;
+  issuance, backfill, and readiness reach 100, 95, and 91 percent branch-aware
+  coverage. The definitive repository-wide run passes all 964 tests in 590.97
+  seconds at 90.41 percent branch coverage. Ruff formatting/lint, strict mypy
+  across 205 source files, Django local/deploy checks, migration drift, OpenAPI
+  and generated-client stability, Staff Console typecheck/19 tests/production
+  build, Python/frontend dependency audits, and documentation validation for
+  171 Markdown files/195 requirement identifiers pass. Restore/PITR and final
+  live browser evidence remain open for this tranche.
+
 The populated synthetic `maru_consolidated_demo` database applied
 authorization `0004`, workforce `0004`, and authorization `0005` in dependency
 order. Both scope-v2 and representation readiness report zero blockers;
@@ -463,6 +503,18 @@ restore the entire database to one pre-write recovery point; do not reverse an
 individual module. The complete operator procedure is in
 `docs/operations/authorization-scope-v2-migration-and-recovery.md`.
 
+Authorization `0006` is a third stopped-writer stage. It adds the exact
+issuance ledger and compatible writers without requiring legacy rows to have
+manufactured sources. After migration, operators run the count-only provenance
+readiness report, dry-run `backfill_provable_authority_provenance`, and may
+apply only exact Board/delegated evidence with the explicit stopped-writer
+acknowledgement. Any issuance makes downgrade of `0006` invalid. Current
+platform-operator inactivity does not erase a historically exact activation,
+but it never becomes organizer authority. The complete procedure is in
+`docs/operations/authority-provenance-migration-and-recovery.md`. The later
+activation-marker/completeness/fence migration has not been implemented and
+must remain a separate irreversible stage.
+
 ## Known limits and production gates
 
 - The unified shell is implemented and backend-tested; current desktop/
@@ -477,7 +529,7 @@ individual module. The complete operator procedure is in
   and representation/platform matrices pass. Representative restore/PITR,
   accessibility, complete visual states, and owner rehearsal are open. Routine
   expiry, replacement, ending, planned suspension/reactivation, invitation
-  delivery, authority-source provenance, and complete effective-access
+  delivery, exact-lineage activation, and complete effective-access
   explanations remain later M2. Exact department/resource scope exists below
   the UI, but a contextual editor and computed explanation are not mounted.
 - Programme, typed applications, venues/mergeable spaces, three-phase
@@ -496,9 +548,10 @@ individual module. The complete operator procedure is in
 
 ## Smallest sensible next actions
 
-1. Record and implement exact actor/approver authority-source provenance for
-   root grant and role issuance; keep production readiness blocked until it is
-   queryable and enforced.
+1. Reconcile every effective ordinary legacy authority row without inference,
+   then implement and rehearse ADR 0044's dormant completeness guards,
+   audited irreversible activation marker, point-in-time exact policy switch,
+   and downgrade fence.
 2. Add the Awoostria-shaped synthetic department template, mounted hierarchy/
    position workflow, and computed effective-access explanation on top of the
    exact scope boundary.
@@ -513,12 +566,12 @@ individual module. The complete operator procedure is in
 
 ## Resume instructions
 
-Read `AGENTS.md`, this file, `PRODUCTION_CONSOLIDATION.md`, ADRs 0037–0043, the
-new ADR 0044,
+Read `AGENTS.md`, this file, `PRODUCTION_CONSOLIDATION.md`, ADRs 0037–0044,
 Page 1–8 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
 `docs/modules/activity.md`, organization/events/authorization/audit/effects
 module docs, and the M1 migration runbook. Run `git status --short --branch`
-and continue with the first unchecked M2 provenance/hierarchy item. Do not treat backend
+and continue with ADR 0044's activation-marker/policy-cutover item before the
+hierarchy editor. Do not treat backend
 evidence as proof
 of browser or deployment readiness. Preserve
 concurrent changes and the non-participating platform boundary.

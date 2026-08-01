@@ -1,11 +1,14 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db import connection, transaction
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
+from maru.authorization import commands as authority_commands
 from maru.authorization.commands import (
     EXECUTIVE_BOARD_ROLE_CODE,
     AuthorityCommandValidationError,
@@ -16,6 +19,8 @@ from maru.authorization.commands import (
     revoke_role_assignment,
 )
 from maru.authorization.models import (
+    AuthorityControl,
+    AuthorityIssuance,
     CapabilityGrant,
     RoleAssignment,
     RoleBundle,
@@ -42,6 +47,7 @@ from tests.factories import (
     OrganizationFactory,
     RoleBundleFactory,
 )
+from tests.support.authority import activate_synthetic_board as _board_controllers
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -72,13 +78,31 @@ def _grant_management(
     capability_code: str,
     *,
     edition: EventEdition | None = None,
-) -> None:
-    CapabilityGrantFactory(
+) -> CapabilityGrant:
+    existing = CapabilityGrant.objects.filter(
         principal=account,
         organization=organization,
         edition=edition,
         capability_code=capability_code,
-        effective_from=timezone.now() - timedelta(minutes=1),
+        revoked_at__isnull=True,
+    ).first()
+    if existing is not None:
+        return existing
+    first, second = _board_controllers(organization)
+    actor, approver = (first, second) if account.id != second.id else (second, first)
+    return grant_capability_direct(
+        actor=actor,
+        approver=approver,
+        recipient=account,
+        capability_code=capability_code,
+        target=_edition_target(edition)
+        if edition is not None
+        else _organization_target(organization),
+        effective_from=timezone.now(),
+        expires_at=None,
+        reason="Establish exact synthetic command authority.",
+        correlation_id=uuid4(),
+        source_channel="test",
     )
 
 
@@ -88,21 +112,51 @@ def _dual_managers(
     *,
     edition: EventEdition | None = None,
 ) -> tuple[Account, Account]:
-    actor = AccountFactory()
-    approver = AccountFactory()
-    _grant_management(
-        actor,
-        organization,
-        capability_code,
-        edition=edition,
+    del capability_code, edition
+    return _board_controllers(organization)
+
+
+def _authorized_role_bundle(
+    organization: Organization,
+    *,
+    capability_codes: tuple[str, ...] = ("events.view_basic",),
+    code: str | None = None,
+) -> RoleBundle:
+    actor, approver = _board_controllers(organization)
+    stable_code = code or f"synthetic-role-{uuid4().hex[:12]}"
+    return create_role_bundle_version(
+        actor=actor,
+        approver=approver,
+        target=_organization_target(organization),
+        code=stable_code,
+        name="Synthetic authorized role",
+        capability_codes=capability_codes,
+        reason="Create a provenance-backed synthetic role definition.",
+        correlation_id=uuid4(),
+        source_channel="test",
     )
-    _grant_management(
-        approver,
-        organization,
-        capability_code,
-        edition=edition,
+
+
+def _bounded_management_grant(
+    *,
+    principal: Account,
+    organization: Organization,
+    capability_code: str,
+    expires_at: datetime,
+) -> CapabilityGrant:
+    actor, approver = _board_controllers(organization)
+    return grant_capability_direct(
+        actor=actor,
+        approver=approver,
+        recipient=principal,
+        capability_code=capability_code,
+        target=_organization_target(organization),
+        effective_from=timezone.now(),
+        expires_at=expires_at,
+        reason="Create bounded provenance-backed controller authority.",
+        correlation_id=uuid4(),
+        source_channel="test",
     )
-    return actor, approver
 
 
 def _scoped_positions() -> tuple[
@@ -167,7 +221,7 @@ def test_direct_grant_requires_two_authorities_and_commits_complete_evidence() -
     )
     recipient = AccountFactory()
     correlation_id = uuid4()
-    effective_from = timezone.now() - timedelta(seconds=1)
+    effective_from = timezone.now()
 
     grant = grant_capability_direct(
         actor=actor,
@@ -184,6 +238,32 @@ def test_direct_grant_requires_two_authorities_and_commits_complete_evidence() -
     assert grant.granted_by == actor
     assert grant.approved_by == approver
     assert grant.delegated_from is None
+    issuance = AuthorityIssuance.objects.get(capability_grant=grant)
+    controls = {
+        control.role: control
+        for control in AuthorityControl.objects.select_related(
+            "source_issuance"
+        ).filter(issuance=issuance)
+    }
+    assert set(controls) == {
+        AuthorityControl.Role.ACTOR,
+        AuthorityControl.Role.APPROVER,
+    }
+    assert controls[AuthorityControl.Role.ACTOR].principal == actor
+    assert controls[AuthorityControl.Role.APPROVER].principal == approver
+    assert (
+        controls[AuthorityControl.Role.ACTOR].source_issuance.role_assignment.principal
+        == actor
+    )
+    assert (
+        controls[
+            AuthorityControl.Role.APPROVER
+        ].source_issuance.role_assignment.principal
+        == approver
+    )
+    assert all(
+        control.source_issuance_id < issuance.ordinal for control in controls.values()
+    )
     assert decide(
         principal=recipient,
         capability_code="events.transition",
@@ -209,6 +289,179 @@ def test_direct_grant_requires_two_authorities_and_commits_complete_evidence() -
         "scope_level": "edition",
     }
     assert OutboxMessage.objects.get(event=event).workload_pool == "security"
+
+
+def test_unproven_legacy_controllers_fail_closed_without_target_or_ledger() -> None:
+    organization = OrganizationFactory()
+    actor = AccountFactory()
+    approver = AccountFactory()
+    recipient = AccountFactory()
+    for principal in (actor, approver):
+        CapabilityGrantFactory(
+            organization=organization,
+            principal=principal,
+            capability_code="authorization.grant_direct",
+            effective_from=timezone.now() - timedelta(minutes=1),
+        )
+    correlation_id = uuid4()
+
+    with pytest.raises(AuthorizationDenied) as captured:
+        grant_capability_direct(
+            actor=actor,
+            approver=approver,
+            recipient=recipient,
+            capability_code="events.view_basic",
+            target=_organization_target(organization),
+            effective_from=timezone.now(),
+            expires_at=None,
+            reason="Legacy rows must not become inferred provenance.",
+            correlation_id=correlation_id,
+        )
+
+    assert captured.value.reason_code == "authority_source_unavailable"
+    assert not CapabilityGrant.objects.filter(
+        principal=recipient,
+        capability_code="events.view_basic",
+    ).exists()
+    assert not AuthorityIssuance.objects.exists()
+    assert not AuthorityControl.objects.exists()
+    denial = AuditEvent.objects.get(correlation_id=correlation_id)
+    assert denial.outcome == AuditEvent.Outcome.DENY
+    assert denial.reason_code == "authority_source_unavailable"
+
+
+def test_controller_accounts_are_locked_in_stable_database_order() -> None:
+    first = AccountFactory()
+    second = AccountFactory()
+    with transaction.atomic(), CaptureQueriesContext(connection) as queries:
+        authority_commands._lock_controllers_in_stable_order(
+            actor=second,
+            approver=first,
+        )
+
+    lock_query = next(
+        query["sql"]
+        for query in queries.captured_queries
+        if "identity_account" in query["sql"] and "FOR UPDATE" in query["sql"]
+    )
+    assert 'ORDER BY "identity_account"."id" ASC' in lock_query
+
+
+def test_role_definition_accepts_bounded_point_in_time_control_sources() -> None:
+    organization = OrganizationFactory()
+    actor = AccountFactory()
+    approver = AccountFactory()
+    expiry = timezone.now() + timedelta(minutes=30)
+    actor_grant = _bounded_management_grant(
+        principal=actor,
+        organization=organization,
+        capability_code="authorization.manage_roles",
+        expires_at=expiry,
+    )
+    approver_grant = _bounded_management_grant(
+        principal=approver,
+        organization=organization,
+        capability_code="authorization.manage_roles",
+        expires_at=expiry,
+    )
+
+    role = create_role_bundle_version(
+        actor=actor,
+        approver=approver,
+        target=_organization_target(organization),
+        code="bounded-definition",
+        name="Bounded definition",
+        capability_codes=("events.view_basic",),
+        reason="A role definition is authorized at one reviewed point in time.",
+        correlation_id=uuid4(),
+    )
+
+    issuance = AuthorityIssuance.objects.get(role_bundle=role)
+    controls = {
+        control.role: control.source_issuance_id
+        for control in AuthorityControl.objects.filter(issuance=issuance)
+    }
+    assert controls == {
+        AuthorityControl.Role.ACTOR: AuthorityIssuance.objects.get(
+            capability_grant=actor_grant
+        ).ordinal,
+        AuthorityControl.Role.APPROVER: AuthorityIssuance.objects.get(
+            capability_grant=approver_grant
+        ).ordinal,
+    }
+
+
+def test_source_selection_pins_direct_authority_before_equivalent_role() -> None:
+    edition = EventEditionFactory()
+    organization = edition.organization
+    actor, approver = _board_controllers(organization)
+    management_role = _authorized_role_bundle(
+        organization,
+        capability_codes=("authorization.grant_direct",),
+    )
+    role_sources: list[RoleAssignment] = []
+    direct_sources: list[CapabilityGrant] = []
+    for principal, independent_approver in (
+        (actor, approver),
+        (approver, actor),
+    ):
+        role_sources.append(
+            assign_role(
+                actor=principal,
+                approver=independent_approver,
+                recipient=principal,
+                target=_edition_target(edition),
+                role_bundle_id=management_role.id,
+                effective_from=timezone.now(),
+                expires_at=None,
+                reason="Create an equivalent role-based controller source.",
+                correlation_id=uuid4(),
+            )
+        )
+        direct_sources.append(
+            grant_capability_direct(
+                actor=principal,
+                approver=independent_approver,
+                recipient=principal,
+                capability_code="authorization.grant_direct",
+                target=_edition_target(edition),
+                effective_from=timezone.now(),
+                expires_at=None,
+                reason="Create the deterministic direct controller source.",
+                correlation_id=uuid4(),
+            )
+        )
+
+    final_grant = grant_capability_direct(
+        actor=actor,
+        approver=approver,
+        recipient=AccountFactory(),
+        capability_code="events.view_basic",
+        target=_edition_target(edition),
+        effective_from=timezone.now(),
+        expires_at=None,
+        reason="Pin the least-authority deterministic sources.",
+        correlation_id=uuid4(),
+    )
+
+    final_issuance = AuthorityIssuance.objects.get(capability_grant=final_grant)
+    pinned = {
+        control.role: control.source_issuance_id
+        for control in AuthorityControl.objects.filter(issuance=final_issuance)
+    }
+    expected_direct = {
+        AuthorityControl.Role.ACTOR: AuthorityIssuance.objects.get(
+            capability_grant=direct_sources[0]
+        ).ordinal,
+        AuthorityControl.Role.APPROVER: AuthorityIssuance.objects.get(
+            capability_grant=direct_sources[1]
+        ).ordinal,
+    }
+    assert pinned == expected_direct
+    assert not set(pinned.values()) & {
+        AuthorityIssuance.objects.get(role_assignment=source).ordinal
+        for source in role_sources
+    }
 
 
 def test_commands_persist_exact_department_and_resource_scope() -> None:
@@ -249,7 +502,7 @@ def test_commands_persist_exact_department_and_resource_scope() -> None:
         recipient=recipient,
         capability_code="events.view_basic",
         target=first_target,
-        effective_from=timezone.now() - timedelta(seconds=1),
+        effective_from=timezone.now(),
         expires_at=None,
         reason="Limit event visibility to one exact position.",
         correlation_id=grant_correlation,
@@ -292,7 +545,7 @@ def test_commands_persist_exact_department_and_resource_scope() -> None:
         edition=edition,
     )
     role_recipient = AccountFactory()
-    role = RoleBundleFactory(organization=organization)
+    role = _authorized_role_bundle(organization)
     department_target = resolve_department_target(
         organization_id=organization.id,
         edition_id=edition.id,
@@ -306,7 +559,7 @@ def test_commands_persist_exact_department_and_resource_scope() -> None:
         recipient=role_recipient,
         target=department_target,
         role_bundle_id=role.id,
-        effective_from=timezone.now() - timedelta(seconds=1),
+        effective_from=timezone.now(),
         expires_at=None,
         reason="Cover one exact department.",
         correlation_id=assignment_correlation,
@@ -371,6 +624,14 @@ def test_direct_grant_denies_invalid_approval_without_state_or_effect(
     assert not CapabilityGrant.objects.filter(
         principal=recipient,
         capability_code="events.view_basic",
+    ).exists()
+    assert not AuthorityIssuance.objects.filter(
+        capability_grant__principal=recipient,
+        capability_grant__capability_code="events.view_basic",
+    ).exists()
+    assert not AuthorityControl.objects.filter(
+        issuance__capability_grant__principal=recipient,
+        issuance__capability_grant__capability_code="events.view_basic",
     ).exists()
     assert not DomainEvent.objects.filter(correlation_id=correlation_id).exists()
     denial = AuditEvent.objects.get(correlation_id=correlation_id)
@@ -542,21 +803,20 @@ def test_new_authority_cannot_outlive_either_controller() -> None:
     actor = AccountFactory()
     approver = AccountFactory()
     now = timezone.now()
-    CapabilityGrantFactory(
-        organization=organization,
+    _bounded_management_grant(
         principal=actor,
+        organization=organization,
         capability_code="authorization.grant_direct",
-        effective_from=now - timedelta(minutes=1),
         expires_at=now + timedelta(days=2),
     )
-    CapabilityGrantFactory(
-        organization=organization,
+    _bounded_management_grant(
         principal=approver,
+        organization=organization,
         capability_code="authorization.grant_direct",
-        effective_from=now - timedelta(minutes=1),
         expires_at=now + timedelta(days=1),
     )
     correlation_id = uuid4()
+    requested_start = timezone.now()
 
     with pytest.raises(AuthorityCommandValidationError) as captured:
         grant_capability_direct(
@@ -565,7 +825,7 @@ def test_new_authority_cannot_outlive_either_controller() -> None:
             recipient=AccountFactory(),
             capability_code="events.view_basic",
             target=_organization_target(organization),
-            effective_from=now,
+            effective_from=requested_start,
             expires_at=now + timedelta(days=1, seconds=1),
             reason="The approver does not hold authority for this long.",
             correlation_id=correlation_id,
@@ -817,7 +1077,7 @@ def test_generic_role_commands_cannot_manage_executive_board_authority() -> None
                 reason="Attempt to share reserved Board authority.",
                 correlation_id=assign_correlation,
             )
-        assert unavailable.value.reason_code == "role_bundle_unavailable"
+        assert unavailable.value.reason_code == "authority_source_unavailable"
         assert not RoleAssignment.objects.filter(
             organization=organization,
             principal=recipient,
@@ -962,6 +1222,14 @@ def test_role_bundle_denial_validation_and_effect_failure_are_atomic(
         organization=organization,
         code="rolled-back-role",
     ).exists()
+    assert not AuthorityIssuance.objects.filter(
+        role_bundle__organization=organization,
+        role_bundle__code="rolled-back-role",
+    ).exists()
+    assert not AuthorityControl.objects.filter(
+        issuance__role_bundle__organization=organization,
+        issuance__role_bundle__code="rolled-back-role",
+    ).exists()
     assert (
         AuditEvent.objects.get(correlation_id=failed_correlation).reason_code
         == "role_bundle_failed"
@@ -976,13 +1244,13 @@ def test_role_assignment_and_revocation_have_complete_policy_and_event_spine() -
         edition=edition,
     )
     recipient = AccountFactory()
-    role = RoleBundleFactory(
-        organization=edition.organization,
+    role = _authorized_role_bundle(
+        edition.organization,
         code="edition-controller",
-        capability_codes=["events.transition"],
+        capability_codes=("events.transition",),
     )
     assigned_correlation = uuid4()
-    effective_from = timezone.now() - timedelta(seconds=1)
+    effective_from = timezone.now()
 
     assignment = assign_role(
         actor=actor,
@@ -1056,9 +1324,9 @@ def test_role_assignment_requires_scope_and_hides_other_tenant_bundle() -> None:
         "authorization.manage_roles",
     )
     recipient = AccountFactory()
-    edition_role = RoleBundleFactory(
-        organization=organization,
-        capability_codes=["events.transition"],
+    edition_role = _authorized_role_bundle(
+        organization,
+        capability_codes=("events.transition",),
     )
 
     with pytest.raises(AuthorityCommandValidationError) as missing_scope:
@@ -1095,6 +1363,40 @@ def test_role_assignment_requires_scope_and_hides_other_tenant_bundle() -> None:
     assert denial.outcome == AuditEvent.Outcome.DENY
 
 
+def test_role_assignment_rejects_unproven_bundle_without_orphan_evidence() -> None:
+    organization = OrganizationFactory()
+    actor, approver = _board_controllers(organization)
+    unproven = RoleBundleFactory(organization=organization)
+    recipient = AccountFactory()
+    issuance_count = AuthorityIssuance.objects.count()
+    control_count = AuthorityControl.objects.count()
+    correlation_id = uuid4()
+
+    with pytest.raises(AuthorizationDenied) as captured:
+        assign_role(
+            actor=actor,
+            approver=approver,
+            recipient=recipient,
+            target=_organization_target(organization),
+            role_bundle_id=unproven.id,
+            effective_from=timezone.now(),
+            expires_at=None,
+            reason="An unproven definition cannot establish current authority.",
+            correlation_id=correlation_id,
+        )
+
+    assert captured.value.reason_code == "role_bundle_unavailable"
+    assert not RoleAssignment.objects.filter(
+        role_bundle=unproven,
+        principal=recipient,
+    ).exists()
+    assert AuthorityIssuance.objects.count() == issuance_count
+    assert AuthorityControl.objects.count() == control_count
+    denial = AuditEvent.objects.get(correlation_id=correlation_id)
+    assert denial.outcome == AuditEvent.Outcome.DENY
+    assert denial.reason_code == "role_bundle_unavailable"
+
+
 def test_role_assignment_duplicate_and_effect_failures_roll_back(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1104,7 +1406,7 @@ def test_role_assignment_duplicate_and_effect_failures_roll_back(
         "authorization.manage_roles",
     )
     recipient = AccountFactory()
-    role = RoleBundleFactory(organization=organization)
+    role = _authorized_role_bundle(organization)
     existing = RoleAssignment.objects.create(
         organization=organization,
         principal=recipient,
@@ -1167,6 +1469,14 @@ def test_role_assignment_duplicate_and_effect_failures_roll_back(
         ).count()
         == 1
     )
+    assert not AuthorityIssuance.objects.filter(
+        role_assignment__principal=recipient,
+        role_assignment__role_bundle=role,
+    ).exists()
+    assert not AuthorityControl.objects.filter(
+        issuance__role_assignment__principal=recipient,
+        issuance__role_assignment__role_bundle=role,
+    ).exists()
     assert (
         AuditEvent.objects.get(correlation_id=failed_correlation).reason_code
         == "role_assignment_failed"
@@ -1178,24 +1488,28 @@ def test_role_assignment_cannot_outlive_role_management_authority() -> None:
     actor = AccountFactory()
     approver = AccountFactory()
     recipient = AccountFactory()
-    role = RoleBundleFactory(organization=organization)
+    role = _authorized_role_bundle(organization)
     now = timezone.now()
-    management_role = RoleBundleFactory(
-        organization=organization,
-        capability_codes=["authorization.manage_roles"],
+    management_role = _authorized_role_bundle(
+        organization,
+        capability_codes=("authorization.manage_roles",),
     )
+    board_actor, board_approver = _board_controllers(organization)
     for principal, expires_at in (
         (actor, now + timedelta(days=3)),
         (approver, now + timedelta(days=1)),
     ):
-        RoleAssignment.objects.create(
-            organization=organization,
-            principal=principal,
-            role_bundle=management_role,
-            effective_from=now - timedelta(minutes=1),
+        assign_role(
+            actor=board_actor,
+            approver=board_approver,
+            recipient=principal,
+            target=_organization_target(organization),
+            role_bundle_id=management_role.id,
+            effective_from=now,
             expires_at=expires_at,
-            granted_by=AccountFactory(),
-            reason="Bounded role-management authority.",
+            reason="Create bounded role-management authority.",
+            correlation_id=uuid4(),
+            source_channel="test",
         )
     correlation_id = uuid4()
 

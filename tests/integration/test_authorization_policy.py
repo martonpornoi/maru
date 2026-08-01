@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
@@ -7,7 +7,10 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
+from maru.authorization.catalog import POLICY_VERSION
+from maru.authorization.commands import grant_capability_direct
 from maru.authorization.models import (
+    AuthorityIssuance,
     CapabilityGrant,
     RoleBundle,
     ScopedResourceBinding,
@@ -24,6 +27,7 @@ from maru.authorization.policy import (
 from maru.authorization.services import AuthorizationDenied, delegate_capability
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.identity.models import Account
+from maru.organizations.models import Organization
 from maru.workforce.models import Department, Position, PositionTemplate
 from tests.factories import (
     AccountFactory,
@@ -33,6 +37,7 @@ from tests.factories import (
     RoleAssignmentFactory,
     RoleBundleFactory,
 )
+from tests.support.authority import activate_synthetic_board
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -126,12 +131,29 @@ def _workforce_resources() -> tuple[
     )
 
 
-def _grant_delegation_authority(actor: object, organization: object) -> None:
-    CapabilityGrantFactory(
-        principal=actor,
-        organization=organization,
-        capability_code="authorization.delegate",
+def _provenance_parent(
+    *,
+    organization: Organization,
+    target: ResolvedAuthorizationTarget,
+    capability_code: str = "events.view_basic",
+    duration: timedelta | None = timedelta(days=2),
+) -> tuple[Account, Account, CapabilityGrant, datetime]:
+    actor, approver = activate_synthetic_board(organization)
+    effective_from = timezone.now()
+    expires_at = effective_from + duration if duration is not None else None
+    parent = grant_capability_direct(
+        actor=actor,
+        approver=approver,
+        recipient=actor,
+        capability_code=capability_code,
+        target=target,
+        effective_from=effective_from,
+        expires_at=expires_at,
+        reason="Establish an exact synthetic delegation parent.",
+        correlation_id=uuid4(),
+        source_channel="test",
     )
+    return actor, approver, parent, effective_from
 
 
 def test_direct_organization_grant_covers_an_edition_and_limits_fields() -> None:
@@ -611,27 +633,24 @@ def test_scope_ceiling_requires_edition_and_rejects_self_capability_grant() -> N
 
 def test_delegation_must_be_narrower_and_not_outlive_parent() -> None:
     edition = EventEditionFactory()
-    actor = AccountFactory()
     recipient = AccountFactory()
-    now = timezone.now()
-    parent = CapabilityGrantFactory(
-        principal=actor,
-        granted_by=AccountFactory(),
-        organization=edition.organization,
-        effective_from=now - timedelta(minutes=1),
-        expires_at=now + timedelta(days=2),
+    organization_target = _target(organization_id=edition.organization_id)
+    edition_target = _target(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
     )
-    _grant_delegation_authority(actor, edition.organization)
+    actor, _, parent, _ = _provenance_parent(
+        organization=edition.organization,
+        target=organization_target,
+    )
+    now = timezone.now()
 
     correlation_id = uuid4()
     child = delegate_capability(
         actor=actor,
         recipient=recipient,
         parent_grant_id=parent.id,
-        target=_target(
-            organization_id=edition.organization_id,
-            edition_id=edition.id,
-        ),
+        target=edition_target,
         effective_from=now,
         expires_at=now + timedelta(days=1),
         reason="Cover one edition.",
@@ -639,6 +658,11 @@ def test_delegation_must_be_narrower_and_not_outlive_parent() -> None:
     )
 
     assert child.delegated_from_id == parent.id
+    parent_issuance = parent.authority_issuance
+    child_issuance = child.authority_issuance
+    assert child_issuance.ordinal > parent_issuance.ordinal
+    assert child_issuance.controls.count() == 0
+    assert child.delegated_from.authority_issuance.ordinal == parent_issuance.ordinal
     audit = AuditEvent.objects.get(correlation_id=correlation_id)
     event = DomainEvent.objects.get(correlation_id=correlation_id)
     assert audit.outcome == AuditEvent.Outcome.ALLOW
@@ -653,10 +677,7 @@ def test_delegation_must_be_narrower_and_not_outlive_parent() -> None:
     assert decide(
         principal=recipient,
         capability_code="events.view_basic",
-        resource=_target(
-            organization_id=edition.organization_id,
-            edition_id=edition.id,
-        ),
+        resource=edition_target,
     ).allowed
 
     with pytest.raises(AuthorizationDenied) as wrong_scope:
@@ -677,7 +698,7 @@ def test_delegation_must_be_narrower_and_not_outlive_parent() -> None:
             actor=actor,
             recipient=recipient,
             parent_grant_id=parent.id,
-            target=_target(organization_id=edition.organization_id),
+            target=organization_target,
             effective_from=now,
             expires_at=None,
             reason="No expiry.",
@@ -688,19 +709,12 @@ def test_delegation_must_be_narrower_and_not_outlive_parent() -> None:
 
 def test_delegation_preserves_exact_department_and_resource_containment() -> None:
     department, _, first_binding, _, second_binding = _workforce_resources()
-    actor = AccountFactory()
     recipient = AccountFactory()
-    now = timezone.now()
-    parent = CapabilityGrantFactory(
-        principal=actor,
-        granted_by=AccountFactory(),
-        organization=department.organization,
-        edition=department.edition,
-        department=department,
-        effective_from=now - timedelta(minutes=1),
-        expires_at=now + timedelta(days=2),
+    department_target = resolve_department_target(
+        organization_id=department.organization_id,
+        edition_id=department.edition_id,
+        department_id=department.id,
     )
-    _grant_delegation_authority(actor, department.organization)
     first_target = resolve_resource_target(
         organization_id=department.organization_id,
         edition_id=department.edition_id,
@@ -713,8 +727,14 @@ def test_delegation_preserves_exact_department_and_resource_containment() -> Non
         department_id=department.id,
         resource_binding_id=second_binding.id,
     )
+    assert department_target is not None
     assert first_target is not None
     assert second_target is not None
+    actor, _, parent, _ = _provenance_parent(
+        organization=department.organization,
+        target=department_target,
+    )
+    now = timezone.now()
 
     child = delegate_capability(
         actor=actor,
@@ -739,18 +759,10 @@ def test_delegation_preserves_exact_department_and_resource_containment() -> Non
         resource=second_target,
     ).allowed
 
-    resource_actor = AccountFactory()
-    exact_parent = CapabilityGrantFactory(
-        principal=resource_actor,
-        granted_by=AccountFactory(),
+    resource_actor, _, exact_parent, _ = _provenance_parent(
         organization=department.organization,
-        edition=department.edition,
-        department=department,
-        resource_binding=first_binding,
-        effective_from=now - timedelta(minutes=1),
-        expires_at=now + timedelta(days=2),
+        target=first_target,
     )
-    _grant_delegation_authority(resource_actor, department.organization)
     with pytest.raises(AuthorizationDenied) as sibling_scope:
         delegate_capability(
             actor=resource_actor,
@@ -801,20 +813,99 @@ def test_delegation_requires_separate_meta_authority_and_audits_denial() -> None
     ).exists()
 
 
-def test_delegation_outbox_failure_rolls_back_grant_and_records_safe_error(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_delegation_rejects_an_unproven_named_parent() -> None:
     edition = EventEditionFactory()
-    actor = AccountFactory()
+    actor, _ = activate_synthetic_board(edition.organization)
     recipient = AccountFactory()
     now = timezone.now()
     parent = CapabilityGrantFactory(
         principal=actor,
         organization=edition.organization,
-        effective_from=now - timedelta(minutes=1),
+        effective_from=now,
+        expires_at=now + timedelta(days=2),
     )
-    _grant_delegation_authority(actor, edition.organization)
     correlation_id = uuid4()
+
+    with pytest.raises(AuthorizationDenied) as captured:
+        delegate_capability(
+            actor=actor,
+            recipient=recipient,
+            parent_grant_id=parent.id,
+            target=_target(
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+            ),
+            effective_from=now,
+            expires_at=now + timedelta(days=1),
+            reason="Attempt to delegate a legacy authority row.",
+            correlation_id=correlation_id,
+        )
+
+    assert captured.value.reason_code == "parent_authority_unproven"
+    assert not CapabilityGrant.objects.filter(
+        delegated_from=parent,
+        principal=recipient,
+    ).exists()
+    assert not DomainEvent.objects.filter(correlation_id=correlation_id).exists()
+    assert AuditEvent.objects.get(correlation_id=correlation_id).reason_code == (
+        "parent_authority_unproven"
+    )
+
+
+def test_delegation_rejects_malformed_parent_issuance_lineage() -> None:
+    edition = EventEditionFactory()
+    actor, _ = activate_synthetic_board(edition.organization)
+    recipient = AccountFactory()
+    now = timezone.now()
+    parent = CapabilityGrantFactory(
+        principal=actor,
+        organization=edition.organization,
+        effective_from=now,
+        expires_at=now + timedelta(days=2),
+    )
+    malformed = AuthorityIssuance.objects.create(
+        capability_grant=parent,
+        policy_version=POLICY_VERSION,
+        evaluated_at=now,
+    )
+    assert malformed.controls.count() == 0
+
+    with pytest.raises(AuthorizationDenied) as captured:
+        delegate_capability(
+            actor=actor,
+            recipient=recipient,
+            parent_grant_id=parent.id,
+            target=_target(
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+            ),
+            effective_from=now,
+            expires_at=now + timedelta(days=1),
+            reason="Attempt to delegate malformed provenance.",
+            correlation_id=uuid4(),
+        )
+
+    assert captured.value.reason_code == "parent_authority_lineage_invalid"
+    assert not CapabilityGrant.objects.filter(
+        delegated_from=parent,
+        principal=recipient,
+    ).exists()
+
+
+def test_delegation_outbox_failure_rolls_back_grant_and_records_safe_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    edition = EventEditionFactory()
+    recipient = AccountFactory()
+    organization_target = _target(organization_id=edition.organization_id)
+    actor, _, parent, _ = _provenance_parent(
+        organization=edition.organization,
+        target=organization_target,
+        duration=None,
+    )
+    now = timezone.now()
+    correlation_id = uuid4()
+    issuance_count = AuthorityIssuance.objects.count()
 
     def fail_publish(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("synthetic effect failure")
@@ -844,6 +935,7 @@ def test_delegation_outbox_failure_rolls_back_grant_and_records_safe_error(
         principal=recipient,
     ).exists()
     assert not DomainEvent.objects.filter(correlation_id=correlation_id).exists()
+    assert AuthorityIssuance.objects.count() == issuance_count
     failure = AuditEvent.objects.get(correlation_id=correlation_id)
     assert failure.outcome == AuditEvent.Outcome.ERROR
     assert failure.reason_code == "delegation_failed"
@@ -851,24 +943,22 @@ def test_delegation_outbox_failure_rolls_back_grant_and_records_safe_error(
 
 def test_revoked_parent_invalidates_delegated_child() -> None:
     edition = EventEditionFactory()
-    actor = AccountFactory()
     recipient = AccountFactory()
-    now = timezone.now()
-    parent = CapabilityGrantFactory(
-        principal=actor,
-        organization=edition.organization,
-        effective_from=now - timedelta(minutes=1),
-        expires_at=now + timedelta(days=2),
+    organization_target = _target(organization_id=edition.organization_id)
+    edition_target = _target(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
     )
-    _grant_delegation_authority(actor, edition.organization)
+    actor, approver, parent, _ = _provenance_parent(
+        organization=edition.organization,
+        target=organization_target,
+    )
+    now = timezone.now()
     delegate_capability(
         actor=actor,
         recipient=recipient,
         parent_grant_id=parent.id,
-        target=_target(
-            organization_id=edition.organization_id,
-            edition_id=edition.id,
-        ),
+        target=edition_target,
         effective_from=now,
         expires_at=now + timedelta(days=1),
         reason="Temporary event access.",
@@ -885,14 +975,38 @@ def test_revoked_parent_invalidates_delegated_child() -> None:
             "updated_at",
         )
     )
+    replacement_start = timezone.now()
+    replacement = grant_capability_direct(
+        actor=actor,
+        approver=approver,
+        recipient=actor,
+        capability_code="events.view_basic",
+        target=organization_target,
+        effective_from=replacement_start,
+        expires_at=replacement_start + timedelta(days=2),
+        reason="Create a distinct replacement without rebinding descendants.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+
+    with pytest.raises(AuthorizationDenied) as captured:
+        delegate_capability(
+            actor=actor,
+            recipient=AccountFactory(),
+            parent_grant_id=parent.id,
+            target=edition_target,
+            effective_from=replacement_start,
+            expires_at=replacement_start + timedelta(days=1),
+            reason="Attempt to reuse the revoked exact parent.",
+            correlation_id=uuid4(),
+        )
+    assert captured.value.reason_code == "parent_authority_inactive"
+    assert replacement.authority_issuance.ordinal > parent.authority_issuance.ordinal
 
     decision = decide(
         principal=recipient,
         capability_code="events.view_basic",
-        resource=_target(
-            organization_id=edition.organization_id,
-            edition_id=edition.id,
-        ),
+        resource=edition_target,
     )
 
     assert not decision.allowed

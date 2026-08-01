@@ -80,7 +80,7 @@ The state vocabulary is deliberately small:
 | Unified administration shell | Mounted | `maru.urls`, reserved route ordering, one sidebar, Convention work, scoped non-staff access, staff-only specialist records, desktop/390-pixel smoke, and the final 792-test/90.01-percent local backend gate pass without warnings. The custom sidebar preserves Django's single `#nav-filter` contract when Specialist records are unavailable; the focused routing regression and live Board reload pass. Accessibility/state-matrix/owner gates remain. |
 | Organization representation | Mounted / partial | Page 8 implements provision, exact verified-account invitation, own response, two-person cross-approval, atomic Draft-to-Active activation, and platform emergency containment. Database guards through organizations `0012`, sensitive read/deny audit, the 106-migration fresh synthetic database/current restore drill, focused readiness/representation matrices, and the final local backend gate pass. Representative PITR, accessibility, owner evidence, and routine term management remain. |
 | Department hierarchy | Partial | Workforce model/projection and preserved structure view exist; no accepted mounted editor or M2 scope exists. |
-| Department/resource authorization | Implemented backend / unmounted editor | ADR 0041 exact department and typed-resource policy, commands, bindings, migrations, and database guards are implemented without implicit hierarchy inheritance. Production status remains blocked on actor/approver authority-source provenance and the contextual editor/effective-access UX remains unmounted. |
+| Department/resource authorization | Implemented backend / unmounted editor | ADR 0041 exact department and typed-resource policy, commands, bindings, migrations, and database guards are implemented without implicit hierarchy inheritance. ADR 0044's additive exact-source ledger/writers/readiness/provable backfill are locally verified; production remains blocked on ordinary legacy reconciliation and irreversible exact-lineage activation. The contextual editor/effective-access UX remains unmounted. |
 | Effective-access explanation | Partial | Pages 3–8 distinguish platform, scoped Board, exact-edition, and own-invitation access. Exact department/resource decisions now work below the UI; computed human explanations and field-purpose detail remain M2. |
 | Attendee registration | Partial | Large tested domain, headless API, and preserved HTML become reachable through the intended URL set, but coherent-shell review and deployment gates remain. |
 | Registration extension fields | Partial | Append-only, permission-aware API/workflow exists; ADR 0039 integration and current browser evidence remain. |
@@ -596,9 +596,14 @@ not production approval.
   - [x] Accept ADR 0044's typed append-only issuance ledger, deterministic
     source selection, non-cyclic Board ceremony, no-rebinding semantics, staged
     reconciliation, and fail-closed activation contract.
-  - [ ] Implement additive issuance/control schema and source-aware writers.
-  - [ ] Backfill provable Board/delegation evidence and reconcile effective
-    ordinary legacy authority without inference.
+  - [x] Implement additive issuance/control schema and source-aware writers.
+  - [x] Backfill only provable initial Board and delegated-parent evidence with
+    a dry-run-first, stopped-writer, idempotent reconciliation command.
+  - [x] Enforce distinct controller principals under concurrent database writes
+    and pass the 964-test repository gate at 90.41 percent branch coverage,
+    static/deploy/OpenAPI/frontend checks, and current dependency audits.
+  - [ ] Revoke/recreate effective ordinary legacy authority without inference,
+    replacing referenced unproven role definitions.
   - [ ] Activate dynamic lineage policy, database completeness guards,
     downgrade fence, readiness, recovery, and complete verification.
 - [ ] Effective-access query/header and audited contextual assignment editor.
@@ -719,8 +724,9 @@ count.
    Page 8 for representation work.
 4. Run `git status --short --branch`; do not discard unrelated changes.
 5. Confirm the latest local checkpoint/commit and test result in `CURRENT.md`.
-6. ADR 0041 scope v2 and focused verification are recorded; resume with the
-   root authority-source provenance gate, then the synthetic department
+6. ADR 0041 scope v2 and ADR 0044's additive provenance/backfill verification
+   are recorded; resume with ordinary legacy reconciliation and the exact-
+   lineage activation/policy/completeness fence, then the synthetic department
    template/editor and computed access explanation.
    Keep representative deployment/PITR, accessibility, complete visual states,
    and owner evidence open. Update this checklist before switching domains.

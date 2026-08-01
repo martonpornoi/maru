@@ -7,7 +7,6 @@ from uuid import UUID
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
@@ -18,7 +17,10 @@ from maru.authorization.catalog import (
     capability,
     require_capability,
 )
+from maru.authorization.issuance import create_persistent_dual_control_issuance
 from maru.authorization.models import (
+    AuthorityControl,
+    AuthorityIssuance,
     CapabilityGrant,
     RoleAssignment,
     RoleBundle,
@@ -28,11 +30,16 @@ from maru.authorization.policy import (
     PolicyDecision,
     ResolvedAuthorizationTarget,
     decide,
-    grant_chain_is_active,
     resolve_department_target,
     resolve_edition_target,
     resolve_organization_target,
     resolve_resource_target,
+)
+from maru.authorization.provenance import (
+    AuthorizedControl,
+    ControlHorizonMode,
+    role_bundle_provenance_is_historical,
+    select_authorized_control_source,
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
@@ -48,6 +55,7 @@ MAX_AUTHORITY_REASON_LENGTH = 240
 MAX_ROLE_NAME_LENGTH = 120
 EXECUTIVE_BOARD_ROLE_CODE = "executive-board"
 REPRESENTATION_MANAGED_ROLE_CODES = frozenset({EXECUTIVE_BOARD_ROLE_CODE})
+DUAL_CONTROL_COUNT = 2
 
 
 class AuthorityCommandValidationError(ValidationError):
@@ -187,73 +195,144 @@ def _require_dual_control(
     return actor_decision
 
 
-def _authority_outlives(
+@dataclass(frozen=True, slots=True)
+class _SelectedDualControlSources:
+    actor_issuance: AuthorityIssuance
+    approver_issuance: AuthorityIssuance
+    evaluated_at: datetime
+
+
+def _lock_controllers_in_stable_order(
+    *,
+    actor: Account,
+    approver: Account,
+) -> tuple[Account, Account]:
+    """Lock both controllers before either source graph is traversed."""
+
+    controller_ids = {actor.id, approver.id}
+    locked = {
+        account.id: account
+        for account in Account.objects.select_for_update()
+        .filter(id__in=controller_ids)
+        .order_by("id")
+    }
+    if len(locked) != DUAL_CONTROL_COUNT:
+        raise AuthorizationDenied(
+            "Exact controller authority is unavailable.",
+            reason_code="authority_source_unavailable",
+        )
+    return locked[actor.id], locked[approver.id]
+
+
+def _select_one_control_source(
     *,
     principal: Account,
+    role: str,
     capability_code: str,
     target: ResolvedAuthorizationTarget,
-    requested_expiry: datetime | None,
-    at: datetime,
-) -> bool:
-    if principal.is_active and principal.is_platform_administrator:
-        return True
-
-    scope = _authority_scope_filter(target)
-    active = (
-        Q(effective_from__lte=at)
-        & (Q(expires_at__isnull=True) | Q(expires_at__gt=at))
-        & Q(revoked_at__isnull=True)
-    )
-    grants = CapabilityGrant.objects.filter(
-        active,
-        scope,
+    requested_effective_from: datetime,
+    requested_expires_at: datetime | None,
+    evaluated_at: datetime,
+    horizon_mode: ControlHorizonMode,
+) -> AuthorizedControl:
+    selected = select_authorized_control_source(
         principal=principal,
-        organization_id=target.organization_id,
+        role=role,
         capability_code=capability_code,
-    ).select_related("delegated_from")
-    grant_expiries = (
-        grant.expires_at for grant in grants if grant_chain_is_active(grant, at)
+        target=target,
+        requested_effective_from=requested_effective_from,
+        requested_expires_at=requested_expires_at,
+        evaluated_at=evaluated_at,
+        horizon_mode=horizon_mode,
     )
-    assignment_expiries = RoleAssignment.objects.filter(
-        active,
-        scope,
-        principal=principal,
-        organization_id=target.organization_id,
-        role_bundle__capability_codes__contains=[capability_code],
-    ).values_list("expires_at", flat=True)
-    return any(
-        expiry is None or (requested_expiry is not None and requested_expiry <= expiry)
-        for expiry in (*grant_expiries, *assignment_expiries)
+    if selected is not None:
+        return selected
+
+    # Preserve the safe horizon classification without treating an unproven
+    # legacy row as authority. A current proven source that cannot cover the
+    # requested interval is distinct from having no exact source at all.
+    if horizon_mode is ControlHorizonMode.PERSISTENT:
+        point_in_time = select_authorized_control_source(
+            principal=principal,
+            role=role,
+            capability_code=capability_code,
+            target=target,
+            requested_effective_from=evaluated_at,
+            requested_expires_at=None,
+            evaluated_at=evaluated_at,
+            horizon_mode=ControlHorizonMode.POINT_IN_TIME,
+        )
+        if point_in_time is not None:
+            raise AuthorityCommandValidationError(
+                {
+                    "expires_at": (
+                        "The new authority cannot outlive either controlling authority."
+                    )
+                },
+                reason_code="authority_expiry_too_early",
+            )
+    raise AuthorizationDenied(
+        "Exact controller authority is unavailable.",
+        reason_code="authority_source_unavailable",
     )
 
 
-def _require_dual_authority_horizon(
+def _select_dual_control_sources(
     *,
     actor: Account,
     approver: Account,
     capability_code: str,
     target: ResolvedAuthorizationTarget,
-    requested_expiry: datetime | None,
-) -> None:
-    at = timezone.now()
-    if all(
-        _authority_outlives(
-            principal=principal,
-            capability_code=capability_code,
-            target=target,
-            requested_expiry=requested_expiry,
-            at=at,
+    requested_effective_from: datetime,
+    requested_expires_at: datetime | None,
+    horizon_mode: ControlHorizonMode,
+) -> _SelectedDualControlSources:
+    """Select and pin exact sources inside the target-writing transaction."""
+
+    locked_actor, locked_approver = _lock_controllers_in_stable_order(
+        actor=actor,
+        approver=approver,
+    )
+    evaluated_at = timezone.now()
+    actor_source = _select_one_control_source(
+        principal=locked_actor,
+        role=AuthorityControl.Role.ACTOR,
+        capability_code=capability_code,
+        target=target,
+        requested_effective_from=requested_effective_from,
+        requested_expires_at=requested_expires_at,
+        evaluated_at=evaluated_at,
+        horizon_mode=horizon_mode,
+    )
+    approver_source = _select_one_control_source(
+        principal=locked_approver,
+        role=AuthorityControl.Role.APPROVER,
+        capability_code=capability_code,
+        target=target,
+        requested_effective_from=requested_effective_from,
+        requested_expires_at=requested_expires_at,
+        evaluated_at=evaluated_at,
+        horizon_mode=horizon_mode,
+    )
+    source_ordinals = {
+        actor_source.source_issuance_ordinal,
+        approver_source.source_issuance_ordinal,
+    }
+    locked_issuances = {
+        issuance.ordinal: issuance
+        for issuance in AuthorityIssuance.objects.select_for_update()
+        .filter(ordinal__in=source_ordinals)
+        .order_by("ordinal")
+    }
+    if set(locked_issuances) != source_ordinals:
+        raise AuthorizationDenied(
+            "Exact controller authority is unavailable.",
+            reason_code="authority_source_unavailable",
         )
-        for principal in (actor, approver)
-    ):
-        return
-    raise AuthorityCommandValidationError(
-        {
-            "expires_at": (
-                "The new authority cannot outlive either controlling authority."
-            )
-        },
-        reason_code="authority_expiry_too_early",
+    return _SelectedDualControlSources(
+        actor_issuance=locked_issuances[actor_source.source_issuance_ordinal],
+        approver_issuance=locked_issuances[approver_source.source_issuance_ordinal],
+        evaluated_at=evaluated_at,
     )
 
 
@@ -313,40 +392,6 @@ def _target_supports_capability(
     maximum_scope: ScopeLevel,
 ) -> bool:
     return _SCOPE_DEPTH[target.scope_level] >= _SCOPE_DEPTH[maximum_scope]
-
-
-def _authority_scope_filter(target: ResolvedAuthorizationTarget) -> Q:
-    organization_scope = Q(
-        edition__isnull=True,
-        department__isnull=True,
-        resource_binding__isnull=True,
-    )
-    if target.edition_id is None:
-        return organization_scope
-    edition_scope = Q(
-        edition_id=target.edition_id,
-        department__isnull=True,
-        resource_binding__isnull=True,
-    )
-    if target.department_id is None:
-        return organization_scope | edition_scope
-    department_scope = Q(
-        edition_id=target.edition_id,
-        department_id=target.department_id,
-        resource_binding__isnull=True,
-    )
-    if target.resource_binding_id is None:
-        return organization_scope | edition_scope | department_scope
-    return (
-        organization_scope
-        | edition_scope
-        | department_scope
-        | Q(
-            edition_id=target.edition_id,
-            department_id=target.department_id,
-            resource_binding_id=target.resource_binding_id,
-        )
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -598,13 +643,6 @@ def grant_capability_direct(
             effective_from=effective_from,
             expires_at=expires_at,
         )
-        _require_dual_authority_horizon(
-            actor=actor,
-            approver=approver,
-            capability_code=GRANT_CAPABILITY,
-            target=target,
-            requested_expiry=expires_at,
-        )
         if not definition.persistable:
             _raise_validation(
                 {
@@ -635,12 +673,14 @@ def grant_capability_direct(
                 capability_code=GRANT_CAPABILITY,
                 target=locked_target,
             )
-            _require_dual_authority_horizon(
+            sources = _select_dual_control_sources(
                 actor=actor,
                 approver=approver,
                 capability_code=GRANT_CAPABILITY,
                 target=locked_target,
-                requested_expiry=expires_at,
+                requested_effective_from=effective_from,
+                requested_expires_at=expires_at,
+                horizon_mode=ControlHorizonMode.PERSISTENT,
             )
             if CapabilityGrant.objects.filter(
                 organization=locked.organization,
@@ -668,6 +708,12 @@ def grant_capability_direct(
                 approved_by=approver,
                 delegated_from=None,
                 reason=normalized_reason,
+            )
+            create_persistent_dual_control_issuance(
+                target=grant,
+                actor_source=sources.actor_issuance,
+                approver_source=sources.approver_issuance,
+                evaluated_at=sources.evaluated_at,
             )
             success_command = replace(
                 command,
@@ -954,6 +1000,15 @@ def create_role_bundle_version(
                 capability_code=ROLE_CAPABILITY,
                 target=locked.target,
             )
+            sources = _select_dual_control_sources(
+                actor=actor,
+                approver=approver,
+                capability_code=ROLE_CAPABILITY,
+                target=locked.target,
+                requested_effective_from=timezone.now(),
+                requested_expires_at=None,
+                horizon_mode=ControlHorizonMode.POINT_IN_TIME,
+            )
             latest = (
                 RoleBundle.objects.filter(
                     organization=organization,
@@ -971,6 +1026,12 @@ def create_role_bundle_version(
                 created_by=actor,
                 approved_by=approver,
                 reason=normalized_reason,
+            )
+            create_persistent_dual_control_issuance(
+                target=role,
+                actor_source=sources.actor_issuance,
+                approver_source=sources.approver_issuance,
+                evaluated_at=sources.evaluated_at,
             )
             success_command = replace(command, target_id=role.id)
             actor_audit = _append_command_audit(
@@ -1072,13 +1133,6 @@ def assign_role(
             effective_from=effective_from,
             expires_at=expires_at,
         )
-        _require_dual_authority_horizon(
-            actor=actor,
-            approver=approver,
-            capability_code=ROLE_CAPABILITY,
-            target=target,
-            requested_expiry=expires_at,
-        )
         with transaction.atomic():
             locked = _lock_target(target)
             locked_target = locked.target
@@ -1090,12 +1144,14 @@ def assign_role(
                 capability_code=ROLE_CAPABILITY,
                 target=locked_target,
             )
-            _require_dual_authority_horizon(
+            sources = _select_dual_control_sources(
                 actor=actor,
                 approver=approver,
                 capability_code=ROLE_CAPABILITY,
                 target=locked_target,
-                requested_expiry=expires_at,
+                requested_effective_from=effective_from,
+                requested_expires_at=expires_at,
+                horizon_mode=ControlHorizonMode.PERSISTENT,
             )
             role = (
                 RoleBundle.objects.filter(
@@ -1107,6 +1163,15 @@ def assign_role(
                 .first()
             )
             if role is None:
+                _raise_authorization(
+                    "The role bundle is unavailable.",
+                    reason_code="role_bundle_unavailable",
+                )
+            if not role_bundle_provenance_is_historical(
+                bundle=role,
+                evaluated_at=sources.evaluated_at,
+                lock=True,
+            ):
                 _raise_authorization(
                     "The role bundle is unavailable.",
                     reason_code="role_bundle_unavailable",
@@ -1158,6 +1223,12 @@ def assign_role(
                 granted_by=actor,
                 approved_by=approver,
                 reason=normalized_reason,
+            )
+            create_persistent_dual_control_issuance(
+                target=assignment,
+                actor_source=sources.actor_issuance,
+                approver_source=sources.approver_issuance,
+                evaluated_at=sources.evaluated_at,
             )
             success_command = replace(
                 command,

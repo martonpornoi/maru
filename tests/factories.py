@@ -8,7 +8,10 @@ from uuid import uuid4
 import factory
 from django.utils import timezone
 
+from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.models import (
+    AuthorityControl,
+    AuthorityIssuance,
     CapabilityGrant,
     RoleAssignment,
     RoleBundle,
@@ -232,6 +235,48 @@ class ScopedResourceBindingFactory(
     organization = factory.SelfAttribute("department.organization")
     edition = factory.SelfAttribute("department.edition")
     resource_kind = ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION
+
+
+class AuthorityIssuanceFactory(factory.django.DjangoModelFactory[AuthorityIssuance]):
+    class Meta:
+        model = AuthorityIssuance
+
+    capability_grant = factory.SubFactory(CapabilityGrantFactory)
+    policy_version = POLICY_VERSION
+    evaluated_at = factory.LazyFunction(timezone.now)
+
+
+class AuthorityControlFactory(factory.django.DjangoModelFactory[AuthorityControl]):
+    """Create one valid persistent actor control and its earlier source."""
+
+    class Meta:
+        model = AuthorityControl
+
+    source_issuance = factory.SubFactory(
+        AuthorityIssuanceFactory,
+        capability_grant=factory.SubFactory(
+            CapabilityGrantFactory,
+            capability_code="authorization.grant_direct",
+        ),
+    )
+    principal = factory.LazyAttribute(
+        lambda control: control.source_issuance.capability_grant.principal
+    )
+    issuance = factory.LazyAttribute(
+        lambda control: AuthorityIssuanceFactory(
+            capability_grant=CapabilityGrantFactory(
+                organization=control.source_issuance.capability_grant.organization,
+                granted_by=control.principal,
+                approved_by=AccountFactory(),
+            ),
+        )
+    )
+    role = AuthorityControl.Role.ACTOR
+    basis = AuthorityControl.Basis.PERSISTENT_AUTHORITY
+    policy_version = factory.LazyAttribute(
+        lambda control: control.issuance.policy_version
+    )
+    evaluated_at = factory.LazyAttribute(lambda control: control.issuance.evaluated_at)
 
 
 class RegistrationTemplateFactory(

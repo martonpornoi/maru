@@ -11,7 +11,12 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION, require_capability
-from maru.authorization.models import CapabilityGrant, ScopedResourceBinding
+from maru.authorization.issuance import create_delegated_grant_issuance
+from maru.authorization.models import (
+    AuthorityIssuance,
+    CapabilityGrant,
+    ScopedResourceBinding,
+)
 from maru.authorization.policy import (
     ResolvedAuthorizationTarget,
     decide,
@@ -21,6 +26,7 @@ from maru.authorization.policy import (
     resolve_organization_target,
     resolve_resource_target,
 )
+from maru.authorization.provenance import authority_issuance_is_current
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
@@ -290,6 +296,45 @@ def _require_active_parent(parent: CapabilityGrant) -> None:
         )
 
 
+def _require_current_parent_issuance(
+    *,
+    parent: CapabilityGrant,
+    target: ResolvedAuthorizationTarget,
+    effective_from: datetime,
+    expires_at: datetime | None,
+    evaluated_at: datetime,
+) -> AuthorityIssuance:
+    """Validate only the named delegated parent; never select a replacement."""
+
+    issuance = (
+        AuthorityIssuance.objects.select_for_update()
+        .only("ordinal")
+        .filter(capability_grant_id=parent.id)
+        .first()
+    )
+    if issuance is None:
+        raise AuthorizationDenied(
+            "The parent authority has no exact issuance provenance.",
+            reason_code="parent_authority_unproven",
+        )
+    _require_active_parent(parent)
+    if not authority_issuance_is_current(
+        issuance_ordinal=issuance.ordinal,
+        principal_id=parent.principal_id,
+        capability_code=parent.capability_code,
+        target=target,
+        requested_effective_from=effective_from,
+        requested_expires_at=expires_at,
+        evaluated_at=evaluated_at,
+        lock=True,
+    ):
+        raise AuthorizationDenied(
+            "The parent authority no longer has current exact lineage.",
+            reason_code="parent_authority_lineage_invalid",
+        )
+    return issuance
+
+
 def delegate_capability(
     *,
     actor: Account,
@@ -327,10 +372,23 @@ def delegate_capability(
     definition = require_capability(parent.capability_code)
     at = timezone.now()
     delegated_authority = parent.delegated_from_id is not None
-    if not definition.delegable or not grant_chain_is_active(parent, at):
+    if not definition.delegable:
         _raise_denial(
             message="The capability cannot be delegated.",
             reason_code="capability_not_delegable",
+            actor=actor,
+            recipient=recipient,
+            organization_id=target.organization_id,
+            edition_id=target.edition_id,
+            correlation_id=correlation_id,
+            request_id=request_id,
+            source_channel=source_channel,
+            delegated_authority=delegated_authority,
+        )
+    if not grant_chain_is_active(parent, at):
+        _raise_denial(
+            message="The parent authority is no longer active.",
+            reason_code="parent_authority_inactive",
             actor=actor,
             recipient=recipient,
             organization_id=target.organization_id,
@@ -423,7 +481,6 @@ def delegate_capability(
                 parent_id=parent.id,
                 actor=actor,
             )
-            _require_active_parent(locked_parent)
             locked_bounds_error = _validate_delegation_bounds(
                 parent=locked_parent,
                 target=locked_target,
@@ -435,6 +492,7 @@ def delegate_capability(
                     "Delegation is no longer valid for the resolved target.",
                     reason_code=locked_bounds_error,
                 )
+            evaluated_at = timezone.now()
             locked_meta_decision = decide(
                 principal=actor,
                 capability_code="authorization.delegate",
@@ -446,6 +504,13 @@ def delegate_capability(
                     "Separate capability-delegation authority is required.",
                     reason_code="delegation_permission_absent",
                 )
+            _require_current_parent_issuance(
+                parent=locked_parent,
+                target=locked_target,
+                effective_from=effective_from,
+                expires_at=expires_at,
+                evaluated_at=evaluated_at,
+            )
             child = CapabilityGrant.objects.create(
                 principal=recipient,
                 capability_code=locked_parent.capability_code,
@@ -459,6 +524,16 @@ def delegate_capability(
                 delegated_from=locked_parent,
                 reason=normalized_reason,
             )
+            try:
+                create_delegated_grant_issuance(
+                    grant=child,
+                    evaluated_at=evaluated_at,
+                )
+            except ValidationError:
+                _raise_authorization(
+                    "The delegated authority could not retain exact parent lineage.",
+                    reason_code="delegated_issuance_invalid",
+                )
             audit = append_audit(
                 AuditRecord(
                     principal_kind="account",

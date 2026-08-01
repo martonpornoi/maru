@@ -2,7 +2,8 @@
 
 Status: Repository rehearsal passed; representative deployment rehearsal required
 Last updated: 2026-08-01
-Scope: organizations `0008` through `0011`; IDN-011 `0012` cross-reference
+Scope: organizations `0008` through `0011`; IDN-011 `0012` and authorization
+`0006` cross-references
 
 This runbook covers Maru's explicit organization-representation schema and its
 database integrity guards. It is not permission to load production personal
@@ -143,6 +144,11 @@ representation, and installs a downgrade fence once emergency evidence exists.
 Organizations `0012` and the participation/registration/workforce IDN-011
 guards are deployed in the same stopped-writer release but use the separate
 [convention-subject runbook](idn011-convention-subject-migration-and-recovery.md).
+Authorization `0006` may be deployed in the same broader maintenance window,
+but its exact issuance ledger, provable-only historical Board/delegation
+backfill, readiness report, and nonempty downgrade boundary use the separate
+[authority-provenance runbook](authority-provenance-migration-and-recovery.md).
+Do not infer ordinary organizer sources from this Board migration.
 
 ## Verify before reopening writes
 

@@ -880,6 +880,7 @@ class Migration(migrations.Migration):
     dependencies: ClassVar[list[tuple[str, str]]] = [
         ("audit", "0004_alter_auditevent_safe_metadata"),
         ("effects", "0002_integrity_guards"),
+        ("identity", "0010_account_kind"),
         ("organizations", "0008_organization_representation"),
     ]
 

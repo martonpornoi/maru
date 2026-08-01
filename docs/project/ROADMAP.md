@@ -51,8 +51,12 @@ only and removes the public-roster rehearsal implementation. ADR 0043 adds
 global platform emergency containment when a Board controller must be removed.
 ADR 0044 accepts exact actor/approver authority-source lineage, deterministic
 least-authority pinning, a non-cyclic initial Board ceremony, and staged legacy
-reconciliation. Its implementation is the active production gate before the
-contextual department editor.
+reconciliation. Its additive ledger, compatible writers, recursive validators,
+count-only readiness, provable-only Board/delegation backfill, and concurrent
+distinct-controller database boundary are locally verified through the current
+964-test repository gate. Explicit ordinary legacy recreation and the
+irreversible exact-lineage activation/completeness/fence stage remain the active
+production gate before the contextual department editor.
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
@@ -171,8 +175,10 @@ The later ADR 0041 implementation supersedes that backend baseline: all 876
 tests pass in 458.05 seconds with 90.43 percent branch coverage. The populated
 synthetic database applies the three-migration scope sequence with zero scope
 or representation blockers, and platform/Board browser smoke preserves exact
-foreign-organization denial. Exact actor/approver authority-source provenance
-remains the next production gate before the contextual hierarchy editor.
+foreign-organization denial. The exact-source schema/writer/backfill stage is
+locally verified; ordinary legacy reconciliation and the exact-lineage
+activation marker remain the next production gate before the contextual
+hierarchy editor.
 Appointment expiry, routine replacement/removal,
 planned suspension/reactivation, invitation delivery, root authority-source
 provenance, the contextual department/resource assignment editor, and the full

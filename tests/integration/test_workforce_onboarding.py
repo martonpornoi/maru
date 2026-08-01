@@ -56,6 +56,10 @@ from tests.factories import (
     EventEditionFactory,
     RegistrationConfigurationFactory,
 )
+from tests.support.authority import (
+    create_provenance_backed_role_bundle,
+    grant_board_controllers_edition_capability,
+)
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -148,6 +152,10 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
             reason="A repeated bootstrap must fail closed.",
             correlation_id=uuid4(),
         )
+    authority_actor, authority_approver = grant_board_controllers_edition_capability(
+        edition,
+        "workforce.manage_assignments",
+    )
 
     configuration = RegistrationConfigurationFactory(
         edition=edition,
@@ -357,6 +365,12 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         code="registration-lead",
         status=PositionTemplate.Status.PUBLISHED,
     )
+    _actor, _approver, assignment_role = create_provenance_backed_role_bundle(
+        organization,
+        code="registration-lead",
+        name="Registration Lead",
+        capability_codes=tuple(template.role_bundle.capability_codes),
+    )
     chair_position = Position.objects.get(
         edition=edition,
         code="convention-chair",
@@ -367,7 +381,7 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         template=template,
         department=operations,
         reports_to=chair_position,
-        role_bundle=template.role_bundle,
+        role_bundle=assignment_role,
         code="registration-lead",
         title="Registration Lead",
         description=template.description,
@@ -411,8 +425,8 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
     assignment = activate_position_assignment(
         position_id=position.id,
         account=attendee,
-        actor=controller,
-        approver=chair,
+        actor=authority_actor,
+        approver=authority_approver,
         effective_from=timezone.now(),
         expires_at=None,
         reason="Approved NDA and appointment as registration lead.",

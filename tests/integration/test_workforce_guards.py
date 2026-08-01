@@ -47,6 +47,10 @@ from tests.factories import (
     ParticipationFactory,
     RoleBundleFactory,
 )
+from tests.support.authority import (
+    create_provenance_backed_role_bundle,
+    grant_board_controllers_edition_capability,
+)
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -338,6 +342,22 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         reason="Set up service edge tests.",
         correlation_id=uuid4(),
     )
+    authority_actor, authority_approver = grant_board_controllers_edition_capability(
+        edition,
+        "workforce.manage_assignments",
+    )
+    _actor, _approver, assignment_role = create_provenance_backed_role_bundle(
+        organization,
+        code="registration-lead",
+        name="Registration Lead",
+        capability_codes=(
+            "events.view_basic",
+            "participation.view_staff_summary",
+            "workforce.view_structure",
+            "registration.view_service_summary",
+            "registration.manage_configuration",
+        ),
+    )
     department = Department.objects.create(
         organization=organization,
         edition=edition,
@@ -353,7 +373,7 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         edition=edition,
         template=template,
         department=department,
-        role_bundle=template.role_bundle,
+        role_bundle=assignment_role,
         code="registration-lead",
         title="Registration Lead",
         description=template.description,
@@ -458,8 +478,8 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         activate_position_assignment(
             position_id=position.id,
             account=person,
-            actor=controller,
-            approver=chair,
+            actor=authority_actor,
+            approver=authority_approver,
             effective_from=timezone.now(),
             expires_at=None,
             reason="Missing NDA",
@@ -530,8 +550,8 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         activate_position_assignment(
             position_id=position.id,
             account=person,
-            actor=controller,
-            approver=controller,
+            actor=authority_actor,
+            approver=authority_actor,
             effective_from=timezone.now(),
             expires_at=None,
             reason="Same controller",
@@ -540,8 +560,8 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
     activated = activate_position_assignment(
         position_id=position.id,
         account=person,
-        actor=controller,
-        approver=chair,
+        actor=authority_actor,
+        approver=authority_approver,
         effective_from=timezone.now(),
         expires_at=None,
         reason="Approved registration lead.",
@@ -558,8 +578,8 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         activate_position_assignment(
             position_id=position.id,
             account=AccountFactory(),
-            actor=controller,
-            approver=chair,
+            actor=authority_actor,
+            approver=authority_approver,
             effective_from=timezone.now(),
             expires_at=None,
             reason="Position is full.",
@@ -584,8 +604,8 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         activate_position_assignment(
             position_id=closed.id,
             account=AccountFactory(),
-            actor=controller,
-            approver=chair,
+            actor=authority_actor,
+            approver=authority_approver,
             effective_from=timezone.now(),
             expires_at=None,
             reason="Closed role.",
@@ -610,6 +630,22 @@ def test_workforce_admin_defaults_reviews_and_activates_with_dual_control(
         chair=chair,
         reason="Verify the organizer admin workflow.",
         correlation_id=uuid4(),
+    )
+    authority_actor, authority_approver = grant_board_controllers_edition_capability(
+        edition,
+        "workforce.manage_assignments",
+    )
+    _actor, _approver, assignment_role = create_provenance_backed_role_bundle(
+        organization,
+        code="registration-lead",
+        name="Registration Lead",
+        capability_codes=(
+            "events.view_basic",
+            "participation.view_staff_summary",
+            "workforce.view_structure",
+            "registration.view_service_summary",
+            "registration.manage_configuration",
+        ),
     )
     department = Department.objects.get(
         edition=edition,
@@ -669,7 +705,7 @@ def test_workforce_admin_defaults_reviews_and_activates_with_dual_control(
         edition=edition,
         template=template,
         department=department,
-        role_bundle=template.role_bundle,
+        role_bundle=assignment_role,
         code="admin-created-role",
         title="Admin-created Role",
         description=template.description,
@@ -751,7 +787,7 @@ def test_workforce_admin_defaults_reviews_and_activates_with_dual_control(
     )
     assert document_request.status == OnboardingDocumentRequest.Status.APPROVED
 
-    request.user = controller
+    request.user = authority_actor
     assignment = PositionAssignment(
         position=position,
         account=candidate,
@@ -765,7 +801,7 @@ def test_workforce_admin_defaults_reviews_and_activates_with_dual_control(
         SimpleNamespace(
             cleaned_data={
                 "activate_now": True,
-                "approved_by": chair,
+                "approved_by": authority_approver,
             }
         ),  # type: ignore[arg-type]
         change=False,

@@ -1,8 +1,9 @@
 # Authorization module
 
 Status: Implemented exact organization/edition/department/resource authority,
-sealed target resolution, human access sharing, and protected Executive Board
-root; actor/approver authority-source provenance remains a production gate
+sealed target resolution, protected Executive Board root, and provenance-
+writing/source-selection stage; legacy reconciliation and dynamic policy
+activation remain a production gate
 Last updated: 2026-08-01
 
 ## Purpose and requirements
@@ -33,6 +34,8 @@ not replace the explainable organizer-scoped restrictions required by ADR 0013.
 - immutable versions of organizer-defined role bundles;
 - scoped, effective, expiring, and revocable role assignments;
 - grant, approval, and revocation provenance for command-managed authority;
+- an append-only typed issuance ledger that pins exact actor/approver sources
+  or the code-owned initial Executive Board ceremony;
 - bounded delegation linked to the authority that produced it;
 - immutable typed bindings between authorization scope and domain-owned
   resources, beginning with `workforce.position`;
@@ -53,6 +56,10 @@ bypassed. Revoking any ancestor invalidates its delegated descendants.
 - `assign_role(...)`
 - `revoke_role_assignment(...)`
 - `delegate_capability(...)`
+- internal `select_authorized_control_source(...)`,
+  `authority_issuance_is_current(...)`, and
+  `role_bundle_provenance_is_historical(...)` boundaries for compatible
+  writers and sensitive explanations
 - `resolve_organization_target(...)`, `resolve_edition_target(...)`,
   `resolve_department_target(...)`, `resolve_resource_target(...)`, and
   persisted owner/self target resolvers
@@ -85,6 +92,15 @@ grant or assignment cannot outlive either controller's active authority.
 Relationship-derived capabilities cannot be converted into stored grants or
 role capabilities.
 
+Compatible ordinary writers now select and lock one exact source issuance for
+each controller in the target transaction. Selection is server-owned and
+deterministic: narrowest containing scope, direct grant before role assignment,
+least surplus expiry with unbounded last, then issuance ordinal. Callers never
+submit a source identifier. Generic platform policy is ineligible for these
+organizer commands. Role definitions use point-in-time controller authority;
+grants and assignments require the complete requested horizon. A legacy or
+malformed source fails closed without creating the target or partial evidence.
+
 Revocation deliberately uses one authorized controller rather than approval:
 removing access must not wait for a second person. Grant and role-assignment
 revocation preserve the original issuance reason, record revoker and
@@ -108,6 +124,14 @@ never principal or approver. The reserved role is thereafter managed only by
 the representation lifecycle: generic role-version, assignment, replacement,
 projection, and revocation commands treat it as unavailable. The initial path
 cannot be reused as a general approval bypass.
+
+Every compatible initial activation also writes one typed issuance for the
+reserved bundle and each root assignment. Its actor control points to the exact
+platform-operated activation and its approver control points to the exact
+different accepted appointment used by the deterministic cross-approval cycle.
+These controls are historical ceremony evidence, not reusable platform
+organizer authority. The Board target, representation, appointments, ledger,
+audit, event, and outbox remain one transaction.
 
 Organizations `0009` additionally protects linked root assignments at the
 database boundary. An active representation must retain the exact immutable
@@ -139,6 +163,14 @@ activate catalog/scope/delegation/revocation guards, and install a durable
 downgrade fence. No historical assignment is silently narrowed. The operator
 procedure is
 [`authorization-scope-v2-migration-and-recovery.md`](../operations/authorization-scope-v2-migration-and-recovery.md).
+
+Authorization `0006` adds `AuthorityIssuance` and `AuthorityControl`, exact
+present-row PostgreSQL guards, delegated-parent/zero-control enforcement, and
+a nonempty-ledger downgrade refusal. It is deliberately additive: legacy
+targets may remain without issuance until provable Board/delegated backfill and
+explicit ordinary-authority reconciliation. The stopped-writer procedure and
+recovery boundary are documented in
+[`authority-provenance-migration-and-recovery.md`](../operations/authority-provenance-migration-and-recovery.md).
 
 Policy accepts only `ResolvedAuthorizationTarget` values sealed by explicit
 database resolvers. Route UUIDs can narrow a query but cannot assert tenant,
@@ -191,11 +223,31 @@ permission protected.
 
 `check_scope_v2_readiness` emits a count-only JSON report. Migration-data
 `status` is intentionally separate from `production_status`: the latter stays
-blocked until ADR 0044's implementation records the exact authority sources
-through which ordinary actors and approvers issued root authority. ADR 0044 is
-accepted but its schema, writers, reconciliation, dynamic policy, and activation
-guards are not implemented yet. No current claim describes ADR 0041 as solving
-that independent IDN-005 invariant.
+blocked until ADR 0044's remaining provable backfill, explicit legacy
+reconciliation, recursive readiness, dynamic policy cutover, completeness
+guards, and final fence are verified. The additive schema, Board writer,
+ordinary command writer, deterministic recursive source evaluator, and
+delegated writer are implementation stages, not permission to infer legacy
+evidence or relabel the platform production-ready. No current claim describes
+ADR 0041 as solving that independent IDN-005 invariant.
+
+After authorization `0006` is present,
+`check_authority_provenance_readiness` inspects the reachable issuance graph
+and emits only stable aggregate blocker/review counts. A zero-blocker `status`
+means the stored data is ready for the later cutover; `production_status`
+remains blocked until exact-lineage policy activation, deferred completeness
+guards, and the provenance-write downgrade fence are installed. The command
+never prints people, capabilities, organizations, target identifiers, or
+entered reason values, and `--no-fail` changes only its process exit behavior.
+
+`backfill_provable_authority_provenance` is read-only by default and can append
+only exact initial Executive Board ceremony rows plus exact delegated-parent
+chains. Mutation requires `--apply --acknowledge-writers-stopped`, locks and
+verifies one graph transaction, remains idempotent, supports immutable
+suspended/ended Board history, and suppresses private exception context.
+Ordinary legacy grants, role definitions, and assignments are count-only
+review debt and must be deliberately revoked/recreated; the reconciler never
+infers their actor or approver sources.
 
 The edition list/search/count/autocomplete API requires organization scope and
 filters the tenant before evaluation. An edition-only grant can retrieve its
@@ -269,6 +321,12 @@ independent approval, recipient self-approval denial, controller expiry
 ceilings, immutable role versioning, unsafe capability rejection, duplicate
 authority, cross-tenant target hiding, immediate revocation, persistent
 provenance, and audit/event/outbox rollback.
+Provenance-specific tests cover fresh/additive migration, clean reverse and
+nonempty downgrade refusal, model and raw-SQL immutability, typed target/control
+shape, exact persistent and Board bases, delegated zero-control parent lineage,
+deterministic least-authority selection, bounded point-in-time definitions,
+cycle/depth fail-closed behavior, pinned no-rebind revalidation, Board current-
+state loss, stale relation caches, and transactional rollback.
 Access-workspace integration tests additionally cover deny-without-disclosure,
 human group labels, latest-version selection, organization/edition isolation,
 exact-email matching, independent approval, unknown-account rejection,
@@ -292,8 +350,9 @@ here.
 
 ## Limitations
 
-Actor/approver authority-source provenance, a complete computed
-effective-access explanation, step-up execution, service/device principals,
+Provable legacy reconciliation, final completeness guards, dynamic
+source-lineage policy activation, a complete computed effective-access
+explanation, step-up execution, service/device principals,
 asynchronous approval workflow, grant review reminders, purpose binding, and
 policy caching are not implemented. The synchronous independent approver
 argument is a command invariant, not yet an approval inbox or pending request

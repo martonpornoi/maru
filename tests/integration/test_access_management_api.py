@@ -1,4 +1,5 @@
 from datetime import timedelta
+from uuid import uuid4
 
 import pytest
 from django.urls import reverse
@@ -6,8 +7,9 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
-from maru.authorization.commands import EXECUTIVE_BOARD_ROLE_CODE
+from maru.authorization.commands import EXECUTIVE_BOARD_ROLE_CODE, assign_role
 from maru.authorization.models import RoleAssignment
+from maru.authorization.policy import resolve_edition_target
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
@@ -15,6 +17,7 @@ from tests.factories import (
     RoleAssignmentFactory,
     RoleBundleFactory,
 )
+from tests.support.authority import create_provenance_backed_role_bundle
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -201,19 +204,15 @@ def test_access_workspace_is_tenant_scoped_and_uses_human_labels() -> None:
 
 def test_access_workspace_assigns_an_exact_existing_person_with_dual_control() -> None:
     edition = EventEditionFactory()
-    actor = AccountFactory()
-    approver = AccountFactory(email="approver@example.invalid")
     recipient = AccountFactory(
         email="volunteer@example.invalid",
         display_name="Helpful Volunteer",
     )
-    _grant(actor, edition.organization, "authorization.manage_roles")
-    _grant(approver, edition.organization, "authorization.manage_roles")
-    front_desk = RoleBundleFactory(
-        organization=edition.organization,
+    actor, approver, front_desk = create_provenance_backed_role_bundle(
+        edition.organization,
         code="front-desk",
         name="Front Desk",
-        capability_codes=["participation.view_staff_summary"],
+        capability_codes=("participation.view_staff_summary",),
     )
 
     response = _client(actor).post(
@@ -386,29 +385,35 @@ def test_generic_access_workspace_hides_and_protects_executive_board() -> None:
 def test_access_replacement_removal_and_tenant_isolation() -> None:
     edition = EventEditionFactory()
     foreign_edition = EventEditionFactory()
-    actor = AccountFactory()
-    approver = AccountFactory()
     recipient = AccountFactory(display_name="Registration Helper")
-    _grant(actor, edition.organization, "authorization.manage_roles")
-    _grant(actor, edition.organization, "authorization.revoke")
-    _grant(approver, edition.organization, "authorization.manage_roles")
-    front_desk = RoleBundleFactory(
-        organization=edition.organization,
+    actor, approver, front_desk = create_provenance_backed_role_bundle(
+        edition.organization,
         code="front-desk",
         name="Front Desk",
-        capability_codes=["participation.view_staff_summary"],
+        capability_codes=("participation.view_staff_summary",),
     )
-    registration = RoleBundleFactory(
-        organization=edition.organization,
+    _actor, _approver, registration = create_provenance_backed_role_bundle(
+        edition.organization,
         code="registration-lead",
         name="Registration Lead",
-        capability_codes=["registration.view_service_summary"],
+        capability_codes=("registration.view_service_summary",),
     )
-    original = RoleAssignmentFactory(
-        organization=edition.organization,
-        edition=edition,
-        principal=recipient,
-        role_bundle=front_desk,
+    target = resolve_edition_target(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+    )
+    assert target is not None
+    original = assign_role(
+        actor=actor,
+        approver=approver,
+        recipient=recipient,
+        target=target,
+        role_bundle_id=front_desk.id,
+        effective_from=timezone.now(),
+        expires_at=None,
+        reason="Establish exact access before replacement.",
+        correlation_id=uuid4(),
+        source_channel="test",
     )
     foreign_role = RoleBundleFactory(
         organization=foreign_edition.organization,

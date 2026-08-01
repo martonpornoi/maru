@@ -20,9 +20,11 @@ their broad meaning. The migration does not infer a department or Position
 from a workforce link. Review and narrow historical authority only through a
 later explicit, audited command.
 
-This procedure establishes migration-data readiness. It does **not** clear the
-separate actor/approver authority-source provenance production gate recorded
-in ADR 0041.
+This procedure establishes migration-data readiness. ADR 0044's separate
+additive ledger, compatible writers, recursive readiness, and provable-only
+Board/delegation backfill are now implemented, but this scope-v2 procedure does
+**not** clear ordinary legacy reconciliation or the irreversible exact-lineage
+policy/completeness/fence production gate.
 
 ## Before the maintenance window
 
@@ -82,8 +84,8 @@ Interpret its top-level fields separately:
 - `status` is `ready` only when migration-data blocker counts are zero;
 - `review_counts` identifies broad legacy evidence that remains valid but may
   deserve explicit reconciliation;
-- `production_status` remains `blocked` while the separately documented
-  actor/approver source-provenance gate is unresolved; and
+- `production_status` remains `blocked` while ADR 0044's exact-lineage
+  activation/completeness/fence gate is unresolved; and
 - `known_production_gates` names that gate without exposing people or records.
 
 Then verify:
