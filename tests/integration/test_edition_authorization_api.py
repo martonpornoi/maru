@@ -69,7 +69,7 @@ def test_edition_scoped_grant_allows_detail_but_not_organization_list() -> None:
     assert "count" not in listing.json()
 
 
-def test_edition_list_rejects_unbounded_page_size() -> None:
+def test_edition_reads_reject_unbounded_and_undeclared_query_input() -> None:
     edition = EventEditionFactory()
     account = AccountFactory()
     CapabilityGrantFactory(
@@ -79,9 +79,21 @@ def test_edition_list_rejects_unbounded_page_size() -> None:
     client = APIClient()
     client.force_authenticate(account)
 
-    response = client.get(_list_url(edition), {"page_size": 101})
+    oversized = client.get(_list_url(edition), {"page_size": 101})
+    undeclared_list = client.get(
+        _list_url(edition),
+        {"include_private": "true"},
+    )
+    undeclared_detail = client.get(
+        _url(edition),
+        {"include_private": "true"},
+    )
 
-    assert response.status_code == 400
+    assert oversized.status_code == 400
+    assert undeclared_list.status_code == 400
+    assert undeclared_list.json()["code"] == "unknown_input_field"
+    assert undeclared_detail.status_code == 400
+    assert undeclared_detail.json()["code"] == "unknown_input_field"
 
 
 def test_basic_edition_api_requires_exact_scoped_capability() -> None:
@@ -104,6 +116,7 @@ def test_basic_edition_api_requires_exact_scoped_capability() -> None:
         "slug": edition.slug,
         "name": edition.name,
         "lifecycle": edition.lifecycle,
+        "aggregate_version": edition.aggregate_version,
         "time_zone": edition.time_zone,
         "language_codes": edition.language_codes,
         "currency_codes": edition.currency_codes,

@@ -1,10 +1,19 @@
 """Authorized edition API projections."""
 
+from datetime import date
+from typing import cast
 from uuid import UUID
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
+from maru.core.validators import (
+    validate_currency_codes,
+    validate_language_codes,
+    validate_time_zone,
+)
 from maru.events.models import (
+    MAX_EDITION_SPAN_DAYS,
     EditionClosureManifest,
     EditionReadinessGate,
     EventEdition,
@@ -12,6 +21,16 @@ from maru.events.models import (
 
 MAX_AUTOCOMPLETE_RESULTS = 20
 MAX_BULK_EDITION_TRANSITIONS = 25
+
+
+def _django_validation_code(
+    error: DjangoValidationError,
+    *,
+    fallback: str,
+) -> str:
+    if hasattr(error, "error_list") and error.error_list:
+        return str(error.error_list[0].code or fallback)
+    return fallback
 
 
 class EditionBasicSerializer(serializers.ModelSerializer[EventEdition]):
@@ -24,6 +43,7 @@ class EditionBasicSerializer(serializers.ModelSerializer[EventEdition]):
             "slug",
             "name",
             "lifecycle",
+            "aggregate_version",
             "time_zone",
             "language_codes",
             "currency_codes",
@@ -31,6 +51,108 @@ class EditionBasicSerializer(serializers.ModelSerializer[EventEdition]):
             "ends_on",
         )
         read_only_fields = fields
+
+
+class EditionProblemSerializer(serializers.Serializer[dict[str, object]]):
+    """RFC 9457 response shape used by edition management endpoints."""
+
+    type = serializers.URLField(read_only=True)
+    title = serializers.CharField(read_only=True)
+    status = serializers.IntegerField(read_only=True)
+    detail = serializers.CharField(read_only=True)
+    code = serializers.CharField(read_only=True)
+    request_id = serializers.UUIDField(required=False)
+    errors = serializers.JSONField(  # type: ignore[assignment]
+        required=False,
+    )
+
+
+class EditionDetailsRequestSerializer(serializers.Serializer[dict[str, object]]):
+    """Complete bounded edition-profile input shared by create and update."""
+
+    name = serializers.CharField(max_length=160, trim_whitespace=True)
+    starts_on = serializers.DateField()
+    ends_on = serializers.DateField()
+    time_zone = serializers.CharField(max_length=63, trim_whitespace=True)
+    language_codes = serializers.ListField(
+        child=serializers.CharField(max_length=35, trim_whitespace=True),
+        min_length=1,
+        max_length=16,
+    )
+    currency_codes = serializers.ListField(
+        child=serializers.CharField(max_length=3, trim_whitespace=True),
+        min_length=1,
+        max_length=8,
+    )
+
+    def validate_time_zone(self, value: str) -> str:
+        try:
+            validate_time_zone(value)
+        except DjangoValidationError as error:
+            raise serializers.ValidationError(
+                error.messages,
+                code=_django_validation_code(
+                    error,
+                    fallback="invalid_time_zone",
+                ),
+            ) from error
+        return value
+
+    def validate_language_codes(self, value: list[str]) -> list[str]:
+        normalized = [code.lower() for code in value]
+        try:
+            validate_language_codes(normalized)
+        except DjangoValidationError as error:
+            raise serializers.ValidationError(
+                error.messages,
+                code=_django_validation_code(
+                    error,
+                    fallback="invalid_language",
+                ),
+            ) from error
+        return normalized
+
+    def validate_currency_codes(self, value: list[str]) -> list[str]:
+        normalized = [code.upper() for code in value]
+        try:
+            validate_currency_codes(normalized)
+        except DjangoValidationError as error:
+            raise serializers.ValidationError(
+                error.messages,
+                code=_django_validation_code(
+                    error,
+                    fallback="invalid_currency",
+                ),
+            ) from error
+        return normalized
+
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        starts_on = cast(date, attrs["starts_on"])
+        ends_on = cast(date, attrs["ends_on"])
+        if ends_on < starts_on:
+            raise serializers.ValidationError(
+                {"ends_on": "The end date cannot be before the start date."},
+                code="edition_end_before_start",
+            )
+        if (ends_on - starts_on).days > MAX_EDITION_SPAN_DAYS:
+            raise serializers.ValidationError(
+                {
+                    "ends_on": (
+                        "An edition date range cannot exceed "
+                        f"{MAX_EDITION_SPAN_DAYS} days."
+                    )
+                },
+                code="edition_date_range_too_long",
+            )
+        return attrs
+
+
+class EditionCreateRequestSerializer(EditionDetailsRequestSerializer):
+    series_id = serializers.UUIDField()
+
+
+class EditionUpdateRequestSerializer(EditionDetailsRequestSerializer):
+    expected_aggregate_version = serializers.IntegerField(min_value=1)
 
 
 class EditionListQuerySerializer(serializers.Serializer[dict[str, str]]):

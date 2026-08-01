@@ -1,0 +1,295 @@
+{% load static tz %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
+    <title>{% if edition %}{{ edition.name }}{% else %}Event edition unavailable{% endif %} · Maru</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
+  </head>
+  <body>
+    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
+    <header class="baseline-header">
+      <img
+        class="baseline-logo"
+        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+        alt="Maru"
+      >
+      <div class="baseline-account">
+        <span>{{ request.user.display_name }}</span>
+        <form method="post" action="{% url 'staff-logout' %}">
+          {% csrf_token %}
+          <button class="baseline-link-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+
+    <div class="baseline-admin-layout">
+      {% include "core/_baseline_admin_navigation.html" with current_admin_page="edition-overview" %}
+
+      <main id="main-content" class="baseline-page baseline-page--form" data-page="event-edition-record" tabindex="-1">
+        {% if edition_record_load_failed %}
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">Convention editions</p>
+            <h1>Event edition unavailable</h1>
+          </header>
+          <div class="baseline-state baseline-state--error" role="alert">
+            <h2>The event edition could not be loaded</h2>
+            <p>
+              Try again after the database is available. No edition data or
+              working context was changed.
+            </p>
+          </div>
+        {% else %}
+          {% if messages %}
+            <div class="baseline-messages" aria-live="polite">
+              {% for message in messages %}
+                <div class="baseline-notice baseline-notice--success" role="status">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <a
+            class="baseline-back-link"
+            href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}"
+          >← {{ convention_series.name }}</a>
+
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">Event-edition record</p>
+            <h1>{{ edition.name }}</h1>
+            <p class="baseline-intro">
+              This is the stable home for one dated convention. Edition-owned
+              work will appear beneath this exact context only when its page is
+              ready.
+            </p>
+            <p class="baseline-record-meta">
+              <span>Lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+              <span>Dates: <strong>{{ edition.starts_on|date:"Y-m-d" }} → {{ edition.ends_on|date:"Y-m-d" }}</strong></span>
+              <span>Stable URL name: <code>{{ edition.slug }}</code></span>
+            </p>
+          </header>
+
+          {% if edition_editable %}
+            {% include "core/_baseline_access_summary.html" with access_operation="view and change this event-edition record" %}
+          {% else %}
+            {% include "core/_baseline_access_summary.html" with access_operation="view this event-edition record" %}
+          {% endif %}
+
+          <section
+            class="baseline-context-control"
+            aria-labelledby="working-edition-title"
+            data-selected="{% if edition_is_selected %}true{% else %}false{% endif %}"
+          >
+            <div>
+              <p class="baseline-kicker">Working context</p>
+              {% if edition_is_selected %}
+                <h2 id="working-edition-title">This edition is selected</h2>
+                <p>
+                  Later edition-owned pages will stay focused on
+                  {{ edition.name }}. Selection filters display context; it
+                  never grants access or makes this account a participant.
+                </p>
+              {% else %}
+                <h2 id="working-edition-title">Use this as the working edition</h2>
+                <p>
+                  Keep later edition-owned pages focused on
+                  {{ edition.name }}. This changes only your session display
+                  context, never authority or convention participation.
+                </p>
+              {% endif %}
+            </div>
+            {% if edition_is_selected %}
+              <form
+                method="post"
+                action="{% url 'baseline-clear-event-edition' organization.slug convention_series.slug edition.slug %}"
+                class="baseline-context-actions"
+              >
+                {% csrf_token %}
+                <button class="baseline-secondary-button" type="submit">
+                  Clear working edition
+                </button>
+              </form>
+            {% else %}
+              <form
+                method="post"
+                action="{% url 'baseline-select-event-edition' organization.slug convention_series.slug edition.slug %}"
+                class="baseline-context-actions"
+              >
+                {% csrf_token %}
+                <button class="baseline-primary-button" type="submit">
+                  Use {{ edition.name }}
+                </button>
+              </form>
+            {% endif %}
+          </section>
+
+          <section class="baseline-panel" aria-labelledby="edition-details-title">
+            <div class="baseline-panel-heading">
+              <div>
+                <p class="baseline-kicker">Trusted scope</p>
+                <h2 id="edition-details-title">Edition details</h2>
+              </div>
+              <span class="baseline-count">Record version {{ edition.aggregate_version }}</span>
+            </div>
+            <dl class="baseline-fact-grid">
+              <div>
+                <dt>Organization</dt>
+                <dd>
+                  <a href="{% url 'baseline-organization-record' organization.slug %}">
+                    {{ organization.name }}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt>Convention series</dt>
+                <dd>
+                  <a href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}">
+                    {{ convention_series.name }}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt>Lifecycle</dt>
+                <dd>{{ edition.get_lifecycle_display }}</dd>
+              </div>
+              <div>
+                <dt>Official dates</dt>
+                <dd>{{ edition.starts_on|date:"Y-m-d" }} → {{ edition.ends_on|date:"Y-m-d" }}</dd>
+              </div>
+              <div>
+                <dt>Time zone</dt>
+                <dd>{{ edition.time_zone }}</dd>
+              </div>
+              <div>
+                <dt>Official languages</dt>
+                <dd>{{ edition.language_codes|join:", " }}</dd>
+              </div>
+              <div>
+                <dt>Operating currencies</dt>
+                <dd>{{ edition.currency_codes|join:", " }}</dd>
+              </div>
+              <div>
+                <dt>Stable URL name</dt>
+                <dd><code>{{ edition.slug }}</code></dd>
+              </div>
+              <div>
+                <dt>Last record update</dt>
+                <dd>
+                  {% timezone edition.time_zone %}
+                    <time datetime="{{ edition.updated_at|date:'c' }}">
+                      {{ edition.updated_at|date:"Y-m-d H:i T" }}
+                    </time>
+                  {% endtimezone %}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          {% if form %}
+            {% if form.non_field_errors %}
+              <div class="baseline-errors" role="alert">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <form method="post" class="baseline-form" novalidate>
+              {% csrf_token %}
+              {{ form.expected_aggregate_version }}
+              {% if form.expected_aggregate_version.errors %}
+                <div class="baseline-errors" role="alert">
+                  {{ form.expected_aggregate_version.errors }}
+                </div>
+              {% endif %}
+
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="edition-profile-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Draft details</p>
+                  <h2 id="edition-profile-title">Edition profile</h2>
+                  <p>
+                    The organization, convention series, stable URL name, and
+                    lifecycle cannot be changed in this form.
+                  </p>
+                </div>
+                {% include "core/_baseline_form_field.html" with field=form.name %}
+              </section>
+
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="edition-profile-dates-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Local convention time</p>
+                  <h2 id="edition-profile-dates-title">Dates and time zone</h2>
+                  <p>
+                    Review these facts before timetable or registration dates
+                    depend on them.
+                  </p>
+                </div>
+                <div class="baseline-field-grid">
+                  {% include "core/_baseline_form_field.html" with field=form.starts_on %}
+                  {% include "core/_baseline_form_field.html" with field=form.ends_on %}
+                </div>
+                {% include "core/_baseline_form_field.html" with field=form.time_zone %}
+              </section>
+
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="edition-profile-locale-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Edition defaults</p>
+                  <h2 id="edition-profile-locale-title">Languages and currencies</h2>
+                  <p>
+                    These codes define later localized content and money-entry
+                    boundaries for this edition.
+                  </p>
+                </div>
+                <div class="baseline-field-grid baseline-field-grid--locale">
+                  {% include "core/_baseline_form_field.html" with field=form.language_codes %}
+                  {% include "core/_baseline_form_field.html" with field=form.currency_codes %}
+                </div>
+              </section>
+
+              <aside class="baseline-boundary" aria-labelledby="edition-profile-boundary-title">
+                <p class="baseline-kicker">Record boundary</p>
+                <h2 id="edition-profile-boundary-title">Profile, not lifecycle or operations</h2>
+                <p>
+                  Saving changes only the reviewed Draft or Preparing profile.
+                  It does not move lifecycle, publish anything, copy prior
+                  configuration, or create access, registration, programme,
+                  venue, staffing, or participation records.
+                </p>
+              </aside>
+
+              <div class="baseline-form-actions baseline-form-actions--sticky">
+                <button type="submit">Save edition</button>
+                <a
+                  class="baseline-secondary-link"
+                  href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}"
+                >Back to series</a>
+              </div>
+            </form>
+          {% else %}
+            <section class="baseline-panel baseline-read-only" aria-labelledby="edition-read-only-title">
+              <p class="baseline-kicker">Retained record</p>
+              <h2 id="edition-read-only-title">Edition profile is read-only</h2>
+              {% if organization.lifecycle == "closed" %}
+                <p>
+                  {{ organization.name }} is Closed, so its convention records
+                  remain available for oversight without ordinary changes.
+                </p>
+              {% else %}
+                <p>
+                  {{ edition.get_lifecycle_display }} editions require a later
+                  lifecycle or change-control workflow before profile facts can
+                  change.
+                </p>
+              {% endif %}
+            </section>
+          {% endif %}
+
+          {% include "core/_baseline_activity.html" %}
+        {% endif %}
+      </main>
+    </div>
+  </body>
+</html>

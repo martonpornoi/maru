@@ -13,7 +13,9 @@ Draft command, ADR 0033 expands Page 2 with the complete optional profile,
 ADR 0034 adds the linked Page 3 record, compact one-row
 **Organizations**/**+ Add** navigation, audited profile updates, and protected
 empty-Draft deletion, and ADR 0035 adds organization-scoped Page 4 convention
-series creation. ADR 0036 makes navigation progressive: global pages remain
+series creation. M1 adds Page 5 series record, Page 6 audited/idempotent edition
+creation, and Page 7 edition record plus explicit working context. ADR 0036
+makes navigation progressive: global pages remain
 global while selected-organization pages appear in a named contextual section,
 and the desktop sidebar aligns to ordinary viewport padding. All retain the
 no-governance and no-participation side-effect boundary. The
@@ -22,7 +24,9 @@ list of currently mounted pages. ADR 0037 now groups page contracts into
 executable vertical milestones so that complete journeys can advance without a
 mandatory pause after every isolated page. Each page still requires UX-013's
 scope, states, authorization, navigation, test, documentation, desktop, and
-narrow-viewport evidence. `PRODUCTION_CONSOLIDATION.md` is the authoritative
+narrow-viewport evidence. ADR 0038 records that the locally verified M1 record
+spine precedes M2 governance and computed scoped access; it does not weaken the
+full ADR 0037 outcome. `PRODUCTION_CONSOLIDATION.md` is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
 milestone checklist.
 
@@ -88,14 +92,25 @@ phase is treated as complete across the whole product.
 
 The controlled rebuild now exposes Page 1 organization inventory, complete
 Page 2 Draft creation, Page 3 organization records for maintaining public
-identity, legal/imprint, contact, and locale defaults, and Page 4 creation of a
-recurring public convention brand nested under its selected organization. A
+identity, legal/imprint, contact, and locale defaults, Page 4 creation of a
+recurring public convention brand, Page 5 versioned series maintenance and
+edition inventory, Page 6 shared HTML/API edition creation, and Page 7
+versioned edition maintenance plus explicit working context. A
 confirmed empty Draft can be deleted, but a created series or any other
 protected relationship refuses deletion. Series creation generates scoped
-identity and audit evidence only; series record editing, event edition
-creation, activation, and Executive Board provisioning remain behind their own
-future contracts. Draft organizations created during this interval must be
-brought under the IDN-012 Executive Board invariant before activation.
+identity and audit evidence only. Edition creation starts one Draft identity
+with idempotency receipt, audit, domain event, and outbox; it does not create
+registration, programme, venue, people, or workforce records. The first access
+summary is truthful but static/provisional: computed organization/department/
+person access and **Manage access** remain Phase 1 scope v2. Draft organizations
+created during this interval must be brought under the IDN-012 Executive Board
+invariant before activation.
+
+M1 is locally verified across the complete suite, migration rehearsal,
+OpenAPI/client regeneration, deployment-shaped checks, and desktop/390-pixel
+visual smoke. Owner rehearsal, automated accessibility analysis, reliable
+keyboard traversal, and the remaining visual state matrix stay open and no
+production-readiness claim follows from M1.
 
 ## Phase 2: Registration vertical slice
 

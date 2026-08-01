@@ -172,8 +172,10 @@ def test_archive_finalizes_labels_as_they_exist_at_close() -> None:
     edition = participation.edition
     series = edition.series
     edition.name = "Final Edition Name"
+    edition.aggregate_version += 1
     edition.save()
     series.name = "Final Series Name"
+    series.profile_version += 1
     series.save()
 
     _archive(edition)
@@ -182,6 +184,7 @@ def test_archive_finalizes_labels_as_they_exist_at_close() -> None:
     assert participation.series_name_snapshot == "Final Series Name"
 
     series.name = "Future Series Name"
+    series.profile_version += 1
     series.save()
     participation.refresh_from_db()
     assert participation.series_name_snapshot == "Final Series Name"

@@ -64,6 +64,10 @@ from maru.identity.api import (
 )
 from maru.identity.forms import EmailOrHandleAuthenticationForm
 from maru.identity.views import recover_account, verify_email
+from maru.organizations.api import (
+    ConventionSeriesDetailView,
+    ConventionSeriesListView,
+)
 from maru.participation.api import (
     EditionParticipationDetailView,
     EditionParticipationListView,
@@ -493,6 +497,16 @@ urlpatterns: list[URLPattern | URLResolver] = [
         "api/v1/management/convention-bootstrap",
         ConventionBootstrapWorkspaceView.as_view(),
         name="api-convention-bootstrap",
+    ),
+    path(
+        "api/v1/organizations/<uuid:organization_id>/series",
+        ConventionSeriesListView.as_view(),
+        name="api-convention-series-list",
+    ),
+    path(
+        ("api/v1/organizations/<uuid:organization_id>/series/<uuid:series_id>"),
+        ConventionSeriesDetailView.as_view(),
+        name="api-convention-series-detail",
     ),
     path(
         "api/v1/organizations/<uuid:organization_id>/editions",

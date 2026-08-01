@@ -1,7 +1,7 @@
 # Development setup
 
-Status: Empty-experience rebuild baseline
-Last updated: 2026-07-31
+Status: Production-consolidation M1 development environment
+Last updated: 2026-08-01
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ uv run python src/manage.py migrate
 uv run python src/manage.py runserver
 ```
 
-ADR 0030's verified baseline uses the separately named
+The controlled rebuild uses the separately named
 `maru_rebuild_empty` database. Local defaults still connect to
 `postgresql://maru:maru@127.0.0.1:5432/maru` when the environment variable is
 omitted, so keep `MARU_DATABASE_URL` set in the server terminal.
@@ -44,10 +44,10 @@ uv run python src/manage.py createsuperuser
 The account uses its email address or optional unique login handle to sign in
 at <http://127.0.0.1:8000/admin/>. A superuser is explicitly classified as a
 non-participating platform administrator. The current default browser
-experience has no menu, setup guide, convention workspace, specialist records,
-public registration, or volunteer pages. It contains Sign in and Page 1's
-read-only organization inventory. Local password authentication is not the
-production identity system.
+experience contains one progressive menu and Pages 1–7 from organization
+inventory through edition record/working context. The preserved setup guide,
+specialist records, public registration, and volunteer pages remain unmounted.
+Local password authentication is not the production identity system.
 
 The verified local baseline contains only:
 
@@ -60,7 +60,19 @@ Password: M4rucon-Rehearsal-2031!
 
 See the
 [empty-experience runbook](../operations/empty-experience-baseline.md). Do not
-add an organization or other record until its page contract is approved.
+assume the named database is still empty or delete owner-created records. The
+[hands-on tutorial](../operations/maru-hands-on-tutorial.md) uses clearly
+synthetic records.
+
+### M1 migration boundary
+
+Organizations `0005`–`0007` and events `0006`–`0009` add series profile
+versions, edition aggregate versions, creation receipts, span/digest
+constraints, database triggers, and fail-closed downgrade fences for populated
+workspaces. Stop old application writers before applying them in a shared
+environment. Do not downgrade populated M1 data to old code or bypass the
+fences; use a reviewed forward fix or approved backup/PITR recovery. See the
+[edition workspace migration and recovery runbook](../operations/edition-workspace-migration-and-recovery.md).
 
 ### Preserved pre-reset workflows
 
@@ -109,8 +121,8 @@ must be acknowledged explicitly on every network import. To rehearse without
 public personal data, pass `--roster-file` with synthetic semantic HTML.
 Automated tests use only such a synthetic miniature.
 
-The former public registration pages are intentionally unmounted during the
-page-by-page rebuild. Registration APIs and services remain preserved.
+The former public registration pages are intentionally unmounted during
+production consolidation. Registration APIs and services remain preserved.
 
 ## Synthetic demonstration data
 
@@ -221,6 +233,10 @@ docker compose stop postgres
 Do not use `flush`, delete the volume, or roll back migrations when the target
 database might contain valuable work.
 
+The edition-creation API requires a UUID `Idempotency-Key` HTTP header; its JSON
+body must not contain `idempotency_key`. HTML Page 6 manages its own hidden
+retry UUID. Both adapters call the same service and receipt boundary.
+
 See the [effect worker runbook](../operations/effects-worker-runbook.md) before
 quarantine replay or queue recovery.
 
@@ -253,5 +269,8 @@ export, message, attachment, or personal identifier into local development.
   database URL before rerunning.
 - If schema generation changes, inspect the OpenAPI diff and update the checked
   contract intentionally.
+- If Django reports a missing identity, series-version, aggregate-version, or
+  creation-receipt column, confirm the exact database URL, stop the server, run
+  current migrations, and restart. Do not use `--fake` to suppress drift.
 - If a migration is detected unexpectedly, review model changes; do not hide
   drift by generating an unexplained migration.

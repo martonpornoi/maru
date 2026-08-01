@@ -1,0 +1,216 @@
+{% load static tz %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
+    <title>{% if convention_series %}{{ convention_series.name }}{% else %}Convention series unavailable{% endif %} · Maru</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
+  </head>
+  <body>
+    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
+    <header class="baseline-header">
+      <img
+        class="baseline-logo"
+        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+        alt="Maru"
+      >
+      <div class="baseline-account">
+        <span>{{ request.user.display_name }}</span>
+        <form method="post" action="{% url 'staff-logout' %}">
+          {% csrf_token %}
+          <button class="baseline-link-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+
+    <div class="baseline-admin-layout">
+      {% include "core/_baseline_admin_navigation.html" with current_admin_page="series-record" %}
+
+      <main id="main-content" class="baseline-page baseline-page--form" data-page="convention-series-record" tabindex="-1">
+        {% if series_record_load_failed %}
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">Convention series</p>
+            <h1>Convention series unavailable</h1>
+          </header>
+          <div class="baseline-state baseline-state--error" role="alert">
+            <h2>The convention series could not be loaded</h2>
+            <p>Try again after the database is available. No data was changed.</p>
+          </div>
+        {% else %}
+          {% if messages %}
+            <div class="baseline-messages" aria-live="polite">
+              {% for message in messages %}
+                <div class="baseline-notice baseline-notice--success" role="status">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <a
+            class="baseline-back-link"
+            href="{% url 'baseline-organization-record' organization.slug %}"
+          >← {{ organization.name }}</a>
+
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">Convention-series record</p>
+            <h1>{{ convention_series.name }}</h1>
+            <p class="baseline-intro">
+              Maintain this recurring convention identity and continue to its
+              dated editions.
+            </p>
+            <p class="baseline-record-meta">
+              <span>Availability: <strong>{% if convention_series.is_active %}Active{% else %}Inactive{% endif %}</strong></span>
+              <span>Stable URL name: <code>{{ convention_series.slug }}</code></span>
+              <span>Owner: <strong>{{ organization.name }}</strong></span>
+              <span>
+                Last changed:
+                {% timezone organization.default_time_zone %}
+                  <time datetime="{{ convention_series.updated_at|date:'c' }}">
+                    {{ convention_series.updated_at|date:"Y-m-d H:i T" }}
+                  </time>
+                {% endtimezone %}
+              </span>
+            </p>
+          </header>
+
+          {% if series_editable %}
+            {% include "core/_baseline_access_summary.html" with access_operation="view and change this convention-series record" %}
+          {% else %}
+            {% include "core/_baseline_access_summary.html" with access_operation="view this retained convention-series record" %}
+          {% endif %}
+
+          <section class="baseline-panel" aria-labelledby="event-editions-title">
+            <div class="baseline-panel-heading">
+              <div>
+                <p class="baseline-kicker">Dated occurrences</p>
+                <h2 id="event-editions-title">Convention editions</h2>
+              </div>
+              <div class="baseline-panel-actions">
+                <span class="baseline-count">{{ editions|length }} edition{{ editions|length|pluralize }}</span>
+                {% if organization.lifecycle != "closed" and convention_series.is_active %}
+                  <a
+                    class="baseline-primary-link"
+                    href="{% url 'baseline-create-event-edition' organization.slug convention_series.slug %}"
+                  >+ Add edition</a>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if editions %}
+              <div class="baseline-table-wrap">
+                <table class="baseline-table">
+                  <caption class="baseline-visually-hidden">
+                    Event editions in {{ convention_series.name }}
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Edition</th>
+                      <th scope="col">Lifecycle</th>
+                      <th scope="col">Dates</th>
+                      <th scope="col">Time zone</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in editions %}
+                      <tr>
+                        <th scope="row" data-label="Edition">
+                          <a
+                            class="baseline-record-name"
+                            href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug item.slug %}"
+                          >{{ item.name }}</a>
+                          <span class="baseline-record-slug">{{ item.slug }}</span>
+                        </th>
+                        <td data-label="Lifecycle">{{ item.get_lifecycle_display }}</td>
+                        <td data-label="Dates">{{ item.starts_on|date:"Y-m-d" }} → {{ item.ends_on|date:"Y-m-d" }}</td>
+                        <td data-label="Time zone">{{ item.time_zone }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% elif not convention_series.is_active %}
+              <div class="baseline-state">
+                <h3>No editions; series is Inactive</h3>
+                <p>Reactivate the series before creating a dated edition.</p>
+              </div>
+            {% elif organization.lifecycle == "closed" %}
+              <div class="baseline-state">
+                <h3>No editions; organization is Closed</h3>
+                <p>Closed organization history remains read-only.</p>
+              </div>
+            {% else %}
+              <div class="baseline-state" data-state="empty">
+                <h3>No convention editions yet</h3>
+                <p>
+                  Add the dated occurrence next. Maru will inherit the
+                  organization's locale defaults without creating participants
+                  or registration.
+                </p>
+              </div>
+            {% endif %}
+          </section>
+
+          {% if form %}
+            {% if form.non_field_errors %}
+              <div class="baseline-errors" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <form method="post" class="baseline-form" novalidate>
+              {% csrf_token %}
+              {{ form.expected_profile_version }}
+              {% if form.expected_profile_version.errors %}
+                <div class="baseline-errors" role="alert">
+                  {{ form.expected_profile_version.errors }}
+                </div>
+              {% endif %}
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="series-profile-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Recurring brand</p>
+                  <h2 id="series-profile-title">Series profile</h2>
+                  <p>The organization and stable URL name cannot be changed here.</p>
+                </div>
+                {% include "core/_baseline_form_field.html" with field=form.name %}
+                {% include "core/_baseline_form_field.html" with field=form.description %}
+                <div class="baseline-field-grid">
+                  {% include "core/_baseline_form_field.html" with field=form.website_url %}
+                  {% include "core/_baseline_form_field.html" with field=form.contact_email %}
+                </div>
+                {% include "core/_baseline_form_field.html" with field=form.availability %}
+              </section>
+
+              <aside class="baseline-boundary" aria-labelledby="series-record-boundary-title">
+                <p class="baseline-kicker">Record boundary</p>
+                <h2 id="series-record-boundary-title">Identity, not an edition</h2>
+                <p>
+                  Saving does not reparent or publish the series, create an
+                  edition, or grant governance, access, membership,
+                  registration, staffing, or participation.
+                </p>
+              </aside>
+
+              <div class="baseline-form-actions baseline-form-actions--sticky">
+                <button type="submit">Save series</button>
+                <a
+                  class="baseline-secondary-link"
+                  href="{% url 'baseline-organization-record' organization.slug %}"
+                >Back to organization</a>
+              </div>
+            </form>
+          {% else %}
+            <section class="baseline-panel baseline-read-only" aria-labelledby="series-read-only-title">
+              <p class="baseline-kicker">Retained history</p>
+              <h2 id="series-read-only-title">Series profile is read-only</h2>
+              <p>A Closed organization's convention records cannot be changed.</p>
+            </section>
+          {% endif %}
+
+          {% include "core/_baseline_activity.html" %}
+        {% endif %}
+      </main>
+    </div>
+  </body>
+</html>

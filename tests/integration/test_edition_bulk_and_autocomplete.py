@@ -178,6 +178,10 @@ def test_autocomplete_is_bounded_minimized_and_literal() -> None:
     response = client.get(url, {"search": "Autumn", "limit": 1})
     literal = client.get(url, {"search": "["})
     oversized = client.get(url, {"search": "Pawprint", "limit": 21})
+    undeclared = client.get(
+        url,
+        {"search": "Pawprint", "include_private": "true"},
+    )
 
     assert response.status_code == 200
     assert response.json() == {
@@ -195,6 +199,8 @@ def test_autocomplete_is_bounded_minimized_and_literal() -> None:
     assert literal.status_code == 200
     assert literal.json() == {"results": []}
     assert oversized.status_code == 400
+    assert undeclared.status_code == 400
+    assert undeclared.json()["code"] == "unknown_input_field"
 
 
 def test_autocomplete_projection_fails_closed(

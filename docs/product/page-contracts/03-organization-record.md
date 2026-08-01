@@ -52,6 +52,13 @@ A changed profile redirects back to the record with a one-time confirmation.
 An unchanged valid submission performs no database or audit write and reports
 that there was nothing to update.
 
+Both browser forms use closed input contracts. The profile form accepts only
+the Page 2 profile fields plus CSRF. The deletion form accepts only
+`confirmation_name`, `acknowledge`, and CSRF. Forged `slug`, `lifecycle`,
+organization identifiers, version values, actor/timestamp fields, or any other
+undeclared key fail with `unknown_input_field`; they are not discarded and no
+mutation is attempted.
+
 ## Delete action
 
 The danger zone is a separate POST form and never shares the profile-update
@@ -117,7 +124,8 @@ have no horizontal overflow.
 - anonymous redirect, ordinary/staff denial before lookup, and authorized 404;
 - complete-profile population, validation, normalization, and changed-field
   audit without copied values;
-- stable slug and lifecycle despite crafted POST values;
+- stable slug and lifecycle, with crafted or otherwise undeclared POST fields
+  rejected before mutation;
 - unchanged save without write or audit;
 - exact-name and acknowledgement delete validation;
 - delete restricted to empty Draft organizations;

@@ -1,7 +1,7 @@
 # Effects module
 
-Status: Implemented V02 worker boundary  
-Last updated: 2026-07-27
+Status: Implemented V02 worker boundary and value-minimized aggregate facts
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
@@ -33,6 +33,13 @@ Handlers receive the domain-event UUID as their idempotency key. Delivery is
 at least once: a provider timeout or worker crash can cause a repeat, so every
 handler or adapter must make that key an idempotency boundary or reconcile the
 ambiguous result.
+
+`aggregate_domain_facts(...)` is the public read boundary for a bounded record
+history. The caller must provide exact organization, aggregate type/identifier,
+an event-name allowlist, and a limit. It returns event name, occurrence time,
+optional actor ID, and validated minimized payload for an already-authorized
+projection. It does not bypass the caller's page/domain authorization and is
+not a replacement for security audit.
 
 ## Worker contract
 
@@ -75,10 +82,11 @@ scope, a quarantined target, and append an allow/deny/error audit.
 
 ## Integrated behavior
 
-Every successful edition lifecycle transition publishes
-`events.edition.lifecycle_transitioned.v1` in the same transaction as state,
-history, and audit. A forced publish failure rolls the entire canonical change
-back.
+Convention-series creation/update and event-edition creation/profile update
+publish their closed versioned facts in the same transaction as canonical
+state and audit. Every successful edition lifecycle transition likewise
+publishes `events.edition.lifecycle_transitioned.v1`. A forced publish failure
+rolls the complete canonical change back.
 
 Authority management publishes closed, minimized facts for direct grants,
 grant revocation, role-bundle version creation, role assignment, and role
@@ -93,6 +101,9 @@ ambiguous external success, transient/permanent/timeout/unexpected failures,
 attempt exhaustion, poison quarantine, reordering convergence, cancellation,
 fair tenant rotation, child success/failure/hard-timeout classification,
 tenant-safe metrics, and authorized/audited operator replay.
+The edition-spine tests additionally cover registered series/edition facts,
+aggregate version order, value-minimized payloads, and record-activity query
+scope.
 
 ## Limitations
 

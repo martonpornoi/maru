@@ -49,6 +49,12 @@ fields. Maru generates a bounded slug, unique case-insensitively within the
 organization; duplicate names receive a numeric suffix and other organizations
 may use the same slug.
 
+The browser contract accepts only these five fields plus CSRF. A forged
+organization, slug, profile version, actor, timestamp, or other undeclared key
+fails with `unknown_input_field`; it is never silently ignored. The same
+closed-input rule applies when the form is reused for Page 5, where the one
+additional declared key is the expected profile version.
+
 ## Authorization, lifecycle, privacy, and audit
 
 Only an authenticated active `platform_administrator` may load or submit Page
@@ -58,11 +64,13 @@ organization. Draft is explicitly allowed so Page 2 organizations can progress
 before the later Executive Board/activation workflow. Active and Suspended are
 also allowed to maintain brand setup; Closed is terminal.
 
-Creation and its audit event are one transaction. Audit names the organization
-relationship and created series fields, but does not copy the name,
-description, website, or email into metadata. A database or audit failure rolls
-back the series. The resulting series remains C1 setup data until an explicit
-publication workflow exists.
+The series, minimized audit event,
+`organizations.convention_series.created.v1` domain event, and outbox delivery
+are one transaction. Audit and domain facts name the organization relationship
+and created field labels, but do not copy the name, description, website, or
+email into metadata. A database, audit, event-publication, or outbox failure
+rolls everything back. The resulting series remains C1 setup data until an
+explicit public-content publication workflow exists.
 
 ## Page states
 
@@ -95,10 +103,11 @@ Page 3's series table reflows to labelled records at narrow widths. Desktop and
 - name-only active creation and complete optional inactive creation;
 - normalized names, bounded collision-safe per-organization slugs, and
   cross-organization reuse;
-- crafted organization/slug values ignored;
+- crafted organization/slug values and every other undeclared field rejected;
 - repeated service authorization and locked lifecycle validation;
-- atomic audit with field names and no entered values;
-- audit/database rollback and safe retry state;
+- atomic minimized audit/domain event/outbox evidence with field names and no
+  entered values;
+- audit/event/outbox/database rollback and safe non-disclosing retry state;
 - no edition, membership, authority, participation, registration, or workforce
   side effects;
 - desktop and 390-pixel browser inspection without creating a live MaruCon

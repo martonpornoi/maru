@@ -1,7 +1,9 @@
 # Identity module
 
-Status: Verified identity lifecycle, explicit platform administrators, human login handles, session controls, and scoped restrictions implemented
-Last updated: 2026-07-31
+Status: Verified identity lifecycle, explicit platform administrators, human
+login handles, session controls, safe activity labels, and scoped restrictions
+implemented
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
@@ -48,6 +50,9 @@ registrants, volunteers, onboarding subjects, or workforce assignees.
 - `AccountManager.create_user`
 - `AccountManager.create_superuser`
 - `AccountSecurityEvent`
+- `account_display_labels(account_ids)`, a bounded internal read projection
+  returning display name or the generic `Maru account` fallback without email,
+  login handle, authentication state, or contact data;
 - `GET /api/v1/me/security-history`
 
 Successful sign-in and sign-out signals append safe event type, outcome, source
@@ -97,6 +102,11 @@ with email as a fallback, supports direct display-name/handle/email search and a
 and keeps UUID and authentication timestamps in a collapsed technical section.
 It does not expose Django groups or per-user Django permissions as an
 alternative to Maru's scoped authority model.
+
+The activity module may use `account_display_labels(...)` only after its own
+tenant/resource authorization and domain-event filtering. The query is a safe
+label adapter, not permission to enumerate accounts; missing/deleted actors
+remain a generic label and raw account identifiers are not rendered.
 
 ## Retention and archive
 

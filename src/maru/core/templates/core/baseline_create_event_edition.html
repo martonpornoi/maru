@@ -1,0 +1,170 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
+    <title>Create event edition · Maru</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
+  </head>
+  <body>
+    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
+    <header class="baseline-header">
+      <img
+        class="baseline-logo"
+        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+        alt="Maru"
+      >
+      <div class="baseline-account">
+        <span>{{ request.user.display_name }}</span>
+        <form method="post" action="{% url 'staff-logout' %}">
+          {% csrf_token %}
+          <button class="baseline-link-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+
+    <div class="baseline-admin-layout">
+      {% include "core/_baseline_admin_navigation.html" with current_admin_page="add-event-edition" %}
+
+      <main id="main-content" class="baseline-page baseline-page--form" data-page="create-event-edition" tabindex="-1">
+        {% if edition_creation_load_failed %}
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">Convention editions</p>
+            <h1>Convention series unavailable</h1>
+          </header>
+          <div class="baseline-state baseline-state--error" role="alert">
+            <h2>The convention series could not be loaded</h2>
+            <p>
+              Try again after the database is available. No event edition was
+              created.
+            </p>
+          </div>
+        {% else %}
+          <a
+            class="baseline-back-link"
+            href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}"
+          >← {{ convention_series.name }}</a>
+
+          <header class="baseline-page-heading">
+            <p class="baseline-kicker">{{ organization.name }} · {{ convention_series.name }}</p>
+            <h1>Create event edition</h1>
+            <p class="baseline-intro">
+              Add the dated occurrence of this recurring convention. Locale
+              suggestions begin with the organization defaults and remain
+              specific to this edition.
+            </p>
+          </header>
+
+          {% if edition_creation_blocked %}
+            {% include "core/_baseline_access_summary.html" with access_operation="view why edition creation is unavailable for this series" %}
+          {% else %}
+            {% include "core/_baseline_access_summary.html" with access_operation="view and create event editions for this series" %}
+          {% endif %}
+
+          {% if edition_creation_blocked %}
+            <div class="baseline-state baseline-state--error baseline-blocked-state" role="alert">
+              <h2>Edition creation is unavailable</h2>
+              {% if organization.lifecycle == "closed" %}
+                <p>
+                  {{ organization.name }} is Closed. Its convention history is
+                  retained, but it cannot receive a new event edition.
+                </p>
+              {% else %}
+                <p>
+                  {{ convention_series.name }} is Inactive. Reactivate the
+                  series from its record before creating a dated edition.
+                </p>
+              {% endif %}
+            </div>
+          {% else %}
+            {% if form.non_field_errors %}
+              <div class="baseline-errors" role="alert">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <form method="post" class="baseline-form" novalidate>
+              {% csrf_token %}
+              {{ form.idempotency_key }}
+              {% if form.idempotency_key.errors %}
+                <div class="baseline-errors" role="alert">
+                  {{ form.idempotency_key.errors }}
+                </div>
+              {% endif %}
+
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="edition-identity-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Dated occurrence</p>
+                  <h2 id="edition-identity-title">Edition identity</h2>
+                  <p>
+                    Use the recognizable public name. Maru creates a stable URL
+                    name within {{ convention_series.name }}.
+                  </p>
+                </div>
+                {% include "core/_baseline_form_field.html" with field=form.name %}
+              </section>
+
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="edition-dates-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Local convention time</p>
+                  <h2 id="edition-dates-title">Dates and time zone</h2>
+                  <p>
+                    Dates identify the official convention days. The selected
+                    IANA time zone will govern later timetable instants.
+                  </p>
+                </div>
+                <div class="baseline-field-grid">
+                  {% include "core/_baseline_form_field.html" with field=form.starts_on %}
+                  {% include "core/_baseline_form_field.html" with field=form.ends_on %}
+                </div>
+                {% include "core/_baseline_form_field.html" with field=form.time_zone %}
+              </section>
+
+              <section class="baseline-panel baseline-form-panel" aria-labelledby="edition-locale-title">
+                <div class="baseline-section-heading">
+                  <p class="baseline-kicker">Edition defaults</p>
+                  <h2 id="edition-locale-title">Languages and currencies</h2>
+                  <p>
+                    Choose the official languages and ordered operating
+                    currencies. These values can be reviewed while the edition
+                    is Draft or Preparing.
+                  </p>
+                </div>
+                <div class="baseline-field-grid baseline-field-grid--locale">
+                  {% include "core/_baseline_form_field.html" with field=form.language_codes %}
+                  {% include "core/_baseline_form_field.html" with field=form.currency_codes %}
+                </div>
+              </section>
+
+              <aside class="baseline-boundary" aria-labelledby="edition-creation-boundary-title">
+                <p class="baseline-kicker">What this step creates</p>
+                <h2 id="edition-creation-boundary-title">One Draft edition</h2>
+                <p>
+                  Maru keeps the organization, series, stable URL name, Draft
+                  lifecycle, actor attribution, and retry identity under
+                  platform control. Creation does not add governance, access,
+                  people, registration,
+                  applications, departments, programme, venue, shifts, or
+                  participation, and this platform account remains outside the
+                  convention.
+                </p>
+              </aside>
+
+              <div class="baseline-form-actions baseline-form-actions--sticky">
+                <button type="submit">Create event edition</button>
+                <a
+                  class="baseline-secondary-link"
+                  href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}"
+                >Cancel</a>
+              </div>
+            </form>
+          {% endif %}
+        {% endif %}
+      </main>
+    </div>
+  </body>
+</html>

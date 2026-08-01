@@ -3,6 +3,7 @@ from datetime import date
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import F
 
 from maru.core.localization import (
     grouped_language_choices,
@@ -154,10 +155,10 @@ def test_historical_labels_are_snapshots() -> None:
     original_series_name = participation.series_name_snapshot
 
     ConventionSeries.objects.filter(pk=participation.edition.series_id).update(
-        name="Renamed Series"
+        name="Renamed Series", profile_version=F("profile_version") + 1
     )
     EventEdition.objects.filter(pk=participation.edition_id).update(
-        name="Renamed Edition"
+        name="Renamed Edition", aggregate_version=F("aggregate_version") + 1
     )
     participation.refresh_from_db()
 

@@ -235,6 +235,11 @@ def submit_volunteer_application(
             .get(id=opportunity_id)
         )
         position = opportunity.position
+        if not actor.is_active:
+            raise ValidationError(
+                "This opportunity is not accepting applications.",
+                code="opportunity_not_accepting",
+            )
         _require(
             actor=actor,
             capability_code=APPLY_SELF,
@@ -242,7 +247,7 @@ def submit_volunteer_application(
             edition_id=position.edition_id,
             owner_account_id=actor.id,
         )
-        if not actor.is_active or not opportunity.accepts_applications:
+        if not opportunity.accepts_applications:
             raise ValidationError(
                 "This opportunity is not accepting applications.",
                 code="opportunity_not_accepting",

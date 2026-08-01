@@ -1,11 +1,13 @@
 # Empty-experience baseline
 
-Status: Historical accepted baseline; superseded by Page 1
-Last updated: 2026-07-31
+Status: Historical accepted baseline; current environment now uses Pages 1–7
+Last updated: 2026-08-01
 
 ADR 0030 deliberately exposed only Sign in and one empty administration home.
-The owner accepted that baseline. ADR 0031 and the
-[Page 1 runbook](page-01-platform-home.md) now describe the executable home.
+The owner accepted that baseline. Pages 1–7 now supersede its executable
+surface; keep this document for the isolated database and original reset
+boundary. Use the [hands-on tutorial](maru-hands-on-tutorial.md) for current
+navigation.
 
 ## Current local environment
 
@@ -19,12 +21,13 @@ Password: M4rucon-Rehearsal-2031!
 The password is local test data. Never reuse it in a deployment or real
 account.
 
-The database contains one account and no organizations, convention series,
-editions, registration configurations, registrations, departments, or
-positions. After identity migration `0010`, the first account is explicitly an
-active `platform_administrator` as described by the Page 1 runbook.
+The database began with one account and no domain records. It may now contain
+the owner's Draft MaruCon organization and M1 rehearsal records. Do not infer a
+known-empty state from the database name or delete those records. After
+identity migration `0010`, the first account is explicitly an active
+`platform_administrator` as described by the Page 1 runbook.
 
-## Start the baseline
+## Start the current controlled shell
 
 From the repository root in PowerShell:
 
@@ -35,6 +38,12 @@ uv run python src/manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/admin/> and sign in as `admin`.
+
+The current surface mounts organization inventory/creation/record, convention-
+series creation/record, event-edition creation/record, and explicit edition
+working context. Apply all current migrations before starting; a missing
+`login_handle`, series profile version, edition aggregate version, or creation
+receipt column means the selected database is behind the running code.
 
 Historical baseline behavior before Page 1:
 
@@ -54,8 +63,8 @@ Do not point this baseline at `maru` or `marucon_rehearsal`. Do not flush or
 drop those databases. `maru_rebuild_empty` is the only database for the
 page-by-page rebuild until a later checkpoint explicitly changes that.
 
-## Next page gate
+## Current continuation
 
-The baseline gate is complete. Continue with the per-page gates in
-`docs/project/RESET_REBUILD.md`; do not restore the old shell or use this
-historical runbook as the current UI contract.
+The baseline gate is complete and `RESET_REBUILD.md` is historical. Continue
+from M1/M2 in `docs/project/PRODUCTION_CONSOLIDATION.md`; do not restore the old
+shell or use this historical runbook as the current UI contract.

@@ -1,7 +1,7 @@
 # Activity, audit, and history
 
-Status: Initial projections implemented  
-Last updated: 2026-07-27
+Status: Initial registration and record-history projections implemented
+Last updated: 2026-08-01
 
 “Track user activity” has three legitimate meanings in Maru. Combining them
 would create a surveillance system, an unusable audit log, and poor historical
@@ -121,6 +121,13 @@ The first executable projection is the registration timeline. Submission,
 confirmation/payment reconciliation, entitlement consequence, and check-in
 produce attendee and purpose-limited staff renditions. Form answers remain in
 the exact submission snapshot and are not copied into the general timeline.
+
+Pages 5 and 7 add the first controlled-shell record histories. They project a
+bounded allowlist of convention-series and edition domain facts, safe actor
+display labels, changed-field labels, and edition/organization-local time. They
+do not copy entered values, email, raw actor identifiers, source channel, or
+security-policy detail. This aggregate history does not complete the later
+cross-domain, department/resource-aware Activity workspace.
 
 ## User-visible account history
 

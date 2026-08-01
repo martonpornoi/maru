@@ -1,9 +1,11 @@
 """Event edition aggregate and lifecycle history."""
 
+from datetime import timedelta
 from typing import Any
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
 
@@ -17,6 +19,7 @@ from maru.core.validators import (
 
 ARCHIVE_AMENDMENT_LABEL_LENGTH = 60
 ARCHIVE_AMENDMENT_CONTENT_LENGTH = ARCHIVE_AMENDMENT_LABEL_LENGTH - 3
+MAX_EDITION_SPAN_DAYS = 31
 
 
 class EventEdition(UUIDTimeStampedModel):
@@ -47,6 +50,7 @@ class EventEdition(UUIDTimeStampedModel):
         default=Lifecycle.DRAFT,
     )
     lifecycle_version = models.PositiveIntegerField(default=0, editable=False)
+    aggregate_version = models.PositiveIntegerField(default=1, editable=False)
     time_zone = models.CharField(max_length=63, validators=[validate_time_zone])
     language_codes = ArrayField(
         models.CharField(max_length=35),
@@ -70,6 +74,14 @@ class EventEdition(UUIDTimeStampedModel):
             models.CheckConstraint(
                 condition=models.Q(ends_on__gte=models.F("starts_on")),
                 name="edition_ends_on_or_after_starts_on",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    ends_on__lte=(
+                        models.F("starts_on") + timedelta(days=MAX_EDITION_SPAN_DAYS)
+                    )
+                ),
+                name="edition_span_no_more_than_31_days",
             ),
         ]
 
@@ -102,6 +114,69 @@ class EventEdition(UUIDTimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+
+class EditionCreationReceipt(UUIDTimeStampedModel):
+    """Immutable idempotency evidence for one edition-creation command."""
+
+    edition = models.OneToOneField(
+        EventEdition,
+        on_delete=models.PROTECT,
+        related_name="creation_receipt",
+    )
+    organization_id = models.UUIDField()
+    series_id = models.UUIDField()
+    actor_id = models.UUIDField()
+    idempotency_key = models.UUIDField()
+    request_digest = models.CharField(
+        max_length=64,
+        validators=(
+            RegexValidator(
+                regex=r"^[0-9a-f]{64}$",
+                message="Use a lowercase SHA-256 digest.",
+                code="invalid_edition_creation_digest",
+            ),
+        ),
+    )
+
+    class Meta:
+        ordering = ("created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("actor_id", "series_id", "idempotency_key"),
+                name="edition_creation_receipt_unique",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.edition_id:
+            if self.edition.organization_id != self.organization_id:
+                raise ValidationError(
+                    "Edition creation receipt organization does not match.",
+                    code="edition_creation_receipt_organization_mismatch",
+                )
+            if self.edition.series_id != self.series_id:
+                raise ValidationError(
+                    "Edition creation receipt series does not match.",
+                    code="edition_creation_receipt_series_mismatch",
+                )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Edition creation receipts are immutable.",
+                code="immutable_edition_creation_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Edition creation receipts are retained with the edition.",
+            code="protected_edition_creation_receipt",
+        )
 
 
 EDITION_LIFECYCLE_CHOICES = EventEdition.Lifecycle.choices

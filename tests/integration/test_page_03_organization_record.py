@@ -67,6 +67,8 @@ def test_inventory_and_record_use_compact_navigation_and_record_link() -> None:
     assert record.status_code == 200
     content = record.content.decode()
     assert 'data-page="organization-record"' in content
+    assert 'href="#main-content">Skip to main content</a>' in content
+    assert 'id="main-content"' in content
     assert content.count('class="baseline-sidebar-row"') == 2
     assert content.count('aria-current="page"') == 1
     assert 'class="baseline-sidebar-context"' in content
@@ -150,8 +152,6 @@ def test_complete_profile_update_keeps_slug_and_lifecycle_and_audits_fields() ->
             country_code="HU",
             default_language_codes=["hu", "en"],
             default_time_zone="Europe/Budapest",
-            slug="crafted-slug",
-            lifecycle=Organization.Lifecycle.ACTIVE,
         ),
         follow=True,
     )
@@ -189,6 +189,30 @@ def test_complete_profile_update_keeps_slug_and_lifecycle_and_audits_fields() ->
     assert "TAX-42" not in audit_text
     assert "Example Street" not in audit_text
     assert "Renamed Synthetic Organizer was updated." in response.content.decode()
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_record_rejects_code_owned_slug_and_lifecycle_inputs() -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    organization = OrganizationFactory(lifecycle=Organization.Lifecycle.DRAFT)
+    client = APIClient()
+    client.force_login(administrator)
+
+    response = client.post(
+        f"/admin/organizations/{organization.slug}/",
+        _profile_post(
+            organization,
+            slug="crafted-slug",
+            lifecycle=Organization.Lifecycle.ACTIVE,
+        ),
+    )
+
+    assert response.status_code == 200
+    assert "Remove unsupported input fields" in response.content.decode()
+    organization.refresh_from_db()
+    assert organization.slug != "crafted-slug"
+    assert organization.lifecycle == Organization.Lifecycle.DRAFT
+    assert not AuditEvent.objects.exists()
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")

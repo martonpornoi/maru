@@ -154,6 +154,7 @@ class ConventionSeries(UUIDTimeStampedModel):
         help_text="Public contact for this convention brand.",
     )
     is_active = models.BooleanField(default=True)
+    profile_version = models.PositiveIntegerField(default=1, editable=False)
 
     class Meta:
         verbose_name_plural = "convention series"

@@ -91,12 +91,14 @@ def decide(
     at: datetime | None = None,
 ) -> PolicyDecision:
     definition = capability(capability_code)
-    if definition is None:
+    if definition is None or not principal.is_active:
         return PolicyDecision(
             allowed=False,
             fields=frozenset(),
             obligations=frozenset(),
-            reason_code="unknown_capability",
+            reason_code=(
+                "unknown_capability" if definition is None else "account_inactive"
+            ),
         )
 
     permitted_fields = definition.field_ceiling

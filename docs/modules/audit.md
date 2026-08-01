@@ -1,7 +1,7 @@
 # Audit module
 
-Status: Implemented V02 kernel  
-Last updated: 2026-07-27
+Status: Implemented V02 kernel with edition-spine mutation evidence
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
@@ -48,6 +48,12 @@ cross-tenant counts.
 
 ## Integrated behavior
 
+Organization/series creation, organization/series profile changes, protected
+empty-Draft deletion, edition creation, and edition profile changes append
+allow evidence inside their canonical transaction. Changed-field names are
+recorded without entered legal, contact, locale, date, or descriptive values.
+Edition creation stores only a hash of the idempotency key in audit metadata.
+
 Edition lifecycle transitions and capability delegation record correlated
 allow, deny, validation error, and safe unexpected-error outcomes. A
 successful audit event and domain event share correlation; the domain event
@@ -57,6 +63,11 @@ Direct grants, role-bundle versions, and role assignments record separate
 actor and independent-approver allow events. Immediate grant and assignment
 revocation records the revoker. Failed canonical transactions retain one safe
 error event after rolling back partial success evidence.
+
+Pages 5 and 7 do not present `AuditEvent` rows as a human activity feed.
+Record activity uses allowlisted domain facts and safe identity labels; audit
+remains security/control evidence with separate authorization, purpose, and
+retention. A later cross-domain Activity workspace must preserve that boundary.
 
 ## Tests
 

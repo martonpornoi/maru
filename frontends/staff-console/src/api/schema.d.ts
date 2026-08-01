@@ -269,7 +269,7 @@ export interface paths {
         };
         get: operations["events_list_basic_editions"];
         put?: never;
-        post?: never;
+        post: operations["events_create_edition"];
         delete?: never;
         options?: never;
         head?: never;
@@ -284,7 +284,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["events_retrieve_basic_edition"];
-        put?: never;
+        put: operations["events_update_edition"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1209,6 +1209,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["organizations_list_convention_series"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/series/{series_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["organizations_retrieve_convention_series"];
+        put: operations["organizations_update_convention_series"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/accounts": {
         parameters: {
             query?: never;
@@ -1877,6 +1909,51 @@ export interface components {
             editions: components["schemas"]["ConventionBootstrapEdition"][];
             chairs: components["schemas"]["ConventionBootstrapChair"][];
         };
+        /** @description RFC 9457 response shape used at this API boundary. */
+        ConventionSeriesProblem: {
+            /** Format: uri */
+            readonly type: string;
+            readonly title: string;
+            readonly status: number;
+            readonly detail: string;
+            readonly code: string;
+            /** Format: uuid */
+            request_id?: string;
+            errors?: unknown;
+        };
+        /** @description Stable identity and complete editable profile for one series. */
+        ConventionSeriesRead: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly organization_id: string;
+            readonly slug: string;
+            readonly name: string;
+            /** @description Public-facing description of this recurring convention brand. */
+            readonly description: string;
+            /** Format: uri */
+            readonly website_url: string;
+            /**
+             * Format: email
+             * @description Public contact for this convention brand.
+             */
+            readonly contact_email: string;
+            readonly is_active: boolean;
+            readonly profile_version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description Complete, strict convention-series profile replacement input. */
+        ConventionSeriesUpdate: {
+            name: string;
+            description: string;
+            website_url: string;
+            contact_email: string;
+            is_active: boolean;
+            expected_profile_version: number;
+        };
         CreateConfigurationDraft: {
             name: string;
             reason: string;
@@ -1990,6 +2067,7 @@ export interface components {
             readonly slug: string;
             readonly name: string;
             readonly lifecycle: components["schemas"]["EditionLifecycleEnum"];
+            readonly aggregate_version: number;
             readonly time_zone: string;
             readonly language_codes: string[];
             readonly currency_codes: string[];
@@ -2042,6 +2120,19 @@ export interface components {
             capacities: components["schemas"]["CapacityContext"][];
             readonly can_transition: boolean;
         };
+        /** @description Complete bounded edition-profile input shared by create and update. */
+        EditionCreateRequest: {
+            name: string;
+            /** Format: date */
+            starts_on: string;
+            /** Format: date */
+            ends_on: string;
+            time_zone: string;
+            language_codes: string[];
+            currency_codes: string[];
+            /** Format: uuid */
+            series_id: string;
+        };
         /**
          * @description * `draft` - Draft
          *     * `preparing` - Preparing
@@ -2053,6 +2144,18 @@ export interface components {
          * @enum {string}
          */
         EditionLifecycleEnum: "draft" | "preparing" | "ready" | "live" | "closing" | "archived" | "cancelled";
+        /** @description RFC 9457 response shape used by edition management endpoints. */
+        EditionProblem: {
+            /** Format: uri */
+            readonly type: string;
+            readonly title: string;
+            readonly status: number;
+            readonly detail: string;
+            readonly code: string;
+            /** Format: uuid */
+            request_id?: string;
+            errors?: unknown;
+        };
         EditionReadinessGate: {
             /** Format: uuid */
             readonly id: string;
@@ -2084,6 +2187,18 @@ export interface components {
             readonly id: string;
             readonly lifecycle: components["schemas"]["EditionLifecycleEnum"];
             readonly lifecycle_version: number;
+        };
+        /** @description Complete bounded edition-profile input shared by create and update. */
+        EditionUpdateRequest: {
+            name: string;
+            /** Format: date */
+            starts_on: string;
+            /** Format: date */
+            ends_on: string;
+            time_zone: string;
+            language_codes: string[];
+            currency_codes: string[];
+            expected_aggregate_version: number;
         };
         Entitlement: {
             readonly code: string;
@@ -2382,6 +2497,21 @@ export interface components {
         OnboardingDocumentUpload: {
             /** Format: uri */
             document: string;
+        };
+        PaginatedConventionSeriesReadList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["ConventionSeriesRead"][];
         };
         PaginatedEditionBasicList: {
             /** @example 123 */
@@ -4102,6 +4232,114 @@ export interface operations {
                     "application/json": components["schemas"]["PaginatedEditionBasicList"];
                 };
             };
+            /** @description The list query is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The caller cannot view this organization's editions. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description A canonical dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+        };
+    };
+    events_create_edition: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Caller-generated UUID reused only when retrying this exact edition-creation command. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditionCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EditionBasic"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EditionBasic"];
+                };
+            };
+            /** @description The idempotency header or complete edition profile is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The caller cannot create an edition in this organization. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The scoped organization or convention series does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The request conflicts with current parent or idempotency state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description A canonical dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
         };
     };
     events_retrieve_basic_edition: {
@@ -4122,6 +4360,113 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EditionBasic"];
+                };
+            };
+            /** @description The detail query is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The caller cannot view this event edition. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The scoped event edition does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description A canonical dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+        };
+    };
+    events_update_edition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditionUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EditionBasic"];
+                };
+            };
+            /** @description The complete edition profile is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The caller cannot change this edition profile. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The scoped event edition does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The edition is read-only or its aggregate version is stale. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description A canonical dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
                 };
             };
         };
@@ -5738,6 +6083,33 @@ export interface operations {
                     "application/json": components["schemas"]["EditionAutocompleteResponse"];
                 };
             };
+            /** @description The autocomplete query is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description The caller cannot view this organization's edition suggestions. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
+            /** @description A canonical dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["EditionProblem"];
+                };
+            };
         };
     };
     events_bulk_transition_editions: {
@@ -5808,6 +6180,195 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaffSubjectRightsRequest"];
+                };
+            };
+        };
+    };
+    organizations_list_convention_series: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedConventionSeriesReadList"];
+                };
+            };
+            /** @description The list query is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description Platform administration is required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description The organization does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description A canonical dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+        };
+    };
+    organizations_retrieve_convention_series: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConventionSeriesRead"];
+                };
+            };
+            /** @description The detail query is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description Platform administration is required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description The scoped series does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description A canonical dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+        };
+    };
+    organizations_update_convention_series: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConventionSeriesUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConventionSeriesRead"];
+                };
+            };
+            /** @description The complete profile is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description Platform administration is required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description The scoped series does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description The parent is closed or the profile version is stale. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+            /** @description A canonical dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
                 };
             };
         };

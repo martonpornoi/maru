@@ -1,7 +1,8 @@
 # Authorization module
 
-Status: Implemented authority boundary with human access sharing
-Last updated: 2026-07-30
+Status: Implemented authority boundary with edition create/profile ceilings and
+preserved human access sharing
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
@@ -18,6 +19,10 @@ code-owned non-self capabilities without stored tenant grants. Capability
 declarations marked as requiring break-glass deny that ordinary platform path;
 self capabilities remain relationship-bound. Existing sensitive and privileged
 operations retain their reason, approval, and audit obligations.
+
+An inactive account is denied before self-relationship, platform, direct-grant,
+or role-assignment evaluation. This platform-wide login-disable invariant does
+not replace the explainable organizer-scoped restrictions required by ADR 0013.
 
 ## Owned data and invariants
 
@@ -46,7 +51,8 @@ bypassed. Revoking any ancestor invalidates its delegated descendants.
 - `require_complete_projection(required_fields, permitted_fields)`
 - `freeze_bulk_targets(trusted_queryset, target_ids, authorize)`
 
-The current catalog declares basic edition viewing, edition transition,
+The current catalog declares basic edition viewing, edition creation, bounded
+Draft/Preparing profile change, edition transition,
 self-history, minimized staff participation viewing, capability delegation,
 direct-grant management, immediate authority revocation, role management, and
 security-audit viewing.
@@ -84,6 +90,13 @@ its policy field ceiling. The bulk target freezer requires an open transaction,
 a tenant/edition-filtered trusted base query, non-empty unique IDs, an exact
 resolved set, row locks, and a positive policy decision for every target before
 returning anything to a command.
+
+`events.create` and `events.change_profile` carry the same minimized C1
+response ceiling as `events.view_basic`; successful mutation responses are
+checked against that ceiling rather than treating write permission as an
+unbounded read. Creation is organization-scoped and profile change is exact-
+edition-scoped. HTML platform administration remains a separate platform
+policy path and creates no stored convention grant.
 
 The edition list/search/count/autocomplete API requires organization scope and
 filters the tenant before evaluation. An edition-only grant can retrieve its
@@ -162,7 +175,8 @@ atomic replacement, immediate removal, and cross-tenant assignment hiding.
 
 ## Limitations
 
-Department/resource scopes, step-up execution, service/device principals,
+Department/resource scopes, a computed effective-access explanation, step-up
+execution, service/device principals,
 asynchronous approval workflow, grant review reminders, purpose binding, and
 policy caching are not implemented. The synchronous independent approver
 argument is a command invariant, not yet an approval inbox or pending request
@@ -170,3 +184,7 @@ state. Initial production bootstrap of the first two controllers also remains
 an operations procedure. The reusable enforcement contracts must be adopted
 and extended with each domain slice; they are not a generic shortcut around
 domain-specific relationships and state.
+
+Pages 1–7 therefore show only a static, truthful platform-oversight summary.
+They must not label that summary as department/person access or expose a
+**Manage access** action until M2 adds representation and scope v2.

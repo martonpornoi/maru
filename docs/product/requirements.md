@@ -453,6 +453,39 @@ architecture documents, implementation issues, tests, and release notes.
   that does not disclose protected principals. Platform administration does
   not imply convention participation, and restricted-case access continues to
   require its separate reasoned or break-glass policy.
+- **UX-021 — Convention-series record:** Every convention series listed on its
+  organization record must link to one scoped record page. The page shows
+  stable organization and slug identity, active/inactive availability, the
+  editable public brand profile, an edition inventory, a contextual **+ Add**
+  edition action when creation is allowed, and a value-minimized human activity
+  history. Saving uses an expected profile version, locks and revalidates the
+  exact organization-owned series, changes no ownership or slug, writes only
+  actual fields, and atomically appends audit and domain-event evidence. The
+  page does not implement series transfer, destructive deletion, publication,
+  governance, participation, registration, or workforce side effects.
+- **UX-022 — Series-scoped edition creation:** A selected active convention
+  series beneath a non-Closed organization must provide one edition-creation
+  page. The organization and series are trusted route scope; name, start date,
+  end date, time zone, languages, and currencies are bounded and validated,
+  with locale defaults inherited visibly from the organization. Maru creates a
+  collision-safe slug, Draft lifecycle, aggregate version, actor attribution,
+  idempotency receipt, audit event, and minimized domain event in one
+  transaction. The browser carries a hidden UUID retry key; the API requires a
+  UUID `Idempotency-Key` request header and rejects that key in JSON. A retry
+  with the same actor, scope, key, and normalized payload
+  returns the first edition; reuse with different input fails. Creation grants
+  no membership, representation, authority, participation, registration,
+  application, department, position, shift, or venue selection.
+- **UX-023 — Edition record and workspace context:** A created edition must
+  redirect to a scoped record page reachable through organization, series, and
+  edition navigation. The page shows lifecycle, stable identity, dates, locale,
+  currencies, parent records, access summary, latest meaningful update, and
+  human activity. Draft and Preparing profile fields may be updated through an
+  expected-aggregate-version command; Ready, Live, Closing, Archived, and Cancelled
+  profiles are read-only until an explicit lifecycle/change-control workflow
+  permits otherwise. Saving cannot directly change lifecycle, slug, parent,
+  authority, participation, registration, or operational configuration. The
+  selected route establishes display context only and never grants access.
 
 ### Registration, orders, and attendee service
 

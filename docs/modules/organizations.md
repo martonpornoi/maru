@@ -1,15 +1,14 @@
 # Organizations module
 
-Status: Implemented tenant, brand, localization bootstrap, Page 1 inventory,
-complete Page 2 Draft creation, Page 3 record management, and Page 4
-organization-scoped convention-series creation
+Status: Implemented tenant, brand, localization bootstrap, and mounted Pages
+1–5 through convention-series record management
 Last updated: 2026-08-01
 
 ## Purpose and requirements
 
 `maru.organizations` owns tenant structure and recurring-series continuity for
 IDN-002, IDN-011, IDN-012, EVT-001, EVT-003, EVT-005, UX-014, UX-015,
-UX-016, UX-017, UX-018, and UX-019.
+UX-016, UX-017, UX-018, UX-019, and UX-021.
 
 ## Owned data and invariants
 
@@ -19,7 +18,8 @@ UX-016, UX-017, UX-018, and UX-019.
   records default to Draft; operational demo builders request Active
   explicitly.
 - `ConventionSeries`: a recurring public convention brand within exactly one
-  organization, with its own description, contact, and website.
+  organization, with its own description, contact, website, availability, and
+  monotonic profile version.
 - `OrganizationMembership`: one organizer-owned account relationship with
   invited, active, suspended, or ended state.
 
@@ -30,6 +30,10 @@ administrator to be attributed as the actor of later platform provisioning.
 Organization slug is globally case-insensitively unique. Series slug is
 case-insensitively unique within its organization. Protected relationships
 prevent deletion from erasing editions or membership history.
+
+PostgreSQL keeps a series' organization and slug stable. New series start at
+profile version 1; changing any editable series fact must advance that version
+by exactly one, and the version cannot advance without a profile change.
 
 An organization may operate more than one series. For example, a legal
 association may run one large annual convention and a separate small retreat.
@@ -64,11 +68,23 @@ non-browser clients.
   a non-Closed parent, accepts typed `ConventionSeriesCreationDetails`,
   normalizes the required name, generates a collision-safe slug within that
   organization, validates the complete series, and appends its audit event.
+- `update_convention_series(...)`, the atomic platform-only command shared by
+  Page 5 and its API. It locks the exact organization-owned series, compares
+  the expected profile version, writes only changed brand fields, and commits
+  minimized audit plus `organizations.convention_series.updated.v1` and its
+  outbox delivery together.
+- `GET /api/v1/organizations/{organization_id}/series`, a platform-
+  administrator-only paginated collection scoped before bounded, strict query
+  evaluation.
+- `GET /api/v1/organizations/{organization_id}/series/{series_id}`, the strict
+  scoped record with no accepted query parameters.
+- `PUT /api/v1/organizations/{organization_id}/series/{series_id}`, the strict
+  complete profile replacement.
 
-Generic unscoped organization APIs remain absent. Pages 2 through 4 are narrowly
-scoped server-rendered platform commands, not public or organizer APIs. They
-create no membership, governance, convention, participation, registration, or
-workforce relationships.
+Generic unscoped organization APIs remain absent. Pages 2 through 5 are
+narrowly scoped platform workflows, not public organizer APIs. They
+create no membership, governance, event edition, participation, registration,
+or workforce relationships.
 
 ## Convention series creation fields
 
@@ -80,6 +96,12 @@ case-insensitively unique within one organization, so two organizations may
 reuse the same recognizable slug while same-tenant collisions receive numeric
 suffixes. Draft, Active, and Suspended parents may prepare a series; Closed
 parents cannot.
+
+Page 5 edits the same complete profile through optimistic concurrency. Its
+HTML form accepts only the declared profile fields, expected profile version,
+and CSRF. The API `PUT` is a strict complete replacement. Undeclared ownership,
+slug, lifecycle, timestamp, or other fields are rejected rather than ignored.
+An unchanged save writes and emits nothing.
 
 ## Organization profile fields
 
@@ -128,7 +150,9 @@ precedence.
 The shared administration menu always exposes the global Organizations row.
 Once an authorized view has selected an organization, a section named for it
 links to its record and Convention series section, with series creation beside
-that destination while lifecycle permits it. This is display context only: it
+that destination while lifecycle permits it. Selecting a series adds its own
+record and Convention editions destinations; new-edition availability depends
+on both organization and series state. This is display context only: it
 does not query across tenants, infer ownership, or grant authority. The desktop
 shell aligns that menu to ordinary page padding instead of centering the whole
 grid.
@@ -147,7 +171,11 @@ confirmed empty Drafts.
 
 Tenant reparenting and cascaded deletion are not ordinary operations. The
 empty-Draft command never cascades; protected relationships refuse it.
-Organization closure and data exit still need a future reasoned workflow.
+Convention-series profile versions and their database guard require compatible
+writers. A migration fence refuses destructive version-column downgrade while
+any series exists; populated recovery uses fix-forward or an approved backup/
+PITR plan. Organization closure and data exit still need a future reasoned
+workflow.
 
 ## Tests
 
@@ -169,15 +197,21 @@ Page 4 tests cover empty and populated organization-scoped series projections,
 contextual navigation, denied-before-lookup authorization, unknown and Closed
 parents, name-only and complete optional creation, crafted-scope resistance,
 per-tenant slug collision/fallback/bounds, repeated service validation,
-value-minimized atomic audit and rollback, safe database failures, and the
-absence of edition or people-relationship side effects.
+value-minimized atomic audit/domain-event/outbox evidence, publication and
+database rollback with safe 503 disclosure, and the absence of edition or
+people-relationship side effects.
+Page 5 and API tests cover exact tenant scope, strict input, complete profile
+replacement, no-op and stale saves, stable ownership/slug database guards,
+profile-version monotonicity, safe activity, audit/event/outbox rollback,
+pagination, error shapes, fail-closed populated downgrade, and the absence of
+convention relationships.
 
 ## Limitations
 
 Executive Board provisioning/backfill, organization and series lifecycle
-transitions, series record editing, slug migration, publication, edition
-creation, processors, invitations, ownership transfer, closure/data exit, and
-a convention-owned organizer console are not implemented. Per IDN-012, the
+transitions, slug migration, publication, processors, invitations, ownership
+transfer, closure/data exit, and a convention-owned organizer console are not
+implemented. Per IDN-012, the
 later governance workflow must establish an Executive Board before activation
 and extend Page 3 property editing to active Executive Board authority;
 platform administration remains non-participating.

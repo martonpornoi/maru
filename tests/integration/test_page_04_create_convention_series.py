@@ -8,6 +8,7 @@ from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
+from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.models import EventEdition
 from maru.organizations.forms import ConventionSeriesCreationForm
 from maru.organizations.models import (
@@ -126,6 +127,8 @@ def test_platform_administrator_can_open_scoped_series_creation() -> None:
     assert response.status_code == 200
     content = response.content.decode()
     assert 'data-page="create-convention-series"' in content
+    assert 'href="#main-content">Skip to main content</a>' in content
+    assert 'id="main-content"' in content
     assert "Create convention series" in content
     assert "Synthetic Maru Organizers" in content
     assert 'href="/admin/organizations/synthetic-maru/"' in content
@@ -234,7 +237,6 @@ def test_name_only_creation_is_active_audited_and_side_effect_free() -> None:
         slug="synthetic-maru",
         lifecycle=Organization.Lifecycle.DRAFT,
     )
-    other = OrganizationFactory(slug="crafted-parent")
     client = APIClient()
     client.force_login(administrator)
 
@@ -242,9 +244,6 @@ def test_name_only_creation_is_active_audited_and_side_effect_free() -> None:
         "/admin/organizations/synthetic-maru/series/new/",
         {
             "name": "  Synthetic   MaruCon  ",
-            "organization": str(other.id),
-            "organization_id": str(other.id),
-            "slug": "crafted-slug",
         },
         follow=True,
     )
@@ -290,6 +289,30 @@ def test_name_only_creation_is_active_audited_and_side_effect_free() -> None:
     assert "was created as a convention series" not in (
         client.get(f"/admin/organizations/{organization.slug}/").content.decode()
     )
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_series_creation_rejects_forged_scope_and_identity_fields() -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    organization = OrganizationFactory(lifecycle=Organization.Lifecycle.DRAFT)
+    other = OrganizationFactory()
+    client = APIClient()
+    client.force_login(administrator)
+
+    response = client.post(
+        f"/admin/organizations/{organization.slug}/series/new/",
+        {
+            "name": "Forged Synthetic Series",
+            "organization": str(other.id),
+            "organization_id": str(other.id),
+            "slug": "crafted-slug",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Remove unsupported input fields" in response.content.decode()
+    assert not ConventionSeries.objects.exists()
+    assert not AuditEvent.objects.exists()
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")
@@ -476,6 +499,39 @@ def test_audit_failure_rolls_back_series_and_returns_safe_retry(
     assert "synthetic private audit failure" not in content
     assert not ConventionSeries.objects.exists()
     assert not AuditEvent.objects.exists()
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_publication_failure_rolls_back_series_and_returns_safe_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    organization = OrganizationFactory(lifecycle=Organization.Lifecycle.DRAFT)
+
+    def unavailable_publication(*args: object, **kwargs: object) -> None:
+        del args, kwargs
+        raise RuntimeError("synthetic private publication failure")
+
+    monkeypatch.setattr(
+        "maru.organizations.services.publish_domain_event",
+        unavailable_publication,
+    )
+    client = APIClient()
+    client.force_login(administrator)
+
+    response = client.post(
+        f"/admin/organizations/{organization.slug}/series/new/",
+        {"name": "Rolled Back Published Brand"},
+    )
+
+    assert response.status_code == 503
+    content = response.content.decode()
+    assert "The convention series could not be created" in content
+    assert "synthetic private publication failure" not in content
+    assert not ConventionSeries.objects.exists()
+    assert not AuditEvent.objects.exists()
+    assert not DomainEvent.objects.exists()
+    assert not OutboxMessage.objects.exists()
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")

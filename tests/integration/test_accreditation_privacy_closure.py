@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import F
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -422,6 +423,7 @@ def test_post_edition_correction_export_and_retention_minimization() -> None:
     EventEdition.objects.filter(id=edition.id).update(
         starts_on=date(2020, 1, 1),
         ends_on=date(2020, 1, 3),
+        aggregate_version=F("aggregate_version") + 1,
     )
     correction = propose_profile_correction(
         account=attendee,
@@ -502,6 +504,7 @@ def test_privacy_correction_and_minimization_api_workflow() -> None:
     EventEdition.objects.filter(id=edition.id).update(
         starts_on=date(2020, 1, 1),
         ends_on=date(2020, 1, 3),
+        aggregate_version=F("aggregate_version") + 1,
     )
     operator = AccountFactory()
     CapabilityGrantFactory(
@@ -579,6 +582,7 @@ def test_privacy_api_denies_cross_scope_and_hides_missing_targets() -> None:
     EventEdition.objects.filter(id=edition.id).update(
         starts_on=date(2020, 1, 1),
         ends_on=date(2020, 1, 3),
+        aggregate_version=F("aggregate_version") + 1,
     )
     unprivileged = AccountFactory()
     staff = APIClient()
@@ -653,6 +657,7 @@ def test_closure_gates_block_then_generate_immutable_manifest() -> None:
         EventEdition.objects.filter(id=edition.id).update(
             lifecycle=lifecycle,
             lifecycle_version=version,
+            aggregate_version=F("aggregate_version") + 1,
         )
     edition.refresh_from_db()
     operator = AccountFactory()
@@ -746,6 +751,7 @@ def test_closure_readiness_and_manifest_api_workflow() -> None:
         EventEdition.objects.filter(id=edition.id).update(
             lifecycle=lifecycle,
             lifecycle_version=version,
+            aggregate_version=F("aggregate_version") + 1,
         )
     operator = AccountFactory()
     CapabilityGrantFactory(

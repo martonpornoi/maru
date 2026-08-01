@@ -18,13 +18,16 @@ permission-controlled operational record.
 - A modular monolith with strongly enforced module boundaries
 - Versioned REST APIs and generated OpenAPI clients
 - Preserved React/TypeScript convention workflows and separately deployable
-  future clients; ADR 0030 deliberately leaves them unmounted during the
-  page-by-page experience rebuild
+  future clients; ADR 0037 keeps them unmounted while the coherent management
+  journeys are consolidated
 - Background workers for delivery, exports, imports, and other slow operations
 
 Reflex is not part of the platform core. The current browser experience
-contains Sign in and Page 1, a read-only platform organization inventory,
-while the product is rebuilt one reviewed page at a time.
+contains Sign in and Pages 1–7: organization inventory/creation/record,
+convention-series creation/record, and event-edition creation/record with
+explicit working context. Platform administration remains separate from
+convention participation. Rich preserved domains are mounted only as complete,
+reviewed journeys.
 
 ## Local quick start
 
@@ -39,8 +42,8 @@ uv run python src/manage.py migrate
 uv run python src/manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>. The current experience deliberately exposes only
-Sign in and the platform-administrator-only `/admin/` organization inventory.
+Open <http://127.0.0.1:8000/>. The current experience exposes the platform-
+administrator-only organization → series → edition spine under `/admin/`.
 For a new empty database, create one
 bootstrap administrator with:
 
@@ -71,6 +74,8 @@ must never be used as production data or credentials.
 See [development setup](docs/development/setup.md) for configuration, checks,
 troubleshooting, fixture details, the empty-experience runbook, and preserved
 rehearsals.
+Follow the [hands-on tutorial](docs/operations/maru-hands-on-tutorial.md) for a
+synthetic first organization, series, and edition.
 
 ## Product principles
 
@@ -111,6 +116,8 @@ rehearsals.
 - [Marucon admin-first educational rehearsal](docs/operations/marucon-admin-rehearsal.md)
 - [Empty-experience baseline](docs/operations/empty-experience-baseline.md)
 - [Page 1 platform-administration runbook](docs/operations/page-01-platform-home.md)
+- [Organization-to-edition hands-on tutorial](docs/operations/maru-hands-on-tutorial.md)
+- [Edition workspace migration and recovery](docs/operations/edition-workspace-migration-and-recovery.md)
 - [Controlled reset ledger](docs/project/RESET_REBUILD.md)
 - [Registration implementation backlog](docs/project/REGISTRATION_TODO.md)
 - [Research landscape](docs/research/landscape-2026-07.md)

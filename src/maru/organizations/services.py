@@ -10,6 +10,7 @@ from django.utils.text import slugify
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
+from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.identity.models import Account
 from maru.organizations.models import ConventionSeries, Organization
 
@@ -54,6 +55,15 @@ CONVENTION_SERIES_CREATION_FIELDS = (
     "website_url",
     "contact_email",
     "is_active",
+    "profile_version",
+)
+
+CONVENTION_SERIES_PROFILE_FIELDS = (
+    "name",
+    "description",
+    "website_url",
+    "contact_email",
+    "is_active",
 )
 
 
@@ -88,6 +98,12 @@ class ConventionSeriesCreationDetails:
 @dataclass(frozen=True, slots=True)
 class OrganizationUpdateResult:
     organization: Organization
+    changed_fields: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ConventionSeriesUpdateResult:
+    series: ConventionSeries
     changed_fields: tuple[str, ...]
 
 
@@ -271,7 +287,7 @@ def create_convention_series(
         organization=organization,
         details=normalized_details,
     )
-    append_audit(
+    audit_event = append_audit(
         AuditRecord(
             principal_kind="account",
             principal_id=actor.id,
@@ -292,7 +308,137 @@ def create_convention_series(
             retention_class="security-standard",
         )
     )
+    publish_domain_event(
+        DomainEventRecord(
+            event_name="organizations.convention_series.created.v1",
+            schema_version=1,
+            organization_id=organization.id,
+            event_edition_id=None,
+            aggregate_type="organizations.convention_series",
+            aggregate_id=series.id,
+            aggregate_version=series.profile_version,
+            payload={
+                "availability": "active" if series.is_active else "inactive",
+                "profile_version": str(series.profile_version),
+            },
+            correlation_id=correlation_id,
+            causation_id=audit_event.id,
+            actor_kind="account",
+            actor_id=actor.id,
+        ),
+        workload_pool="core",
+    )
     return series
+
+
+@transaction.atomic
+def update_convention_series(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    series_id: UUID,
+    expected_profile_version: int,
+    details: ConventionSeriesCreationDetails,
+    correlation_id: UUID,
+    source_channel: str = "service",
+) -> ConventionSeriesUpdateResult:
+    """Update one scoped recurring brand without changing ownership or slug."""
+
+    if not actor.is_active or not actor.is_platform_administrator:
+        raise PermissionDenied("Platform administration is required.")
+
+    organization = Organization.objects.select_for_update().get(id=organization_id)
+    series = ConventionSeries.objects.select_for_update().get(
+        id=series_id,
+        organization=organization,
+    )
+    if organization.lifecycle == Organization.Lifecycle.CLOSED:
+        raise ValidationError(
+            "A Closed organization's convention series is retained read-only.",
+            code="series_parent_closed",
+        )
+    if series.profile_version != expected_profile_version:
+        raise ValidationError(
+            {
+                "expected_profile_version": ValidationError(
+                    (
+                        "This convention series changed after the page was "
+                        "loaded. Reload it before saving your changes."
+                    ),
+                    code="stale_series_profile",
+                )
+            }
+        )
+
+    normalized = _normalize_series_details(details)
+    values: dict[str, object] = {
+        "name": normalized.name,
+        "description": normalized.description,
+        "website_url": normalized.website_url,
+        "contact_email": normalized.contact_email,
+        "is_active": normalized.is_active,
+    }
+    changed_fields = tuple(
+        field_name
+        for field_name in CONVENTION_SERIES_PROFILE_FIELDS
+        if getattr(series, field_name) != values[field_name]
+    )
+    if not changed_fields:
+        return ConventionSeriesUpdateResult(series=series, changed_fields=())
+
+    for field_name in changed_fields:
+        setattr(series, field_name, values[field_name])
+    series.profile_version += 1
+    series.save(
+        update_fields=(*changed_fields, "profile_version", "updated_at"),
+    )
+    audited_fields = (*changed_fields, "profile_version")
+    audit_event = append_audit(
+        AuditRecord(
+            principal_kind="account",
+            principal_id=actor.id,
+            principal_context_id=None,
+            organization_id=organization.id,
+            event_edition_id=None,
+            capability_code="organizations.change_series",
+            operation="organizations.convention_series.update",
+            target_type="organizations.conventionseries",
+            target_id=series.id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code="platform_administration",
+            correlation_id=correlation_id,
+            request_id=correlation_id,
+            source_channel=source_channel,
+            obligations=("audit",),
+            changed_fields=audited_fields,
+            retention_class="security-standard",
+        )
+    )
+    publish_domain_event(
+        DomainEventRecord(
+            event_name="organizations.convention_series.updated.v1",
+            schema_version=1,
+            organization_id=organization.id,
+            event_edition_id=None,
+            aggregate_type="organizations.convention_series",
+            aggregate_id=series.id,
+            aggregate_version=series.profile_version,
+            payload={
+                "availability": "active" if series.is_active else "inactive",
+                "changed_fields": ",".join(changed_fields),
+                "profile_version": str(series.profile_version),
+            },
+            correlation_id=correlation_id,
+            causation_id=audit_event.id,
+            actor_kind="account",
+            actor_id=actor.id,
+        ),
+        workload_pool="core",
+    )
+    return ConventionSeriesUpdateResult(
+        series=series,
+        changed_fields=changed_fields,
+    )
 
 
 @transaction.atomic

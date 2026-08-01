@@ -71,6 +71,8 @@ def test_platform_administrator_reaches_the_platform_home() -> None:
     assert response.request["PATH_INFO"] == "/admin/"
     content = response.content.decode()
     assert 'data-page="platform-administration-home"' in content
+    assert 'href="#main-content">Skip to main content</a>' in content
+    assert 'id="main-content"' in content
     assert "Organizations" in content
     assert 'aria-label="Platform administration"' in content
     assert 'class="baseline-sidebar-context"' not in content

@@ -7,19 +7,20 @@ from typing import Any
 
 from django import forms
 
+from maru.core.forms import StrictInputForm
 from maru.core.localization import (
     country_choices,
     grouped_language_choices,
     grouped_time_zone_choices,
 )
-from maru.organizations.models import Organization
+from maru.organizations.models import ConventionSeries, Organization
 from maru.organizations.services import (
     ConventionSeriesCreationDetails,
     OrganizationCreationDetails,
 )
 
 
-class ConventionSeriesCreationForm(forms.Form):
+class ConventionSeriesCreationForm(StrictInputForm):
     name = forms.CharField(
         label="Convention series name",
         max_length=160,
@@ -74,7 +75,33 @@ class ConventionSeriesCreationForm(forms.Form):
         )
 
 
-class OrganizationCreationForm(forms.Form):
+class ConventionSeriesUpdateForm(ConventionSeriesCreationForm):
+    expected_profile_version = forms.IntegerField(
+        min_value=1,
+        widget=forms.HiddenInput,
+    )
+
+    @classmethod
+    def for_series(
+        cls,
+        series: ConventionSeries,
+        *,
+        data: Mapping[str, Any] | None = None,
+    ) -> ConventionSeriesUpdateForm:
+        return cls(
+            data=data,
+            initial={
+                "name": series.name,
+                "description": series.description,
+                "website_url": series.website_url,
+                "contact_email": series.contact_email,
+                "availability": "active" if series.is_active else "inactive",
+                "expected_profile_version": series.profile_version,
+            },
+        )
+
+
+class OrganizationCreationForm(StrictInputForm):
     name = forms.CharField(
         label="Organization name",
         max_length=160,
@@ -259,7 +286,7 @@ class OrganizationCreationForm(forms.Form):
         return form
 
 
-class OrganizationDeletionForm(forms.Form):
+class OrganizationDeletionForm(StrictInputForm):
     confirmation_name = forms.CharField(
         label="Organization name",
         max_length=160,

@@ -510,6 +510,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedEditionBasicList'
           description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The list query is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The caller cannot view this organization's editions.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: A canonical dependency is temporarily unavailable.
+    post:
+      operationId: events_create_edition
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+          format: uuid
+        description: Caller-generated UUID reused only when retrying this exact edition-creation
+          command.
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditionCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionBasic'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionBasic'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The idempotency header or complete edition profile is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The caller cannot create an edition in this organization.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The scoped organization or convention series does not exist.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The request conflicts with current parent or idempotency state.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: A canonical dependency is temporarily unavailable.
   /api/v1/organizations/{organization_id}/editions/{edition_id}:
     get:
       operationId: events_retrieve_basic_edition
@@ -538,6 +627,93 @@ paths:
               schema:
                 $ref: '#/components/schemas/EditionBasic'
           description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The detail query is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The caller cannot view this event edition.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The scoped event edition does not exist.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: A canonical dependency is temporarily unavailable.
+    put:
+      operationId: events_update_edition
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditionUpdateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditionBasic'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The complete edition profile is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The caller cannot change this edition profile.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The scoped event edition does not exist.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The edition is read-only or its aggregate version is stale.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: A canonical dependency is temporarily unavailable.
   /api/v1/organizations/{organization_id}/editions/{edition_id}/access:
     get:
       operationId: authorization_retrieve_access_workspace
@@ -2873,6 +3049,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/EditionAutocompleteResponse'
           description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The autocomplete query is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: The caller cannot view this organization's edition suggestions.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/EditionProblem'
+          description: A canonical dependency is temporarily unavailable.
   /api/v1/organizations/{organization_id}/editions/bulk-transition:
     post:
       operationId: events_bulk_transition_editions
@@ -2959,6 +3153,178 @@ paths:
               schema:
                 $ref: '#/components/schemas/StaffSubjectRightsRequest'
           description: ''
+  /api/v1/organizations/{organization_id}/series:
+    get:
+      operationId: organizations_list_convention_series
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedConventionSeriesReadList'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: The list query is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: Platform administration is required.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: The organization does not exist.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: A canonical dependency is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/series/{series_id}:
+    get:
+      operationId: organizations_retrieve_convention_series
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: series_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesRead'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: The detail query is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: Platform administration is required.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: The scoped series does not exist.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: A canonical dependency is temporarily unavailable.
+    put:
+      operationId: organizations_update_convention_series
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: series_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConventionSeriesUpdate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesRead'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: The complete profile is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: Platform administration is required.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: The scoped series does not exist.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: The parent is closed or the profile version is stale.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConventionSeriesProblem'
+          description: A canonical dependency is temporarily unavailable.
   /api/v1/public/accounts:
     post:
       operationId: identity_bootstrap_account
@@ -4340,6 +4706,130 @@ components:
       - controller_email
       - editions
       - organizations
+    ConventionSeriesProblem:
+      type: object
+      description: RFC 9457 response shape used at this API boundary.
+      properties:
+        type:
+          type: string
+          format: uri
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        status:
+          type: integer
+          readOnly: true
+        detail:
+          type: string
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+        request_id:
+          type: string
+          format: uuid
+        errors: {}
+      required:
+      - code
+      - detail
+      - status
+      - title
+      - type
+    ConventionSeriesRead:
+      type: object
+      description: Stable identity and complete editable profile for one series.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+          description: Public-facing description of this recurring convention brand.
+        website_url:
+          type: string
+          format: uri
+          readOnly: true
+        contact_email:
+          type: string
+          format: email
+          readOnly: true
+          description: Public contact for this convention brand.
+        is_active:
+          type: boolean
+          readOnly: true
+        profile_version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - contact_email
+      - created_at
+      - description
+      - id
+      - is_active
+      - name
+      - organization_id
+      - profile_version
+      - slug
+      - updated_at
+      - website_url
+    ConventionSeriesUpdate:
+      type: object
+      description: Complete, strict convention-series profile replacement input.
+      properties:
+        name:
+          type: string
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 2000
+        website_url:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        contact_email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        is_active:
+          type: boolean
+        expected_profile_version:
+          type: integer
+          minimum: 1
+      required:
+      - contact_email
+      - description
+      - expected_profile_version
+      - is_active
+      - name
+      - website_url
     CreateConfigurationDraft:
       type: object
       properties:
@@ -4625,6 +5115,9 @@ components:
           allOf:
           - $ref: '#/components/schemas/EditionLifecycleEnum'
           readOnly: true
+        aggregate_version:
+          type: integer
+          readOnly: true
         time_zone:
           type: string
           readOnly: true
@@ -4649,6 +5142,7 @@ components:
           format: date
           readOnly: true
       required:
+      - aggregate_version
       - currency_codes
       - ends_on
       - id
@@ -4789,6 +5283,47 @@ components:
       - series_slug
       - starts_on
       - time_zone
+    EditionCreateRequest:
+      type: object
+      description: Complete bounded edition-profile input shared by create and update.
+      properties:
+        name:
+          type: string
+          maxLength: 160
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        time_zone:
+          type: string
+          maxLength: 63
+        language_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 35
+          maxItems: 16
+          minItems: 1
+        currency_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 3
+          maxItems: 8
+          minItems: 1
+        series_id:
+          type: string
+          format: uuid
+      required:
+      - currency_codes
+      - ends_on
+      - language_codes
+      - name
+      - series_id
+      - starts_on
+      - time_zone
     EditionLifecycleEnum:
       enum:
       - draft
@@ -4807,6 +5342,36 @@ components:
         * `closing` - Closing
         * `archived` - Archived
         * `cancelled` - Cancelled
+    EditionProblem:
+      type: object
+      description: RFC 9457 response shape used by edition management endpoints.
+      properties:
+        type:
+          type: string
+          format: uri
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        status:
+          type: integer
+          readOnly: true
+        detail:
+          type: string
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+        request_id:
+          type: string
+          format: uuid
+        errors: {}
+      required:
+      - code
+      - detail
+      - status
+      - title
+      - type
     EditionReadinessGate:
       type: object
       properties:
@@ -4895,6 +5460,47 @@ components:
       - id
       - lifecycle
       - lifecycle_version
+    EditionUpdateRequest:
+      type: object
+      description: Complete bounded edition-profile input shared by create and update.
+      properties:
+        name:
+          type: string
+          maxLength: 160
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        time_zone:
+          type: string
+          maxLength: 63
+        language_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 35
+          maxItems: 16
+          minItems: 1
+        currency_codes:
+          type: array
+          items:
+            type: string
+            maxLength: 3
+          maxItems: 8
+          minItems: 1
+        expected_aggregate_version:
+          type: integer
+          minimum: 1
+      required:
+      - currency_codes
+      - ends_on
+      - expected_aggregate_version
+      - language_codes
+      - name
+      - starts_on
+      - time_zone
     Entitlement:
       type: object
       properties:
@@ -5685,6 +6291,29 @@ components:
           format: uri
       required:
       - document
+    PaginatedConventionSeriesReadList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConventionSeriesRead'
     PaginatedEditionBasicList:
       type: object
       required:

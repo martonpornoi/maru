@@ -1,13 +1,14 @@
 # Controlled reset and page-by-page rebuild
 
-Status: Pages 1 through 3 accepted; Page 4 Create convention series and its
-progressive navigation revision implemented with product-owner inspection
-pending
+Status: Historical Pages 0–4 rebuild ledger; superseded for active execution
+by production consolidation M1
 Last updated: 2026-08-01
 
-This ledger preserves the current Maru implementation while the product
-experience is reconsidered from a deliberately small baseline. It is the
-resume point if the desktop app or development process stops.
+This ledger preserves the deliberately small Pages 0–4 rebuild and its original
+owner gates. It is no longer the active resume point and its unchecked Page 5+
+items are historical. Resume from `CURRENT.md` and
+`PRODUCTION_CONSOLIDATION.md`, which now track implemented Pages 5–7 and the
+executable-milestone cadence accepted in ADR 0037.
 
 ## Why this reset exists
 

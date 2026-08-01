@@ -39,6 +39,8 @@ def test_platform_administrator_can_open_the_complete_creation_page() -> None:
     assert response.status_code == 200
     content = response.content.decode()
     assert 'data-page="create-organization"' in content
+    assert 'href="#main-content">Skip to main content</a>' in content
+    assert 'id="main-content"' in content
     assert "Create organization" in content
     assert 'aria-label="Platform administration"' in content
     assert 'class="baseline-sidebar-context"' not in content
@@ -256,7 +258,7 @@ def test_creation_normalizes_name_and_disambiguates_generated_slug() -> None:
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")
-def test_posted_slug_and_lifecycle_cannot_override_code_owned_values() -> None:
+def test_posted_slug_and_lifecycle_are_rejected_as_undeclared_input() -> None:
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     client = APIClient()
     client.force_login(administrator)
@@ -270,10 +272,10 @@ def test_posted_slug_and_lifecycle_cannot_override_code_owned_values() -> None:
         },
     )
 
-    assert response.status_code == 302
-    organization = Organization.objects.get()
-    assert organization.slug == "protected-organization"
-    assert organization.lifecycle == Organization.Lifecycle.DRAFT
+    assert response.status_code == 200
+    assert "Remove unsupported input fields" in response.content.decode()
+    assert not Organization.objects.exists()
+    assert not AuditEvent.objects.exists()
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")

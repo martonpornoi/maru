@@ -604,6 +604,7 @@ def test_public_list_is_anonymous_but_unapproved_media_remains_private(
     EventEdition.objects.filter(id=edition.id).update(
         lifecycle=EventEdition.Lifecycle.CANCELLED,
         lifecycle_version=F("lifecycle_version") + 1,
+        aggregate_version=F("aggregate_version") + 1,
     )
     assert (
         outsider_client.get(
@@ -863,6 +864,7 @@ def test_multiple_fursuits_and_profile_edits_leave_submission_immutable() -> Non
     EventEdition.objects.filter(id=edition.id).update(
         starts_on=date(2024, 8, 1),
         ends_on=date(2024, 8, 4),
+        aggregate_version=F("aggregate_version") + 1,
     )
     closed_response = client.get(reverse("edit-attendee-profile", args=(edition.id,)))
     assert closed_response.status_code == 409
@@ -1030,6 +1032,7 @@ def test_media_moderation_public_projection_and_exact_reuse(  # noqa: PLR0915
     EventEdition.objects.filter(id=source_edition.id).update(
         lifecycle=EventEdition.Lifecycle.CANCELLED,
         lifecycle_version=F("lifecycle_version") + 1,
+        aggregate_version=F("aggregate_version") + 1,
     )
     assert moderator_client.get(base).status_code == 404
     historical_review = moderator_client.post(

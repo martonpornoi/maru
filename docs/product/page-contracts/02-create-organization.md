@@ -79,6 +79,13 @@ identity-document data in the free-text field.
 The page visibly states that the generated slug is code-owned and the resulting
 status is Draft. It offers **Create organization** and **Cancel**.
 
+The browser input contract is closed: only the fields listed above and the
+CSRF transport field are accepted. A forged `slug`, `lifecycle`, organization
+identifier, actor, timestamp, or any other undeclared key produces the
+form-wide `unknown_input_field` validation error. Maru reports at most five
+bounded field names and creates nothing; it never silently ignores extra
+input.
+
 ## Defaults and resulting state
 
 The command derives a lowercase ASCII slug from the name. An empty derived
@@ -142,7 +149,7 @@ desktop.
 - complete-profile submission and persistence;
 - URL, email, telephone, country, language, time-zone, and length validation;
 - normalized name and collision-safe bounded slug;
-- Draft-only lifecycle;
+- Draft-only lifecycle and rejection of every undeclared posted field;
 - atomic audit success and rollback on database/audit failure;
 - audit field names without copied sensitive values;
 - no membership, authority, board, series, edition, volunteer, registration,

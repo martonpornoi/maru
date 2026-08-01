@@ -155,6 +155,99 @@ def test_self_relationship_is_explicit_without_persistent_grant() -> None:
     assert not other.allowed
 
 
+def test_inactive_account_cannot_use_self_relationship() -> None:
+    account = AccountFactory(is_active=False)
+    organization = OrganizationFactory()
+
+    decision = decide(
+        principal=account,
+        capability_code="participation.view_self",
+        resource=ResourceScope(
+            organization_id=organization.id,
+            owner_account_id=account.id,
+        ),
+    )
+
+    assert not decision.allowed
+    assert decision.fields == frozenset()
+    assert decision.obligations == frozenset()
+    assert decision.reason_code == "account_inactive"
+
+
+def test_inactive_account_cannot_use_direct_grant() -> None:
+    edition = EventEditionFactory()
+    account = AccountFactory()
+    CapabilityGrantFactory(
+        principal=account,
+        organization=edition.organization,
+        capability_code="events.view_basic",
+    )
+    account.is_active = False
+    account.save(update_fields=("is_active",))
+
+    decision = decide(
+        principal=account,
+        capability_code="events.view_basic",
+        resource=ResourceScope(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+        ),
+    )
+
+    assert not decision.allowed
+    assert decision.fields == frozenset()
+    assert decision.obligations == frozenset()
+    assert decision.reason_code == "account_inactive"
+
+
+def test_inactive_account_cannot_use_role_assignment() -> None:
+    edition = EventEditionFactory()
+    account = AccountFactory()
+    bundle = RoleBundleFactory(organization=edition.organization)
+    RoleAssignmentFactory(
+        organization=edition.organization,
+        principal=account,
+        role_bundle=bundle,
+    )
+    account.is_active = False
+    account.save(update_fields=("is_active",))
+
+    decision = decide(
+        principal=account,
+        capability_code="events.view_basic",
+        resource=ResourceScope(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+        ),
+    )
+
+    assert not decision.allowed
+    assert decision.fields == frozenset()
+    assert decision.obligations == frozenset()
+    assert decision.reason_code == "account_inactive"
+
+
+def test_inactive_platform_administrator_is_denied_by_policy() -> None:
+    edition = EventEditionFactory()
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    administrator.is_active = False
+    administrator.save(update_fields=("is_active",))
+
+    decision = decide(
+        principal=administrator,
+        capability_code="events.view_basic",
+        resource=ResourceScope(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+        ),
+    )
+
+    assert not decision.allowed
+    assert decision.fields == frozenset()
+    assert decision.obligations == frozenset()
+    assert decision.reason_code == "account_inactive"
+
+
 def test_unknown_capability_is_deny_by_default() -> None:
     decision = decide(
         principal=AccountFactory(),

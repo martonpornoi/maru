@@ -51,6 +51,34 @@ def _validate_edition_lifecycle_transitioned(payload: dict[str, object]) -> None
     )
 
 
+def _validate_edition_created(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"aggregate_version", "lifecycle"}),
+    )
+
+
+def _validate_edition_details_updated(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"aggregate_version", "changed_fields"}),
+    )
+
+
+def _validate_convention_series_created(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"availability", "profile_version"}),
+    )
+
+
+def _validate_convention_series_updated(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"availability", "changed_fields", "profile_version"}),
+    )
+
+
 def _validate_effect_probe(payload: dict[str, object]) -> None:
     _require_exact_string_fields(
         payload,
@@ -150,6 +178,30 @@ def _validate_workforce_assignment_activated(payload: dict[str, object]) -> None
 
 
 EVENT_DEFINITIONS = (
+    EventDefinition(
+        name="organizations.convention_series.created.v1",
+        schema_version=1,
+        description="A recurring convention brand was created.",
+        validator=_validate_convention_series_created,
+    ),
+    EventDefinition(
+        name="organizations.convention_series.updated.v1",
+        schema_version=1,
+        description="A recurring convention brand profile changed.",
+        validator=_validate_convention_series_updated,
+    ),
+    EventDefinition(
+        name="events.edition.created.v1",
+        schema_version=1,
+        description="A Draft event edition was created beneath a series.",
+        validator=_validate_edition_created,
+    ),
+    EventDefinition(
+        name="events.edition.details_updated.v1",
+        schema_version=1,
+        description="Editable event-edition details changed.",
+        validator=_validate_edition_details_updated,
+    ),
     EventDefinition(
         name="events.edition.lifecycle_transitioned.v1",
         schema_version=1,

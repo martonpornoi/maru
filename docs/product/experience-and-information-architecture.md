@@ -1,13 +1,13 @@
 # Experience and information architecture
 
-Status: Pages 1–4 mounted through organization-scoped convention-series
-creation; broader model preserved as page-by-page backlog
-Last updated: 2026-07-31
+Status: Pages 1–7 mounted through event-edition record and context; broader
+model preserved as executable vertical milestones
+Last updated: 2026-08-01
 
 ## Current executable experience
 
-ADR 0030 established the two-page baseline. ADRs 0031–0035 restore the first
-reviewed setup journey:
+ADR 0030 established the two-page baseline. ADRs 0031–0037 and M1 restore the
+first executable setup journey:
 
 1. Sign in at `/accounts/login/`.
 2. An authenticated, active-platform-administrator-only organization inventory
@@ -18,6 +18,12 @@ reviewed setup journey:
    convention-series inventory at `/admin/organizations/<slug>/`.
 5. Convention-series creation for that selected organization at
    `/admin/organizations/<slug>/series/new/`.
+6. A linked, versioned series record with activity and edition inventory at
+   `/admin/organizations/<slug>/series/<series-slug>/`.
+7. Idempotent Draft edition creation at
+   `/admin/organizations/<slug>/series/<series-slug>/editions/new/`.
+8. A linked, versioned edition record/activity page with explicit POST-only
+   working-context selection at the nested edition route.
 
 The shared Platform administration navigation remains one **Organizations**
 row with adjacent compact organization **+ Add**. Convention series stays
@@ -25,14 +31,17 @@ nested beneath its accountable tenant and does not become a second global
 website/menu. The pages explain that the administrator operates Maru but does
 not participate in a convention. Series creation requires only the recurring
 brand name, keeps organization and slug code-owned, and does not create a dated
-edition or people relationship. The mounted experience still has no edition
-selector, setup sequence, Django model directory, embedded application,
-registration, volunteer, or convention-owned operational content. `/`
+edition or people relationship. Edition creation likewise creates identity and
+evidence only. The mounted experience has one explicit working-edition context
+action but no Django model directory, embedded application, registration,
+volunteer, or convention-owned operational content. `/`
 redirects to `/admin/`; previous HTML routes return 404. Health and versioned
 APIs remain mounted as backend contracts.
 
-Every later page requires UX-013's page contract and product-owner inspection
-before another page begins. Preserved source does not make a page current.
+Every later page requires UX-013's page contract and evidence. ADR 0037 groups
+dependent pages into executable milestones instead of requiring a separate
+owner pause after each isolated page. Preserved source does not make a page
+current.
 
 ## Preserved target model
 
@@ -126,16 +135,17 @@ resource identity and resolve safely for authorized viewers.
 Archived editions are visually distinct and read-only by default. A correction
 requires a separate, reasoned action rather than an ordinary edit button.
 
-The implemented `/admin/` shell and its embedded Convention work preserve an
-explicitly selected event edition. Edition-owned lists, details, counts, normal
-relationship choices, and new-record defaults follow that context. Specialist
-records also offer `All foundation data` for first-time platform setup.
+The preserved pre-reset `/admin/` shell and its embedded Convention work used
+an explicitly selected event edition. Edition-owned lists, details, counts,
+normal relationship choices, and new-record defaults followed that context.
+Specialist records also offered `All foundation data` for first-time platform
+setup.
 Cross-edition reuse appears only in purpose-named workflows such as
 registration template or source-edition selection; it never silently mixes
 routine operational rows.
 
-The original `/admin/` home keeps the complete alphabetical directory for
-returning operators. ADR 0027 removes the former global Quick Start strip.
+The preserved original `/admin/` home kept the complete alphabetical directory
+for returning operators. ADR 0027 removed the former global Quick Start strip.
 Organization, series, edition, Chair identity, guarded first authority,
 registration, workforce, and readiness guidance is contextual inside
 Convention work's **Setup guide**. An eligible workspace-less superuser
@@ -144,8 +154,8 @@ there; after completion it becomes a read-only explanation rather than a
 permanent action. The guide is not a readiness checklist and ordinary
 navigation never grants access or marks work complete.
 
-The canonical `/admin/` shell has one collapsible sidebar with Convention work
-and Specialist records sections. The embedded workflows do not render another
+That preserved `/admin/` shell had one collapsible sidebar with Convention work
+and Specialist records sections. The embedded workflows did not render another
 global navigation or workspace selector; their headings, modules, fields,
 tables, buttons, and responsive spacing follow the same language as specialist
 record pages. Convention work's Today page keeps published form-driven

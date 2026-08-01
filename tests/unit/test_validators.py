@@ -24,8 +24,9 @@ def test_lowercase_slug_rejects_ambiguous_values(value: str) -> None:
 def test_time_zone_requires_iana_identifier() -> None:
     validate_time_zone("Europe/Budapest")
 
-    with pytest.raises(ValidationError, match="IANA"):
-        validate_time_zone("Convention/Local")
+    for invalid_value in ("Convention/Local", "../etc/passwd"):
+        with pytest.raises(ValidationError, match="IANA"):
+            validate_time_zone(invalid_value)
 
 
 @pytest.mark.parametrize("values", [[], ["en", "en"], ["english"]])

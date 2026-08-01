@@ -3,6 +3,7 @@
 import re
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+import pycountry
 from django.core.exceptions import ValidationError
 
 LOWERCASE_SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -10,6 +11,8 @@ LANGUAGE_CODE_PATTERN = re.compile(
     r"^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|[0-9]{3}))?$"
 )
 CURRENCY_CODE_PATTERN = re.compile(r"^[A-Z]{3}$")
+MAX_EDITION_LANGUAGE_CODES = 16
+MAX_EDITION_CURRENCY_CODES = 8
 
 
 def validate_lowercase_slug(value: str) -> None:
@@ -23,7 +26,7 @@ def validate_lowercase_slug(value: str) -> None:
 def validate_time_zone(value: str) -> None:
     try:
         ZoneInfo(value)
-    except ZoneInfoNotFoundError as error:
+    except (ValueError, ZoneInfoNotFoundError) as error:
         raise ValidationError(
             "Use a valid IANA time-zone identifier.",
             code="invalid_time_zone",
@@ -40,6 +43,11 @@ def validate_language_codes(values: list[str]) -> None:
         raise ValidationError(
             "Language codes must be unique.",
             code="duplicate_language",
+        )
+    if len(values) > MAX_EDITION_LANGUAGE_CODES:
+        raise ValidationError(
+            f"Choose no more than {MAX_EDITION_LANGUAGE_CODES} languages.",
+            code="too_many_languages",
         )
     invalid = [value for value in values if not LANGUAGE_CODE_PATTERN.fullmatch(value)]
     if invalid:
@@ -60,9 +68,22 @@ def validate_currency_codes(values: list[str]) -> None:
             "Currency codes must be unique.",
             code="duplicate_currency",
         )
+    if len(values) > MAX_EDITION_CURRENCY_CODES:
+        raise ValidationError(
+            f"Choose no more than {MAX_EDITION_CURRENCY_CODES} currencies.",
+            code="too_many_currencies",
+        )
     invalid = [value for value in values if not CURRENCY_CODE_PATTERN.fullmatch(value)]
     if invalid:
         raise ValidationError(
             f"Invalid currency code: {invalid[0]}",
             code="invalid_currency",
+        )
+    unknown = [
+        value for value in values if pycountry.currencies.get(alpha_3=value) is None
+    ]
+    if unknown:
+        raise ValidationError(
+            f"Unknown ISO 4217 currency code: {unknown[0]}",
+            code="unknown_currency",
         )

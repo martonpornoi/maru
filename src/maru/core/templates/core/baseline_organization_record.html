@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
   </head>
   <body>
+    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
     <header class="baseline-header">
       <img
         class="baseline-logo"
@@ -29,7 +30,7 @@
     <div class="baseline-admin-layout">
       {% include "core/_baseline_admin_navigation.html" with current_admin_page="organization-record" %}
 
-      <main class="baseline-page baseline-page--form" data-page="organization-record">
+      <main id="main-content" class="baseline-page baseline-page--form" data-page="organization-record" tabindex="-1">
         {% if organization_record_load_failed %}
           <header class="baseline-page-heading">
             <p class="baseline-kicker">Organizations</p>
@@ -66,6 +67,8 @@
             </p>
           </header>
 
+          {% include "core/_baseline_access_summary.html" with access_operation="view and change this organization record" %}
+
           <section class="baseline-panel" aria-labelledby="convention-series-title">
             <div class="baseline-panel-heading">
               <div>
@@ -101,7 +104,10 @@
                     {% for convention_series in series %}
                       <tr>
                         <th scope="row" data-label="Convention series">
-                          <strong class="baseline-record-name">{{ convention_series.name }}</strong>
+                          <a
+                            class="baseline-record-name"
+                            href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}"
+                          >{{ convention_series.name }}</a>
                           <span class="baseline-record-slug">{{ convention_series.slug }}</span>
                         </th>
                         <td data-label="Availability">

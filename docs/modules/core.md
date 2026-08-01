@@ -1,23 +1,24 @@
 # Core module
 
-Status: Implemented backend foundation with ADR 0031 Page 1 platform home
-Last updated: 2026-07-31
+Status: Implemented backend foundation and controlled Pages 1–7 management shell
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
 `maru.core` owns genuinely domain-neutral runtime primitives supporting
-NFR-001, NFR-004, NFR-006, and NFR-008.
+NFR-001, NFR-004, NFR-006, NFR-008, and NFR-009.
 
 ## Owned behavior
 
 - UUID/timestamp abstract persistence base
 - strict reusable value validators
+- strict HTML/API input helpers that reject undeclared fields
 - request correlation
 - allowlisted structured JSON logging
 - RFC 9457-style DRF problem responses
 - liveness, database readiness, and build identity endpoints
 - an ADR 0030 root redirect and focused local sign-in;
-- the ADR 0031 platform-administrator-only organization inventory at `/admin/`;
+- the responsive, progressively scoped Pages 1–7 administration shell;
 - preserved administration safety mixins and previous shell implementation,
   not mounted in the current default experience
 - canonical platform brand assets, accessible palette tokens, and application
@@ -34,16 +35,33 @@ frontends remain replaceable clients.
 ## Current browser baseline
 
 `maru.baseline_urls` is the default URL configuration. `/` redirects to
-`/admin/`; `/accounts/login/` is the only unauthenticated HTML page; and
-`/admin/` is the only authenticated HTML page. The home requires an active
-platform administrator and shows only the C1 organization inventory described
-by UX-014. It performs no mutation and creates no convention relationship.
-Sign-out is a POST action. Previous HTML routes are not mounted and return 404.
+`/admin/`; `/accounts/login/` is the only unauthenticated HTML page. The
+authenticated `/admin/` namespace requires an active platform administrator
+and now mounts the organization → series → edition spine:
 
-The home renders empty and populated states atomically. A database query failure
-produces a safe read-only `503` page and server exception log without exposing
-the database message. The Page 2 organization-creation route is not mounted and
-Page 1 does not present an unfinished action.
+- Page 1 organization inventory;
+- Page 2 Draft organization creation;
+- Page 3 organization record/update/protected empty-Draft deletion;
+- Page 4 convention-series creation;
+- Page 5 convention-series record/update and edition inventory;
+- Page 6 event-edition creation; and
+- Page 7 event-edition record/update and explicit working-context selection.
+
+Sign-out and edition context select/clear are POST actions. The shell creates
+no convention relationship for the platform administrator. Previous
+Convention work, public registration, volunteer, and specialist-record HTML
+routes remain unmounted and return 404.
+
+Every mounted page has bounded empty/populated/conflict/failure states. A
+database dependency failure produces safe `503` guidance and a server exception
+log without exposing the database message. Page adapters call module-owned
+queries and commands; `core` does not absorb their business rules.
+
+`StrictInputForm` admits only declared fields plus CSRF, and
+`reject_unknown_fields(...)` provides the equivalent API boundary. Errors
+report at most five bounded field names. Module services still repeat
+security-critical validation because transport validation alone is not an
+authority or integrity boundary.
 
 Health, build, schema, and versioned APIs remain mounted. Automated backend
 tests may select the preserved URL configuration, but that does not make its
@@ -115,10 +133,13 @@ projection, not the public response.
 
 Unit tests cover strict environment parsing, validators, request correlation,
 safe log output, problem response shape, and health/build behavior. Integration
-tests cover Page 1 authorization, organization counts, non-participation side
-effects, and safe failure behavior.
+tests cover Pages 1–7 authorization, progressive/current navigation, strict
+input, safe failure behavior, and platform non-participation.
 
 ## Limitations
 
-Audit, metrics/tracing export, error capture, rate limiting, and a public status
-service arrive in later V02/operations work.
+Computed effective access, metrics/tracing export, error capture, rate limiting,
+and a public status service remain. The current access summary is deliberately
+static and labels platform oversight only; M2 must replace it with policy-
+computed organization/department/resource explanations before convention-owned
+mutation pages are mounted.

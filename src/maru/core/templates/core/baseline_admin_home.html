@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
   </head>
   <body>
+    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
     <header class="baseline-header">
       <img
         class="baseline-logo"
@@ -29,7 +30,7 @@
     <div class="baseline-admin-layout">
       {% include "core/_baseline_admin_navigation.html" with current_admin_page="organizations" %}
 
-      <main class="baseline-page" data-page="platform-administration-home">
+      <main id="main-content" class="baseline-page" data-page="platform-administration-home" tabindex="-1">
       {% if messages %}
         <div class="baseline-messages" aria-live="polite">
           {% for message in messages %}
@@ -49,6 +50,8 @@
           of them.
         </p>
       </header>
+
+      {% include "core/_baseline_access_summary.html" with access_operation="view the platform organization inventory" %}
 
       <section class="baseline-panel" aria-labelledby="organization-inventory-title">
         <div class="baseline-panel-heading">

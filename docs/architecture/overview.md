@@ -1,6 +1,6 @@
 # Architecture overview
 
-Status: Target architecture with a Pages 1–4 mounted administration baseline
+Status: Target architecture with the Pages 1–7 edition workspace spine mounted
 Last updated: 2026-08-01
 
 ## System shape
@@ -9,9 +9,11 @@ Maru is an API-first modular monolith. One Django deployment may host multiple
 organizations and event editions, while separate clients consume versioned
 APIs.
 
-ADR 0030 reduced HTML to a controlled rebuild. Pages 1–4 now mount organization
-inventory, organization creation and record management, and convention-series
-creation for explicitly classified platform administrators. ADR 0037 delivers
+ADR 0030 reduced HTML to a controlled rebuild. Pages 1–7 now mount organization
+inventory/creation/record management, convention-series creation/record, and
+event-edition creation/record/context for explicitly classified platform
+administrators. HTML and API edition writes share application services, audit,
+domain events, outbox, strict input, and aggregate concurrency. ADR 0037 delivers
 the remaining system as executable vertical milestones. The richer clients in
 the diagram are preserved targets, API consumers, or absent capabilities until
 the live ledger in `docs/project/PRODUCTION_CONSOLIDATION.md` says otherwise.
@@ -58,8 +60,8 @@ configuration; they do not point at mutable records from an older edition.
 | Module | Owns |
 | --- | --- |
 | `identity` | Platform accounts, authentication links, user security history |
-| `organizations` | Tenants, convention series, memberships, departments |
-| `events` | Event editions, lifecycle, venues, rooms, resources, locales |
+| `organizations` | Tenants, convention series, memberships |
+| `events` | Event-edition identity, lifecycle, dates, and locales |
 | `planning` | Objectives, projects, tasks, dependencies, readiness, risks, decisions |
 | `participation` | Edition capacities, roles, status history, archive views |
 | `registration` | Registrations, eligibility, badges, check-in |
@@ -86,6 +88,8 @@ configuration; they do not point at mutable records from an older edition.
 | `engagement` | Opt-in activities, achievements, feedback, limited analytics |
 | `automation` | Versioned rules, triggers, approvals, execution history |
 | `audit` | Privileged audit events, integrity checks, audit access |
+| `effects` | Versioned domain facts, transactional outbox, delivery state |
+| `activity` | Audience-safe operational renditions of allowlisted domain facts |
 | `integrations` | External channel, payment, mail, storage, and identity adapters |
 
 This is a target map, not permission to scaffold every module immediately.
@@ -208,8 +212,11 @@ downloaded.
 
 ## Administration experience
 
-Django admin is a bootstrap and emergency data-management interface. The staff
-operations console is task-oriented and API-driven.
+One `/admin/` namespace is the product management shell. The current Pages 1–7
+are server-rendered, record-oriented journeys; later specialist boards may be
+API-driven inside the same shell. Django's generic model administration remains
+a preserved bootstrap/emergency implementation and is not the current default
+navigation or a second staff product.
 
 The console will favor:
 

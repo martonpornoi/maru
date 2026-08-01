@@ -46,14 +46,19 @@ def test_authorized_transition_commits_state_audit_fact_and_outbox_together() ->
 
     assert transitioned.lifecycle == EventEdition.Lifecycle.PREPARING
     assert transitioned.lifecycle_version == 1
+    assert transitioned.aggregate_version == 2
     transition = EditionLifecycleTransition.objects.get(edition=edition)
     audit = AuditEvent.objects.get(correlation_id=correlation_id)
     event = DomainEvent.objects.get(correlation_id=correlation_id)
     message = OutboxMessage.objects.get(event=event)
     assert transition.actor_id == actor.id
     assert audit.outcome == AuditEvent.Outcome.ALLOW
-    assert audit.changed_fields == ["lifecycle", "lifecycle_version"]
-    assert event.aggregate_version == 1
+    assert audit.changed_fields == [
+        "lifecycle",
+        "lifecycle_version",
+        "aggregate_version",
+    ]
+    assert event.aggregate_version == 2
     assert event.causation_id == audit.id
     assert event.payload == {"from_state": "draft", "to_state": "preparing"}
     assert message.status == OutboxMessage.Status.PENDING
@@ -140,6 +145,7 @@ def test_effect_publish_failure_rolls_back_canonical_change_and_records_error(
     edition.refresh_from_db()
     assert edition.lifecycle == EventEdition.Lifecycle.DRAFT
     assert edition.lifecycle_version == 0
+    assert edition.aggregate_version == 1
     assert not EditionLifecycleTransition.objects.filter(edition=edition).exists()
     assert not DomainEvent.objects.filter(aggregate_id=edition.id).exists()
     audit = AuditEvent.objects.get(correlation_id=correlation_id)

@@ -956,7 +956,14 @@ class _DemoSeeder:
                     setattr(series, field_name, value)
                     changed_fields.append(field_name)
             if changed_fields:
-                series.save(update_fields=(*changed_fields, "updated_at"))
+                series.profile_version += 1
+                series.save(
+                    update_fields=(
+                        *changed_fields,
+                        "profile_version",
+                        "updated_at",
+                    )
+                )
         self._own("convention_series", series.id, created=created)
         return series
 

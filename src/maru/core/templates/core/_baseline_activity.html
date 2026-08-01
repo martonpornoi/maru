@@ -1,0 +1,40 @@
+{% load tz %}
+<section class="baseline-panel" aria-labelledby="record-activity-title">
+  <div class="baseline-panel-heading">
+    <div>
+      <p class="baseline-kicker">Who changed what</p>
+      <h2 id="record-activity-title">Activity</h2>
+    </div>
+    <span class="baseline-count">{{ activity|length }} tracked</span>
+  </div>
+  {% if activity %}
+    <ol class="baseline-activity-list">
+      {% for item in activity %}
+        <li>
+          <div>
+            <strong>{{ item.action }}</strong>
+            <span>by {{ item.actor_label }}</span>
+          </div>
+          {% if item.changed_field_labels %}
+            <p>Changed: {{ item.changed_field_labels|join:", " }}</p>
+          {% endif %}
+          <p class="baseline-activity-meta">
+            {% timezone activity_time_zone %}
+              <time datetime="{{ item.occurred_at|date:'c' }}">
+                {{ item.occurred_at|date:"Y-m-d H:i T" }}
+              </time>
+            {% endtimezone %}
+          </p>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <div class="baseline-state">
+      <h3>No tracked changes yet</h3>
+      <p>
+        Earlier records may predate this human activity view. New meaningful
+        changes appear here without copying entered values.
+      </p>
+    </div>
+  {% endif %}
+</section>

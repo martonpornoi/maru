@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
   </head>
   <body>
+    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
     <header class="baseline-header">
       <img
         class="baseline-logo"
@@ -29,7 +30,7 @@
     <div class="baseline-admin-layout">
       {% include "core/_baseline_admin_navigation.html" with current_admin_page="add-convention-series" %}
 
-      <main class="baseline-page baseline-page--form" data-page="create-convention-series">
+      <main id="main-content" class="baseline-page baseline-page--form" data-page="create-convention-series" tabindex="-1">
         {% if series_creation_load_failed %}
           <header class="baseline-page-heading">
             <p class="baseline-kicker">Convention series</p>
@@ -56,6 +57,8 @@
               editions. It remains owned by this organization.
             </p>
           </header>
+
+          {% include "core/_baseline_access_summary.html" with access_operation="create a convention series for this organization" %}
 
           {% if series_creation_blocked %}
             <div class="baseline-state baseline-state--error" role="alert">

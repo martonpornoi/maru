@@ -4,7 +4,7 @@ Status: Active master checklist
 Branch: `codex/production-consolidation`  
 Base: `327a7d63574d0118356a0fd11ca5a316d78b2aed`  
 Started: 2026-08-01  
-Decision: ADR 0037
+Decisions: ADRs 0037–0038
 
 This is the crash-safe delivery map for turning the retained Maru foundation
 into one understandable convention operating platform. Update this file after
@@ -70,14 +70,14 @@ The state vocabulary is deliberately small:
 
 | Capability | State on 2026-08-01 | Evidence / next dependency |
 | --- | --- | --- |
-| Organization and series Pages 1–4 | Mounted | Accepted baseline views, services, audit, integration tests. |
-| Convention-series record | Absent | Milestone 1, Page 5. |
-| Edition lifecycle | API-only | `maru.events`; creation still lacks shared audited command. |
-| Edition browser workspace | Absent | Milestone 1, Pages 6–7. |
+| Organization and series Pages 1–5 | Mounted | Accepted Pages 1–4 plus locally verified Page 5 record/API. |
+| Convention-series record | Mounted | Page 5 profile concurrency, activity, editions, HTML/API. |
+| Edition lifecycle | API-only | Authorized transition kernel remains API/preserved UI; Page 7 exposes record/profile only. |
+| Edition browser workspace | Mounted | Locally verified Pages 6–7 creation/record/context; owner rehearsal remains. |
 | Organization representation | Partial | Requirement and rehearsal data exist; no organization-level governance workflow. |
 | Department hierarchy | API-only | Workforce model/projection and rehearsal exist; editor is unmounted. |
 | Department/resource authorization | Partial | Organization and edition grants exist; department/resource constraints do not. |
-| Effective-access explanation | Absent | UX-020; depends on scope v2 for full fidelity. |
+| Effective-access explanation | Partial | Static truthful platform-oversight summary on Pages 1–7; computed scope v2 remains M2. |
 | Attendee registration | Preserved/unmounted | Large tested domain and headless API; deployment gates remain. |
 | Registration extension fields | API-only | Append-only, permission-aware implementation exists. |
 | Generic application/form portfolio | Absent | KNO-009 and REG-023. |
@@ -89,8 +89,8 @@ The state vocabulary is deliberately small:
 | Notifications | API-only | Canonical service notifications exist. |
 | Team conversations and on-site messaging | Absent | Needs scoped inbox/thread domain and delivery adapters. |
 | Credentials/offline check-in | API-only | Tested domain; hardware, printing, recovery, and load gates remain. |
-| Audit kernel | API-only / partial UI | Append-only integrity exists; human activity timelines are missing. |
-| Stable API/OpenAPI | Partial | Strong current contract; new domains and organization/series writes absent. |
+| Audit and activity | API-only audit / mounted record history | Append-only audit plus bounded Page 5/7 domain-fact history; cross-domain access-aware activity remains M2. |
+| Stable API/OpenAPI | Partial | Series GET/PUT and edition POST/PUT are implemented and generated artifacts are stable; organization writes, external credentials, and new domains remain. |
 | Production infrastructure | Deployment-gated | Provider selection, SMTP, object storage, scanner, workers, secrets, monitoring, restore, load, and legal/security review. |
 
 Update this table whenever code changes state. Do not leave a capability marked
@@ -412,6 +412,9 @@ relationship record.
   existence leaks.
 - Mutating endpoints use idempotency where retries are plausible and reject
   stale versions.
+- Edition creation uses the UUID `Idempotency-Key` HTTP header; the browser
+  adapter keeps an equivalent hidden UUID. Retry keys do not belong in the API
+  JSON body or routine activity/audit display.
 - Public, ticketed, staff, department, and confidential projections are
   separate serializers/queries, not a broad serializer with client-side hiding.
 - OpenAPI generation and client drift checks remain merge gates.
@@ -427,27 +430,36 @@ relationship record.
 - [x] Select the Page 4 tip as the only safe base.
 - [x] Create `codex/production-consolidation`.
 - [x] Record ADR 0037.
+- [x] Record ADR 0038 after implementation separated the record spine from
+  governance/scoped access.
 - [x] Stabilize explicit requirements for three-phase schedules, layers,
   one-registration/separate-applications, access headers, storage, documents,
   typed applications, and input contracts.
 - [x] Create this capability ledger and crash-safe checklist.
-- [ ] Mark stale status documents as historical or update them to the ledger.
-- [ ] Commit the documentation checkpoint.
+- [x] Mark stale status documents as historical or update them to the ledger.
+- [x] Commit the documentation checkpoint (`4f6cbcb`).
 
 Exit: a maintainer can tell what runs, what exists only in APIs, and what is
 still absent without reading branch history.
 
 ### M1 — Edition workspace spine
 
-- [ ] Page 5: convention-series record, edit, activity, edition inventory.
-- [ ] Page 6: minimal audited edition creation with organization defaults.
-- [ ] Edition creation service shared by HTML/API with tenant checks, audit,
+- [x] Page 5: convention-series record, edit, activity, edition inventory.
+- [x] Page 6: minimal audited edition creation with organization defaults.
+- [x] Edition creation service shared by HTML/API with tenant checks, audit,
   outbox, rollback, and idempotency decision.
-- [ ] Page 7: edition record/home and explicit persistent edition context.
-- [ ] Progressive series/edition navigation on every new page.
-- [ ] First truthful access header: platform authority shown separately from
+- [x] Page 7: edition record/home and explicit persistent edition context.
+- [x] Progressive series/edition navigation on every new page.
+- [x] First truthful access header: platform authority shown separately from
   convention participation.
-- [ ] Full tests, docs, desktop and 390-pixel browser evidence.
+- [x] Full tests, docs, generated API/client, deployment-shaped checks, desktop
+  and 390-pixel browser evidence, with accessibility caveats recorded.
+
+M1 is locally verified, not production-ready. Owner tutorial rehearsal,
+automated accessibility analysis, reliable keyboard traversal, the remaining
+visual state matrix, and every external release gate stay open. The access
+header is static/provisional and must not be mistaken for M2's computed
+organization/department/person access.
 
 Exit: the platform administrator can create and revisit organization -> series
 -> edition without becoming a convention participant.
@@ -460,7 +472,9 @@ Exit: the platform administrator can create and revisit organization -> series
 - [ ] Mounted hierarchy/position editor and minimized structure view.
 - [ ] Department and resource constraints in authorization policy and grants.
 - [ ] Effective-access query/header and audited contextual assignment editor.
-- [ ] Human activity timeline resolving safe actor/target labels.
+- [ ] Cross-domain, access-aware human activity workspace resolving safe actor
+  and target labels. Pages 5/7 already provide bounded aggregate record
+  history; that does not complete this item.
 - [ ] Invitations, expiry, replacement, removal, multi-position and
   multi-department tests.
 
@@ -570,7 +584,7 @@ count.
 
 1. Read `docs/project/CURRENT.md`.
 2. Read this file and find the first unchecked item in the active milestone.
-3. Read ADR 0037 and the page/domain contract being changed.
+3. Read ADRs 0037–0038 and the page/domain contract being changed.
 4. Run `git status --short --branch`; do not discard unrelated changes.
 5. Confirm the latest local checkpoint/commit and test result in `CURRENT.md`.
 6. Continue only the smallest active slice; update this checklist before

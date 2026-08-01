@@ -31,27 +31,49 @@ class Capability:
     obligations: frozenset[str] = frozenset()
 
 
+EDITION_BASIC_FIELD_CEILING = frozenset(
+    {
+        "id",
+        "organization_id",
+        "series_id",
+        "slug",
+        "name",
+        "lifecycle",
+        "aggregate_version",
+        "time_zone",
+        "language_codes",
+        "currency_codes",
+        "starts_on",
+        "ends_on",
+    }
+)
+
+
 CAPABILITY_DEFINITIONS = (
     Capability(
         code="events.view_basic",
         description="View non-public basic metadata for an authorized event edition.",
         maximum_scope=ScopeLevel.ORGANIZATION,
         delegable=True,
-        field_ceiling=frozenset(
-            {
-                "id",
-                "organization_id",
-                "series_id",
-                "slug",
-                "name",
-                "lifecycle",
-                "time_zone",
-                "language_codes",
-                "currency_codes",
-                "starts_on",
-                "ends_on",
-            }
+        field_ceiling=EDITION_BASIC_FIELD_CEILING,
+    ),
+    Capability(
+        code="events.create",
+        description="Create a Draft event edition beneath an authorized series.",
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        field_ceiling=EDITION_BASIC_FIELD_CEILING,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="events.change_profile",
+        description=(
+            "Change bounded Draft or Preparing edition identity, dates, and locale."
         ),
+        maximum_scope=ScopeLevel.EDITION,
+        field_ceiling=EDITION_BASIC_FIELD_CEILING,
+        delegable=False,
+        obligations=frozenset({"audit"}),
     ),
     Capability(
         code="events.transition",
@@ -547,7 +569,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-07-29.2"
+POLICY_VERSION = "2026-08-01.2"
 
 
 def capability(code: str) -> Capability | None:

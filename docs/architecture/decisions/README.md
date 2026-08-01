@@ -42,6 +42,7 @@ the system.
 | [0035](0035-organization-scoped-series-creation.md) | Partially superseded | Organization-scoped creation remains; ADR 0036 adds a scoped Series menu destination without making it global |
 | [0036](0036-progressive-context-scoped-administration-navigation.md) | Accepted | Progressive global and selected-organization navigation aligned to the viewport edge |
 | [0037](0037-executable-journey-production-consolidation.md) | Accepted | Consolidate the retained domain kernel through executable convention journeys in one management shell |
+| [0038](0038-stage-governance-after-edition-spine.md) | Accepted | Stage governance and computed scoped access after the edition workspace record spine |
 
 New ADRs use the next four-digit number and contain:
 

@@ -51,25 +51,29 @@ series**. Its direct route is
 - availability starts Active and does not publish or create an edition;
 - Maru normalizes the name and generates a bounded slug unique within MaruCon;
 - success returns to Page 3 with the created row and one-time confirmation;
-- creation and its value-minimized audit event are atomic; and
+- creation, value-minimized audit,
+  `organizations.convention_series.created.v1`, and outbox delivery are atomic;
+  and
 - this platform account remains outside every convention relationship.
 
-Do not use Page 4 to create an edition. Page 5 will own the existing series
-record and Page 6 will define the dated event edition after their contracts are
-accepted.
+Do not use Page 4 to create an edition. Page 5 now owns the existing series
+record and Page 6 owns the dated event-edition command.
 
 ## Failure and recovery
 
 Invalid values stay local to the form and create nothing. A Closed parent
 returns `409`; an authorized unknown slug returns `404`; other accounts are
-denied before organization lookup. A database or audit failure returns a
-generic `503` and transaction rollback removes the partial series.
+denied before organization lookup. A database, audit, event-publication, or
+outbox failure returns a generic non-disclosing `503`; transaction rollback
+removes the partial series and every correlated evidence row.
 
 Page 4 adds no migration. If it cannot load, check PostgreSQL and
 `/health/ready`, then retry. Do not diagnose against or modify the preserved
 `maru` or `marucon_rehearsal` databases.
 
-## Next page gate
+## Continue the current journey
 
-The owner should inspect and accept Page 4 before Page 5 defines the
-Convention-series record.
+Continue with the
+[organization-to-edition hands-on tutorial](maru-hands-on-tutorial.md), which
+covers Pages 5–7 and the explicit working-edition context. The original
+per-page owner pause was superseded by ADR 0037's executable milestone cadence.
