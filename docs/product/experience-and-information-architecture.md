@@ -1,47 +1,77 @@
 # Experience and information architecture
 
-Status: Pages 1–7 mounted through event-edition record and context; broader
-model preserved as executable vertical milestones
+Status: Unified `/admin/` shell and initial Page 8 handoff locally verified;
+final suite/accessibility/owner evidence pending
 Last updated: 2026-08-01
 
 ## Current executable experience
 
-ADR 0030 established the two-page baseline. ADRs 0031–0037 and M1 restore the
-first executable setup journey:
+ADR 0030 established the two-page baseline. ADRs 0031–0038 and M1 restored the
+first executable setup journey. ADR 0039 moves it into the richer
+record-oriented administration grammar without creating another product. ADR
+0040 defines the next selected-organization handoff. ADR 0041 defines, but does
+not yet implement, exact department/resource access; ADRs 0042 and 0043 make
+the educational data synthetic-only and add emergency controller containment.
+The canonical route design
+is:
 
 1. Sign in at `/accounts/login/`.
-2. An authenticated, active-platform-administrator-only organization inventory
-   at `/admin/`.
-3. Complete optional Draft organization creation at
-   `/admin/organizations/new/`.
-4. A linked organization profile, protected empty-Draft deletion, and nested
-   convention-series inventory at `/admin/organizations/<slug>/`.
-5. Convention-series creation for that selected organization at
-   `/admin/organizations/<slug>/series/new/`.
-6. A linked, versioned series record with activity and edition inventory at
-   `/admin/organizations/<slug>/series/<series-slug>/`.
-7. Idempotent Draft edition creation at
-   `/admin/organizations/<slug>/series/<series-slug>/editions/new/`.
-8. A linked, versioned edition record/activity page with explicit POST-only
-   working-context selection at the nested edition route.
+2. Enter the permission-filtered shared shell at `/admin/`.
+3. Open API-backed Convention work at `/admin/workspace/` or
+   permission-filtered specialist records through the same sidebar.
+4. Open the active-platform-administrator-only organization inventory at
+   `/admin/platform/organizations/`.
+5. Create a complete optional Draft organization at
+   `/admin/platform/organizations/new/`.
+6. Maintain its profile and nested convention-series inventory at
+   `/admin/platform/organizations/<slug>/`.
+7. Open Page 8 at
+   `/admin/platform/organizations/<slug>/representation/`, provision the fixed
+   Executive Board root, invite at least two exact existing verified person
+   accounts, let each answer their own invitation, and activate the organization
+   under cross-approval.
+8. Create a series at
+   `/admin/platform/organizations/<slug>/series/new/` and maintain it at the
+   nested series record.
+9. Create an idempotent Draft edition below that series and revisit its nested
+   record/activity page, with explicit POST-only working-context selection.
 
-The shared Platform administration navigation remains one **Organizations**
-row with adjacent compact organization **+ Add**. Convention series stays
-nested beneath its accountable tenant and does not become a second global
-website/menu. The pages explain that the administrator operates Maru but does
-not participate in a convention. Series creation requires only the recurring
-brand name, keeps organization and slug code-owned, and does not create a dated
-edition or people relationship. Edition creation likewise creates identity and
-evidence only. The mounted experience has one explicit working-edition context
-action but no Django model directory, embedded application, registration,
-volunteer, or convention-owned operational content. `/`
-redirects to `/admin/`; previous HTML routes return 404. Health and versioned
-APIs remain mounted as backend contracts.
+The shared Platform administration section remains one **Organizations** row
+with adjacent compact **+ Add**. Convention series stays nested beneath its
+accountable tenant and does not become a second global website/menu. The pages
+explain that the administrator operates Maru but does not participate in a
+convention. Series creation requires only the recurring brand name, keeps
+organization and slug code-owned, and does not create a dated edition or people
+relationship. Edition creation likewise creates identity and evidence only.
+Page 8 is the explicit exception that creates invited/active Board relationships
+for the exact people who accept; it never enrolls the platform administrator.
+
+The `platform` segment is reserved for purpose-built platform pages and avoids
+collisions with Django application-label routes. The administration home,
+Convention work, platform spine, and specialist records share one collapsible
+sidebar, platform identity, and record-oriented visual grammar. Public and
+personal journeys may remain outside `/admin/` by purpose; they do not become a
+second staff shell. Health and versioned APIs remain authoritative contracts.
+
+Every active account may enter the Maru shell. Pages 1–2 remain platform setup.
+Effective organization/edition grants and role assignments allow ordinary non-
+staff accounts to reach only their scoped Pages 3–8 and Convention work;
+invitees see only their own governance invitations. Specialist model records
+remain separately Django staff/model-permission gated.
+
+Current backend tests verify changed default routes, navigation, scoped shell
+access, Page 8's initial lifecycle, bounded sensitive reads and denials, and
+database-level platform-subject exclusion. Frontend type checking, 19 Vitest
+tests, production build, local populated/fresh migration and restore evidence,
+and desktop/390-pixel smoke pass. A clean one-pass consolidated suite and
+coverage run, keyboard/automated accessibility, complete failure-state, and
+owner-rehearsal evidence remain open under UX-013.
 
 Every later page requires UX-013's page contract and evidence. ADR 0037 groups
 dependent pages into executable milestones instead of requiring a separate
-owner pause after each isolated page. Preserved source does not make a page
-current.
+owner pause after each isolated page. ADR 0039 permits preserved visual and
+interaction grammar to be reused, but preserved source does not make a page
+current or authoritative.
 
 ## Preserved target model
 
@@ -135,17 +165,18 @@ resource identity and resolve safely for authorized viewers.
 Archived editions are visually distinct and read-only by default. A correction
 requires a separate, reasoned action rather than an ordinary edit button.
 
-The preserved pre-reset `/admin/` shell and its embedded Convention work used
-an explicitly selected event edition. Edition-owned lists, details, counts,
-normal relationship choices, and new-record defaults followed that context.
-Specialist records also offered `All foundation data` for first-time platform
-setup.
+ADR 0039 reuses the pre-reset shell's explicitly selected event-edition
+grammar. Edition-owned lists, details, counts, normal relationship choices, and
+new-record defaults follow that context. Specialist records also offer
+`All foundation data` for first-time platform setup. The migration must prove
+that this context remains a query/display aid rather than authority.
 Cross-edition reuse appears only in purpose-named workflows such as
 registration template or source-edition selection; it never silently mixes
 routine operational rows.
 
-The preserved original `/admin/` home kept the complete alphabetical directory
-for returning operators. ADR 0027 removed the former global Quick Start strip.
+The unified `/admin/` home keeps the complete permission-filtered alphabetical
+directory for returning operators. ADR 0027 removed the former global Quick
+Start strip.
 Organization, series, edition, Chair identity, guarded first authority,
 registration, workforce, and readiness guidance is contextual inside
 Convention work's **Setup guide**. An eligible workspace-less superuser
@@ -154,11 +185,12 @@ there; after completion it becomes a read-only explanation rather than a
 permanent action. The guide is not a readiness checklist and ordinary
 navigation never grants access or marks work complete.
 
-That preserved `/admin/` shell had one collapsible sidebar with Convention work
-and Specialist records sections. The embedded workflows did not render another
-global navigation or workspace selector; their headings, modules, fields,
-tables, buttons, and responsive spacing follow the same language as specialist
-record pages. Convention work's Today page keeps published form-driven
+The selected `/admin/` shell has one collapsible sidebar with Platform
+administration, Convention work, and Specialist records sections. Embedded
+workflows do not render another global navigation or workspace selector; their
+headings, modules, fields, tables, buttons, and responsive spacing follow the
+same language as specialist record pages. Convention work's Today page keeps
+published form-driven
 workflows in a separate Forms section rather than scattering registration,
 volunteer applications, and onboarding documents through unrelated menus.
 Existing model pages remain inside the same `/admin/` hierarchy and use the
@@ -208,8 +240,11 @@ sessions, exports, and deletion requests are visibly separated.
 
 ## Administration and Convention work
 
-The original administration shell provides one collapsible global menu:
+ADR 0039 selects one administration shell and collapsible global menu. Its
+route, authorization, frontend, and responsive integration is locally verified:
 
+- **Platform administration:** the organization -> representation -> series ->
+  edition record spine under `/admin/platform/`;
 - **Convention work:** Today, People, Organization structure, My registration,
   Registration, Reports & badges, Setup guide, Security history, and Manage
   access; and
@@ -221,6 +256,29 @@ edition context and account actions without a second menu or duplicated
 selector. Modules may
 register actions, search providers, dashboard cards, and permission
 requirements without creating another global navigation.
+
+### Initial organization representation
+
+The selected organization exposes **Representation & access** before
+department-owned work. Page 8 uses a distinct, ordered handoff rather than a
+generic role editor: an active platform administrator provisions the fixed
+Executive Board root, authorized management exact-matches existing active
+verified person accounts, each invitee accepts or declines their own versioned
+invitation, and a platform administrator activates at least two accepted
+controllers under non-self cross-approval. Activation atomically moves the
+organization from Draft to Active.
+
+Appointment email and the controller directory are visible only to an exact
+organization-scoped manager; an invitee sees only their own open appointment.
+The header explains platform oversight, invitation ownership, and active root
+assignments without presenting the platform administrator as a member. This is
+the first computed relationship slice, not the final department/resource/field
+effective-access view. Expiry, replacement, ending, suspension, invitation
+notification delivery, routine term ending/replacement, quorum recovery, and
+legacy active-organization reconciliation remain open and prevent a
+production-ready claim. ADR 0043's platform-only emergency path may end all of
+one compromised person's Board relationships and suspend Boards that lose
+quorum; it is not a routine lifecycle editor.
 
 ### Access sharing
 

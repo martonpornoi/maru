@@ -21,6 +21,7 @@
 {% endblock %}
 
 {% block branding %}
+  {% maru_admin_shell_access request as maru_shell_access %}
   <div id="site-name">
     <a class="maru-admin-brand" href="{% url 'admin:index' %}">
       <img
@@ -30,9 +31,11 @@
       >
       <span>Administration</span>
     </a>
-    <a class="maru-admin-surface" href="{% url 'management-console' %}">
-      Convention work
-    </a>
+    {% if maru_shell_access.workspace_available %}
+      <a class="maru-admin-surface" href="{% url 'management-console' %}">
+        Convention work
+      </a>
+    {% endif %}
   </div>
 {% endblock %}
 

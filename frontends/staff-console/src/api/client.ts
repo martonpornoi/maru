@@ -28,52 +28,6 @@ export type AttendeeReportRow = components["schemas"]["AttendeeReportRow"];
 export type AccessWorkspace = components["schemas"]["AccessWorkspace"];
 export type AccessGroup = components["schemas"]["AccessGroup"];
 export type AccessAssignment = components["schemas"]["AccessAssignment"];
-export type ConventionBootstrapOrganization = {
-  id: string;
-  slug: string;
-  name: string;
-  status: "eligible" | "established";
-};
-export type ConventionBootstrapEdition = {
-  id: string;
-  organization_id: string;
-  slug: string;
-  name: string;
-  lifecycle: EditionContext["lifecycle"];
-  starts_on: string;
-  ends_on: string;
-};
-export type ConventionBootstrapChair = {
-  email: string;
-  display_name: string;
-};
-export type ConventionBootstrapWorkspace = {
-  controller_email: string;
-  organizations: ConventionBootstrapOrganization[];
-  editions: ConventionBootstrapEdition[];
-  chairs: ConventionBootstrapChair[];
-};
-export type ConventionBootstrapInput = {
-  organization_id: string;
-  edition_id: string;
-  chair_email: string;
-  reason: string;
-  confirm_organization: string;
-  controller_password: string;
-};
-export type ConventionBootstrapResult = {
-  organization: ConventionBootstrapOrganization;
-  edition: ConventionBootstrapEdition;
-  chair: ConventionBootstrapChair;
-  created: {
-    role_bundles: number;
-    position_templates: number;
-    departments: number;
-    positions: number;
-    role_assignments: number;
-    position_assignments: number;
-  };
-};
 export type EditionTransitionResult = {
   id: string;
   lifecycle: EditionContext["lifecycle"];
@@ -221,24 +175,6 @@ export async function requestJson<T>(
 
 export function loadMyContext(): Promise<MyContext> {
   return requestJson<MyContext>("/api/v1/me/context");
-}
-
-export function loadConventionBootstrapWorkspace(): Promise<ConventionBootstrapWorkspace> {
-  return requestJson<ConventionBootstrapWorkspace>(
-    "/api/v1/management/convention-bootstrap",
-  );
-}
-
-export function createConventionBootstrap(
-  input: ConventionBootstrapInput,
-): Promise<ConventionBootstrapResult> {
-  return requestJson<ConventionBootstrapResult>(
-    "/api/v1/management/convention-bootstrap",
-    {
-      method: "POST",
-      body: JSON.stringify(input),
-    },
-  );
 }
 
 export type ParticipationFilters = {

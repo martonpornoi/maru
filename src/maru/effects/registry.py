@@ -79,6 +79,33 @@ def _validate_convention_series_updated(payload: dict[str, object]) -> None:
     )
 
 
+def _validate_organization_representation_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "representation_code", "state"}),
+    )
+    expected_states = {
+        "provisioned": "provisioning",
+        "controller_invited": "invited",
+        "controller_accepted": "accepted",
+        "controller_declined": "declined",
+        "controller_invitation_ended": "provisioning",
+        "activated": "active",
+        "controller_ended": "active",
+        "representation_suspended": "suspended",
+    }
+    action = payload["action"]
+    if (
+        not isinstance(action, str)
+        or payload["representation_code"] != "executive_board"
+        or expected_states.get(action) != payload["state"]
+    ):
+        raise ValidationError(
+            "Organization representation event values are not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
 def _validate_effect_probe(payload: dict[str, object]) -> None:
     _require_exact_string_fields(
         payload,
@@ -178,6 +205,12 @@ def _validate_workforce_assignment_activated(payload: dict[str, object]) -> None
 
 
 EVENT_DEFINITIONS = (
+    EventDefinition(
+        name="organizations.representation.changed.v1",
+        schema_version=1,
+        description="An accountable Executive Board representation changed state.",
+        validator=_validate_organization_representation_changed,
+    ),
     EventDefinition(
         name="organizations.convention_series.created.v1",
         schema_version=1,

@@ -86,9 +86,6 @@ class MyContextView(APIView):
             "display_name": account.display_name,
             "preferred_language": account.preferred_language,
             "can_access_advanced_records": account.is_staff,
-            "can_bootstrap_convention": (
-                account.is_active and account.is_platform_administrator
-            ),
             "memberships": memberships,
             "editions": editions,
         }

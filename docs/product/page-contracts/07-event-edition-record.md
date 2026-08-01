@@ -1,11 +1,13 @@
 # Page 7 contract: Event-edition record
 
-- Status: Implemented and locally verified; owner rehearsal and recorded
-  accessibility/visual-state residuals remain
-- Route: `/admin/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/`
+- Status: Implemented and desktop/390-pixel smoke verified for platform
+  oversight and scoped Executive Board visibility; accessibility, complete
+  visual-state, and owner residuals remain
+- Route: `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/`
 - API: `GET` and `PUT /api/v1/organizations/<organization-id>/editions/<edition-id>`
-- Requirements: UX-009, UX-013, UX-019, UX-020, UX-023, INT-001, NFR-009
-- Decisions: ADRs 0037–0038
+- Requirements: IDN-004, IDN-012, UX-009, UX-012, UX-013, UX-019, UX-020,
+  UX-023, UX-024, INT-001, NFR-009
+- Decisions: ADRs 0037–0041
 
 ## Purpose and primary user
 
@@ -15,8 +17,11 @@ applications, programme, timetable, venue operations, logistics, documents,
 communications, reports, and settings will appear only after their complete
 workflows are mounted.
 
-The controlled page permits an active Maru platform administrator. Route or
-selected working context never grants convention access or participation.
+The page permits an active Maru platform administrator.
+ADR 0040's Board root carries organization-scoped `events.view_basic`, while a
+profile change still requires exact `events.change_profile` authority at this
+edition; the current backend matrix verifies that distinction. Route or selected
+working context never grants convention access or participation.
 
 ## Placement, record, and navigation
 
@@ -40,7 +45,7 @@ changes.
 
 | Field | Type and format | Bounds; null/blank | Normalization | Classification and writer | Lifecycle and retention |
 | --- | --- | --- | --- | --- | --- |
-| `name` | Unicode text | 1–160 characters; null/blank forbidden | Trim ends and collapse internal whitespace | C1 edition setup; browser platform administrator or API `events.change_profile` holder | Editable only in Draft/Preparing beneath non-Closed organization; retained with edition |
+| `name` | Unicode text | 1–160 characters; null/blank forbidden | Trim ends and collapse internal whitespace | C1 edition setup; browser/API `events.change_profile` holder, including explicit platform policy | Editable only in Draft/Preparing beneath non-Closed organization; retained with edition |
 | `starts_on` | ISO calendar date (`YYYY-MM-DD`) | Required; null/blank forbidden | Parse as date without time-zone conversion | C1 edition setup; same writer | On/before end; same edit boundary; retained with edition history |
 | `ends_on` | ISO calendar date (`YYYY-MM-DD`) | Required; null/blank forbidden; at most 31 days after start | Parse as date without time-zone conversion | C1 edition setup; same writer | On/after start; same edit boundary; retained with edition history |
 | `time_zone` | IANA time-zone identifier | Required; model max 63 characters; null/blank forbidden | Trim and validate installed IANA identifier | C1 locale setup; same writer | Same edit boundary; retained with edition and used for activity display |
@@ -85,19 +90,23 @@ not appear in audit or activity payloads.
 **Use as working edition** is an explicit POST to the scoped `/select/` route.
 **Clear working edition** is a separate POST to `/clear/`. Both accept only the
 CSRF transport field and reject every business or forged field. The session stores
-only the edition identifier after the same exact route chain and platform
-boundary are checked. Selection changes navigation/display context only; it
-does not write the edition, create audit activity, grant capability, or create
-membership, participation, registration, or a role. Edition creation does not
+only the edition identifier after the same exact route chain and current
+`events.view_basic` authority are checked. Selection changes
+navigation/display context only; it
+does not write the edition, create audit/domain-event/outbox evidence, grant a
+capability, replace an assignment, or create/change membership, participation,
+or registration. This remains true when access comes from the canonical
+organization-scoped Executive Board assignment. Edition creation does not
 select automatically.
 
 ## Effective access and activity
 
-The current access header states that active platform administrators may view
-or, where lifecycle allows, change the record under platform oversight. It
-explicitly says no convention group, department, or person is granted access
-by the page. This is a provisional/static UX-020 slice, not the final computed
-effective-access explanation or **Manage access** workflow.
+The access header states that active platform administrators may view or,
+where lifecycle allows, change the record under platform oversight. It also
+distinguishes organization-scoped Board view from exact-edition
+`events.change_profile`; the root Board assignment alone does not imply profile
+edit. This is still not the final department/resource/field effective-access
+explanation or **Manage access** workflow.
 
 Recent activity projects only allowlisted domain facts for the exact edition:
 creation, profile update, and lifecycle transition. It resolves a safe actor
@@ -125,9 +134,11 @@ The security audit remains a separate restricted control-evidence boundary.
 - API field-ceiling/OpenAPI/error-shape tests;
 - value-minimized audit/event/activity and platform non-participation tests;
 - explicit select/clear POST, strict no-business-field input, session
-  corruption, and no-authority-side-effect tests; and
+  corruption, and no-authority/domain/evidence-side-effect tests for platform,
+  direct-grant, and canonical Executive Board authority; and
 - keyboard, focus, desktop, 390-pixel, read-only, error, and current-navigation
-  evidence.
+  evidence. Desktop/390-pixel current-navigation smoke passes; keyboard,
+  automated accessibility, the full state matrix, and owner rehearsal remain.
 
 ## Explicit non-goals
 

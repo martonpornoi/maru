@@ -10,10 +10,12 @@ from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection
+from django.db.models import Q
 from django.db.utils import DatabaseError
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
+from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -23,9 +25,16 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from maru.activity.queries import record_activity
+from maru.authorization.models import CapabilityGrant, RoleAssignment
+from maru.authorization.policy import ResourceScope, decide
 from maru.authorization.services import AuthorizationDenied
 from maru.core.forms import StrictInputForm
-from maru.events.admin_context import ADMIN_EDITION_SESSION_KEY, selected_admin_edition
+from maru.events.admin_context import (
+    ADMIN_EDITION_SESSION_KEY,
+    admin_shell_access,
+    has_active_admin_scope,
+    selected_admin_edition,
+)
 from maru.events.forms import EventEditionCreationForm, EventEditionUpdateForm
 from maru.events.models import EventEdition
 from maru.events.services import (
@@ -52,6 +61,34 @@ from maru.organizations.services import (
 
 logger = logging.getLogger(__name__)
 
+_BASELINE_PAGE_PRESENTATION = {
+    "core/baseline_admin_home.html": ("platform-administration-home", ""),
+    "core/baseline_create_organization.html": (
+        "create-organization",
+        "baseline-page--form",
+    ),
+    "core/baseline_organization_record.html": (
+        "organization-record",
+        "baseline-page--form",
+    ),
+    "core/baseline_create_convention_series.html": (
+        "create-convention-series",
+        "baseline-page--form",
+    ),
+    "core/baseline_convention_series_record.html": (
+        "convention-series-record",
+        "baseline-page--form",
+    ),
+    "core/baseline_create_event_edition.html": (
+        "create-event-edition",
+        "baseline-page--form",
+    ),
+    "core/baseline_event_edition_record.html": (
+        "event-edition-record",
+        "baseline-page--form",
+    ),
+}
+
 
 def _require_platform_administrator(request: HttpRequest) -> Account:
     if (
@@ -61,6 +98,133 @@ def _require_platform_administrator(request: HttpRequest) -> Account:
     ):
         raise PermissionDenied
     return request.user
+
+
+def _active_account(request: HttpRequest) -> Account:
+    if not isinstance(request.user, Account) or not request.user.is_active:
+        raise PermissionDenied
+    return request.user
+
+
+def _require_possible_organization_authority(actor: Account) -> None:
+    """Fail before tenant lookup when an account has no active scoped authority."""
+
+    if actor.is_platform_administrator:
+        return
+    evaluated_at = timezone.now()
+    active_at = (
+        Q(effective_from__lte=evaluated_at)
+        & (Q(expires_at__isnull=True) | Q(expires_at__gt=evaluated_at))
+        & Q(revoked_at__isnull=True)
+    )
+    if CapabilityGrant.objects.filter(active_at, principal=actor).exists():
+        return
+    if RoleAssignment.objects.filter(active_at, principal=actor).exists():
+        return
+    raise PermissionDenied
+
+
+def _can(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    capability_code: str,
+    edition_id: UUID | None = None,
+) -> bool:
+    return decide(
+        principal=actor,
+        capability_code=capability_code,
+        resource=ResourceScope(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
+    ).allowed
+
+
+def _require_capability(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    capability_code: str,
+    edition_id: UUID | None = None,
+) -> None:
+    if not _can(
+        actor=actor,
+        organization_id=organization_id,
+        capability_code=capability_code,
+        edition_id=edition_id,
+    ):
+        raise PermissionDenied
+
+
+def _baseline_page_response(
+    request: HttpRequest,
+    template_name: str,
+    context: dict[str, Any] | None = None,
+    *,
+    status: int = 200,
+) -> TemplateResponse:
+    """Render a workflow in the canonical admin shell or isolated test shell."""
+
+    use_admin_shell = request.path_info.startswith("/admin/platform/")
+    page_id, page_class = _BASELINE_PAGE_PRESENTATION[template_name]
+    template_context = admin.site.each_context(request) if use_admin_shell else {}
+    template_context.update(context or {})
+    if use_admin_shell:
+        template_context["has_permission"] = True
+    organization = template_context.get("organization")
+    actor = request.user
+    if isinstance(organization, Organization) and isinstance(actor, Account):
+        template_context.setdefault(
+            "baseline_can_view_organization",
+            _can(
+                actor=actor,
+                organization_id=organization.id,
+                capability_code="organizations.view_basic",
+            ),
+        )
+        template_context.setdefault(
+            "baseline_can_manage_representation",
+            _can(
+                actor=actor,
+                organization_id=organization.id,
+                capability_code="organizations.manage_representation",
+            ),
+        )
+        template_context.setdefault(
+            "baseline_can_create_series",
+            _can(
+                actor=actor,
+                organization_id=organization.id,
+                capability_code="organizations.create_series",
+            ),
+        )
+        template_context.setdefault(
+            "baseline_can_create_edition",
+            _can(
+                actor=actor,
+                organization_id=organization.id,
+                capability_code="events.create",
+            ),
+        )
+    template_context.update(
+        {
+            "baseline_admin_parent_template": (
+                "admin/base_site.html"
+                if use_admin_shell
+                else "core/baseline_admin_standalone.html"
+            ),
+            "baseline_page_class": page_class,
+            "baseline_page_id": page_id,
+            "baseline_use_admin_shell": use_admin_shell,
+        }
+    )
+    return TemplateResponse(
+        request,
+        template_name,
+        template_context,
+        status=status,
+    )
 
 
 def baseline_root(request: HttpRequest) -> HttpResponse:
@@ -86,7 +250,7 @@ def baseline_administration_home(request: HttpRequest) -> HttpResponse:
         load_failed = True
         status = 503
 
-    return TemplateResponse(
+    return _baseline_page_response(
         request,
         "core/baseline_admin_home.html",
         {
@@ -135,7 +299,7 @@ def baseline_create_organization(request: HttpRequest) -> HttpResponse:
             )
             return redirect("baseline-admin-home")
 
-    return TemplateResponse(
+    return _baseline_page_response(
         request,
         "core/baseline_create_organization.html",
         {"form": form},
@@ -148,6 +312,46 @@ def _organization_for_record(slug: str) -> Organization:
         return Organization.objects.get(slug__iexact=slug)
     except Organization.DoesNotExist as error:
         raise Http404 from error
+
+
+def _organization_for_authorized_route(
+    *,
+    actor: Account,
+    slug: str,
+    capability_code: str,
+) -> Organization:
+    """Resolve non-platform routes only inside the actor's possible scope."""
+
+    if actor.is_platform_administrator:
+        return _organization_for_record(slug)
+    evaluated_at = timezone.now()
+    active_at = (
+        Q(effective_from__lte=evaluated_at)
+        & (Q(expires_at__isnull=True) | Q(expires_at__gt=evaluated_at))
+        & Q(revoked_at__isnull=True)
+    )
+    grant_organization_ids = CapabilityGrant.objects.filter(
+        active_at,
+        principal=actor,
+        capability_code=capability_code,
+    ).values_list("organization_id", flat=True)
+    role_organization_ids = RoleAssignment.objects.filter(
+        active_at,
+        principal=actor,
+        role_bundle__capability_codes__contains=[capability_code],
+    ).values_list("organization_id", flat=True)
+    candidate_ids = set(grant_organization_ids).union(role_organization_ids)
+    organization = (
+        Organization.objects.filter(
+            id__in=candidate_ids,
+            slug__iexact=slug,
+        )
+        .order_by("id")
+        .first()
+    )
+    if organization is None:
+        raise PermissionDenied
+    return organization
 
 
 def _add_validation_errors(
@@ -223,26 +427,56 @@ def baseline_organization_record(
 ) -> HttpResponse:
     """Render and update one organization profile without changing its identity."""
 
-    actor = _require_platform_administrator(request)
+    actor = _active_account(request)
+    _require_possible_organization_authority(actor)
     try:
-        organization = _organization_for_record(organization_slug)
+        organization = _organization_for_authorized_route(
+            actor=actor,
+            slug=organization_slug,
+            capability_code="organizations.view_basic",
+        )
+        _require_capability(
+            actor=actor,
+            organization_id=organization.id,
+            capability_code="organizations.view_basic",
+        )
         series = _series_for_organization(organization)
     except DatabaseError:
         logger.exception("Unable to load the organization record")
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_organization_record.html",
             {"organization_record_load_failed": True},
             status=503,
         )
 
-    form = OrganizationCreationForm.for_organization(
-        organization,
-        data=request.POST if request.method == "POST" else None,
+    editable = _can(
+        actor=actor,
+        organization_id=organization.id,
+        capability_code="organizations.change_profile",
     )
-    deletion_form = OrganizationDeletionForm(organization=organization)
+    can_create_series = _can(
+        actor=actor,
+        organization_id=organization.id,
+        capability_code="organizations.create_series",
+    )
+    if request.method == "POST" and not editable:
+        raise PermissionDenied
+    form = (
+        OrganizationCreationForm.for_organization(
+            organization,
+            data=request.POST if request.method == "POST" else None,
+        )
+        if editable
+        else None
+    )
+    deletion_form = (
+        OrganizationDeletionForm(organization=organization)
+        if actor.is_platform_administrator
+        else None
+    )
     status = 200
-    if request.method == "POST" and form.is_valid():
+    if request.method == "POST" and form is not None and form.is_valid():
         try:
             result = update_organization_profile(
                 actor=actor,
@@ -274,7 +508,7 @@ def baseline_organization_record(
                 organization_slug=result.organization.slug,
             )
 
-    return TemplateResponse(
+    return _baseline_page_response(
         request,
         "core/baseline_organization_record.html",
         {
@@ -282,6 +516,8 @@ def baseline_organization_record(
             "series": series,
             "form": form,
             "deletion_form": deletion_form,
+            "organization_editable": editable,
+            "can_create_series": can_create_series,
             "organization_record_load_failed": False,
         },
         status=status,
@@ -302,7 +538,7 @@ def baseline_delete_organization(
         series = _series_for_organization(organization)
     except DatabaseError:
         logger.exception("Unable to load the organization for deletion")
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_organization_record.html",
             {"organization_record_load_failed": True},
@@ -339,7 +575,7 @@ def baseline_delete_organization(
             messages.success(request, f"{deleted.name} was deleted.")
             return redirect("baseline-admin-home")
 
-    return TemplateResponse(
+    return _baseline_page_response(
         request,
         "core/baseline_organization_record.html",
         {
@@ -360,12 +596,22 @@ def baseline_create_convention_series(
 ) -> HttpResponse:
     """Create one recurring convention identity beneath an organization."""
 
-    actor = _require_platform_administrator(request)
+    actor = _active_account(request)
+    _require_possible_organization_authority(actor)
     try:
-        organization = _organization_for_record(organization_slug)
+        organization = _organization_for_authorized_route(
+            actor=actor,
+            slug=organization_slug,
+            capability_code="organizations.create_series",
+        )
+        _require_capability(
+            actor=actor,
+            organization_id=organization.id,
+            capability_code="organizations.create_series",
+        )
     except DatabaseError:
         logger.exception("Unable to load the organization for series creation")
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_create_convention_series.html",
             {"series_creation_load_failed": True},
@@ -373,7 +619,7 @@ def baseline_create_convention_series(
         )
 
     if organization.lifecycle == Organization.Lifecycle.CLOSED:
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_create_convention_series.html",
             {
@@ -415,7 +661,7 @@ def baseline_create_convention_series(
                 organization_slug=organization.slug,
             )
 
-    return TemplateResponse(
+    return _baseline_page_response(
         request,
         "core/baseline_create_convention_series.html",
         {
@@ -436,9 +682,19 @@ def baseline_convention_series_record(
 ) -> HttpResponse:
     """Render and update one scoped recurring convention brand."""
 
-    actor = _require_platform_administrator(request)
+    actor = _active_account(request)
+    _require_possible_organization_authority(actor)
     try:
-        organization = _organization_for_record(organization_slug)
+        organization = _organization_for_authorized_route(
+            actor=actor,
+            slug=organization_slug,
+            capability_code="organizations.view_basic",
+        )
+        _require_capability(
+            actor=actor,
+            organization_id=organization.id,
+            capability_code="organizations.view_basic",
+        )
         series = _series_for_record(organization, series_slug)
         editions = _editions_for_series(series)
         activity = record_activity(
@@ -449,14 +705,28 @@ def baseline_convention_series_record(
         )
     except (DatabaseError, RuntimeError):
         logger.exception("Unable to load the convention-series record")
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_convention_series_record.html",
             {"series_record_load_failed": True},
             status=503,
         )
 
-    editable = organization.lifecycle != Organization.Lifecycle.CLOSED
+    can_change_series = _can(
+        actor=actor,
+        organization_id=organization.id,
+        capability_code="organizations.change_series",
+    )
+    editable = (
+        organization.lifecycle != Organization.Lifecycle.CLOSED and can_change_series
+    )
+    can_create_edition = _can(
+        actor=actor,
+        organization_id=organization.id,
+        capability_code="events.create",
+    )
+    if request.method == "POST" and not can_change_series:
+        raise PermissionDenied
     form = (
         ConventionSeriesUpdateForm.for_series(
             series,
@@ -510,7 +780,7 @@ def baseline_convention_series_record(
                     series_slug=result.series.slug,
                 )
 
-    return TemplateResponse(
+    return _baseline_page_response(
         request,
         "core/baseline_convention_series_record.html",
         {
@@ -521,6 +791,7 @@ def baseline_convention_series_record(
             "activity_time_zone": organization.default_time_zone,
             "form": form,
             "series_editable": editable,
+            "can_create_edition": can_create_edition,
             "series_record_load_failed": False,
         },
         status=status,
@@ -535,13 +806,23 @@ def baseline_create_event_edition(
 ) -> HttpResponse:
     """Create one Draft edition beneath an exact organization-owned series."""
 
-    actor = _require_platform_administrator(request)
+    actor = _active_account(request)
+    _require_possible_organization_authority(actor)
     try:
-        organization = _organization_for_record(organization_slug)
+        organization = _organization_for_authorized_route(
+            actor=actor,
+            slug=organization_slug,
+            capability_code="events.create",
+        )
+        _require_capability(
+            actor=actor,
+            organization_id=organization.id,
+            capability_code="events.create",
+        )
         series = _series_for_record(organization, series_slug)
     except (DatabaseError, RuntimeError):
         logger.exception("Unable to load the parent series for edition creation")
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_create_event_edition.html",
             {"edition_creation_load_failed": True},
@@ -552,7 +833,7 @@ def baseline_create_event_edition(
         organization.lifecycle == Organization.Lifecycle.CLOSED or not series.is_active
     )
     if blocked:
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_create_event_edition.html",
             {
@@ -619,7 +900,7 @@ def baseline_create_event_edition(
                 edition_slug=result.edition.slug,
             )
 
-    return TemplateResponse(
+    return _baseline_page_response(
         request,
         "core/baseline_create_event_edition.html",
         {
@@ -642,14 +923,25 @@ def baseline_event_edition_record(
 ) -> HttpResponse:
     """Render and update one exact edition record and its human activity."""
 
-    actor = _require_platform_administrator(request)
+    actor = _active_account(request)
+    _require_possible_organization_authority(actor)
     try:
-        organization = _organization_for_record(organization_slug)
+        organization = _organization_for_authorized_route(
+            actor=actor,
+            slug=organization_slug,
+            capability_code="events.view_basic",
+        )
         series = _series_for_record(organization, series_slug)
         edition = _edition_for_record(
             organization=organization,
             series=series,
             slug=edition_slug,
+        )
+        _require_capability(
+            actor=actor,
+            organization_id=organization.id,
+            capability_code="events.view_basic",
+            edition_id=edition.id,
         )
         activity = record_activity(
             organization_id=organization.id,
@@ -660,17 +952,26 @@ def baseline_event_edition_record(
         selected = selected_admin_edition(request)
     except (DatabaseError, RuntimeError):
         logger.exception("Unable to load the event-edition record")
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_event_edition_record.html",
             {"edition_record_load_failed": True},
             status=503,
         )
 
+    can_change_edition = _can(
+        actor=actor,
+        organization_id=organization.id,
+        capability_code="events.change_profile",
+        edition_id=edition.id,
+    )
     editable = (
         organization.lifecycle != Organization.Lifecycle.CLOSED
         and edition.lifecycle in EDITION_PROFILE_EDITABLE_LIFECYCLES
+        and can_change_edition
     )
+    if request.method == "POST" and not can_change_edition:
+        raise PermissionDenied
     form = (
         EventEditionUpdateForm.for_edition(
             edition,
@@ -729,7 +1030,7 @@ def baseline_event_edition_record(
                     edition_slug=result.edition.slug,
                 )
 
-    return TemplateResponse(
+    return _baseline_page_response(
         request,
         "core/baseline_event_edition_record.html",
         {
@@ -797,7 +1098,8 @@ def baseline_select_event_edition(
 ) -> HttpResponse:
     """Persist one already authorized exact route chain as display context."""
 
-    _require_platform_administrator(request)
+    actor = _active_account(request)
+    _require_possible_organization_authority(actor)
     input_error = _context_action_input_error_response(
         request,
         organization_slug=organization_slug,
@@ -807,18 +1109,28 @@ def baseline_select_event_edition(
     if input_error is not None:
         return input_error
     try:
-        organization = _organization_for_record(organization_slug)
+        organization = _organization_for_authorized_route(
+            actor=actor,
+            slug=organization_slug,
+            capability_code="events.view_basic",
+        )
         series = _series_for_record(organization, series_slug)
         edition = _edition_for_record(
             organization=organization,
             series=series,
             slug=edition_slug,
         )
+        _require_capability(
+            actor=actor,
+            organization_id=organization.id,
+            capability_code="events.view_basic",
+            edition_id=edition.id,
+        )
         request.session[ADMIN_EDITION_SESSION_KEY] = str(edition.id)
         messages.success(request, f"Working edition changed to {edition.name}.")
     except (DatabaseError, RuntimeError):
         logger.exception("Unable to select the working event edition")
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_event_edition_record.html",
             {"edition_record_load_failed": True},
@@ -842,7 +1154,8 @@ def baseline_clear_event_edition(
 ) -> HttpResponse:
     """Clear display context without changing edition records or authority."""
 
-    _require_platform_administrator(request)
+    actor = _active_account(request)
+    _require_possible_organization_authority(actor)
     input_error = _context_action_input_error_response(
         request,
         organization_slug=organization_slug,
@@ -852,18 +1165,28 @@ def baseline_clear_event_edition(
     if input_error is not None:
         return input_error
     try:
-        organization = _organization_for_record(organization_slug)
+        organization = _organization_for_authorized_route(
+            actor=actor,
+            slug=organization_slug,
+            capability_code="events.view_basic",
+        )
         series = _series_for_record(organization, series_slug)
         edition = _edition_for_record(
             organization=organization,
             series=series,
             slug=edition_slug,
         )
+        _require_capability(
+            actor=actor,
+            organization_id=organization.id,
+            capability_code="events.view_basic",
+            edition_id=edition.id,
+        )
         request.session.pop(ADMIN_EDITION_SESSION_KEY, None)
         messages.success(request, "Working edition cleared.")
     except (DatabaseError, RuntimeError):
         logger.exception("Unable to clear the working event edition")
-        return TemplateResponse(
+        return _baseline_page_response(
             request,
             "core/baseline_event_edition_record.html",
             {"edition_record_load_failed": True},
@@ -890,9 +1213,19 @@ def platform_home(request: HttpRequest) -> TemplateResponse:
 @login_required(login_url="staff-login")
 @ensure_csrf_cookie
 def administration_index(request: HttpRequest) -> HttpResponse:
-    """Serve Django's original administration index to active accounts."""
+    """Serve a policy-filtered home without granting Django staff status."""
 
-    return admin.site.index(request)
+    actor = _active_account(request)
+    extra_context: dict[str, Any] = {
+        "has_permission": True,
+        "maru_shell_access": admin_shell_access(request),
+    }
+    if not actor.is_staff:
+        extra_context.update({"app_list": (), "available_apps": ()})
+    return admin.site.index(
+        request,
+        extra_context=extra_context,
+    )
 
 
 @login_required(login_url="staff-login")
@@ -900,13 +1233,19 @@ def administration_index(request: HttpRequest) -> HttpResponse:
 def administration_workspace(request: HttpRequest) -> HttpResponse:
     """Serve API-backed workflows inside the Django administration shell."""
 
+    _active_account(request)
+    if not has_active_admin_scope(request):
+        raise PermissionDenied
     selected_edition = selected_admin_edition(request)
+    context = admin.site.each_context(request)
+    context["has_permission"] = True
     return TemplateResponse(
         request,
         "core/admin_workspace.html",
         {
-            **admin.site.each_context(request),
+            **context,
             "title": "Convention work",
+            "maru_shell_access": admin_shell_access(request),
             "selected_admin_edition_id": (
                 str(selected_edition.id) if selected_edition is not None else ""
             ),

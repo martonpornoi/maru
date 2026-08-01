@@ -1,11 +1,13 @@
 # Page 4 create convention series
 
-Status: Executable local Page 4
+Status: Page 4 backend-verified for platform and scoped Board access; browser
+rehearsal pending
 Last updated: 2026-08-01
 
 ADRs 0035 and 0036 plus UX-018 and UX-019 add a purpose-built recurring-brand
 command and progressive scoped navigation beneath one organization without
-restoring generic Django model administration.
+using generic Django model saves for the audited workflow. ADR 0039 mounts it
+in the unified shell's reserved platform route space.
 
 ## Current local environment
 
@@ -34,7 +36,7 @@ uv run python src/manage.py runserver
 
 Open <http://127.0.0.1:8000/admin/>, select `MaruCon`, then use **+ Add
 series**. Its direct route is
-<http://127.0.0.1:8000/admin/organizations/marucon/series/new/>.
+<http://127.0.0.1:8000/admin/platform/organizations/marucon/series/new/>.
 
 ## Expected behavior
 

@@ -1,0 +1,89 @@
+{% extends "core/baseline_admin_base.html" %}
+
+{% block baseline_page_title %}My governance invitations · Maru{% endblock %}
+{% block baseline_breadcrumbs %}My governance invitations{% endblock %}
+
+{% block baseline_content %}
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">My Maru</p>
+    <h1>Governance invitations</h1>
+    <p class="baseline-intro">
+      Review invitations addressed to this exact account. Accepting an
+      invitation records consent but grants no authority until the organization
+      completes its independently controlled activation.
+    </p>
+  </header>
+
+  <section class="baseline-access-summary" aria-labelledby="effective-access-title">
+    <div>
+      <p class="baseline-kicker" id="effective-access-title">Effective access</p>
+      <p class="baseline-access-line">
+        <strong>Only this authenticated account</strong>
+        <span>may see and answer its invitations here.</span>
+      </p>
+    </div>
+  </section>
+
+  {% if invitation_action_error %}
+    <div class="baseline-state baseline-state--error" role="alert">
+      <h2>Your response was not saved</h2>
+      <p>{{ invitation_action_error }}</p>
+    </div>
+  {% endif %}
+
+  {% if invitation_load_failed %}
+    <div class="baseline-state baseline-state--error" role="alert">
+      <h2>Invitations are temporarily unavailable</h2>
+      <p>
+        Maru could not safely load your invitation list. No partial list is
+        being shown; retry after the database is available.
+      </p>
+    </div>
+  {% else %}
+  <section class="baseline-panel" aria-labelledby="invitation-list-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Account relationships</p>
+        <h2 id="invitation-list-title">Representation terms</h2>
+      </div>
+      <span class="baseline-count">{{ appointments|length }}</span>
+    </div>
+    {% if appointments %}
+      <div class="baseline-table-wrap">
+        <table class="baseline-table">
+          <thead>
+            <tr>
+              <th scope="col">Organization</th>
+              <th scope="col">Representation</th>
+              <th scope="col">State</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for appointment in appointments %}
+              <tr>
+                <th scope="row" data-label="Organization">
+                  {{ appointment.representation.organization.name }}
+                </th>
+                <td data-label="Representation">{{ appointment.representation.name }}</td>
+                <td data-label="State">{{ appointment.get_state_display }}</td>
+                <td data-label="Action">
+                  <a
+                    class="baseline-record-name"
+                    href="{% url 'organization-representation' appointment.representation.organization.slug %}"
+                  >{% if appointment.state == "invited" %}Review invitation{% else %}View term{% endif %}</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="baseline-state" data-state="empty">
+        <h3>No governance invitations</h3>
+        <p>This account has not been invited to an organization representation.</p>
+      </div>
+    {% endif %}
+  </section>
+  {% endif %}
+{% endblock %}

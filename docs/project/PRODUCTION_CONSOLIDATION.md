@@ -1,10 +1,10 @@
 # Maru production consolidation
 
-Status: Active master checklist  
-Branch: `codex/production-consolidation`  
+Status: Active master checklist; M2.1 locally verified, M2.2 scope v2 next
+Branch: `codex/full-platform-consolidation`
 Base: `327a7d63574d0118356a0fd11ca5a316d78b2aed`  
 Started: 2026-08-01  
-Decisions: ADRs 0037–0038
+Decisions: ADRs 0037–0043
 
 This is the crash-safe delivery map for turning the retained Maru foundation
 into one understandable convention operating platform. Update this file after
@@ -20,7 +20,8 @@ without reimplementing convention rules.
 
 ## Non-negotiable boundaries
 
-- One authenticated administration namespace and one navigation system.
+- One authenticated `/admin/` namespace and one navigation system;
+  purpose-built platform records use the reserved `/admin/platform/` segment.
 - Platform administration is not convention participation.
 - Organization data is tenant-scoped; edition data is additionally
   edition-scoped; department and resource restrictions narrow access further.
@@ -44,15 +45,16 @@ without reimplementing convention rules.
 
 | Ref | Relationship | Use |
 | --- | --- | --- |
-| `main` / `origin/main` at `ca37acb` | Ancestor | Stable modern foundation checkpoint. Already contained here. |
+| `main`, `codex/production-consolidation`, and `codex/full-platform-consolidation` at `17b68a2` | Same committed tip | M0 and locally verified M1 foundation. No merge required. |
+| `origin/main` at `ca37acb` | Ancestor, ten commits behind | Stable modern foundation checkpoint. Already contained here. |
 | `codex/pre-reset-20260731` at `548f15a` | Ancestor | Preserved rich browser behavior and API workflows. Reference selectively. |
 | Page 0 through Page 4 local branches | Linear ancestors | Keep as accepted interaction landmarks. Do not merge them again. |
 | `origin/legacy/github-main-462e7ba` | Unrelated history | Early prototype archaeology only. |
 | `origin/legacy/local-final-2026-07-29` | Unrelated history | Best timetable, room, application, shift, export, and signage interaction reference. Never merge its migrations or global-project model. |
 
-The current branch is the only consolidation line. When a legacy behavior is
-reused, add a modern requirement and test it against current authorization and
-tenant boundaries.
+The current branch is the only consolidation line. No local page or pre-reset
+branch has ref-only commits. When a legacy behavior is reused, add a modern
+requirement and test it against current authorization and tenant boundaries.
 
 ## Honest capability ledger
 
@@ -70,16 +72,17 @@ The state vocabulary is deliberately small:
 
 | Capability | State on 2026-08-01 | Evidence / next dependency |
 | --- | --- | --- |
-| Organization and series Pages 1–5 | Mounted | Accepted Pages 1–4 plus locally verified Page 5 record/API. |
-| Convention-series record | Mounted | Page 5 profile concurrency, activity, editions, HTML/API. |
-| Edition lifecycle | API-only | Authorized transition kernel remains API/preserved UI; Page 7 exposes record/profile only. |
-| Edition browser workspace | Mounted | Locally verified Pages 6–7 creation/record/context; owner rehearsal remains. |
-| Organization representation | Partial | Requirement and rehearsal data exist; no organization-level governance workflow. |
-| Department hierarchy | API-only | Workforce model/projection and rehearsal exist; editor is unmounted. |
-| Department/resource authorization | Partial | Organization and edition grants exist; department/resource constraints do not. |
-| Effective-access explanation | Partial | Static truthful platform-oversight summary on Pages 1–7; computed scope v2 remains M2. |
-| Attendee registration | Preserved/unmounted | Large tested domain and headless API; deployment gates remain. |
-| Registration extension fields | API-only | Append-only, permission-aware implementation exists. |
+| Organization and series Pages 1–5 | Mounted | Implemented under `/admin/platform/`; platform and scoped Board backend matrices pass. Browser/owner evidence remains. |
+| Convention-series record | Mounted | Page 5 domain/API behavior and canonical shell route pass backend checks. Browser/owner evidence remains. |
+| Edition lifecycle | Partial | Authorized API and Convention work are mounted; Page 7 remains record/profile/context only rather than the lifecycle command surface. |
+| Edition browser workspace | Mounted | Pages 6–7 and scoped non-staff routes pass backend checks; current browser and owner rehearsal remain. |
+| Unified administration shell | Mounted | `maru.urls`, reserved route ordering, one sidebar, Convention work, scoped non-staff access, staff-only specialist records, desktop/390-pixel smoke, and the final 792-test/90.01-percent local backend gate pass without warnings. The custom sidebar preserves Django's single `#nav-filter` contract when Specialist records are unavailable; the focused routing regression and live Board reload pass. Accessibility/state-matrix/owner gates remain. |
+| Organization representation | Mounted / partial | Page 8 implements provision, exact verified-account invitation, own response, two-person cross-approval, atomic Draft-to-Active activation, and platform emergency containment. Database guards through organizations `0012`, sensitive read/deny audit, the 106-migration fresh synthetic database/current restore drill, focused readiness/representation matrices, and the final local backend gate pass. Representative PITR, accessibility, owner evidence, and routine term management remain. |
+| Department hierarchy | Partial | Workforce model/projection and preserved structure view exist; no accepted mounted editor or M2 scope exists. |
+| Department/resource authorization | Designed / absent runtime | ADR 0041 accepts exact department and typed-resource scope with no implicit hierarchy inheritance. Current grants remain organization/edition only; department-owned writes stay unmounted. |
+| Effective-access explanation | Partial | Pages 3–8 distinguish platform, scoped Board, exact-edition, and own-invitation access; department/resource/field scope remains M2. |
+| Attendee registration | Partial | Large tested domain, headless API, and preserved HTML become reachable through the intended URL set, but coherent-shell review and deployment gates remain. |
+| Registration extension fields | Partial | Append-only, permission-aware API/workflow exists; ADR 0039 integration and current browser evidence remain. |
 | Generic application/form portfolio | Absent | KNO-009 and REG-023. |
 | Programme intake/review | Absent | PRG-001–007. |
 | Venues and mergeable spaces | Absent | VEN-001, VEN-002, VEN-008. |
@@ -91,6 +94,7 @@ The state vocabulary is deliberately small:
 | Credentials/offline check-in | API-only | Tested domain; hardware, printing, recovery, and load gates remain. |
 | Audit and activity | API-only audit / mounted record history | Append-only audit plus bounded Page 5/7 domain-fact history; cross-domain access-aware activity remains M2. |
 | Stable API/OpenAPI | Partial | Series GET/PUT and edition POST/PUT are implemented and generated artifacts are stable; organization writes, external credentials, and new domains remain. |
+| Synthetic demo governance | Mounted local-only | ADR 0042 makes `seed_demo_data` the canonical synthetic fixture and establishes two active Executive Boards through real services. The old public-roster scenario is deleted and its compatibility command fails before validation, file/network access, or database writes. |
 | Production infrastructure | Deployment-gated | Provider selection, SMTP, object storage, scanner, workers, secrets, monitoring, restore, load, and legal/security review. |
 
 Update this table whenever code changes state. Do not leave a capability marked
@@ -98,36 +102,44 @@ Mounted when its route is removed.
 
 ## Information architecture
 
-The same left navigation progressively reveals only the selected scope:
+The same `/admin/` shell and left navigation progressively reveal only the
+selected scope:
 
 ```text
-Platform
-└─ Organizations                         + Add
-   └─ Selected organization
-      ├─ Organization record
-      ├─ Convention series                + Add
-      ├─ Representation & access
-      ├─ Venues and year-round assets
-      └─ Documents
-         └─ Selected series
-            ├─ Series record
-            └─ Convention editions          + Add
-               └─ Selected edition
-                  ├─ Overview
-                  ├─ People & departments
-                  ├─ Registration
-                  ├─ Applications
-                  ├─ Programme
-                  ├─ Timetable
-                  ├─ Shifts & tasks
-                  ├─ Venue operations
-                  ├─ Logistics
-                  ├─ Documents
-                  ├─ Communications
-                  ├─ Reports
-                  ├─ Activity
-                  └─ Settings & access
+Administration home
+├─ Convention work
+├─ Platform administration
+│  └─ Organizations                      + Add
+│     └─ Selected organization
+│        ├─ Organization record
+│        ├─ Representation & access
+│        ├─ Convention series             + Add
+│        ├─ Venues and year-round assets
+│        └─ Documents
+│           └─ Selected series
+│              ├─ Series record
+│              └─ Convention editions     + Add
+│                 └─ Selected edition
+│                    ├─ Overview
+│                    ├─ People & departments
+│                    ├─ Registration
+│                    ├─ Applications
+│                    ├─ Programme
+│                    ├─ Timetable
+│                    ├─ Shifts & tasks
+│                    ├─ Venue operations
+│                    ├─ Logistics
+│                    ├─ Documents
+│                    ├─ Communications
+│                    ├─ Reports
+│                    ├─ Activity
+│                    └─ Settings & access
+└─ Specialist records
 ```
+
+The Page 1–8 spine uses `/admin/platform/organizations/...`. The reserved
+segment prevents collisions with Django application-label routes while keeping
+all management work inside one namespace and one visual grammar.
 
 Only mounted destinations appear. A missing domain remains absent from the menu
 rather than linking to a placeholder. Search and breadcrumbs preserve context.
@@ -222,6 +234,8 @@ Keep these concepts separate:
 - `Account`: platform identity and authentication.
 - `OrganizationMembership`: relationship to an organizer.
 - `OrganizationRepresentation`: accountable board/representation authority.
+- `RepresentationAppointment`: one exact person's accepted or historical term
+  in that representation, linked to but not replaced by software authority.
 - `Participation`: relationship to one edition.
 - `EditionRegistration`: attendee purchase/attendance record, one per account.
 - `PositionAssignment`: staff/volunteer role in an edition and department.
@@ -461,22 +475,118 @@ visual state matrix, and every external release gate stay open. The access
 header is static/provisional and must not be mistaken for M2's computed
 organization/department/person access.
 
+That verification predates ADR 0039's default-shell and route migration. It
+continues to support the M1 services and records but does not certify the
+active URL or navigation changes.
+
 Exit: the platform administrator can create and revisit organization -> series
 -> edition without becoming a convention participant.
 
+### M1.1 — Coherent administration shell
+
+- [x] Record ADR 0039 and the collision-safe `/admin/platform/` route contract.
+- [x] Update the current handoff, master checklist, roadmap, page contracts,
+  architecture, module, and operator documentation for the chosen shell.
+- [x] Make `maru.urls` the backend-verified default without exposing an unauthorized
+  alternate management surface.
+- [x] Mount Pages 1–7 under `/admin/platform/organizations/...` before
+  `admin.site.urls`; define and test old-route behavior.
+- [x] Present Administration home, Convention work, platform pages, and
+  permission-filtered specialist records through one collapsible sidebar with
+  no duplicate workspace selector or Quick Start strip.
+- [x] Prove anonymous, inactive, ordinary active, Django staff/model-permission,
+  and platform-administrator boundaries for every affected route.
+- [x] Run focused route/navigation tests, migration drift, Django check, Ruff,
+  mypy, Staff Console typecheck, 19 Vitest tests, and production build.
+- [x] Record the pre-hardening isolated backend baseline: 710 tests and 90.03
+  percent coverage passed before organizations `0009`–`0012` and the other
+  IDN-011 guards landed.
+- [x] Rerun the complete backend suite and 90-percent coverage gate once from
+  the final consolidated hardening tree: 792 tests pass in 329.21 seconds with
+  90.01 percent coverage and no warnings. A separate behavior run passes the
+  same 792 tests in 291.86 seconds.
+- [x] Prevent historical migration tests from contaminating later tests by
+  restoring every app to the current on-disk migration leaf in a shared
+  finalizer; the ordered regression passes 26 tests.
+- [x] Prove the secure URL default under warnings-as-errors; 24 focused HTTPS
+  tests pass.
+- [x] Preserve Django `nav_sidebar.js`'s `#nav-filter` contract when a scoped
+  account has no Specialist records. Seven focused unified-routing tests pass;
+  a live Board-admin reload has exactly one hidden filter, no Specialist
+  records, and zero new console warnings or errors.
+- [x] Repeat desktop and 390-pixel browser smoke for the shell, Pages 3/7/8,
+  Convention work, and a scoped Board controller without console errors or
+  horizontal overflow.
+- [x] Run current `pip-audit` and the production `pnpm audit`; both report no
+  known vulnerabilities. The production-shaped deploy check is clean. Repeat
+  dependency audits for each release because advisory data changes.
+- [ ] Complete keyboard traversal, automated accessibility checks, and the
+  relevant error/denied/stale matrix.
+- [ ] Rehearse the revised hands-on tutorial with the owner.
+
+Exit: the richer `/admin/` grammar is the only supported management shell;
+Pages 1–7, Convention work, and specialist records coexist without route or
+authority collisions, and current verification evidence exists. This exit is
+not production approval.
+
 ### M2 — Representation, people, and authorization scope v2
 
-- [ ] Organization-level Executive Board representation model and activation
-  gate; no automatic real-person assignment.
+- [x] Accept ADR 0040 and Page 8's strict initial Executive Board lifecycle,
+  non-participating platform boundary, two-controller activation invariant,
+  and migration/recovery contract.
+- [x] Finish the representation/appointment models and additive migration;
+  never infer a real-person assignment or silently reconcile a non-Draft
+  organization.
+- [x] Finish Page 8 provision, exact-account invitation, self-response, and
+  atomic activation adapters in the unified shell.
+- [x] Prove tenant/principal non-disclosure, strict input, duplicate/replay,
+  stale/concurrent activation, two-person cross-approval, platform exclusion,
+  audit/outbox rollback, and database constraints.
+- [x] Exercise the real handoff in the local-only synthetic demo fixture with
+  two distinct controllers per organization.
+- [x] Complete bounded sensitive-read/privileged-denial audit coverage,
+  including exact-tenant filtering, deterministic ordering, a 100-row ceiling,
+  audited returned count, and fail-closed audit-append behavior.
+- [x] Apply organizations `0008`–`0012`, participation `0004`, registration
+  `0031`, and workforce `0003` to the populated local database; reconcile the
+  synthetic demo through real governance services and prove a second seed is
+  idempotent.
+- [x] Rehearse the representation preflight, a fresh empty migration, and a
+  populated local restore through organizations `0009`; retain bounded counts
+  and remove the isolated drill database afterward.
+- [x] Repeat the current-leaf operational rehearsal: fresh
+  `maru_consolidated_demo` applies 106 migrations and contains 80 synthetic
+  accounts, two organizations, and six editions; readiness is 16/16 with zero
+  blockers. Restore into `maru_restore_drill_m21` passes and cleanup removes
+  the drill database.
+- [x] Accept ADR 0042 and delete the public-roster rehearsal implementation;
+  keep only a compatibility command that fails before validation, file/network
+  access, or database mutation.
+- [x] Accept ADR 0043 and implement platform-only global emergency controller
+  containment with quorum-loss suspension and durable evidence.
+- [x] Enforce IDN-011 below the ORM for organization, participation,
+  registration, and workforce subjects, including concurrent account-kind
+  reclassification.
+- [x] Finish readiness-command parity and the focused representation/platform
+  concurrency matrix: the readiness/core focus passes 10 tests and the
+  representation/platform matrix passes 126 tests.
+- [ ] Rehearse a representative restored deployment database through all
+  current guards, reserved-role conflict, old-writer/fix-forward recovery, and
+  backup/PITR evidence.
+- [ ] Run keyboard/axe, complete visual states, and the revised owner tutorial.
+- [x] Accept ADR 0041's exact department/typed-resource scope design with no
+  implicit department-tree inheritance.
 - [ ] Awoostria-shaped editable department template using synthetic data.
 - [ ] Mounted hierarchy/position editor and minimized structure view.
-- [ ] Department and resource constraints in authorization policy and grants.
+- [ ] Implement ADR 0041 department and typed-resource constraints in
+  authorization policy, grants, assignments, migrations, and trusted targets.
 - [ ] Effective-access query/header and audited contextual assignment editor.
 - [ ] Cross-domain, access-aware human activity workspace resolving safe actor
   and target labels. Pages 5/7 already provide bounded aggregate record
   history; that does not complete this item.
-- [ ] Invitations, expiry, replacement, removal, multi-position and
-  multi-department tests.
+- [ ] Invitation discovery/delivery, expiry, withdrawal, replacement, removal,
+  representation suspension/reactivation, quorum recovery, multi-position,
+  and multi-department tests.
 
 Exit: convention authority can operate Pages 3 onward without broad
 edition-wide grants, while the platform administrator remains external.
@@ -584,11 +694,14 @@ count.
 
 1. Read `docs/project/CURRENT.md`.
 2. Read this file and find the first unchecked item in the active milestone.
-3. Read ADRs 0037–0038 and the page/domain contract being changed.
+3. Read ADRs 0037–0043 and the page/domain contract being changed, including
+   Page 8 for representation work.
 4. Run `git status --short --branch`; do not discard unrelated changes.
 5. Confirm the latest local checkpoint/commit and test result in `CURRENT.md`.
-6. Continue only the smallest active slice; update this checklist before
-   switching domains.
+6. The final local hardening suite/readiness evidence is recorded; resume with
+   M2 authorization scope v2 and the synthetic department template/editor.
+   Keep representative deployment/PITR, accessibility, complete visual states,
+   and owner evidence open. Update this checklist before switching domains.
 
 ## Production gates outside the repository
 

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, ClassVar
 
 from django import forms
 
-from maru.core.forms import StrictInputForm
+from maru.core.forms import HttpsURLField, StrictInputForm
 from maru.core.localization import (
     country_choices,
     grouped_language_choices,
@@ -317,6 +317,81 @@ class OrganizationDeletionForm(StrictInputForm):
         return confirmation_name
 
 
+class RepresentationProvisionForm(StrictInputForm):
+    reason = forms.CharField(
+        max_length=240,
+        strip=True,
+        help_text=("Record why the accountable Executive Board is being established."),
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
+
+class RepresentationInviteForm(StrictInputForm):
+    account_email = forms.EmailField(
+        label="Existing account email",
+        help_text=(
+            "Enter the exact verified email of the person being invited. Maru "
+            "does not create or guess an account from this form."
+        ),
+        widget=forms.EmailInput(attrs={"autocomplete": "off"}),
+    )
+    reason = forms.CharField(
+        max_length=240,
+        strip=True,
+        help_text="Explain the proposed Executive Board appointment.",
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
+    def clean_account_email(self) -> str:
+        return str(self.cleaned_data["account_email"]).strip().lower()
+
+
+class RepresentationResponseForm(StrictInputForm):
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    decision = forms.ChoiceField(
+        choices=(("accept", "Accept invitation"), ("decline", "Decline invitation")),
+        widget=forms.RadioSelect,
+    )
+
+
+class RepresentationActivationForm(StrictInputForm):
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    confirmation_name = forms.CharField(
+        label="Organization name",
+        max_length=160,
+        strip=False,
+        help_text="Enter the organization name exactly to activate its governance.",
+        widget=forms.TextInput(attrs={"autocomplete": "off"}),
+    )
+    reason = forms.CharField(
+        max_length=240,
+        strip=True,
+        help_text=(
+            "Record why the accepted controllers are ready to receive root "
+            "organization authority."
+        ),
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
+    def __init__(
+        self,
+        *args: Any,
+        organization: Organization,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.organization = organization
+
+    def clean_confirmation_name(self) -> str:
+        value = str(self.cleaned_data["confirmation_name"])
+        if value != self.organization.name:
+            raise forms.ValidationError(
+                "Enter the organization name exactly as shown.",
+                code="representation_activation_name_mismatch",
+            )
+        return value
+
+
 class OrganizationAdminForm(forms.ModelForm):  # type: ignore[type-arg]
     default_language_codes = forms.MultipleChoiceField(
         label="Default languages",
@@ -355,6 +430,9 @@ class OrganizationAdminForm(forms.ModelForm):  # type: ignore[type-arg]
 
     class Meta:
         model = Organization
+        field_classes: ClassVar[dict[str, type[forms.Field]]] = {
+            "website_url": HttpsURLField
+        }
         fields = (
             "slug",
             "name",

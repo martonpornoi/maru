@@ -50,6 +50,9 @@ registrants, volunteers, onboarding subjects, or workforce assignees.
 - `AccountManager.create_user`
 - `AccountManager.create_superuser`
 - `AccountSecurityEvent`
+- `deactivate_person_account_for_platform_emergency(...)`, an internal,
+  platform-only identity command called inside a domain-owned outer
+  transaction after every open relationship has been contained;
 - `account_display_labels(account_ids)`, a bounded internal read projection
   returning display name or the generic `Maru account` fallback without email,
   login handle, authentication state, or contact data;
@@ -114,6 +117,12 @@ Account deletion cannot cascade into organizer or event records. Subject-rights
 and retention workflows route each domain relationship according to its
 controller and policy without deleting required finance, safety, or audit
 evidence.
+
+Emergency account deactivation is global: it marks the person inactive,
+revokes every inventoried session, appends a minimized security event, and
+records one organization-neutral privileged audit. The calling domain must
+close all scoped authority and relationship rows first in the same transaction;
+identity deliberately does not import organizer models or invent that scope.
 
 ## Tests
 

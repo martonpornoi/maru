@@ -21,6 +21,7 @@ from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION, capability
 from maru.authorization.commands import (
+    REPRESENTATION_MANAGED_ROLE_CODES,
     assign_role,
     revoke_role_assignment,
 )
@@ -40,7 +41,9 @@ ACCESS_GROUP_LABELS = {
     "board-member": "Board",
     "registration-lead": "Registration",
 }
-NON_SHAREABLE_ROLE_CODES = frozenset({"authority-controller"})
+NON_SHAREABLE_ROLE_CODES = frozenset(
+    {"authority-controller", *REPRESENTATION_MANAGED_ROLE_CODES}
+)
 
 
 def _correlation_id(request: Request) -> UUID:
@@ -234,6 +237,7 @@ def _current_assignments(
             organization_id=organization_id,
             revoked_at__isnull=True,
         )
+        .exclude(role_bundle__code__in=NON_SHAREABLE_ROLE_CODES)
         .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
         .select_related(
             "principal",
@@ -461,6 +465,7 @@ class EditionAccessAssignmentView(APIView):
                         edition_id=edition_id,
                         revoked_at__isnull=True,
                     )
+                    .exclude(role_bundle__code__in=NON_SHAREABLE_ROLE_CODES)
                     .first()
                 )
                 if assignment is None:
@@ -524,12 +529,18 @@ class EditionAccessAssignmentView(APIView):
         serializer = AccessAssignmentRevokeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         reason = str(serializer.validated_data["reason"])
-        assignment_exists = RoleAssignment.objects.filter(
-            pk=assignment_id,
-            organization_id=organization_id,
-            edition_id=edition_id,
-            revoked_at__isnull=True,
-        ).exists()
+        assignment_exists = (
+            RoleAssignment.objects.filter(
+                pk=assignment_id,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                revoked_at__isnull=True,
+            )
+            .exclude(
+                role_bundle__code__in=NON_SHAREABLE_ROLE_CODES,
+            )
+            .exists()
+        )
         if not assignment_exists:
             raise PermissionDenied("The access assignment is unavailable.")
         try:

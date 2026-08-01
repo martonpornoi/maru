@@ -28,6 +28,16 @@ from maru.communications.api import (
 from maru.core.views import (
     administration_index,
     administration_workspace,
+    baseline_administration_home,
+    baseline_clear_event_edition,
+    baseline_convention_series_record,
+    baseline_create_convention_series,
+    baseline_create_event_edition,
+    baseline_create_organization,
+    baseline_delete_organization,
+    baseline_event_edition_record,
+    baseline_organization_record,
+    baseline_select_event_edition,
     build_info,
     liveness,
     platform_home,
@@ -67,6 +77,14 @@ from maru.identity.views import recover_account, verify_email
 from maru.organizations.api import (
     ConventionSeriesDetailView,
     ConventionSeriesListView,
+)
+from maru.organizations.views import (
+    activate_organization_representation,
+    invite_organization_controller,
+    my_representation_invitations,
+    organization_representation,
+    provision_organization_representation,
+    respond_organization_controller_invitation,
 )
 from maru.participation.api import (
     EditionParticipationDetailView,
@@ -135,7 +153,6 @@ from maru.registration.public_views import (
     staff_assisted_registration,
 )
 from maru.workforce.api import (
-    ConventionBootstrapWorkspaceView,
     MyOnboardingDocumentListView,
     MyOnboardingDocumentUploadView,
     MyVolunteerApplicationCreateView,
@@ -249,11 +266,132 @@ urlpatterns: list[URLPattern | URLResolver] = [
         name="admin-edition-context",
     ),
     path(
+        "admin/platform/organizations/",
+        baseline_administration_home,
+        name="baseline-admin-home",
+    ),
+    path(
+        "admin/invitations/",
+        my_representation_invitations,
+        name="my-representation-invitations",
+    ),
+    path(
+        "admin/platform/organizations/new/",
+        baseline_create_organization,
+        name="baseline-create-organization",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/representation/",
+        organization_representation,
+        name="organization-representation",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/"
+            "representation/provision/"
+        ),
+        provision_organization_representation,
+        name="provision-organization-representation",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/"
+            "representation/invite/"
+        ),
+        invite_organization_controller,
+        name="invite-organization-controller",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/"
+            "representation/appointments/<uuid:appointment_id>/respond/"
+        ),
+        respond_organization_controller_invitation,
+        name="respond-organization-controller-invitation",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/"
+            "representation/activate/"
+        ),
+        activate_organization_representation,
+        name="activate-organization-representation",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/",
+        baseline_organization_record,
+        name="baseline-organization-record",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/delete/",
+        baseline_delete_organization,
+        name="baseline-delete-organization",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/new/",
+        baseline_create_convention_series,
+        name="baseline-create-convention-series",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/"
+        ),
+        baseline_convention_series_record,
+        name="baseline-convention-series-record",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/new/"
+        ),
+        baseline_create_event_edition,
+        name="baseline-create-event-edition",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/"
+        ),
+        baseline_event_edition_record,
+        name="baseline-event-edition-record",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/select/"
+        ),
+        baseline_select_event_edition,
+        name="baseline-select-event-edition",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/clear/"
+        ),
+        baseline_clear_event_edition,
+        name="baseline-clear-event-edition",
+    ),
+    path(
         "admin/workspace/",
         administration_workspace,
         name="management-console",
     ),
     path("admin/records/", removed_administration_route),
+    # The unified shell admits active scoped non-staff accounts. Route its
+    # account controls before AdminSite's staff-only wrapper so logout and
+    # password changes remain real operations for every admitted account.
+    path("admin/logout/", admin.site.logout, name="administration-logout"),
+    path(
+        "admin/password_change/",
+        admin.site.password_change,
+        name="administration-password-change",
+    ),
+    path(
+        "admin/password_change/done/",
+        admin.site.password_change_done,
+        name="administration-password-change-done",
+    ),
     path("admin/", administration_index),
     path("admin/", admin.site.urls),
     path("health/live", liveness, name="health-live"),
@@ -492,11 +630,6 @@ urlpatterns: list[URLPattern | URLResolver] = [
         "api/v1/me/participation-history",
         MyParticipationHistoryView.as_view(),
         name="api-my-participation-history",
-    ),
-    path(
-        "api/v1/management/convention-bootstrap",
-        ConventionBootstrapWorkspaceView.as_view(),
-        name="api-convention-bootstrap",
     ),
     path(
         "api/v1/organizations/<uuid:organization_id>/series",

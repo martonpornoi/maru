@@ -17,17 +17,43 @@ permission-controlled operational record.
 - PostgreSQL as the system of record
 - A modular monolith with strongly enforced module boundaries
 - Versioned REST APIs and generated OpenAPI clients
-- Preserved React/TypeScript convention workflows and separately deployable
-  future clients; ADR 0037 keeps them unmounted while the coherent management
-  journeys are consolidated
+- Embedded React/TypeScript Convention work and separately deployable future
+  clients; ADR 0039 integrates the preserved workflow into one coherent
+  `/admin/` shell while current services and APIs remain authoritative
 - Background workers for delivery, exports, imports, and other slow operations
 
-Reflex is not part of the platform core. The current browser experience
-contains Sign in and Pages 1–7: organization inventory/creation/record,
-convention-series creation/record, and event-edition creation/record with
-explicit working context. Platform administration remains separate from
-convention participation. Rich preserved domains are mounted only as complete,
-reviewed journeys.
+Reflex is not part of the platform core. The active browser milestone is one
+record-oriented `/admin/` shell: Administration home, embedded Convention
+work, permission-filtered specialist records, and Pages 1–8 under the reserved
+`/admin/platform/` route space. Platform administration remains separate from
+convention participation. Backend route, authorization, frontend build,
+populated and fresh migration, local restore-drill, and desktop/390-pixel
+browser smoke evidence pass. Dependency audits also report no known Python or
+JavaScript vulnerabilities. The final consolidated full-suite/coverage rerun,
+accessibility, complete visual states, and owner rehearsal remain before
+release acceptance.
+
+ADR 0040 defines Page 8 **Representation & access** as the first M2 slice:
+exact existing verified people accept their own Executive Board invitations,
+at least two distinct controllers cross-approve root authority, and activation
+moves the organization from Draft to Active atomically. The schema, commands,
+HTML adapters, authorization matrix, synthetic fixture handoff, and backend
+tests are implemented. Organizations migrations `0009` through `0011` add
+database-enforced governance provenance and emergency controller containment;
+organizations `0012`, participation `0004`, registration `0031`, and workforce
+`0003` enforce IDN-011 for every covered convention-subject relationship.
+Sensitive Page 8 reads and privileged denials are audited with a bounded
+100-row directory. The final consolidated suite, accessibility/complete-state
+evidence, representative deployment/PITR rehearsal, and owner tutorial remain
+open; the platform administrator is the actor only and never a convention
+subject.
+
+ADR 0041 defines the next exact authorization lattice—organization, edition,
+department, and typed resource—without implicit department-tree inheritance;
+it remains to be implemented. ADR 0042 makes all repository fixtures and
+tutorials synthetic-only and retires the former public-roster rehearsal before
+file, network, or database access. ADR 0043 adds the narrowly scoped global
+emergency containment path for a compromised Board controller.
 
 ## Local quick start
 
@@ -42,8 +68,12 @@ uv run python src/manage.py migrate
 uv run python src/manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>. The current experience exposes the platform-
-administrator-only organization → series → edition spine under `/admin/`.
+Open <http://127.0.0.1:8000/>. ADR 0039 places platform setup and the
+organization-scoped management spine under `/admin/platform/` inside the
+shared `/admin/` shell. Pages 1–2 are platform-administrator-only; active
+scoped non-staff accounts may use permitted Pages 3–8 and Convention work,
+while specialist records still require independent Django staff/model
+permissions.
 For a new empty database, create one
 bootstrap administrator with:
 
@@ -60,8 +90,9 @@ Password: M4rucon-Rehearsal-2031!
 ```
 
 These are local-only credentials. The preserved demo and Marucon fixtures may
-still populate backend reference data, but their former browser pages are not
-mounted in the current baseline. The synthetic fixture command remains:
+still populate backend reference data. Do not treat a reachable preserved
+screen as production-ready before the remaining browser and deployment gates.
+The synthetic fixture command remains:
 
 ```powershell
 uv run python src/manage.py seed_demo_data
@@ -70,12 +101,16 @@ uv run python src/manage.py seed_demo_data
 The demo administrator is `demo.admin@maru.invalid`. Every synthetic account
 uses the documented local-only password `Z7!maru-demo-fixture-2026`. The
 fixture is local-only, idempotent, uses reserved `.invalid` addresses, and
-must never be used as production data or credentials.
+establishes each synthetic organization's two-controller Executive Board by
+calling the real Page 8 services. It must never be used as production data or
+credentials.
 See [development setup](docs/development/setup.md) for configuration, checks,
 troubleshooting, fixture details, the empty-experience runbook, and preserved
 rehearsals.
-Follow the [hands-on tutorial](docs/operations/maru-hands-on-tutorial.md) for a
-synthetic first organization, series, and edition.
+Follow the [hands-on tutorial](docs/operations/maru-hands-on-tutorial.md) for the
+synthetic organization → representation → series → edition journey. Local
+migration, restore, and responsive smoke evidence pass; the owner-led tutorial
+rehearsal remains a release gate.
 
 ## Product principles
 
@@ -118,6 +153,8 @@ synthetic first organization, series, and edition.
 - [Page 1 platform-administration runbook](docs/operations/page-01-platform-home.md)
 - [Organization-to-edition hands-on tutorial](docs/operations/maru-hands-on-tutorial.md)
 - [Edition workspace migration and recovery](docs/operations/edition-workspace-migration-and-recovery.md)
+- [Executive Board migration and recovery](docs/operations/executive-board-migration-and-recovery.md)
+- [IDN-011 convention-subject migration and recovery](docs/operations/idn011-convention-subject-migration-and-recovery.md)
 - [Controlled reset ledger](docs/project/RESET_REBUILD.md)
 - [Registration implementation backlog](docs/project/REGISTRATION_TODO.md)
 - [Research landscape](docs/research/landscape-2026-07.md)

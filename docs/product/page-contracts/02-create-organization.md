@@ -1,11 +1,12 @@
 # Page 2 contract: Create organization
 
-- Status: Revised, implemented, verified, and accepted
+- Status: Revised, implemented, and backend-verified in the unified shell;
+  browser rehearsal pending
 - Branch: `codex/page-02-create-organization`
-- Route: `/admin/organizations/new/`
-- Requirements: IDN-002, IDN-011, IDN-012, EVT-005, UX-013, UX-015,
+- Route: `/admin/platform/organizations/new/`
+- Requirements: IDN-002, IDN-011, IDN-012, EVT-005, UX-012, UX-013, UX-015,
   UX-016, AUD-001, AUD-002, PRI-001
-- Decisions: ADRs 0032, 0033, and navigation refinement ADR 0034
+- Decisions: ADRs 0032, 0033, 0034, and 0039
 
 ## Purpose and primary user
 
@@ -22,17 +23,18 @@ Only the name is required.
 Pages 1 through 3 share a persistent **Platform administration** navigation
 row:
 
-- **Organizations** is the primary link to `/admin/`; and
+- **Organizations** is the primary link to
+  `/admin/platform/organizations/`; and
 - a compact adjacent **+ Add** action links to
-  `/admin/organizations/new/`.
+  `/admin/platform/organizations/new/`.
 
 The current destination uses `aria-current="page"`. The navigation remains
 visible beside the content on desktop and becomes a compact horizontal block at
 narrow widths. Page 1 does not render a second competing creation button.
 
-On success the browser redirects to `/admin/`, where the new Draft row and a
-one-time success confirmation are visible. The organization name links to its
-Page 3 record.
+On success the browser redirects to `/admin/platform/organizations/`, where the
+new Draft row and a one-time success confirmation are visible. The organization
+name links to its Page 3 record.
 
 ## Information and actions
 

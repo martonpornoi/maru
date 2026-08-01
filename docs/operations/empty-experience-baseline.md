@@ -1,13 +1,14 @@
 # Empty-experience baseline
 
-Status: Historical accepted baseline; current environment now uses Pages 1–7
+Status: Historical accepted baseline; ADR 0039 unified shell is current
 Last updated: 2026-08-01
 
 ADR 0030 deliberately exposed only Sign in and one empty administration home.
-The owner accepted that baseline. Pages 1–7 now supersede its executable
-surface; keep this document for the isolated database and original reset
-boundary. Use the [hands-on tutorial](maru-hands-on-tutorial.md) for current
-navigation.
+The owner accepted that baseline. Pages 1–8 superseded its executable surface,
+and ADR 0039 moved them into the unified `/admin/` shell. Keep this
+document for the isolated database and original reset boundary. Use the
+[hands-on tutorial](maru-hands-on-tutorial.md) for current routes. Backend
+verification passes; live migration/browser/coverage gates remain.
 
 ## Current local environment
 
@@ -40,8 +41,9 @@ uv run python src/manage.py runserver
 Open <http://127.0.0.1:8000/admin/> and sign in as `admin`.
 
 The current surface mounts organization inventory/creation/record, convention-
-series creation/record, event-edition creation/record, and explicit edition
-working context. Apply all current migrations before starting; a missing
+series creation/record, event-edition creation/record, Page 8 representation,
+governance invitations, and explicit edition working context. Apply all
+current migrations before starting; a missing
 `login_handle`, series profile version, edition aggregate version, or creation
 receipt column means the selected database is behind the running code.
 

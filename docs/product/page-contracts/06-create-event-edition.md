@@ -1,11 +1,13 @@
 # Page 6 contract: Create event edition
 
-- Status: Implemented and locally verified; owner rehearsal and recorded
-  accessibility/visual-state residuals remain
-- Route: `/admin/organizations/<organization-slug>/series/<series-slug>/editions/new/`
+- Status: Implemented and backend-verified for platform oversight and scoped
+  Executive Board authority; owner/browser rehearsal and visual-state
+  residuals remain
+- Route: `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/new/`
 - API: `POST /api/v1/organizations/<organization-id>/editions`
-- Requirements: UX-013, UX-019, UX-020, UX-022, INT-001, NFR-009
-- Decisions: ADRs 0037–0038
+- Requirements: IDN-004, IDN-012, UX-012, UX-013, UX-019, UX-020, UX-022,
+  UX-024, INT-001, NFR-009
+- Decisions: ADRs 0037–0040
 
 ## Purpose and primary user
 
@@ -15,9 +17,11 @@ identity only; it does not create people, governance, registration,
 applications, programme, venue selection, departments, positions, shifts, or
 staffing records.
 
-The controlled browser permits an active Maru platform administrator. API and
-service callers require `events.create` for the trusted organization scope.
-Platform attribution is audit evidence, not participation.
+The browser permits an active Maru platform administrator.
+ADR 0040's active Board root also carries `events.create` for the trusted
+organization scope; its backend authorization matrix passes. API and
+service callers require that same capability. Platform attribution is audit
+evidence, not participation.
 
 ## Placement and navigation
 
@@ -38,7 +42,7 @@ not ambiguous local timestamps.
 
 | Field | Type and format | Bounds; null/blank | Normalization | Classification and writer | Lifecycle and retention |
 | --- | --- | --- | --- | --- | --- |
-| `name` | Unicode text | 1–160 characters; null/blank forbidden | Trim ends and collapse internal whitespace | C1 edition setup; browser platform administrator or API `events.create` holder | Creation value; later editable only in Draft/Preparing; retained with edition |
+| `name` | Unicode text | 1–160 characters; null/blank forbidden | Trim ends and collapse internal whitespace | C1 edition setup; browser/API `events.create` holder, including explicit platform policy | Creation value; later editable only in Draft/Preparing; retained with edition |
 | `starts_on` | ISO calendar date (`YYYY-MM-DD`) | Required; null/blank forbidden | Parse as date, without time-zone conversion | C1 edition setup; same writer | Must be on/before end; retained with edition history |
 | `ends_on` | ISO calendar date (`YYYY-MM-DD`) | Required; null/blank forbidden; at most 31 days after start | Parse as date, without time-zone conversion | C1 edition setup; same writer | Must be on/after start; retained with edition history |
 | `time_zone` | IANA time-zone identifier | Required; model max 63 characters; null/blank forbidden | Trim and validate against installed IANA zone data; browser inherits organization default | C1 locale setup; same writer | Later editable only in Draft/Preparing; retained with edition |
@@ -91,9 +95,11 @@ Edition, receipt, value-minimized audit event,
 one transaction. Failure of any required write leaves none of them behind.
 Creation does not select a workspace or grant any relationship.
 
-The current access header truthfully identifies platform oversight and no
-convention role. It is UX-020's provisional/static first slice; computed
-organization, department, and person access plus **Manage access** remain M2.
+The M1 header truthfully identifies platform oversight and no convention role.
+The M2 adapter must also explain an active Board assignment's
+organization-scoped `events.create` without exposing other principals. It
+remains narrower than department/resource/field access, and **Manage access**
+does not appear until that underlying editor exists.
 
 ## Page and API states
 

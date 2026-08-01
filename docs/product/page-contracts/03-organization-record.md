@@ -1,18 +1,20 @@
 # Page 3 contract: Organization record
 
-- Status: Implemented, verified, and accepted
+- Status: Implemented and responsive-smoke verified for platform oversight and
+  scoped Executive Board authority; accessibility/state/owner evidence pending
 - Branch: `codex/page-03-organization-record`
-- Route: `/admin/organizations/<slug>/`
-- Requirements: IDN-002, IDN-011, IDN-012, EVT-005, UX-013, UX-014,
-  UX-016, UX-017, UX-019, AUD-001, AUD-002, PRI-001
-- Decisions: ADR 0034, ADR 0036
+- Route: `/admin/platform/organizations/<slug>/`
+- Requirements: IDN-002, IDN-004, IDN-011, IDN-012, EVT-005, UX-012 through
+  UX-014, UX-016, UX-017, UX-019, UX-024, AUD-001, AUD-002, PRI-001
+- Decisions: ADR 0034, ADR 0036, ADR 0039, ADR 0040
 
 ## Purpose and primary user
 
-Let an active Maru platform administrator inspect and maintain one existing
-organization's complete profile. The page also provides a tightly bounded way
-to remove an accidentally created organization before any convention or
-governance record belongs to it.
+Let explicit platform oversight or an active Executive Board assignment with
+`organizations.view_basic` inspect one existing organization's complete
+profile; change requires `organizations.change_profile`. The page also gives
+only the platform administrator a tightly bounded way to remove an accidentally
+created organization before any convention or governance record belongs to it.
 
 This is an organization record, not a convention dashboard. The administrator
 is an attributed platform operator and does not become an organization member,
@@ -79,19 +81,23 @@ They require a future reasoned closure and data-exit workflow.
 
 ## Authorization, privacy, and audit
 
-Only an authenticated, active `platform_administrator` may load or submit
-Page 3 during the controlled rebuild. Authorization runs before record lookup,
-so denied accounts do not learn whether a slug exists. The update and delete
-services repeat authorization and use row locks.
+The M1 adapter allowed only an authenticated, active
+`platform_administrator`. ADR 0040 adds exact organization-scoped Board view and
+change capabilities; the current backend matrix verifies both. Authorization
+runs before record lookup, so denied accounts do not learn whether a slug
+exists. The update and delete services repeat authorization and use row locks;
+protected empty-Draft deletion remains platform-only.
 
 Successful changed updates and successful deletion are atomic with their audit
 events. Audit identifies changed fields or the deleted record but excludes the
 entered legal, contact, address, representative, tax, and imprint values.
 Database or audit failure leaves the prior record intact.
 
-When Executive Board governance is implemented, active Executive Board
-authority must be added to profile editing per IDN-012. That extension is not a
-reason to create placeholder membership or authority in Page 3.
+ADR 0040 and Page 8 define how active Executive Board authority is established.
+The shared profile service and Page 3 adapter accept exact organization-scoped
+`organizations.change_profile` authority. Scoped non-staff, unrelated staff,
+wrong-tenant, inactive, and platform paths are covered without creating
+placeholder membership or authority in Page 3.
 
 ## Page states
 
@@ -113,8 +119,10 @@ reason to create placeholder membership or authority in Page 3.
 The page uses one `h1`, labelled profile sections, field-local errors, visible
 focus, status text independent of color, and separately labelled update and
 delete forms. The danger action is not the default action. Exact confirmation
-instructions are associated with the input. Desktop and 390-pixel layouts must
-have no horizontal overflow.
+instructions are associated with the input. Local desktop and 390-pixel smoke
+has no horizontal overflow or console warning. Complete keyboard/automated-
+accessibility, denied/error states, and owner-led form rehearsal remain release
+evidence.
 
 ## Acceptance checks
 

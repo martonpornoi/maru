@@ -1,36 +1,12 @@
-{% load static %}
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light">
-    <meta name="theme-color" content="#071B3A">
-    <title>Create organization · Maru</title>
-    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
-    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
-  </head>
-  <body>
-    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
-    <header class="baseline-header">
-      <img
-        class="baseline-logo"
-        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
-        alt="Maru"
-      >
-      <div class="baseline-account">
-        <span>{{ request.user.display_name }}</span>
-        <form method="post" action="{% url 'staff-logout' %}">
-          {% csrf_token %}
-          <button class="baseline-link-button" type="submit">Sign out</button>
-        </form>
-      </div>
-    </header>
+{% extends "core/baseline_admin_base.html" %}
 
-    <div class="baseline-admin-layout">
-      {% include "core/_baseline_admin_navigation.html" with current_admin_page="add-organization" %}
+{% block baseline_page_title %}Create organization · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  <a href="{% url 'baseline-admin-home' %}">Platform administration</a>
+  &rsaquo; Create organization
+{% endblock %}
 
-      <main id="main-content" class="baseline-page baseline-page--form" data-page="create-organization" tabindex="-1">
+{% block baseline_content %}
         <header class="baseline-page-heading">
           <p class="baseline-kicker">Organizations</p>
           <h1>Create organization</h1>
@@ -71,7 +47,4 @@
             </a>
           </div>
         </form>
-      </main>
-    </div>
-  </body>
-</html>
+{% endblock %}

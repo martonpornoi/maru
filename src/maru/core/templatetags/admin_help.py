@@ -49,6 +49,22 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
         "For example: find active board members or ended memberships."
     ),
     (
+        "organizations",
+        "organizationrepresentation",
+    ): (
+        "Use this read-only record page to inspect the accountable Executive "
+        "Board root. For example: confirm when representation became active "
+        "and which aggregate version is current."
+    ),
+    (
+        "organizations",
+        "representationappointment",
+    ): (
+        "Use this read-only record page to inspect invitation and controller "
+        "terms. For example: confirm that an exact account accepted before its "
+        "authority became active."
+    ),
+    (
         "events",
         "eventedition",
     ): (

@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.authorization.commands import (
+    EXECUTIVE_BOARD_ROLE_CODE,
     AuthorityCommandValidationError,
     assign_role,
     create_role_bundle_version,
@@ -562,6 +563,103 @@ def test_role_bundle_versions_are_sequential_immutable_and_dual_controlled() -> 
         "role_code": "front-desk-lead",
         "role_version": "2",
     }
+
+
+def test_generic_role_commands_cannot_manage_executive_board_authority() -> None:
+    organization = OrganizationFactory()
+    board = RoleBundleFactory(
+        organization=organization,
+        code=EXECUTIVE_BOARD_ROLE_CODE,
+        name="Executive Board",
+        capability_codes=[
+            "authorization.manage_roles",
+            "authorization.revoke",
+        ],
+    )
+    controllers = (AccountFactory(), AccountFactory())
+    assignments = tuple(
+        RoleAssignment.objects.create(
+            organization=organization,
+            principal=controller,
+            role_bundle=board,
+            effective_from=timezone.now() - timedelta(minutes=1),
+            granted_by=AccountFactory(),
+            approved_by=controllers[(index + 1) % len(controllers)],
+            reason="Synthetic Executive Board activation evidence.",
+        )
+        for index, controller in enumerate(controllers)
+    )
+    platform_administrators = (
+        AccountFactory(is_staff=True, is_superuser=True),
+        AccountFactory(is_staff=True, is_superuser=True),
+    )
+
+    for actor, approver in (controllers, platform_administrators):
+        version_correlation = uuid4()
+        with pytest.raises(AuthorityCommandValidationError) as reserved:
+            create_role_bundle_version(
+                actor=actor,
+                approver=approver,
+                organization_id=organization.id,
+                code=EXECUTIVE_BOARD_ROLE_CODE,
+                name="Executive Board replacement",
+                capability_codes=("authorization.manage_roles",),
+                reason="Attempt a generic reserved-role version.",
+                correlation_id=version_correlation,
+            )
+        assert reserved.value.reason_code == "reserved_role_code"
+        assert (
+            AuditEvent.objects.get(correlation_id=version_correlation).reason_code
+            == "reserved_role_code"
+        )
+
+        recipient = AccountFactory()
+        assign_correlation = uuid4()
+        with pytest.raises(AuthorizationDenied) as unavailable:
+            assign_role(
+                actor=actor,
+                approver=approver,
+                recipient=recipient,
+                organization_id=organization.id,
+                role_bundle_id=board.id,
+                edition_id=None,
+                effective_from=timezone.now(),
+                expires_at=None,
+                reason="Attempt to share reserved Board authority.",
+                correlation_id=assign_correlation,
+            )
+        assert unavailable.value.reason_code == "role_bundle_unavailable"
+        assert not RoleAssignment.objects.filter(
+            organization=organization,
+            principal=recipient,
+        ).exists()
+
+        revoke_correlation = uuid4()
+        with pytest.raises(AuthorizationDenied) as protected:
+            revoke_role_assignment(
+                actor=actor,
+                organization_id=organization.id,
+                assignment_id=assignments[1].id,
+                reason="Attempt to revoke reserved Board authority.",
+                correlation_id=revoke_correlation,
+            )
+        assert protected.value.reason_code == "authority_unavailable"
+
+    assert (
+        RoleBundle.objects.filter(
+            organization=organization,
+            code=EXECUTIVE_BOARD_ROLE_CODE,
+        ).count()
+        == 1
+    )
+    assert (
+        RoleAssignment.objects.filter(
+            organization=organization,
+            role_bundle=board,
+            revoked_at__isnull=True,
+        ).count()
+        == 2
+    )
 
 
 @pytest.mark.parametrize(

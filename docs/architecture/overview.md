@@ -1,6 +1,7 @@
 # Architecture overview
 
-Status: Target architecture with the Pages 1–7 edition workspace spine mounted
+Status: Target architecture with locally verified unified `/admin/` shell,
+initial Executive Board representation, and database subject boundary
 Last updated: 2026-08-01
 
 ## System shape
@@ -9,14 +10,46 @@ Maru is an API-first modular monolith. One Django deployment may host multiple
 organizations and event editions, while separate clients consume versioned
 APIs.
 
-ADR 0030 reduced HTML to a controlled rebuild. Pages 1–7 now mount organization
-inventory/creation/record management, convention-series creation/record, and
-event-edition creation/record/context for explicitly classified platform
-administrators. HTML and API edition writes share application services, audit,
-domain events, outbox, strict input, and aggregate concurrency. ADR 0037 delivers
-the remaining system as executable vertical milestones. The richer clients in
-the diagram are preserved targets, API consumers, or absent capabilities until
-the live ledger in `docs/project/PRODUCTION_CONSOLIDATION.md` says otherwise.
+ADR 0030 reduced HTML to a controlled rebuild. Pages 1–7 then implemented
+organization inventory/creation/record management, convention-series
+creation/record, and event-edition creation/record/context for explicitly
+classified platform administrators. HTML and API edition writes share
+application services, audit, domain events, outbox, strict input, and aggregate
+concurrency.
+
+ADR 0039 supersedes the minimal default shell and moves the management spine to
+reserved `/admin/platform/` routes inside one richer `/admin/` shell alongside
+embedded Convention work and permission-filtered specialist records. The
+default route, collision-safe ordering, and scoped shell authorization are
+implemented and backend-verified. ADR 0037 still
+delivers the remaining system as executable vertical milestones. Richer
+clients in the diagram are current API consumers, preserved targets, or absent
+capabilities until the live ledger in
+`docs/project/PRODUCTION_CONSOLIDATION.md` says otherwise.
+
+ADR 0040 adds a purpose-built Executive Board representation aggregate before
+organization activation. Exact verified person accounts accept versioned
+appointments; at least two accepted controllers receive cross-approved
+assignments to an immutable root-role version in the same transaction that
+moves the Draft organization to Active. The platform administrator is an
+attributed bootstrap actor only and is never a representation, membership,
+authority, participation, registration, or workforce subject. This M2.1 slice
+is implemented with additive migrations, database constraints, service/HTML
+adapters, minimized evidence, and backend security tests. Populated and fresh
+migration, local restore-drill, sensitive-read/denial audit, and responsive
+browser evidence pass; the final consolidated suite/coverage gate remains
+pending.
+
+ADR 0041 accepts the next authorization lattice—organization → edition → exact
+department → exact typed resource—with trusted server-resolved targets and no
+implicit hierarchy inheritance. It is an implementation contract, not current
+capability: department/resource grants and assignments are not yet persisted.
+ADR 0042 makes every repository fixture and tutorial synthetic and deletes the
+old public-roster rehearsal path. ADR 0043 adds audited platform emergency
+containment across all of one controller's organizations. Database guards in
+organizations `0009`–`0012`, participation `0004`, registration `0031`, and
+workforce `0003` protect governance provenance and the IDN-011
+non-participating-platform invariant below the ORM.
 
 ```text
 Attendee web ─┐
@@ -37,8 +70,11 @@ systems costs before they are justified.
 
 ```text
 PlatformAccount
-  └─ OrganizationMembership
+  ├─ explicit platform administration (no organization relationship)
+  └─ accepted organization relationship
        └─ Organization
+            ├─ Executive Board representation
+            │    └─ versioned appointments and scoped authority assignments
             └─ ConventionSeries
                  └─ EventEdition
                       ├─ Participation
@@ -60,7 +96,7 @@ configuration; they do not point at mutable records from an older edition.
 | Module | Owns |
 | --- | --- |
 | `identity` | Platform accounts, authentication links, user security history |
-| `organizations` | Tenants, convention series, memberships |
+| `organizations` | Tenants, convention series, memberships, accountable representation and appointments |
 | `events` | Event-edition identity, lifecycle, dates, and locales |
 | `planning` | Objectives, projects, tasks, dependencies, readiness, risks, decisions |
 | `participation` | Edition capacities, roles, status history, archive views |
@@ -212,11 +248,32 @@ downloaded.
 
 ## Administration experience
 
-One `/admin/` namespace is the product management shell. The current Pages 1–7
-are server-rendered, record-oriented journeys; later specialist boards may be
-API-driven inside the same shell. Django's generic model administration remains
-a preserved bootstrap/emergency implementation and is not the current default
-navigation or a second staff product.
+One `/admin/` namespace is the product management shell. `/admin/` is its
+permission-filtered home, `/admin/workspace/` embeds API-backed Convention work,
+`/admin/platform/` owns collision-safe purpose-built platform journeys, and
+Django application/model routes provide permission-filtered specialist
+records. They share one sidebar, identity, edition-context grammar, and
+record-oriented visual language. No embedded board may add another global menu
+or become a second staff product.
+
+Every active account may enter the Maru shell. Platform administrators receive
+platform oversight; ordinary accounts see only current organization/edition
+scope derived from effective grants or role assignments, plus their own open
+governance invitations. Django `is_staff` and model permissions remain a
+separate prerequisite for specialist model records and never grant convention
+authority by themselves.
+
+Pages 1–8 remain server-rendered adapters over current module services. Django
+model administration does not become an authoritative write path for audited
+cross-domain operations merely because it supplies the shell and specialist
+record grammar. Explicit platform routes resolve before `admin.site.urls`, and
+route placement or selected-edition state never grants authority. Backend
+evidence covers route ordering, permission separation, exact-principal
+disclosure, tenant isolation, concurrency, and audit/outbox atomicity. Local
+populated/fresh migration, restore-drill, and desktop/narrow browser smoke pass.
+The final consolidated suite/coverage rerun, representative deployment/PITR,
+keyboard, automated accessibility, complete visual states, and owner evidence
+remain before release acceptance.
 
 The console will favor:
 

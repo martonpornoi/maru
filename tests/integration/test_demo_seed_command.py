@@ -18,6 +18,8 @@ from maru.organizations.models import (
     ConventionSeries,
     Organization,
     OrganizationMembership,
+    OrganizationRepresentation,
+    RepresentationAppointment,
 )
 from maru.participation.models import Participation, ParticipationCapacity
 from maru.registration.models import (
@@ -49,15 +51,15 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert result["totals"]["organizations"] == 2
     assert result["totals"]["convention_series"] == 2
     assert result["totals"]["event_editions"] == 6
-    assert result["totals"]["role_bundles"] == 28
-    assert result["totals"]["role_assignments"] == 158
+    assert result["totals"]["role_bundles"] == 30
+    assert result["totals"]["role_assignments"] == 162
     assert result["totals"]["capability_grants"] == 58
     assert result["totals"]["participations"] >= 150
     assert result["totals"]["participation_capacities"] >= 400
     assert result["totals"]["lifecycle_transitions"] == 12
-    assert result["totals"]["audit_events"] == 14
-    assert result["totals"]["domain_events"] == 14
-    assert result["totals"]["outbox_messages"] == 14
+    assert result["totals"]["audit_events"] == 30
+    assert result["totals"]["domain_events"] == 26
+    assert result["totals"]["outbox_messages"] == 26
     assert result["totals"]["registration_templates"] == 2
     assert result["totals"]["registration_configurations"] == 8
     assert result["totals"]["registration_template_sections"] == 6
@@ -72,6 +74,18 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert AttendeeFursuit.objects.count() == 4
 
     assert Organization.objects.count() == 2
+    assert (
+        OrganizationRepresentation.objects.filter(
+            state=OrganizationRepresentation.State.ACTIVE
+        ).count()
+        == 2
+    )
+    assert (
+        RepresentationAppointment.objects.filter(
+            state=RepresentationAppointment.State.ACTIVE
+        ).count()
+        == 4
+    )
     danube_organization = Organization.objects.get(slug="pannon-paws-foundation")
     assert danube_organization.country_code == "HU"
     assert danube_organization.default_language_codes == ["en", "hu", "de"]

@@ -17,6 +17,7 @@ ACKNOWLEDGED_INTERNAL_EVENTS = frozenset(
     {
         "organizations.convention_series.created.v1",
         "organizations.convention_series.updated.v1",
+        "organizations.representation.changed.v1",
         "events.edition.created.v1",
         "events.edition.details_updated.v1",
         "events.edition.lifecycle_transitioned.v1",

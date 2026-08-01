@@ -9,7 +9,6 @@ const context = {
   display_name: "Danube Convention Chair (Demo)",
   preferred_language: "hu",
   can_access_advanced_records: true,
-  can_bootstrap_convention: false,
   memberships: [
     {
       organization_id: "22222222-2222-4222-8222-222222222222",
@@ -387,7 +386,6 @@ describe("Management Console", () => {
       if (String(input) === "/api/v1/me/context") {
         return jsonResponse({
           ...context,
-          can_bootstrap_convention: false,
           memberships: [],
           editions: [],
         });
@@ -403,184 +401,12 @@ describe("Management Console", () => {
     expect(
       screen.getByRole("link", { name: "Open Specialist records" }),
     ).toHaveAttribute("href", "/admin/");
-  });
-
-  it("establishes first leadership and starts planning without the command line", async () => {
-    const user = userEvent.setup();
-    let bootstrapped = false;
-    const bootstrapWorkspace = {
-      controller_email: "bootstrap-admin@example.invalid",
-      organizations: [
-        {
-          id: context.editions[0].organization_id,
-          slug: "pannon-paws-foundation",
-          name: "Pannon Paws Foundation",
-          status: "eligible",
-        },
-      ],
-      editions: [
-        {
-          id: context.editions[0].edition_id,
-          organization_id: context.editions[0].organization_id,
-          slug: context.editions[0].edition_slug,
-          name: context.editions[0].edition_name,
-          lifecycle: "draft",
-          starts_on: context.editions[0].starts_on,
-          ends_on: context.editions[0].ends_on,
-        },
-      ],
-      chairs: [
-        {
-          email: "chair@example.invalid",
-          display_name: "Convention Chair",
-        },
-      ],
-    };
-    vi.mocked(fetch).mockImplementation(
-      (input: RequestInfo | URL, init?: RequestInit) => {
-        const url = String(input);
-        if (url === "/api/v1/me/context") {
-          if (bootstrapped) {
-            return jsonResponse({
-              ...context,
-              can_bootstrap_convention: true,
-              editions: [{ ...context.editions[0], lifecycle: "draft" }],
-            });
-          }
-          return jsonResponse({
-            ...context,
-            can_bootstrap_convention: true,
-            memberships: [],
-            editions: [],
-          });
-        }
-        if (url === "/api/v1/management/convention-bootstrap") {
-          if (init?.method === "POST") {
-            bootstrapped = true;
-            return jsonResponse(
-              {
-                organization: {
-                  ...bootstrapWorkspace.organizations[0],
-                  status: "established",
-                },
-                edition: bootstrapWorkspace.editions[0],
-                chair: bootstrapWorkspace.chairs[0],
-                created: {
-                  role_bundles: 11,
-                  position_templates: 10,
-                  departments: 1,
-                  positions: 1,
-                  role_assignments: 4,
-                  position_assignments: 1,
-                },
-              },
-              201,
-            );
-          }
-          return jsonResponse(
-            bootstrapped
-              ? {
-                  ...bootstrapWorkspace,
-                  organizations: [
-                    {
-                      ...bootstrapWorkspace.organizations[0],
-                      status: "established",
-                    },
-                  ],
-                }
-              : bootstrapWorkspace,
-          );
-        }
-        if (url.endsWith("/transition") && init?.method === "POST") {
-          return jsonResponse({
-            id: context.editions[0].edition_id,
-            lifecycle: "preparing",
-            lifecycle_version: 1,
-          });
-        }
-        if (url.includes("/participations?")) return jsonResponse(people);
-        if (url.endsWith("/actions")) return jsonResponse(actions);
-        if (url.endsWith("/access")) return jsonResponse(accessWorkspace);
-        if (url.endsWith("/closure-readiness")) {
-          return jsonResponse(closureReadiness);
-        }
-        return jsonResponse({ detail: "Unknown test request" }, 404);
-      },
-    );
-
-    render(<App />);
-
+    expect(screen.queryByText("Administration Quick Start")).not.toBeInTheDocument();
     expect(
-      await screen.findByRole("heading", {
-        name: "Prepare your first convention workspace",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByRole("heading", {
-        name: "Establish convention leadership",
-      }),
-    ).toBeInTheDocument();
-    await user.clear(
-      screen.getByLabelText("Convention Chair account email"),
-    );
-    await user.type(
-      screen.getByLabelText("Convention Chair account email"),
-      "chair@example.invalid",
-    );
-    await user.type(
-      screen.getByRole("textbox", { name: "Permanent reason" }),
-      "Establish accountable convention leadership.",
-    );
-    await user.type(
-      screen.getByRole("textbox", {
-        name: "Type pannon-paws-foundation to confirm",
-      }),
-      "pannon-paws-foundation",
-    );
-    await user.type(
-      screen.getByLabelText(
-        "Confirm the password for Danube Convention Chair (Demo)",
+      vi.mocked(fetch).mock.calls.some(([url]) =>
+        String(url).includes("convention-bootstrap"),
       ),
-      "correct-controller-password",
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Establish leadership" }),
-    );
-
-    expect(
-      await screen.findByText("Leadership established."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Convention state" }),
-    ).toBeInTheDocument();
-    await user.type(
-      screen.getByRole("textbox", { name: "Reason for this transition" }),
-      "Begin convention planning.",
-    );
-    await user.click(screen.getByRole("button", { name: "Start planning" }));
-
-    expect(
-      await screen.findByText(
-        "Danube Furry Convention 2026 is now Preparing.",
-      ),
-    ).toBeInTheDocument();
-    const bootstrapCall = vi.mocked(fetch).mock.calls.find(
-      ([url, init]) =>
-        String(url) === "/api/v1/management/convention-bootstrap" &&
-        init?.method === "POST",
-    );
-    expect(JSON.parse(String(bootstrapCall?.[1]?.body))).toMatchObject({
-      chair_email: "chair@example.invalid",
-      confirm_organization: "pannon-paws-foundation",
-      controller_password: "correct-controller-password",
-    });
-    const transitionCall = vi.mocked(fetch).mock.calls.find(
-      ([url, init]) => String(url).endsWith("/transition") && init?.method === "POST",
-    );
-    expect(JSON.parse(String(transitionCall?.[1]?.body))).toEqual({
-      to_state: "preparing",
-      reason: "Begin convention planning.",
-    });
+    ).toBe(false);
   });
 
   it("opens the active convention as a useful, honest cockpit", async () => {

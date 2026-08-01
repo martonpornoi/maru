@@ -1,9 +1,16 @@
 """Shared conventions for the bootstrap Django administration interface."""
 
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, ClassVar
+
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.db import models
 from django.http import HttpRequest
+
+from maru.core.forms import HttpsURLField
 
 admin.site.site_header = "Maru Administration"
 admin.site.site_title = "Maru Administration"
@@ -50,3 +57,13 @@ class NoDeleteAdminMixin:
     ) -> bool:
         _ = request, obj
         return False
+
+
+class HttpsURLAdminMixin:
+    """Keep model-generated URL form fields warning-free and HTTPS-first."""
+
+    formfield_overrides: ClassVar[
+        Mapping[type[models.Field[Any, Any]], Mapping[str, Any]]
+    ] = {
+        models.URLField: {"form_class": HttpsURLField},
+    }

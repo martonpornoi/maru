@@ -1,10 +1,11 @@
 # Page 1 contract: Platform administration home
 
-- Status: Implemented, verified, and accepted
+- Status: Implemented and locally responsive-smoke verified in the unified
+  shell; accessibility/state-matrix/owner evidence pending
 - Branch: `codex/page-01-platform-home`
-- Route: `/admin/`
-- Requirements: IDN-011, UX-005 through UX-008, UX-013, UX-014
-- Decision: ADR 0031
+- Route: `/admin/platform/organizations/`
+- Requirements: IDN-011, UX-005 through UX-008, UX-012 through UX-014
+- Decisions: ADR 0031, ADR 0039
 
 ## Purpose and primary user
 
@@ -17,8 +18,10 @@ not a member or participant of any listed convention.
 
 ## Placement and navigation
 
-`/admin/` remains the canonical authenticated home. ADR 0034 refines the
-focused **Platform administration** side navigation shared with Pages 2 and 3.
+`/admin/` remains the canonical authenticated shell home. Page 1 lives in the
+reserved `/admin/platform/` route space so it cannot collide with Django
+application-label routes. ADR 0034 refines the focused **Platform
+administration** side navigation shared with Pages 2 and 3.
 One row contains the primary **Organizations** inventory link and a compact
 adjacent **+ Add** action; it is not a convention selector, setup strip, second
 shell, or link to preserved pages. Sign out remains in the existing header.
@@ -70,9 +73,11 @@ headers, a live error alert, visible keyboard focus, semantic text independent
 of color, and the existing labelled POST-only Sign out action. At narrow width,
 table rows become labelled record blocks without horizontal overflow.
 
-Browser evidence must cover the empty live database at desktop and 390 pixels.
-Automated populated-state coverage proves that counts and record labels remain
-usable before Page 2 creates live records.
+Local desktop and 390-pixel smoke covers the unified shell without horizontal
+overflow or console warnings. Automated empty/populated-state coverage proves
+that counts and record labels remain usable before Page 2 creates records.
+Complete keyboard/automated-accessibility, all failure states, and owner-led
+rehearsal remain release evidence.
 
 ## Acceptance checks
 

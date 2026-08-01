@@ -10,6 +10,7 @@ from django.utils.text import slugify
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
+from maru.authorization.policy import PolicyDecision, ResourceScope, decide
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.identity.models import Account
 from maru.organizations.models import ConventionSeries, Organization
@@ -111,6 +112,22 @@ class ConventionSeriesUpdateResult:
 class DeletedOrganization:
     id: UUID
     name: str
+
+
+def _require_organization_capability(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    capability_code: str,
+) -> PolicyDecision:
+    decision = decide(
+        principal=actor,
+        capability_code=capability_code,
+        resource=ResourceScope(organization_id=organization_id),
+    )
+    if not decision.allowed:
+        raise PermissionDenied("Organization authority is required.")
+    return decision
 
 
 def _normalize_organization_name(name: str) -> str:
@@ -273,8 +290,11 @@ def create_convention_series(
 ) -> ConventionSeries:
     """Create one recurring brand beneath a non-closed organization."""
 
-    if not actor.is_active or not actor.is_platform_administrator:
-        raise PermissionDenied("Platform administration is required.")
+    decision = _require_organization_capability(
+        actor=actor,
+        organization_id=organization_id,
+        capability_code="organizations.create_series",
+    )
 
     organization = Organization.objects.select_for_update().get(id=organization_id)
     if organization.lifecycle == Organization.Lifecycle.CLOSED:
@@ -299,11 +319,11 @@ def create_convention_series(
             target_type="organizations.conventionseries",
             target_id=series.id,
             outcome=AuditEvent.Outcome.ALLOW,
-            reason_code="platform_administration",
+            reason_code=decision.reason_code,
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel=source_channel,
-            obligations=("audit",),
+            obligations=tuple(sorted(decision.obligations)),
             changed_fields=CONVENTION_SERIES_CREATION_FIELDS,
             retention_class="security-standard",
         )
@@ -344,8 +364,11 @@ def update_convention_series(
 ) -> ConventionSeriesUpdateResult:
     """Update one scoped recurring brand without changing ownership or slug."""
 
-    if not actor.is_active or not actor.is_platform_administrator:
-        raise PermissionDenied("Platform administration is required.")
+    decision = _require_organization_capability(
+        actor=actor,
+        organization_id=organization_id,
+        capability_code="organizations.change_series",
+    )
 
     organization = Organization.objects.select_for_update().get(id=organization_id)
     series = ConventionSeries.objects.select_for_update().get(
@@ -405,11 +428,11 @@ def update_convention_series(
             target_type="organizations.conventionseries",
             target_id=series.id,
             outcome=AuditEvent.Outcome.ALLOW,
-            reason_code="platform_administration",
+            reason_code=decision.reason_code,
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel=source_channel,
-            obligations=("audit",),
+            obligations=tuple(sorted(decision.obligations)),
             changed_fields=audited_fields,
             retention_class="security-standard",
         )
@@ -514,8 +537,11 @@ def update_organization_profile(
 ) -> OrganizationUpdateResult:
     """Update code-independent profile fields without changing tenant identity."""
 
-    if not actor.is_active or not actor.is_platform_administrator:
-        raise PermissionDenied("Platform administration is required.")
+    decision = _require_organization_capability(
+        actor=actor,
+        organization_id=organization_id,
+        capability_code="organizations.change_profile",
+    )
 
     organization = Organization.objects.select_for_update().get(id=organization_id)
     normalized_details = replace(
@@ -544,16 +570,16 @@ def update_organization_profile(
             principal_context_id=None,
             organization_id=organization.id,
             event_edition_id=None,
-            capability_code="organizations.change",
+            capability_code="organizations.change_profile",
             operation="organizations.organization.update",
             target_type="organizations.organization",
             target_id=organization.id,
             outcome=AuditEvent.Outcome.ALLOW,
-            reason_code="platform_administration",
+            reason_code=decision.reason_code,
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel=source_channel,
-            obligations=("audit",),
+            obligations=tuple(sorted(decision.obligations)),
             changed_fields=changed_fields,
             retention_class="security-standard",
         )

@@ -20,6 +20,15 @@ from maru.organizations.models import (
     ConventionSeries,
     Organization,
     OrganizationMembership,
+    OrganizationRepresentation,
+    RepresentationAppointment,
+)
+from maru.organizations.representation import (
+    MINIMUM_EXECUTIVE_BOARD_CONTROLLERS,
+    activate_executive_board,
+    invite_representation_controller,
+    provision_executive_board,
+    respond_to_representation_invitation,
 )
 from maru.participation.models import Participation, ParticipationCapacity
 from maru.registration.models import (
@@ -854,10 +863,20 @@ class _DemoSeeder:
                 f"Stable demo account ID {object_id} is already used by "
                 f"{account.email!r}."
             )
-        elif self.reset_passwords and account.id not in self.owned["accounts"]:
-            account.password = self.password_hash
-            account.save(update_fields=("password",))
-            self.passwords_reset += 1
+        else:
+            changed_fields: list[str] = []
+            if account.email_verified_at is None:
+                # Older local fixtures predate verified-email enforcement. The
+                # deterministic demo address is synthetic and fixture-owned, so
+                # reconciling it does not assert anything about a real person.
+                account.email_verified_at = datetime(2024, 1, 1, 12, tzinfo=UTC)
+                changed_fields.append("email_verified_at")
+            if self.reset_passwords and account.id not in self.owned["accounts"]:
+                account.password = self.password_hash
+                changed_fields.append("password")
+                self.passwords_reset += 1
+            if changed_fields:
+                account.save(update_fields=tuple(changed_fields))
 
         self._own("accounts", account.id, created=created)
         return account
@@ -873,8 +892,16 @@ class _DemoSeeder:
             )
         organization = Organization.objects.filter(pk=object_id).first()
         created = organization is None
+        has_active_representation = OrganizationRepresentation.objects.filter(
+            organization_id=object_id,
+            state=OrganizationRepresentation.State.ACTIVE,
+        ).exists()
         organization_values = {
-            "lifecycle": Organization.Lifecycle.ACTIVE,
+            "lifecycle": (
+                Organization.Lifecycle.ACTIVE
+                if has_active_representation
+                else Organization.Lifecycle.DRAFT
+            ),
             "legal_name": spec.organization_name.removesuffix(" (Demo)"),
             "description": (
                 f"Synthetic accountable organizer for the {spec.series_name} "
@@ -908,6 +935,137 @@ class _DemoSeeder:
                 organization.save(update_fields=(*changed_fields, "updated_at"))
         self._own("organizations", organization.id, created=created)
         return organization
+
+    def _executive_board_representation(
+        self,
+        *,
+        convention: ConventionSpec,
+        organization: Organization,
+        administrator: Account,
+        accounts: dict[str, Account],
+    ) -> None:
+        """Exercise the real two-controller handoff in the synthetic fixture."""
+
+        representation = (
+            OrganizationRepresentation.objects.filter(organization=organization)
+            .select_related("organization")
+            .first()
+        )
+        created = representation is None
+        if representation is None:
+            correlation_id = _stable_id(
+                "representation-correlation",
+                convention.key,
+            )
+            before_audit = AuditEvent.objects.filter(
+                organization_id=organization.id
+            ).count()
+            before_events = DomainEvent.objects.filter(
+                organization_id=organization.id
+            ).count()
+            before_outbox = OutboxMessage.objects.filter(
+                organization_id=organization.id
+            ).count()
+            representation = provision_executive_board(
+                actor=administrator,
+                organization_id=organization.id,
+                reason="Synthetic fixture Executive Board establishment.",
+                correlation_id=correlation_id,
+                source_channel="demo_seed",
+            )
+            for persona_key in ("board-chair", "board-vice-chair"):
+                account = accounts[persona_key]
+                appointment = invite_representation_controller(
+                    actor=administrator,
+                    representation_id=representation.id,
+                    account_id=account.id,
+                    reason="Synthetic fixture accountable controller invitation.",
+                    correlation_id=correlation_id,
+                    source_channel="demo_seed",
+                )
+                respond_to_representation_invitation(
+                    actor=account,
+                    appointment_id=appointment.id,
+                    expected_version=appointment.invitation_version,
+                    accept=True,
+                    correlation_id=correlation_id,
+                    source_channel="demo_seed",
+                )
+            representation.refresh_from_db(fields=("aggregate_version",))
+            activate_executive_board(
+                actor=administrator,
+                representation_id=representation.id,
+                expected_version=representation.aggregate_version,
+                reason="Synthetic fixture independent controller activation.",
+                correlation_id=correlation_id,
+                source_channel="demo_seed",
+            )
+            self.created["audit_events"] += (
+                AuditEvent.objects.filter(organization_id=organization.id).count()
+                - before_audit
+            )
+            self.created["domain_events"] += (
+                DomainEvent.objects.filter(organization_id=organization.id).count()
+                - before_events
+            )
+            self.created["outbox_messages"] += (
+                OutboxMessage.objects.filter(organization_id=organization.id).count()
+                - before_outbox
+            )
+
+        representation.refresh_from_db()
+        appointments = tuple(
+            representation.appointments.select_related(
+                "role_assignment",
+                "role_assignment__role_bundle",
+            ).all()
+        )
+        if (
+            representation.state != OrganizationRepresentation.State.ACTIVE
+            or len(
+                [
+                    appointment
+                    for appointment in appointments
+                    if appointment.state == RepresentationAppointment.State.ACTIVE
+                ]
+            )
+            < MINIMUM_EXECUTIVE_BOARD_CONTROLLERS
+        ):
+            raise DemoDataConflictError(
+                f"Synthetic organization {organization.slug!r} has an incomplete "
+                "Executive Board handoff."
+            )
+        self._own(
+            "organization_representations",
+            representation.id,
+            created=created,
+        )
+        for appointment in appointments:
+            self._own(
+                "representation_appointments",
+                appointment.id,
+                created=created,
+            )
+            if appointment.role_assignment is None:
+                raise DemoDataConflictError(
+                    f"Synthetic Executive Board appointment {appointment.id} "
+                    "has no authority assignment."
+                )
+            self._own(
+                "role_assignments",
+                appointment.role_assignment.id,
+                created=created,
+            )
+            self._own(
+                "role_bundles",
+                appointment.role_assignment.role_bundle_id,
+                created=(
+                    created
+                    and appointment.role_assignment.role_bundle_id
+                    not in self.owned["role_bundles"]
+                ),
+            )
+        organization.refresh_from_db(fields=("lifecycle", "updated_at"))
 
     def _series(
         self,
@@ -2839,6 +2997,12 @@ class _DemoSeeder:
                                 granted_by=administrator,
                             )
 
+            self._executive_board_representation(
+                convention=convention,
+                organization=organization,
+                administrator=administrator,
+                accounts=accounts,
+            )
             lifecycle_actor = accounts["convention-chair"]
             for persona_key, role_code in (
                 ("convention-chair", "convention-chair"),

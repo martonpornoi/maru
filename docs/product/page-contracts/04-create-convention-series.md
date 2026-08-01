@@ -1,18 +1,19 @@
 # Page 4 contract: Create convention series
 
-- Status: Implemented and verified; owner inspection pending
+- Status: Implemented and backend-verified for platform oversight and scoped
+  Executive Board authority; browser rehearsal pending
 - Branch: `codex/page-04-create-convention-series`
-- Route: `/admin/organizations/<organization_slug>/series/new/`
-- Requirements: IDN-011, EVT-001, EVT-003, UX-013, UX-014, UX-017,
-  UX-018, UX-019, AUD-001, AUD-002, PRI-001
-- Decisions: ADR 0035, ADR 0036
+- Route: `/admin/platform/organizations/<organization_slug>/series/new/`
+- Requirements: IDN-004, IDN-011, IDN-012, EVT-001, EVT-003, UX-012 through
+  UX-014, UX-017, UX-018, UX-019, UX-024, AUD-001, AUD-002, PRI-001
+- Decisions: ADR 0035, ADR 0036, ADR 0039, ADR 0040
 
 ## Purpose and primary user
 
-Let an active Maru platform administrator create one recurring public
-convention brand beneath the organization being inspected. This is the second
-identity step in setup, after the accountable organization and before any dated
-event edition.
+Let explicit platform oversight or active Executive Board authority with
+`organizations.create_series` create one recurring public convention brand
+beneath the organization being inspected. This follows the accountable
+organization/representation handoff and precedes any dated event edition.
 
 The administrator is an attributed platform operator. Creating the series does
 not make that account an organizer member, Executive Board holder, convention
@@ -57,12 +58,13 @@ additional declared key is the expected profile version.
 
 ## Authorization, lifecycle, privacy, and audit
 
-Only an authenticated active `platform_administrator` may load or submit Page
-4 during the controlled rebuild. Authorization happens before organization
-lookup. The service repeats it, locks the parent, and refuses a Closed
-organization. Draft is explicitly allowed so Page 2 organizations can progress
-before the later Executive Board/activation workflow. Active and Suspended are
-also allowed to maintain brand setup; Closed is terminal.
+The M1 adapter accepted only an active platform administrator. ADR 0040 adds
+exact organization-scoped `organizations.create_series` authority for an
+active Board assignment; the current backend matrix verifies both. Authorization happens before
+organization lookup. The service repeats it, locks the parent, and refuses a
+Closed organization. Draft is allowed for platform setup before activation;
+Board authority exists only after atomic activation. Active and Suspended
+parents may maintain brand setup; Closed is terminal.
 
 The series, minimized audit event,
 `organizations.convention_series.created.v1` domain event, and outbox delivery

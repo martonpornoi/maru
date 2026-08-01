@@ -40,6 +40,8 @@ REVOKE_CAPABILITY = "authorization.revoke"
 ROLE_CAPABILITY = "authorization.manage_roles"
 MAX_AUTHORITY_REASON_LENGTH = 240
 MAX_ROLE_NAME_LENGTH = 120
+EXECUTIVE_BOARD_ROLE_CODE = "executive-board"
+REPRESENTATION_MANAGED_ROLE_CODES = frozenset({EXECUTIVE_BOARD_ROLE_CODE})
 
 
 class AuthorityCommandValidationError(ValidationError):
@@ -730,6 +732,16 @@ def create_role_bundle_version(
         normalized_code = code.strip()
         normalized_name = name.strip()
         normalized_capabilities = tuple(dict.fromkeys(capability_codes))
+        if normalized_code.casefold() in REPRESENTATION_MANAGED_ROLE_CODES:
+            _raise_validation(
+                {
+                    "code": (
+                        "This role code is managed only by the organization "
+                        "representation lifecycle."
+                    )
+                },
+                reason_code="reserved_role_code",
+            )
         if not normalized_name:
             _raise_validation(
                 {"name": "A role name is required."},
@@ -932,6 +944,7 @@ def assign_role(
                     pk=role_bundle_id,
                     organization=organization,
                 )
+                .exclude(code__iexact=EXECUTIVE_BOARD_ROLE_CODE)
                 .only("id", "organization_id", "code", "version", "capability_codes")
                 .first()
             )
@@ -1077,6 +1090,7 @@ def revoke_role_assignment(
                 RoleAssignment.objects.select_for_update()
                 .select_related("role_bundle")
                 .filter(pk=assignment_id, organization_id=organization_id)
+                .exclude(role_bundle__code__iexact=EXECUTIVE_BOARD_ROLE_CODE)
                 .first()
             )
             if assignment is None:

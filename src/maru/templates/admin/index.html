@@ -14,6 +14,7 @@
 
 {% block content %}
   <div id="content-main">
+    {% if maru_shell_access.workspace_available %}
     <section class="maru-admin-workspaces" aria-labelledby="maru-work-heading">
       <div>
         <h2 id="maru-work-heading">Convention work</h2>
@@ -30,6 +31,10 @@
         <a href="{% url 'management-console' %}?view=people">
           <strong>People</strong>
           <span>Find participants and inspect safe operational details.</span>
+        </a>
+        <a href="{% url 'management-console' %}?view=setup&amp;access=1">
+          <strong>Manage access</strong>
+          <span>Review scoped groups and share authority with accountable people.</span>
         </a>
         <a href="{% url 'management-console' %}?view=commerce">
           <strong>Registration</strong>
@@ -49,6 +54,24 @@
         </a>
       </div>
     </section>
+    {% else %}
+      <section class="maru-admin-workspaces" aria-labelledby="maru-personal-heading">
+        <div>
+          <h2 id="maru-personal-heading">Your Maru account</h2>
+          <p>
+            This account has no active convention-management authority. You
+            can still review governance invitations addressed to you.
+          </p>
+        </div>
+        <div class="maru-admin-workspace-grid">
+          <a href="{% url 'my-representation-invitations' %}">
+            <strong>My governance invitations</strong>
+            <span>Review and answer invitations for this exact account.</span>
+          </a>
+        </div>
+      </section>
+    {% endif %}
+    {% if app_list %}
     <div class="maru-admin-directory">
       <h2>All administration areas</h2>
       <p>
@@ -57,12 +80,12 @@
         still easy to scan.
       </p>
     </div>
-    {% if app_list %}
       {% include "admin/_descriptive_app_list.html" with app_list=app_list show_changelinks=True %}
     {% else %}
       <p>
-        This account has no specialist record permissions. Use Convention work
-        above for the operations available to your assigned Maru roles.
+        This account has no specialist record permissions. Django specialist
+        records remain available only to accounts with separate framework
+        staff permissions.
       </p>
     {% endif %}
   </div>

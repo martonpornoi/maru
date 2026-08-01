@@ -15,6 +15,8 @@ from maru.organizations.models import (
     ConventionSeries,
     Organization,
     OrganizationMembership,
+    OrganizationRepresentation,
+    RepresentationAppointment,
 )
 from maru.participation.models import Participation, ParticipationCapacity
 from maru.registration.models import (
@@ -92,6 +94,39 @@ class OrganizationMembershipFactory(
     account = factory.SubFactory(AccountFactory)
     state = OrganizationMembership.State.ACTIVE
     relationship_label = "Staff"
+
+
+class OrganizationRepresentationFactory(
+    factory.django.DjangoModelFactory[OrganizationRepresentation]
+):
+    class Meta:
+        model = OrganizationRepresentation
+
+    organization = factory.SubFactory(
+        OrganizationFactory,
+        lifecycle=Organization.Lifecycle.DRAFT,
+    )
+    provisioning_reason = "Synthetic Executive Board provisioning."
+    provisioned_by = factory.SubFactory(
+        AccountFactory,
+        is_staff=True,
+        is_superuser=True,
+    )
+
+
+class RepresentationAppointmentFactory(
+    factory.django.DjangoModelFactory[RepresentationAppointment]
+):
+    class Meta:
+        model = RepresentationAppointment
+
+    representation = factory.SubFactory(OrganizationRepresentationFactory)
+    account = factory.SubFactory(AccountFactory)
+    invited_by = factory.LazyAttribute(
+        lambda appointment: appointment.representation.provisioned_by
+    )
+    invited_at = factory.LazyFunction(timezone.now)
+    reason = "Synthetic Executive Board invitation."
 
 
 class ParticipationFactory(factory.django.DjangoModelFactory[Participation]):

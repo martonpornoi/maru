@@ -6,6 +6,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
+from maru.authorization.commands import EXECUTIVE_BOARD_ROLE_CODE
 from maru.authorization.models import RoleAssignment
 from tests.factories import (
     AccountFactory,
@@ -121,7 +122,7 @@ def test_access_workspace_is_tenant_scoped_and_uses_human_labels() -> None:
         name="Board Member",
         capability_codes=["events.view_basic"],
     )
-    RoleBundleFactory(
+    authority_controller = RoleBundleFactory(
         organization=edition.organization,
         code="authority-controller",
         name="Authority Controller",
@@ -134,6 +135,7 @@ def test_access_workspace_is_tenant_scoped_and_uses_human_labels() -> None:
     organization_person = AccountFactory(display_name="Board Coordinator")
     hidden_person = AccountFactory(email="other-edition@example.invalid")
     foreign_person = AccountFactory(email="foreign@example.invalid")
+    authority_person = AccountFactory(email="authority@example.invalid")
     foreign_role = RoleBundleFactory(
         organization=other_tenant_edition.organization,
         capability_codes=["events.view_basic"],
@@ -155,6 +157,12 @@ def test_access_workspace_is_tenant_scoped_and_uses_human_labels() -> None:
         edition=other_edition,
         principal=hidden_person,
         role_bundle=old_front_desk,
+    )
+    RoleAssignmentFactory(
+        organization=edition.organization,
+        edition=None,
+        principal=authority_person,
+        role_bundle=authority_controller,
     )
     RoleAssignmentFactory(
         organization=other_tenant_edition.organization,
@@ -182,6 +190,7 @@ def test_access_workspace_is_tenant_scoped_and_uses_human_labels() -> None:
     assert response.data["assignments"][0]["scope_label"]
     assert "foreign@example.invalid" not in response.content.decode()
     assert "other-edition@example.invalid" not in response.content.decode()
+    assert "authority@example.invalid" not in response.content.decode()
     allowed_read = AuditEvent.objects.get(
         principal_id=manager.id,
         operation="authorization.access_workspace.view",
@@ -265,6 +274,113 @@ def test_access_workspace_rejects_unknown_people_without_creating_access() -> No
         organization=edition.organization,
         edition=edition,
     ).exists()
+
+
+def test_generic_access_workspace_hides_and_protects_executive_board() -> None:
+    edition = EventEditionFactory()
+    board = RoleBundleFactory(
+        organization=edition.organization,
+        code=EXECUTIVE_BOARD_ROLE_CODE,
+        name="Executive Board",
+        capability_codes=[
+            "authorization.manage_roles",
+            "authorization.revoke",
+        ],
+    )
+    controllers = (AccountFactory(), AccountFactory())
+    for index, controller in enumerate(controllers):
+        RoleAssignmentFactory(
+            organization=edition.organization,
+            edition=None,
+            principal=controller,
+            role_bundle=board,
+            approved_by=controllers[(index + 1) % len(controllers)],
+        )
+    shareable = RoleBundleFactory(
+        organization=edition.organization,
+        code="front-desk",
+        name="Front Desk",
+        capability_codes=["participation.view_staff_summary"],
+    )
+    reserved_target = RoleAssignmentFactory(
+        organization=edition.organization,
+        edition=edition,
+        principal=AccountFactory(),
+        role_bundle=board,
+    )
+    platform_administrator = AccountFactory(is_staff=True, is_superuser=True)
+
+    for actor, approver in (
+        (controllers[0], controllers[1]),
+        (
+            platform_administrator,
+            AccountFactory(is_staff=True, is_superuser=True),
+        ),
+    ):
+        client = _client(actor)
+        workspace = client.get(_workspace_url(edition))
+        assert workspace.status_code == 200
+        assert EXECUTIVE_BOARD_ROLE_CODE not in {
+            group["code"] for group in workspace.data["groups"]
+        }
+        assert EXECUTIVE_BOARD_ROLE_CODE not in {
+            assignment["group_code"] for assignment in workspace.data["assignments"]
+        }
+
+        recipient = AccountFactory()
+        share_response = client.post(
+            _workspace_url(edition),
+            {
+                "person_email": recipient.email,
+                "group_code": EXECUTIVE_BOARD_ROLE_CODE,
+                "approver_email": approver.email,
+                "reason": "Attempt to share reserved Board authority.",
+            },
+            format="json",
+        )
+        assert share_response.status_code == 400
+        assert not RoleAssignment.objects.filter(
+            organization=edition.organization,
+            principal=recipient,
+        ).exists()
+
+        ordinary_assignment = RoleAssignmentFactory(
+            organization=edition.organization,
+            edition=edition,
+            principal=AccountFactory(),
+            role_bundle=shareable,
+        )
+        replace_with_board = client.patch(
+            _assignment_url(edition, ordinary_assignment),
+            {
+                "group_code": EXECUTIVE_BOARD_ROLE_CODE,
+                "approver_email": approver.email,
+                "reason": "Attempt to replace ordinary access with Board authority.",
+            },
+            format="json",
+        )
+        assert replace_with_board.status_code == 400
+        ordinary_assignment.refresh_from_db()
+        assert ordinary_assignment.revoked_at is None
+
+        replace_board = client.patch(
+            _assignment_url(edition, reserved_target),
+            {
+                "group_code": "front-desk",
+                "approver_email": approver.email,
+                "reason": "Attempt to replace reserved Board authority.",
+            },
+            format="json",
+        )
+        assert replace_board.status_code == 403
+        remove_board = client.delete(
+            _assignment_url(edition, reserved_target),
+            {"reason": "Attempt to remove reserved Board authority."},
+            format="json",
+        )
+        assert remove_board.status_code == 403
+        reserved_target.refresh_from_db()
+        assert reserved_target.revoked_at is None
 
 
 def test_access_replacement_removal_and_tenant_isolation() -> None:

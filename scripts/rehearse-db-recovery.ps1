@@ -1,4 +1,5 @@
 param(
+    [string]$SourceDatabase = "maru",
     [string]$DrillDatabase = "maru_restore_drill"
 )
 
@@ -6,6 +7,12 @@ $ErrorActionPreference = "Stop"
 
 if ($DrillDatabase -notmatch "^maru_restore_drill(?:_[a-z0-9]+)?$") {
     throw "Drill database must use the maru_restore_drill[_suffix] namespace."
+}
+if ($SourceDatabase -notmatch "^maru(?:_[a-z0-9]+)*$") {
+    throw "Source database must use the maru[_suffix] namespace."
+}
+if ($SourceDatabase -eq $DrillDatabase) {
+    throw "Source and drill databases must be different."
 }
 
 $backupPath = "/tmp/maru-recovery-drill.dump"
@@ -23,7 +30,7 @@ function Invoke-Compose {
 try {
     Invoke-Compose exec -T postgres pg_dump `
         --username maru `
-        --dbname maru `
+        --dbname $SourceDatabase `
         --format custom `
         --file $backupPath
 
@@ -66,7 +73,7 @@ SELECT json_build_object(
 
     $evidence = [ordered]@{
         status = "passed"
-        source_database = "maru"
+        source_database = $SourceDatabase
         restored_database = $DrillDatabase
         validated_at_utc = (Get-Date).ToUniversalTime().ToString("o")
         restored_counts = ($validation.Trim() | ConvertFrom-Json)

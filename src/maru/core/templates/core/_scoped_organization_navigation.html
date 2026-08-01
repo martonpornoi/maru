@@ -1,0 +1,52 @@
+{% for item in maru_scoped_organizations %}
+  <section
+    class="baseline-sidebar-context"
+    aria-labelledby="maru-scoped-organization-{{ forloop.counter }}"
+  >
+    <p
+      class="baseline-sidebar-context-name"
+      id="maru-scoped-organization-{{ forloop.counter }}"
+    >
+      {{ item.organization.name }}
+    </p>
+    {% if item.can_view_organization %}
+      <a
+        class="baseline-sidebar-link baseline-sidebar-link--standalone"
+        href="{% url 'baseline-organization-record' item.organization.slug %}"
+      >
+        Organization record
+      </a>
+    {% endif %}
+    {% if item.can_view_organization or item.can_manage_representation %}
+      <a
+        class="baseline-sidebar-link baseline-sidebar-link--standalone"
+        href="{% url 'organization-representation' item.organization.slug %}"
+      >
+        Representation &amp; access
+      </a>
+    {% endif %}
+    {% if item.can_view_organization or item.can_create_series %}
+      <div class="baseline-sidebar-row">
+        {% if item.can_view_organization %}
+          <a
+            class="baseline-sidebar-link"
+            href="{% url 'baseline-organization-record' item.organization.slug %}#convention-series-title"
+          >
+            Convention series
+          </a>
+        {% else %}
+          <span class="baseline-sidebar-link">Convention series</span>
+        {% endif %}
+        {% if item.can_create_series and item.organization.lifecycle != "closed" %}
+          <a
+            class="baseline-sidebar-add"
+            href="{% url 'baseline-create-convention-series' item.organization.slug %}"
+            aria-label="Add convention series for {{ item.organization.name }}"
+          >
+            + Add
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endfor %}

@@ -1,7 +1,7 @@
 # Product requirements
 
 Status: Baseline  
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 
 This document defines stable product requirements. Identifiers are used by
 architecture documents, implementation issues, tests, and release notes.
@@ -74,17 +74,40 @@ architecture documents, implementation issues, tests, and release notes.
   attributed operators, but must not be subjects of organization membership,
   convention capability or role grants, edition participation, registration,
   volunteer applications, onboarding requests, or workforce assignments.
+  This is a database invariant: direct SQL and ORM bulk writes, concurrent
+  subject creation, and later account-kind reclassification must fail without
+  preventing the platform administrator from remaining an attributed actor,
+  creator, reviewer, approver, or auditor.
   Platform oversight must not silently create any of those relationships, and
   restricted case access remains subject to SAF-004 rather than following from
   platform-administrator status.
 - **IDN-012 — Organization representation:** Every organization must have an
-  Executive Board as its accountable representation root. Once that governance
-  structure is introduced, only active Executive Board authority and platform
-  administration may modify organization properties. Provisioning that board
-  must not turn the platform administrator into an organization member or
-  convention participant. Organization records created before the governance
-  page exists remain drafts and must be brought into that invariant when the
-  later workflow is implemented.
+  Executive Board as its accountable representation root before the
+  organization can move from Draft to Active. Initial provisioning must be a
+  reasoned platform operation that creates no platform-administrator
+  membership, appointment, grant, participation, registration, or workforce
+  relationship. Controllers must be exact existing active person accounts with
+  verified email, must accept their own versioned invitations, and must remain
+  eligible at activation. Activation requires at least two distinct accepted
+  controllers, no unanswered controller invitation, current aggregate state,
+  exact organization confirmation, and cross-approved assignments to one
+  immutable root-role version; it atomically activates the representation,
+  memberships, appointments, authority, and organization or changes nothing.
+  Only active Executive Board authority and explicit platform oversight may
+  modify organization properties. Appointment replacement, ending,
+  suspension, and reactivation must be reasoned commands that preserve prior
+  terms and immediate revocation rather than editable status fields. Existing
+  non-Draft organizations without representation require explicit migration
+  reconciliation and must never receive inferred real-person assignments.
+  A reasoned platform emergency containment may start from any open Board
+  invitation or term. Before globally deactivating the person and revoking
+  sessions, it must atomically close every Invited, Accepted, or Active Board
+  appointment for that account across organizations, end matching Board
+  memberships, and revoke linked root assignments. Each affected Board may
+  remain Active only with at least two eligible active controllers; otherwise
+  its representation and organization must be Suspended and all local Board
+  root authority ended. Historical activated-and-ended approvers remain valid
+  provenance but never current authority.
 
 ### Multi-convention and event editions
 
@@ -339,12 +362,14 @@ architecture documents, implementation issues, tests, and release notes.
   setup path must distinguish organizer-, series-, edition-, and ongoing
   tasks, respect model permissions, and must not imply that navigation order
   grants authority or proves setup completion. It must not occupy the global
-  administration header or repeat on every record page. When an active
-  organization has no authority records, an active bootstrap superuser may use
-  a one-time, password-confirmed, exact-scope-confirmed ceremony in the
-  canonical `/admin/` workspace that delegates to the audited bootstrap
-  service; it must become a read-only completion explanation after authority
-  exists.
+  administration header or repeat on every record page. For a new Draft
+  organization it must direct the operator to Page 8's explicit Executive
+  Board handoff rather than silently creating organization, edition, workforce,
+  or participation authority. A legacy non-Draft organization without
+  representation requires a separately approved reconciliation procedure. The
+  former broad browser ceremony and management API are retired; only the
+  operator command and underlying service remain recovery evidence, not a
+  second normal setup workflow.
 - **UX-012 — Unified management console:** Recurring operations, setup
   navigation, access management, forms, and specialist records must appear as
   sections of the original `/admin/` shell with one collapsible,
@@ -374,15 +399,19 @@ architecture documents, implementation issues, tests, and release notes.
   authorization boundary, empty/loading/success/denied/failure behavior,
   desktop and narrow evidence, automated tests, and updated documentation.
   No later page may be treated as current merely because its preserved code or
-  API still exists.
+  API still exists. Leaving the controlled state requires an accepted decision,
+  collision-safe canonical routes, one coherent navigation grammar, current
+  authorization evidence, and fresh verification of every remounted surface.
 - **UX-014 — Platform administration home:** The first page restored after the
-  controlled baseline must make `/admin/` a platform-wide organization
-  inventory available only to active platform administrators. It must explain
+  controlled baseline must provide a platform-wide organization inventory at
+  `/admin/platform/organizations/`, inside the canonical `/admin/` shell, and
+  make it available only to active platform administrators. It must explain
   that platform access is not convention participation, show an honest empty
-  state when no organization exists, show only organization identity, lifecycle,
-  series count, and edition count when records exist, and fail read-only with a
-  safe error when the inventory is unavailable. It must not introduce a
-  convention selector, setup strip, unfinished link, or convention-owned data.
+  state when no organization exists, show only organization identity,
+  lifecycle, series count, and edition count when records exist, and fail
+  read-only with a safe error when the inventory is unavailable. It must not
+  introduce a convention selector, setup strip, unfinished link, or
+  convention-owned data.
 - **UX-015 — Minimal organization creation:** Page 2 of the controlled rebuild
   must let an active platform administrator create a draft organization from
   its name alone. Maru generates a collision-safe stable slug and applies
@@ -486,6 +515,24 @@ architecture documents, implementation issues, tests, and release notes.
   permits otherwise. Saving cannot directly change lifecycle, slug, parent,
   authority, participation, registration, or operational configuration. The
   selected route establishes display context only and never grants access.
+- **UX-024 — Representation and access handoff:** A selected organization must
+  expose one **Representation & access** page in the shared administration
+  navigation. It must explain the purpose and current state of the Executive
+  Board, show platform oversight separately from convention authority, and
+  guide the initial sequence of provision, exact-account invitation,
+  invitee-owned accept or decline, and two-person activation. Managers may see
+  bounded appointment identity and exact email only inside their authorized
+  organization; an invitee may see and answer only their own open invitation;
+  other viewers receive no principal or cross-tenant disclosure. Provision,
+  invitation, response, and activation are separate POST actions with closed
+  input contracts, safe replay behavior, row locking, positive expected
+  versions where state can become stale, value-minimized audit and outbox
+  evidence, and atomic rollback. Activation must require exact organization
+  confirmation and display that it will move the organization from Draft to
+  Active. The page must not create a Django Group, department, edition
+  participation, registration, or workforce position, and its initial root
+  summary must not be presented as the complete department/resource/field
+  effective-access editor.
 
 ### Registration, orders, and attendee service
 

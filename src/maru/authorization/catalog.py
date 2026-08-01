@@ -51,6 +51,65 @@ EDITION_BASIC_FIELD_CEILING = frozenset(
 
 CAPABILITY_DEFINITIONS = (
     Capability(
+        code="organizations.view_basic",
+        description="View the organizer profile and its recurring convention brands.",
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=True,
+        field_ceiling=frozenset(
+            {
+                "id",
+                "slug",
+                "name",
+                "lifecycle",
+                "description",
+                "legal_name",
+                "legal_address",
+                "legal_representative",
+                "registration_authority",
+                "registration_identifier",
+                "tax_identifier",
+                "imprint_text",
+                "website_url",
+                "contact_email",
+                "contact_phone",
+                "country_code",
+                "default_language_codes",
+                "default_time_zone",
+            }
+        ),
+    ),
+    Capability(
+        code="organizations.change_profile",
+        description="Change the bounded legal and operational organizer profile.",
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="organizations.create_series",
+        description="Create a recurring convention brand for an organizer.",
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="organizations.change_series",
+        description="Change a recurring convention brand owned by an organizer.",
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=False,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="organizations.manage_representation",
+        description=(
+            "Invite, activate, replace, or end accountable Executive Board terms."
+        ),
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        sensitivity_ceiling=Sensitivity.SECURITY_CRITICAL,
+        delegable=False,
+        obligations=frozenset({"reason", "audit", "approval"}),
+    ),
+    Capability(
         code="events.view_basic",
         description="View non-public basic metadata for an authorized event edition.",
         maximum_scope=ScopeLevel.ORGANIZATION,
@@ -569,7 +628,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-08-01.2"
+POLICY_VERSION = "2026-08-01.3"
 
 
 def capability(code: str) -> Capability | None:

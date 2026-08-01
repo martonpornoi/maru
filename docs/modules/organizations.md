@@ -1,31 +1,50 @@
 # Organizations module
 
-Status: Implemented tenant, brand, localization bootstrap, and mounted Pages
-1–5 through convention-series record management
+Status: Implemented tenant, brand, localization, Pages 1–5, initial Page 8
+Executive Board lifecycle, and emergency containment; final release gates remain
 Last updated: 2026-08-01
 
 ## Purpose and requirements
 
 `maru.organizations` owns tenant structure and recurring-series continuity for
-IDN-002, IDN-011, IDN-012, EVT-001, EVT-003, EVT-005, UX-014, UX-015,
-UX-016, UX-017, UX-018, UX-019, and UX-021.
+IDN-002, IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, EVT-001, EVT-003,
+EVT-005, UX-014 through UX-021, and UX-024.
 
 ## Owned data and invariants
 
 - `Organization`: the independently governed tenant/data-controller boundary,
   with UUID, slug, public and optional legal identity, lifecycle, contact,
   primary country, ordered default languages, and time-zone default. New
-  records default to Draft; operational demo builders request Active
-  explicitly.
+  records default to Draft; the synthetic demo establishes governance through
+  the real representation services before the organization becomes Active.
 - `ConventionSeries`: a recurring public convention brand within exactly one
   organization, with its own description, contact, website, availability, and
   monotonic profile version.
 - `OrganizationMembership`: one organizer-owned account relationship with
   invited, active, suspended, or ended state.
+- `OrganizationRepresentation`: the one accountable organization-level
+  representation root. The first and currently fixed type is Executive Board,
+  with Provisioning, Active, and reserved Suspended states plus a positive
+  aggregate version and reasoned provisioning/activation provenance.
+- `RepresentationAppointment`: one exact person account's versioned Controller
+  invitation and accepted term in that representation, separately linked to
+  the organization membership and eventual root role assignment.
 
 A platform administrator is not an organizer relationship. Membership
 validation rejects that account classification while still allowing the
 administrator to be attributed as the actor of later platform provisioning.
+
+ADR 0040 makes Draft-to-Active an explicit representation handoff. Provisioning
+creates no person relationship for the platform operator. An invitation may
+create an invited membership for the exact active, verified person account but
+grants no authority. Initial activation requires at least two distinct accepted
+controllers, no unanswered invitation, current aggregate state, and an atomic
+change of appointments, memberships, scoped assignments, representation, and
+organization. ADR 0043 adds one platform-only emergency containment path: it
+closes a person's open Board relationships across every organization, revokes
+sessions and authority, deactivates the account, and suspends any Board that
+loses its two-controller quorum. Routine expiry, replacement, voluntary ending,
+reactivation, and quorum recovery are not implemented.
 
 Organization slug is globally case-insensitively unique. Series slug is
 case-insensitively unique within its organization. Protected relationships
@@ -58,21 +77,38 @@ non-browser clients.
   accepts typed `OrganizationCreationDetails`, normalizes the required name,
   generates a collision-safe slug, validates the complete model, creates one
   Draft tenant, and appends its successful audit event.
-- `update_organization_profile(...)`, the atomic platform-only command that
-  locks an existing organization, updates only changed complete-profile fields,
-  keeps slug/lifecycle code-owned, and audits field names without values.
+- `update_organization_profile(...)`, the atomic exact-organization capability
+  command that accepts explicit platform oversight or active Executive Board
+  `organizations.change_profile`, locks the record, updates only changed
+  complete-profile fields, keeps slug/lifecycle code-owned, and audits field
+  names without values.
 - `delete_empty_draft_organization(...)`, the atomic platform-only command that
   requires exact-name confirmation and acknowledgement and can remove only a
   Draft whose protected relationship graph is empty.
-- `create_convention_series(...)`, the atomic platform-only command that locks
-  a non-Closed parent, accepts typed `ConventionSeriesCreationDetails`,
+- `create_convention_series(...)`, the atomic exact-organization capability
+  command for platform oversight or `organizations.create_series` that locks a
+  non-Closed parent, accepts typed `ConventionSeriesCreationDetails`,
   normalizes the required name, generates a collision-safe slug within that
   organization, validates the complete series, and appends its audit event.
-- `update_convention_series(...)`, the atomic platform-only command shared by
-  Page 5 and its API. It locks the exact organization-owned series, compares
+- `update_convention_series(...)`, the atomic
+  `organizations.change_series` command used by Page 5 and its API adapter. It
+  locks the exact organization-owned series, compares
   the expected profile version, writes only changed brand fields, and commits
   minimized audit plus `organizations.convention_series.updated.v1` and its
   outbox delivery together.
+- `provision_executive_board(...)`, the initial platform-only Draft command
+  that creates the fixed representation root without enrolling its actor.
+- `invite_representation_controller(...)`, the exact-account, reasoned,
+  organization-scoped invitation command that creates no authority.
+- `respond_to_representation_invitation(...)`, the version-checked self command
+  through which only the exact invitee accepts or declines.
+- `activate_executive_board(...)`, the platform-only, aggregate-version-checked
+  transaction that establishes two-or-more-controller cross-approved root
+  authority and changes both representation and organization to Active.
+- `emergency_remove_executive_board_controller(...)`, the platform-only,
+  reasoned global containment command that locks every open Board relationship
+  for one person, revokes sessions and root authority, suspends Boards that lose
+  quorum, and deactivates the account atomically.
 - `GET /api/v1/organizations/{organization_id}/series`, a platform-
   administrator-only paginated collection scoped before bounded, strict query
   evaluation.
@@ -81,10 +117,18 @@ non-browser clients.
 - `PUT /api/v1/organizations/{organization_id}/series/{series_id}`, the strict
   complete profile replacement.
 
-Generic unscoped organization APIs remain absent. Pages 2 through 5 are
-narrowly scoped platform workflows, not public organizer APIs. They
-create no membership, governance, event edition, participation, registration,
-or workforce relationships.
+Generic unscoped organization APIs remain absent. Page 2 remains platform-only;
+Pages 3 through 5 are exact-organization workflows whose Board-authority
+browser paths have backend route and policy coverage. Existing series
+APIs remain platform-administrator adapters until their separate API policy and
+projection contract changes. These record operations create no membership,
+governance, event edition, participation, registration, or workforce
+relationships.
+
+Page 8 has no declared public API in M2.1. Its HTML adapters call these same
+module-owned commands. A future API must define strict projections,
+enumeration resistance, retry semantics, authentication, approval, and OpenAPI
+evidence rather than saving these models directly.
 
 ## Convention series creation fields
 
@@ -138,6 +182,18 @@ their values. An empty Draft may be deleted before it owns related data; once
 any protected relationship exists, retention and a future closure workflow take
 precedence.
 
+Representation state and rationale are C1 governance data. Appointment
+identity, exact email lookup, response state, and membership relationship are
+C2. Only an authorized representation manager may see the bounded directory
+and exact account email; an invitee may see only their own open appointment.
+The directory filters the exact representation before returning at most the 100
+most recently invited terms, ordered by invitation time and stable UUID. Its
+sensitive-read audit records only the bounded returned count, never a hidden
+tenant total or personal value.
+The registered `organizations.representation.changed.v1` event is deliberately
+minimized to action, fixed representation code, and resulting state. It does
+not carry email, display name, reason text, profile values, or capability lists.
+
 ## Dependencies and consumers
 
 - depends on the identity account identifier;
@@ -149,8 +205,9 @@ precedence.
 
 The shared administration menu always exposes the global Organizations row.
 Once an authorized view has selected an organization, a section named for it
-links to its record and Convention series section, with series creation beside
-that destination while lifecycle permits it. Selecting a series adds its own
+links to its record, Page 8 **Representation & access**, and Convention series
+section, with series creation beside that destination while lifecycle permits
+it. Selecting a series adds its own
 record and Convention editions destinations; new-edition availability depends
 on both organization and series state. This is display context only: it
 does not query across tenants, infer ownership, or grant authority. The desktop
@@ -164,8 +221,18 @@ selection, grouped forms, and collapsed technical identifiers.
 Organization and edition forms use searchable, bounded language and time-zone
 choices. The organization form also explains the tenant/organizer role; the
 series form explains recurring-brand continuity. Generic administration
-deletion remains disabled; the purpose-built Page 3 command handles only
-confirmed empty Drafts.
+deletion remains disabled. Organization, convention-series, membership,
+representation, and appointment specialist records are inspection-only so
+model forms cannot bypass the audited commands. The purpose-built Page 3
+command handles only confirmed empty Drafts.
+
+Page 8 presents provision, exact invitation, self-response, and activation as
+separate POST operations. Its forms use closed input contracts: reason is
+1–240 normalized characters; invitation takes one exact email and reason;
+response takes a positive expected invitation version and `accept|decline`;
+activation takes a positive representation version, exact case-sensitive
+organization name, and reason. Every scope, actor, state, role, lifecycle,
+timestamp, and evidence identifier remains server-owned.
 
 ## Failure and retention
 
@@ -176,6 +243,50 @@ writers. A migration fence refuses destructive version-column downgrade while
 any series exists; populated recovery uses fix-forward or an approved backup/
 PITR plan. Organization closure and data exit still need a future reasoned
 workflow.
+
+Representation migrations are additive and must never infer real people.
+Existing non-Draft organizations without either a compliant Active Board or a
+valid emergency-Suspended Board, and any reserved `executive-board` bundle
+conflict, require preflight and explicit reconciliation. Once a representation
+write exists, old writers are incompatible: fix forward or restore the whole
+database to a consistent
+pre-write point, and do not reverse only representation tables while
+membership, authority, audit, or outbox rows refer to them. A failed activation
+must roll back the entire authority/lifecycle change; pending event delivery is
+recovered through the outbox rather than by repeating activation.
+
+Organizations `0009` hardens that boundary with immutable representation,
+appointment, and linked root-assignment provenance; exact monotonic versions;
+deferred active-Board validation across subjects, memberships, authority,
+audit, event, and outbox evidence; and a downgrade fence covering every
+governance artifact. `check_representation_readiness` is the read-only
+deployment preflight. It emits deterministic counts and bounded organization
+slugs, never people or private values, and fails the process when blockers
+exist. The complete maintenance-window and fix-forward procedure is in
+[`executive-board-migration-and-recovery.md`](../operations/executive-board-migration-and-recovery.md).
+
+The readiness pass is intentionally usable before `0009` and mirrors the
+durable `0009` through `0011` assertions through ORM-only reads. Beyond quorum
+and cardinality it checks the exact activation timestamp, assignment
+effectivity/no-expiry/grantor/reason, immutable root-bundle version/name/
+capabilities/creator/approver/reason, linked live authority, bidirectional
+Board membership, activation and assignment audit correlation, original
+activation event/outbox evidence, and current emergency audit/event/outbox/
+identity/revocation evidence. A matching Suspended organization and
+representation is governed rather than blocked only when all open Board terms,
+memberships, and root authority are closed and that emergency evidence is
+complete.
+
+Organizations `0010` prevents platform accounts from receiving any convention
+grant or role assignment and completes active Board membership/appointment
+provenance. Organizations `0011` installs ADR 0043's emergency transition,
+evidence, serialization, quorum, and downgrade guards. Organizations `0012`
+then enforces IDN-011 for membership and every representation-appointment
+state; participation `0004`, registration `0031`, and workforce `0003` apply
+the same account-kind boundary to their owning subject tables. The migrations
+lock identity rows, reject direct/bulk SQL bypass, and defer account-kind
+reclassification validation to commit. See the
+[IDN-011 migration runbook](../operations/idn011-convention-subject-migration-and-recovery.md).
 
 ## Tests
 
@@ -206,12 +317,40 @@ profile-version monotonicity, safe activity, audit/event/outbox rollback,
 pagination, error shapes, fail-closed populated downgrade, and the absence of
 convention relationships.
 
+Page 8 tests cover platform/manager/self/ordinary/inactive and cross-tenant
+visibility, unknown-account equivalence, platform-subject rejection, duplicate
+invitations, self-response stale/replay, activation eligibility and quorum,
+non-self cross-approval, exact scope, database constraints, minimized mutation
+evidence, rollback, and absence of unrelated side effects. Pages 3 through 5
+also exercise active Board assignments and scoped non-staff shell entry.
+Focused hardening tests cover generic reserved-role isolation, manager-only
+sensitive-read audit, privileged-denial audit, raw scope/provenance/version
+mutation, fabricated activation, cross-organization evidence isolation,
+pre-existing platform authority, clean reverse, and artifact-fenced downgrade.
+Page projection tests also cover deterministic history ordering, the 100-row
+ceiling, foreign-tenant exclusion, bounded audit count, and safe 503 behavior
+when the sensitive-read audit append itself fails.
+Populated local upgrade through organizations `0012` and the three other
+IDN-011 module guards passes. The fresh `maru_consolidated_demo` database
+applies all 106 migrations, contains 80 synthetic accounts, two organizations,
+and six editions, and reports readiness 16/16 with zero blockers. The current
+restore into `maru_restore_drill_m21` passes and is cleaned up afterward.
+Fifty-eight combined representation/migration/readiness tests, five emergency-
+focused tests, and a 71-test adjacent IDN-011 batch pass. The readiness/core
+focus passes 10 tests, the representation/platform matrix passes 126, and the
+final consolidated backend invocation passes 792 tests with 90.01 percent
+coverage and no warnings. Automated accessibility, complete visual states,
+representative deployment/PITR, and owner rehearsal remain release gates.
+
 ## Limitations
 
-Executive Board provisioning/backfill, organization and series lifecycle
-transitions, slug migration, publication, processors, invitations, ownership
-transfer, closure/data exit, and a convention-owned organizer console are not
-implemented. Per IDN-012, the
-later governance workflow must establish an Executive Board before activation
-and extend Page 3 property editing to active Executive Board authority;
-platform administration remains non-participating.
+Page 8's Executive Board provisioning, invitation, acceptance, initial
+activation, and platform emergency containment are implemented and backend-
+verified. Local migration/restore evidence is not representative production
+recovery or PITR certification. Appointment expiry, withdrawal, routine
+replacement/ending, planned suspension/reactivation, quorum recovery, legacy
+active-tenant reconciliation, invitation notification delivery, organization
+and series lifecycle transitions beyond initial activation, slug migration, publication,
+processors, ownership transfer, closure/data exit, and the complete
+convention-owned organizer experience remain. Platform administration remains
+non-participating throughout.

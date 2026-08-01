@@ -4,22 +4,6 @@
  */
 
 export interface paths {
-    "/api/v1/management/convention-bootstrap": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["workforce_retrieve_convention_bootstrap_workspace"];
-        put?: never;
-        post: operations["workforce_create_convention_bootstrap"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/me/context": {
         parameters: {
             query?: never;
@@ -1846,69 +1830,6 @@ export interface components {
          * @enum {string}
          */
         ConfirmationBasisEnum: "free" | "provider" | "waiver";
-        ConventionBootstrapChair: {
-            /** Format: email */
-            email: string;
-            display_name: string;
-        };
-        ConventionBootstrapCreated: {
-            role_bundles: number;
-            position_templates: number;
-            departments: number;
-            positions: number;
-            role_assignments: number;
-            position_assignments: number;
-        };
-        ConventionBootstrapEdition: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            organization_id: string;
-            slug: string;
-            name: string;
-            lifecycle: string;
-            /** Format: date */
-            starts_on: string;
-            /** Format: date */
-            ends_on: string;
-        };
-        ConventionBootstrapOrganization: {
-            /** Format: uuid */
-            id: string;
-            slug: string;
-            name: string;
-            status: components["schemas"]["ConventionBootstrapOrganizationStatusEnum"];
-        };
-        /**
-         * @description * `eligible` - eligible
-         *     * `established` - established
-         * @enum {string}
-         */
-        ConventionBootstrapOrganizationStatusEnum: "eligible" | "established";
-        ConventionBootstrapRequest: {
-            /** Format: uuid */
-            organization_id: string;
-            /** Format: uuid */
-            edition_id: string;
-            /** Format: email */
-            chair_email: string;
-            reason: string;
-            confirm_organization: string;
-            controller_password: string;
-        };
-        ConventionBootstrapResult: {
-            organization: components["schemas"]["ConventionBootstrapOrganization"];
-            edition: components["schemas"]["ConventionBootstrapEdition"];
-            chair: components["schemas"]["ConventionBootstrapChair"];
-            created: components["schemas"]["ConventionBootstrapCreated"];
-        };
-        ConventionBootstrapWorkspace: {
-            /** Format: email */
-            controller_email: string;
-            organizations: components["schemas"]["ConventionBootstrapOrganization"][];
-            editions: components["schemas"]["ConventionBootstrapEdition"][];
-            chairs: components["schemas"]["ConventionBootstrapChair"][];
-        };
         /** @description RFC 9457 response shape used at this API boundary. */
         ConventionSeriesProblem: {
             /** Format: uri */
@@ -2371,7 +2292,6 @@ export interface components {
             display_name: string;
             preferred_language: string;
             can_access_advanced_records: boolean;
-            can_bootstrap_convention: boolean;
             memberships: components["schemas"]["MembershipContext"][];
             editions: components["schemas"]["EditionContext"][];
         };
@@ -3758,48 +3678,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    workforce_retrieve_convention_bootstrap_workspace: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConventionBootstrapWorkspace"];
-                };
-            };
-        };
-    };
-    workforce_create_convention_bootstrap: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConventionBootstrapRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConventionBootstrapResult"];
-                };
-            };
-        };
-    };
     identity_retrieve_my_context: {
         parameters: {
             query?: never;

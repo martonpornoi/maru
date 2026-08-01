@@ -1,6 +1,4 @@
-from io import BytesIO
 from pathlib import Path
-from urllib.request import Request
 
 import pytest
 
@@ -49,7 +47,7 @@ def test_roster_parser_rejects_empty_or_single_person_sources() -> None:
         )
 
 
-def test_roster_file_and_https_adapter_are_bounded(
+def test_roster_file_stays_local_and_network_adapter_is_retired(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -57,18 +55,25 @@ def test_roster_file_and_https_adapter_are_bounded(
     roster_path.write_text(ROSTER_HTML, encoding="utf-8")
     assert len(public_roster.load_public_roster_file(roster_path)) == 2
 
-    for unsafe_url in (
+    network_called = False
+
+    def forbidden_urlopen(*args: object, **kwargs: object) -> None:
+        del args, kwargs
+        nonlocal network_called
+        network_called = True
+        raise AssertionError("The retired adapter attempted network I/O.")
+
+    monkeypatch.setattr("urllib.request.urlopen", forbidden_urlopen)
+
+    for url in (
+        public_roster.AWOOSTRIA_ROSTER_URL,
         "http://awoostria.at/about-us/our-volunteers",
         "https://example.invalid/our-volunteers",
     ):
-        with pytest.raises(ValueError, match=r"HTTPS on awoostria\.at"):
-            public_roster.fetch_awoostria_roster(unsafe_url)
+        with pytest.raises(
+            public_roster.PublicRosterNetworkImportRetiredError
+        ) as caught:
+            public_roster.fetch_awoostria_roster(url)
+        assert str(caught.value) == public_roster.NETWORK_IMPORT_RETIRED_MESSAGE
 
-    def fake_urlopen(request: Request, timeout: int) -> BytesIO:
-        assert request.full_url == public_roster.AWOOSTRIA_ROSTER_URL
-        assert request.headers["User-agent"].startswith("Maru local rehearsal")
-        assert timeout == 30
-        return BytesIO(ROSTER_HTML.encode())
-
-    monkeypatch.setattr(public_roster, "urlopen", fake_urlopen)
-    assert len(public_roster.fetch_awoostria_roster()) == 2
+    assert network_called is False

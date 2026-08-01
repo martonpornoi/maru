@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString, mark_safe
 
-from maru.core.admin import NoDeleteAdminMixin, ReadOnlyAdminMixin
+from maru.core.admin import HttpsURLAdminMixin, NoDeleteAdminMixin, ReadOnlyAdminMixin
 from maru.events.admin_context import EditionContextAdmin
 from maru.events.models import EventEdition
 from maru.identity.models import Account
@@ -1435,6 +1435,7 @@ class RegistrationTimelineEntryAdmin(
 @admin.register(PaymentProviderAccount)
 class PaymentProviderAccountAdmin(
     NoDeleteAdminMixin,
+    HttpsURLAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
     list_display = ("code", "display_name", "organization", "adapter", "enabled")

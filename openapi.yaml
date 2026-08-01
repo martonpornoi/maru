@@ -4,41 +4,6 @@ info:
   version: 0.1.0
   description: Versioned API for the Maru convention operating platform.
 paths:
-  /api/v1/management/convention-bootstrap:
-    get:
-      operationId: workforce_retrieve_convention_bootstrap_workspace
-      tags:
-      - management
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConventionBootstrapWorkspace'
-          description: ''
-    post:
-      operationId: workforce_create_convention_bootstrap
-      tags:
-      - management
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ConventionBootstrapRequest'
-        required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConventionBootstrapResult'
-          description: ''
   /api/v1/me/context:
     get:
       operationId: identity_retrieve_my_context
@@ -4548,164 +4513,6 @@ components:
         * `free` - No payment required
         * `provider` - Payment provider
         * `waiver` - Authorized waiver
-    ConventionBootstrapChair:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-        display_name:
-          type: string
-      required:
-      - display_name
-      - email
-    ConventionBootstrapCreated:
-      type: object
-      properties:
-        role_bundles:
-          type: integer
-        position_templates:
-          type: integer
-        departments:
-          type: integer
-        positions:
-          type: integer
-        role_assignments:
-          type: integer
-        position_assignments:
-          type: integer
-      required:
-      - departments
-      - position_assignments
-      - position_templates
-      - positions
-      - role_assignments
-      - role_bundles
-    ConventionBootstrapEdition:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        organization_id:
-          type: string
-          format: uuid
-        slug:
-          type: string
-          pattern: ^[-a-zA-Z0-9_]+$
-        name:
-          type: string
-        lifecycle:
-          type: string
-        starts_on:
-          type: string
-          format: date
-        ends_on:
-          type: string
-          format: date
-      required:
-      - ends_on
-      - id
-      - lifecycle
-      - name
-      - organization_id
-      - slug
-      - starts_on
-    ConventionBootstrapOrganization:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        slug:
-          type: string
-          pattern: ^[-a-zA-Z0-9_]+$
-        name:
-          type: string
-        status:
-          $ref: '#/components/schemas/ConventionBootstrapOrganizationStatusEnum'
-      required:
-      - id
-      - name
-      - slug
-      - status
-    ConventionBootstrapOrganizationStatusEnum:
-      enum:
-      - eligible
-      - established
-      type: string
-      description: |-
-        * `eligible` - eligible
-        * `established` - established
-    ConventionBootstrapRequest:
-      type: object
-      properties:
-        organization_id:
-          type: string
-          format: uuid
-        edition_id:
-          type: string
-          format: uuid
-        chair_email:
-          type: string
-          format: email
-        reason:
-          type: string
-          maxLength: 500
-        confirm_organization:
-          type: string
-          maxLength: 80
-          pattern: ^[-a-zA-Z0-9_]+$
-        controller_password:
-          type: string
-          writeOnly: true
-          maxLength: 256
-      required:
-      - chair_email
-      - confirm_organization
-      - controller_password
-      - edition_id
-      - organization_id
-      - reason
-    ConventionBootstrapResult:
-      type: object
-      properties:
-        organization:
-          $ref: '#/components/schemas/ConventionBootstrapOrganization'
-        edition:
-          $ref: '#/components/schemas/ConventionBootstrapEdition'
-        chair:
-          $ref: '#/components/schemas/ConventionBootstrapChair'
-        created:
-          $ref: '#/components/schemas/ConventionBootstrapCreated'
-      required:
-      - chair
-      - created
-      - edition
-      - organization
-    ConventionBootstrapWorkspace:
-      type: object
-      properties:
-        controller_email:
-          type: string
-          format: email
-        organizations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ConventionBootstrapOrganization'
-        editions:
-          type: array
-          items:
-            $ref: '#/components/schemas/ConventionBootstrapEdition'
-        chairs:
-          type: array
-          items:
-            $ref: '#/components/schemas/ConventionBootstrapChair'
-      required:
-      - chairs
-      - controller_email
-      - editions
-      - organizations
     ConventionSeriesProblem:
       type: object
       description: RFC 9457 response shape used at this API boundary.
@@ -5932,8 +5739,6 @@ components:
           type: string
         can_access_advanced_records:
           type: boolean
-        can_bootstrap_convention:
-          type: boolean
         memberships:
           type: array
           items:
@@ -5945,7 +5750,6 @@ components:
       required:
       - account_id
       - can_access_advanced_records
-      - can_bootstrap_convention
       - display_name
       - editions
       - memberships

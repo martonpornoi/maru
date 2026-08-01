@@ -155,6 +155,71 @@ html[data-theme="dark"] {
   background: var(--selected-bg);
 }
 
+.maru-platform-navigation {
+  display: grid;
+  gap: 0.18rem;
+  margin: 0 0 0.75rem;
+  padding: 0 0.75rem;
+}
+
+.maru-platform-navigation .baseline-sidebar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.maru-platform-navigation .baseline-sidebar-link,
+.maru-platform-navigation .baseline-sidebar-add {
+  display: block;
+  padding: 0.42rem 0.55rem;
+  border: 0;
+  border-radius: 0.35rem;
+  color: var(--body-fg);
+  font-size: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.maru-platform-navigation .baseline-sidebar-add {
+  white-space: nowrap;
+}
+
+.maru-platform-navigation .baseline-sidebar-link:hover,
+.maru-platform-navigation .baseline-sidebar-link:focus-visible,
+.maru-platform-navigation .baseline-sidebar-add:hover,
+.maru-platform-navigation .baseline-sidebar-add:focus-visible,
+.maru-platform-navigation [aria-current="page"] {
+  color: var(--body-fg);
+  background: var(--selected-bg);
+}
+
+.maru-platform-navigation .baseline-sidebar-context {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--hairline-color);
+}
+
+.maru-platform-navigation .baseline-sidebar-context--nested {
+  margin-left: 0.45rem;
+  padding-left: 0.55rem;
+  border-top: 0;
+  border-left: 1px solid var(--hairline-color);
+}
+
+.maru-platform-navigation .baseline-sidebar-context-name {
+  margin: 0 0 0.18rem;
+  color: var(--body-quiet-color);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.maru-platform-navigation .baseline-sidebar-add--disabled {
+  color: var(--body-quiet-color);
+  cursor: not-allowed;
+}
+
 .maru-admin-record-nav #nav-filter {
   width: calc(100% - 1.5rem);
   margin: 0 0.75rem 0.75rem;

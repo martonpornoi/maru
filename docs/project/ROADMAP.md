@@ -5,9 +5,17 @@ first convention partner are known.
 
 ## Current production-consolidation discipline
 
-ADR 0030 temporarily reduces the default browser experience to Sign in and one
-minimal administration home while retaining the tested backend and APIs. ADR
-0031 restores Page 1 as a platform-administrator-only organization inventory
+ADR 0030 established and preserved the accepted empty-experience baseline while
+retaining the tested backend and APIs. ADR 0039 now supersedes that decision's
+default URL configuration: the active milestone uses one coherent
+`/admin/` shell with Convention work, specialist records, and Pages 1–7 under
+the collision-safe `/admin/platform/` route space. Backend route, permission,
+schema-drift, frontend build, populated/fresh migration, local restore-drill,
+and desktop/390-pixel smoke evidence passes. The final consolidated local
+backend invocation passes 792 tests in 329.21 seconds with 90.01 percent
+coverage and no warnings. Accessibility, representative recovery/PITR,
+complete visual-state, and owner evidence remain. ADR 0031
+restored Page 1 as a platform-administrator-only organization inventory
 without adding convention participation. ADR 0032 adds the name-only audited
 Draft command, ADR 0033 expands Page 2 with the complete optional profile,
 ADR 0034 adds the linked Page 3 record, compact one-row
@@ -26,7 +34,21 @@ mandatory pause after every isolated page. Each page still requires UX-013's
 scope, states, authorization, navigation, test, documentation, desktop, and
 narrow-viewport evidence. ADR 0038 records that the locally verified M1 record
 spine precedes M2 governance and computed scoped access; it does not weaken the
-full ADR 0037 outcome. `PRODUCTION_CONSOLIDATION.md` is the authoritative
+full ADR 0037 outcome. ADR 0039 selects the richer pre-reset record-oriented
+visual grammar without restoring a second menu, Quick Start, direct
+cross-domain saves, or legacy domain assumptions. ADR 0040 now starts M2.1 with
+Page 8's explicit Executive Board representation lifecycle: exact verified
+accounts accept their own invitations, at least two distinct controllers
+cross-approve root authority, activation moves the Draft organization to
+Active atomically, and the platform administrator remains external. Its
+initial schema, service, HTML, authorization, and synthetic-fixture lifecycle
+are backend-verified alongside the M1.1 shell. ADR 0041 accepts exact
+department/typed-resource scope without implicit hierarchy inheritance; its
+runtime implementation is next. ADR 0042 makes repository fixtures synthetic-
+only and removes the public-roster rehearsal implementation. ADR 0043 adds
+global platform emergency containment when a Board controller must be removed.
+`PRODUCTION_CONSOLIDATION.md`
+is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
 milestone checklist.
 
@@ -79,18 +101,29 @@ chrome. One collapsible administration navigation, record-oriented Convention
 work inner pages, a separate Forms home section, integrated specialist records,
 and exact-person convention-group access sharing replace the visible
 staff/admin split without introducing page ACLs or Django Groups.
-The exceptional one-shot first-authority service now has a password-confirmed,
-exact-scope-confirmed ceremony in the canonical `/admin/` workspace with
-audited reads and denials; the explicit operator command remains a recovery
-fallback. Authorized
-leaders can also move editions through valid, explained lifecycle transitions
-without directly editing lifecycle fields.
-ADR 0030 leaves those former browser pages unmounted during the controlled
-rebuild. Broad user/staff activity
-projections beyond the implemented registration actions remain before this
-phase is treated as complete across the whole product.
+Active scoped non-staff accounts enter that shell without gaining specialist
+model access; effective grants/assignments drive organization and edition
+navigation, while Django staff/model permission remains a separate boundary.
+The preserved one-shot first-authority operator command/service is no longer
+the normal establishment path under ADR 0040. Its browser ceremony and
+management API are retired; recovery use requires an explicit legacy-
+reconciliation procedure. Authorized leaders can still move editions through
+valid, explained lifecycle transitions without directly editing lifecycle
+fields.
+ADR 0039 reintroduces that shell as the single management surface. Its
+current services, APIs, policy checks, audit, and effects remain authoritative;
+pre-reset screens supply layout and interaction grammar rather than a parallel
+domain implementation. Backend route ordering, platform/scoped-nonstaff/staff
+permissions, sidebar behavior, Convention work, specialist-record gating, and
+frontend checks pass. The pre-hardening isolated suite/coverage baseline,
+populated/fresh migrations, local restore through the representation boundary,
+clean dependency audits, responsive smoke, and the final 792-test/90.01-percent
+coverage gate pass locally without warnings. Accessibility, representative
+restore/PITR, and complete visual-state evidence remain open. Broad user/staff activity
+projections beyond the implemented registration actions also remain before
+this phase is treated as complete across the whole product.
 
-The controlled rebuild now exposes Page 1 organization inventory, complete
+The accepted Pages 1–7 implement Page 1 organization inventory, complete
 Page 2 Draft creation, Page 3 organization records for maintaining public
 identity, legal/imprint, contact, and locale defaults, Page 4 creation of a
 recurring public convention brand, Page 5 versioned series maintenance and
@@ -100,17 +133,45 @@ confirmed empty Draft can be deleted, but a created series or any other
 protected relationship refuses deletion. Series creation generates scoped
 identity and audit evidence only. Edition creation starts one Draft identity
 with idempotency receipt, audit, domain event, and outbox; it does not create
-registration, programme, venue, people, or workforce records. The first access
-summary is truthful but static/provisional: computed organization/department/
-person access and **Manage access** remain Phase 1 scope v2. Draft organizations
+registration, programme, venue, people, or workforce records. The access
+summary distinguishes platform, Board, exact-edition, and own-invitation
+authority but remains provisional: computed department/resource/field access
+remains Phase 1 scope v2. Draft organizations
 created during this interval must be brought under the IDN-012 Executive Board
 invariant before activation.
 
-M1 is locally verified across the complete suite, migration rehearsal,
+The accepted Page 8 contract is the first Phase 1 scope-v2 slice. It separates
+the Executive Board representation aggregate from membership, departments,
+participation, and generic role sharing; requires existing active verified
+person accounts and invitee-owned versioned decisions; and defines atomic
+two-or-more-controller activation with value-minimized audit/outbox evidence.
+The local-only synthetic demo establishes two controllers per organization
+through these real services rather than forcing Active state.
+The working-tree implementation passes schema drift, tenant/principal non-
+disclosure, core concurrency/replay, platform exclusion, cross-approval,
+rollback, scoped-shell, populated/fresh migration, local restore through
+organizations `0009`, bounded sensitive-read/denial audit, IDN-011 database
+subject guards through organizations `0012` plus participation `0004`,
+registration `0031`, and workforce `0003`, and desktop/390-pixel smoke gates.
+The readiness/core focus passes 10 tests, the representation/platform matrix
+passes 126 tests, the ordered migration-contamination regression passes 26
+tests, and the final consolidated backend gate passes 792 tests in 329.21
+seconds with 90.01 percent coverage and no warnings. A separate behavior run
+passes the same 792 tests in 291.86 seconds. Representative restore/PITR,
+accessibility, complete visual-state, and owner-rehearsal gates remain.
+Appointment expiry, routine replacement/removal,
+planned suspension/reactivation, invitation delivery, implemented department/resource scope, and
+the full effective-access header remain later M2 work.
+
+The committed M1 spine is locally verified across the complete suite, migration rehearsal,
 OpenAPI/client regeneration, deployment-shaped checks, and desktop/390-pixel
 visual smoke. Owner rehearsal, automated accessibility analysis, reliable
 keyboard traversal, and the remaining visual state matrix stay open and no
-production-readiness claim follows from M1.
+production-readiness claim follows from M1. M1.1 repeated backend/frontend,
+coverage, populated-migration, and responsive-smoke evidence after the unified-
+shell migration. The later integrity tree now passes the final consolidated
+local suite and coverage gate; accessibility, complete visual-state,
+representative recovery, and owner evidence remain before release acceptance.
 
 ## Phase 2: Registration vertical slice
 
@@ -178,9 +239,10 @@ Repository status: the first workforce onboarding slice is implemented:
 one-shot empty-organization chair bootstrap, reusable furry-convention
 position templates, edition department/reporting hierarchy, publishable
 position opportunities, applications, reviewed PDF agreements, headcount, and
-dual-controlled role/capacity activation. The one-shot bootstrap is available
-as a guarded `/admin/` ceremony and an operator fallback, and is placed in
-context by the Setup guide. A minimized Organization structure page shows
+dual-controlled role/capacity activation. The old one-shot bootstrap remains
+only as an operator command/service for an approved legacy reconciliation; its
+guarded browser ceremony and management API are retired. A minimized
+Organization structure page shows
 nested departments, positions, several holders, and multi-department roles
 under exact edition scope.
 Qualifications, availability,

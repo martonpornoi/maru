@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from tests.factories import AccountFactory, ParticipationFactory
+from tests.factories import AccountFactory, CapabilityGrantFactory
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -26,8 +26,9 @@ def test_admin_is_the_preferred_authenticated_route() -> None:
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Convention work" in content
-    assert "All administration areas" in content
+    assert "Your Maru account" in content
+    assert "My governance invitations" in content
+    assert "Convention work" not in content
     assert "Specialist records" not in content
     assert "/static/staff-console/app.js" not in content
 
@@ -38,6 +39,7 @@ def test_workflows_are_embedded_under_the_original_admin_shell() -> None:
     assert anonymous["Location"] == ("/accounts/login/?next=/admin/workspace/")
 
     account = AccountFactory()
+    CapabilityGrantFactory(principal=account)
     client = APIClient()
     client.force_login(account)
     response = client.get(reverse("management-console"))
@@ -62,7 +64,7 @@ def test_local_login_explains_why_and_how_to_use_it() -> None:
     assert "For example:" in content
 
 
-def test_any_active_platform_account_can_open_original_admin_index() -> None:
+def test_active_account_without_scope_gets_a_personal_admin_landing() -> None:
     account = AccountFactory()
     client = APIClient()
     client.force_login(account)
@@ -71,7 +73,8 @@ def test_any_active_platform_account_can_open_original_admin_index() -> None:
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Convention work" in content
+    assert "Your Maru account" in content
+    assert "Convention work" not in content
     assert "This account has no specialist record permissions" in content
 
 
@@ -105,7 +108,7 @@ def test_ordinary_staff_with_a_workspace_can_open_admin_workspace() -> None:
     staff_account = AccountFactory(
         is_staff=True,
     )
-    ParticipationFactory(account=staff_account)
+    CapabilityGrantFactory(principal=staff_account)
     client = APIClient()
     client.force_login(staff_account)
 

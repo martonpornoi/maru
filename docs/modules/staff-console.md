@@ -1,22 +1,31 @@
 # Embedded Convention work
 
-Status: Preserved and tested, but not mounted during the ADR 0030 rebuild
-Last updated: 2026-07-31
+Status: API-backed workflow mounted in the unified shell; backend/frontend and
+responsive smoke evidence pass; final release evidence remains
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
-This module preserves the pre-reset API-backed Convention work implementation
-under ADRs 0006, 0023, 0026, and 0027. ADR 0030 supersedes it as a mounted
-browser experience. Its source, generated client, tests, and backend contracts
-remain evidence; no route or menu currently exposes it.
+This module carries forward the pre-reset API-backed Convention work implementation
+under ADRs 0006, 0023, 0026, and 0027. ADR 0039 selects its record-oriented
+grammar and mounts it inside the one `/admin/` shell without making
+its client the domain authority. Its source, generated client, tests, and
+backend contracts remain evidence; current route and authorization tests now
+cover the changed default resolver.
 
-Source lives in `frontends/staff-console`. The preserved URL configuration can
-serve the bundle at `/admin/workspace/` for regression tests, but the default
-`maru.baseline_urls` configuration returns 404 there.
-Business behavior and authorization remain in the versioned API. The original
-permission-filtered Django index stays at `/admin/`, and existing model routes
-remain below it. `/manage/`, `/staff/`, and `/admin/records/` are not alternate
-entry points.
+Source lives in `frontends/staff-console`. The default `maru.urls`
+configuration serves it at `/admin/workspace/`, embedded in the administration
+base template. Business behavior and authorization remain in the versioned
+API. The permission-filtered Django index stays at `/admin/`, purpose-built
+platform records use `/admin/platform/`, and existing model routes remain below
+`/admin/`. `/manage/`, `/staff/`, and `/admin/records/` are not alternate entry
+points.
+
+The current backend verifies its route, authorization, and sidebar boundaries;
+the current frontend passes type checking, 19 Vitest tests, production build,
+and desktop/390-pixel smoke without console errors or horizontal overflow.
+Keyboard, automated accessibility, complete failure-state, final consolidated
+suite/coverage, and owner evidence remain release gates.
 
 The shell uses Maru's canonical navy, gold, and ivory platform identity and
 owned square mark. The source bundle repeats the documented palette so the
@@ -24,16 +33,13 @@ standalone Vite development server works without a Django template; automated
 checks keep those anchors aligned with `maru.core`. Convention-owned annual
 public clients may use independent seasonal themes.
 
-## Preserved pre-reset experience
+## Selected interaction grammar and preserved workflows
 
-- local session sign-in for any active platform account;
+- local session sign-in for any active account, followed by policy-filtered
+  shell content;
 - active-edition selection with remembered context;
-- a safe empty-workspace state for every account without convention
-  participation, with the administration home available to Django staff;
-- a guarded workspace-less-superuser Setup guide ceremony that establishes the first
-  convention controllers and Chair through the existing one-shot service,
-  requiring current password, exact organizer slug, separate Chair, reason,
-  and auditable scope;
+- a safe empty-workspace state for every account without current convention
+  authority, plus exact self-service governance invitations;
 - one collapsible administration sidebar for Convention work and specialist
   records, with no nested React sidebar or duplicate workspace selector;
 - record-oriented inner pages whose spacing, forms, tables, buttons, and
@@ -97,7 +103,6 @@ The frontend generates TypeScript types from checked-in `openapi.yaml` and uses:
 
 - `GET /api/v1/me/context`;
 - `GET /api/v1/me/security-history`;
-- `GET|POST /api/v1/management/convention-bootstrap`;
 - `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/participations`;
 - `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure`;
 - `POST /api/v1/organizations/{organization_id}/editions/{edition_id}/transition`;
@@ -170,6 +175,17 @@ lifecycle rules. Its persistent convention-workspace selector was verified
 with Danube 2027: edition-owned lists and choices stayed focused, eligible
 registration sources remained explicitly reusable, mobile layout had no
 horizontal overflow, and the browser reported no runtime errors.
+
+Current route-collision, shell-permission, and frontend evidence now passes:
+active scoped non-staff accounts can use Convention work, inactive or unscoped
+accounts cannot, and specialist records still require Django staff/model
+permission. Type checking, 19 Vitest tests, and the production build pass. A
+709-test backend run had one stale administration-home expectation; that exact
+test passed after **Manage access** was restored. Desktop and 390-pixel smoke
+now also pass without console errors or horizontal overflow. The complete
+consolidated suite/coverage rerun after all later integrity work, keyboard and
+automated accessibility, complete visual states, and owner evidence remain
+required.
 
 ## Limitations
 

@@ -1,14 +1,15 @@
 # Authorization module
 
-Status: Implemented authority boundary with edition create/profile ceilings and
-preserved human access sharing
+Status: Implemented organization/edition authority boundary, human access
+sharing, and protected Executive Board root; ADR 0041 scope v2 is designed
 Last updated: 2026-08-01
 
 ## Purpose and requirements
 
 `maru.authorization` is the deny-by-default authority boundary for IDN-002,
-IDN-004, IDN-005, IDN-009, IDN-011, QRY-003, ADR 0003, and ADR 0023. A membership or
-familiar role name never grants broad access by itself.
+IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, QRY-003, UX-020, UX-024,
+ADR 0003, ADR 0023, ADR 0040, and ADR 0041. A membership or familiar role name never
+grants broad access by itself.
 
 Platform administration is a separate principal purpose under ADR 0031.
 Capability grants and role assignments reject a platform administrator as
@@ -57,6 +58,13 @@ self-history, minimized staff participation viewing, capability delegation,
 direct-grant management, immediate authority revocation, role management, and
 security-audit viewing.
 
+M2 adds organization basic view, organization profile change, series creation,
+series change, and the security-critical
+`organizations.manage_representation` capability. The representation command
+uses exact organization scope and carries reason, audit, and approval
+obligations. These declarations extend the existing policy; they do not create
+a second Board flag or grant authority from membership alone.
+
 Delegation is dual-authority: the actor must hold an active delegable parent
 grant and a separate `authorization.delegate` capability. A child cannot
 broaden scope, start before, or outlive its parent. Success writes the child
@@ -83,6 +91,39 @@ classified audit evidence without creating partial authority. An outbox
 failure rolls the authority change and success evidence back, then records one
 safe error audit.
 
+ADR 0040 defines one bounded exception for establishing the first controllers.
+An active platform administrator may create the reserved immutable
+`executive-board` role-bundle version and act as grantor only inside the atomic
+Draft-to-Active representation command. At least two accepted eligible
+controllers are required, and each assignment is approved by a different
+accepted controller in a deterministic cycle. The platform administrator is
+never principal or approver. The reserved role is thereafter managed only by
+the representation lifecycle: generic role-version, assignment, replacement,
+projection, and revocation commands treat it as unavailable. The initial path
+cannot be reused as a general approval bypass.
+
+Organizations `0009` additionally protects linked root assignments at the
+database boundary. An active representation must retain the exact immutable
+bundle capability set, two or more eligible active controllers, active
+memberships, effective non-self cross-approved assignments, and correlated
+activation audit/domain-event/outbox evidence. Direct ORM or SQL mutation of
+representation identity, appointment provenance, linked assignment scope, or
+platform-principal roles is rejected.
+
+Organizations `0010` rejects platform principals for direct grants as well as
+role assignments and protects exact Board membership provenance. Organizations
+`0011` keeps current authority consistent with ADR 0043 emergency containment:
+ended terms retain immutable historical cross-approval evidence, while active
+authority, membership, and quorum remain Active-only. Organizations `0012`
+and the corresponding participation, registration, and workforce migrations
+extend IDN-011 to every covered convention-subject relationship.
+
+ADR 0041 accepts the next persistent scope lattice—organization → edition →
+exact department → exact typed resource—and explicitly denies implicit
+department-tree inheritance. That design is not yet implemented: current
+grants and assignments remain organization- or edition-scoped, so
+department-owned mutation pages must stay unmounted.
+
 ## Enforcement
 
 The reusable projection guard fails closed when a serializer contract exceeds
@@ -97,6 +138,14 @@ checked against that ceiling rather than treating write permission as an
 unbounded read. Creation is organization-scoped and profile change is exact-
 edition-scoped. HTML platform administration remains a separate platform
 policy path and creates no stored convention grant.
+
+The `/admin/` shell does not use Django `is_staff` as a convention-authority
+shortcut. Active platform administrators receive platform scope. An ordinary
+active account receives only organizations/editions reachable through current,
+unrevoked grants or role assignments whose delegation ancestry is still
+effective; expired, future, revoked, foreign-tenant, and stale selected-edition
+state are excluded. Specialist Django records remain separately staff/model-
+permission protected.
 
 The edition list/search/count/autocomplete API requires organization scope and
 filters the tenant before evaluation. An edition-only grant can retrieve its
@@ -124,9 +173,11 @@ administration sidebar or any embedded Convention work area:
 The workspace requires `authorization.manage_roles`; change and removal also
 require `authorization.revoke`, which the API reports separately so the client
 does not offer unsupported controls. It excludes the non-shareable
-`authority-controller` role. Every query is scoped by trusted organization and
-edition route values before records are returned. Sensitive workspace reads
-and all underlying authority mutations are audited.
+`authority-controller` and reserved `executive-board` roles from role lists,
+assignment projections, exact resolution, replacement, and removal. Every
+query is scoped by trusted organization and edition route values before
+records are returned. Sensitive workspace reads and all underlying authority
+mutations are audited.
 
 The UI calls role bundles “groups” because Front Desk, Registration, Board,
 Treasurer, and similar convention teams are familiar sharing concepts. They
@@ -172,19 +223,40 @@ Access-workspace integration tests additionally cover deny-without-disclosure,
 human group labels, latest-version selection, organization/edition isolation,
 exact-email matching, independent approval, unknown-account rejection,
 atomic replacement, immediate removal, and cross-tenant assignment hiding.
+They also prove that Board controllers and platform administrators cannot use
+generic authority commands or the workspace to list, version, share, replace,
+or revoke reserved Executive Board authority.
+
+Page 8 policy, command, and browser-adapter tests cover exact organization
+scope, bounded platform bootstrap, non-platform subjects, two distinct cross-
+approvers, reserved role conflicts, stale/replayed activation and invitations,
+inactive or suspended controllers, immutable role creation, platform exclusion,
+rollback, and cross-tenant/principal non-disclosure. Populated and empty
+migration, restore drill, sensitive read/denial audit, and responsive browser
+evidence pass. The focused integrity evidence includes 58 combined
+representation/migration/readiness tests, five emergency tests, and the
+71-test adjacent IDN-011 batch. Readiness parity and more concurrent
+multi-active coverage are still being hardened; the final consolidated
+full-suite/coverage run, routine Board-term semantics, complete visual states,
+representative deployment/PITR, and accessibility/owner evidence remain open.
 
 ## Limitations
 
-Department/resource scopes, a computed effective-access explanation, step-up
-execution, service/device principals,
+Department/resource scopes, a complete computed effective-access explanation,
+step-up execution, service/device principals,
 asynchronous approval workflow, grant review reminders, purpose binding, and
 policy caching are not implemented. The synchronous independent approver
 argument is a command invariant, not yet an approval inbox or pending request
-state. Initial production bootstrap of the first two controllers also remains
-an operations procedure. The reusable enforcement contracts must be adopted
+state. Page 8 replaces the old operations-only first-controller procedure and
+its initial backend security matrix passes. The reusable
+enforcement contracts must be adopted
 and extended with each domain slice; they are not a generic shortcut around
 domain-specific relationships and state.
 
-Pages 1–7 therefore show only a static, truthful platform-oversight summary.
-They must not label that summary as department/person access or expose a
-**Manage access** action until M2 adds representation and scope v2.
+Pages 1–7 therefore show only a static, truthful authority summary.
+Page 8's root-representation explanation remains narrower
+than department/resource/field access. Pages must not label either summary as
+complete department/person access or expose a generic **Manage access** action
+until the remaining M2 scope-v2 query and assignment editor are implemented
+and verified. Appointment expiry/replacement/end and legacy authority
+reconciliation also remain open.

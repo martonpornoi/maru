@@ -22,17 +22,13 @@ import {
   checkInRegistration,
   type ClosureReadiness,
   confirmMyDemoPayment,
-  createConventionBootstrap,
   createRegistrationDraft,
-  type ConventionBootstrapResult,
-  type ConventionBootstrapWorkspace,
   type EditionContext,
   type EditionTransitionResult,
   loadActions,
   loadAccessWorkspace,
   loadAttendeeReport,
   loadClosureReadiness,
-  loadConventionBootstrapWorkspace,
   loadMyContext,
   loadMyProfileExtensions,
   loadMyRegistration,
@@ -237,322 +233,7 @@ function ErrorScreen({ message }: { message: string }) {
   );
 }
 
-function ConventionBootstrapPanel({
-  context,
-  organizationId,
-  onCompleted,
-}: {
-  context: MyContext;
-  organizationId?: string;
-  onCompleted: (result: ConventionBootstrapResult) => Promise<void>;
-}) {
-  const [workspace, setWorkspace] = useState<ConventionBootstrapWorkspace>();
-  const [organization, setOrganization] = useState("");
-  const [edition, setEdition] = useState("");
-  const [chairEmail, setChairEmail] = useState("");
-  const [reason, setReason] = useState("");
-  const [confirmation, setConfirmation] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    setError(undefined);
-    void loadConventionBootstrapWorkspace()
-      .then((loaded) => {
-        setWorkspace(loaded);
-        const eligible = loaded.organizations.filter(
-          (item) => item.status === "eligible",
-        );
-        const initialOrganization =
-          eligible.find((item) => item.id === organizationId) ?? eligible[0];
-        if (!initialOrganization) return;
-        setOrganization(initialOrganization.id);
-        setEdition(
-          loaded.editions.find(
-            (item) => item.organization_id === initialOrganization.id,
-          )?.id ?? "",
-        );
-        setChairEmail(loaded.chairs[0]?.email ?? "");
-      })
-      .catch((caught: unknown) => {
-        setError(
-          caught instanceof Error
-            ? caught.message
-            : "Convention leadership setup could not be loaded.",
-        );
-      });
-  }, [organizationId]);
-
-  const eligibleOrganizations =
-    workspace?.organizations.filter((item) => item.status === "eligible") ?? [];
-  const selectedOrganization = workspace?.organizations.find(
-    (item) => item.id === organization,
-  );
-  const availableEditions =
-    workspace?.editions.filter((item) => item.organization_id === organization) ??
-    [];
-  const currentOrganization = workspace?.organizations.find(
-    (item) => item.id === organizationId,
-  );
-  const ready = Boolean(
-    selectedOrganization &&
-      edition &&
-      chairEmail.trim() &&
-      reason.trim() &&
-      confirmation.trim() &&
-      password,
-  );
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!ready || !selectedOrganization) return;
-    setBusy(true);
-    setError(undefined);
-    try {
-      const result = await createConventionBootstrap({
-        organization_id: selectedOrganization.id,
-        edition_id: edition,
-        chair_email: chairEmail.trim(),
-        reason: reason.trim(),
-        confirm_organization: confirmation.trim(),
-        controller_password: password,
-      });
-      setPassword("");
-      await onCompleted(result);
-    } catch (caught: unknown) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "Convention leadership could not be established.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (!workspace && !error) {
-    return (
-      <section className="panel bootstrap-ceremony" aria-live="polite">
-        <p className="muted-copy">Checking first-leadership prerequisites…</p>
-      </section>
-    );
-  }
-
-  if (
-    organizationId &&
-    currentOrganization?.status === "established" &&
-    eligibleOrganizations.length === 0
-  ) {
-    return (
-      <section className="panel bootstrap-ceremony completed-ceremony">
-        <div className="ceremony-status" aria-hidden="true">✓</div>
-        <div>
-          <p className="section-kicker">Initial authority</p>
-          <h2>Convention leadership established</h2>
-          <p className="muted-copy">
-            This one-time trust ceremony is complete. Further leadership and
-            access changes use Manage access and the independently approved
-            workforce appointment workflow.
-          </p>
-        </div>
-      </section>
-    );
-  }
-
-  if (workspace && eligibleOrganizations.length === 0) {
-    return (
-      <section className="panel bootstrap-ceremony">
-        <p className="section-kicker">Initial authority</p>
-        <h2>No organization is waiting for leadership setup</h2>
-        <p className="muted-copy">
-          Create an active organization, a non-closed edition, and a distinct
-          Chair account in Specialist records, or use ordinary access management
-          for an organizer that already has authority.
-        </p>
-        <a className="secondary-button" href="/admin/">
-          Open Specialist records
-        </a>
-      </section>
-    );
-  }
-
-  return (
-    <section className="panel bootstrap-ceremony">
-      <div className="panel-heading">
-        <div>
-          <p className="section-kicker">One-time guarded action</p>
-          <h2>Establish convention leadership</h2>
-          <p className="muted-copy">
-            This creates the first two authority controllers, appoints the
-            Convention Chair, and installs the starter convention roles and
-            position templates. It cannot be repeated for this organizer.
-          </p>
-        </div>
-        <span className="quiet-badge">Current password required</span>
-      </div>
-      <div className="ceremony-warning">
-        <strong>Before continuing</strong>
-        <span>
-          The Chair must be a separate active account. Maru records the
-          administrator, Chair, reason, scope, server time, and created authority
-          as permanent audit evidence.
-        </span>
-      </div>
-      <form className="bootstrap-form" onSubmit={submit}>
-        <div className="form-field">
-          <label htmlFor="bootstrap-organization">Organization</label>
-          <select
-            id="bootstrap-organization"
-            value={organization}
-            onChange={(event) => {
-              const nextOrganization = event.target.value;
-              setOrganization(nextOrganization);
-              setEdition(
-                workspace?.editions.find(
-                  (item) => item.organization_id === nextOrganization,
-                )?.id ?? "",
-              );
-              setConfirmation("");
-            }}
-          >
-            {eligibleOrganizations.map((item) => (
-              <option value={item.id} key={item.id}>
-                {item.name} ({item.slug})
-              </option>
-            ))}
-          </select>
-          <small>The independently governed organizer receiving first authority.</small>
-        </div>
-        <div className="form-field">
-          <label htmlFor="bootstrap-edition">First event edition</label>
-          <select
-            id="bootstrap-edition"
-            value={edition}
-            onChange={(event) => setEdition(event.target.value)}
-          >
-            {availableEditions.map((item) => (
-              <option value={item.id} key={item.id}>
-                {item.name} · {lifecycleLabel(item.lifecycle)}
-              </option>
-            ))}
-          </select>
-          <small>The non-closed edition led by the first Chair.</small>
-        </div>
-        <div className="form-field">
-          <label htmlFor="bootstrap-chair">Convention Chair account email</label>
-          <input
-            id="bootstrap-chair"
-            type="email"
-            list="bootstrap-chair-options"
-            value={chairEmail}
-            onChange={(event) => setChairEmail(event.target.value)}
-            autoComplete="off"
-          />
-          <datalist id="bootstrap-chair-options">
-            {workspace?.chairs.map((chair) => (
-              <option value={chair.email} key={chair.email}>
-                {chair.display_name || chair.email}
-              </option>
-            ))}
-          </datalist>
-          <small>Type or select the exact email of a distinct active account.</small>
-        </div>
-        <div className="form-field full-field">
-          <label htmlFor="bootstrap-reason">Permanent reason</label>
-          <textarea
-            id="bootstrap-reason"
-            rows={3}
-            maxLength={500}
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-          />
-          <small>Explain why these people are establishing initial authority.</small>
-        </div>
-        <div className="form-field">
-          <label htmlFor="bootstrap-confirmation">
-            Type {selectedOrganization?.slug ?? "the organization slug"} to confirm
-          </label>
-          <input
-            id="bootstrap-confirmation"
-            value={confirmation}
-            onChange={(event) => setConfirmation(event.target.value)}
-            autoComplete="off"
-          />
-          <small>This prevents choosing the wrong organizer.</small>
-        </div>
-        <div className="form-field">
-          <label htmlFor="bootstrap-password">
-            Confirm the password for {accountLabel(context)}
-          </label>
-          <input
-            id="bootstrap-password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="current-password"
-          />
-          <small>The password is checked for this action and is never stored.</small>
-        </div>
-        {error && <p className="form-error full-field" role="alert">{error}</p>}
-        <div className="form-actions full-field">
-          <button className="primary-button" disabled={!ready || busy}>
-            {busy ? "Establishing leadership…" : "Establish leadership"}
-          </button>
-          <span>
-            Signed in as {workspace?.controller_email ?? accountLabel(context)}
-          </span>
-        </div>
-      </form>
-    </section>
-  );
-}
-
-function EmptyContext({
-  context,
-  onBootstrapped,
-}: {
-  context: MyContext;
-  onBootstrapped: (result: ConventionBootstrapResult) => Promise<void>;
-}) {
-  if (context.can_bootstrap_convention) {
-    return (
-      <main className="bootstrap-page">
-        <header className="bootstrap-page-heading">
-          <img
-            className="brand-mark"
-            src="/static/core/brand/maru_square_logo_no_text.png"
-            alt="Maru"
-          />
-          <div>
-            <p className="eyebrow">Administration Quick Start</p>
-            <h1>Prepare your first convention workspace</h1>
-            <p>
-              Organization, edition, and Chair records already live in Specialist
-              records. This guarded step connects them with accountable authority.
-            </p>
-          </div>
-        </header>
-        <ConventionBootstrapPanel
-          context={context}
-          onCompleted={onBootstrapped}
-        />
-        <div className="bootstrap-page-actions">
-          <a className="secondary-button" href="/admin/">
-            Open Specialist records
-          </a>
-          <button
-            className="text-button"
-            onClick={() =>
-              document.querySelector<HTMLFormElement>("#maru-logout-form")?.submit()
-            }
-          >
-            Sign out
-          </button>
-        </div>
-      </main>
-    );
-  }
+function EmptyContext({ context }: { context: MyContext }) {
   return (
     <main className="center-state">
       <img
@@ -3543,11 +3224,9 @@ const lifecycleActions: Record<
 
 function EditionLifecyclePanel({
   edition,
-  bootstrapJustCompleted,
   onTransitioned,
 }: {
   edition: EditionContext;
-  bootstrapJustCompleted: boolean;
   onTransitioned: (result: EditionTransitionResult) => void;
 }) {
   const actions = lifecycleActions[edition.lifecycle];
@@ -3611,16 +3290,6 @@ function EditionLifecyclePanel({
         </div>
         <StatusPill lifecycle={edition.lifecycle} />
       </div>
-      {bootstrapJustCompleted && edition.lifecycle === "draft" && (
-        <div className="success-notice" role="status">
-          <strong>Leadership established.</strong>
-          <span>
-            The next appropriate step is Start planning. This makes the edition
-            an active workspace; it does not open registration or mark the event
-            as currently running.
-          </span>
-        </div>
-      )}
       {!edition.can_transition ? (
         <div className="permission-state compact-permission">
           <span className="permission-lock" aria-hidden="true">◇</span>
@@ -3709,20 +3378,12 @@ function EditionLifecyclePanel({
 }
 
 function SetupView({
-  context,
   edition,
   canAccessAdvancedRecords,
-  canBootstrapConvention,
-  bootstrapJustCompleted,
-  onBootstrapped,
   onTransitioned,
 }: {
-  context: MyContext;
   edition: EditionContext;
   canAccessAdvancedRecords: boolean;
-  canBootstrapConvention: boolean;
-  bootstrapJustCompleted: boolean;
-  onBootstrapped: (result: ConventionBootstrapResult) => Promise<void>;
   onTransitioned: (result: EditionTransitionResult) => void;
 }) {
   const [readiness, setReadiness] = useState<ClosureReadiness>();
@@ -3825,16 +3486,8 @@ function SetupView({
           />
         </div>
       </div>
-      {canBootstrapConvention && (
-        <ConventionBootstrapPanel
-          context={context}
-          organizationId={edition.organization_id}
-          onCompleted={onBootstrapped}
-        />
-      )}
       <EditionLifecyclePanel
         edition={edition}
-        bootstrapJustCompleted={bootstrapJustCompleted}
         onTransitioned={onTransitioned}
       />
       {!canAccessAdvancedRecords ? (
@@ -4428,7 +4081,6 @@ export default function App({
   const [accessError, setAccessError] = useState<string>();
   const [filters, setFilters] = useState<ParticipationFilters>({ page: 1 });
   const [fatalError, setFatalError] = useState<string>();
-  const [bootstrapJustCompleted, setBootstrapJustCompleted] = useState(false);
 
   useEffect(() => {
     void loadMyContext()
@@ -4507,29 +4159,6 @@ export default function App({
       });
   }, [edition]);
 
-  async function completeBootstrap(
-    result: ConventionBootstrapResult,
-  ): Promise<void> {
-    const loaded = await loadMyContext();
-    const bootstrappedEdition = loaded.editions.find(
-      (candidate) => candidate.edition_id === result.edition.id,
-    );
-    if (!bootstrappedEdition) {
-      throw new Error(
-        "Leadership was established, but the new convention workspace could not be loaded.",
-      );
-    }
-    window.localStorage.setItem(
-      "maru.staff.edition",
-      bootstrappedEdition.edition_id,
-    );
-    window.history.replaceState({}, "", "/admin/workspace/?view=setup");
-    setContext(loaded);
-    setEdition(bootstrappedEdition);
-    setDestination("setup");
-    setBootstrapJustCompleted(true);
-  }
-
   function recordLifecycleTransition(result: EditionTransitionResult) {
     setEdition((current) =>
       current && current.edition_id === result.id
@@ -4548,16 +4177,11 @@ export default function App({
           }
         : current,
     );
-    setBootstrapJustCompleted(false);
   }
 
   if (fatalError) return <ErrorScreen message={fatalError} />;
   if (!context) return <LoadingScreen />;
-  if (!edition) {
-    return (
-      <EmptyContext context={context} onBootstrapped={completeBootstrap} />
-    );
-  }
+  if (!edition) return <EmptyContext context={context} />;
   const activeEdition = edition;
 
   function changeEdition(next: EditionContext) {
@@ -4569,7 +4193,6 @@ export default function App({
     setAccessWorkspace(undefined);
     setAccessOpen(false);
     setAccessError(undefined);
-    setBootstrapJustCompleted(false);
   }
 
   async function assignAccess(input: AssignAccessInput): Promise<void> {
@@ -4661,12 +4284,8 @@ export default function App({
       {destination === "security" && <SecurityView />}
       {destination === "setup" && (
         <SetupView
-          context={context}
           edition={edition}
           canAccessAdvancedRecords={context.can_access_advanced_records}
-          canBootstrapConvention={context.can_bootstrap_convention}
-          bootstrapJustCompleted={bootstrapJustCompleted}
-          onBootstrapped={completeBootstrap}
           onTransitioned={recordLifecycleTransition}
         />
       )}

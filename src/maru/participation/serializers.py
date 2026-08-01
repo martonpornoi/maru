@@ -130,7 +130,6 @@ class MyContextSerializer(serializers.Serializer[dict[str, object]]):
     display_name = serializers.CharField()
     preferred_language = serializers.CharField()
     can_access_advanced_records = serializers.BooleanField()
-    can_bootstrap_convention = serializers.BooleanField()
     memberships = MembershipContextSerializer(many=True)
     editions = EditionContextSerializer(many=True)
 

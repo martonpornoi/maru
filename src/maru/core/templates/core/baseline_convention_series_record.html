@@ -1,36 +1,17 @@
-{% load static tz %}
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light">
-    <meta name="theme-color" content="#071B3A">
-    <title>{% if convention_series %}{{ convention_series.name }}{% else %}Convention series unavailable{% endif %} · Maru</title>
-    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
-    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
-  </head>
-  <body>
-    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
-    <header class="baseline-header">
-      <img
-        class="baseline-logo"
-        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
-        alt="Maru"
-      >
-      <div class="baseline-account">
-        <span>{{ request.user.display_name }}</span>
-        <form method="post" action="{% url 'staff-logout' %}">
-          {% csrf_token %}
-          <button class="baseline-link-button" type="submit">Sign out</button>
-        </form>
-      </div>
-    </header>
+{% extends "core/baseline_admin_base.html" %}
+{% load tz %}
 
-    <div class="baseline-admin-layout">
-      {% include "core/_baseline_admin_navigation.html" with current_admin_page="series-record" %}
+{% block baseline_page_title %}{% if convention_series %}{{ convention_series.name }}{% else %}Convention series unavailable{% endif %} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  <a href="{% url 'baseline-admin-home' %}">Platform administration</a>
+  {% if organization %}
+    &rsaquo;
+    <a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>
+  {% endif %}
+  &rsaquo; {% if convention_series %}{{ convention_series.name }}{% else %}Convention series unavailable{% endif %}
+{% endblock %}
 
-      <main id="main-content" class="baseline-page baseline-page--form" data-page="convention-series-record" tabindex="-1">
+{% block baseline_content %}
         {% if series_record_load_failed %}
           <header class="baseline-page-heading">
             <p class="baseline-kicker">Convention series</p>
@@ -41,16 +22,6 @@
             <p>Try again after the database is available. No data was changed.</p>
           </div>
         {% else %}
-          {% if messages %}
-            <div class="baseline-messages" aria-live="polite">
-              {% for message in messages %}
-                <div class="baseline-notice baseline-notice--success" role="status">
-                  {{ message }}
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-
           <a
             class="baseline-back-link"
             href="{% url 'baseline-organization-record' organization.slug %}"
@@ -92,7 +63,7 @@
               </div>
               <div class="baseline-panel-actions">
                 <span class="baseline-count">{{ editions|length }} edition{{ editions|length|pluralize }}</span>
-                {% if organization.lifecycle != "closed" and convention_series.is_active %}
+                {% if organization.lifecycle != "closed" and convention_series.is_active and can_create_edition %}
                   <a
                     class="baseline-primary-link"
                     href="{% url 'baseline-create-event-edition' organization.slug convention_series.slug %}"
@@ -210,7 +181,4 @@
 
           {% include "core/_baseline_activity.html" %}
         {% endif %}
-      </main>
-    </div>
-  </body>
-</html>
+{% endblock %}

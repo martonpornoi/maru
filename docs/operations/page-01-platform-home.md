@@ -1,11 +1,14 @@
 # Page 1 platform administration home
 
-Status: Executable local Page 1
-Last updated: 2026-07-31
+Status: Page 1 backend and responsive-smoke verified in the unified shell;
+accessibility/state-matrix/owner rehearsal pending
+Last updated: 2026-08-01
 
 ADR 0031 replaces the accepted empty `/admin/` state with a read-only
 organization inventory. ADR 0032 subsequently adds a separate Page 2 creation
 route; the inventory remains free of inline editing and convention-owned work.
+ADR 0039 moves the inventory to `/admin/platform/organizations/` inside the
+one administration shell.
 
 ## Current local environment
 
@@ -20,11 +23,11 @@ Account kind: platform_administrator
 The password is local test data. Never reuse it in a deployment or real
 account.
 
-The database contains the platform administrator and the owner-created Draft
-organization `MaruCon`. It contains no convention series, editions,
-memberships, participation, registrations, volunteer applications, or
-workforce assignments. The `maru` and `marucon_rehearsal` databases are not the
-controlled rebuild database and must not be reset.
+This block records the historical controlled-rebuild login, not a promise about
+the database's current contents. Inspect the selected database before use and
+never delete owner-created records. For a deterministic populated tour, use
+`seed_demo_data`; for an isolated empty journey, follow the hands-on tutorial's
+separate-database procedure. Never reset `maru` or any other existing database.
 
 ## Start Page 1
 
@@ -36,21 +39,29 @@ uv run python src/manage.py migrate
 uv run python src/manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/admin/> and sign in as `admin`.
+Open <http://127.0.0.1:8000/admin/>, sign in as `admin`, and select
+**Platform administration → Organizations**. The direct route is
+<http://127.0.0.1:8000/admin/platform/organizations/>.
 
 ## Expected behavior
 
-- anonymous `/admin/` redirects to Sign in;
+- anonymous `/admin/platform/organizations/` redirects to Sign in;
 - the active platform administrator sees **Organizations**;
 - the page shows one **Organizations** row with a compact adjacent **+ Add**
   action;
 - an empty database shows **No organizations yet** and zero organizations;
 - the page explains **Platform access, not participation**;
-- **+ Add** opens `/admin/organizations/new/`;
-- each organization name opens its `/admin/organizations/<slug>/` record;
+- **+ Add** opens `/admin/platform/organizations/new/`;
+- each organization name opens its
+  `/admin/platform/organizations/<slug>/` record;
 - an ordinary account, including ordinary staff, receives `403`;
-- the old administration and Convention work HTML routes remain `404`; and
+- the same shell exposes only independently authorized Convention work and
+  specialist records, without another global menu; and
 - health and versioned JSON APIs remain available.
+
+Local desktop and 390-pixel smoke passed without horizontal overflow or
+console warnings. The complete empty/error/denied visual matrix, keyboard and
+automated accessibility checks, and owner-led tutorial remain release gates.
 
 The platform administrator may receive explicit platform-policy decisions and
 may be an attributed actor. It must have no organization membership,
@@ -61,14 +72,15 @@ account kind.
 
 ## Failure and recovery
 
-If the organization query fails, `/admin/` returns a read-only `503` page. The
+If the organization query fails, `/admin/platform/organizations/` returns a
+read-only `503` page. The
 HTML does not contain the database exception and no convention data changes.
 Check PostgreSQL and `/health/ready`, then retry.
 
-The accepted baseline is commit `db5af58` on
-`codex/page-by-page-rebuild`. Page 1 is developed on
-`codex/page-01-platform-home`. Switch back to the baseline branch if Page 1
-must be removed without disturbing the preserved backend.
+The accepted baseline is commit `db5af58` and Page 1's review landmark is
+`codex/page-01-platform-home`. Both are ancestors of the consolidation line.
+Inspect them with `git show`; do not switch or merge them into active work to
+change current routing.
 
 ## Next page
 

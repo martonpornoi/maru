@@ -1,15 +1,14 @@
 """API-first volunteer opportunity and self-service onboarding clients."""
 
-from typing import Never, cast
+from typing import cast
 from uuid import UUID
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.uploadedfile import UploadedFile
-from django.db.models import Exists, OuterRef, Prefetch
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -18,15 +17,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from maru.audit.models import AuditEvent
-from maru.audit.services import AuditRecord, append_audit
-from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
 from maru.authorization.policy import ResourceScope, decide
 from maru.events.models import EventEdition
 from maru.identity.models import Account
-from maru.organizations.models import Organization
-from maru.workforce.bootstrap import bootstrap_organization_workforce
 from maru.workforce.models import (
     Department,
     OnboardingDocumentRequest,
@@ -35,9 +28,6 @@ from maru.workforce.models import (
     VolunteerOpportunity,
 )
 from maru.workforce.serializers import (
-    ConventionBootstrapRequestSerializer,
-    ConventionBootstrapResultSerializer,
-    ConventionBootstrapWorkspaceSerializer,
     OnboardingDocumentRequestSerializer,
     OnboardingDocumentUploadSerializer,
     VolunteerApplicationSerializer,
@@ -55,262 +45,6 @@ def _account(request: Request) -> Account:
     if not isinstance(request.user, Account):
         raise PermissionDenied("Sign in to use workforce self-service.")
     return request.user
-
-
-def _bootstrap_audit(
-    *,
-    account: Account,
-    correlation_id: UUID,
-    operation: str,
-    outcome: str,
-    reason_code: str,
-    organization_id: UUID | None = None,
-    edition_id: UUID | None = None,
-    target_count: int | None = None,
-) -> None:
-    safe_metadata: dict[str, object] = {"policy_version": POLICY_VERSION}
-    if target_count is not None:
-        safe_metadata["target_count"] = target_count
-    append_audit(
-        AuditRecord(
-            principal_kind="account",
-            principal_id=account.id,
-            principal_context_id=None,
-            organization_id=organization_id,
-            event_edition_id=edition_id,
-            capability_code="authorization.manage_roles",
-            operation=operation,
-            target_type="workforce.convention_bootstrap",
-            target_id=organization_id,
-            outcome=outcome,
-            reason_code=reason_code,
-            correlation_id=correlation_id,
-            request_id=correlation_id,
-            source_channel="management-console",
-            obligations=("current_password", "exact_confirmation", "audit"),
-            elevated=True,
-            safe_metadata=safe_metadata,
-            retention_class="security-extended",
-        )
-    )
-
-
-def _bootstrap_controller(request: Request) -> tuple[Account, UUID]:
-    account = _account(request)
-    correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
-    if not account.is_active or not account.is_superuser:
-        _bootstrap_audit(
-            account=account,
-            correlation_id=correlation_id,
-            operation="workforce.convention_bootstrap.view",
-            outcome=AuditEvent.Outcome.DENY,
-            reason_code="bootstrap_superuser_required",
-        )
-        raise PermissionDenied(
-            "Initial convention leadership is available only to an active "
-            "bootstrap administrator.",
-            code="bootstrap_superuser_required",
-        )
-    return account, correlation_id
-
-
-def _bootstrap_workspace_payload(controller: Account) -> dict[str, object]:
-    authority_roles = RoleBundle.objects.filter(organization_id=OuterRef("pk"))
-    authority_assignments = RoleAssignment.objects.filter(
-        organization_id=OuterRef("pk")
-    )
-    direct_grants = CapabilityGrant.objects.filter(organization_id=OuterRef("pk"))
-    organization_rows = list(
-        Organization.objects.filter(lifecycle=Organization.Lifecycle.ACTIVE)
-        .annotate(
-            has_roles=Exists(authority_roles),
-            has_assignments=Exists(authority_assignments),
-            has_grants=Exists(direct_grants),
-        )
-        .values(
-            "id",
-            "slug",
-            "name",
-            "has_roles",
-            "has_assignments",
-            "has_grants",
-        )
-        .order_by("name", "id")
-    )
-    organizations = [
-        {
-            "id": row["id"],
-            "slug": row["slug"],
-            "name": row["name"],
-            "status": (
-                "established"
-                if row["has_roles"] or row["has_assignments"] or row["has_grants"]
-                else "eligible"
-            ),
-        }
-        for row in organization_rows
-    ]
-    editions = list(
-        EventEdition.objects.filter(
-            organization__lifecycle=Organization.Lifecycle.ACTIVE,
-        )
-        .exclude(
-            lifecycle__in=(
-                EventEdition.Lifecycle.ARCHIVED,
-                EventEdition.Lifecycle.CANCELLED,
-            )
-        )
-        .values(
-            "id",
-            "organization_id",
-            "slug",
-            "name",
-            "lifecycle",
-            "starts_on",
-            "ends_on",
-        )
-        .order_by("organization__name", "-starts_on", "name", "id")
-    )
-    chairs = list(
-        Account.objects.filter(is_active=True)
-        .exclude(id=controller.id)
-        .values("email", "display_name")
-        .order_by("display_name", "email")[:250]
-    )
-    return {
-        "controller_email": controller.email,
-        "organizations": organizations,
-        "editions": editions,
-        "chairs": chairs,
-    }
-
-
-class ConventionBootstrapWorkspaceView(APIView):
-    @extend_schema(
-        operation_id="workforce_retrieve_convention_bootstrap_workspace",
-        responses=ConventionBootstrapWorkspaceSerializer,
-    )
-    def get(self, request: Request) -> Response:
-        controller, correlation_id = _bootstrap_controller(request)
-        payload = _bootstrap_workspace_payload(controller)
-        target_count = len(cast(list[object], payload["chairs"]))
-        _bootstrap_audit(
-            account=controller,
-            correlation_id=correlation_id,
-            operation="workforce.convention_bootstrap.view",
-            outcome=AuditEvent.Outcome.ALLOW,
-            reason_code="bootstrap_workspace_available",
-            target_count=target_count,
-        )
-        return Response(ConventionBootstrapWorkspaceSerializer(payload).data)
-
-    @extend_schema(
-        operation_id="workforce_create_convention_bootstrap",
-        request=ConventionBootstrapRequestSerializer,
-        responses={201: ConventionBootstrapResultSerializer},
-    )
-    def post(self, request: Request) -> Response:
-        controller, correlation_id = _bootstrap_controller(request)
-        serializer = ConventionBootstrapRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        values = serializer.validated_data
-        organization_id = cast(UUID, values["organization_id"])
-        edition_id = cast(UUID, values["edition_id"])
-        organization = Organization.objects.filter(
-            id=organization_id,
-            lifecycle=Organization.Lifecycle.ACTIVE,
-        ).first()
-        edition = (
-            EventEdition.objects.filter(
-                id=edition_id,
-                organization_id=organization_id,
-            )
-            .exclude(
-                lifecycle__in=(
-                    EventEdition.Lifecycle.ARCHIVED,
-                    EventEdition.Lifecycle.CANCELLED,
-                )
-            )
-            .first()
-        )
-
-        def reject(detail: str, code: str) -> Never:
-            _bootstrap_audit(
-                account=controller,
-                correlation_id=correlation_id,
-                operation="workforce.convention_bootstrap",
-                outcome=AuditEvent.Outcome.DENY,
-                reason_code=code,
-                organization_id=organization_id,
-                edition_id=edition_id,
-            )
-            raise ApiValidationError({"detail": detail, "code": code})
-
-        if organization is None or edition is None:
-            reject(
-                "Choose a matching active organization and non-closed edition.",
-                "bootstrap_scope_invalid",
-            )
-        if (
-            cast(str, values["confirm_organization"]).casefold()
-            != organization.slug.casefold()
-        ):
-            reject(
-                f"Type {organization.slug} exactly to confirm.",
-                "bootstrap_confirmation_mismatch",
-            )
-        if not controller.check_password(cast(str, values["controller_password"])):
-            reject(
-                "The administrator password is incorrect.",
-                "bootstrap_password_invalid",
-            )
-        chair = Account.objects.filter(
-            email__iexact=cast(str, values["chair_email"]).strip(),
-            is_active=True,
-        ).first()
-        if chair is None or chair.id == controller.id:
-            reject(
-                "Choose a distinct active Convention Chair account.",
-                "bootstrap_chair_invalid",
-            )
-        try:
-            created = bootstrap_organization_workforce(
-                organization=organization,
-                edition=edition,
-                controller=controller,
-                chair=chair,
-                reason=cast(str, values["reason"]),
-                correlation_id=correlation_id,
-                source_channel="management-console",
-            )
-        except DjangoValidationError as error:
-            reject(error.messages[0], "bootstrap_unavailable")
-        payload = {
-            "organization": {
-                "id": organization.id,
-                "slug": organization.slug,
-                "name": organization.name,
-                "status": "established",
-            },
-            "edition": {
-                "id": edition.id,
-                "organization_id": organization.id,
-                "slug": edition.slug,
-                "name": edition.name,
-                "lifecycle": edition.lifecycle,
-                "starts_on": edition.starts_on,
-                "ends_on": edition.ends_on,
-            },
-            "chair": {
-                "email": chair.email,
-                "display_name": chair.display_name,
-            },
-            "created": created,
-        }
-        return Response(
-            ConventionBootstrapResultSerializer(payload).data,
-            status=status.HTTP_201_CREATED,
-        )
 
 
 class WorkforceStructureView(APIView):

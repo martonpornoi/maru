@@ -1,0 +1,287 @@
+{% extends "core/baseline_admin_base.html" %}
+
+{% block baseline_page_title %}Representation &amp; access{% if organization %} · {{ organization.name }}{% endif %} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if request.user.is_platform_administrator and organization %}
+    <a href="{% url 'baseline-admin-home' %}">Platform administration</a>
+  {% else %}
+    <a href="{% url 'my-representation-invitations' %}">My governance invitations</a>
+  {% endif %}
+  {% if organization %}
+    &rsaquo;
+    {% if can_view_organization %}
+      <a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>
+    {% else %}
+      {{ organization.name }}
+    {% endif %}
+  {% endif %}
+  &rsaquo; Representation &amp; access
+{% endblock %}
+
+{% block baseline_content %}
+  {% if representation_load_failed %}
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Organization representation</p>
+      <h1>Representation &amp; access is temporarily unavailable</h1>
+      <p class="baseline-intro">
+        Maru could not safely load the governance record. No partial record is
+        being shown; retry after the database is available.
+      </p>
+    </header>
+    <div class="baseline-state baseline-state--error" role="alert">
+      <h2>Nothing was changed</h2>
+      <p>The failed request did not grant, revoke, or partially apply authority.</p>
+    </div>
+  {% else %}
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">Organization representation</p>
+    <h1>Executive Board</h1>
+    <p class="baseline-intro">
+      Establish the accountable people who may operate {{ organization.name }}.
+      Platform administrators oversee this handoff but never become board members
+      or convention participants.
+    </p>
+  </header>
+
+  <section class="baseline-access-summary" aria-labelledby="effective-access-title">
+    <div>
+      <p class="baseline-kicker" id="effective-access-title">Effective access</p>
+      <p class="baseline-access-line">
+        <strong>Platform administrators</strong>
+        <span>may provision and activate the initial representation.</span>
+      </p>
+      {% if representation and representation.state == "active" %}
+        <p class="baseline-access-line">
+          <strong>Active Executive Board controllers</strong>
+          <span>may view the organization and manage its scoped authority.</span>
+        </p>
+      {% elif own_appointment %}
+        <p class="baseline-access-line">
+          <strong>You, as the exact invited account</strong>
+          <span>may view and answer only your invitation.</span>
+        </p>
+      {% endif %}
+    </div>
+    <details>
+      <summary>How is this calculated?</summary>
+      <p>
+        Maru derives this summary from platform authority, the representation
+        state, exact invitation ownership, active immutable role assignments,
+        and their effective terms. This is not a page-local access list.
+      </p>
+    </details>
+  </section>
+
+  {% if not representation %}
+    <section class="baseline-panel" aria-labelledby="provision-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Step 1</p>
+          <h2 id="provision-title">Create the representation root</h2>
+        </div>
+      </div>
+      {% if can_provision_representation %}
+        <form
+          class="baseline-form baseline-form-panel"
+          method="post"
+          action="{% url 'provision-organization-representation' organization.slug %}"
+          novalidate
+        >
+          {% csrf_token %}
+          {% if provision_form.non_field_errors %}
+            <div class="baseline-errors" role="alert">{{ provision_form.non_field_errors }}</div>
+          {% endif %}
+          {% include "core/_baseline_form_field.html" with field=provision_form.reason %}
+          <div class="baseline-form-actions">
+            <button type="submit">Create Executive Board</button>
+          </div>
+        </form>
+      {% else %}
+        <div class="baseline-state baseline-state--error" role="alert">
+          <h3>Representation has not been provisioned</h3>
+          <p>An active platform administrator must complete this first step.</p>
+        </div>
+      {% endif %}
+    </section>
+  {% else %}
+    <section class="baseline-panel" aria-labelledby="representation-state-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Governance state</p>
+          <h2 id="representation-state-title">{{ representation.get_state_display }}</h2>
+        </div>
+        <span class="baseline-count">Version {{ representation.aggregate_version }}</span>
+      </div>
+      <dl class="baseline-fact-grid">
+        <div>
+          <dt>Representation</dt>
+          <dd>{{ representation.name }}</dd>
+        </div>
+        <div>
+          <dt>Organization</dt>
+          <dd>{{ organization.name }} · {{ organization.get_lifecycle_display }}</dd>
+        </div>
+        <div>
+          <dt>Required controllers</dt>
+          <dd>At least two distinct accepted accounts</dd>
+        </div>
+      </dl>
+    </section>
+
+    {% if can_invite_representation %}
+      <section class="baseline-panel" aria-labelledby="invite-controller-title">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">Step 2</p>
+            <h2 id="invite-controller-title">Invite an exact account</h2>
+          </div>
+        </div>
+        <form
+          class="baseline-form baseline-form-panel"
+          method="post"
+          action="{% url 'invite-organization-controller' organization.slug %}"
+          novalidate
+        >
+          {% csrf_token %}
+          {% if invite_form.non_field_errors %}
+            <div class="baseline-errors" role="alert">{{ invite_form.non_field_errors }}</div>
+          {% endif %}
+          {% include "core/_baseline_form_field.html" with field=invite_form.account_email %}
+          {% include "core/_baseline_form_field.html" with field=invite_form.reason %}
+          <div class="baseline-form-actions">
+            <button type="submit">Invite controller</button>
+          </div>
+        </form>
+      </section>
+    {% endif %}
+
+    {% if show_appointment_directory %}
+    <section class="baseline-panel" aria-labelledby="appointments-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Controller terms</p>
+          <h2 id="appointments-title">Executive Board appointments</h2>
+        </div>
+        <span class="baseline-count">
+          {% if appointment_history_truncated %}Latest {% endif %}{{ appointments|length }}
+        </span>
+      </div>
+      {% if appointments %}
+        <div class="baseline-table-wrap">
+          <table class="baseline-table">
+            <thead>
+              <tr>
+                <th scope="col">Person</th>
+                <th scope="col">Role</th>
+                <th scope="col">State</th>
+                <th scope="col">Authority</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for appointment in appointments %}
+                <tr>
+                  <th scope="row" data-label="Person">
+                    <span class="baseline-record-name">{{ appointment.account.display_name|default:"Maru account" }}</span>
+                    {% if can_manage_representation %}
+                      <span class="baseline-record-slug">{{ appointment.account.email }}</span>
+                    {% endif %}
+                  </th>
+                  <td data-label="Role">{{ appointment.get_role_display }}</td>
+                  <td data-label="State">{{ appointment.get_state_display }}</td>
+                  <td data-label="Authority">
+                    {% if appointment.role_assignment_id %}Active role assignment{% else %}None yet{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if appointment_history_truncated %}
+          <p class="baseline-help">
+            Showing the {{ appointment_history_limit }} most recently invited appointments.
+          </p>
+        {% endif %}
+      {% else %}
+        <div class="baseline-state" data-state="empty">
+          <h3>No visible appointments</h3>
+          <p>Invite controllers or sign in as the exact invited account.</p>
+        </div>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {% if own_appointment and own_appointment.state == "invited" and response_form %}
+      <section class="baseline-panel" aria-labelledby="answer-invitation-title">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">Your decision</p>
+            <h2 id="answer-invitation-title">Answer the invitation</h2>
+          </div>
+        </div>
+        <form
+          class="baseline-form baseline-form-panel"
+          method="post"
+          action="{% url 'respond-organization-controller-invitation' organization.slug own_appointment.id %}"
+          novalidate
+        >
+          {% csrf_token %}
+          {{ response_form.expected_version }}
+          {% if response_form.non_field_errors or response_form.expected_version.errors %}
+            <div class="baseline-errors" role="alert">
+              {{ response_form.non_field_errors }}
+              {{ response_form.expected_version.errors }}
+            </div>
+          {% endif %}
+          {% include "core/_baseline_form_field.html" with field=response_form.decision %}
+          <div class="baseline-form-actions">
+            <button type="submit">Record my decision</button>
+          </div>
+        </form>
+      </section>
+    {% endif %}
+
+    {% if can_activate_representation and activation_form %}
+      <section class="baseline-panel baseline-danger-zone" aria-labelledby="activate-board-title">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">Step 3 · Root authority</p>
+            <h2 id="activate-board-title">Activate governance</h2>
+          </div>
+        </div>
+        <form
+          class="baseline-form baseline-form-panel"
+          method="post"
+          action="{% url 'activate-organization-representation' organization.slug %}"
+          novalidate
+        >
+          {% csrf_token %}
+          {{ activation_form.expected_version }}
+          {% if activation_form.non_field_errors or activation_form.expected_version.errors %}
+            <div class="baseline-errors" role="alert">
+              {{ activation_form.non_field_errors }}
+              {{ activation_form.expected_version.errors }}
+            </div>
+          {% endif %}
+          {% include "core/_baseline_form_field.html" with field=activation_form.confirmation_name %}
+          {% include "core/_baseline_form_field.html" with field=activation_form.reason %}
+          <p class="baseline-help">
+            Activation makes the organization Active and grants the accepted
+            controllers the immutable Executive Board role under cross-approval.
+          </p>
+          <div class="baseline-form-actions">
+            <button type="submit">Activate Executive Board</button>
+          </div>
+        </form>
+      </section>
+    {% endif %}
+  {% endif %}
+
+  {% if can_view_organization %}
+    <p>
+      <a class="baseline-back-link" href="{% url 'baseline-organization-record' organization.slug %}">
+        Back to organization record
+      </a>
+    </p>
+  {% endif %}
+  {% endif %}
+{% endblock %}

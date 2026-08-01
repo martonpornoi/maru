@@ -1,7 +1,7 @@
 # Synthetic demonstration data
 
-Status: Implemented synthetic fixture and bounded admin-first rehearsal support
-Last updated: 2026-07-31
+Status: Implemented synthetic fixture; public-roster rehearsal retired fail-closed
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
@@ -105,36 +105,21 @@ The optional `--password` argument supports deliberate local test overrides.
 The default is intentionally public and must never be reused for any real
 account or environment.
 
-## Marucon admin-first rehearsal
+## Retired public-roster rehearsal
 
-`seed_marucon_rehearsal` is a separate local/test-only educational scenario.
-It requires a clean account table so the deterministic `admin` superuser is
-truthfully the first account. It creates Marucon Organizers, the Marucon
-series, the preparing Marucon 2031 edition, the initial dual-control Chair,
-nested workforce structure, active appointments, a published registration
-template, an inherited active registration configuration, and reviewed
-post-submission profile extension fields.
+ADR 0042 retires `seed_marucon_rehearsal` and the public-roster path. The former
+scenario implementation is deleted from the production package. The small
+compatibility command accepts its former argument names only to return one
+stable retirement error before password validation, file or network access,
+and database mutation. The former network entry point always raises its retired
+exception before URL handling. The local HTML parser remains solely for bounded
+synthetic taxonomy unit tests; it is not a supported data-import workflow.
 
-The network form requires explicit acknowledgement:
-
-```powershell
-uv run python src/manage.py seed_marucon_rehearsal --accept-public-roster
-```
-
-Only public handles, department names/descriptions, and role labels are
-imported from the configured HTTPS Awoostria page. The adapter ignores
-recruiting-call headings and never imports images or contact data. It generates
-collision-safe `.invalid` emails and assigns the documented local-only shared
-password `M4rucon-Rehearsal-2031!`. Automated tests never fetch or check in the
-live roster; `--roster-file` drives the same scenario with synthetic semantic
-HTML.
-
-The command is atomic and idempotent for fixture-owned rows. It refuses a
-non-empty account table owned by another fixture rather than deleting,
-renumbering, or pretending its administrator was first. The educational smoke
-test covers handle sign-in, hierarchy visibility, multiple roles, inherited
-registration, hidden staff questions, authoritative Infinity eligibility, and
-rerun stability.
+Use `seed_demo_data` for every local educational journey. It creates only
+synthetic `.invalid` identities and establishes active Executive Boards through
+the real Page 8 representation services. Page 8, **Representation & access**,
+is the supported first-authority handoff; the platform administrator is the
+operator and never a convention subject.
 
 ## Safety and failure behavior
 

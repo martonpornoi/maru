@@ -1,7 +1,7 @@
 # Events module
 
-Status: Implemented edition aggregate, shared creation/profile commands,
-mounted Pages 6–7, and authorized lifecycle kernel
+Status: Implemented edition aggregate, shared creation/profile commands, Pages
+6–7, authorized lifecycle kernel, and scoped unified-shell context
 Last updated: 2026-08-01
 
 ## Purpose and requirements
@@ -132,18 +132,16 @@ lifecycle mutation requires `events.transition`, a reason, and audit.
 
 ## Bootstrap administration
 
-The current baseline mounts Page 6 edition creation beneath an exact series
-and Page 7 as the edition record/home. Progressive navigation reveals only the
-selected organization, series, and edition. Page 7 supports explicit POST-only
-**Use as working edition** and **Clear working edition** actions. The session
+ADR 0039 mounts Page 6 edition creation and Page 7 record/home below the exact
+organization and series in `/admin/platform/`. Progressive navigation reveals
+only the selected organization, series, and edition. Page 7 supports explicit
+POST-only **Use as working edition** and **Clear working edition** actions. The session
 selection is display/query context, creates no authority or participation, and
 is not performed automatically after creation.
 
-The first effective-access summary labels active platform-administrator
-oversight separately from convention participation. It is intentionally
-static/provisional until M2 adds organization representation and department/
-resource scope; it does not claim that convention groups or people have
-access.
+The effective-access summary separates active platform oversight from
+organization-scoped Board view and exact-edition profile authority. It remains
+provisional until M2 adds department/resource/field scope.
 
 Edition lists show convention name, organization, series, lifecycle, dates,
 time zone, and aggregate version with search and scope filters. Lifecycle is
@@ -162,9 +160,17 @@ replacement must pass through the capability-checked, audited Convention
 work/API workflow so raw organization IDs, reviewer IDs, or manual
 timestamps cannot bypass the domain service.
 
-ADR 0008's preserved workspace selector remains relevant behavior evidence.
-The controlled baseline now exposes the smaller explicit Page 7 session action
-rather than mounting the former selector or `All foundation data` workflow.
+ADR 0008's workspace selector is mounted in the unified shell. Platform
+administrators may select any edition; ordinary accounts see only editions
+covered by current unrevoked role assignments or grants with valid delegation
+ancestry. Future, expired, revoked, foreign, or stale session choices are
+excluded and cleared. **All foundation data** clears display/query context; it
+does not broaden authority. Page 7 also exposes its exact scoped POST action.
+Select, rejected-clear, and clear change only the authenticated session: tests
+freeze capability grants, role assignments, memberships, participation,
+registration, audit, domain-event, and outbox counts across each action,
+including when `events.view_basic` comes from the canonical Executive Board
+assignment.
 
 ## Failure and concurrency
 
@@ -206,7 +212,9 @@ PostgreSQL tests cover creation, idempotent replay/conflict, strict inputs,
 profile update/no-op/stale behavior, date/locale/currency/slug validation,
 scope and version triggers, receipt immutability, populated downgrade refusal,
 audit/event/outbox rollback, Pages 6–7, strict explicit working context, and
-non-participation. They also cover the
+non-participation. Working-context tests additionally prove platform, direct-
+grant, and canonical Executive Board selection/clear never write authority,
+relationship, registration, audit, event, or outbox state. They also cover the
 full lifecycle, invalid transitions, reason, scope
 triggers, date constraints, raw lifecycle bypass, append-only transition
 history, archived model/bulk mutation, archive snapshot orchestration,

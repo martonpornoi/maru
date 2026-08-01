@@ -1,6 +1,6 @@
 # Development setup
 
-Status: Production-consolidation M1 development environment
+Status: Production-consolidation M1.1/M2.1 locally migrated and smoke-verified
 Last updated: 2026-08-01
 
 ## Prerequisites
@@ -43,11 +43,21 @@ uv run python src/manage.py createsuperuser
 
 The account uses its email address or optional unique login handle to sign in
 at <http://127.0.0.1:8000/admin/>. A superuser is explicitly classified as a
-non-participating platform administrator. The current default browser
-experience contains one progressive menu and Pages 1–7 from organization
-inventory through edition record/working context. The preserved setup guide,
-specialist records, public registration, and volunteer pages remain unmounted.
-Local password authentication is not the production identity system.
+non-participating platform administrator. ADR 0039 makes one `/admin/` shell
+the default, with Convention work, permission-filtered specialist records, and
+Pages 1–8 below `/admin/platform/`. Backend route and authorization
+verification passes. Active scoped accounts do not need Django `is_staff`
+merely to enter the Maru shell or use their allowed organization workflows;
+specialist records still require independent staff/model permissions. Local password
+authentication is not the production identity system.
+
+ADR 0040 adds a Page 8 representation handoff to that selected-organization
+route space. Its schema, service, HTML, authorization, synthetic-fixture,
+populated/fresh migration, local restore, and responsive browser checks pass.
+Do not exercise it against an important database or infer Board members from
+existing accounts; use the isolated synthetic hands-on tutorial after applying
+all current migrations. The final consolidated suite, representative
+deployment/PITR rehearsal, accessibility, and owner tutorial remain open.
 
 The verified local baseline contains only:
 
@@ -74,17 +84,42 @@ environment. Do not downgrade populated M1 data to old code or bypass the
 fences; use a reviewed forward fix or approved backup/PITR recovery. See the
 [edition workspace migration and recovery runbook](../operations/edition-workspace-migration-and-recovery.md).
 
-### Preserved pre-reset workflows
+### M2.1 governance and convention-subject boundary
+
+Organizations `0008` adds the representation records. Organizations `0009`
+through `0011` enforce immutable Executive Board provenance, exact active
+authority, eligible principals, and global emergency controller containment.
+Organizations `0012`, participation `0004`, registration `0031`, and workforce
+`0003` install IDN-011 database guards so a platform administrator cannot be a
+convention subject even through bulk or direct-SQL writes or concurrent account
+reclassification.
+
+These migrations require stopped writers. Run the privacy-minimized readiness
+check before and after applying them:
+
+```powershell
+uv run python src/manage.py check_representation_readiness
+uv run python src/manage.py migrate
+uv run python src/manage.py check_representation_readiness
+```
+
+Do not use `--fake`, disable the triggers, or roll old writers over the new
+guards. Follow the [Executive Board recovery runbook](../operations/executive-board-migration-and-recovery.md)
+and [IDN-011 subject-boundary runbook](../operations/idn011-convention-subject-migration-and-recovery.md).
+
+### Unified shell and preserved workflows
 
 The domain services, APIs, fixtures, and former browser implementation remain
-in the repository as tested evidence during the rebuild. The following
-commands are operator/recovery references; their old HTML pages are not mounted
-by default.
+in the repository as tested evidence. ADR 0039 is reusing their record-oriented
+grammar without replacing current service or policy boundaries. The following
+commands remain operator/recovery references; a mounted screen does not make a
+direct model write the supported workflow.
 
-In the preserved pre-reset URL configuration, an operator could create an
-Organization, Convention Series, Event Edition, and separate Chair through
-specialist record pages, then complete **Establish convention leadership** in
-Convention work. Those pages are not mounted in the current baseline.
+In the pre-reset workflow, an operator could create an Organization,
+Convention Series, Event Edition, and separate Chair through specialist record
+pages, then complete **Establish convention leadership** in Convention work.
+That web ceremony and its `/api/v1/management/convention-bootstrap` endpoint
+are not mounted now. They remain historical behavior evidence only.
 
 The equivalent command remains available for recovery and automation:
 
@@ -98,31 +133,40 @@ uv run python src/manage.py bootstrap_convention `
   --confirm-organization ORGANIZATION_SLUG
 ```
 
+ADR 0040 supersedes this broad bootstrap as the normal first-authority path.
+The command and underlying service remain operator/recovery evidence, not a
+browser or public API workflow. Do not use them for a new Draft organization or
+as an alternative to Page 8. They may be considered only by an approved legacy-
+reconciliation procedure because they also create edition, workforce, and
+participation relationships.
+
 See the
 [clean convention onboarding walkthrough](../operations/clean-convention-onboarding-walkthrough.md)
 for the complete no-demo-database rehearsal.
 
-### Admin-first Marucon rehearsal
+### Retired public-roster rehearsal
 
-Use a new, separately named empty database. The command refuses a database
-whose first account is not its deterministic administrator, never resets an
-existing database, and imports only public handles, department descriptions,
-and role labels. Images and contact data are excluded.
+`seed_marucon_rehearsal` is retired. It remains registered only so old scripts
+fail with one explanatory `CommandError`; every former option is rejected
+before password validation, file access, network access, or database writes.
+Maru does not import live volunteer handles into rehearsal accounts.
+
+Use the deterministic synthetic fixture instead:
 
 ```powershell
-$env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/marucon_rehearsal"
-uv run python src/manage.py migrate
-uv run python src/manage.py seed_marucon_rehearsal --accept-public-roster
+uv run python src/manage.py seed_demo_data
 ```
 
-The output reports the `admin` login, Chair handle, counts, registration URL,
-and shared local-only password `M4rucon-Rehearsal-2031!`. The external source
-must be acknowledged explicitly on every network import. To rehearse without
-public personal data, pass `--roster-file` with synthetic semantic HTML.
-Automated tests use only such a synthetic miniature.
+The synthetic fixture exercises the real Page 8 Executive Board provision,
+invitation, self-response, and two-controller activation services while
+keeping the platform administrator outside convention relationships. Continue
+the hands-on journey through **Representation & access** under the selected
+organization in `/admin/`.
 
-The former public registration pages are intentionally unmounted during
-production consolidation. Registration APIs and services remain preserved.
+ADR 0039's intended URL set can make the preserved public registration pages
+reachable again. Registration APIs and services remain authoritative, and the
+browser journey stays partial/deployment-gated until its current integration
+and release evidence pass.
 
 ## Synthetic demonstration data
 
@@ -161,21 +205,26 @@ uv run python src/manage.py seed_demo_data --reset-passwords
 `--password` remains available for an intentional local override. Never reuse
 the documented demo password for a real account or deployment.
 
-The current schema now includes initial workforce departments, positions,
+The current schema now includes an active two-controller Executive Board for
+each synthetic organization, established through the real representation
+services, plus initial workforce departments, positions,
 volunteer opportunities, applications, onboarding agreements, and position
 assignments. Shifts, programme, dealer-table, accommodation, and case records
 remain future modules. Registration is a real vertical with a local/test-only
 payment adapter. See
 [`demo-data.md`](../modules/demo-data.md) for the exact boundary.
 
-Those persona accounts and records remain useful for backend permission tests,
-but the former cockpit, reports, Front Desk, and attendee pages are not current
-browser routes.
+Those persona accounts and records remain useful for backend permission tests.
+The former cockpit, reports, Front Desk, and attendee pages are preserved
+workflows; route reachability during ADR 0039 does not make them accepted or
+production-ready current journeys.
 
-## Preserved Convention work frontend
+## Convention work frontend
 
-The bundle is checked into Django's app static directory but is not mounted by
-the ADR 0030 baseline. To verify the preserved source while it remains:
+The bundle is checked into Django's app static directory and mounted at
+`/admin/workspace/` inside the shared shell. The route requires an active
+platform administrator or current organization/edition authority. To verify
+its source independently of browser rehearsal:
 
 ```powershell
 cd frontends/staff-console
@@ -209,6 +258,11 @@ Complete local gate:
 ./scripts/check.ps1
 ./scripts/verify-production-settings.ps1
 ```
+
+The current dependency audit evidence is clean: `pip-audit` reports no known
+Python package vulnerability and `pnpm audit` reports no known frontend package
+vulnerability. Rerun both for a release because advisory data changes over
+time; a clean dependency scan does not replace application security testing.
 
 Database tests must run on PostgreSQL. SQLite is not a supported substitute.
 

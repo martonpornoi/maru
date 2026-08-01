@@ -7,19 +7,21 @@ from django.contrib import admin
 from django.db.models import Count, QuerySet
 from django.http import HttpRequest
 
-from maru.core.admin import NoDeleteAdminMixin
+from maru.core.admin import ReadOnlyAdminMixin
 from maru.events.admin_context import EditionContextAdmin
 from maru.organizations.forms import OrganizationAdminForm
 from maru.organizations.models import (
     ConventionSeries,
     Organization,
     OrganizationMembership,
+    OrganizationRepresentation,
+    RepresentationAppointment,
 )
 
 
 @admin.register(Organization)
 class OrganizationAdmin(
-    NoDeleteAdminMixin,
+    ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
     form = OrganizationAdminForm
@@ -108,7 +110,7 @@ class OrganizationAdmin(
 
 @admin.register(ConventionSeries)
 class ConventionSeriesAdmin(
-    NoDeleteAdminMixin,
+    ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
     edition_context_lookup = "id"
@@ -171,7 +173,7 @@ class ConventionSeriesAdmin(
 
 @admin.register(OrganizationMembership)
 class OrganizationMembershipAdmin(
-    NoDeleteAdminMixin,
+    ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
     edition_context_lookup = "organization_id"
@@ -218,4 +220,86 @@ class OrganizationMembershipAdmin(
                 "fields": ("id", "created_at", "updated_at"),
             },
         ),
+    )
+
+
+@admin.register(OrganizationRepresentation)
+class OrganizationRepresentationAdmin(
+    ReadOnlyAdminMixin,
+    EditionContextAdmin,
+):
+    edition_context_lookup = "organization_id"
+    edition_context_value_attribute = "organization_id"
+    list_display = (
+        "name",
+        "organization",
+        "state",
+        "aggregate_version",
+        "activated_at",
+    )
+    list_filter = ("state",)
+    search_fields = ("organization__name", "organization__slug", "name")
+    list_select_related = ("organization", "provisioned_by", "activated_by")
+    ordering = ("organization__name",)
+    readonly_fields = (
+        "id",
+        "organization",
+        "code",
+        "name",
+        "state",
+        "aggregate_version",
+        "provisioned_by",
+        "provisioning_reason",
+        "activated_by",
+        "activation_reason",
+        "activated_at",
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(RepresentationAppointment)
+class RepresentationAppointmentAdmin(
+    ReadOnlyAdminMixin,
+    EditionContextAdmin,
+):
+    edition_context_lookup = "representation__organization_id"
+    edition_context_value_attribute = "organization_id"
+    list_display = (
+        "account",
+        "representation",
+        "role",
+        "state",
+        "invited_at",
+        "activated_at",
+    )
+    list_filter = ("role", "state")
+    search_fields = (
+        "account__display_name",
+        "account__email",
+        "representation__organization__name",
+    )
+    list_select_related = (
+        "account",
+        "representation",
+        "representation__organization",
+        "role_assignment",
+    )
+    ordering = ("representation__organization__name", "account__display_name")
+    readonly_fields = (
+        "id",
+        "representation",
+        "account",
+        "role",
+        "state",
+        "invitation_version",
+        "invited_by",
+        "invited_at",
+        "responded_at",
+        "activated_at",
+        "ended_at",
+        "reason",
+        "role_assignment",
+        "created_at",
+        "updated_at",
     )

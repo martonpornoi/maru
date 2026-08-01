@@ -1,12 +1,10 @@
-"""Explicit local-only adapter for the public Awoostria volunteer roster."""
+"""Synthetic roster parser with the former network adapter retired."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urlparse
-from urllib.request import Request, urlopen
 
 AWOOSTRIA_ROSTER_URL = "https://awoostria.at/about-us/our-volunteers"
 MINIMUM_ROSTER_ACCOUNTS = 2
@@ -16,6 +14,14 @@ NON_PERSON_HEADINGS = frozenset(
         "open positions",
     }
 )
+NETWORK_IMPORT_RETIRED_MESSAGE = (
+    "Public roster network import is retired. Use synthetic taxonomy data with "
+    "seed_demo_data; never import live volunteer handles into a rehearsal fixture."
+)
+
+
+class PublicRosterNetworkImportRetiredError(RuntimeError):
+    """Raised before any network I/O for the retired live-roster adapter."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,6 +120,8 @@ class _RosterParser(HTMLParser):
 
 
 def parse_public_roster(html: str) -> tuple[PublicRosterDepartment, ...]:
+    """Parse a bounded synthetic HTML taxonomy for local tests only."""
+
     parser = _RosterParser()
     parser.feed(html)
     departments = tuple(
@@ -138,27 +146,15 @@ def parse_public_roster(html: str) -> tuple[PublicRosterDepartment, ...]:
 
 
 def load_public_roster_file(path: Path) -> tuple[PublicRosterDepartment, ...]:
+    """Load a local synthetic taxonomy fixture without any network access."""
+
     return parse_public_roster(path.read_text(encoding="utf-8"))
 
 
 def fetch_awoostria_roster(
     url: str = AWOOSTRIA_ROSTER_URL,
 ) -> tuple[PublicRosterDepartment, ...]:
-    parsed = urlparse(url)
-    if parsed.scheme != "https" or parsed.hostname not in {
-        "awoostria.at",
-        "www.awoostria.at",
-    }:
-        raise ValueError("The rehearsal roster URL must be HTTPS on awoostria.at.")
-    request = Request(  # noqa: S310
-        url,
-        headers={
-            "User-Agent": (
-                "Maru local rehearsal importer/1.0 "
-                "(public volunteer roles; no contact or image import)"
-            )
-        },
-    )
-    with urlopen(request, timeout=30) as response:  # noqa: S310
-        html = response.read().decode("utf-8")
-    return parse_public_roster(html)
+    """Reject the retired live-roster adapter before URL or network handling."""
+
+    del url
+    raise PublicRosterNetworkImportRetiredError(NETWORK_IMPORT_RETIRED_MESSAGE)

@@ -1,7 +1,7 @@
 # Participation module
 
 Status: Implemented V01 kernel and initial staff projection  
-Last updated: 2026-07-27
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
@@ -19,11 +19,16 @@ capacity labels for IDN-003, IDN-011, and ARC-001 through ARC-004.
 - contribution summary and opt-in public-history flags.
 
 Platform administrators are operational actors rather than convention people;
-participation validation rejects that account classification before saving.
+model validation and PostgreSQL reject that account classification as a
+participation subject. The database guard locks the identity row during writes,
+and a deferred identity trigger rejects reclassification while any edition
+participation remains.
 
 PostgreSQL triggers reject organization/edition mismatches and any ordinary
 participation or capacity mutation after edition archive. Uniqueness exists at
-the database boundary.
+the database boundary. Participation `0004` installs its IDN-011 write and
+reclassification guards before a final count-only existing-data preflight; see
+[`idn011-convention-subject-migration-and-recovery.md`](../operations/idn011-convention-subject-migration-and-recovery.md).
 
 ## Public queries and API
 
@@ -89,7 +94,9 @@ PostgreSQL tests cover cross-scope model and raw-update rejection, duplicate
 participation/capacity, archive immutability, snapshot timing, self-only API
 projection, staff field minimization, staff list/detail audit, filters,
 anonymous denial, unknown-target hiding, and two-tenant/two-edition
-non-disclosure.
+non-disclosure. IDN-011 tests also cover bulk insertion, raw reassignment,
+account-kind reclassification, legacy-row migration refusal, and concurrent
+subject writes versus reclassification.
 
 ## Limitations
 

@@ -298,6 +298,27 @@ h1 {
   background: #edf5ea;
 }
 
+.baseline-notice--error {
+  border-color: #e0b4af;
+  border-left-color: #9e3028;
+  color: #76241e;
+  background: #f9e8e5;
+}
+
+.baseline-notice--warning {
+  border-color: #d9b873;
+  border-left-color: #956822;
+  color: #5c3c12;
+  background: #fbf7ee;
+}
+
+.baseline-notice--info {
+  border-color: #9caec4;
+  border-left-color: #365781;
+  color: #183052;
+  background: #f1f4f8;
+}
+
 .baseline-state {
   padding: clamp(1.5rem, 5vw, 3rem);
 }
@@ -812,6 +833,88 @@ button:focus-visible {
   font-weight: 700;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* Pages 1–7 keep their task-specific components inside Django's admin shell. */
+.baseline-unified-admin {
+  color: var(--body-fg);
+  background: var(--body-bg);
+  font-family: var(--font-family-primary);
+}
+
+.baseline-unified-admin .baseline-page {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.baseline-unified-admin .baseline-page--form {
+  max-width: 68rem;
+}
+
+.baseline-unified-admin .baseline-page h1 {
+  margin: 0.5rem 0;
+  color: var(--body-fg);
+  font-size: 1.55rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.25;
+}
+
+.baseline-unified-admin .baseline-intro,
+.baseline-unified-admin .baseline-record-meta,
+.baseline-unified-admin .baseline-help,
+.baseline-unified-admin .baseline-state p,
+.baseline-unified-admin .baseline-boundary p {
+  color: var(--body-quiet-color);
+}
+
+.baseline-unified-admin .baseline-panel,
+.baseline-unified-admin .baseline-boundary,
+.baseline-unified-admin .baseline-access-summary,
+.baseline-unified-admin .baseline-context-control,
+.baseline-unified-admin .baseline-form-actions--sticky {
+  border-color: var(--hairline-color);
+  background: var(--body-bg);
+}
+
+.baseline-unified-admin .baseline-panel-heading {
+  padding: 0.65rem 1rem;
+  border-color: var(--hairline-color);
+  color: var(--header-link-color);
+  background: var(--primary);
+}
+
+.baseline-unified-admin .baseline-panel-heading h2,
+.baseline-unified-admin .baseline-panel-heading .baseline-kicker {
+  color: inherit;
+}
+
+.baseline-unified-admin .baseline-form input,
+.baseline-unified-admin .baseline-form select,
+.baseline-unified-admin .baseline-form textarea {
+  border-color: var(--border-color);
+  color: var(--body-fg);
+  background: var(--body-bg);
+}
+
+.baseline-unified-admin .baseline-form button,
+.baseline-unified-admin .baseline-primary-link,
+.baseline-unified-admin .baseline-primary-button {
+  border-color: var(--button-bg);
+  color: var(--button-fg);
+  background: var(--button-bg);
+}
+
+.baseline-unified-admin .baseline-table thead th {
+  color: var(--body-quiet-color);
+  background: var(--darkened-bg);
+}
+
+.baseline-unified-admin .baseline-table th,
+.baseline-unified-admin .baseline-table td,
+.baseline-unified-admin .baseline-activity-list li {
+  border-color: var(--hairline-color);
 }
 
 @media (max-width: 32rem) {

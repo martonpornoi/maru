@@ -1,17 +1,20 @@
 # Page 5 contract: Convention-series record
 
-- Status: Implemented and locally verified; owner rehearsal and recorded
-  accessibility/visual-state residuals remain
-- Route: `/admin/organizations/<organization-slug>/series/<series-slug>/`
+- Status: Implemented and backend-verified for platform oversight and scoped
+  Executive Board authority; owner/browser rehearsal and visual-state
+  residuals remain
+- Route: `/admin/platform/organizations/<organization-slug>/series/<series-slug>/`
 - API: `GET` and `PUT /api/v1/organizations/<organization-id>/series/<series-id>`
-- Requirements: UX-013, UX-019, UX-020, UX-021, INT-001, NFR-009
-- Decisions: ADRs 0037–0038
+- Requirements: IDN-004, IDN-012, UX-012, UX-013, UX-019 through UX-021,
+  UX-024, INT-001, NFR-009
+- Decisions: ADRs 0037–0040
 
 ## Purpose and primary user
 
-Let an active Maru platform administrator revisit and maintain one recurring
-convention brand, inspect its dated editions, and continue to edition creation
-without changing tenant ownership or stable identity.
+Let explicit platform oversight or active organization-scoped convention
+authority revisit and maintain one recurring convention brand, inspect its
+dated editions, and continue to edition creation without changing tenant
+ownership or stable identity.
 
 The page is a series record, not a convention workspace. Platform attribution
 does not create organization membership, representation, edition
@@ -55,7 +58,7 @@ links.
 
 | Field | Type and format | Bounds; null/blank | Normalization | Classification and writer | Lifecycle and retention |
 | --- | --- | --- | --- | --- | --- |
-| `name` | Unicode text | 1–160 characters; null/blank forbidden | Trim ends and collapse internal whitespace | C1 setup data; current browser/API: active platform administrator | Editable unless parent organization is Closed; retained with series |
+| `name` | Unicode text | 1–160 characters; null/blank forbidden | Trim ends and collapse internal whitespace | C1 setup data; browser platform oversight or `organizations.change_series`; current API remains platform-only | Editable unless parent organization is Closed; retained with series |
 | `description` | Unicode long text | 0–2,000 characters; null forbidden, blank allowed | Preserve meaningful text; form trims transport whitespace | C1 until an explicit publication workflow; same writer | Same edit boundary; retained with series |
 | `website_url` | HTTP(S) URL | At most 200 stored characters; null forbidden, blank allowed | Trim; assume `https://` when the scheme is omitted; validate final URL | C1 until publication; same writer | Same edit boundary; retained with series |
 | `contact_email` | Email address | At most 254 characters; null forbidden, blank allowed | Trim and validate address syntax; no account lookup implied | C1 public-contact setup; same writer | Same edit boundary; retained with series/contact record |
@@ -77,18 +80,19 @@ reload guidance; a Closed parent uses `series_parent_closed`.
 
 ## Authorization and effective-access summary
 
-The controlled HTML and series API adapters require an authenticated, active
-platform administrator and authorize before scoped lookup. The service repeats
-the platform boundary and locks the exact organization-owned series. Future
-organizer access needs an explicit capability contract; navigation, Django
-staff status, or Django Groups must never provide it implicitly.
+The current series API remains platform-administrator-only and authorizes
+before scoped lookup. The HTML adapter also supports explicit organization-scoped
+`organizations.view_basic`, `organizations.change_series`, and `events.create`
+for active Board assignments; that backend matrix passes, while the API
+contract remains platform-only until separately
+changed. The service locks the exact organization-owned series. Navigation,
+Django staff status, selected edition, or Django Groups never provide access.
 
-The current header truthfully says that active platform administrators may
-view or change the record under platform oversight and that this is not
-convention participation. This is a provisional/static UX-020 implementation:
-it does not yet compute organization representation, departments, named
-people, or a **Manage access** action. Those claims wait for M2 authorization
-scope v2.
+The header distinguishes platform oversight from active Board-derived
+view/change/create-edition authority without
+listing unauthorized people. This remains narrower than department/resource/
+field effective access and does not yet justify a generic **Manage access**
+action.
 
 ## Mutation, concurrency, and evidence
 

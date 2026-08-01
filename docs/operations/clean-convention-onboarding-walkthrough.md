@@ -1,11 +1,18 @@
 # Clean convention and volunteer onboarding walkthrough
 
-Status: Executable local rehearsal  
-Last updated: 2026-07-31
+Status: Preserved legacy workforce/registration rehearsal; its former
+first-authority browser step is retired
+Last updated: 2026-08-01
 
 This walkthrough starts with an empty, separately named local database. It
 does not use `seed_demo_data`, and it does not delete or modify an existing
 demo database. Use synthetic identities and documents only.
+
+ADR 0039 mounts this shell grammar and backend route/permission tests pass.
+Treat the browser details as preserved evidence until current browser gates
+pass. Use `maru-hands-on-tutorial.md` for the active Page 1–8 journey. This
+document's broad `bootstrap_convention` step is recovery evidence only after
+ADR 0040 and must not be used for a new Draft organization.
 
 ## 1. Start Maru and create the bootstrap administrator
 
@@ -30,12 +37,15 @@ so cleanup can be deliberate after the rehearsal.
 
 ## 2. Create the convention structure and people
 
-From the original `/admin/` home:
+The former specialist-record creation route below is retired. Organization,
+series, and membership specialist records are inspection-only because their
+audited commands own mutation. For a supported new organization, follow Pages
+2–8 in the hands-on tutorial instead:
 
-1. create an Organization at `/admin/organizations/organization/add/`;
-2. create its Convention Series at
-   `/admin/organizations/conventionseries/add/`;
-3. create the Event Edition at `/admin/events/eventedition/add/`;
+1. create the Draft Organization at `/admin/platform/organizations/new/`;
+2. establish and activate its Executive Board on Page 8;
+3. create its Convention Series and Event Edition from the contextual platform
+   pages;
 4. create a separate active Convention Chair account at
    `/admin/identity/account/add/`.
 
@@ -43,28 +53,18 @@ Use lowercase stable slugs. Keep the edition in a non-closed lifecycle.
 The attendee may already have an account, but you no longer need to create one
 in bootstrap admin before staff-assisted registration.
 
-The home keeps the complete alphabetical record directory. The setup
+The platform superuser sees the complete alphabetical record directory because
+it independently has Django staff/model permissions. Scoped non-staff accounts
+do not. The setup
 dependency order is available contextually under **Convention work → Setup
 guide**; it is guidance, not a readiness or completion tracker. All records
 remain editable through their ordinary pages.
 
-## 3. Establish the first Chairman and starter templates
+## 3. Legacy workforce bootstrap reference
 
-After creating the organization, series, edition, and separate Chair account,
-return to <http://127.0.0.1:8000/admin/>. The guarded **Establish convention
-leadership** panel is available under **Convention work → Setup guide**.
-
-1. select the organization and matching first edition;
-2. type or select the exact Chair account email;
-3. enter the permanent reason for establishing the first authority;
-4. type the organization slug exactly;
-5. confirm the signed-in administrator's current password; and
-6. submit **Establish leadership**.
-
-Maru refreshes the newly created convention workspace and opens Setup guide.
-Review the lifecycle explanation, enter a reason, and select **Start
-planning**. This moves Draft to Preparing; it does not open registration or
-mark the convention as currently running.
+The former **Establish convention leadership** browser ceremony and
+`/api/v1/management/convention-bootstrap` endpoint are not mounted. Do not look
+for them in Convention work or treat them as an alternate to Page 8.
 
 The command remains a recovery fallback. If the browser ceremony is
 unavailable, the database assignment and Python invocation must be separate
@@ -81,10 +81,12 @@ $env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/maru_walkthrough
   --confirm-organization YOUR_ORGANIZATION_SLUG
 ```
 
-Both paths establish the same audited controller and Chair authority,
-leadership department/position, and starter position templates. Repeating
-either path is expected to fail. The browser path is a guarded one-time
-ceremony, not an ordinary editable record.
+The command invokes the preserved audited service and may establish controller/
+Chair authority, leadership department/position, and starter templates only as
+part of an approved legacy reconciliation. Repeating it is expected to fail.
+There is no current browser path. Stop this fresh-database rehearsal here unless
+the operator has explicitly approved that recovery procedure; the active Page
+8 path intentionally does not invent workforce appointments or templates.
 
 ## 4. Create and activate the registration form
 
@@ -231,7 +233,6 @@ profile claims.
 
 ## 12. Useful negative tests
 
-- revisit the leadership ceremony and expect a read-only completion summary;
 - repeat `bootstrap_convention` and expect rejection;
 - staff-register an email that has never existed and verify the warning,
   account, `payment_pending` registration, and account-creation audit;

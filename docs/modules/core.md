@@ -1,6 +1,7 @@
 # Core module
 
-Status: Implemented backend foundation and controlled Pages 1–7 management shell
+Status: Implemented backend foundation, unified `/admin/` shell, and Page 8
+governance integration; final suite/accessibility/owner gates remain
 Last updated: 2026-08-01
 
 ## Purpose and requirements
@@ -17,10 +18,11 @@ NFR-001, NFR-004, NFR-006, NFR-008, and NFR-009.
 - allowlisted structured JSON logging
 - RFC 9457-style DRF problem responses
 - liveness, database readiness, and build identity endpoints
-- an ADR 0030 root redirect and focused local sign-in;
-- the responsive, progressively scoped Pages 1–7 administration shell;
-- preserved administration safety mixins and previous shell implementation,
-  not mounted in the current default experience
+- focused local sign-in and the unified `/admin/` host boundary;
+- responsive, progressively scoped Pages 1–8 adapters under the reserved
+  `/admin/platform/` route space;
+- the shared administration host, safety mixins, platform navigation, and
+  record-oriented visual grammar selected by ADR 0039;
 - canonical platform brand assets, accessible palette tokens, and application
   metadata
 
@@ -32,12 +34,23 @@ The platform identity is defined in
 It supports Maru's stable operational shell; convention-owned seasonal
 frontends remain replaceable clients.
 
-## Current browser baseline
+## Current browser shell
 
-`maru.baseline_urls` is the default URL configuration. `/` redirects to
-`/admin/`; `/accounts/login/` is the only unauthenticated HTML page. The
-authenticated `/admin/` namespace requires an active platform administrator
-and now mounts the organization → series → edition spine:
+ADR 0039 makes `maru.urls`, rather than `maru.baseline_urls`, the default URL
+configuration. The current implementation provides one
+authenticated `/admin/` namespace:
+
+- `/admin/` is the permission-filtered administration home;
+- `/admin/workspace/` embeds API-backed Convention work;
+- `/admin/platform/organizations/...` owns the purpose-built Pages 1–8 spine;
+  and
+- `/admin/<app-label>/<model-name>/...` retains specialist records.
+
+The `platform` segment is reserved so the page spine cannot collide with a
+Django application label. Explicit routes must be registered before
+`admin.site.urls`. Pages 1–2 remain platform-administrator setup. Pages 3–7 use
+exact organization/edition capability checks. Page 8 has bounded platform,
+representation-manager, and exact-invitee policies. The shell mounts:
 
 - Page 1 organization inventory;
 - Page 2 Draft organization creation;
@@ -45,12 +58,30 @@ and now mounts the organization → series → edition spine:
 - Page 4 convention-series creation;
 - Page 5 convention-series record/update and edition inventory;
 - Page 6 event-edition creation; and
-- Page 7 event-edition record/update and explicit working-context selection.
+- Page 7 event-edition record/update and explicit working-context selection;
+  and
+- Page 8 organization representation, exact controller invitations,
+  self-response, and initial Draft-to-Active activation.
 
 Sign-out and edition context select/clear are POST actions. The shell creates
-no convention relationship for the platform administrator. Previous
-Convention work, public registration, volunteer, and specialist-record HTML
-routes remain unmounted and return 404.
+no convention relationship for the platform administrator. Convention work
+and specialist records use their existing independent policy/model-permission
+boundaries; being visible in one menu does not broaden them. Public and
+personal HTML routes remain outside `/admin/` according to purpose.
+
+Focused route, authorization, shell/sidebar, and Page 8 backend verification
+passes. Populated and fresh migrations, a local populated restore drill,
+desktop/390-pixel smoke, and the Page 8 sensitive-read/denial audit boundary
+also pass. The final consolidated local backend gate passes 792 tests in
+329.21 seconds with 90.01 percent coverage and no warnings; a separate behavior
+run passes the same 792 tests in 291.86 seconds. Nine focused unified-routing
+tests pass, including scoped non-staff account-control routing. A live Board
+logout reaches `/accounts/login/`, removes the logged-in banner, and produces no
+new console warning or error. A platform-administrator reload renders one
+searchable `#nav-filter`, Specialist records and Platform administration
+exactly once each, the correct `demo.admin` account, and no new console warning
+or error. Keyboard, automated accessibility, complete visual-state, and
+owner-tutorial evidence remain open.
 
 Every mounted page has bounded empty/populated/conflict/failure states. A
 database dependency failure produces safe `503` guidance and a server exception
@@ -63,14 +94,21 @@ report at most five bounded field names. Module services still repeat
 security-critical validation because transport validation alone is not an
 authority or integrity boundary.
 
-Health, build, schema, and versioned APIs remain mounted. Automated backend
-tests may select the preserved URL configuration, but that does not make its
-pages part of the product.
+Page 8 reuses that primitive for four closed forms. Provision accepts only a
+bounded reason; invite accepts exact email plus reason; self-response accepts a
+positive expected invitation version plus `accept|decline`; activation accepts
+a positive representation version, exact case-sensitive organization name,
+and reason. Organization, person, representation, role, actor, state, scope,
+lifecycle, timestamps, and evidence remain code-owned.
 
-## Preserved administration implementation
+Health, build, schema, and versioned APIs remain authoritative. HTML and
+embedded clients call the same module services; a mounted preserved screen does
+not replace those contracts.
 
-Before ADR 0030, the original Django administration index was the canonical
-`/admin/` home.
+## Unified administration implementation
+
+ADR 0039 again selects the original Django administration index as the
+canonical `/admin/` home and reuses its stronger visual grammar.
 API-backed Convention work is embedded inside the same base template at
 `/admin/workspace/`; the embedded application does not render another global
 menu or workspace selector. Its inner pages use the same record-oriented
@@ -79,6 +117,15 @@ specialist record pages. Existing model URLs remain under `/admin/`. Shared admi
 destructive bulk deletion and make command-owned records view-only. One
 collapsible sidebar links recurring work, contextual access sharing, and the
 permission-filtered specialist record directory.
+Django's `nav_sidebar.js` expects one `#nav-filter` even when no model directory
+is available. The custom sidebar preserves that DOM contract and hides the
+filter for scoped accounts with no Specialist records instead of removing it.
+Django AdminSite's normal URL wrapper rejects non-staff accounts before its
+account-control views run. Maru therefore declares `/admin/logout/`,
+`/admin/password_change/`, and its completion route before `admin.site.urls`.
+Active scoped non-staff accounts admitted to the unified shell can use real
+logout and password-change handlers without receiving staff status or access
+to Specialist records.
 Django's generic `Group` page is hidden
 because Maru authority is expressed through scoped capabilities and versioned
 role bundles, not a parallel unscoped role system.
@@ -90,19 +137,25 @@ The header also hosts the ADR 0008 convention-workspace selector. Event-owned
 modules declare their scope explicitly; the shared shell does not infer tenant
 ownership or treat the selected edition as authorization.
 
-The administration home keeps Django's complete alphabetical application/model
-list. ADR 0027 removes the former global Quick Start because it consumed every
-administration page's top chrome. Dependency guidance and the guarded
-first-authority ceremony remain contextually in Convention work's **Setup
-guide**; record existence still does not prove approval, authority, readiness,
-or completion.
+The administration home shows Django's alphabetical application/model list
+only to accounts with independent staff/model permissions. Active scoped non-
+staff accounts still enter the Maru shell and see only permitted Maru work.
+ADR 0027 removes the former global Quick Start because it consumed every
+administration page's top chrome. Dependency guidance remains contextually in
+Convention work's **Setup guide**; record existence still does not prove
+approval, authority, readiness, or completion. ADR 0040 replaces its broad
+first-authority ceremony as the normal path with selected-organization Page 8.
+The old bootstrap command/service is recovery evidence only until an explicit
+legacy-reconciliation procedure approves a narrower use. Its former web
+ceremony and `/api/v1/management/convention-bootstrap` endpoint are not mounted.
 
-Every active authenticated account enters at `/admin/`. A workspace-less
-bootstrap superuser can open the guarded leadership ceremony through
-Convention work; active non-administrators without a workspace retain the safe
-empty state. Ordinary Django record pages remain staff/model-permission
-protected. Platform staff status does not grant convention capabilities.
-Removed `/manage/`, `/staff/`, and `/admin/records/` paths do not redirect.
+Every active authenticated account enters the management product at `/admin/`.
+An exact Page 8 invitee may open only their scoped invitation even before they
+hold organization authority; active non-administrators without a relationship
+retain the safe empty state. Ordinary Django record pages remain staff/model-
+permission protected. Platform staff status does not grant convention
+capabilities. Removed `/manage/`, `/staff/`, and `/admin/records/` paths do not
+redirect.
 
 ## Public contracts
 
@@ -136,10 +189,24 @@ safe log output, problem response shape, and health/build behavior. Integration
 tests cover Pages 1–7 authorization, progressive/current navigation, strict
 input, safe failure behavior, and platform non-participation.
 
+Current integration tests cover route collisions, anonymous/inactive/platform/
+scoped-nonstaff/staff boundaries, sidebar visibility, Convention work,
+specialist-record gating, old-route behavior, Page 8 menu and disclosure,
+strict forms, stale/replay behavior, and activation failure. They prove that a
+selected edition, Django staff flag, and visible menu never grant organization
+authority. Database-level representation tests cover cross-approval,
+constraints, atomicity, and platform exclusion. The responsive smoke, local
+migration/restore, bounded Page 8 read/denial audit, final local full suite/
+coverage gate, nine-test focused routing regression, live Board logout, and
+platform-administrator reload pass. Keyboard/automated accessibility, complete
+visual states, and owner evidence remain required.
+
 ## Limitations
 
-Computed effective access, metrics/tracing export, error capture, rate limiting,
-and a public status service remain. The current access summary is deliberately
-static and labels platform oversight only; M2 must replace it with policy-
-computed organization/department/resource explanations before convention-owned
-mutation pages are mounted.
+Complete computed effective access, invitation notification discovery,
+metrics/tracing export, error capture, rate limiting, and a public status
+service remain. Page 8's root-representation explanation is only the first
+policy-derived slice; M2 must still add department/resource/field explanations
+before department-owned mutation pages are mounted. The unified shell and
+initial Page 8 lifecycle are implemented backend milestones, not production-
+ready release claims.

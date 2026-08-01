@@ -4,6 +4,7 @@ from typing import Any
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator, RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
@@ -220,3 +221,286 @@ class OrganizationMembership(UUIDTimeStampedModel):
     def __str__(self) -> str:
         relationship = self.relationship_label or self.get_state_display()
         return f"{self.account} — {relationship} at {self.organization}"
+
+
+class OrganizationRepresentation(UUIDTimeStampedModel):
+    """The accountable organization-level representation root.
+
+    Representation is deliberately separate from platform administration,
+    ordinary organization membership, and edition workforce structure.  The
+    first supported representation type is the Executive Board required by
+    IDN-012.
+    """
+
+    EXECUTIVE_BOARD_CODE = "executive_board"
+    EXECUTIVE_BOARD_NAME = "Executive Board"
+
+    class State(models.TextChoices):
+        PROVISIONING = "provisioning", "Provisioning"
+        ACTIVE = "active", "Active"
+        SUSPENDED = "suspended", "Suspended"
+
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.PROTECT,
+        related_name="representation",
+    )
+    code = models.CharField(
+        max_length=40,
+        default=EXECUTIVE_BOARD_CODE,
+        editable=False,
+    )
+    name = models.CharField(max_length=120, default="Executive Board")
+    state = models.CharField(
+        max_length=20,
+        choices=State,
+        default=State.PROVISIONING,
+    )
+    aggregate_version = models.PositiveIntegerField(default=1, editable=False)
+    provisioning_reason = models.CharField(max_length=240)
+    activation_reason = models.CharField(max_length=240, blank=True)
+    provisioned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="organization_representations_provisioned",
+    )
+    activated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="organization_representations_activated",
+    )
+    activated_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("organization__name", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(code="executive_board"),
+                name="organization_representation_exec_board_code",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(name="Executive Board"),
+                name="organization_representation_exec_board_name",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(aggregate_version__gte=1),
+                name="organization_representation_version_positive",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(provisioning_reason=""),
+                name="organization_representation_reason_required",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        state="provisioning",
+                        activated_at__isnull=True,
+                        activated_by__isnull=True,
+                        activation_reason="",
+                    )
+                    | (
+                        models.Q(
+                            state__in=("active", "suspended"),
+                            activated_at__isnull=False,
+                            activated_by__isnull=False,
+                        )
+                        & ~models.Q(activation_reason="")
+                    )
+                ),
+                name="organization_representation_activation_state",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.provisioned_by_id and not self.provisioned_by.is_platform_administrator:
+            raise ValidationError(
+                {
+                    "provisioned_by": ValidationError(
+                        "Initial representation provisioning requires a platform "
+                        "administrator.",
+                        code="representation_provisioner_not_platform_administrator",
+                    )
+                },
+            )
+        activated_by = self.activated_by
+        if self.activated_by_id and (
+            activated_by is None or not activated_by.is_platform_administrator
+        ):
+            raise ValidationError(
+                {
+                    "activated_by": ValidationError(
+                        "Initial representation activation requires a platform "
+                        "administrator.",
+                        code="representation_activator_not_platform_administrator",
+                    )
+                },
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.code = self.EXECUTIVE_BOARD_CODE
+        self.name = self.EXECUTIVE_BOARD_NAME
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.name} — {self.organization.name}"
+
+
+class RepresentationAppointment(UUIDTimeStampedModel):
+    """One invitation and accepted term in an organization representation."""
+
+    class Role(models.TextChoices):
+        CONTROLLER = "controller", "Controller"
+
+    class State(models.TextChoices):
+        INVITED = "invited", "Invited"
+        ACCEPTED = "accepted", "Accepted"
+        ACTIVE = "active", "Active"
+        DECLINED = "declined", "Declined"
+        ENDED = "ended", "Ended"
+
+    representation = models.ForeignKey(
+        OrganizationRepresentation,
+        on_delete=models.PROTECT,
+        related_name="appointments",
+    )
+    account = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="representation_appointments",
+    )
+    role = models.CharField(
+        max_length=20,
+        choices=Role,
+        default=Role.CONTROLLER,
+    )
+    state = models.CharField(
+        max_length=20,
+        choices=State,
+        default=State.INVITED,
+    )
+    invitation_version = models.PositiveIntegerField(default=1, editable=False)
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="representation_appointments_invited",
+    )
+    invited_at = models.DateTimeField()
+    responded_at = models.DateTimeField(null=True, blank=True)
+    activated_at = models.DateTimeField(null=True, blank=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    reason = models.CharField(max_length=240)
+    role_assignment = models.OneToOneField(
+        "authorization.RoleAssignment",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="representation_appointment",
+    )
+
+    class Meta:
+        ordering = ("representation_id", "invited_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("representation", "account"),
+                condition=models.Q(state__in=("invited", "accepted", "active")),
+                name="one_open_representation_appointment_per_account",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(role="controller"),
+                name="representation_appointment_controller_role",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(invitation_version__gte=1),
+                name="representation_appointment_version_positive",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(reason=""),
+                name="representation_appointment_reason_required",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        state="invited",
+                        responded_at__isnull=True,
+                        activated_at__isnull=True,
+                        ended_at__isnull=True,
+                        role_assignment__isnull=True,
+                    )
+                    | models.Q(
+                        state="accepted",
+                        responded_at__isnull=False,
+                        activated_at__isnull=True,
+                        ended_at__isnull=True,
+                        role_assignment__isnull=True,
+                    )
+                    | models.Q(
+                        state="active",
+                        responded_at__isnull=False,
+                        activated_at__isnull=False,
+                        ended_at__isnull=True,
+                        role_assignment__isnull=False,
+                    )
+                    | models.Q(
+                        state="declined",
+                        responded_at__isnull=False,
+                        activated_at__isnull=True,
+                        ended_at__isnull=False,
+                        role_assignment__isnull=True,
+                    )
+                    | (
+                        models.Q(
+                            state="ended",
+                            responded_at__isnull=False,
+                            ended_at__isnull=False,
+                        )
+                        & (
+                            models.Q(
+                                activated_at__isnull=True,
+                                role_assignment__isnull=True,
+                            )
+                            | models.Q(
+                                activated_at__isnull=False,
+                                role_assignment__isnull=False,
+                            )
+                        )
+                    )
+                ),
+                name="representation_appointment_state_timestamps",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.account_id:
+            validate_convention_subject(self.account)
+        if self.role_assignment_id:
+            assignment = self.role_assignment
+            if assignment is None or (
+                assignment.organization_id != self.representation.organization_id
+                or assignment.principal_id != self.account_id
+                or assignment.edition_id is not None
+                or assignment.role_bundle.code != "executive-board"
+            ):
+                raise ValidationError(
+                    {
+                        "role_assignment": ValidationError(
+                            "Use this controller's organization-scoped Executive "
+                            "Board assignment.",
+                            code="representation_assignment_scope_mismatch",
+                        )
+                    },
+                )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.role = self.Role.CONTROLLER
+        if self.account_id:
+            validate_convention_subject(self.account)
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.account} — {self.get_role_display()} at {self.representation}"

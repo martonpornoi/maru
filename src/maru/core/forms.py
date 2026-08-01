@@ -37,3 +37,11 @@ class StrictInputForm(forms.Form):
                 code="unknown_input_field",
             )
         return cleaned
+
+
+class HttpsURLField(forms.URLField):
+    """Use Django 6's secure URL default explicitly on every supported version."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs.setdefault("assume_scheme", "https")
+        super().__init__(*args, **kwargs)

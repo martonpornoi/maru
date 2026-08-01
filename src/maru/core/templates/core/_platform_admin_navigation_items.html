@@ -1,0 +1,149 @@
+{% if request.user.is_platform_administrator %}
+  <div class="baseline-sidebar-row">
+    <a
+      class="baseline-sidebar-link"
+      href="{% url 'baseline-admin-home' %}"
+      {% if request.resolver_match.url_name == "baseline-admin-home" %}aria-current="page"{% endif %}
+    >
+      Organizations
+    </a>
+    <a
+      class="baseline-sidebar-add"
+      href="{% url 'baseline-create-organization' %}"
+      aria-label="Add organization"
+      {% if request.resolver_match.url_name == "baseline-create-organization" %}aria-current="page"{% endif %}
+    >
+      + Add
+    </a>
+  </div>
+{% endif %}
+
+{% if baseline_page_id and organization %}
+  <section
+    class="baseline-sidebar-context"
+    aria-labelledby="baseline-organization-context"
+  >
+    <p
+      class="baseline-sidebar-context-name"
+      id="baseline-organization-context"
+    >
+      {{ organization.name }}
+    </p>
+    {% if baseline_can_view_organization %}
+      <a
+        class="baseline-sidebar-link baseline-sidebar-link--standalone"
+        href="{% url 'baseline-organization-record' organization.slug %}"
+        {% if request.resolver_match.url_name == "baseline-organization-record" %}aria-current="page"{% endif %}
+      >
+        Organization record
+      </a>
+    {% endif %}
+    {% if baseline_use_admin_shell %}
+      {% if baseline_can_view_organization or baseline_can_manage_representation or baseline_page_id == "organization-representation" %}
+      <a
+        class="baseline-sidebar-link baseline-sidebar-link--standalone"
+        href="{% url 'organization-representation' organization.slug %}"
+        {% if request.resolver_match.url_name == "organization-representation" %}aria-current="page"{% endif %}
+      >
+        Representation &amp; access
+      </a>
+      {% endif %}
+    {% endif %}
+    {% if baseline_can_view_organization or baseline_can_create_series %}
+      <div class="baseline-sidebar-row">
+        {% if baseline_can_view_organization %}
+          <a
+            class="baseline-sidebar-link"
+            href="{% url 'baseline-organization-record' organization.slug %}#convention-series-title"
+          >
+            Convention series
+          </a>
+        {% else %}
+          <span class="baseline-sidebar-link">Convention series</span>
+        {% endif %}
+      {% if baseline_can_create_series and organization.lifecycle != "closed" %}
+        <a
+          class="baseline-sidebar-add"
+          href="{% url 'baseline-create-convention-series' organization.slug %}"
+          aria-label="Add convention series for {{ organization.name }}"
+          {% if request.resolver_match.url_name == "baseline-create-convention-series" %}aria-current="page"{% endif %}
+        >
+          + Add
+        </a>
+      {% elif baseline_can_create_series and request.resolver_match.url_name == "baseline-create-convention-series" %}
+        <span
+          class="baseline-sidebar-add baseline-sidebar-add--disabled"
+          aria-current="page"
+          aria-disabled="true"
+        >+ Add</span>
+      {% endif %}
+      </div>
+    {% endif %}
+  </section>
+
+  {% if convention_series %}
+    <section
+      class="baseline-sidebar-context baseline-sidebar-context--nested"
+      aria-labelledby="baseline-series-context"
+    >
+      <p
+        class="baseline-sidebar-context-name"
+        id="baseline-series-context"
+      >
+        {{ convention_series.name }}
+      </p>
+      <a
+        class="baseline-sidebar-link baseline-sidebar-link--standalone"
+        href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}"
+        {% if request.resolver_match.url_name == "baseline-convention-series-record" %}aria-current="page"{% endif %}
+      >
+        Series record
+      </a>
+      <div class="baseline-sidebar-row">
+        <a
+          class="baseline-sidebar-link"
+          href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}#event-editions-title"
+        >
+          Convention editions
+        </a>
+        {% if baseline_can_create_edition and organization.lifecycle != "closed" and convention_series.is_active %}
+          <a
+            class="baseline-sidebar-add"
+            href="{% url 'baseline-create-event-edition' organization.slug convention_series.slug %}"
+            aria-label="Add event edition for {{ convention_series.name }}"
+            {% if request.resolver_match.url_name == "baseline-create-event-edition" %}aria-current="page"{% endif %}
+          >
+            + Add
+          </a>
+        {% elif baseline_can_create_edition and request.resolver_match.url_name == "baseline-create-event-edition" %}
+          <span
+            class="baseline-sidebar-add baseline-sidebar-add--disabled"
+            aria-current="page"
+            aria-disabled="true"
+          >+ Add</span>
+        {% endif %}
+      </div>
+
+      {% if edition %}
+        <section
+          class="baseline-sidebar-context baseline-sidebar-context--nested"
+          aria-labelledby="baseline-edition-context"
+        >
+          <p
+            class="baseline-sidebar-context-name"
+            id="baseline-edition-context"
+          >
+            {{ edition.name }}
+          </p>
+          <a
+            class="baseline-sidebar-link baseline-sidebar-link--standalone"
+            href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}"
+            {% if request.resolver_match.url_name == "baseline-event-edition-record" %}aria-current="page"{% endif %}
+          >
+            Overview
+          </a>
+        </section>
+      {% endif %}
+    </section>
+  {% endif %}
+{% endif %}

@@ -1,36 +1,20 @@
-{% load static %}
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light">
-    <meta name="theme-color" content="#071B3A">
-    <title>Create event edition · Maru</title>
-    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
-    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
-  </head>
-  <body>
-    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
-    <header class="baseline-header">
-      <img
-        class="baseline-logo"
-        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
-        alt="Maru"
-      >
-      <div class="baseline-account">
-        <span>{{ request.user.display_name }}</span>
-        <form method="post" action="{% url 'staff-logout' %}">
-          {% csrf_token %}
-          <button class="baseline-link-button" type="submit">Sign out</button>
-        </form>
-      </div>
-    </header>
+{% extends "core/baseline_admin_base.html" %}
 
-    <div class="baseline-admin-layout">
-      {% include "core/_baseline_admin_navigation.html" with current_admin_page="add-event-edition" %}
+{% block baseline_page_title %}Create event edition · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  <a href="{% url 'baseline-admin-home' %}">Platform administration</a>
+  {% if organization %}
+    &rsaquo;
+    <a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>
+  {% endif %}
+  {% if convention_series %}
+    &rsaquo;
+    <a href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}">{{ convention_series.name }}</a>
+  {% endif %}
+  &rsaquo; Create event edition
+{% endblock %}
 
-      <main id="main-content" class="baseline-page baseline-page--form" data-page="create-event-edition" tabindex="-1">
+{% block baseline_content %}
         {% if edition_creation_load_failed %}
           <header class="baseline-page-heading">
             <p class="baseline-kicker">Convention editions</p>
@@ -164,7 +148,4 @@
             </form>
           {% endif %}
         {% endif %}
-      </main>
-    </div>
-  </body>
-</html>
+{% endblock %}

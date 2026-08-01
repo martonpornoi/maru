@@ -4,9 +4,15 @@ import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
+from tests.support.migrations import (
+    current_migration_leaves,
+    restore_current_migration_graph,
+)
+
 pytestmark = [
     pytest.mark.django_db(transaction=True),
     pytest.mark.integration,
+    pytest.mark.usefixtures("restores_current_migration_graph"),
 ]
 
 EVENTS_BEFORE_AGGREGATE = ("events", "0005_editionclosuremanifest_editionreadinessgate")
@@ -198,3 +204,35 @@ def test_downgrade_fences_refuse_to_drop_nonempty_workspace_history() -> None:
             )
     finally:
         _migrate(EVENTS_AFTER_GUARDS, ORGANIZATIONS_AFTER_GUARD)
+
+
+def test_historical_workspace_target_can_restore_the_complete_current_graph() -> None:
+    _migrate(EVENTS_AFTER_GUARDS, ORGANIZATIONS_AFTER_GUARD)
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT to_regclass('organizations_organizationrepresentation')")
+        assert cursor.fetchone() == (None,)
+
+    restore_current_migration_graph()
+
+    executor = MigrationExecutor(connection)
+    assert set(current_migration_leaves()).issubset(executor.loader.applied_migrations)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT tgname
+              FROM pg_trigger
+             WHERE NOT tgisinternal
+               AND tgname IN (
+                   'organizations_idn011_membership_subject_guard',
+                   'organizations_idn011_appointment_subject_guard',
+                   'identity_idn011_organizations_subject_guard'
+               )
+             ORDER BY tgname
+            """
+        )
+        assert [row[0] for row in cursor.fetchall()] == [
+            "identity_idn011_organizations_subject_guard",
+            "organizations_idn011_appointment_subject_guard",
+            "organizations_idn011_membership_subject_guard",
+        ]

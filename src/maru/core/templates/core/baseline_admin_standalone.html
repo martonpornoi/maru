@@ -1,0 +1,38 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
+    <title>{% block title %}Administration · Maru{% endblock %}</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    {% block extrastyle %}{% endblock %}
+    {% block extrahead %}{% endblock %}
+  </head>
+  <body class="{% block bodyclass %}baseline-standalone-body{% endblock %}">
+    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
+    <header class="baseline-header">
+      <img
+        class="baseline-logo"
+        src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
+        alt="Maru"
+      >
+      <div class="baseline-account">
+        <span>{{ request.user.display_name }}</span>
+        <form method="post" action="{% url 'staff-logout' %}">
+          {% csrf_token %}
+          <button class="baseline-link-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+
+    {% block breadcrumbs %}{% endblock %}
+    <div class="baseline-admin-layout">
+      {% include "core/_baseline_admin_navigation.html" %}
+      {% block messages %}{% endblock %}
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

@@ -13,7 +13,7 @@ from uuid import UUID, uuid4
 from django.conf import settings
 from django.contrib.auth import password_validation
 from django.contrib.sessions.models import Session
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.db import IntegrityError, models, transaction
 from django.http import HttpRequest
@@ -47,6 +47,7 @@ ABUSE_LIMIT: Final = 8
 ABUSE_BLOCK: Final = timedelta(hours=1)
 STEP_UP_LIFETIME: Final = timedelta(minutes=15)
 CHALLENGE_ATTEMPT_LIMIT: Final = 10
+MAX_EMERGENCY_REASON_LENGTH: Final = 240
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +56,14 @@ class ChallengeDispatch:
 
     accepted: bool
     raw_token: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class EmergencyAccountDeactivation:
+    """Minimized result for a platform-operated emergency deactivation."""
+
+    account: Account
+    revoked_session_count: int
 
 
 def _digest(value: str, *, purpose: str) -> str:
@@ -534,6 +543,89 @@ def revoke_all_sessions(
         )
         count += 1
     return count
+
+
+@transaction.atomic
+def deactivate_person_account_for_platform_emergency(
+    *,
+    actor: Account,
+    account_id: UUID,
+    reason: str,
+    correlation_id: UUID,
+    source_channel: str = "service",
+) -> EmergencyAccountDeactivation:
+    """Deactivate one person and every inventoried session under platform control.
+
+    The caller owns the domain-specific relationship transition in the same
+    outer transaction.  This identity command owns the account/session write
+    and its minimized security audit without importing organizer models.
+    """
+
+    if not actor.is_active or not actor.is_platform_administrator:
+        raise PermissionDenied("Platform administration is required.")
+    normalized_reason = " ".join(reason.split())
+    if not normalized_reason:
+        raise ValidationError(
+            "Explain why this emergency account deactivation is required.",
+            code="reason_required",
+        )
+    if len(normalized_reason) > MAX_EMERGENCY_REASON_LENGTH:
+        raise ValidationError(
+            "Ensure the reason has at most 240 characters.",
+            code="reason_too_long",
+        )
+
+    account = Account.objects.select_for_update().get(id=account_id)
+    if account.is_platform_administrator:
+        raise ValidationError(
+            "A platform account cannot be deactivated through convention governance.",
+            code="emergency_deactivation_subject_ineligible",
+        )
+    if not account.is_active:
+        raise ValidationError(
+            "This account is already inactive.",
+            code="emergency_deactivation_already_inactive",
+        )
+
+    account.is_active = False
+    account.save(update_fields=("is_active",))
+    revoked_session_count = revoke_all_sessions(
+        account=account,
+        reason="platform_emergency_deactivation",
+        exclude_session_id=None,
+    )
+    if revoked_session_count:
+        _append_security_event(
+            account=account,
+            event_type=AccountSecurityEvent.EventType.SESSION_REVOKED,
+            detail_code="platform_emergency_deactivation",
+            source_channel=source_channel,
+        )
+    append_audit(
+        AuditRecord(
+            principal_kind="account",
+            principal_id=actor.id,
+            principal_context_id=None,
+            organization_id=None,
+            event_edition_id=None,
+            capability_code="organizations.manage_representation",
+            operation="identity.account.emergency_deactivate",
+            target_type="identity.account",
+            target_id=account.id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code="platform_emergency_removal",
+            correlation_id=correlation_id,
+            request_id=correlation_id,
+            source_channel=source_channel,
+            obligations=("reason", "audit"),
+            changed_fields=("is_active", "sessions"),
+            retention_class="security-extended",
+        )
+    )
+    return EmergencyAccountDeactivation(
+        account=account,
+        revoked_session_count=revoked_session_count,
+    )
 
 
 def complete_step_up(

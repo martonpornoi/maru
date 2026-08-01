@@ -1,10 +1,12 @@
 # Page 3 organization record
 
-Status: Executable local Page 3
-Last updated: 2026-07-31
+Status: Page 3 backend and responsive-smoke verified for platform and scoped
+Board access; accessibility/state-matrix/owner rehearsal pending
+Last updated: 2026-08-01
 
 ADR 0034 and UX-017 add purpose-built editing and protected empty-Draft
-deletion without restoring generic model administration.
+deletion without using generic model saves for the audited workflow. ADR 0039
+moves it into the unified shell's reserved platform route space.
 
 ## Current local environment
 
@@ -17,10 +19,11 @@ Account kind: platform_administrator
 ```
 
 The password is local test data. Never reuse it in a deployment or real
-account. The controlled database contains the owner-created Draft `MaruCon`
-with slug `marucon`, blank optional profile values, zero series/editions, and
-its original creation audit event. Browser QA did not submit either Page 3
-form. The `maru` and `marucon_rehearsal` databases remain out of scope.
+account. These credentials and the `MaruCon` slug record the historical
+controlled-rebuild exercise, not the selected database's guaranteed current
+state. Inspect before use and do not modify or delete owner-created records.
+The current responsive smoke loaded Page 3 without submitting either mutation
+form. Use the tutorial's separate database for mutation rehearsal.
 
 ## Start Page 3
 
@@ -34,7 +37,7 @@ uv run python src/manage.py runserver
 
 Open <http://127.0.0.1:8000/admin/>, sign in as `admin`, and select an
 organization name. MaruCon's direct route is
-<http://127.0.0.1:8000/admin/organizations/marucon/>.
+<http://127.0.0.1:8000/admin/platform/organizations/marucon/>.
 
 ## Expected behavior
 
@@ -42,7 +45,8 @@ organization name. MaruCon's direct route is
 - the record prepopulates the same complete profile used by Page 2;
 - only organization name is required;
 - **Save changes** updates changed fields and returns to the stable slug URL;
-- posted slug and lifecycle values are ignored;
+- posted slug, lifecycle, scope, actor, and other undeclared values are rejected
+  before mutation;
 - an unchanged save produces no write or audit event;
 - successful changed updates are atomic with an audit event containing field
   names but no entered profile values;
@@ -51,6 +55,10 @@ organization name. MaruCon's direct route is
 - deletion succeeds only for a Draft with no protected related records and is
   atomic with its audit event; and
 - this platform account remains outside all convention relationships.
+
+The local desktop and 390-pixel journey passed without horizontal overflow or
+console warnings. Complete keyboard/automated accessibility, mutation failure
+states, and owner-led form rehearsal remain open.
 
 Never use the delete action as closure. A series, edition, member, authority,
 participant, registration, workforce record, communication, restriction, or

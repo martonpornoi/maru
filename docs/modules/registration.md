@@ -1,7 +1,7 @@
 # Registration module
 
 Status: Registration, extensible profiles, staff-assisted intake, reporting, provider-payment, finance, media, minor, credential, and closure boundaries implemented
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
@@ -27,6 +27,9 @@ organization and event edition.
 Registration validation rejects a platform administrator as its attendee
 subject. The account may still be retained separately as the attributed actor
 of a permitted staff-assisted or platform operation.
+PostgreSQL enforces the same distinction for the registration, attendee
+profile, and fursuit subject account while leaving `submitted_by` and media
+reviewer provenance untouched.
 ADR 0019 adds staff-assisted registration while preserving the ordinary
 policy, capacity, price, and payment lifecycle. ADR 0020 adds explicit,
 audited account creation when the entered email has never belonged to an
@@ -486,6 +489,16 @@ version guard. Fursuit rows redundantly carry registration, organization,
 edition, account, and profile scope; a database trigger rejects mismatch,
 scope mutation, archived/cancelled changes, and ordinary deletion.
 
+Registration `0031` adds the IDN-011 database invariant to `Registration`,
+`AttendeeRegistrationProfile`, and `AttendeeFursuit`. Before each insert or
+update, the module locks and checks only the subject `account_id`; staff-assisted
+submitters and media reviewers remain actor provenance. A deferred identity
+trigger prevents later reclassification of any account that retains these
+records. The transactional migration installs the guards before its final
+count-only existing-data preflight, closing the deployment race as well as ORM
+bulk and direct-SQL bypasses. See
+[`idn011-convention-subject-migration-and-recovery.md`](../operations/idn011-convention-subject-migration-and-recovery.md).
+
 The aggregate guard additionally constrains waitlist offer,
 payment-deadline, confirmation, expiry, cancellation, and check-in
 transitions. Registration adjustments are scope-checked and append-only at the
@@ -560,6 +573,9 @@ Integration coverage includes:
   and
 - closure readiness counts, reviewed gates, immutable manifest, and stale
   manifest rejection.
+- bulk/direct registration-subject rejection, complete-graph account
+  reclassification refusal, populated-data preflight, and subject-write versus
+  reclassification serialization.
 
 The Convention work tests cover convention-defined conditional questions,
 permission-denied states, reconciliation rendering, controlled exception

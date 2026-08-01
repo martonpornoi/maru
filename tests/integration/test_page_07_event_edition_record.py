@@ -7,6 +7,7 @@ from django.test import override_settings
 from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
+from maru.authorization.models import CapabilityGrant, RoleAssignment
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.admin_context import ADMIN_EDITION_SESSION_KEY
 from maru.events.models import EventEdition
@@ -16,7 +17,20 @@ from maru.events.services import (
     create_event_edition,
     transition_edition,
 )
-from maru.organizations.models import ConventionSeries, Organization
+from maru.identity.models import Account
+from maru.organizations.models import (
+    ConventionSeries,
+    Organization,
+    OrganizationMembership,
+)
+from maru.organizations.representation import (
+    activate_executive_board,
+    invite_representation_controller,
+    provision_executive_board,
+    respond_to_representation_invitation,
+)
+from maru.participation.models import Participation
+from maru.registration.models import Registration
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
@@ -96,6 +110,65 @@ def _create_edition(*, actor: object, series: ConventionSeries) -> EventEdition:
     ).edition
 
 
+def _domain_write_counts() -> dict[str, int]:
+    return {
+        "capability_grants": CapabilityGrant.objects.count(),
+        "role_assignments": RoleAssignment.objects.count(),
+        "memberships": OrganizationMembership.objects.count(),
+        "participations": Participation.objects.count(),
+        "registrations": Registration.objects.count(),
+        "audit_events": AuditEvent.objects.count(),
+        "domain_events": DomainEvent.objects.count(),
+        "outbox_messages": OutboxMessage.objects.count(),
+    }
+
+
+def _activate_board_controller(
+    *, administrator: Account, organization: Organization
+) -> Account:
+    representation = provision_executive_board(
+        actor=administrator,
+        organization_id=organization.id,
+        reason="Establish synthetic accountable governance.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    controllers = tuple(
+        AccountFactory(display_name=display_name)
+        for display_name in (
+            "Synthetic Board Context Controller One",
+            "Synthetic Board Context Controller Two",
+        )
+    )
+    for controller in controllers:
+        appointment = invite_representation_controller(
+            actor=administrator,
+            representation_id=representation.id,
+            account_id=controller.id,
+            reason="Invite a synthetic accountable controller.",
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+        respond_to_representation_invitation(
+            actor=controller,
+            appointment_id=appointment.id,
+            expected_version=appointment.invitation_version,
+            accept=True,
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+    representation.refresh_from_db()
+    activate_executive_board(
+        actor=administrator,
+        representation_id=representation.id,
+        expected_version=representation.aggregate_version,
+        reason="Activate the synthetic Executive Board.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    return controllers[0]
+
+
 @override_settings(ROOT_URLCONF="maru.baseline_urls")
 def test_edition_record_is_scoped_detailed_and_does_not_select_on_get() -> None:
     administrator, client = _administrator_client()
@@ -147,6 +220,7 @@ def test_working_edition_context_requires_explicit_post_and_never_grants_access(
     session = client.session
     session[ADMIN_EDITION_SESSION_KEY] = str(other.id)
     session.save()
+    expected_domain_counts = _domain_write_counts()
 
     viewed = client.get(_record_url(target))
     select_url = f"{_record_url(target)}select/"
@@ -158,6 +232,7 @@ def test_working_edition_context_requires_explicit_post_and_never_grants_access(
     assert client.get(clear_url).status_code == 405
     assert f'action="{select_url}"' in viewed.content.decode()
     assert "csrfmiddlewaretoken" in viewed.content.decode()
+    assert _domain_write_counts() == expected_domain_counts
 
     rejected_select = client.post(
         select_url,
@@ -170,6 +245,7 @@ def test_working_edition_context_requires_explicit_post_and_never_grants_access(
         in rejected_select.content.decode()
     )
     assert client.session[ADMIN_EDITION_SESSION_KEY] == str(other.id)
+    assert _domain_write_counts() == expected_domain_counts
 
     selected = client.post(select_url, follow=True)
     assert selected.status_code == 200
@@ -178,15 +254,108 @@ def test_working_edition_context_requires_explicit_post_and_never_grants_access(
     assert "This edition is selected" in selected_content
     assert "never grants access" in selected_content
     assert f'action="{clear_url}"' in selected_content
+    assert _domain_write_counts() == expected_domain_counts
 
     rejected_clear = client.post(clear_url, {"scope": "forged"}, follow=True)
     assert rejected_clear.status_code == 200
     assert "Remove unsupported input fields: scope" in rejected_clear.content.decode()
     assert client.session[ADMIN_EDITION_SESSION_KEY] == str(target.id)
+    assert _domain_write_counts() == expected_domain_counts
 
     cleared = client.post(clear_url, follow=True)
     assert cleared.status_code == 200
     assert ADMIN_EDITION_SESSION_KEY not in client.session
+    assert _domain_write_counts() == expected_domain_counts
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_canonical_board_context_actions_change_only_the_session() -> None:
+    administrator, _ = _administrator_client()
+    organization = OrganizationFactory(
+        name="Synthetic Board Context Organization",
+        slug="synthetic-board-context",
+        lifecycle=Organization.Lifecycle.DRAFT,
+    )
+    series = ConventionSeriesFactory(organization=organization)
+    target = EventEditionFactory(
+        organization=organization,
+        series=series,
+        name="Synthetic Board Context Target",
+    )
+    controller = _activate_board_controller(
+        administrator=administrator,
+        organization=organization,
+    )
+    client = APIClient()
+    client.force_login(controller)
+    select_url = f"{_record_url(target)}select/"
+    clear_url = f"{_record_url(target)}clear/"
+    expected_domain_counts = _domain_write_counts()
+    assert (
+        RoleAssignment.objects.filter(
+            principal=controller,
+            organization=organization,
+            role_bundle__code="executive-board",
+            revoked_at__isnull=True,
+        ).count()
+        == 1
+    )
+
+    selected = client.post(select_url, follow=True)
+    assert selected.status_code == 200
+    assert client.session[ADMIN_EDITION_SESSION_KEY] == str(target.id)
+    assert _domain_write_counts() == expected_domain_counts
+
+    rejected_clear = client.post(clear_url, {"scope": "forged"}, follow=True)
+    assert rejected_clear.status_code == 200
+    assert "Remove unsupported input fields: scope" in rejected_clear.content.decode()
+    assert client.session[ADMIN_EDITION_SESSION_KEY] == str(target.id)
+    assert _domain_write_counts() == expected_domain_counts
+
+    cleared = client.post(clear_url, follow=True)
+    assert cleared.status_code == 200
+    assert ADMIN_EDITION_SESSION_KEY not in client.session
+    assert _domain_write_counts() == expected_domain_counts
+
+
+@override_settings(ROOT_URLCONF="maru.baseline_urls")
+def test_scoped_viewer_can_select_only_the_exact_authorized_edition() -> None:
+    actor = AccountFactory(is_staff=False, is_superuser=False)
+    authorized = EventEditionFactory()
+    sibling = EventEditionFactory(
+        organization=authorized.organization,
+        series=authorized.series,
+    )
+    foreign = EventEditionFactory()
+    CapabilityGrantFactory(
+        organization=authorized.organization,
+        edition=authorized,
+        principal=actor,
+        capability_code="events.view_basic",
+    )
+    client = APIClient()
+    client.force_login(actor)
+    expected_domain_counts = _domain_write_counts()
+
+    viewed = client.get(_record_url(authorized))
+    selected = client.post(f"{_record_url(authorized)}select/", follow=True)
+
+    assert viewed.status_code == 200
+    assert selected.status_code == 200
+    assert client.session[ADMIN_EDITION_SESSION_KEY] == str(authorized.id)
+    assert "This edition is selected" in selected.content.decode()
+    assert _domain_write_counts() == expected_domain_counts
+
+    for denied in (sibling, foreign):
+        response = client.post(f"{_record_url(denied)}select/")
+        assert response.status_code == 403
+        assert client.session[ADMIN_EDITION_SESSION_KEY] == str(authorized.id)
+        assert _domain_write_counts() == expected_domain_counts
+
+    cleared = client.post(f"{_record_url(authorized)}clear/", follow=True)
+    assert cleared.status_code == 200
+    assert ADMIN_EDITION_SESSION_KEY not in client.session
+    assert _domain_write_counts() == expected_domain_counts
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")

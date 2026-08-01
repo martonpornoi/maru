@@ -1,10 +1,13 @@
-{% load i18n %}
+{% load i18n admin_edition_context %}
+{% maru_admin_shell_access request as maru_shell_access %}
+{% maru_admin_organization_navigation request as maru_scoped_organizations %}
 <button
   class="sticky toggle-nav-sidebar"
   id="toggle-nav-sidebar"
   aria-label="{% translate 'Toggle navigation' %}"
 ></button>
 <nav class="sticky" id="nav-sidebar" aria-label="Administration">
+  {% if maru_shell_access.workspace_available %}
   <details class="maru-admin-nav-section" open>
     <summary>Convention work</summary>
     <ul>
@@ -36,14 +39,43 @@
           Security history
         </a>
       </li>
-      <li>
-        <a href="{% url 'management-console' %}?view=setup&amp;access=1">
-          Manage access
-        </a>
-      </li>
     </ul>
   </details>
-  {% if available_apps %}
+  {% endif %}
+  {% if request.user.is_authenticated %}
+    <details class="maru-admin-nav-section" open>
+      <summary>My account</summary>
+      <ul>
+        <li>
+          <a
+            href="{% url 'my-representation-invitations' %}"
+            {% if request.resolver_match.url_name == "my-representation-invitations" %}aria-current="page"{% endif %}
+          >My governance invitations</a>
+        </li>
+      </ul>
+    </details>
+  {% endif %}
+  {% if not request.user.is_platform_administrator and maru_scoped_organizations %}
+    {% if not organization %}
+      <details class="maru-admin-nav-section" open>
+        <summary>Organization management</summary>
+        <div class="maru-platform-navigation">
+          {% include "core/_scoped_organization_navigation.html" %}
+        </div>
+      </details>
+    {% endif %}
+  {% endif %}
+  {% if request.user.is_platform_administrator or baseline_page_id and organization %}
+    <details class="maru-admin-nav-section" open>
+      <summary>
+        {% if request.user.is_platform_administrator %}Platform administration{% else %}Organization management{% endif %}
+      </summary>
+      <div class="maru-platform-navigation">
+        {% include "core/_platform_admin_navigation_items.html" %}
+      </div>
+    </details>
+  {% endif %}
+  {% if maru_shell_access.specialist_records_available and available_apps %}
     <details
       class="maru-admin-nav-section maru-admin-record-nav"
       {% if request.resolver_match.url_name != "management-console" %}open{% endif %}
@@ -57,5 +89,8 @@
       >
       {% include "admin/app_list.html" with app_list=available_apps show_changelinks=False %}
     </details>
+  {% else %}
+    {# Django's nav_sidebar.js requires this element whenever #nav-sidebar exists. #}
+    <input type="hidden" id="nav-filter" value="">
   {% endif %}
 </nav>

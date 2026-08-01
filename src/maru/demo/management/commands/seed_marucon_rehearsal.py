@@ -1,110 +1,46 @@
-"""Create the bounded, admin-first local Marucon educational rehearsal."""
+"""Fail closed for the retired public-roster Marucon rehearsal."""
 
 from __future__ import annotations
 
-import json
-import os
 from pathlib import Path
 from typing import Any
 
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 
-from maru.demo.marucon_rehearsal import (
-    MARUCON_SHARED_PASSWORD,
-    MaruconRehearsalConflictError,
-    seed_marucon_rehearsal,
+RETIRED_COMMAND_MESSAGE = (
+    "seed_marucon_rehearsal is retired and cannot import public roster data or "
+    "create convention authority. Use `python src/manage.py seed_demo_data` for "
+    "the synthetic rehearsal, then use Page 8, Representation & access, for the "
+    "explicit Executive Board handoff."
 )
-from maru.demo.public_roster import (
-    AWOOSTRIA_ROSTER_URL,
-    fetch_awoostria_roster,
-    load_public_roster_file,
-)
+
+_RETIRED_ROSTER_URL = "https://awoostria.at/about-us/our-volunteers"
 
 
 class Command(BaseCommand):
-    help = (
-        "Create the local-only Marucon admin-first educational rehearsal from "
-        "an explicitly acknowledged public or local HTML roster."
-    )
+    help = "Retired: use seed_demo_data and Page 8 instead."
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
             "--roster-file",
             type=Path,
-            help=(
-                "Read a saved or synthetic roster HTML file instead of making a "
-                "network request."
-            ),
+            help="Retired compatibility option; no file is read.",
         )
         parser.add_argument(
             "--roster-url",
-            default=AWOOSTRIA_ROSTER_URL,
-            help="Public Awoostria volunteer page used by the local rehearsal.",
+            default=_RETIRED_ROSTER_URL,
+            help="Retired compatibility option; no network request is made.",
         )
         parser.add_argument(
             "--accept-public-roster",
             action="store_true",
-            help=(
-                "Acknowledge that public usernames, departments, descriptions, "
-                "and role labels will be copied into the local database. Images "
-                "and contact data are never imported."
-            ),
+            help="Retired compatibility option; public roster import is disabled.",
         )
         parser.add_argument(
             "--password",
-            default=MARUCON_SHARED_PASSWORD,
-            help="Shared password assigned to newly created rehearsal accounts.",
+            help="Retired compatibility option; no password is validated or stored.",
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
-        _ = args
-        settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "")
-        if settings_module not in {"maru.settings.local", "maru.settings.test"}:
-            raise CommandError(
-                "The Marucon rehearsal can be seeded only with local or test settings."
-            )
-
-        password = str(options["password"])
-        try:
-            validate_password(password)
-        except ValidationError as error:
-            raise CommandError(
-                "The supplied rehearsal password does not satisfy password "
-                "validation: " + " ".join(error.messages)
-            ) from error
-
-        roster_file = options.get("roster_file")
-        try:
-            if roster_file is not None:
-                roster = load_public_roster_file(roster_file)
-                roster_source = str(roster_file)
-            else:
-                if not options["accept_public_roster"]:
-                    raise CommandError(
-                        "Pass --accept-public-roster to acknowledge the bounded "
-                        "public data import, or use --roster-file."
-                    )
-                roster = fetch_awoostria_roster(str(options["roster_url"]))
-                roster_source = str(options["roster_url"])
-            summary = seed_marucon_rehearsal(
-                roster=roster,
-                password=password,
-            )
-        except (OSError, UnicodeError, ValueError) as error:
-            raise CommandError(
-                f"Could not load the rehearsal roster: {error}"
-            ) from error
-        except MaruconRehearsalConflictError as error:
-            raise CommandError(str(error)) from error
-
-        result = summary.as_dict()
-        result.update(
-            {
-                "local_only": True,
-                "roster_source": roster_source,
-                "shared_password": password,
-            }
-        )
-        self.stdout.write(json.dumps(result, indent=2, sort_keys=True))
+        del args, options
+        raise CommandError(RETIRED_COMMAND_MESSAGE)

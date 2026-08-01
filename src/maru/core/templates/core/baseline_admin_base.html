@@ -1,0 +1,66 @@
+{% extends baseline_admin_parent_template|default:"core/baseline_admin_standalone.html" %}
+{% load static %}
+
+{% block title %}{% block baseline_page_title %}Administration · Maru{% endblock %}{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
+{% endblock %}
+
+{% block bodyclass %}
+  {{ block.super }}{% if baseline_use_admin_shell %} baseline-unified-admin{% endif %}
+{% endblock %}
+
+{% block breadcrumbs %}
+  {% if baseline_use_admin_shell %}
+    <div class="breadcrumbs">
+      <a href="{% url 'admin:index' %}">Administration home</a>
+      &rsaquo;
+      {% block baseline_breadcrumbs %}Platform administration{% endblock %}
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block messages %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block content_subtitle %}{% endblock %}
+
+{% block content %}
+  {% if baseline_use_admin_shell %}
+    <div
+      id="main-content"
+      class="baseline-page {{ baseline_page_class }}"
+      data-page="{{ baseline_page_id }}"
+      tabindex="-1"
+    >
+  {% else %}
+    <main
+      id="main-content"
+      class="baseline-page {{ baseline_page_class }}"
+      data-page="{{ baseline_page_id }}"
+      tabindex="-1"
+    >
+  {% endif %}
+
+    {% if messages %}
+      <div class="baseline-messages" aria-live="polite">
+        {% for message in messages %}
+          <div
+            class="baseline-notice{% if message.tags %} baseline-notice--{{ message.tags }}{% endif %}"
+            role="{% if 'error' in message.tags %}alert{% else %}status{% endif %}"
+          >
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block baseline_content %}{% endblock %}
+
+  {% if baseline_use_admin_shell %}
+    </div>
+  {% else %}
+    </main>
+  {% endif %}
+{% endblock %}

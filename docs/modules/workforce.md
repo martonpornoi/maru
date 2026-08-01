@@ -1,7 +1,7 @@
 # Workforce module
 
 Status: Position, hierarchy, opportunity, agreement, and authority-onboarding slice
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
@@ -25,14 +25,21 @@ answer, an uploaded file, or a profile label. Authority remains owned by
 
 A platform administrator may initiate or review bootstrap work as an attributed
 actor, but cannot be the subject of a volunteer application, onboarding request,
-or position assignment. Those model boundaries reject the platform-only
-account classification.
+or position assignment. Model validation and PostgreSQL reject the
+platform-only subject classification without rejecting `reviewed_by`,
+`requested_by`, `proposed_by`, or `approved_by` actor provenance.
 
-## Empty-organization bootstrap
+## Legacy empty-organization bootstrap
+
+ADR 0040 supersedes this broad workforce ceremony as the normal way to
+establish first organization authority. A new Draft organization uses Page 8's
+purpose-built Executive Board lifecycle. The service below remains preserved
+recovery evidence for legacy reconciliation only; it must not compete with Page
+8 or be used without a separately approved procedure.
 
 An empty organization cannot use its own scoped permission commands before it
-has a controller. Convention work's **Establish convention leadership**
-ceremony is therefore a one-shot, trust-on-first-use exception.
+has a controller. The preserved one-shot, trust-on-first-use service was the
+former **Establish convention leadership** workflow.
 It requires:
 
 - an existing active platform administrator as bootstrap controller;
@@ -48,15 +55,12 @@ templates. The platform administrator remains an attributed actor and receives
 no organizer membership, convention role, participation, or workforce
 position. A second run fails closed.
 
-The ceremony appears contextually in Convention work's **Setup guide** only to
-an active platform administrator while an eligible organizer has no authority
-records. It lists recognizable
-organization, edition, and Chair labels, requires the controller's current
-password, exact organization slug, and a permanent reason, and delegates to
-the same atomic service as the command. Candidate account reads, denied
-attempts, and success are audited. After completion it becomes a read-only
-explanation; later changes use ordinary dual-controlled access and appointment
-workflows.
+The former browser ceremony and
+`/api/v1/management/convention-bootstrap` endpoint are not mounted. Their old
+tests and implementation remain historical recovery evidence; they are not a
+second setup path beside Page 8. Candidate reads and mutations must use an
+approved operator reconciliation procedure and retain the service's existing
+audit and atomicity boundaries.
 
 `bootstrap_convention` remains the recovery/operator fallback. In PowerShell,
 set the database in a separate statement and invoke the virtual-environment
@@ -173,8 +177,6 @@ Reference web routes:
 Versioned client routes:
 
 ```text
-GET  /api/v1/management/convention-bootstrap
-POST /api/v1/management/convention-bootstrap
 GET  /api/v1/public/editions/<edition_id>/volunteer-opportunities
 POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/opportunities/<opportunity_id>/applications/me
 GET  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/documents/me
@@ -193,6 +195,23 @@ Specialist records:
 /admin/workforce/onboardingdocumentrequest/
 /admin/workforce/positionassignment/
 ```
+
+## Database integrity and recovery
+
+Workforce `0003` installs IDN-011 guards for volunteer applications,
+onboarding-document requests, and position assignments. Each insert or update
+locks the exact subject identity row before checking that it remains a person.
+A deferred identity trigger prevents person-to-platform reclassification while
+any of the three subject relationships survives. The transactional migration
+creates those guards before its final count-only legacy-data preflight, so a
+concurrent writer cannot enter between the scan and protection becoming
+effective.
+
+These checks complement the existing department, document-type, position,
+onboarding-evidence, and assignment-scope guards. They do not turn applications
+or requests into authority and do not inspect actor/provenance foreign keys.
+Use the maintenance-window, reconciliation, and fix-forward procedure in
+[`idn011-convention-subject-migration-and-recovery.md`](../operations/idn011-convention-subject-migration-and-recovery.md).
 
 ## Current limitations
 
