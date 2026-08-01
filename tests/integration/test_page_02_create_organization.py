@@ -41,6 +41,7 @@ def test_platform_administrator_can_open_the_complete_creation_page() -> None:
     assert 'data-page="create-organization"' in content
     assert "Create organization" in content
     assert 'aria-label="Platform administration"' in content
+    assert 'class="baseline-sidebar-context"' not in content
     assert 'href="/admin/"' in content
     assert 'href="/admin/organizations/new/"' in content
     assert "+ Add" in content

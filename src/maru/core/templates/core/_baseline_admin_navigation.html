@@ -18,5 +18,44 @@
         + Add
       </a>
     </div>
+
+    {% if organization %}
+      <section
+        class="baseline-sidebar-context"
+        aria-labelledby="baseline-organization-context"
+      >
+        <p
+          class="baseline-sidebar-context-name"
+          id="baseline-organization-context"
+        >
+          {{ organization.name }}
+        </p>
+        <a
+          class="baseline-sidebar-link baseline-sidebar-link--standalone"
+          href="{% url 'baseline-organization-record' organization.slug %}"
+          {% if current_admin_page == "organization-record" %}aria-current="page"{% endif %}
+        >
+          Organization record
+        </a>
+        <div class="baseline-sidebar-row">
+          <a
+            class="baseline-sidebar-link"
+            href="{% url 'baseline-organization-record' organization.slug %}#convention-series-title"
+          >
+            Convention series
+          </a>
+          {% if organization.lifecycle != "closed" %}
+            <a
+              class="baseline-sidebar-add"
+              href="{% url 'baseline-create-convention-series' organization.slug %}"
+              aria-label="Add convention series for {{ organization.name }}"
+              {% if current_admin_page == "add-convention-series" %}aria-current="page"{% endif %}
+            >
+              + Add
+            </a>
+          {% endif %}
+        </div>
+      </section>
+    {% endif %}
   </nav>
 </aside>

@@ -72,7 +72,14 @@ def test_organization_record_shows_only_its_series_and_contextual_add() -> None:
     assert "Synthetic Retreat" in content
     assert "Inactive" in content
     assert "Other Tenant Brand" not in content
-    assert content.count('class="baseline-sidebar-row"') == 1
+    assert content.count('class="baseline-sidebar-row"') == 2
+    assert content.count('aria-current="page"') == 1
+    assert 'class="baseline-sidebar-context"' in content
+    assert "Organization record" in content
+    assert (
+        'href="/admin/organizations/synthetic-maru/#convention-series-title"' in content
+    )
+    assert 'aria-label="Add convention series for Synthetic Maru Organizers"' in content
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")
@@ -96,6 +103,11 @@ def test_empty_and_closed_organization_record_states_are_explicit() -> None:
     closed_content = closed_response.content.decode()
     assert "A Closed organization cannot add a new convention series" in closed_content
     assert f"/admin/organizations/{closed.slug}/series/new/" not in closed_content
+    assert "Organization record" in closed_content
+    assert (
+        f'href="/admin/organizations/{closed.slug}/#convention-series-title"'
+        in closed_content
+    )
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")
@@ -132,7 +144,14 @@ def test_platform_administrator_can_open_scoped_series_creation() -> None:
     assert '<option value="active" selected>Active</option>' in content
     assert "One recurring brand, no edition" in content
     assert "does not make this platform account part" in content
-    assert content.count('class="baseline-sidebar-row"') == 1
+    assert content.count('class="baseline-sidebar-row"') == 2
+    assert content.count('aria-current="page"') == 1
+    assert 'class="baseline-sidebar-context"' in content
+    assert "Organization record" in content
+    assert (
+        'href="/admin/organizations/synthetic-maru/#convention-series-title"' in content
+    )
+    assert 'aria-label="Add convention series for Synthetic Maru Organizers"' in content
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")

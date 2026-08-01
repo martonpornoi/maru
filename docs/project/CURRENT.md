@@ -1,8 +1,9 @@
 # Current project state
 
-Last updated: 2026-07-31
-Phase: Page 4 Create convention series implemented; product-owner inspection
-is the gate before Page 5 Convention-series record
+Last updated: 2026-08-01
+Phase: Page 4 Create convention series and progressive navigation revision
+implemented; product-owner inspection is the gate before Page 5
+Convention-series record
 Implementation status: The default browser exposes Sign in, the platform
 organization inventory, complete optional Draft creation, linked organization
 records, audited profile editing, protected empty-Draft deletion, and nested
@@ -25,10 +26,10 @@ The complete pre-reset state is also durable as commit `548f15a` on
 implementation continues on `codex/page-by-page-rebuild`.
 
 The product owner accepted the empty baseline and Pages 1 through 3. Page 4 is
-implemented on `codex/page-04-create-convention-series` under ADR 0035 and
-UX-018, using the preserved Convention Series vocabulary inside the reviewed
-organization-scoped journey. The default `maru.baseline_urls` experience now
-exposes:
+implemented on `codex/page-04-create-convention-series` under ADRs 0035 and
+0036 plus UX-018 and UX-019, using the preserved Convention Series vocabulary
+and compact navigation pattern inside the reviewed organization-scoped
+journey. The default `maru.baseline_urls` experience now exposes:
 
 - `/accounts/login/`: the only unauthenticated HTML page;
 - `/admin/`: the only authenticated HTML page, restricted to active platform
@@ -46,9 +47,13 @@ exposes:
 
 The administration home contains Maru identity, the signed-in name, Sign out,
 the organization inventory, its empty/populated/failure states, and a clear
-platform-access-not-participation boundary. Pages 1 through 4 share one focused
-Platform administration row with **Organizations** and an adjacent compact
-**+ Add** action.
+platform-access-not-participation boundary. Pages 1 through 4 share a global
+**Organizations** row with an adjacent compact **+ Add** action. Pages 3 and 4
+also show a section named for the selected organization with **Organization
+record** and **Convention series**, plus the scoped series **+ Add** action.
+Exactly one action identifies the current page. The desktop sidebar now begins
+at normal viewport padding rather than inside a centered 88-rem grid; narrow
+layouts stack the same destinations above the content.
 The inventory shows only organization identity, lifecycle, series count, and
 edition count. It has no setup guidance, edition selector, Django model
 directory, embedded application, registration, volunteer, or convention-owned
@@ -259,6 +264,9 @@ excludes images/contact data and automated tests use a synthetic miniature.
   protected empty-Draft deletion.
 - ADR 0035 supersedes ADR 0020 only for the current series-creation browser
   adapter, nesting Page 4 under Page 3 and keeping organization/slug code-owned.
+- ADR 0036 supersedes ADRs 0034 and 0035 only for navigation placement and
+  current state: mounted pages appear at their real global or selected-context
+  scope, and the desktop sidebar aligns to ordinary viewport padding.
 
 ## Verification
 
@@ -270,15 +278,17 @@ excludes images/contact data and automated tests use a synthetic miniature.
 - Django system check, production-shaped deployment check, and migration drift
   check pass.
 - OpenAPI 3.1 generation/validation and generated TypeScript types pass.
-- Browser QA covers Page 3's one-row navigation and series empty state plus
-  Page 4's parent context, one required name, optional fields, Active default,
-  boundary text, and actions at desktop and 390-by-844. Both pages have no
-  horizontal overflow. The live form was not submitted; MaruCon remains
-  unchanged with zero series.
+- Browser QA covers Page 3's selected-organization navigation and series empty
+  state plus Page 4's parent context, scoped current add action, one required
+  name, optional fields, Active default, boundary text, and actions. At 1920
+  pixels the sidebar begins 40 pixels from the viewport edge; at 390 by 844 it
+  stacks at 16 pixels. Both have no horizontal overflow or browser runtime
+  warnings/errors. The menu add action navigates from Page 3 to Page 4. The live
+  form was not submitted; MaruCon remains unchanged with zero series.
 - The preserved frontend still passes 20 component tests, TypeScript
   typecheck/generated-contract validation, and its Vite production build, but
   it is not mounted by the baseline.
-- Documentation validation passes for 138 Markdown files and 188 unique
+- Documentation validation passes for 140 Markdown files and 188 unique
   requirement identifiers.
 - Fresh migration apply passed through organizations `0004`, identity `0010`,
   and registration `0030` on `maru_rebuild_empty`; the existing MaruCon Draft
@@ -363,8 +373,8 @@ production-approved until these deployment and governance gates pass.
 
 Read `AGENTS.md`, this file, `RESET_REBUILD.md`, `ROADMAP.md`,
 `MARUCON_ADMIN_SCENARIO.md`, requirements IDN-009 through IDN-012, UX-009
-through UX-018, REG-001 through REG-022, HR-007/008/010, ADRs 0017 through
-0035, the Page 1 through Page 4 contracts, and the authorization, events,
+through UX-019, REG-001 through REG-022, HR-007/008/010, ADRs 0017 through
+0036, the Page 1 through Page 4 contracts, and the authorization, events,
 organizations, Convention work, registration, workforce, and demo-data module
 documents.
 

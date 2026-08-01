@@ -3,13 +3,13 @@
 Status: Implemented tenant, brand, localization bootstrap, Page 1 inventory,
 complete Page 2 Draft creation, Page 3 record management, and Page 4
 organization-scoped convention-series creation
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 
 ## Purpose and requirements
 
 `maru.organizations` owns tenant structure and recurring-series continuity for
 IDN-002, IDN-011, IDN-012, EVT-001, EVT-003, EVT-005, UX-014, UX-015,
-UX-016, UX-017, and UX-018.
+UX-016, UX-017, UX-018, and UX-019.
 
 ## Owned data and invariants
 
@@ -124,6 +124,14 @@ precedence.
 - the self-context projection consumes the membership query.
 
 ## Bootstrap administration
+
+The shared administration menu always exposes the global Organizations row.
+Once an authorized view has selected an organization, a section named for it
+links to its record and Convention series section, with series creation beside
+that destination while lifecycle permits it. This is display context only: it
+does not query across tenants, infer ownership, or grant authority. The desktop
+shell aligns that menu to ordinary page padding instead of centering the whole
+grid.
 
 Organization, convention-series, and membership lists use names and
 relationship labels instead of UUIDs. They support scoped search, lifecycle

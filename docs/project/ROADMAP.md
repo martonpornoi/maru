@@ -13,8 +13,10 @@ Draft command, ADR 0033 expands Page 2 with the complete optional profile,
 ADR 0034 adds the linked Page 3 record, compact one-row
 **Organizations**/**+ Add** navigation, audited profile updates, and protected
 empty-Draft deletion, and ADR 0035 adds organization-scoped Page 4 convention
-series creation. All retain the no-governance and no-participation side-effect
-boundary. The
+series creation. ADR 0036 makes navigation progressive: global pages remain
+global while selected-organization pages appear in a named contextual section,
+and the desktop sidebar aligns to ordinary viewport padding. All retain the
+no-governance and no-participation side-effect boundary. The
 phase descriptions below are capability evidence and future outcomes, not a
 list of currently mounted pages. Pages return only after UX-013's contract is
 approved and verified one at a time.

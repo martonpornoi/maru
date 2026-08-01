@@ -4,8 +4,8 @@
 - Branch: `codex/page-03-organization-record`
 - Route: `/admin/organizations/<slug>/`
 - Requirements: IDN-002, IDN-011, IDN-012, EVT-005, UX-013, UX-014,
-  UX-016, UX-017, AUD-001, AUD-002, PRI-001
-- Decision: ADR 0034
+  UX-016, UX-017, UX-019, AUD-001, AUD-002, PRI-001
+- Decisions: ADR 0034, ADR 0036
 
 ## Purpose and primary user
 
@@ -20,16 +20,19 @@ Executive Board holder, participant, registrant, or volunteer.
 
 ## Placement and navigation
 
-Page 1 inventory names link to the corresponding Page 3 record. Page 1,
-Page 2, and Page 3 share one **Platform administration** navigation row:
+Page 1 inventory names link to the corresponding Page 3 record. Every page
+keeps the global **Organizations** destination and its adjacent compact
+**+ Add** action. After an organization is selected, Page 3 also shows a
+section named for that organization with:
 
-- **Organizations** is the primary inventory link; and
-- a compact adjacent **+ Add** action links to Page 2.
+- **Organization record**, current on Page 3; and
+- **Convention series** with an adjacent **+ Add** action linking to Page 4.
 
-The inventory link is current on Page 1 and Page 3. The add action is current
-only on Page 2. The actions remain individually focusable and labelled. At
-narrow widths the row remains one coherent group rather than becoming two
-stacked menu destinations.
+The scoped series destination anchors the Page 3 section rather than opening a
+global list. A Closed organization omits the unavailable add action. Actions
+remain individually focusable and labelled. The desktop menu begins at normal
+page padding rather than inside a centered grid; at narrow widths it stacks
+above the record without horizontal overflow.
 
 ## Information and edit action
 
@@ -108,8 +111,8 @@ have no horizontal overflow.
 
 ## Acceptance checks
 
-- one-row **Organizations** plus adjacent **+ Add** navigation on all three
-  pages, with correct current action;
+- global **Organizations** plus adjacent **+ Add**, selected-organization
+  record and series destinations, and exactly one correct current action;
 - linked inventory names and an authorized populated record;
 - anonymous redirect, ordinary/staff denial before lookup, and authorized 404;
 - complete-profile population, validation, normalization, and changed-field

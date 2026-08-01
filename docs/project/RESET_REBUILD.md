@@ -1,8 +1,9 @@
 # Controlled reset and page-by-page rebuild
 
-Status: Pages 1 through 3 accepted; Page 4 Create convention series implemented
-with verification complete and product-owner inspection pending
-Last updated: 2026-07-31
+Status: Pages 1 through 3 accepted; Page 4 Create convention series and its
+progressive navigation revision implemented with product-owner inspection
+pending
+Last updated: 2026-08-01
 
 This ledger preserves the current Maru implementation while the product
 experience is reconsidered from a deliberately small baseline. It is the
@@ -221,8 +222,8 @@ Checklist:
 - Contract:
   [`../product/page-contracts/04-create-convention-series.md`](../product/page-contracts/04-create-convention-series.md)
 - Requirements: IDN-011, EVT-001, EVT-003, UX-013, UX-014, UX-017,
-  UX-018, AUD-001, AUD-002, PRI-001
-- Decision: ADR 0035
+  UX-018, UX-019, AUD-001, AUD-002, PRI-001
+- Decisions: ADR 0035, ADR 0036
 
 Checklist:
 
@@ -231,6 +232,8 @@ Checklist:
   effect, failure, and responsive contract before implementation.
 - [x] Show organization-scoped series empty/populated states and **+ Add
   series** on Page 3.
+- [x] Add every mounted page to the shared menu at its real scope and align the
+  desktop sidebar to normal viewport padding.
 - [x] Implement the name-only creation path and complete optional series
   identity fields without accepting parent or slug from POST.
 - [x] Prove scoped collision handling, Closed refusal, atomic audit, rollback,

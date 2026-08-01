@@ -1,10 +1,11 @@
 # Page 4 create convention series
 
 Status: Executable local Page 4
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 
-ADR 0035 and UX-018 add a purpose-built recurring-brand command beneath one
-organization without restoring generic Django model administration.
+ADRs 0035 and 0036 plus UX-018 and UX-019 add a purpose-built recurring-brand
+command and progressive scoped navigation beneath one organization without
+restoring generic Django model administration.
 
 ## Current local environment
 
@@ -39,7 +40,11 @@ series**. Its direct route is
 
 - Page 3 shows only the selected organization's series and contextual add
   action before the complete profile;
-- the sidebar remains one **Organizations**/**+ Add** organization row;
+- the sidebar keeps the global **Organizations**/**+ Add** row and, while
+  MaruCon is selected, adds **Organization record** and **Convention series**
+  with the scoped series **+ Add** action beside it;
+- the sidebar begins at ordinary viewport padding on desktop and stacks above
+  content without horizontal overflow at narrow widths;
 - Page 4 displays the parent but accepts no organization or slug field;
 - only Convention series name is required;
 - description, website, public contact email, and availability are optional;

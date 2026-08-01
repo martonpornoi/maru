@@ -57,10 +57,11 @@ body {
 
 .baseline-admin-layout {
   display: grid;
-  width: min(88rem, calc(100% - 2rem));
-  grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr);
-  gap: clamp(2rem, 5vw, 4.5rem);
-  margin: clamp(2.5rem, 7vh, 5rem) auto 4rem;
+  width: 100%;
+  grid-template-columns: minmax(12rem, 14rem) minmax(0, 68rem);
+  gap: clamp(2rem, 4vw, 4rem);
+  margin: clamp(2.5rem, 7vh, 5rem) 0 4rem;
+  padding-inline: clamp(1rem, 4vw, 2.5rem);
 }
 
 .baseline-admin-layout .baseline-page {
@@ -83,6 +84,22 @@ body {
   margin-top: 1rem;
 }
 
+.baseline-sidebar-context {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e5e0d7;
+}
+
+.baseline-sidebar-context-name {
+  margin: 0 0 0.45rem;
+  color: #6b5840;
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
 .baseline-sidebar-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -96,6 +113,10 @@ body {
   color: #071b3a;
   font-weight: 700;
   text-decoration: none;
+}
+
+.baseline-sidebar-link--standalone {
+  margin-bottom: 0.15rem;
 }
 
 .baseline-sidebar-link:hover {
@@ -660,6 +681,7 @@ button:focus-visible {
   .baseline-admin-layout {
     grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
+    padding-inline: 1rem;
   }
 
   .baseline-sidebar {

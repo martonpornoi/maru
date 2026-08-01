@@ -62,11 +62,19 @@ def test_inventory_and_record_use_compact_navigation_and_record_link() -> None:
     inventory_content = inventory.content.decode()
     assert 'class="baseline-sidebar-row"' in inventory_content
     assert 'aria-label="Add organization"' in inventory_content
+    assert 'class="baseline-sidebar-context"' not in inventory_content
     assert 'href="/admin/organizations/synthetic-maru/"' in inventory_content
     assert record.status_code == 200
     content = record.content.decode()
     assert 'data-page="organization-record"' in content
-    assert content.count('class="baseline-sidebar-row"') == 1
+    assert content.count('class="baseline-sidebar-row"') == 2
+    assert content.count('aria-current="page"') == 1
+    assert 'class="baseline-sidebar-context"' in content
+    assert "Organization record" in content
+    assert (
+        'href="/admin/organizations/synthetic-maru/#convention-series-title"' in content
+    )
+    assert 'aria-label="Add convention series for Synthetic Maru Organizers"' in content
     assert 'href="/admin/"' in content
     assert 'href="/admin/organizations/new/"' in content
     assert "Synthetic Maru Organizers" in content

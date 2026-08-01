@@ -411,6 +411,18 @@ architecture documents, implementation issues, tests, and release notes.
   membership, authority, participation, registration, governance, or workforce
   record. Denied, unknown-parent, validation, persistence, and audit failures
   must disclose no cross-tenant data and leave no partial series.
+- **UX-019 — Progressive, context-scoped administration navigation:** Every
+  mounted administration page must be reachable from the shared side menu at
+  the scope where it belongs. Platform-wide destinations remain visible
+  globally; organization-owned destinations appear only after an organization
+  is selected and name that organization as their context. A creation action
+  sits beside its corresponding destination, each current page has exactly one
+  current navigation action, and every action has an unambiguous accessible
+  name. The desktop shell must align the menu near the viewport edge using
+  ordinary page padding rather than centering the whole administration grid;
+  narrow layouts must stack without horizontal overflow. Navigation context
+  never grants authority, lists another tenant's records, or accepts or
+  reparents tenant ownership.
 
 ### Registration, orders, and attendee service
 

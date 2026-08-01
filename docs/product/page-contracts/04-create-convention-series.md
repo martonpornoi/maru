@@ -4,8 +4,8 @@
 - Branch: `codex/page-04-create-convention-series`
 - Route: `/admin/organizations/<organization_slug>/series/new/`
 - Requirements: IDN-011, EVT-001, EVT-003, UX-013, UX-014, UX-017,
-  UX-018, AUD-001, AUD-002, PRI-001
-- Decision: ADR 0035
+  UX-018, UX-019, AUD-001, AUD-002, PRI-001
+- Decisions: ADR 0035, ADR 0036
 
 ## Purpose and primary user
 
@@ -25,8 +25,12 @@ section lists only series owned by that organization and provides a contextual
 **+ Add series** action. Empty text explains that editions come later.
 
 Page 4 is nested under that organization and links back to its Page 3 record.
-The shared sidebar remains one **Organizations** row with the adjacent compact
-organization **+ Add** action; it does not gain a misleading global Series row.
+The shared sidebar retains the global **Organizations** row and adds a section
+named for the selected organization. That section links to **Organization
+record** and **Convention series**; the latter keeps its compact adjacent
+**+ Add** action current on Page 4. This is contextual navigation, not a
+global or cross-tenant Series collection. The desktop sidebar starts at normal
+page padding and the bounded content remains beside it; narrow layouts stack.
 
 ## Information and creation action
 
@@ -85,7 +89,8 @@ Page 3's series table reflows to labelled records at narrow widths. Desktop and
 ## Acceptance checks
 
 - Page 3 empty and populated organization-scoped series states;
-- contextual add route and unchanged one-row global navigation;
+- contextual record and series destinations, current add route, global
+  organization row, and viewport-edge desktop alignment;
 - anonymous redirect, denied-before-lookup, authorized 404, and Closed `409`;
 - name-only active creation and complete optional inactive creation;
 - normalized names, bounded collision-safe per-organization slugs, and

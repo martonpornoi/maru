@@ -73,6 +73,7 @@ def test_platform_administrator_reaches_the_platform_home() -> None:
     assert 'data-page="platform-administration-home"' in content
     assert "Organizations" in content
     assert 'aria-label="Platform administration"' in content
+    assert 'class="baseline-sidebar-context"' not in content
     assert 'href="/admin/organizations/new/"' in content
     assert "+ Add" in content
     assert 'aria-current="page"' in content
