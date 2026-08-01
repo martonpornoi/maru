@@ -240,7 +240,11 @@ def test_revoked_scope_removes_workspace_and_selector_without_staff_promotion() 
         organization=edition.organization,
         edition=edition,
     )
-    CapabilityGrant.objects.filter(id=grant.id).update(revoked_at=timezone.now())
+    CapabilityGrant.objects.filter(id=grant.id).update(
+        revoked_at=timezone.now(),
+        revoked_by=AccountFactory(),
+        revocation_reason="Synthetic scoped-shell revocation.",
+    )
     client = _client(account)
 
     home = client.get(reverse("admin:index"))

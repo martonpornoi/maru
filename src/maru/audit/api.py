@@ -15,7 +15,7 @@ from maru.audit.serializers import (
 )
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_organization_target
 from maru.identity.models import Account
 
 
@@ -75,7 +75,7 @@ class AuditEventListView(APIView):
         decision = decide(
             principal=account,
             capability_code="audit.view_security",
-            resource=ResourceScope(organization_id=organization_id),
+            resource=resolve_organization_target(organization_id=organization_id),
             requested_fields=frozenset(AuditEventSummarySerializer.Meta.fields),
         )
         obligations = tuple(sorted(decision.obligations))

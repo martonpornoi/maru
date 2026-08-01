@@ -1,6 +1,7 @@
 # Maru production consolidation
 
-Status: Active master checklist; M2.1 locally verified, M2.2 scope v2 next
+Status: Active master checklist; M2.2 exact scope locally verified, M2.3 exact
+authority-provenance hardening next
 Branch: `codex/full-platform-consolidation`
 Base: `327a7d63574d0118356a0fd11ca5a316d78b2aed`  
 Started: 2026-08-01  
@@ -79,8 +80,8 @@ The state vocabulary is deliberately small:
 | Unified administration shell | Mounted | `maru.urls`, reserved route ordering, one sidebar, Convention work, scoped non-staff access, staff-only specialist records, desktop/390-pixel smoke, and the final 792-test/90.01-percent local backend gate pass without warnings. The custom sidebar preserves Django's single `#nav-filter` contract when Specialist records are unavailable; the focused routing regression and live Board reload pass. Accessibility/state-matrix/owner gates remain. |
 | Organization representation | Mounted / partial | Page 8 implements provision, exact verified-account invitation, own response, two-person cross-approval, atomic Draft-to-Active activation, and platform emergency containment. Database guards through organizations `0012`, sensitive read/deny audit, the 106-migration fresh synthetic database/current restore drill, focused readiness/representation matrices, and the final local backend gate pass. Representative PITR, accessibility, owner evidence, and routine term management remain. |
 | Department hierarchy | Partial | Workforce model/projection and preserved structure view exist; no accepted mounted editor or M2 scope exists. |
-| Department/resource authorization | Designed / absent runtime | ADR 0041 accepts exact department and typed-resource scope with no implicit hierarchy inheritance. Current grants remain organization/edition only; department-owned writes stay unmounted. |
-| Effective-access explanation | Partial | Pages 3–8 distinguish platform, scoped Board, exact-edition, and own-invitation access; department/resource/field scope remains M2. |
+| Department/resource authorization | Implemented backend / unmounted editor | ADR 0041 exact department and typed-resource policy, commands, bindings, migrations, and database guards are implemented without implicit hierarchy inheritance. Production status remains blocked on actor/approver authority-source provenance and the contextual editor/effective-access UX remains unmounted. |
+| Effective-access explanation | Partial | Pages 3–8 distinguish platform, scoped Board, exact-edition, and own-invitation access. Exact department/resource decisions now work below the UI; computed human explanations and field-purpose detail remain M2. |
 | Attendee registration | Partial | Large tested domain, headless API, and preserved HTML become reachable through the intended URL set, but coherent-shell review and deployment gates remain. |
 | Registration extension fields | Partial | Append-only, permission-aware API/workflow exists; ADR 0039 integration and current browser evidence remain. |
 | Generic application/form portfolio | Absent | KNO-009 and REG-023. |
@@ -578,8 +579,20 @@ not production approval.
   implicit department-tree inheritance.
 - [ ] Awoostria-shaped editable department template using synthetic data.
 - [ ] Mounted hierarchy/position editor and minimized structure view.
-- [ ] Implement ADR 0041 department and typed-resource constraints in
+- [x] Implement ADR 0041 department and typed-resource constraints in
   authorization policy, grants, assignments, migrations, and trusted targets.
+- [x] Add deterministic immutable `workforce.position` bindings, including
+  activation backfill and explicit live creation from specialist-record and
+  preserved bootstrap workflows.
+- [x] Add a privacy-minimized readiness command that separates migration-data
+  readiness from production readiness and names authority-source provenance as
+  unresolved without disclosing people, capabilities, or resource IDs.
+- [x] Pass the consolidated 876-test backend gate at 90.43 percent branch
+  coverage, the 57-test ordered migration matrix, static/deploy/OpenAPI/client/
+  frontend/documentation gates, populated synthetic migration/readiness, and
+  scoped live browser smoke.
+- [ ] Record and enforce exact actor/approver authority-source provenance for
+  root grant and role issuance.
 - [ ] Effective-access query/header and audited contextual assignment editor.
 - [ ] Cross-domain, access-aware human activity workspace resolving safe actor
   and target labels. Pages 5/7 already provide bounded aggregate record
@@ -698,8 +711,9 @@ count.
    Page 8 for representation work.
 4. Run `git status --short --branch`; do not discard unrelated changes.
 5. Confirm the latest local checkpoint/commit and test result in `CURRENT.md`.
-6. The final local hardening suite/readiness evidence is recorded; resume with
-   M2 authorization scope v2 and the synthetic department template/editor.
+6. ADR 0041 scope v2 and focused verification are recorded; resume with the
+   root authority-source provenance gate, then the synthetic department
+   template/editor and computed access explanation.
    Keep representative deployment/PITR, accessibility, complete visual states,
    and owner evidence open. Update this checklist before switching domains.
 

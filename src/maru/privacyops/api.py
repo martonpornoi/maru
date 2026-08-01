@@ -113,12 +113,15 @@ class StaffSubjectRightsRequestListView(APIView):
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
         account = _account(request)
-        from maru.authorization.policy import ResourceScope, decide  # noqa: PLC0415
+        from maru.authorization.policy import (  # noqa: PLC0415
+            decide,
+            resolve_organization_target,
+        )
 
         decision = decide(
             principal=account,
             capability_code="privacy.manage_requests",
-            resource=ResourceScope(organization_id=organization_id),
+            resource=resolve_organization_target(organization_id=organization_id),
         )
         if not decision.allowed:
             raise PermissionDenied(

@@ -188,9 +188,22 @@ def _active_appointment_is_exact(
         or appointment.role_assignment_id is None
     ):
         return False
-    assignment = RoleAssignment.objects.filter(
-        id=appointment.role_assignment_id
-    ).first()
+    assignment = (
+        RoleAssignment.objects.filter(id=appointment.role_assignment_id)
+        .only(
+            "organization",
+            "edition",
+            "principal",
+            "role_bundle",
+            "effective_from",
+            "expires_at",
+            "revoked_at",
+            "granted_by",
+            "approved_by",
+            "reason",
+        )
+        .first()
+    )
     if assignment is None:
         return False
     return (

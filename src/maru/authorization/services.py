@@ -11,14 +11,21 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION, require_capability
-from maru.authorization.models import CapabilityGrant
+from maru.authorization.models import CapabilityGrant, ScopedResourceBinding
 from maru.authorization.policy import (
-    ResourceScope,
+    ResolvedAuthorizationTarget,
     decide,
     grant_chain_is_active,
+    resolve_department_target,
+    resolve_edition_target,
+    resolve_organization_target,
+    resolve_resource_target,
 )
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.models import EventEdition
 from maru.identity.models import Account
+from maru.organizations.models import Organization
+from maru.workforce.models import Department, Position
 
 
 class AuthorizationDenied(PermissionDenied):
@@ -27,17 +34,27 @@ class AuthorizationDenied(PermissionDenied):
         super().__init__(message)
 
 
+def _raise_authorization(message: str, *, reason_code: str) -> Never:
+    raise AuthorizationDenied(message, reason_code=reason_code)
+
+
 def _scope_is_within(
     *,
     parent: CapabilityGrant,
-    organization_id: UUID,
-    edition_id: UUID | None,
+    target: ResolvedAuthorizationTarget,
 ) -> bool:
-    if parent.organization_id != organization_id:
+    if parent.organization_id != target.organization_id:
         return False
-    if parent.edition_id is None:
-        return True
-    return parent.edition_id == edition_id
+    if parent.resource_binding_id is not None:
+        return parent.resource_binding_id == target.resource_binding_id
+    if parent.department_id is not None:
+        return (
+            parent.edition_id == target.edition_id
+            and parent.department_id == target.department_id
+        )
+    if parent.edition_id is not None:
+        return parent.edition_id == target.edition_id
+    return True
 
 
 def _append_delegation_audit(
@@ -112,15 +129,13 @@ def _raise_denial(
 def _validate_delegation_bounds(
     *,
     parent: CapabilityGrant,
-    organization_id: UUID,
-    edition_id: UUID | None,
+    target: ResolvedAuthorizationTarget,
     effective_from: datetime,
     expires_at: datetime | None,
 ) -> str | None:
     if not _scope_is_within(
         parent=parent,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=target,
     ):
         return "delegation_scope_too_broad"
     if effective_from < parent.effective_from:
@@ -151,6 +166,122 @@ def _lock_parent_chain(
     return parent
 
 
+def _lock_target(  # noqa: PLR0912
+    target: ResolvedAuthorizationTarget,
+) -> ResolvedAuthorizationTarget:
+    if (
+        not Organization.objects.select_for_update()
+        .filter(pk=target.organization_id)
+        .exists()
+    ):
+        raise AuthorizationDenied(
+            "The authority scope is unavailable.",
+            reason_code="target_unavailable",
+        )
+    edition_id = target.edition_id
+    department_id = target.department_id
+    resource_binding_id = target.resource_binding_id
+    if edition_id is not None and not (
+        EventEdition.objects.select_for_update()
+        .filter(
+            pk=edition_id,
+            organization_id=target.organization_id,
+        )
+        .exists()
+    ):
+        raise AuthorizationDenied(
+            "The authority scope is unavailable.",
+            reason_code="target_unavailable",
+        )
+    if department_id is not None:
+        if edition_id is None:
+            raise AuthorizationDenied(
+                "The authority scope is unavailable.",
+                reason_code="target_unavailable",
+            )
+        department_exists = (
+            Department.objects.select_for_update()
+            .filter(
+                pk=department_id,
+                organization_id=target.organization_id,
+                edition_id=edition_id,
+            )
+            .exists()
+        )
+        if not department_exists:
+            raise AuthorizationDenied(
+                "The authority scope is unavailable.",
+                reason_code="target_unavailable",
+            )
+    if resource_binding_id is not None:
+        if edition_id is None or department_id is None:
+            raise AuthorizationDenied(
+                "The authority scope is unavailable.",
+                reason_code="target_unavailable",
+            )
+        binding = (
+            ScopedResourceBinding.objects.select_for_update()
+            .filter(
+                pk=resource_binding_id,
+                organization_id=target.organization_id,
+                edition_id=edition_id,
+                department_id=department_id,
+            )
+            .first()
+        )
+        if (
+            binding is None
+            or not Position.objects.select_for_update()
+            .filter(
+                pk=binding.resource_id,
+                organization_id=target.organization_id,
+                edition_id=edition_id,
+                department_id=department_id,
+            )
+            .exists()
+        ):
+            raise AuthorizationDenied(
+                "The authority scope is unavailable.",
+                reason_code="target_unavailable",
+            )
+    if resource_binding_id is not None:
+        if edition_id is None or department_id is None:
+            raise AuthorizationDenied(
+                "The authority scope is unavailable.",
+                reason_code="target_unavailable",
+            )
+        refreshed = resolve_resource_target(
+            organization_id=target.organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            resource_binding_id=resource_binding_id,
+        )
+    elif department_id is not None:
+        if edition_id is None:
+            raise AuthorizationDenied(
+                "The authority scope is unavailable.",
+                reason_code="target_unavailable",
+            )
+        refreshed = resolve_department_target(
+            organization_id=target.organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+        )
+    elif edition_id is not None:
+        refreshed = resolve_edition_target(
+            organization_id=target.organization_id,
+            edition_id=edition_id,
+        )
+    else:
+        refreshed = resolve_organization_target(organization_id=target.organization_id)
+    if refreshed is None:
+        raise AuthorizationDenied(
+            "The authority scope is unavailable.",
+            reason_code="target_unavailable",
+        )
+    return refreshed
+
+
 def _require_active_parent(parent: CapabilityGrant) -> None:
     if not grant_chain_is_active(parent, timezone.now()):
         raise AuthorizationDenied(
@@ -164,8 +295,7 @@ def delegate_capability(
     actor: Account,
     recipient: Account,
     parent_grant_id: UUID,
-    organization_id: UUID,
-    edition_id: UUID | None,
+    target: ResolvedAuthorizationTarget,
     effective_from: datetime,
     expires_at: datetime | None,
     reason: str,
@@ -187,8 +317,8 @@ def delegate_capability(
             reason_code="parent_authority_absent",
             actor=actor,
             recipient=recipient,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            organization_id=target.organization_id,
+            edition_id=target.edition_id,
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,
@@ -203,8 +333,8 @@ def delegate_capability(
             reason_code="capability_not_delegable",
             actor=actor,
             recipient=recipient,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            organization_id=target.organization_id,
+            edition_id=target.edition_id,
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,
@@ -213,8 +343,7 @@ def delegate_capability(
 
     bounds_error = _validate_delegation_bounds(
         parent=parent,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=target,
         effective_from=effective_from,
         expires_at=expires_at,
     )
@@ -238,8 +367,8 @@ def delegate_capability(
             reason_code=bounds_error,
             actor=actor,
             recipient=recipient,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            organization_id=target.organization_id,
+            edition_id=target.edition_id,
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,
@@ -249,10 +378,7 @@ def delegate_capability(
     meta_decision = decide(
         principal=actor,
         capability_code="authorization.delegate",
-        resource=ResourceScope(
-            organization_id=organization_id,
-            edition_id=edition_id,
-        ),
+        resource=target,
     )
     obligations = tuple(sorted(meta_decision.obligations))
     if not meta_decision.allowed:
@@ -261,8 +387,8 @@ def delegate_capability(
             reason_code="delegation_permission_absent",
             actor=actor,
             recipient=recipient,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            organization_id=target.organization_id,
+            edition_id=target.edition_id,
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,
@@ -275,8 +401,8 @@ def delegate_capability(
         _append_delegation_audit(
             actor=actor,
             recipient=recipient,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            organization_id=target.organization_id,
+            edition_id=target.edition_id,
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,
@@ -292,16 +418,41 @@ def delegate_capability(
 
     try:
         with transaction.atomic():
+            locked_target = _lock_target(target)
             locked_parent = _lock_parent_chain(
                 parent_id=parent.id,
                 actor=actor,
             )
             _require_active_parent(locked_parent)
+            locked_bounds_error = _validate_delegation_bounds(
+                parent=locked_parent,
+                target=locked_target,
+                effective_from=effective_from,
+                expires_at=expires_at,
+            )
+            if locked_bounds_error is not None:
+                _raise_authorization(
+                    "Delegation is no longer valid for the resolved target.",
+                    reason_code=locked_bounds_error,
+                )
+            locked_meta_decision = decide(
+                principal=actor,
+                capability_code="authorization.delegate",
+                resource=locked_target,
+            )
+            obligations = tuple(sorted(locked_meta_decision.obligations))
+            if not locked_meta_decision.allowed:
+                _raise_authorization(
+                    "Separate capability-delegation authority is required.",
+                    reason_code="delegation_permission_absent",
+                )
             child = CapabilityGrant.objects.create(
                 principal=recipient,
                 capability_code=locked_parent.capability_code,
-                organization_id=organization_id,
-                edition_id=edition_id,
+                organization_id=locked_target.organization_id,
+                edition_id=locked_target.edition_id,
+                department_id=locked_target.department_id,
+                resource_binding_id=locked_target.resource_binding_id,
                 effective_from=effective_from,
                 expires_at=expires_at,
                 granted_by=actor,
@@ -313,14 +464,14 @@ def delegate_capability(
                     principal_kind="account",
                     principal_id=actor.id,
                     principal_context_id=None,
-                    organization_id=organization_id,
-                    event_edition_id=edition_id,
+                    organization_id=locked_target.organization_id,
+                    event_edition_id=locked_target.edition_id,
                     capability_code="authorization.delegate",
                     operation="authorization.capability.delegate",
                     target_type="authorization.capability_grant",
                     target_id=child.id,
                     outcome=AuditEvent.Outcome.ALLOW,
-                    reason_code=meta_decision.reason_code,
+                    reason_code=locked_meta_decision.reason_code,
                     correlation_id=correlation_id,
                     request_id=request_id,
                     source_channel=source_channel,
@@ -335,14 +486,14 @@ def delegate_capability(
                 DomainEventRecord(
                     event_name="authorization.capability.delegated.v1",
                     schema_version=1,
-                    organization_id=organization_id,
-                    event_edition_id=edition_id,
+                    organization_id=locked_target.organization_id,
+                    event_edition_id=locked_target.edition_id,
                     aggregate_type="authorization.capability_grant",
                     aggregate_id=child.id,
                     aggregate_version=1,
                     payload={
                         "capability_code": child.capability_code,
-                        "scope_level": "edition" if edition_id else "organization",
+                        "scope_level": locked_target.scope_level,
                     },
                     correlation_id=correlation_id,
                     causation_id=audit.id,
@@ -357,8 +508,8 @@ def delegate_capability(
         _append_delegation_audit(
             actor=actor,
             recipient=recipient,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            organization_id=target.organization_id,
+            edition_id=target.edition_id,
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,
@@ -372,8 +523,8 @@ def delegate_capability(
         _append_delegation_audit(
             actor=actor,
             recipient=recipient,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            organization_id=target.organization_id,
+            edition_id=target.edition_id,
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,

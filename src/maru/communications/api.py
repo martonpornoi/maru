@@ -16,7 +16,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_edition_target
 from maru.communications.models import (
     NotificationDelivery,
     NotificationMessage,
@@ -140,7 +140,7 @@ class StaffDeliveryFailureListView(APIView):
         decision = decide(
             principal=account,
             capability_code="registration.view_service_summary",
-            resource=ResourceScope(
+            resource=resolve_edition_target(
                 organization_id=organization_id,
                 edition_id=edition_id,
             ),

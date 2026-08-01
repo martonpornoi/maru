@@ -8,7 +8,12 @@ from uuid import uuid4
 import factory
 from django.utils import timezone
 
-from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
+from maru.authorization.models import (
+    CapabilityGrant,
+    RoleAssignment,
+    RoleBundle,
+    ScopedResourceBinding,
+)
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import (
@@ -164,6 +169,17 @@ class CapabilityGrantFactory(factory.django.DjangoModelFactory[CapabilityGrant])
     effective_from = factory.LazyFunction(timezone.now)
     granted_by = factory.SubFactory(AccountFactory)
     reason = "Synthetic test grant."
+    revoked_at = None
+    revoked_by = factory.Maybe(
+        "revoked_at",
+        yes_declaration=factory.SubFactory(AccountFactory),
+        no_declaration=None,
+    )
+    revocation_reason = factory.Maybe(
+        "revoked_at",
+        yes_declaration="Synthetic test revocation.",
+        no_declaration="",
+    )
 
 
 class RoleBundleFactory(factory.django.DjangoModelFactory[RoleBundle]):
@@ -188,6 +204,34 @@ class RoleAssignmentFactory(factory.django.DjangoModelFactory[RoleAssignment]):
     effective_from = factory.LazyFunction(timezone.now)
     granted_by = factory.SubFactory(AccountFactory)
     reason = "Synthetic role assignment."
+    revoked_at = None
+    revoked_by = factory.Maybe(
+        "revoked_at",
+        yes_declaration=factory.SubFactory(AccountFactory),
+        no_declaration=None,
+    )
+    revocation_reason = factory.Maybe(
+        "revoked_at",
+        yes_declaration="Synthetic role revocation.",
+        no_declaration="",
+    )
+
+
+class ScopedResourceBindingFactory(
+    factory.django.DjangoModelFactory[ScopedResourceBinding]
+):
+    """A binding factory whose caller supplies the real owning department.
+
+    The workforce integrity phase resolves ``resource_id`` to a real Position,
+    so tests crossing that boundary must also pass that position's identifier.
+    """
+
+    class Meta:
+        model = ScopedResourceBinding
+
+    organization = factory.SelfAttribute("department.organization")
+    edition = factory.SelfAttribute("department.edition")
+    resource_kind = ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION
 
 
 class RegistrationTemplateFactory(

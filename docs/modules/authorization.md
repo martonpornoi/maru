@@ -1,7 +1,8 @@
 # Authorization module
 
-Status: Implemented organization/edition authority boundary, human access
-sharing, and protected Executive Board root; ADR 0041 scope v2 is designed
+Status: Implemented exact organization/edition/department/resource authority,
+sealed target resolution, human access sharing, and protected Executive Board
+root; actor/approver authority-source provenance remains a production gate
 Last updated: 2026-08-01
 
 ## Purpose and requirements
@@ -28,11 +29,14 @@ not replace the explainable organizer-scoped restrictions required by ADR 0013.
 ## Owned data and invariants
 
 - a code-owned, versioned capability catalog;
-- organization- or edition-scoped direct grants;
+- organization-, edition-, department-, or exact-resource-scoped direct grants;
 - immutable versions of organizer-defined role bundles;
 - scoped, effective, expiring, and revocable role assignments;
 - grant, approval, and revocation provenance for command-managed authority;
-- bounded delegation linked to the authority that produced it; and
+- bounded delegation linked to the authority that produced it;
+- immutable typed bindings between authorization scope and domain-owned
+  resources, beginning with `workforce.position`;
+- a durable first-scoped-write marker for fail-closed recovery; and
 - stable policy decisions with fields, obligations, reason code, and policy
   version.
 
@@ -49,6 +53,9 @@ bypassed. Revoking any ancestor invalidates its delegated descendants.
 - `assign_role(...)`
 - `revoke_role_assignment(...)`
 - `delegate_capability(...)`
+- `resolve_organization_target(...)`, `resolve_edition_target(...)`,
+  `resolve_department_target(...)`, `resolve_resource_target(...)`, and
+  persisted owner/self target resolvers
 - `require_complete_projection(required_fields, permitted_fields)`
 - `freeze_bulk_targets(trusted_queryset, target_ids, authorize)`
 
@@ -118,11 +125,46 @@ authority, membership, and quorum remain Active-only. Organizations `0012`
 and the corresponding participation, registration, and workforce migrations
 extend IDN-011 to every covered convention-subject relationship.
 
-ADR 0041 accepts the next persistent scope lattice—organization → edition →
+ADR 0041 implements the persistent scope lattice—organization → edition →
 exact department → exact typed resource—and explicitly denies implicit
-department-tree inheritance. That design is not yet implemented: current
-grants and assignments remain organization- or edition-scoped, so
-department-owned mutation pages must stay unmounted.
+department-tree inheritance. Grants and assignments derive scope from one
+valid parent tuple. Immutable `ScopedResourceBinding` records identify a
+code-owned resource kind within an exact organization, edition, and department
+chain; the first kind resolves a real workforce Position.
+
+The ordered `authorization 0004 → workforce 0004 → authorization 0005`
+migrations preserve every existing organization- or edition-wide meaning,
+harden owning-record containment, backfill reproducible Position bindings,
+activate catalog/scope/delegation/revocation guards, and install a durable
+downgrade fence. No historical assignment is silently narrowed. The operator
+procedure is
+[`authorization-scope-v2-migration-and-recovery.md`](../operations/authorization-scope-v2-migration-and-recovery.md).
+
+Policy accepts only `ResolvedAuthorizationTarget` values sealed by explicit
+database resolvers. Route UUIDs can narrow a query but cannot assert tenant,
+department, resource, lifecycle, or owner facts. Commands lock and re-resolve
+the target, repeat their policy decision in the transaction, and derive audit
+and event scope from that target. Organization authority covers narrower
+same-tenant targets; edition authority covers that edition; department
+authority covers only that exact department and its bound resources; resource
+authority covers only that exact binding.
+
+Issuance fields are append-only at the PostgreSQL boundary. Replacement uses a
+new record; revocation is single-control, evidence-complete, and one-way; hard
+deletion is refused. Role bundles reject unknown, duplicate, null, and
+relationship-only capabilities. Delegation cannot change capability or tenant,
+move sideways or upward, start before or outlive a parent, or form a cycle.
+The full chain is evaluated on every decision, so ancestor revocation remains
+immediate.
+
+`ensure_workforce_position_binding(position=...)` is the explicit live-write
+integration for the currently supported typed resource. It locks and re-reads
+the persisted Position, creates the same deterministic immutable binding as
+activation backfill, returns an existing exact binding idempotently, and fails
+closed when existing scope or deterministic identity conflicts. Owning
+workflows call this public application service after Position persistence in
+their transaction; Maru deliberately does not use a model signal, generic
+foreign key, or hidden cross-module database write trigger for this step.
 
 ## Enforcement
 
@@ -146,6 +188,12 @@ unrevoked grants or role assignments whose delegation ancestry is still
 effective; expired, future, revoked, foreign-tenant, and stale selected-edition
 state are excluded. Specialist Django records remain separately staff/model-
 permission protected.
+
+`check_scope_v2_readiness` emits a count-only JSON report. Migration-data
+`status` is intentionally separate from `production_status`: the latter stays
+blocked until a later accepted decision records the exact authority sources
+through which ordinary actors and approvers issued root authority. No current
+claim describes ADR 0041 as solving that independent IDN-005 invariant.
 
 The edition list/search/count/autocomplete API requires organization scope and
 filters the tenant before evaluation. An edition-only grant can retrieve its
@@ -195,7 +243,7 @@ reasoned system-access assignment.
 
 Capability grants, role-bundle versions, and role assignments are searchable,
 filterable inspection pages. Lists show the person, human-readable role or
-capability, organization/edition scope, current state, compact effective term,
+capability, resolved human scope, current state, compact effective term,
 delegation, capability summaries, and assignment counts as appropriate.
 Exact dates, actor, approver, revoker, issuance reason, and revocation reason
 remain in record detail.
@@ -233,17 +281,17 @@ approvers, reserved role conflicts, stale/replayed activation and invitations,
 inactive or suspended controllers, immutable role creation, platform exclusion,
 rollback, and cross-tenant/principal non-disclosure. Populated and empty
 migration, restore drill, sensitive read/denial audit, and responsive browser
-evidence pass. The focused integrity evidence includes 58 combined
-representation/migration/readiness tests, five emergency tests, and the
-71-test adjacent IDN-011 batch. Readiness parity and more concurrent
-multi-active coverage are still being hardened; the final consolidated
-full-suite/coverage run, routine Board-term semantics, complete visual states,
-representative deployment/PITR, and accessibility/owner evidence remain open.
+evidence pass. Scope-v2 evidence includes additive-schema,
+workforce-integrity, activation/reverse, database-bypass, exact policy,
+command, adapter, and privacy-minimized readiness-command suites. Final
+consolidated full-suite and coverage totals are recorded in
+`docs/project/CURRENT.md` and the milestone checkpoint rather than duplicated
+here.
 
 ## Limitations
 
-Department/resource scopes, a complete computed effective-access explanation,
-step-up execution, service/device principals,
+Actor/approver authority-source provenance, a complete computed
+effective-access explanation, step-up execution, service/device principals,
 asynchronous approval workflow, grant review reminders, purpose binding, and
 policy caching are not implemented. The synchronous independent approver
 argument is a command invariant, not yet an approval inbox or pending request
@@ -253,10 +301,8 @@ enforcement contracts must be adopted
 and extended with each domain slice; they are not a generic shortcut around
 domain-specific relationships and state.
 
-Pages 1–7 therefore show only a static, truthful authority summary.
-Page 8's root-representation explanation remains narrower
-than department/resource/field access. Pages must not label either summary as
-complete department/person access or expose a generic **Manage access** action
-until the remaining M2 scope-v2 query and assignment editor are implemented
-and verified. Appointment expiry/replacement/end and legacy authority
-reconciliation also remain open.
+The current access workspace remains edition-oriented. Exact department and
+Position authority is supported by policy, commands, and database records, but
+a complete UX-020 effective-access explanation and purpose-built nested access
+editor remain open. Appointment expiry/replacement/end and explicit legacy
+authority reconciliation also remain open.

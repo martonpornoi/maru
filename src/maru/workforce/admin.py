@@ -8,12 +8,14 @@ from uuid import UUID
 
 from django import forms
 from django.contrib import admin
+from django.db import transaction
 from django.http import HttpRequest
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import SafeString
 
+from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.events.admin_context import EditionContextAdmin
 from maru.identity.models import Account
 from maru.workforce.models import (
@@ -209,6 +211,7 @@ class PositionAdmin(EditionContextAdmin):
         return opportunity.get_status_display()
 
     @override
+    @transaction.atomic
     def save_model(
         self,
         request: HttpRequest,
@@ -220,6 +223,7 @@ class PositionAdmin(EditionContextAdmin):
         if not obj.created_by_id and isinstance(request.user, Account):
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+        ensure_workforce_position_binding(position=obj)
 
 
 @admin.register(OnboardingDocumentType)

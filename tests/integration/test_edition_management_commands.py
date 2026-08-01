@@ -736,7 +736,7 @@ def test_update_is_exactly_scoped_and_rolls_back_on_outbox_failure(
     edition = EventEditionFactory()
     foreign = EventEditionFactory()
 
-    with pytest.raises(EventEdition.DoesNotExist):
+    with pytest.raises(AuthorizationDenied) as unavailable:
         update_event_edition(
             actor=administrator,
             organization_id=edition.organization_id,
@@ -746,6 +746,7 @@ def test_update_is_exactly_scoped_and_rolls_back_on_outbox_failure(
             details=_details(name="Cross-tenant rewrite"),
             correlation_id=uuid4(),
         )
+    assert unavailable.value.reason_code == "target_unavailable"
 
     def fail_outbox(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("synthetic outbox failure")

@@ -22,6 +22,7 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import append_audit
+from maru.authorization.policy import resolve_edition_target
 from maru.identity.models import Account
 from maru.registration.finance import record_provider_payment, record_provider_refund
 from maru.registration.models import (
@@ -739,8 +740,10 @@ def resolve_payment_exception(
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_FINANCE,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
         operation="registration.payment_exception.resolve",
         target_type="registration.payment_exception",
         target_id=exception_id,

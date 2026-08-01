@@ -10,7 +10,11 @@ from django.utils.text import slugify
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
-from maru.authorization.policy import PolicyDecision, ResourceScope, decide
+from maru.authorization.policy import (
+    PolicyDecision,
+    decide,
+    resolve_organization_target,
+)
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.identity.models import Account
 from maru.organizations.models import ConventionSeries, Organization
@@ -123,7 +127,7 @@ def _require_organization_capability(
     decision = decide(
         principal=actor,
         capability_code=capability_code,
-        resource=ResourceScope(organization_id=organization_id),
+        resource=resolve_organization_target(organization_id=organization_id),
     )
     if not decision.allowed:
         raise PermissionDenied("Organization authority is required.")

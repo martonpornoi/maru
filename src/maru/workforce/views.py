@@ -14,7 +14,7 @@ from django.template.response import TemplateResponse
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_owned_target
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.workforce.forms import (
@@ -206,11 +206,7 @@ def download_onboarding_document(
     decision = decide(
         principal=actor,
         capability_code=capability_code,
-        resource=ResourceScope(
-            organization_id=document_request.organization_id,
-            edition_id=document_request.edition_id,
-            owner_account_id=document_request.account_id,
-        ),
+        resource=resolve_owned_target(resource=document_request),
     )
     if not decision.allowed:
         raise Http404

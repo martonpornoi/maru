@@ -15,7 +15,7 @@ from django.core.exceptions import (
     ValidationError as DjangoValidationError,
 )
 from django.core.files.uploadedfile import UploadedFile
-from django.db.models import Count, Max, Prefetch, Q, QuerySet, Sum
+from django.db.models import Count, Max, Model, Prefetch, Q, QuerySet, Sum
 from django.http import HttpResponse
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
@@ -41,7 +41,13 @@ from maru.authorization.enforcement import (
     FieldProjectionDeniedError,
     require_complete_projection,
 )
-from maru.authorization.policy import PolicyDecision, ResourceScope, decide
+from maru.authorization.policy import (
+    PolicyDecision,
+    decide,
+    resolve_edition_target,
+    resolve_owned_target,
+    resolve_self_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.communications.models import NotificationDelivery
 from maru.core.pagination import StandardPageNumberPagination
@@ -707,7 +713,7 @@ class SelfProfileSuggestionView(APIView):
             organization_id=configuration.organization_id,
             edition_id=edition_id,
             requested_fields=requested_fields,
-            owner_account_id=account.id,
+            self_intent=True,
         )
         if not decision.allowed:
             raise PermissionDenied(
@@ -829,16 +835,28 @@ def _scope_decision(
     organization_id: UUID,
     edition_id: UUID,
     requested_fields: frozenset[str] | None = None,
-    owner_account_id: UUID | None = None,
+    owned_resource: Model | None = None,
+    self_intent: bool = False,
 ) -> PolicyDecision:
+    if owned_resource is not None and self_intent:
+        raise ValueError("Choose an owning record or a self-service intent.")
+    if owned_resource is not None:
+        target = resolve_owned_target(resource=owned_resource)
+    elif self_intent:
+        target = resolve_self_target(
+            principal=account,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+    else:
+        target = resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
     return decide(
         principal=account,
         capability_code=capability_code,
-        resource=ResourceScope(
-            organization_id=organization_id,
-            edition_id=edition_id,
-            owner_account_id=owner_account_id,
-        ),
+        resource=target,
         requested_fields=requested_fields,
     )
 
@@ -1104,7 +1122,7 @@ class MyAttendeeProfileView(APIView):
             capability_code=VIEW_SELF_PROFILE,
             organization_id=organization_id,
             edition_id=edition_id,
-            owner_account_id=account.id,
+            owned_resource=profile,
         )
         if not decision.allowed:
             raise PermissionDenied(
@@ -1651,7 +1669,7 @@ class MyRegistrationProfileExtensionsView(APIView):
             capability_code=VIEW_SELF_PROFILE,
             organization_id=organization_id,
             edition_id=edition_id,
-            owner_account_id=account.id,
+            owned_resource=registration,
         )
         if not decision.allowed:
             raise PermissionDenied(
@@ -1855,18 +1873,19 @@ class MyRegistrationView(APIView):
             capability_code=VIEW_SELF,
             organization_id=organization_id,
             edition_id=edition_id,
-            owner_account_id=account.id,
+            self_intent=True,
         )
         if not decision.allowed:
             raise PermissionDenied(
                 "Your registration is unavailable.",
                 code=decision.reason_code,
             )
-        if not Participation.objects.filter(
+        participation = Participation.objects.filter(
             organization_id=organization_id,
             edition_id=edition_id,
             account=account,
-        ).exists():
+        ).first()
+        if participation is None:
             raise NotFound(
                 "Your registration is unavailable.",
                 code="registration_unavailable",

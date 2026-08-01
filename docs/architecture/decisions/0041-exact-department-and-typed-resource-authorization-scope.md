@@ -238,6 +238,19 @@ Position scope stability after binding, delegation containment, and immutable
 resource bindings. Fresh and populated forward migration, database-bypass
 tests, and rollback/fix-forward rehearsal are required.
 
+The implementation treats the complete issuance identity and time horizon as
+append-only, not merely the four scope columns. Replacement creates a new
+authority row; revocation requires complete evidence and is one-way; hard
+deletion is refused. A managed singleton marker records the first scoped
+authority write durably, so later row removal cannot make an unsafe downgrade
+appear clean. These are stronger enforcement details of the accepted immediate
+revocation, audit, and recovery invariants.
+
+Positions present during activation receive reproducible bindings. A Position
+created later receives its binding through an explicit workforce/application
+service before exact-resource authority is assigned; authorization does not
+install a cross-module creation trigger or infer access from Position creation.
+
 This is a maintenance-window writer change. Old application nodes can create
 only organization/edition authority and are incompatible once department or
 resource writes are enabled. After the first scoped authority write, downgrade

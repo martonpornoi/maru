@@ -141,11 +141,16 @@ def test_basic_edition_api_denies_ordinary_membership_and_other_tenant() -> None
     unknown_response = client.get(
         f"/api/v1/organizations/{other_edition.organization_id}/editions/{edition.id}"
     )
+    absent_response = client.get(
+        f"/api/v1/organizations/{other_edition.organization_id}/editions/{uuid4()}"
+    )
 
     assert other_response.status_code == 403
     assert other_response.json()["code"] == "permission_absent"
     assert unknown_response.status_code == 403
-    assert unknown_response.json()["code"] == "permission_absent"
+    assert unknown_response.json()["code"] == "target_unavailable"
+    assert absent_response.status_code == 403
+    assert absent_response.json()["code"] == "target_unavailable"
 
 
 def test_transition_api_uses_scoped_capability_and_request_correlation() -> None:

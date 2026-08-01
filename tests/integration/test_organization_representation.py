@@ -13,7 +13,7 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_organization_target
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.identity.models import Account
 from maru.organizations.models import (
@@ -258,12 +258,14 @@ def test_complete_executive_board_journey_activates_two_human_controllers() -> N
             assert decide(
                 principal=controller,
                 capability_code=capability_code,
-                resource=ResourceScope(organization_id=organization.id),
+                resource=resolve_organization_target(organization_id=organization.id),
             ).allowed, capability_code
         assert not decide(
             principal=controller,
             capability_code="organizations.change_profile",
-            resource=ResourceScope(organization_id=OrganizationFactory().id),
+            resource=resolve_organization_target(
+                organization_id=OrganizationFactory().id
+            ),
         ).allowed
 
     events = list(
@@ -1030,7 +1032,10 @@ def test_database_freezes_linked_root_assignment_identity_and_provenance() -> No
             transaction.atomic(),
             pytest.raises(
                 IntegrityError,
-                match="linked Executive Board assignment provenance is immutable",
+                match=(
+                    r"role assignment issuance is immutable|"
+                    "linked Executive Board assignment provenance is immutable"
+                ),
             ),
         ):
             RoleAssignment.objects.filter(pk=assignment.pk).update(**changes)

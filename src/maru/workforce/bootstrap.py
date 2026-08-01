@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
+from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
 from maru.events.models import EventEdition
@@ -356,6 +357,7 @@ def bootstrap_organization_workforce(
         status=Position.Status.FILLED,
         created_by=controller,
     )
+    ensure_workforce_position_binding(position=chair_position)
     chair_role_assignment = RoleAssignment.objects.get(
         organization=organization,
         edition=edition,

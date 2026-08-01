@@ -20,7 +20,13 @@ from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.commands import assign_role
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import (
+    ResolvedAuthorizationTarget,
+    decide,
+    resolve_edition_target,
+    resolve_owned_target,
+    resolve_self_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.identity.models import Account
@@ -64,18 +70,12 @@ def _require(
     *,
     actor: Account,
     capability_code: str,
-    organization_id: UUID,
-    edition_id: UUID,
-    owner_account_id: UUID | None = None,
+    target: ResolvedAuthorizationTarget | None,
 ) -> frozenset[str]:
     decision = decide(
         principal=actor,
         capability_code=capability_code,
-        resource=ResourceScope(
-            organization_id=organization_id,
-            edition_id=edition_id,
-            owner_account_id=owner_account_id,
-        ),
+        resource=target,
     )
     if not decision.allowed:
         raise AuthorizationDenied(
@@ -96,6 +96,7 @@ def _audit(
     target_id: UUID,
     correlation_id: UUID,
     reason_code: str,
+    authorization_target: ResolvedAuthorizationTarget | None,
     changed_fields: tuple[str, ...] = (),
     source_channel: str = "api",
 ) -> AuditEvent:
@@ -120,13 +121,7 @@ def _audit(
                     _require(
                         actor=actor,
                         capability_code=capability_code,
-                        organization_id=organization_id,
-                        edition_id=edition_id,
-                        owner_account_id=(
-                            actor.id
-                            if capability_code in {VIEW_SELF, APPLY_SELF}
-                            else None
-                        ),
+                        target=authorization_target,
                     )
                 )
             ),
@@ -243,9 +238,11 @@ def submit_volunteer_application(
         _require(
             actor=actor,
             capability_code=APPLY_SELF,
-            organization_id=position.organization_id,
-            edition_id=position.edition_id,
-            owner_account_id=actor.id,
+            target=resolve_self_target(
+                principal=actor,
+                organization_id=position.organization_id,
+                edition_id=position.edition_id,
+            ),
         )
         if not opportunity.accepts_applications:
             raise ValidationError(
@@ -268,6 +265,7 @@ def submit_volunteer_application(
             target_id=application.id,
             correlation_id=correlation_id,
             reason_code="self_relationship",
+            authorization_target=resolve_owned_target(resource=application),
             changed_fields=("application",),
         )
         publish_domain_event(
@@ -307,9 +305,7 @@ def upload_onboarding_document(
         _require(
             actor=actor,
             capability_code=VIEW_SELF,
-            organization_id=document_request.organization_id,
-            edition_id=document_request.edition_id,
-            owner_account_id=actor.id,
+            target=resolve_owned_target(resource=document_request),
         )
         if document_request.status not in {
             OnboardingDocumentRequest.Status.REQUESTED,
@@ -352,6 +348,7 @@ def upload_onboarding_document(
             target_id=document_request.id,
             correlation_id=correlation_id,
             reason_code="self_relationship",
+            authorization_target=resolve_owned_target(resource=document_request),
             changed_fields=("document", "status", "safety_receipt"),
         )
         return document_request
@@ -388,8 +385,7 @@ def review_onboarding_document(
         _require(
             actor=actor,
             capability_code=MANAGE_DOCUMENTS,
-            organization_id=document_request.organization_id,
-            edition_id=document_request.edition_id,
+            target=resolve_owned_target(resource=document_request),
         )
         if document_request.status != OnboardingDocumentRequest.Status.SUBMITTED:
             raise ValidationError(
@@ -419,6 +415,7 @@ def review_onboarding_document(
             target_id=document_request.id,
             correlation_id=correlation_id,
             reason_code=f"document_{decision}",
+            authorization_target=resolve_owned_target(resource=document_request),
             changed_fields=("status", "review_evidence"),
             source_channel="admin",
         )
@@ -446,7 +443,7 @@ def review_onboarding_document(
         return document_request
 
 
-def activate_position_assignment(  # noqa: PLR0915
+def activate_position_assignment(  # noqa: PLR0912, PLR0915
     *,
     position_id: UUID,
     account: Account,
@@ -475,8 +472,10 @@ def activate_position_assignment(  # noqa: PLR0915
             _require(
                 actor=controller,
                 capability_code=MANAGE_ASSIGNMENTS,
-                organization_id=position.organization_id,
-                edition_id=position.edition_id,
+                target=resolve_edition_target(
+                    organization_id=position.organization_id,
+                    edition_id=position.edition_id,
+                ),
             )
         if position.status == Position.Status.CLOSED:
             raise ValidationError(
@@ -513,13 +512,21 @@ def activate_position_assignment(  # noqa: PLR0915
                 "Every required onboarding document must be approved first.",
                 code="assignment_documents_incomplete",
             )
+        assignment_target = resolve_edition_target(
+            organization_id=position.organization_id,
+            edition_id=position.edition_id,
+        )
+        if assignment_target is None:
+            raise AuthorizationDenied(
+                "The workforce operation is unavailable.",
+                reason_code="target_unavailable",
+            )
         role_assignment = assign_role(
             actor=actor,
             approver=approver,
             recipient=account,
-            organization_id=position.organization_id,
+            target=assignment_target,
             role_bundle_id=position.role_bundle_id,
-            edition_id=position.edition_id,
             effective_from=effective_from,
             expires_at=expires_at,
             reason=normalized_reason,
@@ -642,6 +649,7 @@ def activate_position_assignment(  # noqa: PLR0915
             target_id=assignment.id,
             correlation_id=correlation_id,
             reason_code="assignment_activated",
+            authorization_target=resolve_owned_target(resource=assignment),
             changed_fields=("assignment", "role_assignment", "participation_capacity"),
             source_channel="admin",
         )
@@ -655,6 +663,7 @@ def activate_position_assignment(  # noqa: PLR0915
             target_id=assignment.id,
             correlation_id=correlation_id,
             reason_code="independent_approval",
+            authorization_target=resolve_owned_target(resource=assignment),
             changed_fields=("assignment_approval",),
             source_channel="admin",
         )

@@ -142,10 +142,12 @@ def test_cross_tenant_and_unknown_detail_have_the_same_safe_shape() -> None:
     cross_tenant = client.get(f"{base_url}/{protected.id}")
     unknown = client.get(f"{base_url}/{uuid4()}")
 
-    assert cross_tenant.status_code == 404
-    assert unknown.status_code == 404
+    assert cross_tenant.status_code == 403
+    assert unknown.status_code == 403
     cross_body = cross_tenant.json()
     unknown_body = unknown.json()
+    assert cross_body["code"] == "target_unavailable"
+    assert unknown_body["code"] == "target_unavailable"
     cross_body.pop("request_id")
     unknown_body.pop("request_id")
     assert cross_body == unknown_body

@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from maru.authorization.models import CapabilityGrant, RoleAssignment
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_organization_target
 from maru.identity.models import Account
 from maru.organizations.models import OrganizationMembership
 from maru.participation.models import Participation
@@ -116,12 +116,12 @@ def test_platform_administrator_uses_platform_policy_without_a_convention_grant(
     ordinary = decide(
         principal=administrator,
         capability_code="events.view_basic",
-        resource=ResourceScope(organization_id=organization.id),
+        resource=resolve_organization_target(organization_id=organization.id),
     )
     restricted_operation = decide(
         principal=administrator,
         capability_code="identity.manage_restrictions",
-        resource=ResourceScope(organization_id=organization.id, edition_id=None),
+        resource=resolve_organization_target(organization_id=organization.id),
     )
 
     assert ordinary.allowed

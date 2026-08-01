@@ -168,7 +168,7 @@ def test_scoped_nonstaff_account_can_log_out_from_the_unified_admin_shell() -> N
     assert "_auth_user_id" not in client.session
     admin_response = client.get(reverse("admin:index"))
     assert admin_response.status_code == 302
-    assert admin_response.url.startswith(f'{reverse("staff-login")}?next=')
+    assert admin_response.url.startswith(f"{reverse('staff-login')}?next=")
 
 
 def test_scoped_nonstaff_account_can_use_admin_password_change_pages() -> None:

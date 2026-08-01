@@ -651,7 +651,11 @@ def test_selected_context_clears_when_staff_authority_is_revoked() -> None:
     )
     _select_edition(client, edition)
 
-    CapabilityGrant.objects.filter(id=grant.id).update(revoked_at=timezone.now())
+    CapabilityGrant.objects.filter(id=grant.id).update(
+        revoked_at=timezone.now(),
+        revoked_by=AccountFactory(),
+        revocation_reason="Synthetic selected-context revocation.",
+    )
     response = client.get(reverse("admin:index"))
 
     assert response.status_code == 200
@@ -689,27 +693,40 @@ def test_delegated_grant_requires_every_ancestor_to_remain_active() -> None:
         revocation_reason="Synthetic ancestor revocation.",
     )
 
-    expired_ancestor_edition = EventEditionFactory(name="Expired Delegation Ancestor")
-    expired_delegator = AccountFactory()
-    expired_ancestor = CapabilityGrantFactory(
-        principal=expired_delegator,
-        organization=expired_ancestor_edition.organization,
-        edition=expired_ancestor_edition,
+    deep_ancestor_edition = EventEditionFactory(name="Deep Delegation Ancestor")
+    root_delegator = AccountFactory()
+    intermediate_delegator = AccountFactory()
+    root_ancestor = CapabilityGrantFactory(
+        principal=root_delegator,
+        organization=deep_ancestor_edition.organization,
+        edition=deep_ancestor_edition,
         effective_from=now - timedelta(days=2),
+        expires_at=now + timedelta(days=3),
+    )
+    intermediate_ancestor = CapabilityGrantFactory(
+        principal=intermediate_delegator,
+        organization=deep_ancestor_edition.organization,
+        edition=deep_ancestor_edition,
+        capability_code=root_ancestor.capability_code,
+        effective_from=now - timedelta(days=1),
         expires_at=now + timedelta(days=2),
+        granted_by=root_delegator,
+        delegated_from=root_ancestor,
     )
     CapabilityGrantFactory(
         principal=staff,
-        organization=expired_ancestor_edition.organization,
-        edition=expired_ancestor_edition,
-        capability_code=expired_ancestor.capability_code,
-        effective_from=now - timedelta(days=1),
+        organization=deep_ancestor_edition.organization,
+        edition=deep_ancestor_edition,
+        capability_code=root_ancestor.capability_code,
+        effective_from=now - timedelta(hours=12),
         expires_at=now + timedelta(days=1),
-        granted_by=expired_delegator,
-        delegated_from=expired_ancestor,
+        granted_by=intermediate_delegator,
+        delegated_from=intermediate_ancestor,
     )
-    CapabilityGrant.objects.filter(id=expired_ancestor.id).update(
-        expires_at=now - timedelta(hours=1)
+    CapabilityGrant.objects.filter(id=root_ancestor.id).update(
+        revoked_at=now,
+        revoked_by=AccountFactory(),
+        revocation_reason="Synthetic root-ancestor revocation.",
     )
 
     response = client.get(reverse("admin:index"))
@@ -717,7 +734,7 @@ def test_delegated_grant_requires_every_ancestor_to_remain_active() -> None:
     assert response.status_code == 200
     assert ADMIN_EDITION_SESSION_KEY not in client.session
     assert _selector_edition_ids(response) == set()
-    for unavailable in (revoked_ancestor_edition, expired_ancestor_edition):
+    for unavailable in (revoked_ancestor_edition, deep_ancestor_edition):
         denied = client.post(
             reverse("admin-edition-context"),
             {

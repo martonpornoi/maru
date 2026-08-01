@@ -22,7 +22,11 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import (
+    decide,
+    resolve_edition_target,
+    resolve_organization_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import (
     DomainEventRecord,
@@ -749,13 +753,18 @@ def _require_restriction_authority(
     organization_id: UUID,
     edition_id: UUID | None,
 ) -> tuple[str, ...]:
+    target = (
+        resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        if edition_id is not None
+        else resolve_organization_target(organization_id=organization_id)
+    )
     decision = decide(
         principal=actor,
         capability_code="identity.manage_restrictions",
-        resource=ResourceScope(
-            organization_id=organization_id,
-            edition_id=edition_id,
-        ),
+        resource=target,
     )
     if not decision.allowed:
         raise AuthorizationDenied(

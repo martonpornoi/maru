@@ -12,7 +12,11 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import (
+    decide,
+    resolve_edition_target,
+    resolve_organization_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.events.models import EventEdition
 from maru.identity.models import Account, AccountSecurityEvent
@@ -228,7 +232,7 @@ def transition_subject_rights_request(
     decision = decide(
         principal=actor,
         capability_code="privacy.manage_requests",
-        resource=ResourceScope(organization_id=organization_id),
+        resource=resolve_organization_target(organization_id=organization_id),
     )
     if not decision.allowed:
         raise AuthorizationDenied(
@@ -381,7 +385,7 @@ def decide_profile_correction(
     decision = decide(
         principal=actor,
         capability_code="privacy.manage_requests",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=organization_id,
             edition_id=edition_id,
         ),
@@ -439,7 +443,7 @@ def minimize_registration_profile(
     decision = decide(
         principal=actor,
         capability_code="privacy.manage_requests",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=organization_id,
             edition_id=edition_id,
         ),

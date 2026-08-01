@@ -10,7 +10,7 @@ from django.test import Client
 from django.urls import reverse
 
 from maru.authorization.models import RoleBundle
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_edition_target
 from maru.demo.constants import DEMO_ACCOUNT_PASSWORD
 from maru.events.models import EventEdition
 from maru.identity.models import Account
@@ -141,7 +141,7 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     decision = decide(
         principal=danube_chair,
         capability_code="events.transition",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=danube_current.organization_id,
             edition_id=danube_current.id,
         ),
@@ -155,7 +155,7 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         access_decision = decide(
             principal=danube_chair,
             capability_code=capability_code,
-            resource=ResourceScope(
+            resource=resolve_edition_target(
                 organization_id=danube_current.organization_id,
                 edition_id=danube_current.id,
             ),

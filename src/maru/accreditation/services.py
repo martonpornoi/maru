@@ -27,7 +27,7 @@ from maru.accreditation.models import (
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_edition_target
 from maru.authorization.services import AuthorizationDenied
 from maru.identity.models import Account
 from maru.registration.models import CheckInRecord, Registration
@@ -63,7 +63,7 @@ def _require(
     decision = decide(
         principal=actor,
         capability_code=capability_code,
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=organization_id,
             edition_id=edition_id,
         ),

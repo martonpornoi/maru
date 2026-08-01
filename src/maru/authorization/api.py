@@ -26,7 +26,11 @@ from maru.authorization.commands import (
     revoke_role_assignment,
 )
 from maru.authorization.models import RoleAssignment, RoleBundle
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import (
+    ResolvedAuthorizationTarget,
+    decide,
+    resolve_edition_target,
+)
 from maru.authorization.serializers import (
     AccessAssignmentCreateSerializer,
     AccessAssignmentReplaceSerializer,
@@ -55,6 +59,18 @@ def _account(request: Request) -> Account:
     if not isinstance(account, Account):
         raise TypeError("Authenticated principal is not a platform account")
     return account
+
+
+def _edition_target(
+    *, organization_id: UUID, edition_id: UUID
+) -> ResolvedAuthorizationTarget:
+    target = resolve_edition_target(
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
+    if target is None:
+        raise PermissionDenied("The access workspace is unavailable.")
+    return target
 
 
 def _audit_access_workspace(
@@ -104,7 +120,7 @@ def _authorize_access(
     decision = decide(
         principal=account,
         capability_code=MANAGE_ACCESS_CAPABILITY,
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=organization_id,
             edition_id=edition_id,
         ),
@@ -270,7 +286,7 @@ def _workspace_payload(
         "can_revoke_assignments": decide(
             principal=account,
             capability_code="authorization.revoke",
-            resource=ResourceScope(
+            resource=resolve_edition_target(
                 organization_id=edition.organization_id,
                 edition_id=edition.id,
             ),
@@ -399,9 +415,11 @@ class EditionAccessWorkspaceView(APIView):
                 actor=account,
                 approver=approver,
                 recipient=recipient,
-                organization_id=organization_id,
+                target=_edition_target(
+                    organization_id=organization_id,
+                    edition_id=edition_id,
+                ),
                 role_bundle_id=role.id,
-                edition_id=edition_id,
                 effective_from=timezone.now(),
                 expires_at=values.get("expires_at"),
                 reason=str(values["reason"]),
@@ -473,7 +491,10 @@ class EditionAccessAssignmentView(APIView):
                 reason = str(values["reason"])
                 revoke_role_assignment(
                     actor=account,
-                    organization_id=organization_id,
+                    target=_edition_target(
+                        organization_id=organization_id,
+                        edition_id=edition_id,
+                    ),
                     assignment_id=assignment.id,
                     reason=f"Replaced access: {reason}"[:240],
                     correlation_id=correlation_id,
@@ -484,9 +505,11 @@ class EditionAccessAssignmentView(APIView):
                     actor=account,
                     approver=approver,
                     recipient=assignment.principal,
-                    organization_id=organization_id,
+                    target=_edition_target(
+                        organization_id=organization_id,
+                        edition_id=edition_id,
+                    ),
                     role_bundle_id=replacement_role.id,
-                    edition_id=edition_id,
                     effective_from=timezone.now(),
                     expires_at=values.get("expires_at"),
                     reason=reason,
@@ -546,7 +569,10 @@ class EditionAccessAssignmentView(APIView):
         try:
             revoke_role_assignment(
                 actor=account,
-                organization_id=organization_id,
+                target=_edition_target(
+                    organization_id=organization_id,
+                    edition_id=edition_id,
+                ),
                 assignment_id=assignment_id,
                 reason=reason,
                 correlation_id=correlation_id,

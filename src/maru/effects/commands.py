@@ -9,7 +9,7 @@ from django.db import transaction
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION, require_capability
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_organization_target
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.models import OutboxMessage
 from maru.effects.services import replay_quarantined_effect
@@ -81,7 +81,7 @@ def replay_effect(
     decision = decide(
         principal=actor,
         capability_code=REPLAY_CAPABILITY,
-        resource=ResourceScope(organization_id=organization_id),
+        resource=resolve_organization_target(organization_id=organization_id),
     )
     obligations = tuple(sorted(require_capability(REPLAY_CAPABILITY).obligations))
     if not decision.allowed:

@@ -16,7 +16,13 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import (
+    ResolvedAuthorizationTarget,
+    decide,
+    resolve_edition_target,
+    resolve_owned_target,
+    resolve_self_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import (
     DomainEventRecord,
@@ -184,8 +190,8 @@ def _audit_record(
     actor: Account,
     capability_code: str,
     operation: str,
-    organization_id: UUID,
-    edition_id: UUID,
+    organization_id: UUID | None,
+    edition_id: UUID | None,
     target_type: str,
     target_id: UUID | None,
     correlation_id: UUID,
@@ -225,23 +231,17 @@ def _require_decision(
     *,
     actor: Account,
     capability_code: str,
-    organization_id: UUID,
-    edition_id: UUID,
+    target: ResolvedAuthorizationTarget | None,
     operation: str,
     target_type: str,
     target_id: UUID | None,
     correlation_id: UUID,
     source_channel: str,
-    owner_account_id: UUID | None = None,
 ) -> frozenset[str]:
     decision = decide(
         principal=actor,
         capability_code=capability_code,
-        resource=ResourceScope(
-            organization_id=organization_id,
-            edition_id=edition_id,
-            owner_account_id=owner_account_id,
-        ),
+        resource=target,
     )
     if decision.allowed:
         return decision.obligations
@@ -250,8 +250,8 @@ def _require_decision(
             actor=actor,
             capability_code=capability_code,
             operation=operation,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            organization_id=target.organization_id if target is not None else None,
+            edition_id=target.edition_id if target is not None else None,
             target_type=target_type,
             target_id=target_id,
             correlation_id=correlation_id,
@@ -375,8 +375,10 @@ def create_configuration_draft(  # noqa: PLR0915
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_CONFIGURATION,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
         operation="registration.configuration.create_draft",
         target_type="registration.configuration",
         target_id=None,
@@ -626,8 +628,10 @@ def activate_configuration(
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_CONFIGURATION,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
         operation="registration.configuration.activate",
         target_type="registration.configuration",
         target_id=configuration_id,
@@ -781,8 +785,10 @@ def publish_configuration_as_template(
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_CONFIGURATION,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
         operation="registration.template.publish",
         target_type="registration.configuration",
         target_id=configuration_id,
@@ -1149,9 +1155,7 @@ def write_registration_profile_extension_value(
         obligations = _require_decision(
             actor=actor,
             capability_code=MANAGE_SELF_PROFILE,
-            organization_id=locked_registration.organization_id,
-            edition_id=locked_registration.edition_id,
-            owner_account_id=locked_registration.account_id,
+            target=resolve_owned_target(resource=locked_registration),
             operation="registration.profile_extension.write",
             target_type="registration.profile_extension",
             target_id=scoped_field.id,
@@ -1178,8 +1182,10 @@ def write_registration_profile_extension_value(
         obligations = _require_decision(
             actor=actor,
             capability_code=REGISTER_ON_BEHALF,
-            organization_id=locked_registration.organization_id,
-            edition_id=locked_registration.edition_id,
+            target=resolve_edition_target(
+                organization_id=locked_registration.organization_id,
+                edition_id=locked_registration.edition_id,
+            ),
             operation="registration.profile_extension.write",
             target_type="registration.profile_extension",
             target_id=scoped_field.id,
@@ -1446,11 +1452,22 @@ def submit_registration(
         kind=AccountRestriction.Kind.REGISTRATION,
     )
     capability_code = REGISTER_ON_BEHALF if staff_assisted else REGISTER_SELF
+    authorization_target = (
+        resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        if staff_assisted
+        else resolve_self_target(
+            principal=actor,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+    )
     obligations = _require_decision(
         actor=actor,
         capability_code=capability_code,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=authorization_target,
         operation=(
             "registration.submit_on_behalf" if staff_assisted else "registration.submit"
         ),
@@ -1458,7 +1475,6 @@ def submit_registration(
         target_id=None,
         correlation_id=correlation_id,
         source_channel=source_channel,
-        owner_account_id=None if staff_assisted else actor.id,
     )
     submitted_at = now or timezone.now()
     with transaction.atomic():
@@ -2373,14 +2389,12 @@ def update_attendee_profile(  # noqa: PLR0912, PLR0915
         obligations = _require_decision(
             actor=actor,
             capability_code=MANAGE_SELF_PROFILE,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            target=resolve_owned_target(resource=profile),
             operation="registration.profile.update",
             target_type="registration.attendee_profile",
             target_id=profile.id,
             correlation_id=correlation_id,
             source_channel=source_channel,
-            owner_account_id=actor.id,
         )
         if not profile_is_editable(profile, now=changed_at):
             raise ValidationError(
@@ -2704,8 +2718,10 @@ def review_attendee_media(  # noqa: PLR0915
         obligations = _require_decision(
             actor=actor,
             capability_code=MODERATE_PUBLIC_PROFILE,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            target=resolve_edition_target(
+                organization_id=organization_id,
+                edition_id=edition_id,
+            ),
             operation="registration.profile_media.review",
             target_type=target_type,
             target_id=item.id,
@@ -2845,17 +2861,25 @@ def confirm_demo_payment(
             "The simulated payment adapter is disabled.",
             code="demo_payment_disabled",
         )
+    owned_registration = Registration.objects.filter(
+        id=registration_id,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        account=actor,
+    ).first()
     obligations = _require_decision(
         actor=actor,
         capability_code=REGISTER_SELF,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=(
+            resolve_owned_target(resource=owned_registration)
+            if owned_registration is not None
+            else None
+        ),
         operation="registration.payment.demo_confirm",
         target_type="registration.registration",
         target_id=registration_id,
         correlation_id=correlation_id,
         source_channel=source_channel,
-        owner_account_id=actor.id,
     )
     paid_at = now or timezone.now()
     with transaction.atomic():
@@ -2996,8 +3020,10 @@ def extend_payment_deadline(
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_EXCEPTIONS,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
         operation="registration.payment_deadline.change",
         target_type="registration.registration",
         target_id=registration_id,
@@ -3100,8 +3126,10 @@ def waive_registration_payment(
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_EXCEPTIONS,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
         operation="registration.payment.waive",
         target_type="registration.registration",
         target_id=registration_id,
@@ -3580,8 +3608,10 @@ def check_in_registration(
     obligations = _require_decision(
         actor=actor,
         capability_code=CHECK_IN,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
         operation="registration.check_in",
         target_type="registration.registration",
         target_id=registration_id,

@@ -22,18 +22,24 @@ from maru.authorization.models import (
     CapabilityGrant,
     RoleAssignment,
     RoleBundle,
+    ScopedResourceBinding,
 )
 from maru.authorization.policy import (
     PolicyDecision,
-    ResourceScope,
+    ResolvedAuthorizationTarget,
     decide,
     grant_chain_is_active,
+    resolve_department_target,
+    resolve_edition_target,
+    resolve_organization_target,
+    resolve_resource_target,
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
+from maru.workforce.models import Department, Position
 
 GRANT_CAPABILITY = "authorization.grant_direct"
 REVOKE_CAPABILITY = "authorization.revoke"
@@ -129,16 +135,12 @@ def _require_permission(
     *,
     principal: Account,
     capability_code: str,
-    organization_id: UUID,
-    edition_id: UUID | None,
+    target: ResolvedAuthorizationTarget,
 ) -> PolicyDecision:
     decision = decide(
         principal=principal,
         capability_code=capability_code,
-        resource=ResourceScope(
-            organization_id=organization_id,
-            edition_id=edition_id,
-        ),
+        resource=target,
     )
     if not decision.allowed:
         raise AuthorizationDenied(
@@ -154,8 +156,7 @@ def _require_dual_control(
     approver: Account,
     recipient: Account | None,
     capability_code: str,
-    organization_id: UUID,
-    edition_id: UUID | None,
+    target: ResolvedAuthorizationTarget,
 ) -> PolicyDecision:
     if actor.id == approver.id:
         raise AuthorizationDenied(
@@ -170,15 +171,13 @@ def _require_dual_control(
     actor_decision = _require_permission(
         principal=actor,
         capability_code=capability_code,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        target=target,
     )
     try:
         _require_permission(
             principal=approver,
             capability_code=capability_code,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            target=target,
         )
     except AuthorizationDenied as error:
         raise AuthorizationDenied(
@@ -192,19 +191,14 @@ def _authority_outlives(
     *,
     principal: Account,
     capability_code: str,
-    organization_id: UUID,
-    edition_id: UUID | None,
+    target: ResolvedAuthorizationTarget,
     requested_expiry: datetime | None,
     at: datetime,
 ) -> bool:
     if principal.is_active and principal.is_platform_administrator:
         return True
 
-    scope = (
-        Q(edition__isnull=True)
-        if edition_id is None
-        else Q(edition__isnull=True) | Q(edition_id=edition_id)
-    )
+    scope = _authority_scope_filter(target)
     active = (
         Q(effective_from__lte=at)
         & (Q(expires_at__isnull=True) | Q(expires_at__gt=at))
@@ -214,7 +208,7 @@ def _authority_outlives(
         active,
         scope,
         principal=principal,
-        organization_id=organization_id,
+        organization_id=target.organization_id,
         capability_code=capability_code,
     ).select_related("delegated_from")
     grant_expiries = (
@@ -224,7 +218,7 @@ def _authority_outlives(
         active,
         scope,
         principal=principal,
-        organization_id=organization_id,
+        organization_id=target.organization_id,
         role_bundle__capability_codes__contains=[capability_code],
     ).values_list("expires_at", flat=True)
     return any(
@@ -238,8 +232,7 @@ def _require_dual_authority_horizon(
     actor: Account,
     approver: Account,
     capability_code: str,
-    organization_id: UUID,
-    edition_id: UUID | None,
+    target: ResolvedAuthorizationTarget,
     requested_expiry: datetime | None,
 ) -> None:
     at = timezone.now()
@@ -247,8 +240,7 @@ def _require_dual_authority_horizon(
         _authority_outlives(
             principal=principal,
             capability_code=capability_code,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            target=target,
             requested_expiry=requested_expiry,
             at=at,
         )
@@ -304,39 +296,203 @@ def _validate_interval(
         )
 
 
-def _scope_level(edition_id: UUID | None) -> str:
-    return ScopeLevel.EDITION if edition_id else ScopeLevel.ORGANIZATION
+def _scope_level(target: ResolvedAuthorizationTarget) -> str:
+    return target.scope_level
 
 
-def _resolve_edition(
-    *,
-    organization_id: UUID,
-    edition_id: UUID | None,
-) -> EventEdition | None:
-    if edition_id is None:
-        return None
-    edition = EventEdition.objects.filter(
-        pk=edition_id,
-        organization_id=organization_id,
-    ).first()
-    if edition is None:
-        raise AuthorityCommandValidationError(
-            {"edition": "The requested authority scope is unavailable."},
-            reason_code="scope_unavailable",
+_SCOPE_DEPTH = {
+    ScopeLevel.ORGANIZATION: 0,
+    ScopeLevel.EDITION: 1,
+    ScopeLevel.DEPARTMENT: 2,
+    ScopeLevel.RESOURCE: 3,
+}
+
+
+def _target_supports_capability(
+    target: ResolvedAuthorizationTarget,
+    maximum_scope: ScopeLevel,
+) -> bool:
+    return _SCOPE_DEPTH[target.scope_level] >= _SCOPE_DEPTH[maximum_scope]
+
+
+def _authority_scope_filter(target: ResolvedAuthorizationTarget) -> Q:
+    organization_scope = Q(
+        edition__isnull=True,
+        department__isnull=True,
+        resource_binding__isnull=True,
+    )
+    if target.edition_id is None:
+        return organization_scope
+    edition_scope = Q(
+        edition_id=target.edition_id,
+        department__isnull=True,
+        resource_binding__isnull=True,
+    )
+    if target.department_id is None:
+        return organization_scope | edition_scope
+    department_scope = Q(
+        edition_id=target.edition_id,
+        department_id=target.department_id,
+        resource_binding__isnull=True,
+    )
+    if target.resource_binding_id is None:
+        return organization_scope | edition_scope | department_scope
+    return (
+        organization_scope
+        | edition_scope
+        | department_scope
+        | Q(
+            edition_id=target.edition_id,
+            department_id=target.department_id,
+            resource_binding_id=target.resource_binding_id,
         )
-    return edition
+    )
 
 
-def _lock_organization(organization_id: UUID) -> Organization:
+@dataclass(frozen=True, slots=True)
+class _LockedTarget:
+    target: ResolvedAuthorizationTarget
+    organization: Organization
+    edition: EventEdition | None
+    department: Department | None
+    resource_binding: ScopedResourceBinding | None
+
+
+def _lock_target(  # noqa: PLR0912
+    target: ResolvedAuthorizationTarget,
+) -> _LockedTarget:
     organization = (
-        Organization.objects.select_for_update().filter(pk=organization_id).first()
+        Organization.objects.select_for_update()
+        .filter(pk=target.organization_id)
+        .first()
     )
     if organization is None:
-        raise AuthorityCommandValidationError(
-            "The requested organization is unavailable.",
+        _raise_validation(
+            "The requested authority scope is unavailable.",
             reason_code="scope_unavailable",
         )
-    return organization
+    edition_id = target.edition_id
+    department_id = target.department_id
+    resource_binding_id = target.resource_binding_id
+    edition = None
+    if edition_id is not None:
+        edition = (
+            EventEdition.objects.select_for_update()
+            .filter(
+                pk=edition_id,
+                organization_id=target.organization_id,
+            )
+            .first()
+        )
+        if edition is None:
+            _raise_validation(
+                "The requested authority scope is unavailable.",
+                reason_code="scope_unavailable",
+            )
+    department = None
+    if department_id is not None:
+        if edition_id is None:
+            _raise_validation(
+                "The requested authority scope is unavailable.",
+                reason_code="scope_unavailable",
+            )
+        department = (
+            Department.objects.select_for_update()
+            .filter(
+                pk=department_id,
+                organization_id=target.organization_id,
+                edition_id=edition_id,
+            )
+            .first()
+        )
+        if department is None:
+            _raise_validation(
+                "The requested authority scope is unavailable.",
+                reason_code="scope_unavailable",
+            )
+    resource_binding = None
+    if resource_binding_id is not None:
+        if edition_id is None or department_id is None:
+            _raise_validation(
+                "The requested authority scope is unavailable.",
+                reason_code="scope_unavailable",
+            )
+        resource_binding = (
+            ScopedResourceBinding.objects.select_for_update()
+            .filter(
+                pk=resource_binding_id,
+                organization_id=target.organization_id,
+                edition_id=edition_id,
+                department_id=department_id,
+            )
+            .first()
+        )
+        if resource_binding is None:
+            _raise_validation(
+                "The requested authority scope is unavailable.",
+                reason_code="scope_unavailable",
+            )
+        position_exists = (
+            Position.objects.select_for_update()
+            .filter(
+                pk=resource_binding.resource_id,
+                organization_id=target.organization_id,
+                edition_id=edition_id,
+                department_id=department_id,
+            )
+            .exists()
+        )
+        if (
+            resource_binding.resource_kind
+            != ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION
+            or not position_exists
+        ):
+            _raise_validation(
+                "The requested authority scope is unavailable.",
+                reason_code="scope_unavailable",
+            )
+    if resource_binding_id is not None:
+        if edition_id is None or department_id is None:
+            _raise_validation(
+                "The requested authority scope is unavailable.",
+                reason_code="scope_unavailable",
+            )
+        refreshed = resolve_resource_target(
+            organization_id=target.organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            resource_binding_id=resource_binding_id,
+        )
+    elif department_id is not None:
+        if edition_id is None:
+            _raise_validation(
+                "The requested authority scope is unavailable.",
+                reason_code="scope_unavailable",
+            )
+        refreshed = resolve_department_target(
+            organization_id=target.organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+        )
+    elif edition_id is not None:
+        refreshed = resolve_edition_target(
+            organization_id=target.organization_id,
+            edition_id=edition_id,
+        )
+    else:
+        refreshed = resolve_organization_target(organization_id=target.organization_id)
+    if refreshed is None:
+        _raise_validation(
+            "The requested authority scope is unavailable.",
+            reason_code="scope_unavailable",
+        )
+    return _LockedTarget(
+        target=refreshed,
+        organization=organization,
+        edition=edition,
+        department=department,
+        resource_binding=resource_binding,
+    )
 
 
 def _publish_authority_event(
@@ -398,8 +554,7 @@ def grant_capability_direct(
     approver: Account,
     recipient: Account,
     capability_code: str,
-    organization_id: UUID,
-    edition_id: UUID | None,
+    target: ResolvedAuthorizationTarget,
     effective_from: datetime,
     expires_at: datetime | None,
     reason: str,
@@ -415,8 +570,8 @@ def grant_capability_direct(
         operation="authorization.capability.grant_direct",
         target_type="identity.account",
         target_id=recipient.id,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        organization_id=target.organization_id,
+        edition_id=target.edition_id,
         correlation_id=correlation_id,
         request_id=request_id,
         source_channel=source_channel,
@@ -430,8 +585,7 @@ def grant_capability_direct(
             approver=approver,
             recipient=recipient,
             capability_code=GRANT_CAPABILITY,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            target=target,
         )
         definition = capability(capability_code)
         if definition is None:
@@ -448,11 +602,10 @@ def grant_capability_direct(
             actor=actor,
             approver=approver,
             capability_code=GRANT_CAPABILITY,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            target=target,
             requested_expiry=expires_at,
         )
-        if definition.maximum_scope is ScopeLevel.RESOURCE:
+        if not definition.persistable:
             _raise_validation(
                 {
                     "capability_code": (
@@ -461,37 +614,39 @@ def grant_capability_direct(
                 },
                 reason_code="resource_capability_not_grantable",
             )
-        if definition.maximum_scope is ScopeLevel.EDITION and edition_id is None:
+        if not _target_supports_capability(target, definition.maximum_scope):
             _raise_validation(
-                {"edition": "This capability requires edition scope."},
-                reason_code="edition_scope_required",
+                {
+                    "scope": (
+                        "This capability requires "
+                        f"{definition.maximum_scope.value} scope."
+                    )
+                },
+                reason_code=f"{definition.maximum_scope.value}_scope_required",
             )
 
         with transaction.atomic():
-            organization = _lock_organization(organization_id)
+            locked = _lock_target(target)
+            locked_target = locked.target
             decision = _require_dual_control(
                 actor=actor,
                 approver=approver,
                 recipient=recipient,
                 capability_code=GRANT_CAPABILITY,
-                organization_id=organization_id,
-                edition_id=edition_id,
+                target=locked_target,
             )
             _require_dual_authority_horizon(
                 actor=actor,
                 approver=approver,
                 capability_code=GRANT_CAPABILITY,
-                organization_id=organization_id,
-                edition_id=edition_id,
+                target=locked_target,
                 requested_expiry=expires_at,
             )
-            edition = _resolve_edition(
-                organization_id=organization_id,
-                edition_id=edition_id,
-            )
             if CapabilityGrant.objects.filter(
-                organization=organization,
-                edition=edition,
+                organization=locked.organization,
+                edition=locked.edition,
+                department=locked.department,
+                resource_binding=locked.resource_binding,
                 principal=recipient,
                 capability_code=capability_code,
                 revoked_at__isnull=True,
@@ -501,8 +656,10 @@ def grant_capability_direct(
                     reason_code="active_grant_exists",
                 )
             grant = CapabilityGrant.objects.create(
-                organization=organization,
-                edition=edition,
+                organization=locked.organization,
+                edition=locked.edition,
+                department=locked.department,
+                resource_binding=locked.resource_binding,
                 principal=recipient,
                 capability_code=capability_code,
                 effective_from=effective_from,
@@ -533,14 +690,14 @@ def grant_capability_direct(
             )
             _publish_authority_event(
                 event_name="authorization.capability.direct_granted.v1",
-                organization_id=organization_id,
-                edition_id=edition_id,
+                organization_id=locked_target.organization_id,
+                edition_id=locked_target.edition_id,
                 aggregate_type="authorization.capability_grant",
                 aggregate_id=grant.id,
                 aggregate_version=1,
                 payload={
                     "capability_code": grant.capability_code,
-                    "scope_level": _scope_level(edition_id),
+                    "scope_level": _scope_level(locked_target),
                 },
                 correlation_id=correlation_id,
                 causation_id=actor_audit.id,
@@ -575,7 +732,7 @@ def grant_capability_direct(
 def revoke_capability_grant(
     *,
     actor: Account,
-    organization_id: UUID,
+    target: ResolvedAuthorizationTarget,
     grant_id: UUID,
     reason: str,
     correlation_id: UUID,
@@ -591,8 +748,8 @@ def revoke_capability_grant(
         operation="authorization.capability.revoke",
         target_type="authorization.capability_grant",
         target_id=grant_id,
-        organization_id=organization_id,
-        edition_id=None,
+        organization_id=target.organization_id,
+        edition_id=target.edition_id,
         correlation_id=correlation_id,
         request_id=request_id,
         source_channel=source_channel,
@@ -603,16 +760,22 @@ def revoke_capability_grant(
         decision = _require_permission(
             principal=actor,
             capability_code=REVOKE_CAPABILITY,
-            organization_id=organization_id,
-            edition_id=None,
+            target=target,
         )
         normalized_reason = _normalized_reason(reason)
         effective_revocation = revoked_at or timezone.now()
         with transaction.atomic():
-            _lock_organization(organization_id)
+            locked = _lock_target(target)
+            locked_target = locked.target
             grant = (
                 CapabilityGrant.objects.select_for_update()
-                .filter(pk=grant_id, organization_id=organization_id)
+                .filter(
+                    pk=grant_id,
+                    organization_id=locked_target.organization_id,
+                    edition_id=locked_target.edition_id,
+                    department=locked.department,
+                    resource_binding_id=locked_target.resource_binding_id,
+                )
                 .first()
             )
             if grant is None:
@@ -623,8 +786,7 @@ def revoke_capability_grant(
             decision = _require_permission(
                 principal=actor,
                 capability_code=REVOKE_CAPABILITY,
-                organization_id=organization_id,
-                edition_id=grant.edition_id,
+                target=locked_target,
             )
             if grant.revoked_at is not None:
                 _raise_validation(
@@ -642,23 +804,22 @@ def revoke_capability_grant(
                     "updated_at",
                 )
             )
-            scoped_command = replace(command, edition_id=grant.edition_id)
             audit = _append_command_audit(
                 principal=actor,
-                command=scoped_command,
+                command=command,
                 outcome=AuditEvent.Outcome.ALLOW,
                 reason_code=decision.reason_code,
             )
             _publish_authority_event(
                 event_name="authorization.capability.revoked.v1",
-                organization_id=organization_id,
-                edition_id=grant.edition_id,
+                organization_id=locked_target.organization_id,
+                edition_id=locked_target.edition_id,
                 aggregate_type="authorization.capability_grant",
                 aggregate_id=grant.id,
                 aggregate_version=2,
                 payload={
                     "capability_code": grant.capability_code,
-                    "scope_level": _scope_level(grant.edition_id),
+                    "scope_level": _scope_level(locked_target),
                 },
                 correlation_id=correlation_id,
                 causation_id=audit.id,
@@ -694,7 +855,7 @@ def create_role_bundle_version(
     *,
     actor: Account,
     approver: Account,
-    organization_id: UUID,
+    target: ResolvedAuthorizationTarget,
     code: str,
     name: str,
     capability_codes: tuple[str, ...],
@@ -711,8 +872,8 @@ def create_role_bundle_version(
         operation="authorization.role_bundle.version_create",
         target_type="authorization.role_bundle",
         target_id=None,
-        organization_id=organization_id,
-        edition_id=None,
+        organization_id=target.organization_id,
+        edition_id=target.edition_id,
         correlation_id=correlation_id,
         request_id=request_id,
         source_channel=source_channel,
@@ -725,9 +886,13 @@ def create_role_bundle_version(
             approver=approver,
             recipient=None,
             capability_code=ROLE_CAPABILITY,
-            organization_id=organization_id,
-            edition_id=None,
+            target=target,
         )
+        if target.scope_level is not ScopeLevel.ORGANIZATION:
+            _raise_validation(
+                "Role bundle versions belong to an exact organization.",
+                reason_code="organization_scope_required",
+            )
         normalized_reason = _normalized_reason(reason)
         normalized_code = code.strip()
         normalized_name = name.strip()
@@ -768,7 +933,7 @@ def create_role_bundle_version(
                     },
                     reason_code="unknown_capability",
                 )
-            if definition.maximum_scope is ScopeLevel.RESOURCE:
+            if not definition.persistable:
                 _raise_validation(
                     {
                         "capability_codes": (
@@ -780,14 +945,14 @@ def create_role_bundle_version(
                 )
 
         with transaction.atomic():
-            organization = _lock_organization(organization_id)
+            locked = _lock_target(target)
+            organization = locked.organization
             decision = _require_dual_control(
                 actor=actor,
                 approver=approver,
                 recipient=None,
                 capability_code=ROLE_CAPABILITY,
-                organization_id=organization_id,
-                edition_id=None,
+                target=locked.target,
             )
             latest = (
                 RoleBundle.objects.filter(
@@ -824,8 +989,8 @@ def create_role_bundle_version(
             )
             _publish_authority_event(
                 event_name="authorization.role_bundle.version_created.v1",
-                organization_id=organization_id,
-                edition_id=None,
+                organization_id=locked.target.organization_id,
+                edition_id=locked.target.edition_id,
                 aggregate_type="authorization.role_bundle",
                 aggregate_id=role.id,
                 aggregate_version=1,
@@ -868,9 +1033,8 @@ def assign_role(
     actor: Account,
     approver: Account,
     recipient: Account,
-    organization_id: UUID,
+    target: ResolvedAuthorizationTarget,
     role_bundle_id: UUID,
-    edition_id: UUID | None,
     effective_from: datetime,
     expires_at: datetime | None,
     reason: str,
@@ -886,8 +1050,8 @@ def assign_role(
         operation="authorization.role.assign",
         target_type="identity.account",
         target_id=recipient.id,
-        organization_id=organization_id,
-        edition_id=edition_id,
+        organization_id=target.organization_id,
+        edition_id=target.edition_id,
         correlation_id=correlation_id,
         request_id=request_id,
         source_channel=source_channel,
@@ -901,8 +1065,7 @@ def assign_role(
             approver=approver,
             recipient=recipient,
             capability_code=ROLE_CAPABILITY,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            target=target,
         )
         normalized_reason = _normalized_reason(reason)
         _validate_interval(
@@ -913,31 +1076,26 @@ def assign_role(
             actor=actor,
             approver=approver,
             capability_code=ROLE_CAPABILITY,
-            organization_id=organization_id,
-            edition_id=edition_id,
+            target=target,
             requested_expiry=expires_at,
         )
         with transaction.atomic():
-            organization = _lock_organization(organization_id)
+            locked = _lock_target(target)
+            locked_target = locked.target
+            organization = locked.organization
             decision = _require_dual_control(
                 actor=actor,
                 approver=approver,
                 recipient=recipient,
                 capability_code=ROLE_CAPABILITY,
-                organization_id=organization_id,
-                edition_id=edition_id,
+                target=locked_target,
             )
             _require_dual_authority_horizon(
                 actor=actor,
                 approver=approver,
                 capability_code=ROLE_CAPABILITY,
-                organization_id=organization_id,
-                edition_id=edition_id,
+                target=locked_target,
                 requested_expiry=expires_at,
-            )
-            edition = _resolve_edition(
-                organization_id=organization_id,
-                edition_id=edition_id,
             )
             role = (
                 RoleBundle.objects.filter(
@@ -954,20 +1112,32 @@ def assign_role(
                     reason_code="role_bundle_unavailable",
                 )
             definitions = [require_capability(item) for item in role.capability_codes]
-            if (
-                any(
-                    definition.maximum_scope is ScopeLevel.EDITION
+            unavailable_scope = next(
+                (
+                    definition.maximum_scope
                     for definition in definitions
-                )
-                and edition is None
-            ):
+                    if not _target_supports_capability(
+                        locked_target,
+                        definition.maximum_scope,
+                    )
+                ),
+                None,
+            )
+            if unavailable_scope is not None:
                 _raise_validation(
-                    {"edition": "This role bundle requires edition scope."},
-                    reason_code="edition_scope_required",
+                    {
+                        "scope": (
+                            "This role bundle requires "
+                            f"{unavailable_scope.value} scope."
+                        )
+                    },
+                    reason_code=f"{unavailable_scope.value}_scope_required",
                 )
             if RoleAssignment.objects.filter(
                 organization=organization,
-                edition=edition,
+                edition=locked.edition,
+                department=locked.department,
+                resource_binding=locked.resource_binding,
                 principal=recipient,
                 role_bundle=role,
                 revoked_at__isnull=True,
@@ -978,7 +1148,9 @@ def assign_role(
                 )
             assignment = RoleAssignment.objects.create(
                 organization=organization,
-                edition=edition,
+                edition=locked.edition,
+                department=locked.department,
+                resource_binding=locked.resource_binding,
                 principal=recipient,
                 role_bundle=role,
                 effective_from=effective_from,
@@ -1008,15 +1180,15 @@ def assign_role(
             )
             _publish_authority_event(
                 event_name="authorization.role.assigned.v1",
-                organization_id=organization_id,
-                edition_id=edition_id,
+                organization_id=locked_target.organization_id,
+                edition_id=locked_target.edition_id,
                 aggregate_type="authorization.role_assignment",
                 aggregate_id=assignment.id,
                 aggregate_version=1,
                 payload={
                     "role_code": role.code,
                     "role_version": str(role.version),
-                    "scope_level": _scope_level(edition_id),
+                    "scope_level": _scope_level(locked_target),
                 },
                 correlation_id=correlation_id,
                 causation_id=actor_audit.id,
@@ -1051,7 +1223,7 @@ def assign_role(
 def revoke_role_assignment(
     *,
     actor: Account,
-    organization_id: UUID,
+    target: ResolvedAuthorizationTarget,
     assignment_id: UUID,
     reason: str,
     correlation_id: UUID,
@@ -1067,8 +1239,8 @@ def revoke_role_assignment(
         operation="authorization.role.revoke",
         target_type="authorization.role_assignment",
         target_id=assignment_id,
-        organization_id=organization_id,
-        edition_id=None,
+        organization_id=target.organization_id,
+        edition_id=target.edition_id,
         correlation_id=correlation_id,
         request_id=request_id,
         source_channel=source_channel,
@@ -1079,17 +1251,23 @@ def revoke_role_assignment(
         decision = _require_permission(
             principal=actor,
             capability_code=REVOKE_CAPABILITY,
-            organization_id=organization_id,
-            edition_id=None,
+            target=target,
         )
         normalized_reason = _normalized_reason(reason)
         effective_revocation = revoked_at or timezone.now()
         with transaction.atomic():
-            _lock_organization(organization_id)
+            locked = _lock_target(target)
+            locked_target = locked.target
             assignment = (
                 RoleAssignment.objects.select_for_update()
                 .select_related("role_bundle")
-                .filter(pk=assignment_id, organization_id=organization_id)
+                .filter(
+                    pk=assignment_id,
+                    organization_id=locked_target.organization_id,
+                    edition_id=locked_target.edition_id,
+                    department=locked.department,
+                    resource_binding_id=locked_target.resource_binding_id,
+                )
                 .exclude(role_bundle__code__iexact=EXECUTIVE_BOARD_ROLE_CODE)
                 .first()
             )
@@ -1101,8 +1279,7 @@ def revoke_role_assignment(
             decision = _require_permission(
                 principal=actor,
                 capability_code=REVOKE_CAPABILITY,
-                organization_id=organization_id,
-                edition_id=assignment.edition_id,
+                target=locked_target,
             )
             if assignment.revoked_at is not None:
                 _raise_validation(
@@ -1120,25 +1297,24 @@ def revoke_role_assignment(
                     "updated_at",
                 )
             )
-            scoped_command = replace(command, edition_id=assignment.edition_id)
             audit = _append_command_audit(
                 principal=actor,
-                command=scoped_command,
+                command=command,
                 outcome=AuditEvent.Outcome.ALLOW,
                 reason_code=decision.reason_code,
             )
             role = assignment.role_bundle
             _publish_authority_event(
                 event_name="authorization.role.revoked.v1",
-                organization_id=organization_id,
-                edition_id=assignment.edition_id,
+                organization_id=locked_target.organization_id,
+                edition_id=locked_target.edition_id,
                 aggregate_type="authorization.role_assignment",
                 aggregate_id=assignment.id,
                 aggregate_version=2,
                 payload={
                     "role_code": role.code,
                     "role_version": str(role.version),
-                    "scope_level": _scope_level(assignment.edition_id),
+                    "scope_level": _scope_level(locked_target),
                 },
                 correlation_id=correlation_id,
                 causation_id=audit.id,

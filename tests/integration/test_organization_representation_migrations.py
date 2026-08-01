@@ -26,6 +26,7 @@ from tests.factories import (
     OrganizationFactory,
     RoleAssignmentFactory,
 )
+from tests.support.migrations import restore_current_migration_graph
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -58,6 +59,12 @@ def _migrate(*targets: tuple[str, str]) -> MigrationExecutor:
     executor = MigrationExecutor(connection)
     executor.migrate(list(targets))
     return executor
+
+
+def _restore_current_graph() -> MigrationExecutor:
+    """Restore all leaves before current-model assertions or test handoff."""
+
+    return restore_current_migration_graph()
 
 
 def _historical_objects(executor: MigrationExecutor):  # type: ignore[no-untyped-def]
@@ -153,7 +160,7 @@ def test_hardened_downgrade_fence_detects_surviving_governance_artifacts(
         ):
             _migrate(ORGANIZATIONS_BEFORE_HARDENING)
     finally:
-        _migrate(ORGANIZATIONS_AFTER_HARDENING)
+        _restore_current_graph()
 
 
 def test_hardened_downgrade_fence_allows_clean_reverse_plan() -> None:
@@ -162,11 +169,11 @@ def test_hardened_downgrade_fence_allows_clean_reverse_plan() -> None:
         _migrate(ORGANIZATIONS_AFTER_HARDENING)
         _migrate(ORGANIZATIONS_BEFORE_HARDENING)
     finally:
-        _migrate(ORGANIZATIONS_AFTER_HARDENING)
+        _restore_current_graph()
 
 
 def test_emergency_integrity_downgrade_fence_rejects_surviving_evidence() -> None:
-    _migrate(ORGANIZATIONS_AFTER_HARDENING)
+    _restore_current_graph()
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     organization = OrganizationFactory(lifecycle=Organization.Lifecycle.DRAFT)
     representation = provision_executive_board(
@@ -217,7 +224,7 @@ def test_emergency_integrity_downgrade_fence_rejects_surviving_evidence() -> Non
         ):
             _migrate(ORGANIZATIONS_BEFORE_EMERGENCY_HARDENING)
     finally:
-        _migrate(ORGANIZATIONS_AFTER_HARDENING)
+        _restore_current_graph()
 
 
 def test_hardening_preflight_rejects_existing_platform_role_assignment() -> None:
@@ -262,7 +269,7 @@ def test_hardening_preflight_rejects_existing_platform_role_assignment() -> None
             _migrate(ORGANIZATIONS_AFTER_HARDENING)
     finally:
         role_assignment_model.objects.filter(pk=assignment.pk).delete()
-        _migrate(ORGANIZATIONS_AFTER_HARDENING)
+        _restore_current_graph()
 
 
 def test_fix_forward_preflight_rejects_existing_platform_capability_grant() -> None:
@@ -308,7 +315,7 @@ def test_fix_forward_preflight_rejects_existing_platform_capability_grant() -> N
             _migrate(ORGANIZATIONS_AFTER_HARDENING)
     finally:
         capability_grant_model.objects.filter(pk=grant.pk).delete()
-        _migrate(ORGANIZATIONS_AFTER_HARDENING)
+        _restore_current_graph()
 
 
 def test_fix_forward_preflight_rejects_ineligible_provisioning_subjects() -> None:
@@ -390,11 +397,11 @@ def test_fix_forward_preflight_rejects_ineligible_provisioning_subjects() -> Non
             is_active=True,
             email_verified_at=timezone.now(),
         )
-        _migrate(ORGANIZATIONS_AFTER_HARDENING)
+        _restore_current_graph()
 
 
 def test_fix_forward_rejects_raw_platform_capability_grants() -> None:
-    _migrate(ORGANIZATIONS_AFTER_HARDENING)
+    _restore_current_graph()
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     organization = OrganizationFactory(lifecycle=Organization.Lifecycle.DRAFT)
 
@@ -423,7 +430,7 @@ def test_fix_forward_rejects_raw_platform_capability_grants() -> None:
 def test_fix_forward_blocks_reclassification_while_authority_remains(
     authority_kind: str,
 ) -> None:
-    _migrate(ORGANIZATIONS_AFTER_HARDENING)
+    _restore_current_graph()
     person = AccountFactory()
     organization = OrganizationFactory(lifecycle=Organization.Lifecycle.DRAFT)
     if authority_kind == "grant":
@@ -472,7 +479,7 @@ def test_fix_forward_blocks_reclassification_while_authority_remains(
 def test_fix_forward_freezes_active_board_membership_provenance(
     membership_changes: dict[str, object],
 ) -> None:
-    _migrate(ORGANIZATIONS_AFTER_HARDENING)
+    _restore_current_graph()
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     organization = OrganizationFactory(lifecycle=Organization.Lifecycle.DRAFT)
     representation = provision_executive_board(

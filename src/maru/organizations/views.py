@@ -21,7 +21,7 @@ from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.models import CapabilityGrant, RoleAssignment
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_organization_target
 from maru.identity.models import Account
 from maru.organizations.forms import (
     RepresentationActivationForm,
@@ -91,7 +91,7 @@ def _decision_allowed(
     return decide(
         principal=actor,
         capability_code=capability_code,
-        resource=ResourceScope(organization_id=organization.id),
+        resource=resolve_organization_target(organization_id=organization.id),
     ).allowed
 
 
@@ -369,12 +369,12 @@ def _representation_page(
         view_decision = decide(
             principal=actor,
             capability_code="organizations.view_basic",
-            resource=ResourceScope(organization_id=organization.id),
+            resource=resolve_organization_target(organization_id=organization.id),
         )
         manage_decision = decide(
             principal=actor,
             capability_code="organizations.manage_representation",
-            resource=ResourceScope(organization_id=organization.id),
+            resource=resolve_organization_target(organization_id=organization.id),
         )
         can_view_organization = view_decision.allowed
         can_manage = manage_decision.allowed

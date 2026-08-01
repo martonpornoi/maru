@@ -19,7 +19,11 @@ from maru.authorization.enforcement import (
     BulkTargetUnavailableError,
     freeze_bulk_targets,
 )
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import (
+    decide,
+    resolve_edition_target,
+    resolve_organization_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import (
@@ -218,9 +222,13 @@ def _require_edition_capability(
     decision = decide(
         principal=actor,
         capability_code=capability_code,
-        resource=ResourceScope(
-            organization_id=organization_id,
-            edition_id=edition_id,
+        resource=(
+            resolve_edition_target(
+                organization_id=organization_id,
+                edition_id=edition_id,
+            )
+            if edition_id is not None
+            else resolve_organization_target(organization_id=organization_id)
         ),
     )
     if not decision.allowed:
@@ -615,7 +623,7 @@ def transition_edition(
     decision = decide(
         principal=actor,
         capability_code="events.transition",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=organization_id,
             edition_id=edition_id,
         ),
@@ -804,10 +812,9 @@ def bulk_transition_editions(
                 authorize=lambda edition: decide(
                     principal=actor,
                     capability_code="events.transition",
-                    resource=ResourceScope(
+                    resource=resolve_edition_target(
                         organization_id=organization_id,
                         edition_id=edition.id,
-                        state=edition.lifecycle,
                     ),
                 ),
             )

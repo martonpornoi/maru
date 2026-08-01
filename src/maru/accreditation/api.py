@@ -35,7 +35,7 @@ from maru.accreditation.services import (
     reconcile_offline_check_in,
     revoke_credential,
 )
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_edition_target
 from maru.authorization.services import AuthorizationDenied
 from maru.identity.models import Account
 
@@ -241,7 +241,7 @@ class StaffOfflineConflictListView(APIView):
         decision = decide(
             principal=_account(request),
             capability_code="accreditation.manage_offline",
-            resource=ResourceScope(
+            resource=resolve_edition_target(
                 organization_id=organization_id,
                 edition_id=edition_id,
             ),

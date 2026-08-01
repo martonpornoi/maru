@@ -25,7 +25,7 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_edition_target
 from maru.events.models import EventEdition
 from maru.identity.models import Account, IdentityChallenge
 from maru.identity.services import (
@@ -194,7 +194,7 @@ def staff_assisted_registration(
     decision = decide(
         principal=actor,
         capability_code=REGISTER_ON_BEHALF,
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=configuration.organization_id,
             edition_id=configuration.edition_id,
         ),
@@ -970,7 +970,7 @@ def _moderator_access(
     decision = decide(
         principal=account,
         capability_code="registration.moderate_public_profile",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=organization_id,
             edition_id=edition_id,
         ),

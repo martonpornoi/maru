@@ -18,7 +18,7 @@ from maru.authorization.enforcement import (
     FieldProjectionDeniedError,
     require_complete_projection,
 )
-from maru.authorization.policy import PolicyDecision, ResourceScope, decide
+from maru.authorization.policy import PolicyDecision, decide, resolve_edition_target
 from maru.core.pagination import StandardPageNumberPagination
 from maru.events.queries import platform_editions
 from maru.identity.models import Account
@@ -68,7 +68,7 @@ class MyContextView(APIView):
                     "can_transition": decide(
                         principal=account,
                         capability_code="events.transition",
-                        resource=ResourceScope(
+                        resource=resolve_edition_target(
                             organization_id=edition.organization_id,
                             edition_id=edition.id,
                         ),
@@ -161,7 +161,7 @@ def _staff_summary_decision(
     return decide(
         principal=account,
         capability_code="participation.view_staff_summary",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=organization_id,
             edition_id=edition_id,
         ),

@@ -15,10 +15,26 @@ from maru.authorization.commands import (
     revoke_capability_grant,
     revoke_role_assignment,
 )
-from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.models import (
+    CapabilityGrant,
+    RoleAssignment,
+    RoleBundle,
+    ScopedResourceBinding,
+)
+from maru.authorization.policy import (
+    ResolvedAuthorizationTarget,
+    decide,
+    resolve_department_target,
+    resolve_edition_target,
+    resolve_organization_target,
+    resolve_resource_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.models import DomainEvent, OutboxMessage
+from maru.events.models import EventEdition
+from maru.identity.models import Account
+from maru.organizations.models import Organization
+from maru.workforce.models import Department, Position, PositionTemplate
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
@@ -33,12 +49,29 @@ pytestmark = [
 ]
 
 
+def _organization_target(
+    organization: Organization,
+) -> ResolvedAuthorizationTarget:
+    target = resolve_organization_target(organization_id=organization.id)
+    assert target is not None
+    return target
+
+
+def _edition_target(edition: EventEdition) -> ResolvedAuthorizationTarget:
+    target = resolve_edition_target(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+    )
+    assert target is not None
+    return target
+
+
 def _grant_management(
-    account: object,
-    organization: object,
+    account: Account,
+    organization: Organization,
     capability_code: str,
     *,
-    edition: object | None = None,
+    edition: EventEdition | None = None,
 ) -> None:
     CapabilityGrantFactory(
         principal=account,
@@ -50,11 +83,11 @@ def _grant_management(
 
 
 def _dual_managers(
-    organization: object,
+    organization: Organization,
     capability_code: str,
     *,
-    edition: object | None = None,
-) -> tuple[object, object]:
+    edition: EventEdition | None = None,
+) -> tuple[Account, Account]:
     actor = AccountFactory()
     approver = AccountFactory()
     _grant_management(
@@ -70,6 +103,59 @@ def _dual_managers(
         edition=edition,
     )
     return actor, approver
+
+
+def _scoped_positions() -> tuple[
+    Department,
+    ScopedResourceBinding,
+    ScopedResourceBinding,
+]:
+    edition = EventEditionFactory()
+    creator = AccountFactory()
+    role_bundle = RoleBundleFactory(organization=edition.organization)
+    department = Department.objects.create(
+        organization=edition.organization,
+        edition=edition,
+        code=f"operations-{uuid4().hex[:8]}",
+        name="Operations",
+    )
+    template = PositionTemplate.objects.create(
+        organization=edition.organization,
+        code=f"operations-role-{uuid4().hex[:8]}",
+        name="Operations role",
+        description="Synthetic exact-scope authority command target.",
+        default_capacity_codes=["staff"],
+        role_bundle=role_bundle,
+        created_by=creator,
+    )
+
+    def create_binding(code: str) -> ScopedResourceBinding:
+        position = Position.objects.create(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=role_bundle,
+            code=code,
+            title=code.replace("-", " ").title(),
+            description="Synthetic exact authority target.",
+            capacity_codes=["staff"],
+            created_by=creator,
+        )
+        binding, _ = ScopedResourceBinding.objects.get_or_create(
+            resource_kind=ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION,
+            resource_id=position.id,
+            defaults={
+                "organization": department.organization,
+                "edition": department.edition,
+                "department": department,
+            },
+        )
+        return binding
+
+    first = create_binding(f"operations-lead-{uuid4().hex[:8]}")
+    second = create_binding(f"operations-deputy-{uuid4().hex[:8]}")
+    return department, first, second
 
 
 def test_direct_grant_requires_two_authorities_and_commits_complete_evidence() -> None:
@@ -88,8 +174,7 @@ def test_direct_grant_requires_two_authorities_and_commits_complete_evidence() -
         approver=approver,
         recipient=recipient,
         capability_code="events.transition",
-        organization_id=edition.organization_id,
-        edition_id=edition.id,
+        target=_edition_target(edition),
         effective_from=effective_from,
         expires_at=effective_from + timedelta(days=2),
         reason="Temporary lifecycle authority for the event lead.",
@@ -102,7 +187,7 @@ def test_direct_grant_requires_two_authorities_and_commits_complete_evidence() -
     assert decide(
         principal=recipient,
         capability_code="events.transition",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=edition.organization_id,
             edition_id=edition.id,
         ),
@@ -124,6 +209,126 @@ def test_direct_grant_requires_two_authorities_and_commits_complete_evidence() -
         "scope_level": "edition",
     }
     assert OutboxMessage.objects.get(event=event).workload_pool == "security"
+
+
+def test_commands_persist_exact_department_and_resource_scope() -> None:
+    department, first_binding, second_binding = _scoped_positions()
+    edition = department.edition
+    organization = department.organization
+    actor, approver = _dual_managers(
+        organization,
+        "authorization.grant_direct",
+        edition=edition,
+    )
+    _grant_management(
+        actor,
+        organization,
+        "authorization.revoke",
+        edition=edition,
+    )
+    first_target = resolve_resource_target(
+        organization_id=organization.id,
+        edition_id=edition.id,
+        department_id=department.id,
+        resource_binding_id=first_binding.id,
+    )
+    second_target = resolve_resource_target(
+        organization_id=organization.id,
+        edition_id=edition.id,
+        department_id=department.id,
+        resource_binding_id=second_binding.id,
+    )
+    assert first_target is not None
+    assert second_target is not None
+
+    recipient = AccountFactory()
+    grant_correlation = uuid4()
+    grant = grant_capability_direct(
+        actor=actor,
+        approver=approver,
+        recipient=recipient,
+        capability_code="events.view_basic",
+        target=first_target,
+        effective_from=timezone.now() - timedelta(seconds=1),
+        expires_at=None,
+        reason="Limit event visibility to one exact position.",
+        correlation_id=grant_correlation,
+    )
+    assert grant.department_id == department.id
+    assert grant.resource_binding_id == first_binding.id
+    assert (
+        DomainEvent.objects.get(correlation_id=grant_correlation).payload["scope_level"]
+        == "resource"
+    )
+    assert decide(
+        principal=recipient,
+        capability_code="events.view_basic",
+        resource=first_target,
+    ).allowed
+    assert not decide(
+        principal=recipient,
+        capability_code="events.view_basic",
+        resource=second_target,
+    ).allowed
+
+    revoked = revoke_capability_grant(
+        actor=actor,
+        target=first_target,
+        grant_id=grant.id,
+        reason="End exact-position access.",
+        correlation_id=uuid4(),
+    )
+    assert revoked.revoked_by_id == actor.id
+    assert revoked.revocation_reason == "End exact-position access."
+    assert not decide(
+        principal=recipient,
+        capability_code="events.view_basic",
+        resource=first_target,
+    ).allowed
+
+    role_actor, role_approver = _dual_managers(
+        organization,
+        "authorization.manage_roles",
+        edition=edition,
+    )
+    role_recipient = AccountFactory()
+    role = RoleBundleFactory(organization=organization)
+    department_target = resolve_department_target(
+        organization_id=organization.id,
+        edition_id=edition.id,
+        department_id=department.id,
+    )
+    assert department_target is not None
+    assignment_correlation = uuid4()
+    assignment = assign_role(
+        actor=role_actor,
+        approver=role_approver,
+        recipient=role_recipient,
+        target=department_target,
+        role_bundle_id=role.id,
+        effective_from=timezone.now() - timedelta(seconds=1),
+        expires_at=None,
+        reason="Cover one exact department.",
+        correlation_id=assignment_correlation,
+    )
+    assert assignment.department_id == department.id
+    assert assignment.resource_binding_id is None
+    assert (
+        DomainEvent.objects.get(correlation_id=assignment_correlation).payload[
+            "scope_level"
+        ]
+        == "department"
+    )
+    assert decide(
+        principal=role_recipient,
+        capability_code="events.view_basic",
+        resource=first_target,
+    ).allowed
+    assert decide(
+        principal=role_recipient,
+        capability_code="events.view_basic",
+        resource=second_target,
+    ).allowed
 
 
 @pytest.mark.parametrize(
@@ -155,8 +360,7 @@ def test_direct_grant_denies_invalid_approval_without_state_or_effect(
             approver=approver,
             recipient=recipient,
             capability_code="events.view_basic",
-            organization_id=organization.id,
-            edition_id=None,
+            target=_organization_target(organization),
             effective_from=timezone.now(),
             expires_at=None,
             reason="Attempt invalid approval.",
@@ -200,8 +404,7 @@ def test_direct_grant_rejects_unsafe_targets_with_classified_audit(
             approver=approver,
             recipient=AccountFactory(),
             capability_code=capability_code,
-            organization_id=organization.id,
-            edition_id=None,
+            target=_organization_target(organization),
             effective_from=timezone.now(),
             expires_at=None,
             reason=("Missing edition scope." if edition_required else "Unsafe target."),
@@ -239,8 +442,7 @@ def test_direct_grant_effect_failure_rolls_back_state_and_success_evidence(
             approver=approver,
             recipient=recipient,
             capability_code="events.view_basic",
-            organization_id=organization.id,
-            edition_id=None,
+            target=_organization_target(organization),
             effective_from=timezone.now(),
             expires_at=None,
             reason="This command must roll back atomically.",
@@ -283,8 +485,7 @@ def test_direct_grant_validates_reason_and_effective_interval(
             approver=approver,
             recipient=AccountFactory(),
             capability_code="events.view_basic",
-            organization_id=organization.id,
-            edition_id=None,
+            target=_organization_target(organization),
             effective_from=effective_from,
             expires_at=(
                 effective_from + expires_delta if expires_delta is not None else None
@@ -307,22 +508,13 @@ def test_direct_grant_rejects_missing_scope_and_active_duplicate() -> None:
         "authorization.grant_direct",
     )
     recipient = AccountFactory()
-    missing_scope_correlation = uuid4()
-
-    with pytest.raises(AuthorityCommandValidationError) as missing_scope:
-        grant_capability_direct(
-            actor=actor,
-            approver=approver,
-            recipient=recipient,
-            capability_code="events.view_basic",
+    assert (
+        resolve_edition_target(
             organization_id=organization.id,
             edition_id=uuid4(),
-            effective_from=timezone.now(),
-            expires_at=None,
-            reason="The edition must exist in the tenant.",
-            correlation_id=missing_scope_correlation,
         )
-    assert missing_scope.value.reason_code == "scope_unavailable"
+        is None
+    )
 
     CapabilityGrantFactory(
         organization=organization,
@@ -336,8 +528,7 @@ def test_direct_grant_rejects_missing_scope_and_active_duplicate() -> None:
             approver=approver,
             recipient=recipient,
             capability_code="events.view_basic",
-            organization_id=organization.id,
-            edition_id=None,
+            target=_organization_target(organization),
             effective_from=timezone.now(),
             expires_at=None,
             reason="Do not duplicate active authority.",
@@ -373,8 +564,7 @@ def test_new_authority_cannot_outlive_either_controller() -> None:
             approver=approver,
             recipient=AccountFactory(),
             capability_code="events.view_basic",
-            organization_id=organization.id,
-            edition_id=None,
+            target=_organization_target(organization),
             effective_from=now,
             expires_at=now + timedelta(days=1, seconds=1),
             reason="The approver does not hold authority for this long.",
@@ -421,7 +611,7 @@ def test_revocation_is_immediate_preserves_provenance_and_invalidates_descendant
 
     revoked = revoke_capability_grant(
         actor=actor,
-        organization_id=edition.organization_id,
+        target=_edition_target(edition),
         grant_id=parent.id,
         reason="Offboarding requires immediate removal.",
         correlation_id=correlation_id,
@@ -433,7 +623,7 @@ def test_revocation_is_immediate_preserves_provenance_and_invalidates_descendant
     assert not decide(
         principal=child.principal,
         capability_code=child.capability_code,
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=edition.organization_id,
             edition_id=edition.id,
         ),
@@ -456,7 +646,7 @@ def test_revocation_hides_another_tenants_authority_record() -> None:
     with pytest.raises(AuthorizationDenied) as captured:
         revoke_capability_grant(
             actor=actor,
-            organization_id=own_organization.id,
+            target=_organization_target(own_organization),
             grant_id=other_grant.id,
             reason="Attempt a cross-tenant revocation.",
             correlation_id=correlation_id,
@@ -484,7 +674,7 @@ def test_grant_revocation_rejects_repeat_and_rolls_back_effect_failure(
     with pytest.raises(AuthorityCommandValidationError) as repeated:
         revoke_capability_grant(
             actor=actor,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             grant_id=already_revoked.id,
             reason="A repeated revocation is invalid.",
             correlation_id=repeat_correlation,
@@ -504,7 +694,7 @@ def test_grant_revocation_rejects_repeat_and_rolls_back_effect_failure(
     with pytest.raises(RuntimeError, match="synthetic revocation"):
         revoke_capability_grant(
             actor=actor,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             grant_id=active.id,
             reason="This revocation must roll back.",
             correlation_id=failed_correlation,
@@ -527,7 +717,7 @@ def test_role_bundle_versions_are_sequential_immutable_and_dual_controlled() -> 
     first = create_role_bundle_version(
         actor=actor,
         approver=approver,
-        organization_id=organization.id,
+        target=_organization_target(organization),
         code="front-desk-lead",
         name="Front Desk Lead",
         capability_codes=("events.view_basic",),
@@ -537,7 +727,7 @@ def test_role_bundle_versions_are_sequential_immutable_and_dual_controlled() -> 
     second = create_role_bundle_version(
         actor=actor,
         approver=approver,
-        organization_id=organization.id,
+        target=_organization_target(organization),
         code="front-desk-lead",
         name="Front Desk Lead",
         capability_codes=("events.view_basic", "events.transition"),
@@ -600,7 +790,7 @@ def test_generic_role_commands_cannot_manage_executive_board_authority() -> None
             create_role_bundle_version(
                 actor=actor,
                 approver=approver,
-                organization_id=organization.id,
+                target=_organization_target(organization),
                 code=EXECUTIVE_BOARD_ROLE_CODE,
                 name="Executive Board replacement",
                 capability_codes=("authorization.manage_roles",),
@@ -620,9 +810,8 @@ def test_generic_role_commands_cannot_manage_executive_board_authority() -> None
                 actor=actor,
                 approver=approver,
                 recipient=recipient,
-                organization_id=organization.id,
+                target=_organization_target(organization),
                 role_bundle_id=board.id,
-                edition_id=None,
                 effective_from=timezone.now(),
                 expires_at=None,
                 reason="Attempt to share reserved Board authority.",
@@ -638,7 +827,7 @@ def test_generic_role_commands_cannot_manage_executive_board_authority() -> None
         with pytest.raises(AuthorizationDenied) as protected:
             revoke_role_assignment(
                 actor=actor,
-                organization_id=organization.id,
+                target=_organization_target(organization),
                 assignment_id=assignments[1].id,
                 reason="Attempt to revoke reserved Board authority.",
                 correlation_id=revoke_correlation,
@@ -696,7 +885,7 @@ def test_role_bundle_command_rejects_unsafe_definitions(
         create_role_bundle_version(
             actor=actor,
             approver=approver,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             code="unsafe-role",
             name=name,
             capability_codes=capability_codes,
@@ -722,7 +911,7 @@ def test_role_bundle_denial_validation_and_effect_failure_are_atomic(
         create_role_bundle_version(
             actor=actor,
             approver=AccountFactory(),
-            organization_id=organization.id,
+            target=_organization_target(organization),
             code="denied-role",
             name="Denied role",
             capability_codes=("events.view_basic",),
@@ -738,7 +927,7 @@ def test_role_bundle_denial_validation_and_effect_failure_are_atomic(
         create_role_bundle_version(
             actor=actor,
             approver=approver,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             code="Invalid Role Code",
             name="Invalid role",
             capability_codes=("events.view_basic",),
@@ -762,7 +951,7 @@ def test_role_bundle_denial_validation_and_effect_failure_are_atomic(
         create_role_bundle_version(
             actor=actor,
             approver=approver,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             code="rolled-back-role",
             name="Rolled back role",
             capability_codes=("events.view_basic",),
@@ -799,9 +988,8 @@ def test_role_assignment_and_revocation_have_complete_policy_and_event_spine() -
         actor=actor,
         approver=approver,
         recipient=recipient,
-        organization_id=edition.organization_id,
+        target=_edition_target(edition),
         role_bundle_id=role.id,
-        edition_id=edition.id,
         effective_from=effective_from,
         expires_at=effective_from + timedelta(days=3),
         reason="Cover the event control duty.",
@@ -812,7 +1000,7 @@ def test_role_assignment_and_revocation_have_complete_policy_and_event_spine() -
     assert decide(
         principal=recipient,
         capability_code="events.transition",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=edition.organization_id,
             edition_id=edition.id,
         ),
@@ -838,7 +1026,7 @@ def test_role_assignment_and_revocation_have_complete_policy_and_event_spine() -
     revoked_correlation = uuid4()
     revoked = revoke_role_assignment(
         actor=revoker,
-        organization_id=edition.organization_id,
+        target=_edition_target(edition),
         assignment_id=assignment.id,
         reason="The temporary duty ended.",
         correlation_id=revoked_correlation,
@@ -850,7 +1038,7 @@ def test_role_assignment_and_revocation_have_complete_policy_and_event_spine() -
     assert not decide(
         principal=recipient,
         capability_code="events.transition",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=edition.organization_id,
             edition_id=edition.id,
         ),
@@ -878,9 +1066,8 @@ def test_role_assignment_requires_scope_and_hides_other_tenant_bundle() -> None:
             actor=actor,
             approver=approver,
             recipient=recipient,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             role_bundle_id=edition_role.id,
-            edition_id=None,
             effective_from=timezone.now(),
             expires_at=None,
             reason="This must name an edition.",
@@ -895,9 +1082,8 @@ def test_role_assignment_requires_scope_and_hides_other_tenant_bundle() -> None:
             actor=actor,
             approver=approver,
             recipient=recipient,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             role_bundle_id=other_role.id,
-            edition_id=None,
             effective_from=timezone.now(),
             expires_at=None,
             reason="Attempt cross-tenant role use.",
@@ -933,9 +1119,8 @@ def test_role_assignment_duplicate_and_effect_failures_roll_back(
             actor=actor,
             approver=approver,
             recipient=recipient,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             role_bundle_id=role.id,
-            edition_id=None,
             effective_from=timezone.now(),
             expires_at=None,
             reason="Do not duplicate active assignments.",
@@ -944,7 +1129,16 @@ def test_role_assignment_duplicate_and_effect_failures_roll_back(
     assert duplicate.value.reason_code == "active_assignment_exists"
 
     existing.revoked_at = timezone.now()
-    existing.save(update_fields=("revoked_at", "updated_at"))
+    existing.revoked_by = actor
+    existing.revocation_reason = "Synthetic completed assignment."
+    existing.save(
+        update_fields=(
+            "revoked_at",
+            "revoked_by",
+            "revocation_reason",
+            "updated_at",
+        )
+    )
 
     def fail_publish(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("synthetic assignment effect failure")
@@ -959,9 +1153,8 @@ def test_role_assignment_duplicate_and_effect_failures_roll_back(
             actor=actor,
             approver=approver,
             recipient=recipient,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             role_bundle_id=role.id,
-            edition_id=None,
             effective_from=timezone.now(),
             expires_at=None,
             reason="This assignment must roll back.",
@@ -1011,9 +1204,8 @@ def test_role_assignment_cannot_outlive_role_management_authority() -> None:
             actor=actor,
             approver=approver,
             recipient=recipient,
-            organization_id=organization.id,
+            target=_organization_target(organization),
             role_bundle_id=role.id,
-            edition_id=None,
             effective_from=now,
             expires_at=now + timedelta(days=2),
             reason="The assignment exceeds the approval horizon.",
@@ -1046,7 +1238,7 @@ def test_role_revocation_denial_repeat_and_effect_failure_are_classified(
     with pytest.raises(AuthorizationDenied) as missing:
         revoke_role_assignment(
             actor=actor,
-            organization_id=own_organization.id,
+            target=_organization_target(own_organization),
             assignment_id=other_assignment.id,
             reason="Attempt cross-tenant removal.",
             correlation_id=missing_correlation,
@@ -1060,6 +1252,8 @@ def test_role_revocation_denial_repeat_and_effect_failure_are_classified(
         role_bundle=role,
         effective_from=timezone.now(),
         revoked_at=timezone.now(),
+        revoked_by=actor,
+        revocation_reason="Synthetic prior revocation.",
         granted_by=AccountFactory(),
         reason="Already revoked.",
     )
@@ -1067,7 +1261,7 @@ def test_role_revocation_denial_repeat_and_effect_failure_are_classified(
     with pytest.raises(AuthorityCommandValidationError) as repeated:
         revoke_role_assignment(
             actor=actor,
-            organization_id=own_organization.id,
+            target=_organization_target(own_organization),
             assignment_id=already_revoked.id,
             reason="Do not revoke twice.",
             correlation_id=repeat_correlation,
@@ -1094,7 +1288,7 @@ def test_role_revocation_denial_repeat_and_effect_failure_are_classified(
     with pytest.raises(RuntimeError, match="synthetic role revocation"):
         revoke_role_assignment(
             actor=actor,
-            organization_id=own_organization.id,
+            target=_organization_target(own_organization),
             assignment_id=active.id,
             reason="This revocation must roll back.",
             correlation_id=failed_correlation,

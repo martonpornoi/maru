@@ -17,7 +17,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import (
+    decide,
+    resolve_edition_target,
+    resolve_self_target,
+)
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.workforce.models import (
@@ -69,7 +73,7 @@ class WorkforceStructureView(APIView):
         decision = decide(
             principal=account,
             capability_code="workforce.view_structure",
-            resource=ResourceScope(
+            resource=resolve_edition_target(
                 organization_id=organization_id,
                 edition_id=edition_id,
             ),
@@ -334,10 +338,10 @@ class MyOnboardingDocumentListView(APIView):
         decision = decide(
             principal=account,
             capability_code="workforce.view_self",
-            resource=ResourceScope(
+            resource=resolve_self_target(
+                principal=account,
                 organization_id=organization_id,
                 edition_id=edition_id,
-                owner_account_id=account.id,
             ),
         )
         if not decision.allowed:

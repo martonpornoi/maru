@@ -26,7 +26,11 @@ from rest_framework.response import Response
 
 from maru.activity.queries import record_activity
 from maru.authorization.models import CapabilityGrant, RoleAssignment
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import (
+    decide,
+    resolve_edition_target,
+    resolve_organization_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.core.forms import StrictInputForm
 from maru.events.admin_context import (
@@ -134,9 +138,13 @@ def _can(
     return decide(
         principal=actor,
         capability_code=capability_code,
-        resource=ResourceScope(
-            organization_id=organization_id,
-            edition_id=edition_id,
+        resource=(
+            resolve_edition_target(
+                organization_id=organization_id,
+                edition_id=edition_id,
+            )
+            if edition_id is not None
+            else resolve_organization_target(organization_id=organization_id)
         ),
     ).allowed
 

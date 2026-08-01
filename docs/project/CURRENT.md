@@ -1,8 +1,8 @@
 # Current project state
 
 Last updated: 2026-08-01
-Phase: Production consolidation M2.1 locally verified; M2.2 authorization
-scope-v2 implementation next
+Phase: Production consolidation M2.2 authorization scope v2 locally verified;
+M2.3 exact authority-provenance hardening next
 Branch: `codex/full-platform-consolidation`
 
 ## Current outcome
@@ -17,9 +17,9 @@ ADR 0037's single-shell decision. `maru.urls` now provides one record-oriented
 `/admin/` shell using Maru's logo and the stronger pre-reset visual grammar.
 Backend route, authorization, migration-drift, frontend build, deploy-shaped,
 OpenAPI determinism, populated/fresh migration, local restore-drill, and
-desktop/390-pixel browser smoke gates pass. The final consolidated local
-backend invocation passes 792 tests in 329.21 seconds with 90.01 percent
-coverage and no warnings. Accessibility, complete denied/error-state,
+desktop/390-pixel browser smoke gates pass. The current consolidated local
+backend invocation passes 876 tests in 458.05 seconds with 90.43 percent
+branch coverage and no warnings. Accessibility, complete denied/error-state,
 representative recovery/PITR, and owner-rehearsal gates remain.
 
 ADR 0040 supersedes the broad ADR 0024 ceremony as the normal way to establish
@@ -37,8 +37,14 @@ reconciled through the real services; fresh tests, local restore evidence, and
 bounded Page 8 read/deny audit pass. Representative recovery/PITR,
 accessibility, complete visual-state, and owner evidence remain.
 
-ADR 0041 accepts exact department and typed-resource scope without implicit
-department-tree inheritance; it is not implemented yet. ADR 0042 makes every
+ADR 0041 now implements exact department and typed-resource scope without
+implicit department-tree inheritance. Sealed database-resolved targets,
+append-only grant and role issuance, one-way evidence-complete revocation,
+bounded delegation, exact Position bindings, and the ordered authorization
+`0004` → workforce `0004` → authorization `0005` integrity path are present.
+The privacy-minimized readiness command separates migration-data readiness
+from production readiness; production remains blocked until exact actor and
+approver authority-source provenance is designed and stored. ADR 0042 makes every
 repository-controlled fixture synthetic and deletes the public-roster
 rehearsal implementation while retaining a fail-closed compatibility command.
 ADR 0043 adds platform-only emergency containment across every organization of
@@ -350,6 +356,42 @@ Current post-hardening evidence is:
 - documentation validation passes for 165 Markdown files and 195 unique
   requirement identifiers.
 
+Current scope-v2 evidence is:
+
+- 157 initial focused migration, database-integrity, exact-policy, authority-command,
+  live resource-binding, readiness, representation, platform-boundary, and
+  workforce tests pass on an isolated PostgreSQL database;
+- the migration suite covers additive schema, reproducible Position backfill,
+  reverse behavior before scoped writes, the durable first-write downgrade
+  fence, raw/bulk bypass attempts, hierarchy/reporting cycles, and exact
+  position-assignment evidence;
+- `ensure_workforce_position_binding` locks and re-reads every Position created
+  through the specialist record or preserved bootstrap, then establishes the
+  same deterministic immutable binding used by migration backfill; and
+- a 57-test ordered historical-migration matrix restores authorization `0005`,
+  workforce `0004`, and organizations `0012` before current-model use;
+- 44 additional fail-closed runtime tests cover binding lifecycle, malformed
+  scope evidence, target tampering, delegation ancestry, stale target locks,
+  transactional rechecks, and readiness catalog categories;
+- the definitive repository-wide run passes all 876 tests in 458.05 seconds,
+  reaches 90.43 percent branch coverage, and emits no warnings; and
+- Ruff formatting/lint, strict mypy across 199 source files, Django local and
+  deploy-shaped checks, migration drift, documentation validation for 167
+  Markdown files/195 requirement identifiers, OpenAPI validation and generated
+  client stability, Staff Console typecheck/19 tests/production build, and
+  whitespace checks pass.
+
+The populated synthetic `maru_consolidated_demo` database applied
+authorization `0004`, workforce `0004`, and authorization `0005` in dependency
+order. Both scope-v2 and representation readiness report zero blockers;
+scope-v2 reports `status: ready` and truthfully retains `production_status:
+blocked` for authority-source provenance. Current migration leaves, system
+check, and drift check pass. Live browser smoke then verified the platform
+administrator shell, an ordinary Board controller's organization and
+representation access, exact foreign-organization 403 denial, and no desktop
+horizontal overflow. The platform administrator session is left open at
+`/admin/` for continued review.
+
 Historical-migration test modules now use a shared finalizer that migrates
 every Django app back to the migration graph's current on-disk leaf in a
 `finally` path. A regression starts from the historical workspace target and
@@ -404,12 +446,22 @@ containment must leave no partial membership, role, session, identity,
 representation, organization-lifecycle, audit, event, or outbox change. The
 local evidence is not representative deployment backup/PITR certification.
 
+Authorization `0004`, workforce `0004`, and authorization `0005` are a second
+stopped-writer sequence. The count-only `check_scope_v2_readiness` preflight
+must report zero migration blockers. The sequence preserves broad historical
+grants, installs exact containment and immutable issuance/revocation guards,
+backfills deterministic Position bindings, and records a durable fence after
+the first scoped write. Once fenced, use compatible writers and fix forward or
+restore the entire database to one pre-write recovery point; do not reverse an
+individual module. The complete operator procedure is in
+`docs/operations/authorization-scope-v2-migration-and-recovery.md`.
+
 ## Known limits and production gates
 
 - The unified shell is implemented and backend-tested; current desktop/
   responsive browser smoke, deploy-shaped settings, and local migration/
-  restore evidence pass. The final consolidated local backend gate passes 792
-  tests with 90.01 percent coverage and no warnings. Automated accessibility
+  restore evidence pass. The current consolidated local backend gate passes 876
+  tests with 90.43 percent branch coverage and no warnings. Automated accessibility
   and complete visual-state coverage remain incomplete.
 - Owner tutorial rehearsal is unfinished.
 - Executive Board provisioning, exact invitation, self-response, initial
@@ -417,9 +469,10 @@ local evidence is not representative deployment backup/PITR certification.
   containment are implemented and focused-tested. The focused readiness/core
   and representation/platform matrices pass. Representative restore/PITR,
   accessibility, complete visual states, and owner rehearsal are open. Routine
-  expiry, replacement, ending, planned
-  suspension/reactivation, invitation delivery, implemented department/resource
-  scope, and complete effective-access explanations remain later M2.
+  expiry, replacement, ending, planned suspension/reactivation, invitation
+  delivery, authority-source provenance, and complete effective-access
+  explanations remain later M2. Exact department/resource scope exists below
+  the UI, but a contextual editor and computed explanation are not mounted.
 - Programme, typed applications, venues/mergeable spaces, three-phase
   timetable/layers, shifts, storage/logistics, governed documents, and team/
   on-site communications remain absent current modules.
@@ -436,18 +489,18 @@ local evidence is not representative deployment backup/PITR certification.
 
 ## Smallest sensible next actions
 
-1. Implement ADR 0041 department/resource containment before mounting
-   department-owned writes.
-2. Rehearse every current migration against a representative restored database
+1. Record and implement exact actor/approver authority-source provenance for
+   root grant and role issuance; keep production readiness blocked until it is
+   queryable and enforced.
+2. Add the Awoostria-shaped synthetic department template, mounted hierarchy/
+   position workflow, and computed effective-access explanation on top of the
+   exact scope boundary.
+3. Rehearse every current migration against a representative restored database
    with reserved-role/non-Draft preflight, full fix-forward, and backup/PITR
    evidence.
-3. Run automated accessibility, reliable keyboard traversal, and the complete
+4. Run automated accessibility, reliable keyboard traversal, and the complete
    blocked/error/stale-state matrix before owner rehearsal.
-4. Add the Awoostria-shaped synthetic department template and mounted
-   hierarchy/position workflow.
-5. Replace the provisional access summary with computed effective access before
-   mounting department-owned mutations.
-6. Deliver the next differentiating vertical: panel application → accepted
+5. Deliver the next differentiating vertical: panel application → accepted
    private programme item → reusable/mergeable venue selection → three-phase
    layered timetable → immutable release/API projection.
 
@@ -457,7 +510,7 @@ Read `AGENTS.md`, this file, `PRODUCTION_CONSOLIDATION.md`, ADRs 0037–0043, th
 Page 1–8 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
 `docs/modules/activity.md`, organization/events/authorization/audit/effects
 module docs, and the M1 migration runbook. Run `git status --short --branch`
-and continue with the first unchecked M2 hardening/scope-v2 item. Do not treat backend
+and continue with the first unchecked M2 provenance/hierarchy item. Do not treat backend
 evidence as proof
 of browser or deployment readiness. Preserve
 concurrent changes and the non-participating platform boundary.

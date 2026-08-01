@@ -28,6 +28,17 @@ def test_require_capability_returns_stable_definition() -> None:
     assert "name" in definition.field_ceiling
 
 
+def test_catalog_distinguishes_scope_depth_from_persistability() -> None:
+    relationship_only = require_capability("registration.view_self")
+    edition_capability = require_capability("workforce.view_structure")
+
+    assert ScopeLevel.DEPARTMENT.value == "department"
+    assert relationship_only.maximum_scope is ScopeLevel.RESOURCE
+    assert not relationship_only.persistable
+    assert edition_capability.maximum_scope is ScopeLevel.EDITION
+    assert edition_capability.persistable
+
+
 def test_authority_management_capabilities_make_control_obligations_explicit() -> None:
     direct_grant = require_capability("authorization.grant_direct")
     role_management = require_capability("authorization.manage_roles")

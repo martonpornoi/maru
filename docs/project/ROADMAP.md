@@ -42,9 +42,11 @@ accounts accept their own invitations, at least two distinct controllers
 cross-approve root authority, activation moves the Draft organization to
 Active atomically, and the platform administrator remains external. Its
 initial schema, service, HTML, authorization, and synthetic-fixture lifecycle
-are backend-verified alongside the M1.1 shell. ADR 0041 accepts exact
-department/typed-resource scope without implicit hierarchy inheritance; its
-runtime implementation is next. ADR 0042 makes repository fixtures synthetic-
+are backend-verified alongside the M1.1 shell. ADR 0041 implements exact
+department/typed-resource scope without implicit hierarchy inheritance through
+sealed targets, policy, commands, immutable bindings, and database guards.
+Its contextual access editor remains unmounted, and exact actor/approver
+authority-source provenance remains a production gate. ADR 0042 makes repository fixtures synthetic-
 only and removes the public-roster rehearsal implementation. ADR 0043 adds
 global platform emergency containment when a Board controller must be removed.
 `PRODUCTION_CONSOLIDATION.md`
@@ -135,8 +137,9 @@ identity and audit evidence only. Edition creation starts one Draft identity
 with idempotency receipt, audit, domain event, and outbox; it does not create
 registration, programme, venue, people, or workforce records. The access
 summary distinguishes platform, Board, exact-edition, and own-invitation
-authority but remains provisional: computed department/resource/field access
-remains Phase 1 scope v2. Draft organizations
+authority but remains provisional: exact department/resource enforcement now
+exists below the UI, while the computed human explanation and field-purpose
+detail remain Phase 1 work. Draft organizations
 created during this interval must be brought under the IDN-012 Executive Board
 invariant before activation.
 
@@ -159,9 +162,17 @@ tests, and the final consolidated backend gate passes 792 tests in 329.21
 seconds with 90.01 percent coverage and no warnings. A separate behavior run
 passes the same 792 tests in 291.86 seconds. Representative restore/PITR,
 accessibility, complete visual-state, and owner-rehearsal gates remain.
+
+The later ADR 0041 implementation supersedes that backend baseline: all 876
+tests pass in 458.05 seconds with 90.43 percent branch coverage. The populated
+synthetic database applies the three-migration scope sequence with zero scope
+or representation blockers, and platform/Board browser smoke preserves exact
+foreign-organization denial. Exact actor/approver authority-source provenance
+remains the next production gate before the contextual hierarchy editor.
 Appointment expiry, routine replacement/removal,
-planned suspension/reactivation, invitation delivery, implemented department/resource scope, and
-the full effective-access header remain later M2 work.
+planned suspension/reactivation, invitation delivery, root authority-source
+provenance, the contextual department/resource assignment editor, and the full
+effective-access header remain later M2 work.
 
 The committed M1 spine is locally verified across the complete suite, migration rehearsal,
 OpenAPI/client regeneration, deployment-shaped checks, and desktop/390-pixel

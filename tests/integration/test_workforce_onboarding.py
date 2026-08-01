@@ -20,7 +20,7 @@ from PIL import Image
 from rest_framework.test import APIClient
 
 from maru.authorization.models import RoleAssignment
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_edition_target
 from maru.registration.models import (
     AttendeeFursuit,
     ConfigurationStatus,
@@ -439,7 +439,7 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
     assert decide(
         principal=attendee,
         capability_code="registration.register_on_behalf",
-        resource=ResourceScope(
+        resource=resolve_edition_target(
             organization_id=organization.id,
             edition_id=edition.id,
         ),

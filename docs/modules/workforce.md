@@ -1,6 +1,7 @@
 # Workforce module
 
-Status: Position, hierarchy, opportunity, agreement, and authority-onboarding slice
+Status: Position, hierarchy, opportunity, agreement, authority onboarding, and
+ADR 0041 workforce containment slice
 Last updated: 2026-08-01
 
 ## Purpose and requirements
@@ -117,6 +118,15 @@ set application dates. A published filled position remains in the public list
 when `visible_when_filled` is enabled, but it no longer accepts applications.
 Headcount greater than one supports roles with multiple holders.
 
+The Position specialist-record save and preserved workforce bootstrap also
+call authorization's explicit typed-binding service after the Position is
+saved. The service re-reads the locked row instead of trusting submitted scope,
+and the surrounding transaction rolls Position creation back if its exact
+immutable authorization binding cannot be established. Any future production
+import or application service that creates Positions must make the same call;
+direct ORM creation is only a low-level building block, not a complete live
+creation workflow.
+
 An application is an expression of interest only. Accepting or reviewing it
 does not grant a role, capacity, or access.
 
@@ -197,6 +207,32 @@ Specialist records:
 ```
 
 ## Database integrity and recovery
+
+Workforce `0004` is the stopped-writer integrity stage of ADR 0041. It installs
+database enforcement before its count-only preflight and provides these
+guarantees even when model validation is bypassed:
+
+- every department and parent share the exact organization and edition;
+- department reparenting is serialized within that scope, so raw, bulk, and
+  concurrent writes cannot create a hierarchy cycle;
+- every position agrees with its edition, department, organization template,
+  role bundle, and reporting scope, while serialized raw or concurrent writes
+  cannot create a reporting-line cycle;
+- a `workforce.position` resource binding freezes that position's
+  organization, edition, and department identity; and
+- linked position-assignment role evidence remains valid in both write
+  directions. Existing exact-edition evidence with no department or resource
+  remains edition-wide. A narrower assignment must name the position's exact
+  department or its exact typed position binding; organization-wide, sibling,
+  foreign-edition, and foreign-position evidence is rejected.
+
+The migration reports the number of retained edition-wide workforce role
+assignments separately and does not insert resource bindings or reinterpret
+their historical intent. Reproducible binding backfill and the final downgrade
+fence belong to the following authorization migration. After the first
+scope-v2 write, retain compatible writers and fix forward or restore the whole
+database to a mutually consistent pre-write point; do not reverse this guard
+layer independently.
 
 Workforce `0003` installs IDN-011 guards for volunteer applications,
 onboarding-document requests, and position assignments. Each insert or update

@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import decide, resolve_edition_target
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import OrganizationMembership
@@ -97,7 +97,7 @@ class EditionContextSerializer(serializers.ModelSerializer[Participation]):
         return decide(
             principal=account,
             capability_code="events.transition",
-            resource=ResourceScope(
+            resource=resolve_edition_target(
                 organization_id=obj.organization_id,
                 edition_id=obj.edition_id,
             ),

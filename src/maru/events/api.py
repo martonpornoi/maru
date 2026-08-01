@@ -32,7 +32,11 @@ from maru.authorization.enforcement import (
     FieldProjectionDeniedError,
     require_complete_projection,
 )
-from maru.authorization.policy import ResourceScope, decide
+from maru.authorization.policy import (
+    decide,
+    resolve_edition_target,
+    resolve_organization_target,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.core.api_input import reject_unknown_fields
 from maru.core.pagination import StandardPageNumberPagination
@@ -210,7 +214,7 @@ class EditionListView(GenericAPIView[EventEdition]):
             decision = decide(
                 principal=account,
                 capability_code="events.view_basic",
-                resource=ResourceScope(organization_id=organization_id),
+                resource=resolve_organization_target(organization_id=organization_id),
                 requested_fields=EDITION_BASIC_RESPONSE_FIELDS,
             )
         except (DatabaseError, RuntimeError) as error:
@@ -300,7 +304,7 @@ class EditionListView(GenericAPIView[EventEdition]):
             decision = decide(
                 principal=account,
                 capability_code="events.create",
-                resource=ResourceScope(organization_id=organization_id),
+                resource=resolve_organization_target(organization_id=organization_id),
                 requested_fields=EDITION_BASIC_RESPONSE_FIELDS,
             )
         except (DatabaseError, RuntimeError) as error:
@@ -406,7 +410,7 @@ class EditionAutocompleteView(APIView):
             decision = decide(
                 principal=account,
                 capability_code="events.view_basic",
-                resource=ResourceScope(organization_id=organization_id),
+                resource=resolve_organization_target(organization_id=organization_id),
                 requested_fields=required_fields,
             )
         except (DatabaseError, RuntimeError) as error:
@@ -480,7 +484,7 @@ class EditionBasicDetailView(APIView):
             decision = decide(
                 principal=account,
                 capability_code="events.view_basic",
-                resource=ResourceScope(
+                resource=resolve_edition_target(
                     organization_id=organization_id,
                     edition_id=edition_id,
                 ),
@@ -556,7 +560,7 @@ class EditionBasicDetailView(APIView):
             decision = decide(
                 principal=account,
                 capability_code="events.change_profile",
-                resource=ResourceScope(
+                resource=resolve_edition_target(
                     organization_id=organization_id,
                     edition_id=edition_id,
                 ),
@@ -753,7 +757,7 @@ class EditionClosureReadinessView(APIView):
         decision = decide(
             principal=account,
             capability_code="events.transition",
-            resource=ResourceScope(
+            resource=resolve_edition_target(
                 organization_id=organization_id,
                 edition_id=edition_id,
             ),

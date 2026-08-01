@@ -14,7 +14,11 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.models import RoleAssignment, RoleBundle
-from maru.authorization.policy import PolicyDecision, ResourceScope, decide
+from maru.authorization.policy import (
+    PolicyDecision,
+    decide,
+    resolve_organization_target,
+)
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.identity.models import Account
 from maru.identity.policies import validate_convention_subject
@@ -142,7 +146,7 @@ def _require_representation_manager(
     decision = decide(
         principal=actor,
         capability_code=MANAGE_REPRESENTATION,
-        resource=ResourceScope(organization_id=organization_id),
+        resource=resolve_organization_target(organization_id=organization_id),
     )
     if not decision.allowed:
         raise PermissionDenied("Executive Board management authority is required.")

@@ -29,8 +29,9 @@ work, permission-filtered specialist records, and Pages 1–8 under the reserved
 convention participation. Backend route, authorization, frontend build,
 populated and fresh migration, local restore-drill, and desktop/390-pixel
 browser smoke evidence pass. Dependency audits also report no known Python or
-JavaScript vulnerabilities. The final consolidated full-suite/coverage rerun,
-accessibility, complete visual states, and owner rehearsal remain before
+JavaScript vulnerabilities. The current consolidated backend gate passes 876
+tests with 90.43 percent branch coverage. Accessibility, complete visual states,
+and owner rehearsal remain before
 release acceptance.
 
 ADR 0040 defines Page 8 **Representation & access** as the first M2 slice:
@@ -43,14 +44,19 @@ database-enforced governance provenance and emergency controller containment;
 organizations `0012`, participation `0004`, registration `0031`, and workforce
 `0003` enforce IDN-011 for every covered convention-subject relationship.
 Sensitive Page 8 reads and privileged denials are audited with a bounded
-100-row directory. The final consolidated suite, accessibility/complete-state
-evidence, representative deployment/PITR rehearsal, and owner tutorial remain
+100-row directory. Accessibility/complete-state evidence, representative
+deployment/PITR rehearsal, and owner tutorial remain
 open; the platform administrator is the actor only and never a convention
 subject.
 
-ADR 0041 defines the next exact authorization lattice—organization, edition,
-department, and typed resource—without implicit department-tree inheritance;
-it remains to be implemented. ADR 0042 makes all repository fixtures and
+ADR 0041 implements the exact authorization lattice—organization, edition,
+department, and typed resource—without implicit department-tree inheritance.
+Sealed database-resolved targets, immutable workforce-position bindings,
+append-only issuance, one-way revocation, bounded delegation, PostgreSQL
+integrity guards, and a privacy-minimized migration-readiness command are in
+place. The contextual editor and computed access explanation remain unmounted,
+and exact actor/approver authority-source provenance remains a production gate.
+ADR 0042 makes all repository fixtures and
 tutorials synthetic-only and retires the former public-roster rehearsal before
 file, network, or database access. ADR 0043 adds the narrowly scoped global
 emergency containment path for a compromised Board controller.

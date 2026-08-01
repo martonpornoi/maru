@@ -7,6 +7,7 @@ from enum import StrEnum
 class ScopeLevel(StrEnum):
     ORGANIZATION = "organization"
     EDITION = "edition"
+    DEPARTMENT = "department"
     RESOURCE = "resource"
 
 
@@ -23,6 +24,7 @@ class Capability:
     code: str
     description: str
     maximum_scope: ScopeLevel
+    persistable: bool = True
     field_ceiling: frozenset[str] = frozenset()
     sensitivity_ceiling: Sensitivity = Sensitivity.INTERNAL
     delegable: bool = False
@@ -145,6 +147,7 @@ CAPABILITY_DEFINITIONS = (
         code="participation.view_self",
         description="View one's own edition participation and safe history.",
         maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
         allow_self=True,
         sensitivity_ceiling=Sensitivity.PERSONAL,
         field_ceiling=frozenset(
@@ -455,6 +458,7 @@ CAPABILITY_DEFINITIONS = (
         code="registration.view_self",
         description="View one's own registration, entitlements, and timeline.",
         maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
         allow_self=True,
         sensitivity_ceiling=Sensitivity.PERSONAL,
         field_ceiling=frozenset(
@@ -483,6 +487,7 @@ CAPABILITY_DEFINITIONS = (
         code="registration.register_self",
         description="Start and pay one's own registration in an open edition.",
         maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
         allow_self=True,
         sensitivity_ceiling=Sensitivity.PERSONAL,
         obligations=frozenset({"audit"}),
@@ -494,6 +499,7 @@ CAPABILITY_DEFINITIONS = (
             "without changing the immutable registration submission."
         ),
         maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
         allow_self=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
         obligations=frozenset({"audit"}),
@@ -505,6 +511,7 @@ CAPABILITY_DEFINITIONS = (
             "explicit registration suggestion."
         ),
         maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
         allow_self=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
         field_ceiling=frozenset(
@@ -610,6 +617,7 @@ CAPABILITY_DEFINITIONS = (
         code="workforce.view_self",
         description="View one's own applications, requested documents, and positions.",
         maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
         allow_self=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
         field_ceiling=frozenset({"applications", "document_requests", "assignments"}),
@@ -618,6 +626,7 @@ CAPABILITY_DEFINITIONS = (
         code="workforce.apply_self",
         description="Apply to a published edition volunteer opportunity.",
         maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
         allow_self=True,
         sensitivity_ceiling=Sensitivity.PERSONAL,
         obligations=frozenset({"audit"}),
