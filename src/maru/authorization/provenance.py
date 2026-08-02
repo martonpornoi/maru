@@ -34,10 +34,11 @@ from maru.organizations.models import (
 )
 
 MAX_AUTHORITY_LINEAGE_DEPTH = 64
+_POSTGRESQL_BIGINT_MAX = 9_223_372_036_854_775_807
+_CURRENT_CHECK_DATABASE_BATCH_SIZE = 256
 _REQUIRED_CONTROL_COUNT = 2
 _GRANT_CONTROL_CAPABILITY = "authorization.grant_direct"
 _ROLE_CONTROL_CAPABILITY = "authorization.manage_roles"
-_EXECUTIVE_BOARD_ROLE_CODE = "executive-board"
 _ModelT = TypeVar("_ModelT", bound=models.Model)
 
 
@@ -91,6 +92,23 @@ class AuthorizedControl:
 
 
 @dataclass(frozen=True, slots=True)
+class AuthorityIssuanceCurrentCheck:
+    """One read-only exact-lineage validation in a call-scoped batch.
+
+    The result boundary is positional booleans only.  Callers retain no shared
+    validator state and receive no authority or issuance identifiers back.
+    """
+
+    issuance_ordinal: int
+    principal_id: UUID
+    capability_code: str
+    target: _ResolvedTarget
+    requested_effective_from: datetime
+    requested_expires_at: datetime | None
+    horizon_mode: ControlHorizonMode = ControlHorizonMode.PERSISTENT
+
+
+@dataclass(frozen=True, slots=True)
 class _Scope:
     organization_id: UUID
     edition_id: UUID | None = None
@@ -139,6 +157,13 @@ class _LineageContext:
     bundles: dict[UUID, RoleBundle | None] = field(default_factory=dict)
     historical_bundles: dict[tuple[UUID, datetime], bool] = field(default_factory=dict)
     historical_bundle_path: set[tuple[UUID, datetime]] = field(default_factory=set)
+    special_controls: dict[
+        tuple[int, UUID, UUID | None],
+        tuple[OrganizationRepresentation, RepresentationAppointment] | None,
+    ] = field(default_factory=dict)
+    current_board_assignments: dict[UUID, bool] = field(default_factory=dict)
+    current_board_bundles: dict[tuple[UUID, UUID], bool] = field(default_factory=dict)
+    current_scopes: dict[_Scope, bool] = field(default_factory=dict)
     historical_validity: dict[tuple[object, ...], bool] = field(default_factory=dict)
     validity: dict[tuple[object, ...], bool] = field(default_factory=dict)
 
@@ -287,11 +312,16 @@ def _resolved_target_is_current(target: _ResolvedTarget) -> bool:
     return resolved is not None and _scope_from_target(resolved) == scope
 
 
-def _authority_scope_is_current(authority: CapabilityGrant | RoleAssignment) -> bool:
+def _authority_scope_is_current(
+    context: _LineageContext,
+    authority: CapabilityGrant | RoleAssignment,
+) -> bool:
     scope = _scope_from_authority(authority)
     if not _scope_shape_is_valid(scope):
         return False
-    return _resolved_target_is_current(scope)
+    if scope not in context.current_scopes:
+        context.current_scopes[scope] = _resolved_target_is_current(scope)
+    return context.current_scopes[scope]
 
 
 def _time_window_is_valid(
@@ -523,13 +553,73 @@ def _special_controls_are_historical(
     organization_id: UUID,
     recipient_id: UUID | None,
 ) -> tuple[OrganizationRepresentation, RepresentationAppointment] | None:
+    key = (issuance.ordinal, organization_id, recipient_id)
+    if key not in context.special_controls:
+        context.special_controls[key] = _load_special_controls_historical(
+            context=context,
+            issuance=issuance,
+            organization_id=organization_id,
+            recipient_id=recipient_id,
+        )
+    return context.special_controls[key]
+
+
+def _executive_board_definition() -> tuple[str, str, int, frozenset[str], str]:
+    """Load the representation service's canonical reserved-role definition."""
+
+    from maru.organizations.representation import (  # noqa: PLC0415
+        EXECUTIVE_BOARD_CAPABILITIES,
+        EXECUTIVE_BOARD_MEMBERSHIP_LABEL,
+        EXECUTIVE_BOARD_ROLE_CODE,
+        EXECUTIVE_BOARD_ROLE_NAME,
+        EXECUTIVE_BOARD_ROLE_VERSION,
+    )
+
+    return (
+        EXECUTIVE_BOARD_ROLE_CODE,
+        EXECUTIVE_BOARD_ROLE_NAME,
+        EXECUTIVE_BOARD_ROLE_VERSION,
+        frozenset(EXECUTIVE_BOARD_CAPABILITIES),
+        EXECUTIVE_BOARD_MEMBERSHIP_LABEL,
+    )
+
+
+def _is_executive_board_role(bundle: RoleBundle) -> bool:
+    role_code, _role_name, _role_version, _capabilities, _membership_label = (
+        _executive_board_definition()
+    )
+    return bundle.code == role_code
+
+
+def _executive_board_bundle_shape_is_valid(bundle: RoleBundle) -> bool:
+    role_code, role_name, role_version, capabilities, _membership_label = (
+        _executive_board_definition()
+    )
+    capability_codes = tuple(bundle.capability_codes)
+    return bool(
+        bundle.code == role_code
+        and bundle.name == role_name
+        and bundle.version == role_version
+        and len(capability_codes) == len(capabilities)
+        and frozenset(capability_codes) == capabilities
+    )
+
+
+def _load_special_controls_historical(
+    *,
+    context: _LineageContext,
+    issuance: AuthorityIssuance,
+    organization_id: UUID,
+    recipient_id: UUID | None,
+) -> tuple[OrganizationRepresentation, RepresentationAppointment] | None:
     controls = _controls_by_role(context, issuance)
     if controls is None:
         return None
     actor = controls[AuthorityControl.Role.ACTOR]
     approver = controls[AuthorityControl.Role.APPROVER]
     if (
-        actor.basis != AuthorityControl.Basis.PLATFORM_REPRESENTATION_BOOTSTRAP
+        actor.principal_id == approver.principal_id
+        or actor.basis != AuthorityControl.Basis.PLATFORM_REPRESENTATION_BOOTSTRAP
         or actor.representation_id is None
         or actor.source_issuance_id is not None
         or actor.appointment_id is not None
@@ -568,6 +658,9 @@ def _special_controls_are_historical(
     if (
         representation is None
         or appointment is None
+        or representation.code != OrganizationRepresentation.EXECUTIVE_BOARD_CODE
+        or representation.name != OrganizationRepresentation.EXECUTIVE_BOARD_NAME
+        or appointment.role != RepresentationAppointment.Role.CONTROLLER
         or representation.activated_at != issuance.evaluated_at
         or appointment.responded_at is None
         or appointment.responded_at > issuance.evaluated_at
@@ -646,7 +739,7 @@ def _bundle_ceremony_is_historical(
             and target[1].id == bundle.id
             and issuance.evaluated_at <= evaluated_at
         ):
-            if bundle.code == _EXECUTIVE_BOARD_ROLE_CODE:
+            if _executive_board_bundle_shape_is_valid(bundle):
                 historical = _special_controls_are_historical(
                     context=context,
                     issuance=issuance,
@@ -660,7 +753,7 @@ def _bundle_ceremony_is_historical(
                         actor_id == representation.activated_by_id
                         and approver_id == appointment.account_id
                     )
-            else:
+            elif not _is_executive_board_role(bundle):
                 valid = _ordinary_bundle_ceremony_is_historical(
                     context=context,
                     issuance=issuance,
@@ -678,6 +771,24 @@ def _board_bundle_ceremony_is_valid(
     bundle: RoleBundle,
     representation_id: UUID,
 ) -> bool:
+    key = (bundle.id, representation_id)
+    if key not in context.current_board_bundles:
+        context.current_board_bundles[key] = _load_board_bundle_ceremony_is_valid(
+            context=context,
+            bundle=bundle,
+            representation_id=representation_id,
+        )
+    return context.current_board_bundles[key]
+
+
+def _load_board_bundle_ceremony_is_valid(
+    *,
+    context: _LineageContext,
+    bundle: RoleBundle,
+    representation_id: UUID,
+) -> bool:
+    if not _executive_board_bundle_shape_is_valid(bundle):
+        return False
     issuance = context.issuance_for_bundle(bundle.id)
     if issuance is None:
         return False
@@ -699,8 +810,7 @@ def _board_bundle_ceremony_is_valid(
         return False
     representation, appointment = historical
     return (
-        bundle.code == _EXECUTIVE_BOARD_ROLE_CODE
-        and representation.id == representation_id
+        representation.id == representation_id
         and actor_id == representation.activated_by_id
         and approver_id == appointment.account_id
     )
@@ -712,6 +822,38 @@ def _board_assignment_is_current(
     issuance: AuthorityIssuance,
     assignment: RoleAssignment,
 ) -> bool:
+    if assignment.id not in context.current_board_assignments:
+        context.current_board_assignments[assignment.id] = (
+            _load_board_assignment_is_current(
+                context=context,
+                issuance=issuance,
+                assignment=assignment,
+            )
+        )
+    return context.current_board_assignments[assignment.id]
+
+
+def _load_board_assignment_is_current(
+    *,
+    context: _LineageContext,
+    issuance: AuthorityIssuance,
+    assignment: RoleAssignment,
+) -> bool:
+    principal = context.account(assignment.principal_id)
+    if (
+        not _executive_board_bundle_shape_is_valid(assignment.role_bundle)
+        or assignment.edition_id is not None
+        or assignment.department_id is not None
+        or assignment.resource_binding_id is not None
+        or assignment.effective_from != issuance.evaluated_at
+        or assignment.expires_at is not None
+        or assignment.revoked_at is not None
+        or principal is None
+        or principal.account_kind != Account.Kind.PERSON
+        or not principal.is_active
+        or not principal.has_verified_email
+    ):
+        return False
     historical = _special_controls_are_historical(
         context=context,
         issuance=issuance,
@@ -734,10 +876,18 @@ def _board_assignment_is_current(
     ).first()
     organization_query = context._locked(Organization.objects.all())
     membership_query = context._locked(OrganizationMembership.objects.all())
+    _code, _name, _version, _capabilities, membership_label = (
+        _executive_board_definition()
+    )
+    membership = membership_query.filter(
+        organization_id=assignment.organization_id,
+        account_id=assignment.principal_id,
+    ).first()
     if (
         current_appointment is None
         or representation.state != OrganizationRepresentation.State.ACTIVE
         or representation.activated_at != issuance.evaluated_at
+        or assignment.reason != representation.activation_reason
         or current_appointment.responded_at is None
         or current_appointment.responded_at > issuance.evaluated_at
         or current_appointment.activated_at != issuance.evaluated_at
@@ -747,12 +897,11 @@ def _board_assignment_is_current(
             pk=assignment.organization_id,
             lifecycle=Organization.Lifecycle.ACTIVE,
         ).exists()
-        or not membership_query.filter(
-            organization_id=assignment.organization_id,
-            account_id=assignment.principal_id,
-            state=OrganizationMembership.State.ACTIVE,
-            ended_at__isnull=True,
-        ).exists()
+        or membership is None
+        or membership.state != OrganizationMembership.State.ACTIVE
+        or membership.relationship_label != membership_label
+        or membership.started_at is None
+        or membership.ended_at is not None
     ):
         return False
     return _board_bundle_ceremony_is_valid(
@@ -774,6 +923,17 @@ def _board_assignment_was_current_at(
     assignment: RoleAssignment,
     evaluated_at: datetime,
 ) -> bool:
+    if (
+        not _executive_board_bundle_shape_is_valid(assignment.role_bundle)
+        or assignment.edition_id is not None
+        or assignment.department_id is not None
+        or assignment.resource_binding_id is not None
+        or assignment.effective_from != issuance.evaluated_at
+        or assignment.expires_at is not None
+        or (assignment.revoked_at is not None and assignment.revoked_at <= evaluated_at)
+        or not _principal_was_person(context, assignment.principal_id)
+    ):
+        return False
     historical = _special_controls_are_historical(
         context=context,
         issuance=issuance,
@@ -814,6 +974,7 @@ def _board_assignment_was_current_at(
         appointment is not None
         and representation.activated_at == issuance.evaluated_at
         and representation.activated_at <= evaluated_at
+        and assignment.reason == representation.activation_reason
         and assignment.granted_by_id == representation.activated_by_id
         and assignment.approved_by_id == approver_appointment.account_id
         and Organization.objects.filter(pk=assignment.organization_id).exists()
@@ -916,7 +1077,7 @@ def _validate_issuance_historical(  # noqa: PLR0911
         source.principal_id != expectation.principal_id
         or not _principal_was_person(context, source.principal_id)
         or not _source_has_capability(source, expectation.capability_code)
-        or not _authority_scope_is_current(source)
+        or not _authority_scope_is_current(context, source)
         or not _scope_contains(
             source=_scope_from_authority(source),
             target=expectation.target_scope,
@@ -967,7 +1128,7 @@ def _validate_issuance_historical(  # noqa: PLR0911
                 path=next_path,
                 depth=depth,
             )
-    elif source.role_bundle.code == _EXECUTIVE_BOARD_ROLE_CODE:
+    elif _is_executive_board_role(source.role_bundle):
         valid = _board_assignment_was_current_at(
             context=context,
             issuance=issuance,
@@ -1035,7 +1196,7 @@ def _validate_issuance_current(  # noqa: PLR0911, PLR0912
         source.principal_id != expectation.principal_id
         or not _principal_is_current(context, source.principal_id)
         or not _source_has_capability(source, expectation.capability_code)
-        or not _authority_scope_is_current(source)
+        or not _authority_scope_is_current(context, source)
         or not _scope_contains(
             source=_scope_from_authority(source),
             target=expectation.target_scope,
@@ -1082,7 +1243,7 @@ def _validate_issuance_current(  # noqa: PLR0911, PLR0912
                 path=next_path,
                 depth=depth,
             )
-    elif source.role_bundle.code == _EXECUTIVE_BOARD_ROLE_CODE:
+    elif _is_executive_board_role(source.role_bundle):
         valid = _board_assignment_is_current(
             context=context,
             issuance=issuance,
@@ -1173,6 +1334,244 @@ def role_bundle_provenance_is_historical(
     )
 
 
+def _authority_issuances_are_current_python(
+    *,
+    checks: tuple[AuthorityIssuanceCurrentCheck, ...],
+    evaluated_at: datetime,
+    lock: bool,
+) -> tuple[bool, ...]:
+    """Run the Python validator, retaining the lock-capable writer path."""
+
+    context = _LineageContext(lock=lock)
+    current_targets: dict[_Scope, bool] = {}
+    results: list[bool] = []
+    for check in checks:
+        try:
+            target_scope = _scope_from_target(check.target)
+            if (
+                check.issuance_ordinal <= 0
+                or not check.capability_code
+                or target_scope is None
+                or not _time_window_is_valid(
+                    requested_effective_from=check.requested_effective_from,
+                    requested_expires_at=check.requested_expires_at,
+                    evaluated_at=evaluated_at,
+                    horizon_mode=check.horizon_mode,
+                )
+            ):
+                valid = False
+            else:
+                if target_scope not in current_targets:
+                    current_targets[target_scope] = _resolved_target_is_current(
+                        check.target
+                    )
+                valid = current_targets[target_scope] and _validate_issuance_current(
+                    context=context,
+                    ordinal=check.issuance_ordinal,
+                    expectation=_Expectation(
+                        principal_id=check.principal_id,
+                        capability_code=check.capability_code,
+                        target_scope=target_scope,
+                        requested_effective_from=check.requested_effective_from,
+                        requested_expires_at=check.requested_expires_at,
+                        evaluated_at=evaluated_at,
+                        horizon_mode=check.horizon_mode,
+                    ),
+                )
+        except (AttributeError, TypeError, ValueError):
+            # Malformed in-process callers do not gain authority or prevent
+            # later independent positions from being evaluated.
+            valid = False
+        results.append(valid)
+    return tuple(results)
+
+
+def _database_current_check_is_well_formed(
+    *,
+    check: AuthorityIssuanceCurrentCheck,
+    target_scope: _Scope | None,
+    evaluated_at: datetime,
+) -> bool:
+    """Reject malformed values before they reach PostgreSQL's typed boundary."""
+
+    scope_values = (
+        ()
+        if target_scope is None
+        else (
+            target_scope.organization_id,
+            target_scope.edition_id,
+            target_scope.department_id,
+            target_scope.resource_binding_id,
+        )
+    )
+    return bool(
+        isinstance(check.issuance_ordinal, int)
+        and not isinstance(check.issuance_ordinal, bool)
+        and 0 < check.issuance_ordinal <= _POSTGRESQL_BIGINT_MAX
+        and isinstance(check.principal_id, UUID)
+        and isinstance(check.capability_code, str)
+        and bool(check.capability_code.strip())
+        and target_scope is not None
+        and isinstance(target_scope.organization_id, UUID)
+        and all(value is None or isinstance(value, UUID) for value in scope_values)
+        and isinstance(check.requested_effective_from, datetime)
+        and (
+            check.requested_expires_at is None
+            or isinstance(check.requested_expires_at, datetime)
+        )
+        and check.horizon_mode
+        in {ControlHorizonMode.PERSISTENT, ControlHorizonMode.POINT_IN_TIME}
+        and _time_window_is_valid(
+            requested_effective_from=check.requested_effective_from,
+            requested_expires_at=check.requested_expires_at,
+            evaluated_at=evaluated_at,
+            horizon_mode=check.horizon_mode,
+        )
+    )
+
+
+def _authority_issuances_are_current_database(
+    *,
+    checks: tuple[AuthorityIssuanceCurrentCheck, ...],
+    evaluated_at: datetime,
+) -> tuple[bool, ...]:
+    """Evaluate pinned issuances through the fingerprinted database contract.
+
+    Persisted target resolution remains in Python so a valid ancestor scope
+    cannot authorize an identifier whose current tenant ancestry has changed.
+    PostgreSQL receives only already-resolved identifiers and returns positional
+    booleans; it never selects or discloses an alternative authority source.
+    """
+
+    results = [False] * len(checks)
+    current_targets: dict[_Scope, bool] = {}
+    prepared: list[tuple[int, AuthorityIssuanceCurrentCheck, _Scope]] = []
+    for position, check in enumerate(checks):
+        try:
+            target_scope = _scope_from_target(check.target)
+            if not _database_current_check_is_well_formed(
+                check=check,
+                target_scope=target_scope,
+                evaluated_at=evaluated_at,
+            ):
+                continue
+            if target_scope is None:
+                continue
+            if target_scope not in current_targets:
+                current_targets[target_scope] = _resolved_target_is_current(
+                    check.target
+                )
+            if current_targets[target_scope]:
+                prepared.append((position, check, target_scope))
+        except (AttributeError, TypeError, ValueError):
+            # One malformed in-process position cannot suppress independent
+            # checks or widen authority.
+            continue
+    if not prepared:
+        return tuple(results)
+
+    statement = """
+        WITH validation_input AS (
+            SELECT *
+              FROM ROWS FROM (
+                  pg_catalog.unnest(%s::integer[]),
+                  pg_catalog.unnest(%s::bigint[]),
+                  pg_catalog.unnest(%s::uuid[]),
+                  pg_catalog.unnest(%s::varchar[]),
+                  pg_catalog.unnest(%s::uuid[]),
+                  pg_catalog.unnest(%s::uuid[]),
+                  pg_catalog.unnest(%s::uuid[]),
+                  pg_catalog.unnest(%s::uuid[]),
+                  pg_catalog.unnest(%s::timestamptz[]),
+                  pg_catalog.unnest(%s::timestamptz[]),
+                  pg_catalog.unnest(%s::boolean[])
+              ) AS supplied(
+                  position,
+                  issuance_ordinal,
+                  principal_id,
+                  capability_code,
+                  organization_id,
+                  edition_id,
+                  department_id,
+                  resource_binding_id,
+                  requested_effective_from,
+                  requested_expires_at,
+                  persistent_horizon
+              )
+        )
+        SELECT supplied.position,
+               public.maru_authority_issuance_valid_v1(
+                   supplied.issuance_ordinal,
+                   supplied.principal_id,
+                   supplied.capability_code,
+                   supplied.organization_id,
+                   supplied.edition_id,
+                   supplied.department_id,
+                   supplied.resource_binding_id,
+                   supplied.requested_effective_from,
+                   supplied.requested_expires_at,
+                   %s::timestamptz,
+                   TRUE,
+                   supplied.persistent_horizon,
+                   ARRAY[]::bigint[],
+                   0
+               ) AS is_current
+          FROM validation_input AS supplied
+         ORDER BY supplied.position
+    """
+    for offset in range(0, len(prepared), _CURRENT_CHECK_DATABASE_BATCH_SIZE):
+        batch = prepared[offset : offset + _CURRENT_CHECK_DATABASE_BATCH_SIZE]
+        parameters = (
+            [item[0] for item in batch],
+            [item[1].issuance_ordinal for item in batch],
+            [item[1].principal_id for item in batch],
+            [item[1].capability_code for item in batch],
+            [item[2].organization_id for item in batch],
+            [item[2].edition_id for item in batch],
+            [item[2].department_id for item in batch],
+            [item[2].resource_binding_id for item in batch],
+            [item[1].requested_effective_from for item in batch],
+            [item[1].requested_expires_at for item in batch],
+            [item[1].horizon_mode is ControlHorizonMode.PERSISTENT for item in batch],
+            evaluated_at,
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(statement, parameters)
+            for position, is_current in cursor.fetchall():
+                results[position] = bool(is_current)
+    return tuple(results)
+
+
+def authority_issuances_are_current(
+    *,
+    checks: tuple[AuthorityIssuanceCurrentCheck, ...],
+    evaluated_at: datetime | None = None,
+    lock: bool = False,
+) -> tuple[bool, ...]:
+    """Validate exact issuances at their supplied ordinals as positional booleans.
+
+    Read-only batches use ADR 0044's installed and fingerprinted PostgreSQL
+    validator in one round trip.  The lock-capable writer path deliberately
+    retains the independent Python validator.  Neither path performs
+    existential source selection, and duplicate ordinals stay distinct input
+    positions.
+    """
+
+    if lock and not connection.in_atomic_block:
+        raise RuntimeError("Authority-issuance locking requires a transaction.")
+    effective_evaluation = evaluated_at or timezone.now()
+    if lock:
+        return _authority_issuances_are_current_python(
+            checks=checks,
+            evaluated_at=effective_evaluation,
+            lock=True,
+        )
+    return _authority_issuances_are_current_database(
+        checks=checks,
+        evaluated_at=effective_evaluation,
+    )
+
+
 def authority_issuance_is_current(
     *,
     issuance_ordinal: int,
@@ -1182,39 +1581,34 @@ def authority_issuance_is_current(
     requested_effective_from: datetime,
     requested_expires_at: datetime | None,
     evaluated_at: datetime | None = None,
+    horizon_mode: ControlHorizonMode = ControlHorizonMode.PERSISTENT,
     lock: bool = False,
 ) -> bool:
-    """Validate one caller-pinned issuance without selecting a replacement."""
+    """Validate one caller-pinned issuance without selecting a replacement.
 
+    Single-source and writer checks retain the Python implementation.  The
+    database fast path is intentionally confined to the explicit read batch
+    boundary above, which is differentially tested against this path.
+    """
+
+    effective_evaluation = evaluated_at or timezone.now()
     if lock and not connection.in_atomic_block:
         raise RuntimeError("Authority-issuance locking requires a transaction.")
-    effective_evaluation = evaluated_at or timezone.now()
-    target_scope = _scope_from_target(target)
-    if (
-        issuance_ordinal <= 0
-        or not capability_code
-        or target_scope is None
-        or not _time_window_is_valid(
-            requested_effective_from=requested_effective_from,
-            requested_expires_at=requested_expires_at,
-            evaluated_at=effective_evaluation,
-            horizon_mode=ControlHorizonMode.PERSISTENT,
-        )
-        or not _resolved_target_is_current(target)
-    ):
-        return False
-    return _validate_issuance_current(
-        context=_LineageContext(lock=lock),
-        ordinal=issuance_ordinal,
-        expectation=_Expectation(
-            principal_id=principal_id,
-            capability_code=capability_code,
-            target_scope=target_scope,
-            requested_effective_from=requested_effective_from,
-            requested_expires_at=requested_expires_at,
-            evaluated_at=effective_evaluation,
+    return _authority_issuances_are_current_python(
+        checks=(
+            AuthorityIssuanceCurrentCheck(
+                issuance_ordinal=issuance_ordinal,
+                principal_id=principal_id,
+                capability_code=capability_code,
+                target=target,
+                requested_effective_from=requested_effective_from,
+                requested_expires_at=requested_expires_at,
+                horizon_mode=horizon_mode,
+            ),
         ),
-    )
+        evaluated_at=effective_evaluation,
+        lock=lock,
+    )[0]
 
 
 def select_authorized_control_source(

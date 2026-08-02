@@ -10,18 +10,16 @@ from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError
-from django.db.models import Q
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
-from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.models import CapabilityGrant, RoleAssignment
 from maru.authorization.policy import decide, resolve_organization_target
+from maru.events.admin_context import authorized_admin_organization_ids
 from maru.identity.models import Account
 from maru.organizations.forms import (
     RepresentationActivationForm,
@@ -241,15 +239,6 @@ def _add_invitation_validation_errors(
     _add_validation_errors(form, error)
 
 
-def _active_authority_filter() -> Q:
-    evaluated_at = timezone.now()
-    return (
-        Q(effective_from__lte=evaluated_at)
-        & (Q(expires_at__isnull=True) | Q(expires_at__gt=evaluated_at))
-        & Q(revoked_at__isnull=True)
-    )
-
-
 def _authorized_organization_for_route(
     *,
     request: HttpRequest,
@@ -262,21 +251,10 @@ def _authorized_organization_for_route(
     if actor.is_platform_administrator:
         return get_object_or_404(Organization, slug__iexact=organization_slug)
 
-    active_at = _active_authority_filter()
-    grant_organization_ids = CapabilityGrant.objects.filter(
-        active_at,
-        principal=actor,
-        capability_code__in=capability_codes,
-    ).values_list("organization_id", flat=True)
-    role_filter = Q()
-    for capability_code in capability_codes:
-        role_filter |= Q(role_bundle__capability_codes__contains=[capability_code])
-    role_organization_ids = RoleAssignment.objects.filter(
-        active_at,
-        role_filter,
-        principal=actor,
-    ).values_list("organization_id", flat=True)
-    candidate_ids = set(grant_organization_ids).union(role_organization_ids)
+    candidate_ids = authorized_admin_organization_ids(
+        request,
+        capability_codes=frozenset(capability_codes),
+    )
     organization = (
         Organization.objects.filter(
             id__in=candidate_ids,

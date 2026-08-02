@@ -49,6 +49,8 @@ the system.
 | [0042](0042-synthetic-only-educational-fixtures.md) | Accepted | Retire live public-roster rehearsal imports and require deterministic synthetic people for fixtures, tests, and tutorials |
 | [0043](0043-global-emergency-executive-board-controller-containment.md) | Accepted | Contain a compromised controller across every organization, suspend Boards that lose quorum, and deactivate the global account atomically |
 | [0044](0044-exact-authority-issuance-provenance.md) | Accepted | Pin immutable actor and approver authority sources, propagate controller loss, and preserve a non-cyclic initial Executive Board root |
+| [0045](0045-governance-anchored-copy-on-write-edition-structure.md) | Accepted | Present organization governance above an edition-owned, copy-on-write, versioned and safely editable workforce Department tree |
+| [0046](0046-nondelegable-runtime-database-login.md) | Accepted | Require a genuine non-delegable PostgreSQL runtime login, select-only cutover controls, and trigger-integrity ACL proof |
 
 New ADRs use the next four-digit number and contain:
 

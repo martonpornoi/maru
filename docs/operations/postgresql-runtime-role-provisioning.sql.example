@@ -1,0 +1,214 @@
+-- Maru PostgreSQL 17 runtime-role provisioning example.
+--
+-- Run this once through an audited database role administrator/owner that may
+-- create roles, change database/schema ACLs, and alter default privileges for
+-- the named migration role.  This is not the runtime role and need not be the
+-- ordinary migration login.  Keep administrator, migration, runtime, and
+-- break-glass roles distinct.  Replace the three example identifiers below.
+-- Do not put a password in this file: provision the login credential through
+-- the deployment secret manager or managed database identity after review.
+--
+-- Example identifiers used below:
+--   database:       maru
+--   migration role: maru_migration
+--   runtime role:   maru_runtime
+--
+-- The file is transaction-wrapped.  Run it with a client that reports errors
+-- and does not split statements across connections.  A missing object,
+-- signature, role, or privilege aborts the transaction; do not continue by
+-- manually committing a partially edited copy.
+
+BEGIN;
+
+DO $maru_runtime_role_preflight$
+BEGIN
+    IF pg_catalog.current_database() <> 'maru' THEN
+        RAISE EXCEPTION 'connect to the reviewed target database first';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+          FROM pg_catalog.pg_roles
+         WHERE rolname = 'maru_migration'
+    ) THEN
+        RAISE EXCEPTION 'the reviewed migration role must exist first';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+          FROM pg_catalog.pg_roles
+         WHERE rolname = 'maru_runtime'
+    ) THEN
+        RAISE EXCEPTION 'the runtime role already exists; use a reviewed reconciliation';
+    END IF;
+END
+$maru_runtime_role_preflight$;
+
+CREATE ROLE maru_runtime
+    LOGIN
+    PASSWORD NULL
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    NOREPLICATION
+    NOBYPASSRLS;
+
+-- PUBLIC receives CONNECT/TEMPORARY on a database and CREATE/USAGE on public
+-- by default.  Preserve an explicit migration DDL plane before closing those
+-- defaults, then make the runtime data plane explicit.  The migration role
+-- must already own, or deliberately inherit ownership authority for, existing
+-- Maru objects: ACL grants cannot confer ALTER/DROP ownership, and this file
+-- will not guess or reassign a historical owner.
+REVOKE CONNECT, CREATE, TEMPORARY ON DATABASE maru FROM PUBLIC;
+GRANT CONNECT, CREATE, TEMPORARY ON DATABASE maru TO maru_migration;
+REVOKE CREATE, TEMPORARY ON DATABASE maru FROM maru_runtime;
+GRANT CONNECT ON DATABASE maru TO maru_runtime;
+
+REVOKE CREATE, USAGE ON SCHEMA public FROM PUBLIC;
+GRANT CREATE, USAGE ON SCHEMA public TO maru_migration;
+REVOKE CREATE ON SCHEMA public FROM maru_runtime;
+
+GRANT USAGE ON SCHEMA public TO maru_runtime;
+GRANT SELECT, INSERT, UPDATE, DELETE
+    ON ALL TABLES IN SCHEMA public
+    TO maru_runtime;
+GRANT USAGE, SELECT
+    ON ALL SEQUENCES IN SCHEMA public
+    TO maru_runtime;
+
+-- Make future tables and sequences usable without granting ownership or DDL.
+ALTER DEFAULT PRIVILEGES FOR ROLE maru_migration IN SCHEMA public
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO maru_runtime;
+ALTER DEFAULT PRIVILEGES FOR ROLE maru_migration IN SCHEMA public
+    GRANT USAGE, SELECT ON SEQUENCES TO maru_runtime;
+
+-- Migration metadata and cutover state are controlled by the audited
+-- migration/cutover owner.  The application login may inspect them for
+-- readiness and policy decisions, but it must never rewrite migration history
+-- or activate, acknowledge, or reset exact provenance itself.  Keep these
+-- revokes after blanket/default table grants, and reapply them if any protected
+-- relation is ever recreated.
+REVOKE INSERT, UPDATE, DELETE ON TABLE
+    public.django_migrations,
+    public.authorization_authorityprovenanceactivation,
+    public.authorization_provenanceactivationlatch
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE ON TABLE
+    public.django_migrations,
+    public.authorization_authorityprovenanceactivation,
+    public.authorization_provenanceactivationlatch
+    FROM PUBLIC;
+GRANT SELECT ON TABLE
+    public.django_migrations,
+    public.authorization_authorityprovenanceactivation,
+    public.authorization_provenanceactivationlatch
+    TO maru_runtime;
+
+-- setval() is authorized by UPDATE and changes a sequence outside ordinary
+-- MVCC rollback.  Runtime needs USAGE/SELECT only.
+REVOKE UPDATE ON ALL SEQUENCES IN SCHEMA public FROM maru_runtime;
+
+-- session_replication_role=replica disables ordinary integrity triggers.
+-- Neither PUBLIC nor the runtime login may acquire an explicit parameter ACL.
+REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role FROM PUBLIC;
+REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role
+    FROM maru_runtime;
+
+-- Functions are executable by PUBLIC by default.  The ADR 0046 v2 allowlist below is
+-- the complete non-trigger helper closure used by Maru's current runtime SQL
+-- and database triggers.  A change must update code, migration evidence, this
+-- file, and the genuine-login service smoke together.
+REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
+REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM maru_runtime;
+ALTER DEFAULT PRIVILEGES FOR ROLE maru_migration IN SCHEMA public
+    REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION
+    public.maru_assert_active_board_membership_provenance(uuid),
+    public.maru_assert_active_executive_board(uuid),
+    public.maru_assert_active_executive_board_v0009(uuid),
+    public.maru_assert_authority_issuance_complete(bigint),
+    public.maru_assert_authority_issuance_complete_internal(
+        bigint,
+        bigint[],
+        integer
+    ),
+    public.maru_assert_authority_provenance_activation(),
+    public.maru_assert_authority_target_complete(character varying, uuid),
+    public.maru_audit_test_reset_allowed(),
+    public.maru_authority_bundle_historical_v1(
+        uuid,
+        timestamp with time zone,
+        uuid,
+        bigint[],
+        integer
+    ),
+    public.maru_authority_issuance_valid_v1(
+        bigint,
+        uuid,
+        character varying,
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        timestamp with time zone,
+        timestamp with time zone,
+        timestamp with time zone,
+        boolean,
+        boolean,
+        bigint[],
+        integer
+    ),
+    public.maru_authority_provenance_is_active(),
+    public.maru_lock_authority_provenance_latch(),
+    public.maru_authority_provenance_test_reset_allowed(),
+    public.maru_authority_scope_contains_v1(
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid
+    ),
+    public.maru_authority_scope_is_current_v1(uuid, uuid, uuid, uuid),
+    public.maru_authorization_capability_min_scope(text),
+    public.maru_authorization_scope_contains(
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid
+    ),
+    public.maru_authorization_scope_rank(uuid, uuid, uuid),
+    public.maru_workforce_role_evidence_matches_position(
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid,
+        uuid
+    )
+    TO maru_runtime;
+
+-- These are denied explicitly for review clarity.  The ordinary DML grants
+-- above do not include them.
+REVOKE TRIGGER, TRUNCATE, MAINTAIN
+    ON ALL TABLES IN SCHEMA public
+    FROM maru_runtime;
+
+-- Repeat the schema grants/revokes for every intentional non-system schema.
+-- The runtime role must not own the database, a user schema, a relation, or a
+-- function, and must not inherit any owner, predefined pg_* role, or privileged
+-- role.  MARU_RUNTIME_DATABASE_ROLE=maru_runtime makes Maru prove this catalog
+-- boundary before exact-provenance activation and on public runtime readiness.
+-- Activation itself runs only through the controlled migration/cutover owner.
+-- Readiness also rejects effective parameter ACLs, non-origin role/database
+-- settings, sequence UPDATE, reachable membership ADMIN OPTION, object grant
+-- options, and any runtime DML on migration metadata or the two cutover-state
+-- relations.
+
+COMMIT;

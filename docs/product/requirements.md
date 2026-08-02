@@ -63,6 +63,10 @@ architecture documents, implementation issues, tests, and release notes.
   approver; removal must remain immediate and reasoned. Contextual sharing
   controls may recommend roles but must not create page-local ACLs, expose
   unauthorized identities, or grant beyond either controller's authority.
+  Every authority-derived shell entry, tenant or edition name, selector,
+  navigation link, queryset prefilter, and API projection must use the same
+  current exact-lineage decision as its destination. A required but dormant,
+  missing, or malformed lineage contract must reveal no organizer scope.
 - **IDN-010 — Human login aliases:** A platform account may have one
   case-insensitively unique human login handle in addition to its normalized
   email. Local sign-in must accept either exact identifier without revealing
@@ -110,7 +114,10 @@ architecture documents, implementation issues, tests, and release notes.
   remain Active only with at least two eligible active controllers; otherwise
   its representation and organization must be Suspended and all local Board
   root authority ended. Historical activated-and-ended approvers remain valid
-  provenance but never current authority.
+  provenance but never current authority. The representation is the
+  organization governance anchor, not an edition Department, Position, generic
+  group, or workforce assignment; a structure projection may place operational
+  departments visually beneath it but must not mirror it into those records.
 
 ### Multi-convention and event editions
 
@@ -256,6 +263,23 @@ architecture documents, implementation issues, tests, and release notes.
   positions in several departments. It exposes only public operational names,
   position labels, and reporting relationships; email, HR evidence, account
   state, technical identifiers, and unrelated organizer data remain excluded.
+- **HR-011 — Versioned edition structure management:** An authorized edition
+  structure manager must be able to create, rename, describe, order, reparent,
+  retire, and safely remove Departments through audited, tenant- and
+  edition-scoped application services shared by HTML and API clients. Every
+  change must use optimistic concurrency, strict inputs, exact parent-chain
+  validation, cycle prevention, and non-cascading retention rules. Maru must
+  provide an immutable, versioned built-in Awoostria reference whose edition-
+  owned copy places Helper Board above the operational department taxonomy.
+  It may be applied only to an empty Draft or Preparing edition, retains exact
+  source-version and retry provenance, and creates no account, membership,
+  representation, participation, Position, assignment, role, capability, or
+  registration relationship. The Executive Board remains the separate
+  OrganizationRepresentation governance anchor and may be composed visually
+  above Helper Board without becoming a Department or an authority-inheritance
+  edge. Position editing is a later substep unless its immutable role-bundle,
+  typed-resource, dual-control, lifecycle, and recovery implications are
+  explicitly satisfied.
 
 ### Programme, shifts, and timetable planning
 
@@ -536,6 +560,26 @@ architecture documents, implementation issues, tests, and release notes.
   participation, registration, or workforce position, and its initial root
   summary must not be presented as the complete department/resource/field
   effective-access editor.
+- **UX-025 — Edition organization-structure page:** A selected edition must
+  expose one **Organization structure** destination beneath that edition in the
+  shared administration navigation. Its responsive hierarchy places the
+  minimized Executive Board governance anchor above the edition-owned Helper
+  Board and nested Departments, while clearly distinguishing representation,
+  operational reporting, and software authority. The header and navigation
+  must derive view and edit explanations from the exact current policy
+  decision; platform oversight remains non-participating, department-only
+  authority does not reveal the complete edition tree, and hidden people or
+  tenant names are never disclosed. The first management slice applies the
+  exact versioned built-in reference or edits Departments through closed,
+  reasoned, expected-version forms and the same strict API services. Template
+  application requires a retry key and exact edition confirmation; hard delete
+  requires exact department-name confirmation and proof that no child,
+  Position, assignment, authority, resource binding, cross-module reference,
+  or operational history depends on the record. Overflow, stale, denied,
+  validation, protected, persistence, audit, and outbox failures must be
+  explicit and leave no partial tree. Ready, Live, Closing, Archived, and
+  Cancelled editions are read-only until a separately accepted structural
+  change-control workflow permits otherwise.
 
 ### Registration, orders, and attendee service
 
@@ -1072,6 +1116,34 @@ architecture documents, implementation issues, tests, and release notes.
   where practical. Unknown fields, tenant identifiers supplied in place of
   trusted scope, unsafe files, ambiguous local times, impossible containment,
   and silent truncation must be rejected.
+- **NFR-010 — Pinned database execution boundary:** Runtime database
+  connections and security-critical functions must resolve trusted catalogs,
+  relations, and internal functions through a code-owned schema order. Caller
+  DSN options, temporary objects, per-user schemas, or stale pooled sessions
+  must not shadow tenant, authority, audit, migration, or cutover state.
+  Production must name and use a dedicated login role that cannot inherit
+  administrative attributes or predefined roles; own the database, a user
+  schema, relation, or function; create database/schema objects or temporary
+  tables; or trigger, truncate, or maintain application tables. Ordinary DML
+  must be positively available alongside database connection and user-schema
+  usage, except that provenance marker/latch controls and materialized views
+  are SELECT-only. Sequences permit use/read but never update. The login must
+  have no reachable membership admin option, database/schema/relation/column/
+  sequence/function grant option, explicit effective PostgreSQL parameter
+  setting ACL, or persistent non-origin `session_replication_role` setting;
+  the live setting must be `origin`. Non-system functions must be closed to
+  `PUBLIC`; only the explicit versioned runtime policy/trigger-helper closure
+  may be executable by the application role.
+  Activation must prove the future named role even when connected as the
+  controlled migration/cutover owner, while that owner's live trigger setting
+  remains safe. Public production readiness must additionally prove that
+  `CURRENT_USER`, `SESSION_USER`, and the backend's authenticated identity all
+  equal the dedicated login; role switching or session-authorization
+  impersonation is insufficient. The reserved provenance-activation audit may
+  be inserted only as the exact same-transaction companion to the marker and
+  latch transition. Production readiness must fail closed
+  without disclosing identifiers when the role, effective runtime boundary, or
+  supported database-major contract is not the rehearsed one.
 
 ## Explicit non-goals
 

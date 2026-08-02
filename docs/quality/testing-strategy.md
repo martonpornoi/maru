@@ -1,7 +1,7 @@
 # Testing strategy
 
-Status: Baseline  
-Last updated: 2026-07-27
+Status: Active
+Last updated: 2026-08-02
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
@@ -29,6 +29,29 @@ Run against PostgreSQL for:
 - migrations and representative historical data.
 
 SQLite is not a substitute for PostgreSQL behavior.
+
+The ADR 0044 no-truncate provenance and audit fences also apply in development.
+Django's `TransactionTestCase`/pytest database flush is the sole exception: the
+test settings pass `maru.authority_provenance_test_reset=on`, and each database
+function independently requires the database name to begin with `test_`. Both
+conditions are required. Production settings reject both a `test_` database
+name and any appearance of the test-reset connection option. Tests must never
+disable the trigger contract or reuse this escape against a development,
+rehearsal, or production database.
+
+ADR 0044 cutover tests additionally use real PostgreSQL to prove exact
+function/trigger fingerprints (including older immutability and append-only
+dependencies), absence of trigger predicates/arguments, fixed function and
+connection schema order, temporary relation/function shadow resistance,
+active-era timestamp bounds with clock-skew tolerance, concurrent stale-writer
+and reverse-migration fences, and marker/audit atomicity. Health SQL receives
+at least one unmocked PostgreSQL execution test. Every authority-derived shell,
+navigation, tenant-name, and edition-selector projection repeats malformed
+contract and revoked pinned-source denial tests; testing only destination
+views is insufficient. A high-cardinality regression resolves 257 name-free
+scope chains with a constant tenant-resolution query ceiling, while a separate
+257-position exact-lineage batch proves the fixed 256-check SQL chunk limit and
+stable positional results.
 
 ### API contract tests
 
@@ -128,6 +151,21 @@ empty/error states, and narrow-viewport overflow.
 - external adapter timeouts, rate limits, duplicates, and partial failures;
 - backup restoration;
 - degraded network and reconciliation;
+- real PostgreSQL runtime-role matrices that prove both denied control-plane
+  privileges and required data-plane liveness, reject `PUBLIC`/extra function
+  execution, persistent/non-origin trigger settings, parameter ACLs, sequence
+  update, protected-relation table/column mutation, membership admin options,
+  and database/schema/relation/column/sequence/function grant options;
+- runtime-login evidence that treats `SET ROLE` and
+  `SET SESSION AUTHORIZATION` only as negative impersonation regressions, then
+  uses a fresh credential-bound connection to prove all three identities,
+  exact policy/projection reads, SELECT-only migration-recorder/marker/latch
+  access, and direct mutation denial without logging the credential;
+- migration evidence that preserves pre-existing ACLs across reversal, proves
+  ordinary audit and trigger-helper writes, rejects orphan or repeated reserved
+  activation audits, fingerprints every runtime-executable helper, defeats
+  hostile search paths and shadow objects, and refuses owning-module reversal
+  after durable activation even without the convergence recorder row;
 - load tests for registration opening, timetable publication, announcements,
   search, and bulk check-in;
 - safe deployment with active jobs and supported database migrations.

@@ -174,11 +174,17 @@ Logs include an allowlist of technical metadata. Exception type may be logged;
 exception message and request payload are not.
 
 Health failures name only the affected dependency class. Liveness deliberately
-does not contact external dependencies.
+does not contact external dependencies. Readiness proves that authority
+cutover tables are either wholly absent or in the configuration-compatible
+dormant/exact state; exact mode also checks PostgreSQL 17, fixed effective
+schema order, and absence of runtime `TEMPORARY` privilege without exposing
+which check failed.
 
 ## Failure and operations
 
-Readiness returns `503` when PostgreSQL cannot answer a trivial query.
+Readiness returns `503` when PostgreSQL cannot answer its minimized catalog or
+authority-contract queries, when a false-configured replica sees active or
+malformed cutover state, or when the required exact boundary is unavailable.
 Independent provider health will be added to an authenticated operator
 projection, not the public response.
 

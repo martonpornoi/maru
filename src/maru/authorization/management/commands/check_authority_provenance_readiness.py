@@ -32,3 +32,8 @@ class Command(BaseCommand):
                 "Authority provenance blockers detected; inspect the count-only "
                 "JSON report."
             )
+        if report["production_status"] == "blocked" and not options["no_fail"]:
+            raise CommandError(
+                "Authority provenance production gates are unresolved; inspect "
+                "the count-only JSON report."
+            )

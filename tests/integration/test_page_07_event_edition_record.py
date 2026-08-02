@@ -526,7 +526,10 @@ def test_edition_record_authorization_scope_and_database_failure(
         del args, kwargs
         raise AssertionError("denied requests must not resolve edition scope")
 
-    monkeypatch.setattr("maru.core.views._organization_for_record", unexpected_lookup)
+    monkeypatch.setattr(
+        "maru.core.views._edition_chain_for_authorized_route",
+        unexpected_lookup,
+    )
     assert (
         denied_client.get(
             "/admin/organizations/hidden/series/hidden/editions/hidden/"
@@ -548,7 +551,10 @@ def test_edition_record_authorization_scope_and_database_failure(
         del args, kwargs
         raise DatabaseError("synthetic private record failure")
 
-    monkeypatch.setattr("maru.core.views._organization_for_record", unavailable)
+    monkeypatch.setattr(
+        "maru.core.views._edition_chain_for_authorized_route",
+        unavailable,
+    )
     failed = client.get(
         "/admin/organizations/unavailable/series/unavailable/editions/unavailable/"
     )
@@ -704,7 +710,10 @@ def test_edition_record_context_and_context_actions_fail_safely(
     assert "synthetic private" not in record.content.decode()
 
     monkeypatch.undo()
-    monkeypatch.setattr("maru.core.views._organization_for_record", unavailable)
+    monkeypatch.setattr(
+        "maru.core.views._edition_chain_for_authorized_route",
+        unavailable,
+    )
     selected = client.post(f"{_record_url(edition)}select/")
     cleared = client.post(f"{_record_url(edition)}clear/")
     assert selected.status_code == 503

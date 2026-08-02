@@ -145,6 +145,22 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 - Output encoding, CSRF protection for cookie sessions, CSP, secure cookies,
   origin controls, parameterized ORM use, and strict redirect/URL handling.
 - Separate service and migration database roles; no application superuser.
+- Pin runtime PostgreSQL resolution to code-owned `public,pg_temp` (with
+  `pg_catalog` implicitly first), reject caller DSN options, revoke effective
+  `TEMPORARY`, and schema-qualify security-critical database functions so
+  temporary or per-user objects cannot shadow authority or audit state.
+- Name the runtime login role explicitly and prove its direct and inherited
+  catalog boundary before activation and during runtime readiness: no elevated
+  attributes, reserved/predefined identity, membership admin option,
+  database/user-object ownership, database or schema creation, table
+  trigger/truncate/maintenance, parameter-control ACL, non-origin trigger
+  setting, sequence update, object/column grant option, or credential detail in
+  health output. Prove the required connection, schema, ordinary DML,
+  SELECT-only cutover-control, and sequence use/read data plane so an unusable
+  role cannot appear safe. Revoke non-system function execution from `PUBLIC`
+  and grant the runtime role only the versioned v2 policy/trigger-helper
+  closure. Require current, session, and authenticated-backend identity for
+  runtime health; owner role switching is not authentication evidence.
 - Secrets live outside code and logs and rotate without a deploy.
 - Dependency, secret, static, dynamic, container, and infrastructure scanning
   feed release gates with human triage.

@@ -301,6 +301,7 @@ quarantine replay or queue recovery.
 | `MARU_SETTINGS_MODULE` | `maru.settings.local` | must select production |
 | `MARU_SECRET_KEY` | known development-only value | required, minimum strength |
 | `MARU_DATABASE_URL` | local PostgreSQL | required PostgreSQL URL |
+| `MARU_RUNTIME_DATABASE_ROLE` | empty | required dedicated non-owner login role name |
 | `MARU_ALLOWED_HOSTS` | localhost addresses | required comma-separated hosts |
 | `MARU_CSRF_TRUSTED_ORIGINS` | empty | explicit HTTPS origins if needed |
 | `MARU_BUILD_VERSION` | `development` | immutable release identifier |
@@ -309,6 +310,21 @@ quarantine replay or queue recovery.
 
 Boolean values accept only documented spellings and invalid configuration fails
 startup.
+`MARU_DATABASE_URL` may include ordinary libpq parameters such as `sslmode`,
+but not `options`: Maru owns the fixed `search_path=public,pg_temp` connection
+boundary so temporary or per-user schemas cannot shadow application tables.
+`MARU_RUNTIME_DATABASE_ROLE` contains only a PostgreSQL role name, never its
+password or connection URL. Production rejects a missing, non-printable, or
+overlength name. Provision and rehearse the least-privilege role separately by
+adapting
+[`postgresql-runtime-role-provisioning.sql.example`](../operations/postgresql-runtime-role-provisioning.sql.example);
+deliver its credential only through the deployment secret manager. Production
+health accepts only a fresh connection genuinely authenticated as that login;
+`SET ROLE` is not equivalent. The runtime role has ordinary application DML
+but only SELECT on provenance marker/latch controls, no sequence update,
+parameter-control ACL, persistent trigger-disable setting, membership admin
+option, or database-object grant option. Activation remains a controlled
+migration/cutover-owner operation.
 
 ## Test data
 

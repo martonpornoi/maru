@@ -11,7 +11,7 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
     services:
       postgres:
         image: postgres:17-alpine
@@ -95,7 +95,12 @@ jobs:
           MARU_MEDIA_SCANNER: clamav
           MARU_MEDIA_SCANNER_HOST: scanner.internal
           MARU_OFFLINE_MANIFEST_SECRET: verification-only-offline-secret-value
-        run: uv run python src/manage.py check --deploy
+          MARU_RUNTIME_DATABASE_ROLE: maru_runtime
+        run: |
+          for exact_provenance_required in false true; do
+            MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE="$exact_provenance_required" \
+              uv run python src/manage.py check --deploy
+          done
 
       - name: OpenAPI compatibility artifact
         run: |

@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from maru.settings.environment import csv_value, postgres_database
+from maru.settings.environment import boolean, csv_value, postgres_database
 
 BASE_DIR = Path(__file__).resolve().parents[3]
 
@@ -192,6 +192,12 @@ MEDIA_REQUIRE_SAFETY_RECEIPT = True
 MARU_OFFLINE_MANIFEST_SECRET = os.environ.get("MARU_OFFLINE_MANIFEST_SECRET", "")
 MARU_EXPOSE_TEST_CREDENTIAL_TOKENS = False
 ENFORCE_EDITION_CLOSURE_GATES = True
+REQUIRE_EXACT_AUTHORITY_PROVENANCE = boolean(
+    os.environ,
+    "MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE",
+    default=False,
+)
+RUNTIME_DATABASE_ROLE = os.environ.get("MARU_RUNTIME_DATABASE_ROLE", "").strip()
 
 LOGGING = {
     "version": 1,

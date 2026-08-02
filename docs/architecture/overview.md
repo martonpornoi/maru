@@ -263,6 +263,21 @@ governance invitations. Django `is_staff` and model permissions remain a
 separate prerequisite for specialist model records and never grant convention
 authority by themselves.
 
+Organizer authority is compatibility-readable until the one-way ADR 0044
+activation marker is committed. After activation, a grant or role assignment
+is effective only through its own immutable issuance and the exact actor and
+approver sources pinned there; policy never substitutes another equivalent
+source. The marker and its pre-existing generation latch select the runtime
+contract without process-local caching. A missing or malformed marker after
+the latch has advanced fails closed, while deferred PostgreSQL guards reject
+new reachable authority without complete provenance. Activation itself is a
+stopped-writer, platform-operated maintenance command with count-only
+pre/postflight, exact audit coupling, stale-writer serialization, and a
+non-reversible migration fence.
+The production release separately requires exact provenance after cutover; a
+restored database without the exact marker then denies organizer authority and
+fails public readiness instead of silently falling back to compatibility.
+
 Pages 1–8 remain server-rendered adapters over current module services. Django
 model administration does not become an authoritative write path for audited
 cross-domain operations merely because it supplies the shell and specialist

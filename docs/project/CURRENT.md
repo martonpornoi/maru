@@ -1,9 +1,9 @@
 # Current project state
 
-Last updated: 2026-08-01
-Phase: Production consolidation M2.3 authority-provenance schema, compatible
-writers, provable-only backfill, and readiness locally verified; irreversible
-exact-lineage activation next
+Last updated: 2026-08-02
+Phase: Production consolidation M2.3 exact authority-provenance activation
+implemented and locally rehearsed; production reconciliation, load, cutover,
+and deployment-recovery evidence next
 Branch: `codex/full-platform-consolidation`
 
 ## Current outcome
@@ -18,8 +18,8 @@ ADR 0037's single-shell decision. `maru.urls` now provides one record-oriented
 `/admin/` shell using Maru's logo and the stronger pre-reset visual grammar.
 Backend route, authorization, migration-drift, frontend build, deploy-shaped,
 OpenAPI determinism, populated/fresh migration, local restore-drill, and
-desktop/390-pixel browser smoke gates pass. The current consolidated local
-backend invocation passes 876 tests in 458.05 seconds with 90.43 percent
+desktop/390-pixel browser smoke gates pass. The pre-exact-activation
+consolidated baseline passed 876 tests in 458.05 seconds with 90.43 percent
 branch coverage and no warnings. Accessibility, complete denied/error-state,
 representative recovery/PITR, and owner-rehearsal gates remain.
 
@@ -44,8 +44,9 @@ append-only grant and role issuance, one-way evidence-complete revocation,
 bounded delegation, exact Position bindings, and the ordered authorization
 `0004` → workforce `0004` → authorization `0005` integrity path are present.
 The privacy-minimized readiness command separates migration-data readiness
-from production readiness; production remains blocked until ADR 0044's
-exact-lineage activation gates are installed. ADR 0042 makes every
+from production readiness. ADR 0044's exact-lineage activation gates are now
+installed and locally verified, but no production deployment has crossed that
+boundary. ADR 0042 makes every
 repository-controlled fixture synthetic and deletes the public-roster
 rehearsal implementation while retaining a fail-closed compatibility command.
 ADR 0043 adds platform-only emergency containment across every organization of
@@ -55,13 +56,35 @@ grants, role-bundle versions, and role assignments. It keeps initial Executive
 Board activation non-cyclic through explicit platform-bootstrap and accepted-
 appointment ceremony controls, forbids generic platform issuance, denies
 silent source rebinding, and requires staged legacy reconciliation before
-fail-closed activation. Authorization `0006`, compatible Board/ordinary/
-delegated writers, recursive current and historical validation, the count-only
-readiness graph, and the dry-run-by-default provable-only Board/delegation
-backfill are implemented and locally verified. Ordinary legacy authority is
-never inferred. Production remains blocked until effective legacy rows are
-deliberately recreated and the dormant completeness guards, exact policy
-switch, activation marker, and downgrade fence are installed.
+fail-closed activation. Authorization `0006` and `0007`, audit `0005`,
+compatible Board/ordinary/delegated writers, recursive current and historical
+validation, the count-only readiness graph, the dry-run-by-default
+provable-only Board/delegation backfill, and the guarded one-way activation
+service are implemented and locally verified. Ordinary legacy authority is
+never inferred. Synthetic activation and recovery paths pass locally; effective
+ordinary legacy rows have not been reconciled in a real deployment, no
+production activation has occurred, and representative restore/PITR evidence
+remains open.
+
+The working tree also contains ADR 0046's non-delegable PostgreSQL runtime-login
+boundary, which supersedes only ADR 0044's earlier role proof. Production names
+one non-owner login with `MARU_RUNTIME_DATABASE_ROLE`; a parameterized
+25-boolean catalog proof rejects privileged/reserved/delegable membership,
+ownership and DDL paths, parameter/config trigger bypass, sequence update,
+object/column grant options, migration-recorder/marker/latch mutation, and any
+public/missing/extra function-execute path. It positively requires the
+ordinary data plane, three SELECT-only control relations, and the versioned
+19-function v2 helper closure. Organizations `0013`, workforce `0005`, and
+authorization `0009` harden the four directly executable Board/workforce
+helpers and all 12 persistent callers. Exact readiness fingerprints all 57
+security-critical functions and proves the 12 caller trigger attachments,
+including deferred timing and exact `UPDATE OF` column lists.
+Migration/cutover-owner activation inspects the future role while live trigger
+semantics remain active. Public readiness additionally proves current, session,
+and authenticated-backend identity through a fresh dedicated-login connection;
+`SET ROLE` and `SET SESSION AUTHORIZATION` are negative regressions, not valid
+deployment smokes. The credential-free provisioning example and real
+PostgreSQL tamper/login tests cover this contract without recording a password.
 
 The canonical management routes are:
 
@@ -338,7 +361,7 @@ Historical shell/initial-representation evidence for ADRs 0039 and 0040 is:
   synthetic Executive Boards, reset all 80 synthetic account passwords, and
   then produced an idempotent second seed with no creations or password resets.
 
-Current post-hardening evidence is:
+Earlier representation/identity-hardening evidence is:
 
 - the final consolidated backend invocation passes 792 tests in 329.21
   seconds, reaches 90.01 percent coverage, and emits no warnings;
@@ -355,9 +378,11 @@ Current post-hardening evidence is:
   pass, including database-bypass and concurrent reclassification boundaries;
 - organizations `0009`–`0012`, participation `0004`, registration `0031`, and
   workforce `0003` apply to the populated local database;
-- the fresh `maru_consolidated_demo` database applies all 106 migrations,
-  contains 80 synthetic accounts, two organizations, and six editions, and
-  reports readiness 16/16 with zero blockers;
+- before the runtime-function hardening convergence, the fresh
+  `maru_consolidated_demo` database applied the then-current 106 migrations,
+  contained 80 synthetic accounts, two organizations, and six editions, and
+  reported readiness 16/16 with zero blockers; this is a prior baseline, not
+  current-graph release evidence;
 - the current restore drill into `maru_restore_drill_m21` passes and the drill
   database is removed afterward;
 - Page 8 manager reads and privileged denials append value-minimized evidence,
@@ -394,12 +419,18 @@ Current scope-v2 evidence is:
   client stability, Staff Console typecheck/19 tests/production build, and
   whitespace checks pass.
 
-Current exact authority-provenance evidence is:
+Current exact authority-provenance activation evidence is:
 
 - authorization `0006` adds typed append-only issuance/control tables,
   monotonic ordinals, exact target/basis/attribution/source/scope/horizon
   guards, immutable history, clean-empty reverse, and nonempty downgrade
   refusal;
+- authorization `0007`/`0008`, audit `0005`/`0006`, organizations `0013`,
+  workforce `0005`, and authorization `0009` install the dormant generation latch,
+  immutable one-row activation marker and evidence, writer barrier, deferred
+  exact-completeness constraints, destructive-operation fences, and guarded
+  downgrade boundary. They also pin all 57 security-critical function
+  definitions and 12 exact trigger attachments used by the runtime closure;
 - Executive Board activation, direct grants, immutable role definitions, role
   assignments, and delegation write their exact evidence in the target/audit/
   event/outbox transaction, while platform status is excluded from ordinary
@@ -408,25 +439,37 @@ Current exact authority-provenance evidence is:
   selects the least-authority source deterministically, and never silently
   rebinds a dependent record to an equivalent source;
 - `check_authority_provenance_readiness` reports only stable aggregate blocker
-  and review counts. Zero data blockers do not change its blocked production
-  status while exact policy, completeness, and fence gates remain unresolved;
+  and review counts. Exact-required activation additionally proves the complete
+  fingerprinted database contract and the configured safe runtime role;
 - `backfill_provable_authority_provenance` is read-only by default, requires
   both apply and stopped-writer acknowledgement to mutate, handles exact
   active/suspended/ended Board history and parent-first delegation, is
-  idempotent, and leaves ordinary legacy authority untouched; and
+  idempotent, and leaves ordinary legacy authority untouched;
+- `activate_authority_provenance` requires the external exact-required fence,
+  an explicit stopped-process acknowledgement, and a top-level READ COMMITTED
+  transaction. Marker and minimized audit commit together; repeat activation
+  is idempotent and a failed local synthetic activation leaves neither behind;
 - the database also rejects concurrent actor/approver controls that reuse one
   principal for an issuance; a two-connection regression proves exactly one
-  competing transaction commits; and
-- the root combined PostgreSQL provenance gate passes 168 tests in 227.48
-  seconds. The focused backfill and readiness gates pass 24 and eight tests;
-  issuance, backfill, and readiness reach 100, 95, and 91 percent branch-aware
-  coverage. The definitive repository-wide run passes all 964 tests in 590.97
-  seconds at 90.41 percent branch coverage. Ruff formatting/lint, strict mypy
-  across 205 source files, Django local/deploy checks, migration drift, OpenAPI
-  and generated-client stability, Staff Console typecheck/19 tests/production
-  build, Python/frontend dependency audits, and documentation validation for
-  171 Markdown files/195 requirement identifiers pass. Restore/PITR and final
-  live browser evidence remain open for this tranche.
+  competing transaction commits;
+- the target-resolution regression holds tenant-chain lookup at five fixed
+  queries as candidate cardinality grows. Exact issuance validation is bounded
+  separately in chunks of 256, so its database-call count grows by one per
+  chunk; representative unbounded candidate-cardinality load remains an open
+  gate; and
+- the final runtime-role unit/real-PostgreSQL matrix passes 50 tests. The fresh
+  runtime-function hardening suite passes 9 tests, its corrected fence and
+  hardening rerun passes 10, and the populated organization/workforce
+  migration-history suites pass 31. The provisioning artifact is exercised
+  both through a deliberately late atomic rollback and a successful complete
+  grant proof. Production settings in both exact modes, OpenAPI/client
+  determinism, 19 frontend tests, frontend build, Python/Node dependency
+  audits, Ruff, mypy, Django checks, migration drift, whitespace, and
+  documentation validation pass. The definitive fresh current-graph backend
+  invocation applies all 117 migration-plan entries and passes 1,199 tests in
+  930.63 seconds with 90.33 percent branch coverage and no warnings. No real
+  legacy reconciliation, production cutover, representative deployment
+  restore, or PITR drill has occurred.
 
 The populated synthetic `maru_consolidated_demo` database applied
 authorization `0004`, workforce `0004`, and authorization `0005` in dependency
@@ -508,20 +551,31 @@ issuance ledger and compatible writers without requiring legacy rows to have
 manufactured sources. After migration, operators run the count-only provenance
 readiness report, dry-run `backfill_provable_authority_provenance`, and may
 apply only exact Board/delegated evidence with the explicit stopped-writer
-acknowledgement. Any issuance makes downgrade of `0006` invalid. Current
-platform-operator inactivity does not erase a historically exact activation,
-but it never becomes organizer authority. The complete procedure is in
-`docs/operations/authority-provenance-migration-and-recovery.md`. The later
-activation-marker/completeness/fence migration has not been implemented and
-must remain a separate irreversible stage.
+acknowledgement. Authorization `0007`/`0008`, audit `0005`/`0006`,
+organizations `0013`, workforce `0005`, and authorization `0009` then install
+the dormant completeness, marker, writer-barrier, evidence, no-truncate,
+runtime-function/trigger fingerprints, and module-local plus converged
+downgrade fences. Runtime treats `django_migrations` and marker/latch as three
+SELECT-only control relations. The guarded activation service selects exact
+policy only when the
+external fence, runtime-role proof, zero-blocker graph, and stopped-process
+acknowledgement agree. Local synthetic activation/failure recovery is verified;
+the production database has not been reconciled or activated. Once a marker
+commits, do not reverse, truncate, or deploy an old writer: fix forward or
+restore the whole database and application to one consistent pre-activation
+point. The complete procedures are in
+`docs/operations/authority-provenance-migration-and-recovery.md` and the
+transaction-wrapped
+`docs/operations/postgresql-runtime-role-provisioning.sql.example`.
 
 ## Known limits and production gates
 
-- The unified shell is implemented and backend-tested; current desktop/
-  responsive browser smoke, deploy-shaped settings, and local migration/
-  restore evidence pass. The current consolidated local backend gate passes 876
-  tests with 90.43 percent branch coverage and no warnings. Automated accessibility
-  and complete visual-state coverage remain incomplete.
+- The unified shell is implemented and backend-tested; desktop/responsive
+  browser smoke, deploy-shaped settings, and the earlier local migration/
+  restore evidence pass. The 876-test/90.43-percent result is the consolidated
+  pre-exact-activation baseline; the current milestone result is recorded in
+  the exact-lineage evidence above. Automated accessibility and complete
+  visual-state coverage remain incomplete.
 - Owner tutorial rehearsal is unfinished.
 - Executive Board provisioning, exact invitation, self-response, initial
   activation, bounded read/denial audit, database subject guards, and emergency
@@ -529,9 +583,9 @@ must remain a separate irreversible stage.
   and representation/platform matrices pass. Representative restore/PITR,
   accessibility, complete visual states, and owner rehearsal are open. Routine
   expiry, replacement, ending, planned suspension/reactivation, invitation
-  delivery, exact-lineage activation, and complete effective-access
-  explanations remain later M2. Exact department/resource scope exists below
-  the UI, but a contextual editor and computed explanation are not mounted.
+  delivery, production legacy reconciliation/cutover, and complete effective-
+  access explanations remain later M2. Exact department/resource scope exists
+  below the UI, but a contextual editor and computed explanation are not mounted.
 - Programme, typed applications, venues/mergeable spaces, three-phase
   timetable/layers, shifts, storage/logistics, governed documents, and team/
   on-site communications remain absent current modules.
@@ -548,30 +602,36 @@ must remain a separate irreversible stage.
 
 ## Smallest sensible next actions
 
-1. Reconcile every effective ordinary legacy authority row without inference,
-   then implement and rehearse ADR 0044's dormant completeness guards,
-   audited irreversible activation marker, point-in-time exact policy switch,
-   and downgrade fence.
-2. Add the Awoostria-shaped synthetic department template, mounted hierarchy/
-   position workflow, and computed effective-access explanation on top of the
-   exact scope boundary.
-3. Rehearse every current migration against a representative restored database
-   with reserved-role/non-Draft preflight, full fix-forward, and backup/PITR
-   evidence.
-4. Run automated accessibility, reliable keyboard traversal, and the complete
+1. Implement Page 9a's bounded, governance-anchored edition Department tree
+   and canonical navigation without synthesizing people, roles, or authority;
+   then add its copy-on-write structure controls in staged migrations.
+2. Reconcile every effective ordinary legacy authority row without inference
+   on a representative restored deployment and prove a zero-blocker preflight.
+3. Exercise representative unbounded authority-candidate sets under load. The
+   accepted geometry is five fixed target-resolution queries plus one exact-
+   issuance database call per 256-item chunk; latency and memory still need a
+   deployment-shaped bound.
+4. Rehearse the stopped-writer production cutover, runtime-role transition,
+   failure/fix-forward path, and whole-database backup/PITR recovery before any
+   real activation.
+5. Add Page 9b's Position workflow and computed effective-access explanation
+   only after the Department aggregate is stable.
+6. Run automated accessibility, reliable keyboard traversal, and the complete
    blocked/error/stale-state matrix before owner rehearsal.
-5. Deliver the next differentiating vertical: panel application → accepted
+7. Deliver the next differentiating vertical: panel application → accepted
    private programme item → reusable/mergeable venue selection → three-phase
    layered timetable → immutable release/API projection.
 
 ## Resume instructions
 
-Read `AGENTS.md`, this file, `PRODUCTION_CONSOLIDATION.md`, ADRs 0037–0044,
-Page 1–8 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
-`docs/modules/activity.md`, organization/events/authorization/audit/effects
-module docs, and the M1 migration runbook. Run `git status --short --branch`
-and continue with ADR 0044's activation-marker/policy-cutover item before the
-hierarchy editor. Do not treat backend
+Read `AGENTS.md`, this file, `PRODUCTION_CONSOLIDATION.md`, ADRs 0037–0046,
+Page 1–9 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
+`docs/modules/activity.md`, organization/events/workforce/authorization/audit/
+effects module docs, the edition/scope-v2/authority-provenance migration and
+recovery runbooks, and ADR 0046's PostgreSQL provisioning artifact. Run
+`git status --short --branch` and continue with Page 9a while retaining
+representative legacy reconciliation, unbounded candidate-cardinality load,
+deployment cutover, and PITR as explicit release gates. Do not treat backend
 evidence as proof
 of browser or deployment readiness. Preserve
 concurrent changes and the non-participating platform boundary.

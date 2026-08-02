@@ -1,19 +1,40 @@
 """Deny-by-default policy evaluation over server-resolved targets."""
 
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, TypeGuard, cast
 from uuid import UUID
 
-from django.core.exceptions import ValidationError
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import F, Model, Q
 from django.utils import timezone
 
 from maru.authorization.catalog import POLICY_VERSION, ScopeLevel, capability
-from maru.authorization.models import CapabilityGrant, RoleAssignment
+from maru.authorization.models import (
+    AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
+    AUTHORITY_PROVENANCE_ACTIVE_GENERATION,
+    AUTHORITY_PROVENANCE_CONTRACT_VERSION,
+    AUTHORITY_PROVENANCE_INACTIVE_GENERATION,
+    AuthorityProvenanceActivation,
+    AuthorityProvenanceActivationLatch,
+    CapabilityGrant,
+    RoleAssignment,
+    ScopedResourceBinding,
+)
+from maru.authorization.provenance import (
+    AuthorityIssuanceCurrentCheck,
+    ControlHorizonMode,
+    authority_issuance_is_current,
+    authority_issuances_are_current,
+)
 from maru.identity.models import Account
 
 _TARGET_SEAL = object()
+EXACT_LINEAGE_POLICY_CONTRACT_VERSION = AUTHORITY_PROVENANCE_CONTRACT_VERSION
+EXACT_LINEAGE_POLICY_VERSION = AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION
+type _AuthorityScopeKey = tuple[UUID, UUID | None, UUID | None, UUID | None]
 
 
 @dataclass(frozen=True, slots=True, init=False)
@@ -57,6 +78,23 @@ class PolicyDecision:
     obligations: frozenset[str]
     reason_code: str
     policy_version: str = POLICY_VERSION
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorizedScopeProjection:
+    """Name-free organizer scope proven by current persisted authority.
+
+    The projection deliberately contains no authority, issuance, principal, or
+    tenant display identifiers.  Browser navigation may use it to constrain a
+    later tenant-name query, but every destination must repeat its own policy
+    decision.
+    """
+
+    organization_id: UUID
+    edition_id: UUID | None
+    department_id: UUID | None
+    resource_binding_id: UUID | None
+    capability_codes: frozenset[str]
 
 
 def _seal_target(
@@ -414,6 +452,351 @@ def grant_chain_is_active(  # noqa: PLR0911
     return True
 
 
+def _exact_lineage_policy_state() -> tuple[bool, bool]:
+    """Return cutover evidence and runtime-contract validity without caching."""
+
+    latch_generation = (
+        AuthorityProvenanceActivationLatch.objects.filter(singleton=True)
+        .values_list("generation", flat=True)
+        .first()
+    )
+    marker = (
+        AuthorityProvenanceActivation.objects.filter(singleton=True)
+        .values("contract_version", "policy_version")
+        .first()
+    )
+    if marker is None:
+        return (
+            latch_generation is None
+            or latch_generation != AUTHORITY_PROVENANCE_INACTIVE_GENERATION
+        ), False
+    return True, bool(
+        latch_generation == AUTHORITY_PROVENANCE_ACTIVE_GENERATION
+        and marker["contract_version"] == EXACT_LINEAGE_POLICY_CONTRACT_VERSION
+        and marker["policy_version"] == EXACT_LINEAGE_POLICY_VERSION
+    )
+
+
+def exact_lineage_policy_is_active() -> bool:
+    """Confirm that the durable marker selects this exact runtime contract."""
+
+    marker_present, contract_valid = _exact_lineage_policy_state()
+    return marker_present and contract_valid
+
+
+def _exact_issuance_allows(
+    *,
+    authority: CapabilityGrant | RoleAssignment,
+    principal: Account,
+    capability_code: str,
+    resource: ResolvedAuthorizationTarget,
+    evaluation_time: datetime,
+) -> bool:
+    try:
+        issuance_ordinal = authority.authority_issuance.ordinal
+    except ObjectDoesNotExist:
+        return False
+    return authority_issuance_is_current(
+        issuance_ordinal=issuance_ordinal,
+        principal_id=principal.id,
+        capability_code=capability_code,
+        target=resource,
+        requested_effective_from=evaluation_time,
+        requested_expires_at=None,
+        evaluated_at=evaluation_time,
+        horizon_mode=ControlHorizonMode.POINT_IN_TIME,
+    )
+
+
+def _bulk_authority_projection_targets(
+    scope_keys: Collection[_AuthorityScopeKey],
+) -> dict[_AuthorityScopeKey, ResolvedAuthorizationTarget]:
+    """Resolve every candidate tenant chain in a constant number of queries.
+
+    Navigation can legitimately project hundreds of scoped assignments.  A
+    per-authority resolver would turn that into an attacker-amplifiable query
+    fan-out before the batched provenance check.  These reads remain name-free
+    and retain the same exact organization/edition/department/resource chain
+    validation as the public single-target resolvers.
+    """
+
+    if not scope_keys:
+        return {}
+
+    from maru.events.models import EventEdition  # noqa: PLC0415
+    from maru.organizations.models import Organization  # noqa: PLC0415
+    from maru.workforce.models import Department, Position  # noqa: PLC0415
+
+    organization_ids = {scope[0] for scope in scope_keys}
+    valid_organizations = set(
+        Organization.objects.filter(id__in=organization_ids)
+        .order_by()
+        .values_list("id", flat=True)
+    )
+
+    requested_edition_ids = {scope[1] for scope in scope_keys if scope[1] is not None}
+    editions = {
+        row["id"]: row["organization_id"]
+        for row in EventEdition.objects.filter(id__in=requested_edition_ids)
+        .order_by()
+        .values("id", "organization_id")
+    }
+
+    requested_department_ids = {
+        scope[2] for scope in scope_keys if scope[2] is not None
+    }
+    departments = {
+        row["id"]: (row["organization_id"], row["edition_id"])
+        for row in Department.objects.filter(id__in=requested_department_ids)
+        .order_by()
+        .values("id", "organization_id", "edition_id")
+    }
+
+    requested_binding_ids = {scope[3] for scope in scope_keys if scope[3] is not None}
+    bindings = {
+        row["id"]: row
+        for row in ScopedResourceBinding.objects.filter(
+            id__in=requested_binding_ids,
+        )
+        .order_by()
+        .values(
+            "id",
+            "organization_id",
+            "edition_id",
+            "department_id",
+            "resource_kind",
+            "resource_id",
+        )
+    }
+    position_ids = {
+        row["resource_id"]
+        for row in bindings.values()
+        if row["resource_kind"] == ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION
+    }
+    positions = {
+        row["id"]: (
+            row["organization_id"],
+            row["edition_id"],
+            row["department_id"],
+        )
+        for row in Position.objects.filter(id__in=position_ids)
+        .order_by()
+        .values("id", "organization_id", "edition_id", "department_id")
+    }
+
+    resolved: dict[_AuthorityScopeKey, ResolvedAuthorizationTarget] = {}
+    for scope_key in scope_keys:
+        organization_id, edition_id, department_id, binding_id = scope_key
+        if organization_id not in valid_organizations:
+            continue
+        if edition_id is None:
+            if department_id is not None or binding_id is not None:
+                continue
+            resolved[scope_key] = _seal_target(organization_id=organization_id)
+            continue
+        if editions.get(edition_id) != organization_id:
+            continue
+        if department_id is None:
+            if binding_id is not None:
+                continue
+            resolved[scope_key] = _seal_target(
+                organization_id=organization_id,
+                edition_id=edition_id,
+            )
+            continue
+        if departments.get(department_id) != (organization_id, edition_id):
+            continue
+        if binding_id is None:
+            resolved[scope_key] = _seal_target(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                department_id=department_id,
+            )
+            continue
+        binding = bindings.get(binding_id)
+        if (
+            binding is None
+            or binding["organization_id"] != organization_id
+            or binding["edition_id"] != edition_id
+            or binding["department_id"] != department_id
+            or binding["resource_kind"]
+            != ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION
+            or positions.get(binding["resource_id"])
+            != (organization_id, edition_id, department_id)
+        ):
+            continue
+        resolved[scope_key] = _seal_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            resource_binding_id=binding_id,
+        )
+    return resolved
+
+
+def _persistable_authority_capability_codes(
+    authority: CapabilityGrant | RoleAssignment,
+) -> tuple[str, ...]:
+    raw_codes = (
+        (authority.capability_code,)
+        if isinstance(authority, CapabilityGrant)
+        else tuple(authority.role_bundle.capability_codes)
+    )
+    return tuple(
+        sorted(
+            code
+            for code in raw_codes
+            if (definition := capability(code)) is not None and definition.persistable
+        )
+    )
+
+
+def project_active_authority_scopes(  # noqa: PLR0912
+    *,
+    principal: Account,
+    at: datetime | None = None,
+) -> tuple[AuthorizedScopeProjection, ...]:
+    """Project current organizer authority without names or existential rebinding.
+
+    This read-only query is the shared boundary for navigation and other
+    non-sensitive scope pickers.  It reads the activation contract once,
+    resolves each candidate through its persisted tenant chain, and validates
+    that candidate row's own pinned issuance exactly once.  Equivalent rows do
+    not rescue an invalid candidate; their independently valid capabilities
+    are merged only after validation.  Dormant compatibility retains the
+    legacy delegated-chain behavior until the external exact-lineage fence is
+    selected.  Platform oversight and self-service remain outside this
+    organizer-authority projection.
+    """
+
+    evaluation_time = at or timezone.now()
+    if (
+        not timezone.is_aware(evaluation_time)
+        or principal.is_platform_administrator
+        or not principal.is_active
+        or not Account.objects.filter(
+            pk=principal.pk,
+            account_kind=Account.Kind.PERSON,
+            is_active=True,
+        ).exists()
+    ):
+        return ()
+
+    marker_present, exact_lineage_active = _exact_lineage_policy_state()
+    if (
+        marker_present or settings.REQUIRE_EXACT_AUTHORITY_PROVENANCE
+    ) and not exact_lineage_active:
+        return ()
+
+    authorities: tuple[CapabilityGrant | RoleAssignment, ...] = (
+        *CapabilityGrant.objects.filter(
+            _active_at(evaluation_time),
+            principal=principal,
+        )
+        .select_related("authority_issuance", "delegated_from")
+        .order_by("id"),
+        *RoleAssignment.objects.filter(
+            _active_at(evaluation_time),
+            principal=principal,
+        )
+        .select_related("authority_issuance", "role_bundle")
+        .order_by("id"),
+    )
+    scope_keys = {
+        (
+            authority.organization_id,
+            authority.edition_id,
+            authority.department_id,
+            authority.resource_binding_id,
+        )
+        for authority in authorities
+    }
+    target_cache = _bulk_authority_projection_targets(scope_keys)
+    projected: dict[
+        _AuthorityScopeKey,
+        set[str],
+    ] = {}
+    pending_exact: list[
+        tuple[
+            _AuthorityScopeKey,
+            tuple[str, ...],
+            AuthorityIssuanceCurrentCheck,
+        ]
+    ] = []
+    for authority in authorities:
+        scope_key = (
+            authority.organization_id,
+            authority.edition_id,
+            authority.department_id,
+            authority.resource_binding_id,
+        )
+        target = target_cache.get(scope_key)
+        if target is None:
+            continue
+        capability_codes = _persistable_authority_capability_codes(authority)
+        if not capability_codes:
+            continue
+        if exact_lineage_active:
+            try:
+                issuance_ordinal = authority.authority_issuance.ordinal
+            except ObjectDoesNotExist:
+                continue
+            pending_exact.append(
+                (
+                    scope_key,
+                    capability_codes,
+                    AuthorityIssuanceCurrentCheck(
+                        issuance_ordinal=issuance_ordinal,
+                        principal_id=principal.id,
+                        capability_code=capability_codes[0],
+                        target=target,
+                        requested_effective_from=evaluation_time,
+                        requested_expires_at=None,
+                        horizon_mode=ControlHorizonMode.POINT_IN_TIME,
+                    ),
+                )
+            )
+            continue
+        if isinstance(authority, CapabilityGrant):
+            authority_is_current = grant_chain_is_active(authority, evaluation_time)
+        else:
+            authority_is_current = True
+        if authority_is_current:
+            projected.setdefault(scope_key, set()).update(capability_codes)
+
+    if pending_exact:
+        exact_results = authority_issuances_are_current(
+            checks=tuple(item[2] for item in pending_exact),
+            evaluated_at=evaluation_time,
+        )
+        for (scope_key, capability_codes, _check), is_current in zip(
+            pending_exact,
+            exact_results,
+            strict=True,
+        ):
+            if is_current:
+                projected.setdefault(scope_key, set()).update(capability_codes)
+
+    return tuple(
+        AuthorizedScopeProjection(
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+            resource_binding_id=resource_binding_id,
+            capability_codes=frozenset(projected[scope_key]),
+        )
+        for scope_key in sorted(
+            projected,
+            key=lambda values: tuple(
+                "" if value is None else str(value) for value in values
+            ),
+        )
+        for organization_id, edition_id, department_id, resource_binding_id in (
+            scope_key,
+        )
+    )
+
+
 def _target_is_trusted(
     resource: object,
 ) -> TypeGuard[ResolvedAuthorizationTarget]:
@@ -482,14 +865,40 @@ def decide(  # noqa: PLR0911
         )
 
     evaluation_time = at or timezone.now()
+    marker_present, exact_lineage_active = _exact_lineage_policy_state()
+    if (
+        marker_present or settings.REQUIRE_EXACT_AUTHORITY_PROVENANCE
+    ) and not exact_lineage_active:
+        return PolicyDecision(
+            allowed=False,
+            fields=frozenset(),
+            obligations=frozenset(),
+            reason_code="authority_provenance_contract_invalid",
+        )
     direct_grants = CapabilityGrant.objects.filter(
         _active_at(evaluation_time),
         _scope_filter(resource),
         organization_id=resource.organization_id,
         principal=principal,
         capability_code=capability_code,
-    ).select_related("delegated_from")
-    if any(grant_chain_is_active(grant, evaluation_time) for grant in direct_grants):
+    ).select_related("authority_issuance", "delegated_from")
+    direct_grant_allowed = (
+        any(
+            _exact_issuance_allows(
+                authority=grant,
+                principal=principal,
+                capability_code=capability_code,
+                resource=resource,
+                evaluation_time=evaluation_time,
+            )
+            for grant in direct_grants
+        )
+        if exact_lineage_active
+        else any(
+            grant_chain_is_active(grant, evaluation_time) for grant in direct_grants
+        )
+    )
+    if direct_grant_allowed:
         return PolicyDecision(
             allowed=True,
             fields=permitted_fields,
@@ -497,14 +906,28 @@ def decide(  # noqa: PLR0911
             reason_code="direct_grant",
         )
 
-    role_assignment_exists = RoleAssignment.objects.filter(
+    role_assignments = RoleAssignment.objects.filter(
         _active_at(evaluation_time),
         _scope_filter(resource),
         organization_id=resource.organization_id,
         principal=principal,
         role_bundle__capability_codes__contains=[capability_code],
-    ).exists()
-    if role_assignment_exists:
+    ).select_related("authority_issuance", "role_bundle")
+    role_assignment_allowed = (
+        any(
+            _exact_issuance_allows(
+                authority=assignment,
+                principal=principal,
+                capability_code=capability_code,
+                resource=resource,
+                evaluation_time=evaluation_time,
+            )
+            for assignment in role_assignments
+        )
+        if exact_lineage_active
+        else role_assignments.exists()
+    )
+    if role_assignment_allowed:
         return PolicyDecision(
             allowed=True,
             fields=permitted_fields,

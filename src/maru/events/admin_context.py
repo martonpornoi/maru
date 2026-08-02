@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, ClassVar, cast
 from uuid import UUID
 
@@ -11,7 +10,7 @@ from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import FieldDoesNotExist, PermissionDenied
 from django.db import models
-from django.db.models import Exists, OuterRef, Q, QuerySet
+from django.db.models import Q, QuerySet
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -19,8 +18,10 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from maru.authorization.models import CapabilityGrant, RoleAssignment
-from maru.authorization.policy import grant_chain_is_active
+from maru.authorization.policy import (
+    AuthorizedScopeProjection,
+    project_active_authority_scopes,
+)
 from maru.core.admin import HttpsURLAdminMixin
 from maru.events.models import EventEdition
 from maru.identity.models import Account
@@ -31,6 +32,7 @@ ADMIN_PATH_PREFIX = "/admin/"
 _REQUEST_CACHE_ATTRIBUTE = "_maru_admin_edition_context"
 _AUTHORIZED_EDITIONS_CACHE_ATTRIBUTE = "_maru_authorized_admin_editions"
 _ACTIVE_ADMIN_SCOPE_CACHE_ATTRIBUTE = "_maru_active_admin_scope"
+_AUTHORIZED_ADMIN_SCOPES_CACHE_ATTRIBUTE = "_maru_authorized_admin_scopes"
 _ADMIN_ORGANIZATION_NAVIGATION_CACHE_ATTRIBUTE = "_maru_admin_organization_navigation"
 _NOT_CACHED = object()
 
@@ -50,11 +52,100 @@ def _active_account(request: HttpRequest) -> Account | None:
     return user
 
 
-def _active_scope_filter(evaluated_at: datetime) -> Q:
-    return (
-        Q(effective_from__lte=evaluated_at)
-        & (Q(expires_at__isnull=True) | Q(expires_at__gt=evaluated_at))
-        & Q(revoked_at__isnull=True)
+def _authorized_admin_scopes(
+    request: HttpRequest,
+) -> tuple[AuthorizedScopeProjection, ...]:
+    """Return request-local, name-free scopes whose lineage is current.
+
+    The authorization policy owns compatibility versus exact-lineage
+    selection. In the exact contract it validates every candidate row's pinned
+    issuance recursively; a missing or malformed required contract returns no
+    scope before any organization or edition name is queried.
+    """
+
+    cached = getattr(
+        request,
+        _AUTHORIZED_ADMIN_SCOPES_CACHE_ATTRIBUTE,
+        _NOT_CACHED,
+    )
+    if cached is not _NOT_CACHED:
+        return cast("tuple[AuthorizedScopeProjection, ...]", cached)
+
+    account = _active_account(request)
+    if account is None or account.is_platform_administrator:
+        authorized: tuple[AuthorizedScopeProjection, ...] = ()
+    else:
+        authorized = project_active_authority_scopes(
+            principal=account,
+            at=timezone.now(),
+        )
+
+    setattr(request, _AUTHORIZED_ADMIN_SCOPES_CACHE_ATTRIBUTE, authorized)
+    return authorized
+
+
+def authorized_admin_organization_ids(
+    request: HttpRequest,
+    *,
+    capability_codes: frozenset[str],
+) -> frozenset[UUID]:
+    """Return exact organization-target IDs without projecting tenant names.
+
+    Platform callers retain their explicit oversight branch and should not use
+    this organizer-scope query as a substitute for it. Narrower authority does
+    not flow upward into organization-record routes.
+    """
+
+    return frozenset(
+        scope.organization_id
+        for scope in _authorized_admin_scopes(request)
+        if scope.edition_id is None
+        and scope.department_id is None
+        and scope.resource_binding_id is None
+        and scope.capability_codes.intersection(capability_codes)
+    )
+
+
+def _authorized_admin_edition_scope_ids(
+    request: HttpRequest,
+    *,
+    capability_codes: frozenset[str],
+) -> tuple[frozenset[UUID], frozenset[UUID]]:
+    """Return organization-wide and exact-edition authority separately."""
+
+    organization_ids: set[UUID] = set()
+    edition_ids: set[UUID] = set()
+    for scope in _authorized_admin_scopes(request):
+        if (
+            not scope.capability_codes.intersection(capability_codes)
+            or scope.department_id is not None
+            or scope.resource_binding_id is not None
+        ):
+            continue
+        if scope.edition_id is None:
+            organization_ids.add(scope.organization_id)
+        else:
+            edition_ids.add(scope.edition_id)
+    return frozenset(organization_ids), frozenset(edition_ids)
+
+
+def authorized_admin_edition_ids(
+    request: HttpRequest,
+    *,
+    capability_codes: frozenset[str],
+) -> frozenset[UUID]:
+    """Resolve name-free edition IDs for org-wide or exact-edition authority."""
+
+    organization_ids, edition_ids = _authorized_admin_edition_scope_ids(
+        request,
+        capability_codes=capability_codes,
+    )
+    if not organization_ids and not edition_ids:
+        return frozenset()
+    return frozenset(
+        EventEdition.objects.filter(
+            Q(organization_id__in=organization_ids) | Q(id__in=edition_ids)
+        ).values_list("id", flat=True)
     )
 
 
@@ -62,10 +153,8 @@ def has_active_admin_scope(request: HttpRequest) -> bool:
     """Return whether the account may enter convention management.
 
     Django's ``is_staff`` flag remains the boundary for specialist model
-    administration.  This separate predicate admits only an active platform
-    administrator or an account with current, organization-scoped Maru
-    authority.  Delegated grants are accepted only while their complete chain
-    remains valid.
+    administration.  Ordinary access requires at least one current capability
+    whose complete compatibility or exact-lineage policy decision succeeds.
     """
 
     cached = getattr(request, _ACTIVE_ADMIN_SCOPE_CACHE_ATTRIBUTE, _NOT_CACHED)
@@ -73,23 +162,10 @@ def has_active_admin_scope(request: HttpRequest) -> bool:
         return bool(cached)
 
     account = _active_account(request)
-    if account is None:
-        available = False
-    elif account.is_platform_administrator:
-        available = True
-    else:
-        evaluated_at = timezone.now()
-        active_at = _active_scope_filter(evaluated_at)
-        available = RoleAssignment.objects.filter(
-            active_at,
-            principal=account,
-        ).exists() or bool(
-            _active_grant_ids_with_valid_chains(
-                account,
-                evaluated_at=evaluated_at,
-                active_at=active_at,
-            )
-        )
+    available = bool(
+        account
+        and (account.is_platform_administrator or _authorized_admin_scopes(request))
+    )
     setattr(request, _ACTIVE_ADMIN_SCOPE_CACHE_ATTRIBUTE, available)
     return available
 
@@ -102,79 +178,6 @@ def admin_shell_access(request: HttpRequest) -> dict[str, bool]:
         "active": account is not None,
         "workspace_available": has_active_admin_scope(request),
         "specialist_records_available": bool(account and account.is_staff),
-    }
-
-
-def _grant_chain_is_loaded(
-    grant: CapabilityGrant,
-    grants_by_id: dict[UUID, CapabilityGrant],
-) -> bool:
-    """Fail closed if an ancestor disappeared while its chain was loaded."""
-
-    seen: set[UUID] = set()
-    current = grant
-    while current.delegated_from_id is not None:
-        if current.id in seen:
-            # A fully loaded cycle is passed to the canonical validator, which
-            # rejects it. Stopping here avoids looping during this completeness
-            # check.
-            return True
-        seen.add(current.id)
-        parent = grants_by_id.get(current.delegated_from_id)
-        if parent is None:
-            return False
-        current = parent
-    return True
-
-
-def _active_grant_ids_with_valid_chains(
-    account: Account,
-    *,
-    evaluated_at: datetime,
-    active_at: Q,
-) -> set[UUID]:
-    """Load delegation ancestors in batches and reject invalid grant chains."""
-
-    candidates = list(
-        CapabilityGrant.objects.filter(
-            active_at,
-            principal=account,
-        )
-    )
-    grants_by_id = {grant.id: grant for grant in candidates}
-    pending_parent_ids = {
-        grant.delegated_from_id
-        for grant in candidates
-        if grant.delegated_from_id is not None
-        and grant.delegated_from_id not in grants_by_id
-    }
-    while pending_parent_ids:
-        parents = list(CapabilityGrant.objects.filter(id__in=pending_parent_ids))
-        grants_by_id.update((parent.id, parent) for parent in parents)
-        pending_parent_ids = {
-            parent.delegated_from_id
-            for parent in parents
-            if parent.delegated_from_id is not None
-            and parent.delegated_from_id not in grants_by_id
-        }
-
-    # Populate Django's relation cache so the canonical chain validator never
-    # issues one query per ancestor. Missing parents remain uncached and cause
-    # the explicit completeness check below to deny the candidate.
-    for grant in grants_by_id.values():
-        if (
-            grant.delegated_from_id is not None
-            and grant.delegated_from_id in grants_by_id
-        ):
-            grant._state.fields_cache["delegated_from"] = grants_by_id[
-                grant.delegated_from_id
-            ]
-
-    return {
-        grant.id
-        for grant in candidates
-        if _grant_chain_is_loaded(grant, grants_by_id)
-        and grant_chain_is_active(grant, evaluated_at)
     }
 
 
@@ -200,39 +203,18 @@ def admin_organization_navigation(
     if account is None or account.is_platform_administrator:
         navigation: tuple[dict[str, object], ...] = ()
     else:
-        evaluated_at = timezone.now()
-        active_at = _active_scope_filter(evaluated_at)
         capabilities_by_organization: dict[UUID, set[str]] = {}
-
-        assignments = RoleAssignment.objects.filter(
-            active_at,
-            principal=account,
-            edition__isnull=True,
-        ).select_related("role_bundle")
-        for assignment in assignments:
+        for scope in _authorized_admin_scopes(request):
+            if scope.edition_id is not None:
+                continue
             capabilities = _ORGANIZATION_NAVIGATION_CAPABILITIES.intersection(
-                assignment.role_bundle.capability_codes
+                scope.capability_codes
             )
             if capabilities:
                 capabilities_by_organization.setdefault(
-                    assignment.organization_id,
+                    scope.organization_id,
                     set(),
                 ).update(capabilities)
-
-        valid_grant_ids = _active_grant_ids_with_valid_chains(
-            account,
-            evaluated_at=evaluated_at,
-            active_at=active_at,
-        )
-        grants = CapabilityGrant.objects.filter(
-            id__in=valid_grant_ids,
-            edition__isnull=True,
-            capability_code__in=_ORGANIZATION_NAVIGATION_CAPABILITIES,
-        ).values_list("organization_id", "capability_code")
-        for organization_id, capability_code in grants:
-            capabilities_by_organization.setdefault(organization_id, set()).add(
-                capability_code
-            )
 
         organizations = Organization.objects.filter(
             id__in=capabilities_by_organization
@@ -274,36 +256,16 @@ def _authorized_admin_editions(request: HttpRequest) -> QuerySet[EventEdition]:
     elif account.is_platform_administrator:
         authorized_editions = editions
     else:
-        evaluated_at = timezone.now()
-        active_at = _active_scope_filter(evaluated_at)
-        matching_scope = Q(edition__isnull=True) | Q(edition_id=OuterRef("pk"))
-        active_assignments = RoleAssignment.objects.filter(
-            active_at,
-            matching_scope,
-            principal=account,
-            organization_id=OuterRef("organization_id"),
+        organization_ids, edition_ids = _authorized_admin_edition_scope_ids(
+            request,
+            capability_codes=frozenset({"events.view_basic"}),
         )
-        annotations: dict[str, Exists] = {
-            "_maru_has_active_assignment": Exists(active_assignments),
-        }
-        authority_filter = Q(_maru_has_active_assignment=True)
-
-        valid_grant_ids = _active_grant_ids_with_valid_chains(
-            account,
-            evaluated_at=evaluated_at,
-            active_at=active_at,
-        )
-        if valid_grant_ids:
-            active_grants = CapabilityGrant.objects.filter(
-                matching_scope,
-                id__in=valid_grant_ids,
-                principal=account,
-                organization_id=OuterRef("organization_id"),
+        if organization_ids or edition_ids:
+            authorized_editions = editions.filter(
+                Q(organization_id__in=organization_ids) | Q(id__in=edition_ids)
             )
-            annotations["_maru_has_active_grant"] = Exists(active_grants)
-            authority_filter |= Q(_maru_has_active_grant=True)
-
-        authorized_editions = editions.annotate(**annotations).filter(authority_filter)
+        else:
+            authorized_editions = editions.none()
 
     setattr(request, _AUTHORIZED_EDITIONS_CACHE_ATTRIBUTE, authorized_editions)
     return authorized_editions

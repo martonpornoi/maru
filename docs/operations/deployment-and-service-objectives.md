@@ -123,6 +123,8 @@ MARU_PAYMENT_PROVIDER_HOSTS
 MARU_MEDIA_SCANNER=clamav
 MARU_MEDIA_SCANNER_HOST
 MARU_OFFLINE_MANIFEST_SECRET
+MARU_RUNTIME_DATABASE_ROLE
+MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE=true|false
 ```
 
 Along with the ordinary strong secret, explicit hosts, PostgreSQL URL, and
@@ -139,8 +141,45 @@ MARU_REQUIRE_PRIVILEGED_STEP_UP=true
 MARU_ENFORCE_EDITION_CLOSURE_GATES=true
 ```
 
+`MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE` has no implicit production value.
+Declare `false` only while a deployment is intentionally before the ADR 0044
+cutover. Declare `true` in the rehearsed cutover release and retain it after
+activation so a partial restore or missing activation marker denies organizer
+authority and keeps `/health/ready` unavailable instead of silently returning
+to compatibility policy.
+`MARU_RUNTIME_DATABASE_ROLE` is the dedicated PostgreSQL login-role name, not a
+password. Production configuration rejects a missing, non-printable, or
+overlength name. The migration-owner cutover report proves that named future
+role has no privileged attributes, reserved/predefined identity, dangerous or
+administratively delegable membership, no
+database or non-system schema/relation/function ownership, no database
+`CREATE`/`TEMPORARY`, no user-schema `CREATE`, and no table `TRIGGER`,
+`TRUNCATE`, or `MAINTAIN`. It also denies effective parameter-control ACLs,
+non-origin trigger settings, sequence `UPDATE`, and database/schema/relation/
+column/sequence/function grant options. It must positively retain database
+`CONNECT`, schema `USAGE`, ordinary runtime-relation DML, sequence
+`USAGE`/`SELECT`, SELECT-only materialized-view and activation-control reads,
+and the exact versioned 19-function v2 policy/trigger-helper execute closure.
+`PUBLIC` may
+execute no non-system function and the runtime role may execute no function
+outside that closure. Adapt and rehearse
+[`postgresql-runtime-role-provisioning.sql.example`](postgresql-runtime-role-provisioning.sql.example),
+then inject the separate login credential through the secret manager. Only the
+controlled migration/cutover owner activates the marker/latch. Runtime health
+additionally proves that connected `CURRENT_USER`, `SESSION_USER`, and the
+backend-authenticated identity are all the configured login and that live
+`session_replication_role` remains `origin`; all failures remain one minimized
+unavailable dependency. Release smoke uses a genuine fresh login rather than
+owner role switching and never logs the credential.
+Maru rejects caller-supplied PostgreSQL `options` in `MARU_DATABASE_URL` and
+owns `search_path=public,pg_temp` for every connection. Restart every pool when
+promoting this boundary. Health verifies the effective trusted schema order,
+and compatibility-mode health rejects an already active or malformed cutover
+database so a later `false` replica cannot silently appear ready.
+
 Run `scripts/verify-production-settings.ps1` in release validation. It uses
-verification-only values and `check --deploy`; it does not certify SMTP,
+verification-only values and runs `check --deploy` once for each explicit
+pre-/post-cutover fence mode; it does not certify SMTP,
 provider, scanner, storage, or offline devices.
 
 ## Release artifact

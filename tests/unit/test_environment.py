@@ -6,10 +6,12 @@ from django.test import override_settings
 
 from maru.registration.payments import _validate_provider_url
 from maru.settings.environment import (
+    POSTGRES_CONNECTION_OPTIONS,
     boolean,
     csv_value,
     postgres_database,
     required,
+    required_boolean,
     validate_production,
 )
 
@@ -53,6 +55,28 @@ def test_boolean_rejects_ambiguous_value() -> None:
         boolean({"VALUE": "enabled"}, "VALUE", default=False)
 
 
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [("true", True), ("false", False)],
+)
+def test_required_boolean_requires_an_explicit_valid_value(
+    value: str,
+    expected: bool,
+) -> None:
+    assert required_boolean({"VALUE": value}, "VALUE") is expected
+
+
+def test_required_boolean_rejects_an_absent_value() -> None:
+    with pytest.raises(ImproperlyConfigured, match="VALUE is required"):
+        required_boolean({}, "VALUE")
+
+
+def test_test_settings_default_to_compatible_authority_provenance(
+    settings: object,
+) -> None:
+    assert settings.REQUIRE_EXACT_AUTHORITY_PROVENANCE is False  # type: ignore[attr-defined]
+
+
 def test_postgres_database_parses_and_decodes_url() -> None:
     database = postgres_database(
         "postgresql://maru:user%20secret@db.example:5433/maru_test?sslmode=require"
@@ -67,8 +91,20 @@ def test_postgres_database_parses_and_decodes_url() -> None:
         "PORT": "5433",
         "CONN_MAX_AGE": 60,
         "CONN_HEALTH_CHECKS": True,
-        "OPTIONS": {"sslmode": "require", "connect_timeout": "3"},
+        "OPTIONS": {
+            "sslmode": "require",
+            "connect_timeout": "3",
+            "options": POSTGRES_CONNECTION_OPTIONS,
+        },
     }
+
+
+def test_postgres_database_rejects_caller_controlled_libpq_options() -> None:
+    with pytest.raises(ImproperlyConfigured, match="owns the connection search path"):
+        postgres_database(
+            "postgresql://maru:secret@db.example:5432/maru"
+            "?options=-c%20search_path%3Devil%2Cpublic"
+        )
 
 
 @pytest.mark.parametrize(
@@ -90,7 +126,11 @@ def test_validate_production_accepts_safe_baseline() -> None:
         secret_key="s" * 50,
         allowed_hosts=["maru.example"],
         debug=False,
-        database={"ENGINE": "django.db.backends.postgresql"},
+        database={
+            "ENGINE": "django.db.backends.postgresql",
+            "OPTIONS": {"options": POSTGRES_CONNECTION_OPTIONS},
+        },
+        runtime_database_role="maru_runtime",
         public_base_url="https://maru.example",
         default_from_email="registration@maru.example",
         email_backend="django.core.mail.backends.smtp.EmailBackend",
@@ -118,7 +158,12 @@ def test_validate_production_reports_all_unsafe_values() -> None:
             secret_key="development-secret",
             allowed_hosts=["*"],
             debug=True,
-            database={"ENGINE": "django.db.backends.sqlite3"},
+            database={
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": "test_production",
+                "OPTIONS": {"options": "-c maru.authority_provenance_test_reset=on"},
+            },
+            runtime_database_role="\n",
             public_base_url="http://maru.invalid",
             default_from_email="no-reply@maru.invalid",
             email_backend="django.core.mail.backends.console.EmailBackend",
@@ -144,6 +189,10 @@ def test_validate_production_reports_all_unsafe_values() -> None:
     assert "wildcard" in message
     assert "DEBUG" in message
     assert "PostgreSQL" in message
+    assert "test_ prefix" in message
+    assert "fixed PostgreSQL search path" in message
+    assert "test-reset database option" in message
+    assert "MARU_RUNTIME_DATABASE_ROLE" in message
     assert "MARU_PUBLIC_BASE_URL" in message
     assert "MARU_DEFAULT_FROM_EMAIL" in message
     assert "production email" in message

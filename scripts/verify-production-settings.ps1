@@ -10,6 +10,7 @@ $env:MARU_SETTINGS_MODULE = "maru.settings.production"
 $env:MARU_SECRET_KEY = "verification-only-not-a-production-secret-at-least-50-characters"
 $env:MARU_ALLOWED_HOSTS = "maru.example.invalid"
 $env:MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:5432/maru"
+$env:MARU_RUNTIME_DATABASE_ROLE = "maru_runtime"
 $env:MARU_PUBLIC_BASE_URL = "https://maru.example.invalid"
 $env:MARU_DEFAULT_FROM_EMAIL = "registration@example.com"
 $env:MARU_EMAIL_HOST = "smtp.example.invalid"
@@ -33,13 +34,15 @@ $env:MARU_MEDIA_SCANNER_HOST = "scanner.internal"
 $env:MARU_OFFLINE_MANIFEST_SECRET = (
     "verification-only-offline-manifest-secret-value"
 )
-
-if (Test-Path -LiteralPath $localPython) {
-    & $localPython src/manage.py check --deploy
-}
-else {
-    & $uvCommand run python src/manage.py check --deploy
-}
-if ($LASTEXITCODE -ne 0) {
-    exit $LASTEXITCODE
+foreach ($exactProvenanceRequired in @("false", "true")) {
+    $env:MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE = $exactProvenanceRequired
+    if (Test-Path -LiteralPath $localPython) {
+        & $localPython src/manage.py check --deploy
+    }
+    else {
+        & $uvCommand run python src/manage.py check --deploy
+    }
+    if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+    }
 }

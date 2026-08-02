@@ -19,6 +19,7 @@ SHA256_VALIDATOR = RegexValidator(
 SAFE_METADATA_TYPES: dict[str, type[object] | tuple[type[object], ...]] = {
     "access_purpose": str,
     "client_kind": str,
+    "contract_version": str,
     "export_classification": str,
     "http_method": str,
     "policy_version": str,

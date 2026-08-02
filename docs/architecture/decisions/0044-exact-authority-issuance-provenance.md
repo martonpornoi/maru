@@ -164,6 +164,90 @@ authority identifiers. Production status becomes ready only when every
 effective or reachable authority path has valid lineage and the activation
 guards are installed.
 
+The final transition uses one pre-existing database generation latch and one
+immutable activation marker. Compatible authority writers take the shared side
+of the cutover lock and observe the latch; activation at `READ COMMITTED` takes
+the exclusive side, reads actor eligibility after the barrier, advances the
+latch, appends the marker and its exactly matching security audit, and proves
+the same count-only graph before commit. Marker and audit must have the same
+database timestamp and PostgreSQL transaction ID, while a partial unique index
+prevents a later duplicate activation audit. Higher transaction isolation is
+rejected rather than allowing an older MVCC snapshot to survive the barrier. A
+pre-opened repeatable-read writer instead serialization-fails when it observes
+the changed latch. The marker, latch, issuance ledger, controls, and activation
+audit reject mutation, deletion, truncation, and unsafe migration reversal at
+the database boundary. Application policy reads latch and marker afresh and
+fails closed if an advanced latch lacks the exact runtime contract.
+
+Activation refuses to start unless the external exact-required fence is
+already true, autocommit is enabled, no outer transaction exists, and the
+session uses `READ COMMITTED`. Its owned transaction pins `public` ahead of an
+explicit trailing `pg_temp`; only acquisition of the writer-drain advisory
+lock receives the bounded lock timeout. Every cutover SQL function pins
+`pg_catalog, public, pg_temp`, and every security-critical relation and
+internal function call is schema-qualified. Exact readiness fingerprints those
+definitions plus the pre-existing issuance/control immutability and audit
+append-only guards, and rejects trigger predicates or arguments that could
+silently weaken them.
+
+Production explicitly declares whether exact provenance is required by the
+deployed release. Before cutover that external fence may be false; the
+post-cutover release sets and retains it as true. When required, a dormant,
+missing, or malformed marker/latch denies organizer authority and makes public
+readiness unavailable. This prevents a partial database restore from silently
+re-entering compatibility policy while preserving platform oversight and
+code-owned self-service semantics.
+The exact cutover trigger and concurrency contract is rehearsed and supported
+on PostgreSQL major version 17. Required-exact public readiness checks only the
+server major and fails closed, without reporting its value, on another major
+until a superseding compatibility decision and evidence approve it.
+Production names one dedicated login role through
+`MARU_RUNTIME_DATABASE_ROLE`. Before activation, a parameterized PostgreSQL
+catalog probe proves that named future role is present and unprivileged even
+when the probe itself runs as the migration owner. The role and every reachable
+membership must be free of superuser, database/role creation, replication,
+row-level-security bypass, predefined `pg_*` membership, database ownership,
+and ownership of any schema, relation, or function in a non-system schema. It
+must also have no effective database `CREATE` or `TEMPORARY`, user-schema
+`CREATE`, or table `TRIGGER`, `TRUNCATE`, or `MAINTAIN` privilege. Ordinary
+runtime viability is proved positively: database `CONNECT`; `USAGE` on every
+non-system schema; `SELECT`/`INSERT`/`UPDATE`/`DELETE` on runtime relations
+(`SELECT` only for materialized views); and `USAGE`/`SELECT` on sequences. The
+probe also requires the versioned, schema-qualified 18-function v1 helper
+closure used by runtime policy and invoker-security trigger calls. `PUBLIC`
+must have no execute access to any non-system function, and the runtime role
+must have no function execution outside that exact allowlist.
+Activation/readiness reporting evaluates the future role, while public runtime
+readiness additionally proves that `CURRENT_USER` is the configured role.
+
+This boundary prevents a pooled application session from shadowing authority
+relations, modifying integrity triggers, or inheriting owner-equivalent escape
+paths. The public health fence reads the marker and latch only through
+`public`-qualified relations, checks the complete fingerprinted runtime
+contract, and reports every version, privilege, role, ownership, or contract
+mismatch as the same minimized unavailable dependency. It never reports a
+role, object, membership, or credential identifier.
+Migration `0007` revokes PostgreSQL's default `PUBLIC` execute only from the
+functions it introduces, preserving every pre-existing custom ACL across
+forward and reverse migration. The provisioning boundary revokes `PUBLIC`
+execute from the complete existing schema and grants the v1 closure explicitly;
+default privileges keep later migration-owned functions closed until a reviewed
+allowlist version adds them.
+Maru owns the connection-level `search_path=public,pg_temp` option for every
+process and rejects caller-supplied libpq `options`; PostgreSQL therefore keeps
+`pg_catalog` implicitly first and resolves durable application tables before
+temporary or per-user schemas. Required-exact health verifies that effective
+order. Compatibility-mode health also refuses an active or malformed durable
+cutover state, catching a later replica configured false after activation.
+
+The marker's `policy_version` is frozen historical evidence of the policy
+release used for this activation; it is not an alias for the mutable capability
+catalog version. Later capability additions may advance the catalog and new
+issuances may record that later version without invalidating the immutable
+marker. The provenance contract version remains the runtime selector. A change
+to lineage meaning therefore requires a superseding ADR and compatible
+migration, not an edit to the existing marker or its frozen policy value.
+
 Old writers are incompatible once provenance activation begins. After the
 first provenance write, recovery keeps compatible code and fixes forward or
 restores target records, issuance evidence, representation state, audit, and
@@ -171,6 +255,11 @@ outbox to one mutually consistent pre-write point. Reversing only the ledger or
 deleting evidence is forbidden. A failed issuance transaction leaves no orphan
 target or control; committed asynchronous effects are replayed from the outbox
 rather than reissuing authority.
+
+Every old reader as well as every writer is stopped for activation. Database
+guards can reject stale writes, but a reader built before this decision does
+not know that the marker selects exact lineage and can otherwise continue an
+unsafe legacy decision until restarted on compatible code.
 
 ## Consequences
 

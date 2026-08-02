@@ -8,6 +8,7 @@ from maru.settings.environment import (
     csv_value,
     postgres_database,
     required,
+    required_boolean,
     validate_production,
 )
 
@@ -16,6 +17,7 @@ SECRET_KEY = required(os.environ, "MARU_SECRET_KEY")
 ALLOWED_HOSTS = csv_value(os.environ, "MARU_ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = csv_value(os.environ, "MARU_CSRF_TRUSTED_ORIGINS")
 DATABASES = {"default": postgres_database(required(os.environ, "MARU_DATABASE_URL"))}
+RUNTIME_DATABASE_ROLE = required(os.environ, "MARU_RUNTIME_DATABASE_ROLE")
 MARU_PUBLIC_BASE_URL = required(os.environ, "MARU_PUBLIC_BASE_URL")
 DEFAULT_FROM_EMAIL = required(os.environ, "MARU_DEFAULT_FROM_EMAIL")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -68,6 +70,10 @@ ENFORCE_EDITION_CLOSURE_GATES = boolean(
     "MARU_ENFORCE_EDITION_CLOSURE_GATES",
     default=True,
 )
+REQUIRE_EXACT_AUTHORITY_PROVENANCE = required_boolean(
+    os.environ,
+    "MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE",
+)
 
 SECURE_SSL_REDIRECT = boolean(os.environ, "MARU_SECURE_SSL_REDIRECT", default=True)
 SESSION_COOKIE_SECURE = True
@@ -88,6 +94,7 @@ validate_production(
     allowed_hosts=ALLOWED_HOSTS,
     debug=DEBUG,
     database=DATABASES["default"],
+    runtime_database_role=RUNTIME_DATABASE_ROLE,
     public_base_url=MARU_PUBLIC_BASE_URL,
     default_from_email=DEFAULT_FROM_EMAIL,
     email_backend=EMAIL_BACKEND,

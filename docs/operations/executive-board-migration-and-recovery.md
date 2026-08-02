@@ -257,9 +257,12 @@ Subsequent current-tree evidence is deliberately separated by scope:
 - the final consolidated backend invocation passes 792 tests in 329.21
   seconds with 90.01 percent coverage and no warnings;
 - a separate behavior run passes the same 792 tests in 291.86 seconds;
-- fresh database `maru_consolidated_demo` applies all 106 current migrations,
+- before the runtime-function hardening convergence, fresh database
+  `maru_consolidated_demo` applied the then-current 106 migrations,
   contains 80 synthetic accounts, two organizations, and six editions, and
-  reports readiness 16/16 with zero blockers;
+  reported readiness 16/16 with zero blockers; this remains a prior baseline
+  until the demo is rebuilt at organizations `0013`, workforce `0005`, and
+  authorization `0009`;
 - a current restore drill into `maru_restore_drill_m21` passes and cleanup
   removes the drill database;
 - `pip-audit` and the production `pnpm audit` report no known vulnerabilities;

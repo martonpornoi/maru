@@ -45,18 +45,19 @@ initial schema, service, HTML, authorization, and synthetic-fixture lifecycle
 are backend-verified alongside the M1.1 shell. ADR 0041 implements exact
 department/typed-resource scope without implicit hierarchy inheritance through
 sealed targets, policy, commands, immutable bindings, and database guards.
-Its contextual access editor remains unmounted, and exact actor/approver
-authority-source provenance remains a production gate. ADR 0042 makes repository fixtures synthetic-
-only and removes the public-roster rehearsal implementation. ADR 0043 adds
+Its contextual access editor remains unmounted. ADR 0042 makes repository
+fixtures synthetic-only and removes the public-roster rehearsal implementation. ADR 0043 adds
 global platform emergency containment when a Board controller must be removed.
 ADR 0044 accepts exact actor/approver authority-source lineage, deterministic
 least-authority pinning, a non-cyclic initial Board ceremony, and staged legacy
 reconciliation. Its additive ledger, compatible writers, recursive validators,
-count-only readiness, provable-only Board/delegation backfill, and concurrent
-distinct-controller database boundary are locally verified through the current
-964-test repository gate. Explicit ordinary legacy recreation and the
-irreversible exact-lineage activation/completeness/fence stage remain the active
-production gate before the contextual department editor.
+count-only readiness, provable-only Board/delegation backfill, concurrent
+distinct-controller boundary, completeness guards, one-way marker, policy
+switch, runtime-role proof, and recovery behavior are implemented and locally
+verified with synthetic data. Production has not been cut over: explicit
+ordinary legacy recreation, representative candidate-cardinality load,
+deployment restore/PITR, and the real activation ceremony remain gates before
+production approval.
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
@@ -175,13 +176,14 @@ The later ADR 0041 implementation supersedes that backend baseline: all 876
 tests pass in 458.05 seconds with 90.43 percent branch coverage. The populated
 synthetic database applies the three-migration scope sequence with zero scope
 or representation blockers, and platform/Board browser smoke preserves exact
-foreign-organization denial. The exact-source schema/writer/backfill stage is
-locally verified; ordinary legacy reconciliation and the exact-lineage
-activation marker remain the next production gate before the contextual
-hierarchy editor.
+foreign-organization denial. ADR 0044's exact-source schema/writer/backfill and
+guarded activation stages are locally verified with synthetic data. Ordinary
+legacy reconciliation, representative unbounded candidate-cardinality load,
+deployment restore/PITR, and an actual production cutover remain open before
+production approval and the contextual hierarchy editor.
 Appointment expiry, routine replacement/removal,
-planned suspension/reactivation, invitation delivery, root authority-source
-provenance, the contextual department/resource assignment editor, and the full
+planned suspension/reactivation, invitation delivery, the contextual
+department/resource assignment editor, and the full
 effective-access header remain later M2 work.
 
 The committed M1 spine is locally verified across the complete suite, migration rehearsal,

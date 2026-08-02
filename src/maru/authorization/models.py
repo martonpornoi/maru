@@ -14,6 +14,11 @@ from maru.core.models import UUIDTimeStampedModel
 from maru.identity.policies import validate_convention_subject
 
 ROLE_CODE_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
+AUTHORITY_PROVENANCE_CONTRACT_VERSION = "adr-0044-v1"
+AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION = "2026-08-01.3"
+AUTHORITY_PROVENANCE_ACTIVATION_LOCK_KEY = 4_400_440_007
+AUTHORITY_PROVENANCE_INACTIVE_GENERATION = 0
+AUTHORITY_PROVENANCE_ACTIVE_GENERATION = 1
 
 
 class AuthorizationScopeWriteFence(models.Model):
@@ -32,6 +37,144 @@ class AuthorizationScopeWriteFence(models.Model):
 
     def __str__(self) -> str:
         return "Authorization scope-v2 writes exist"
+
+
+class AuthorityProvenanceActivation(models.Model):
+    """Immutable singleton evidence for the ADR 0044 provenance cutover."""
+
+    singleton = models.BooleanField(
+        primary_key=True,
+        default=True,
+        editable=False,
+    )
+    contract_version = models.CharField(max_length=40, editable=False)
+    policy_version = models.CharField(max_length=40, editable=False)
+    activated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="authority_provenance_activations",
+        editable=False,
+    )
+    reason = models.CharField(max_length=240, editable=False)
+    correlation_id = models.UUIDField(unique=True, editable=False)
+    activated_at = models.DateTimeField(auto_now_add=True, editable=False)
+
+    class Meta:
+        default_permissions = ()
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(singleton=True),
+                name="authorization_provenance_activation_singleton_true",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(contract_version=""),
+                name="authorization_provenance_activation_contract_required",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(policy_version=""),
+                name="authorization_provenance_activation_policy_required",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(reason=""),
+                name="authorization_provenance_activation_reason_required",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Authority provenance active under {self.contract_version}"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Authority provenance activation is immutable.",
+                code="immutable_authority_provenance_activation",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        del args, kwargs
+        raise ValidationError(
+            "Authority provenance activation cannot be deleted.",
+            code="immutable_authority_provenance_activation",
+        )
+
+    def clean(self) -> None:
+        super().clean()
+        if self.singleton is not True:
+            raise ValidationError(
+                {"singleton": "Authority provenance activation is a singleton."}
+            )
+        if self.contract_version != AUTHORITY_PROVENANCE_CONTRACT_VERSION:
+            raise ValidationError(
+                {"contract_version": "Use the current provenance contract version."}
+            )
+        if self.policy_version != AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION:
+            raise ValidationError(
+                {"policy_version": "Use the current authorization policy version."}
+            )
+        if not self.reason.strip():
+            raise ValidationError({"reason": "An activation reason is required."})
+        if self.activated_by_id:
+            try:
+                activated_by = self.activated_by
+            except ObjectDoesNotExist as error:
+                raise ValidationError(
+                    {"activated_by": "The activation administrator does not exist."}
+                ) from error
+            if not activated_by.is_active or not activated_by.is_platform_administrator:
+                raise ValidationError(
+                    {
+                        "activated_by": (
+                            "Activation requires an active platform administrator."
+                        )
+                    }
+                )
+
+
+class AuthorityProvenanceActivationLatch(models.Model):
+    """Internal pre-existing row used to fence old repeatable-read writers."""
+
+    singleton = models.BooleanField(
+        primary_key=True,
+        default=True,
+        editable=False,
+    )
+    generation = models.PositiveSmallIntegerField(
+        default=AUTHORITY_PROVENANCE_INACTIVE_GENERATION,
+        editable=False,
+    )
+
+    class Meta:
+        db_table = "authorization_provenanceactivationlatch"
+        default_permissions = ()
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(singleton=True),
+                name="authorization_provenance_latch_singleton_true",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(generation__in=(0, 1)),
+                name="authorization_provenance_latch_generation_known",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Authority provenance activation generation {self.generation}"
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        del args, kwargs
+        raise ValidationError(
+            "The authority provenance activation latch is database-managed.",
+            code="immutable_authority_provenance_activation_latch",
+        )
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        del args, kwargs
+        raise ValidationError(
+            "The authority provenance activation latch cannot be deleted.",
+            code="immutable_authority_provenance_activation_latch",
+        )
 
 
 def validate_capability_code(value: str) -> None:

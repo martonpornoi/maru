@@ -1,7 +1,8 @@
 # Maru production consolidation
 
-Status: Active master checklist; M2.2 exact scope locally verified, M2.3 exact
-authority-provenance hardening next
+Status: Active master checklist; M2.3 exact authority-provenance activation
+locally verified, with production reconciliation, load, cutover, and recovery
+evidence next
 Branch: `codex/full-platform-consolidation`
 Base: `327a7d63574d0118356a0fd11ca5a316d78b2aed`  
 Started: 2026-08-01  
@@ -71,7 +72,7 @@ The state vocabulary is deliberately small:
 - **Deployment-gated** — code exists but external service or operating evidence
   blocks a production claim.
 
-| Capability | State on 2026-08-01 | Evidence / next dependency |
+| Capability | State on 2026-08-02 | Evidence / next dependency |
 | --- | --- | --- |
 | Organization and series Pages 1–5 | Mounted | Implemented under `/admin/platform/`; platform and scoped Board backend matrices pass. Browser/owner evidence remains. |
 | Convention-series record | Mounted | Page 5 domain/API behavior and canonical shell route pass backend checks. Browser/owner evidence remains. |
@@ -80,7 +81,7 @@ The state vocabulary is deliberately small:
 | Unified administration shell | Mounted | `maru.urls`, reserved route ordering, one sidebar, Convention work, scoped non-staff access, staff-only specialist records, desktop/390-pixel smoke, and the final 792-test/90.01-percent local backend gate pass without warnings. The custom sidebar preserves Django's single `#nav-filter` contract when Specialist records are unavailable; the focused routing regression and live Board reload pass. Accessibility/state-matrix/owner gates remain. |
 | Organization representation | Mounted / partial | Page 8 implements provision, exact verified-account invitation, own response, two-person cross-approval, atomic Draft-to-Active activation, and platform emergency containment. Database guards through organizations `0012`, sensitive read/deny audit, the 106-migration fresh synthetic database/current restore drill, focused readiness/representation matrices, and the final local backend gate pass. Representative PITR, accessibility, owner evidence, and routine term management remain. |
 | Department hierarchy | Partial | Workforce model/projection and preserved structure view exist; no accepted mounted editor or M2 scope exists. |
-| Department/resource authorization | Implemented backend / unmounted editor | ADR 0041 exact department and typed-resource policy, commands, bindings, migrations, and database guards are implemented without implicit hierarchy inheritance. ADR 0044's additive exact-source ledger/writers/readiness/provable backfill are locally verified; production remains blocked on ordinary legacy reconciliation and irreversible exact-lineage activation. The contextual editor/effective-access UX remains unmounted. |
+| Department/resource authorization | Implemented backend / unmounted editor | ADR 0041 exact department and typed-resource policy, commands, bindings, migrations, and database guards are implemented without implicit hierarchy inheritance. ADR 0044's ledger, writers, readiness, provable backfill, completeness guards, one-way marker, exact policy switch, runtime-role proof, and synthetic activation/recovery are locally verified. No ordinary production legacy reconciliation, real cutover, representative restore/PITR drill, or unbounded candidate-cardinality load gate has completed. The contextual editor/effective-access UX remains unmounted. |
 | Effective-access explanation | Partial | Pages 3–8 distinguish platform, scoped Board, exact-edition, and own-invitation access. Exact department/resource decisions now work below the UI; computed human explanations and field-purpose detail remain M2. |
 | Attendee registration | Partial | Large tested domain, headless API, and preserved HTML become reachable through the intended URL set, but coherent-shell review and deployment gates remain. |
 | Registration extension fields | Partial | Append-only, permission-aware API/workflow exists; ADR 0039 integration and current browser evidence remain. |
@@ -555,11 +556,12 @@ not production approval.
 - [x] Rehearse the representation preflight, a fresh empty migration, and a
   populated local restore through organizations `0009`; retain bounded counts
   and remove the isolated drill database afterward.
-- [x] Repeat the current-leaf operational rehearsal: fresh
-  `maru_consolidated_demo` applies 106 migrations and contains 80 synthetic
+- [x] Repeat the then-current pre-runtime-hardening operational rehearsal:
+  fresh `maru_consolidated_demo` applied 106 migrations and contained 80 synthetic
   accounts, two organizations, and six editions; readiness is 16/16 with zero
-  blockers. Restore into `maru_restore_drill_m21` passes and cleanup removes
-  the drill database.
+  blockers. Restore into `maru_restore_drill_m21` passed and cleanup removed
+  the drill database. Rebuild current-graph demo/recovery evidence after the
+  organizations `0013`/workforce `0005`/authorization `0009` convergence.
 - [x] Accept ADR 0042 and delete the public-roster rehearsal implementation;
   keep only a compatibility command that fails before validation, file/network
   access, or database mutation.
@@ -591,7 +593,7 @@ not production approval.
   coverage, the 57-test ordered migration matrix, static/deploy/OpenAPI/client/
   frontend/documentation gates, populated synthetic migration/readiness, and
   scoped live browser smoke.
-- [ ] Record and enforce exact actor/approver authority-source provenance for
+- [x] Record and enforce exact actor/approver authority-source provenance for
   root grant and role issuance.
   - [x] Accept ADR 0044's typed append-only issuance ledger, deterministic
     source selection, non-cyclic Board ceremony, no-rebinding semantics, staged
@@ -604,8 +606,17 @@ not production approval.
     static/deploy/OpenAPI/frontend checks, and current dependency audits.
   - [ ] Revoke/recreate effective ordinary legacy authority without inference,
     replacing referenced unproven role definitions.
-  - [ ] Activate dynamic lineage policy, database completeness guards,
-    downgrade fence, readiness, recovery, and complete verification.
+  - [x] Implement the dynamic lineage policy, database completeness guards,
+    one-way marker/evidence, downgrade fence, runtime-role readiness, guarded
+    activation, and local synthetic failure/recovery verification.
+  - [x] Hold target resolution to five fixed tenant-chain queries and exact
+    issuance validation to database-call chunks of 256 checks.
+  - [ ] Prove acceptable latency and memory for representative unbounded
+    authority-candidate cardinality; the 256-item issuance chunks do not bound
+    candidate-set construction or total work.
+  - [ ] Rehearse representative deployment backup/PITR and fix-forward, then
+    perform the stopped-writer production activation only after ordinary legacy
+    reconciliation and named operator approval.
 - [ ] Effective-access query/header and audited contextual assignment editor.
 - [ ] Cross-domain, access-aware human activity workspace resolving safe actor
   and target labels. Pages 5/7 already provide bounded aggregate record
@@ -724,10 +735,12 @@ count.
    Page 8 for representation work.
 4. Run `git status --short --branch`; do not discard unrelated changes.
 5. Confirm the latest local checkpoint/commit and test result in `CURRENT.md`.
-6. ADR 0041 scope v2 and ADR 0044's additive provenance/backfill verification
-   are recorded; resume with ordinary legacy reconciliation and the exact-
-   lineage activation/policy/completeness fence, then the synthetic department
-   template/editor and computed access explanation.
+6. ADR 0041 scope v2 and ADR 0044's guarded exact-lineage activation are
+   implemented and locally verified with synthetic data. Resume with ordinary
+   legacy reconciliation on a representative restore, the unbounded candidate-
+   cardinality load gate, and stopped-writer cutover/PITR rehearsal; only then
+   consider a real production activation. Continue afterward with the synthetic
+   department template/editor and computed access explanation.
    Keep representative deployment/PITR, accessibility, complete visual states,
    and owner evidence open. Update this checklist before switching domains.
 

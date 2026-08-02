@@ -1,7 +1,50 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from django.db.utils import OperationalError
+from django.test import override_settings
 from rest_framework.test import APIClient
+
+from maru.authorization.database_role_safety import RuntimeDatabaseRoleSafety
+from maru.authorization.models import (
+    AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
+    AUTHORITY_PROVENANCE_ACTIVE_GENERATION,
+    AUTHORITY_PROVENANCE_CONTRACT_VERSION,
+)
+from maru.core import views
+
+
+def _runtime_role_safety(
+    **overrides: bool,
+) -> RuntimeDatabaseRoleSafety:
+    values = {
+        "role_exists": True,
+        "can_login": True,
+        "attributes_safe": True,
+        "memberships_safe": True,
+        "database_ownership_safe": True,
+        "user_schema_ownership_safe": True,
+        "user_relation_ownership_safe": True,
+        "user_function_ownership_safe": True,
+        "database_privileges_safe": True,
+        "user_schema_privileges_safe": True,
+        "table_privileges_safe": True,
+        "parameter_privileges_safe": True,
+        "role_settings_safe": True,
+        "session_replication_role_is_origin": True,
+        "database_connect_available": True,
+        "user_schema_usage_available": True,
+        "required_relation_privileges_available": True,
+        "sequence_privileges_safe": True,
+        "required_sequence_privileges_available": True,
+        "grant_options_safe": True,
+        "function_execute_boundary_safe": True,
+        "required_function_execute_available": True,
+        "current_user_matches": True,
+        "session_user_matches": True,
+        "authenticated_user_matches": True,
+    }
+    values.update(overrides)
+    return RuntimeDatabaseRoleSafety(**values)
 
 
 def test_platform_home_is_a_browser_friendly_start_page() -> None:
@@ -44,6 +87,7 @@ def test_build_info_contains_only_release_identity(settings: object) -> None:
 
 @patch("maru.core.views.connection.cursor")
 def test_readiness_checks_database(cursor: MagicMock) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.return_value = (False, False)
     response = APIClient().get("/health/ready")
 
     assert response.status_code == 200
@@ -52,8 +96,9 @@ def test_readiness_checks_database(cursor: MagicMock) -> None:
         "dependencies": {"database": "ok"},
     }
     cursor.return_value.__enter__.return_value.execute.assert_called_once_with(
-        "SELECT 1"
+        views._AUTHORITY_PROVENANCE_TABLE_HEALTH_QUERY
     )
+    assert cursor.call_count == 1
 
 
 @patch(
@@ -67,4 +112,308 @@ def test_readiness_returns_safe_failure(cursor: MagicMock) -> None:
     assert response.json() == {
         "status": "unavailable",
         "dependencies": {"database": "unavailable"},
+    }
+
+
+@override_settings(REQUIRE_EXACT_AUTHORITY_PROVENANCE=True)
+@patch("maru.core.views.connection.cursor")
+def test_readiness_requires_active_exact_authority_provenance(
+    cursor: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (17, False, True, True, False),
+    ]
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "unavailable",
+        },
+    }
+    assert cursor.call_count == 2
+
+
+@override_settings(
+    REQUIRE_EXACT_AUTHORITY_PROVENANCE=True,
+    RUNTIME_DATABASE_ROLE="maru_runtime",
+)
+@patch(
+    "maru.core.views.authority_provenance_runtime_contract_is_ready",
+    return_value=True,
+)
+@patch("maru.core.views.probe_runtime_database_role_safety")
+@patch("maru.core.views.connection.cursor")
+def test_readiness_accepts_active_exact_authority_provenance(
+    cursor: MagicMock,
+    role_probe: MagicMock,
+    runtime_contract: MagicMock,
+) -> None:
+    role_probe.return_value = _runtime_role_safety()
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (17, False, True, True, True),
+    ]
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "ok",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "ok",
+        },
+    }
+    cursor.return_value.__enter__.return_value.execute.assert_has_calls(
+        [
+            call(views._AUTHORITY_PROVENANCE_TABLE_HEALTH_QUERY),
+            call(
+                views._EXACT_AUTHORITY_PROVENANCE_HEALTH_QUERY,
+                (
+                    AUTHORITY_PROVENANCE_ACTIVE_GENERATION,
+                    AUTHORITY_PROVENANCE_CONTRACT_VERSION,
+                    AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
+                ),
+            ),
+        ]
+    )
+    role_probe.assert_called_once_with(role_name="maru_runtime")
+    runtime_contract.assert_called_once_with()
+
+
+@override_settings(
+    REQUIRE_EXACT_AUTHORITY_PROVENANCE=True,
+    RUNTIME_DATABASE_ROLE="maru_runtime",
+)
+@patch(
+    "maru.core.views.authority_provenance_runtime_contract_is_ready",
+    return_value=True,
+)
+@patch("maru.core.views.probe_runtime_database_role_safety")
+@patch("maru.core.views.connection.cursor")
+def test_readiness_rejects_a_different_or_unsafe_runtime_database_role(
+    cursor: MagicMock,
+    role_probe: MagicMock,
+    runtime_contract: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (17, False, True, True, True),
+    ]
+    role_probe.return_value = _runtime_role_safety(current_user_matches=False)
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "unavailable",
+        },
+    }
+    runtime_contract.assert_called_once_with()
+
+
+@override_settings(
+    REQUIRE_EXACT_AUTHORITY_PROVENANCE=True,
+    RUNTIME_DATABASE_ROLE="maru_runtime",
+)
+@patch(
+    "maru.core.views.authority_provenance_runtime_contract_is_ready",
+    return_value=True,
+)
+@patch(
+    "maru.core.views.probe_runtime_database_role_safety",
+    side_effect=OperationalError("private role or ownership detail"),
+)
+@patch("maru.core.views.connection.cursor")
+def test_readiness_minimizes_runtime_database_role_probe_errors(
+    cursor: MagicMock,
+    role_probe: MagicMock,
+    runtime_contract: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (17, False, True, True, True),
+    ]
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "unavailable",
+        },
+    }
+    role_probe.assert_called_once_with(role_name="maru_runtime")
+    runtime_contract.assert_called_once_with()
+
+
+@override_settings(
+    REQUIRE_EXACT_AUTHORITY_PROVENANCE=True,
+    RUNTIME_DATABASE_ROLE="maru_runtime",
+)
+@patch(
+    "maru.core.views.authority_provenance_runtime_contract_is_ready",
+    return_value=False,
+)
+@patch("maru.core.views.probe_runtime_database_role_safety")
+@patch("maru.core.views.connection.cursor")
+def test_readiness_requires_the_full_fingerprinted_runtime_contract(
+    cursor: MagicMock,
+    role_probe: MagicMock,
+    runtime_contract: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (17, False, True, True, True),
+    ]
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "unavailable",
+        },
+    }
+    runtime_contract.assert_called_once_with()
+    role_probe.assert_not_called()
+
+
+@override_settings(REQUIRE_EXACT_AUTHORITY_PROVENANCE=True)
+@patch("maru.core.views.connection.cursor")
+def test_readiness_minimizes_exact_authority_provenance_database_errors(
+    cursor: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.return_value = (True, True)
+    cursor.return_value.__enter__.return_value.execute.side_effect = [
+        None,
+        OperationalError("private marker detail"),
+    ]
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "unavailable",
+        },
+    }
+
+
+@patch("maru.core.views.connection.cursor")
+def test_readiness_accepts_an_explicitly_dormant_compatibility_contract(
+    cursor: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (True, True),
+    ]
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 200
+    cursor.return_value.__enter__.return_value.execute.assert_has_calls(
+        [
+            call(views._AUTHORITY_PROVENANCE_TABLE_HEALTH_QUERY),
+            call(
+                views._DORMANT_AUTHORITY_PROVENANCE_HEALTH_QUERY,
+                (0,),
+            ),
+        ]
+    )
+
+
+@patch("maru.core.views.connection.cursor")
+def test_readiness_rejects_false_configuration_after_activation(
+    cursor: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (False, False),
+    ]
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "unavailable",
+        },
+    }
+
+
+@override_settings(REQUIRE_EXACT_AUTHORITY_PROVENANCE=True)
+@patch("maru.core.views.connection.cursor")
+def test_readiness_rejects_an_unsupported_postgresql_major(
+    cursor: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (18, False, True, True, True),
+    ]
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "unavailable",
+        },
+    }
+
+
+@override_settings(REQUIRE_EXACT_AUTHORITY_PROVENANCE=True)
+@patch("maru.core.views.connection.cursor")
+def test_readiness_rejects_runtime_database_temporary_privilege(
+    cursor: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (17, True, True, True, True),
+    ]
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "unavailable",
+        },
+    }
+
+
+@override_settings(REQUIRE_EXACT_AUTHORITY_PROVENANCE=True)
+@patch("maru.core.views.connection.cursor")
+def test_readiness_rejects_an_unsafe_effective_database_schema_order(
+    cursor: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.side_effect = [
+        (True, True),
+        (17, False, False, True, True),
+    ]
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "authority_provenance": "unavailable",
+        },
     }

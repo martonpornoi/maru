@@ -10,6 +10,8 @@ TRUE_VALUES: Final = frozenset({"1", "true", "yes", "on"})
 FALSE_VALUES: Final = frozenset({"0", "false", "no", "off"})
 MINIMUM_PRODUCTION_SECRET_LENGTH: Final = 50
 MINIMUM_OFFLINE_SECRET_LENGTH: Final = 32
+POSTGRES_CONNECTION_OPTIONS: Final = "-c search_path=public,pg_temp"
+POSTGRES_IDENTIFIER_MAX_BYTES: Final = 63
 
 
 def required(environment: Mapping[str, str], name: str) -> str:
@@ -44,6 +46,13 @@ def boolean(
     )
 
 
+def required_boolean(environment: Mapping[str, str], name: str) -> bool:
+    """Parse one explicitly declared boolean environment value."""
+
+    required(environment, name)
+    return boolean(environment, name, default=False)
+
+
 def postgres_database(url: str) -> dict[str, object]:
     parsed = urlsplit(url)
     if parsed.scheme not in {"postgres", "postgresql"}:
@@ -56,7 +65,13 @@ def postgres_database(url: str) -> dict[str, object]:
         raise ImproperlyConfigured("MARU_DATABASE_URL must include one database name")
 
     options = dict(parse_qsl(parsed.query, keep_blank_values=False))
+    if "options" in options:
+        raise ImproperlyConfigured(
+            "MARU_DATABASE_URL cannot set PostgreSQL options; Maru owns the "
+            "connection search path"
+        )
     options.setdefault("connect_timeout", "3")
+    options["options"] = POSTGRES_CONNECTION_OPTIONS
     return {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": unquote(database_name),
@@ -76,6 +91,7 @@ def validate_production(  # noqa: PLR0912
     allowed_hosts: list[str],
     debug: bool,
     database: Mapping[str, object],
+    runtime_database_role: str,
     public_base_url: str,
     default_from_email: str,
     email_backend: str,
@@ -110,6 +126,33 @@ def validate_production(  # noqa: PLR0912
         errors.append("DEBUG cannot be enabled in production")
     if database.get("ENGINE") != "django.db.backends.postgresql":
         errors.append("production requires PostgreSQL")
+    database_name = str(database.get("NAME", "")).strip()
+    if database_name.casefold().startswith("test_"):
+        errors.append("production database names cannot use the test_ prefix")
+    database_options = database.get("OPTIONS")
+    if not isinstance(database_options, Mapping) or (
+        str(database_options.get("options", "")).strip() != POSTGRES_CONNECTION_OPTIONS
+    ):
+        errors.append("production requires Maru's fixed PostgreSQL search path")
+    if isinstance(database_options, Mapping) and (
+        "maru.authority_provenance_test_reset"
+        in str(database_options.get("options", "")).casefold()
+    ):
+        errors.append(
+            "the authority provenance test-reset database option is forbidden "
+            "in production"
+        )
+    runtime_role_bytes = runtime_database_role.encode("utf-8")
+    if (
+        not runtime_database_role
+        or runtime_database_role != runtime_database_role.strip()
+        or len(runtime_role_bytes) > POSTGRES_IDENTIFIER_MAX_BYTES
+        or not runtime_database_role.isprintable()
+    ):
+        errors.append(
+            "MARU_RUNTIME_DATABASE_ROLE must name one explicit printable "
+            "PostgreSQL role of at most 63 UTF-8 bytes"
+        )
     if urlsplit(public_base_url).scheme != "https":
         errors.append("MARU_PUBLIC_BASE_URL must use HTTPS in production")
     if "@" not in default_from_email or default_from_email.casefold().endswith(

@@ -35,6 +35,9 @@ MANAGE_REPRESENTATION = "organizations.manage_representation"
 MINIMUM_EXECUTIVE_BOARD_CONTROLLERS = 2
 MAX_REPRESENTATION_REASON_LENGTH = 240
 EXECUTIVE_BOARD_ROLE_CODE = "executive-board"
+EXECUTIVE_BOARD_ROLE_NAME = OrganizationRepresentation.EXECUTIVE_BOARD_NAME
+EXECUTIVE_BOARD_ROLE_VERSION = 1
+EXECUTIVE_BOARD_MEMBERSHIP_LABEL = "Executive Board controller"
 REPRESENTATION_SUBJECT_LOCK_NAMESPACE = 0x13A2_91D7_0000_0000
 OPEN_REPRESENTATION_APPOINTMENT_STATES = (
     RepresentationAppointment.State.INVITED,
@@ -608,8 +611,8 @@ def _executive_board_bundle(
     return RoleBundle.objects.create(
         organization_id=representation.organization_id,
         code=EXECUTIVE_BOARD_ROLE_CODE,
-        name="Executive Board",
-        version=1,
+        name=EXECUTIVE_BOARD_ROLE_NAME,
+        version=EXECUTIVE_BOARD_ROLE_VERSION,
         capability_codes=list(EXECUTIVE_BOARD_CAPABILITIES),
         created_by=actor,
         approved_by=controllers[0].account,
@@ -807,7 +810,7 @@ def activate_executive_board(
         )
         membership = memberships[appointment.account_id]
         membership.state = OrganizationMembership.State.ACTIVE
-        membership.relationship_label = "Executive Board controller"
+        membership.relationship_label = EXECUTIVE_BOARD_MEMBERSHIP_LABEL
         membership.started_at = membership.started_at or activated_at
         membership.ended_at = None
         membership.save(

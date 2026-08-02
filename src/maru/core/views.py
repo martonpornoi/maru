@@ -10,12 +10,10 @@ from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection
-from django.db.models import Q
 from django.db.utils import DatabaseError
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
-from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -25,17 +23,31 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from maru.activity.queries import record_activity
-from maru.authorization.models import CapabilityGrant, RoleAssignment
+from maru.authorization.database_role_safety import (
+    RuntimeDatabaseRoleProbeError,
+    probe_runtime_database_role_safety,
+)
+from maru.authorization.models import (
+    AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
+    AUTHORITY_PROVENANCE_ACTIVE_GENERATION,
+    AUTHORITY_PROVENANCE_CONTRACT_VERSION,
+    AUTHORITY_PROVENANCE_INACTIVE_GENERATION,
+)
 from maru.authorization.policy import (
     decide,
     resolve_edition_target,
     resolve_organization_target,
+)
+from maru.authorization.provenance_readiness import (
+    authority_provenance_runtime_contract_is_ready,
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.core.forms import StrictInputForm
 from maru.events.admin_context import (
     ADMIN_EDITION_SESSION_KEY,
     admin_shell_access,
+    authorized_admin_edition_ids,
+    authorized_admin_organization_ids,
     has_active_admin_scope,
     selected_admin_edition,
 )
@@ -64,6 +76,56 @@ from maru.organizations.services import (
 )
 
 logger = logging.getLogger(__name__)
+
+_EXACT_AUTHORITY_PROVENANCE_POSTGRESQL_MAJOR = 17
+_AUTHORITY_PROVENANCE_TABLE_HEALTH_QUERY = """
+SELECT
+    pg_catalog.to_regclass(
+        'public.authorization_authorityprovenanceactivation'
+    ) IS NOT NULL,
+    pg_catalog.to_regclass(
+        'public.authorization_provenanceactivationlatch'
+    ) IS NOT NULL
+"""
+_DORMANT_AUTHORITY_PROVENANCE_HEALTH_QUERY = """
+SELECT
+    NOT EXISTS (
+        SELECT 1
+        FROM public.authorization_authorityprovenanceactivation
+    ),
+    (
+        SELECT COUNT(*) = 1
+           AND COUNT(*) FILTER (
+               WHERE latch.singleton IS TRUE
+                 AND latch.generation = %s
+           ) = 1
+        FROM public.authorization_provenanceactivationlatch AS latch
+    )
+"""
+_EXACT_AUTHORITY_PROVENANCE_HEALTH_QUERY = """
+SELECT
+    pg_catalog.current_setting('server_version_num')::integer / 10000,
+    pg_catalog.has_database_privilege(
+        CURRENT_USER,
+        pg_catalog.current_database(),
+        'TEMPORARY'
+    ),
+    (pg_catalog.current_schemas(TRUE))[1:2]
+        = ARRAY['pg_catalog', 'public']::name[],
+    EXISTS (
+        SELECT 1
+        FROM public.authorization_provenanceactivationlatch AS latch
+        WHERE latch.singleton IS TRUE
+          AND latch.generation = %s
+    ),
+    EXISTS (
+        SELECT 1
+        FROM public.authorization_authorityprovenanceactivation AS activation
+        WHERE activation.singleton IS TRUE
+          AND activation.contract_version = %s
+          AND activation.policy_version = %s
+    )
+"""
 
 _BASELINE_PAGE_PRESENTATION = {
     "core/baseline_admin_home.html": ("platform-administration-home", ""),
@@ -110,20 +172,15 @@ def _active_account(request: HttpRequest) -> Account:
     return request.user
 
 
-def _require_possible_organization_authority(actor: Account) -> None:
+def _require_possible_organization_authority(
+    request: HttpRequest,
+    actor: Account,
+) -> None:
     """Fail before tenant lookup when an account has no active scoped authority."""
 
     if actor.is_platform_administrator:
         return
-    evaluated_at = timezone.now()
-    active_at = (
-        Q(effective_from__lte=evaluated_at)
-        & (Q(expires_at__isnull=True) | Q(expires_at__gt=evaluated_at))
-        & Q(revoked_at__isnull=True)
-    )
-    if CapabilityGrant.objects.filter(active_at, principal=actor).exists():
-        return
-    if RoleAssignment.objects.filter(active_at, principal=actor).exists():
+    if has_active_admin_scope(request):
         return
     raise PermissionDenied
 
@@ -324,6 +381,7 @@ def _organization_for_record(slug: str) -> Organization:
 
 def _organization_for_authorized_route(
     *,
+    request: HttpRequest,
     actor: Account,
     slug: str,
     capability_code: str,
@@ -332,23 +390,10 @@ def _organization_for_authorized_route(
 
     if actor.is_platform_administrator:
         return _organization_for_record(slug)
-    evaluated_at = timezone.now()
-    active_at = (
-        Q(effective_from__lte=evaluated_at)
-        & (Q(expires_at__isnull=True) | Q(expires_at__gt=evaluated_at))
-        & Q(revoked_at__isnull=True)
+    candidate_ids = authorized_admin_organization_ids(
+        request,
+        capability_codes=frozenset({capability_code}),
     )
-    grant_organization_ids = CapabilityGrant.objects.filter(
-        active_at,
-        principal=actor,
-        capability_code=capability_code,
-    ).values_list("organization_id", flat=True)
-    role_organization_ids = RoleAssignment.objects.filter(
-        active_at,
-        principal=actor,
-        role_bundle__capability_codes__contains=[capability_code],
-    ).values_list("organization_id", flat=True)
-    candidate_ids = set(grant_organization_ids).union(role_organization_ids)
     organization = (
         Organization.objects.filter(
             id__in=candidate_ids,
@@ -360,6 +405,36 @@ def _organization_for_authorized_route(
     if organization is None:
         raise PermissionDenied
     return organization
+
+
+def _edition_chain_for_authorized_route(
+    *,
+    request: HttpRequest,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    capability_code: str,
+) -> tuple[Organization, ConventionSeries, EventEdition]:
+    """Resolve a complete edition chain only inside its name-free authority set."""
+
+    editions = EventEdition.objects.select_related("organization", "series").filter(
+        organization__slug__iexact=organization_slug,
+        series__slug__iexact=series_slug,
+        slug__iexact=edition_slug,
+    )
+    if not actor.is_platform_administrator:
+        candidate_ids = authorized_admin_edition_ids(
+            request,
+            capability_codes=frozenset({capability_code}),
+        )
+        editions = editions.filter(id__in=candidate_ids)
+    edition = editions.order_by("id").first()
+    if edition is None:
+        if actor.is_platform_administrator:
+            raise Http404
+        raise PermissionDenied
+    return edition.organization, edition.series, edition
 
 
 def _add_validation_errors(
@@ -436,9 +511,10 @@ def baseline_organization_record(
     """Render and update one organization profile without changing its identity."""
 
     actor = _active_account(request)
-    _require_possible_organization_authority(actor)
+    _require_possible_organization_authority(request, actor)
     try:
         organization = _organization_for_authorized_route(
+            request=request,
             actor=actor,
             slug=organization_slug,
             capability_code="organizations.view_basic",
@@ -605,9 +681,10 @@ def baseline_create_convention_series(
     """Create one recurring convention identity beneath an organization."""
 
     actor = _active_account(request)
-    _require_possible_organization_authority(actor)
+    _require_possible_organization_authority(request, actor)
     try:
         organization = _organization_for_authorized_route(
+            request=request,
             actor=actor,
             slug=organization_slug,
             capability_code="organizations.create_series",
@@ -691,9 +768,10 @@ def baseline_convention_series_record(
     """Render and update one scoped recurring convention brand."""
 
     actor = _active_account(request)
-    _require_possible_organization_authority(actor)
+    _require_possible_organization_authority(request, actor)
     try:
         organization = _organization_for_authorized_route(
+            request=request,
             actor=actor,
             slug=organization_slug,
             capability_code="organizations.view_basic",
@@ -815,9 +893,10 @@ def baseline_create_event_edition(
     """Create one Draft edition beneath an exact organization-owned series."""
 
     actor = _active_account(request)
-    _require_possible_organization_authority(actor)
+    _require_possible_organization_authority(request, actor)
     try:
         organization = _organization_for_authorized_route(
+            request=request,
             actor=actor,
             slug=organization_slug,
             capability_code="events.create",
@@ -932,18 +1011,15 @@ def baseline_event_edition_record(
     """Render and update one exact edition record and its human activity."""
 
     actor = _active_account(request)
-    _require_possible_organization_authority(actor)
+    _require_possible_organization_authority(request, actor)
     try:
-        organization = _organization_for_authorized_route(
+        organization, series, edition = _edition_chain_for_authorized_route(
+            request=request,
             actor=actor,
-            slug=organization_slug,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
             capability_code="events.view_basic",
-        )
-        series = _series_for_record(organization, series_slug)
-        edition = _edition_for_record(
-            organization=organization,
-            series=series,
-            slug=edition_slug,
         )
         _require_capability(
             actor=actor,
@@ -1107,7 +1183,7 @@ def baseline_select_event_edition(
     """Persist one already authorized exact route chain as display context."""
 
     actor = _active_account(request)
-    _require_possible_organization_authority(actor)
+    _require_possible_organization_authority(request, actor)
     input_error = _context_action_input_error_response(
         request,
         organization_slug=organization_slug,
@@ -1117,16 +1193,13 @@ def baseline_select_event_edition(
     if input_error is not None:
         return input_error
     try:
-        organization = _organization_for_authorized_route(
+        organization, series, edition = _edition_chain_for_authorized_route(
+            request=request,
             actor=actor,
-            slug=organization_slug,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
             capability_code="events.view_basic",
-        )
-        series = _series_for_record(organization, series_slug)
-        edition = _edition_for_record(
-            organization=organization,
-            series=series,
-            slug=edition_slug,
         )
         _require_capability(
             actor=actor,
@@ -1163,7 +1236,7 @@ def baseline_clear_event_edition(
     """Clear display context without changing edition records or authority."""
 
     actor = _active_account(request)
-    _require_possible_organization_authority(actor)
+    _require_possible_organization_authority(request, actor)
     input_error = _context_action_input_error_response(
         request,
         organization_slug=organization_slug,
@@ -1173,16 +1246,13 @@ def baseline_clear_event_edition(
     if input_error is not None:
         return input_error
     try:
-        organization = _organization_for_authorized_route(
+        organization, series, edition = _edition_chain_for_authorized_route(
+            request=request,
             actor=actor,
-            slug=organization_slug,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
             capability_code="events.view_basic",
-        )
-        series = _series_for_record(organization, series_slug)
-        edition = _edition_for_record(
-            organization=organization,
-            series=series,
-            slug=edition_slug,
         )
         _require_capability(
             actor=actor,
@@ -1292,16 +1362,76 @@ def liveness(request: Request) -> Response:
 @permission_classes([AllowAny])
 def readiness(request: Request) -> Response:
     del request
+    require_exact_provenance = settings.REQUIRE_EXACT_AUTHORITY_PROVENANCE
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
+            cursor.execute(_AUTHORITY_PROVENANCE_TABLE_HEALTH_QUERY)
+            provenance_tables = cursor.fetchone()
     except DatabaseError:
         return Response(
             {"status": "unavailable", "dependencies": {"database": "unavailable"}},
             status=503,
         )
-    return Response({"status": "ok", "dependencies": {"database": "ok"}})
+    dependencies = {"database": "ok"}
+    authority_provenance_ready = False
+    if not require_exact_provenance:
+        if provenance_tables == (False, False):
+            authority_provenance_ready = True
+        elif provenance_tables == (True, True):
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        _DORMANT_AUTHORITY_PROVENANCE_HEALTH_QUERY,
+                        (AUTHORITY_PROVENANCE_INACTIVE_GENERATION,),
+                    )
+                    dormant_contract = cursor.fetchone()
+            except DatabaseError:
+                dormant_contract = None
+            authority_provenance_ready = dormant_contract == (True, True)
+    elif provenance_tables == (True, True):
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    _EXACT_AUTHORITY_PROVENANCE_HEALTH_QUERY,
+                    (
+                        AUTHORITY_PROVENANCE_ACTIVE_GENERATION,
+                        AUTHORITY_PROVENANCE_CONTRACT_VERSION,
+                        AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
+                    ),
+                )
+                exact_contract_row = cursor.fetchone()
+        except DatabaseError:
+            exact_contract_row = None
+        exact_contract_ready = exact_contract_row == (
+            _EXACT_AUTHORITY_PROVENANCE_POSTGRESQL_MAJOR,
+            False,
+            True,
+            True,
+            True,
+        )
+        runtime_role_safe = False
+        runtime_contract_ready = False
+        if exact_contract_ready:
+            runtime_contract_ready = authority_provenance_runtime_contract_is_ready()
+        if exact_contract_ready and runtime_contract_ready:
+            try:
+                runtime_role_safe = probe_runtime_database_role_safety(
+                    role_name=settings.RUNTIME_DATABASE_ROLE
+                ).current_session_is_safe
+            except (DatabaseError, RuntimeDatabaseRoleProbeError):
+                runtime_role_safe = False
+        authority_provenance_ready = (
+            exact_contract_ready and runtime_contract_ready and runtime_role_safe
+        )
+    if authority_provenance_ready:
+        if require_exact_provenance:
+            dependencies["authority_provenance"] = "ok"
+        return Response({"status": "ok", "dependencies": dependencies})
+    dependencies["authority_provenance"] = "unavailable"
+    return Response(
+        {"status": "unavailable", "dependencies": dependencies},
+        status=503,
+    )
 
 
 def build_info(request: HttpRequest) -> JsonResponse:

@@ -1,7 +1,7 @@
 # Audit module
 
 Status: Implemented V02 kernel with edition-spine mutation evidence
-Last updated: 2026-08-01
+Last updated: 2026-08-02
 
 ## Purpose and requirements
 
@@ -64,6 +64,24 @@ actor and independent-approver allow events. Immediate grant and assignment
 revocation records the revoker. Failed canonical transactions retain one safe
 error event after rolling back partial success evidence.
 
+Audit `0005` hardens the pre-existing append-only event guard, adds a permanent
+no-truncate fence and a partial unique activation index, and makes the single
+ADR 0044 exact-lineage marker audit part of the same database transaction,
+timestamp, and transaction ID. Audit `0006` adds the reciprocal boundary: a
+`BEFORE INSERT` guard leaves every ordinary audit operation unchanged but
+accepts the reserved activation operation only when its frozen payload matches
+the platform-administrator marker and active latch created or transitioned in
+that same transaction. Its upgrade preflight accepts either one pristine
+dormant state or one exact durable marker/audit pair and rejects legacy orphan,
+extra, or malformed reserved events. Its reverse fence is removable only from
+the pristine dormant state.
+
+The audit functions pin the trusted schema order and are included in
+authorization readiness fingerprints. Reserved trigger functions are not
+generally executable: `PUBLIC` execution is revoked. Test-only truncation
+requires both a `test_` database name and the dedicated test GUC; production
+settings reject either escape shape.
+
 Pages 5 and 7 do not present `AuditEvent` rows as a human activity feed.
 Record activity uses allowlisted domain facts and safe identity labels; audit
 remains security/control evidence with separate authorization, purpose, and
@@ -74,12 +92,14 @@ retention. A later cross-domain Activity workspace must preserve that boundary.
 Tests cover safe payload rejection, direct and bulk mutation/deletion,
 one-time sealing, multiple linked batches, empty reruns, sequence gaps, digest
 and count mismatch, batch immutability, batch-size bounds, command output, and
-command failure.
+command failure. Activation-evidence tests cover ordinary-operation
+pass-through, same-transaction marker/latch binding, fresh-correlation forgery,
+active upgrade, dormant reverse, and fail-closed catalog tampering.
 
 ## Limitations
 
-Signing or independently storing integrity checkpoints, database-role
-separation, partitioning, retention execution, subject security history,
-cursor pagination, signed exports, alert integration, and subject-specific
-security history remain. Hash chaining provides tamper evidence; it does not
-replace access control, backups, or independent checkpoints.
+Signing or independently storing integrity checkpoints, partitioning,
+retention execution, subject security history, cursor pagination, signed
+exports, alert integration, and subject-specific security history remain. Hash
+chaining provides tamper evidence; it does not replace access control, backups,
+or independent checkpoints.

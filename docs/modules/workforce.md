@@ -1,14 +1,15 @@
 # Workforce module
 
 Status: Position, hierarchy, opportunity, agreement, authority onboarding, and
-ADR 0041 workforce containment slice
-Last updated: 2026-08-01
+ADR 0041 containment implemented; ADR 0045 Page 9 design accepted and pending
+Last updated: 2026-08-02
 
 ## Purpose and requirements
 
-`maru.workforce` owns the first executable HR-007 and HR-008 slice defined by
-ADR 0019 and applies IDN-011's non-participation boundary. It turns an edition
-responsibility into explicit structure:
+`maru.workforce` owns the executable HR-007, HR-008, and HR-010 slices defined
+by ADRs 0019 and 0028, the accepted HR-011 edition-structure boundary, and
+IDN-011's non-participation boundary. It turns an edition responsibility into
+explicit structure:
 
 ```text
 department hierarchy
@@ -85,7 +86,8 @@ default headcount, and capacity codes.
 
 ## Organization structure projection
 
-Convention work has a separate **Organization structure** page backed by:
+The current Convention work client has a read-only **Organization structure**
+view backed by:
 
 ```text
 GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure
@@ -99,10 +101,79 @@ authority records. Department parents support arbitrary same-edition nesting;
 position headcount supports several leads or deputies; one account may hold
 several positions in several departments.
 
-The local-only Marucon rehearsal demonstrates Executive Board as the root,
-Helper Board and ordinary departments below it, and selected nested
-subdepartments. Public roster labels become workforce appointments through the
-ordinary dual-controlled service; labels alone never grant authority.
+ADR 0042 removed the former public-roster rehearsal. Repository fixtures and
+tutorials use synthetic people only; public labels never become accounts,
+appointments, assignments, or authority.
+
+ADR 0045 accepts Page 9 **Organization structure** at the selected-edition
+route documented in
+[`09-organization-structure.md`](../product/page-contracts/09-organization-structure.md).
+Its governance-anchored projection is deliberately composed from two sources:
+
+```text
+Executive Board — minimized OrganizationRepresentation anchor
+  -> Helper Board — top-level edition-owned Department
+       -> operational and nested edition Departments
+```
+
+Executive Board is never copied into Department, Position, PositionAssignment,
+or a generic group. Helper Board has no persisted Department parent; the page
+places it visually beneath the organization-owned governance anchor. Every
+other parent edge remains an exact same-organization, same-edition Department
+relationship. Neither visual nor Department ancestry implies authority.
+
+The accepted first management slice introduces one workforce-owned edition
+structure aggregate with monotonic optimistic versioning and shared HTML/API
+application services for built-in-template application plus Department create,
+update, reparent, order, retire, and protected delete. The design is accepted;
+those services, schema, Page 9 route, and verification are not implemented yet.
+
+### Built-in reference and independent copy
+
+The immutable built-in `awoostria-reference@1` contains Helper Board plus 21
+operational Department definitions: Art, Charity, Ceremonies, Dealers' Den,
+Decorations, Events & Programming, Front Desk, Fursuit Support, Graphics
+Design, Human Resources, IT, Legal & Compliance, Logistics, Maid Café,
+Multimedia, PEER, Registration, Security, Social Media, Stage Tech, and Story.
+
+An authorized manager may apply that exact version only to an empty Draft or
+Preparing edition workforce structure. One atomic, idempotent application
+copies 22 independent Department rows and retains immutable source code,
+version, digest, actor, retry, correlation, and resulting-version provenance.
+It does not create or infer representation, people, membership, participation,
+roles, capabilities, Positions, opportunities, applications, onboarding,
+assignments, registration, or public-roster relationships. A later built-in
+version never mutates an earlier source or an already copied edition.
+
+### Department command boundary
+
+Page 9 reads require `workforce.view_structure` effective at the exact edition;
+department-only authority is too narrow for the complete tree. Mutations also
+require `workforce.manage_structure`, except for explicit non-participating
+platform oversight. Board representation or hierarchy position by itself is
+not that capability. The exact access header and navigation repeat those same
+decisions and disclose no foreign tenant or hidden principal.
+
+Commands accept only bounded name, optional description, exact same-edition
+parent, display order, expected structure version, reason, and operation-
+specific retry or exact-name confirmation. Scope, code, actor, lifecycle,
+template digest, timestamps, output version, audit, and event fields are
+server-owned. Unknown fields, stale versions, cross-tenant parents, cycles, and
+silent truncation fail closed. Successful changes advance the aggregate once
+and commit minimized audit, `workforce.structure.changed.v1`, and outbox
+evidence together; normalized no-ops write nothing.
+
+Retirement preserves used Departments and is refused while a current child,
+open Position, effective assignment or authority, or another live dependency
+would become misleading. Hard deletion requires exact current-name
+confirmation and an unused leaf with no cross-module or operational history;
+it never cascades. Ready, Live, Closing, Archived, and Cancelled editions remain
+read-only until a separate structure change-control design is accepted.
+
+Position editing is Page 9b. It must first define immutable PositionTemplate
+and RoleBundle selection, ADR 0044 dual-control provenance, typed binding,
+opportunity, lifecycle, reporting-cycle, and recovery behavior. The built-in
+Department template creates no Lead, Deputy, or Volunteer Positions.
 
 ## Positions and published opportunities
 
@@ -193,6 +264,24 @@ GET  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/doc
 POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/documents/me/<request_id>/upload
 ```
 
+Accepted Page 9 API surface; the mutation routes are not mounted until ADR
+0045 is implemented:
+
+```text
+GET    /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/structure
+POST   /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/structure/template-applications
+POST   /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/departments
+PUT    /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/departments/<department_id>
+POST   /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/departments/<department_id>/retire
+DELETE /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/departments/<department_id>
+```
+
+The existing structure GET remains the compatibility projection until Page 9
+adopts its bounded complete-tree and governance-anchor response. New mutation
+routes must use the same application services as HTML, strict RFC 9457
+problems, route-owned scope, UUID `Idempotency-Key` for create/application, and
+deterministic OpenAPI/client generation.
+
 Specialist records:
 
 ```text
@@ -205,6 +294,11 @@ Specialist records:
 /admin/workforce/onboardingdocumentrequest/
 /admin/workforce/positionassignment/
 ```
+
+These specialist routes are not the accepted Page 9 mutation contract. Once
+the shared commands and migration fence are active, Department mutations
+covered by Page 9 become inspection-only here. Position writes remain a
+separate Page 9b decision rather than an implicit exception.
 
 ## Database integrity and recovery
 
@@ -234,6 +328,14 @@ scope-v2 write, retain compatible writers and fix forward or restore the whole
 database to a mutually consistent pre-write point; do not reverse this guard
 layer independently.
 
+Workforce `0005` hardens the directly executable role-evidence matcher and both
+persistent trigger callers. It validates code-owned pre/post source hashes,
+uses `CREATE OR REPLACE` to preserve OID, owner, and ACL, fixes
+`pg_catalog, public, pg_temp`, qualifies every events, workforce,
+authorization, and participation relation plus internal helper calls, restores
+the exact `0004` definitions only while dormant, and keeps an owning-module
+activation fence even if authorization `0009`'s recorder row is missing.
+
 Workforce `0003` installs IDN-011 guards for volunteer applications,
 onboarding-document requests, and position assignments. Each insert or update
 locks the exact subject identity row before checking that it remains a person.
@@ -249,11 +351,23 @@ or requests into authority and do not inspect actor/provenance foreign keys.
 Use the maintenance-window, reconciliation, and fix-forward procedure in
 [`idn011-convention-subject-migration-and-recovery.md`](../operations/idn011-convention-subject-migration-and-recovery.md).
 
+ADR 0045's future additive migration must preserve every existing Department
+identifier and parent edge, create at most one structure-control aggregate for
+each populated edition, and mark it as legacy-existing without inventing a
+template receipt. It must never infer Executive Board, Helper Board, a person,
+Position, assignment, authority, or template version from names. Preflight and
+database checks cover exact scope, cycles, immutable source receipt, monotonic
+aggregate version, incompatible direct writers, non-cascading retirement, and
+downgrade/recovery behavior. This paragraph is an accepted migration contract,
+not evidence that the schema exists.
+
 ## Current limitations
 
 Qualifications, availability, shifts, time records, acceptance decisions,
 position ending/replacement UX, approval notifications, document download
-through the REST API, a purpose-built structure editor, and a separately
-authenticated approval inbox remain Phase 3 work. The first slice is intended
-to prove the safe path from a known person and reviewed agreement to scoped
-working access.
+through the REST API, Page 9 implementation and Page 9b Position editing, and a
+separately authenticated approval inbox remain work. ADR 0045 and the Page 9
+contract define the Department editor but do not claim its schema, routes,
+services, API, tests, migration rehearsal, accessibility, or owner walkthrough
+are complete. The implemented first assignment slice continues to prove the
+safe path from a known person and reviewed agreement to scoped working access.

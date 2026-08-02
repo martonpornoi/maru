@@ -118,6 +118,36 @@ These signals link to authorized work queues, not public telemetry.
 A healthy process can still deliver an unhealthy event workflow; domain health
 must be visible separately.
 
+The public `/health/ready` probe always performs a cheap database/catalog
+check. Before the cutover tables exist, compatibility mode needs nothing more.
+Once they exist, compatibility mode also proves exactly one generation-zero
+latch and no marker; an active or malformed database cannot appear healthy
+under a later `false` configuration. When the production recovery fence
+`MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE=true` is selected, readiness instead
+requires the exact ADR 0044 marker/latch contract. A dormant, missing,
+malformed, or unreadable contract returns safe `503` dependency status without
+contract, tenant, person, capability, database-version, or database error
+details. The cheap public SQL gate is followed by the complete fingerprinted
+runtime-contract verifier; a marker-shaped but weakened trigger/function
+contract cannot pass. It then proves that `CURRENT_USER`, `SESSION_USER`, and
+the current backend's `pg_stat_activity.usesysid` all identify
+`MARU_RUNTIME_DATABASE_ROLE`; role or session-authorization impersonation does
+not pass. The named login must have none of the forbidden attributes,
+reserved/predefined or admin-option memberships, ownership, database/schema
+creation, temporary-table, table-maintenance, parameter-control, persistent
+non-origin trigger-setting, sequence-update, or object/column grant-option
+paths. It also positively proves database connection, every user-schema usage
+path, ordinary runtime relation DML, SELECT-only materialized-view and exact
+marker/latch access, sequence use/read, live
+`session_replication_role=origin`, and the exact versioned v2 policy/trigger-
+helper function closure. `PUBLIC` function execution or an extra/missing
+runtime execute grant fails closed. The same minimized dependency fails closed
+when any role proof fails, the server major is not the rehearsed PostgreSQL 17
+contract, the effective schema order is not `pg_catalog, public, ...`, or the
+exact rows cannot be read through their `public`-qualified relations. Public
+health never reports the role name, membership, object, credential, or database
+error that caused the denial.
+
 ## Alert design
 
 An alert has owner, severity, edition impact, symptom, threshold, evaluation

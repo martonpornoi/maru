@@ -4,7 +4,7 @@ Status: Implemented exact organization/edition/department/resource authority,
 sealed target resolution, protected Executive Board root, and provenance-
 writing/source-selection stage; legacy reconciliation and dynamic policy
 activation remain a production gate
-Last updated: 2026-08-01
+Last updated: 2026-08-02
 
 ## Purpose and requirements
 
@@ -172,6 +172,60 @@ explicit ordinary-authority reconciliation. The stopped-writer procedure and
 recovery boundary are documented in
 [`authority-provenance-migration-and-recovery.md`](../operations/authority-provenance-migration-and-recovery.md).
 
+Authorization `0007`, paired with audit `0005`, installs the dormant
+generation latch, immutable one-row activation marker, same-transaction audit
+proof, writer barrier, deferred exact-completeness validators, no-truncate and
+reverse fences, and hardened definitions for the older issuance/control/audit
+guards it depends on. Audit `0006` adds the reciprocal reserved-operation insert
+guard; authorization `0008` delegates only the latch row lock to a
+revoked-by-default definer helper so the runtime writer remains serialized
+without latch `UPDATE`. Organizations `0013` and workforce `0005` then pin the
+four remaining runtime-executable Board/workforce helpers, and their persistent
+trigger callers, to `pg_catalog, public, pg_temp` with `public`-qualified object
+and helper references. Authorization `0009` is the convergence leaf and central
+downgrade fence; each owning migration also retains its own active-state fence
+if the recorder row is damaged. Readiness fingerprints the complete 19-helper
+runtime closure, all 12 hardened persistent callers, and their exact trigger
+attachments (including `UPDATE OF` column lists) on PostgreSQL 17.
+Activation requires the exact-required external fence, an owned top-level
+`READ COMMITTED` transaction, zero blockers, and a stopped-process
+acknowledgement. It is irreversible and idempotent after its one successful
+marker/audit commit.
+
+`database_role_safety.py` is the read-only PostgreSQL role boundary shared by
+activation reporting and public readiness. Its role name, required function
+identities, and protected-relation identities are bound parameters. Controlled
+migration/cutover-owner sessions use
+`target_role_is_safe` to inspect the configured future runtime login without
+impersonating it; web/worker health additionally uses
+`current_session_is_safe`. ADR 0046's fixed 25-boolean result denies dangerous
+attributes, reserved/predefined names, reachable membership admin options,
+database or non-system schema/relation/function ownership, database/schema
+creation and temporary objects, table trigger/truncate/maintenance, explicit
+effective parameter ACLs, non-origin persistent/live trigger settings,
+sequence update, object/column grant options, and an unusable data plane. A
+safe role has database `CONNECT`, schema `USAGE`, ordinary four-operation DML,
+and sequence `USAGE`/`SELECT`; materialized views and the exact activation
+control trio (`django_migrations`, marker, and latch) are SELECT-only. The
+current-session proof additionally
+matches `CURRENT_USER`, `SESSION_USER`, and this backend's
+`pg_stat_activity.usesysid` to the configured target. Role switching and
+session-authorization impersonation therefore prove privileges but never a
+healthy runtime login.
+
+`RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2` enumerates the 19 non-trigger
+helpers reachable from current triggers and direct policy execution, including
+the narrow definer helper that takes the latch row lock without granting latch
+`UPDATE` to runtime. Every non-system function is closed to `PUBLIC`; the role
+must execute every listed identity, and neither it nor any membership-reachable
+role (including `NOINHERIT` roles available through `SET ROLE`) may execute an
+unlisted one. All 19 helpers, including the three Board validators and the
+workforce evidence matcher, are definition-fingerprinted; the audit-owned
+reserved-activation operation guard is pinned too. Only the controlled owner
+mutates the migration recorder, marker, or latch; the reserved
+audit append is valid only as its exact same-transaction companion. The
+credential-free operator SQL is the matching executable grant specification.
+
 Policy accepts only `ResolvedAuthorizationTarget` values sealed by explicit
 database resolvers. Route UUIDs can narrow a query but cannot assert tenant,
 department, resource, lifecycle, or owner facts. Commands lock and re-resolve
@@ -214,12 +268,23 @@ edition-scoped. HTML platform administration remains a separate platform
 policy path and creates no stored convention grant.
 
 The `/admin/` shell does not use Django `is_staff` as a convention-authority
-shortcut. Active platform administrators receive platform scope. An ordinary
-active account receives only organizations/editions reachable through current,
-unrevoked grants or role assignments whose delegation ancestry is still
-effective; expired, future, revoked, foreign-tenant, and stale selected-edition
-state are excluded. Specialist Django records remain separately staff/model-
+shortcut. Active platform administrators receive platform scope. Every
+ordinary shell entry, tenant name, navigation link, edition option, and context
+change is derived through the same canonical capability decision as its
+destination. Compatibility readers validate legacy grant chains before
+cutover; exact readers validate pinned issuance lineage afterward. A required
+but dormant/malformed contract and a revoked pinned ancestor produce no
+organizer projection. Specialist Django records remain separately staff/model-
 permission protected.
+
+The navigation projection resolves organization, edition, department, typed
+binding, and owning Position chains through identifier-only bulk reads. Its
+tenant-chain query count is constant as authority cardinality grows; exact
+issuance checks use a fixed schema-qualified PostgreSQL call in chunks of 256
+and preserve positional results. A role assignment proves one representative
+capability from its immutable, provenance-validated bundle, then projects only
+known persistable capabilities from that same bundle. A 257-scope regression
+guards both query amplification boundaries without loading tenant names.
 
 `check_scope_v2_readiness` emits a count-only JSON report. Migration-data
 `status` is intentionally separate from `production_status`: the latter stays
@@ -234,11 +299,11 @@ ADR 0041 as solving that independent IDN-005 invariant.
 After authorization `0006` is present,
 `check_authority_provenance_readiness` inspects the reachable issuance graph
 and emits only stable aggregate blocker/review counts. A zero-blocker `status`
-means the stored data is ready for the later cutover; `production_status`
-remains blocked until exact-lineage policy activation, deferred completeness
-guards, and the provenance-write downgrade fence are installed. The command
-never prints people, capabilities, organizations, target identifiers, or
-entered reason values, and `--no-fail` changes only its process exit behavior.
+means stored data is structurally ready; `activation_status` additionally
+requires the dormant PostgreSQL 17 guard catalog; `production_status` requires
+the exact marker/audit/policy and downgrade fence. The command never prints
+people, capabilities, organizations, target identifiers, or entered reason
+values, and `--no-fail` changes only its process exit behavior.
 
 `backfill_provable_authority_provenance` is read-only by default and can append
 only exact initial Executive Board ceremony rows plus exact delegated-parent

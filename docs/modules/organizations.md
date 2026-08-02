@@ -1,14 +1,15 @@
 # Organizations module
 
 Status: Implemented tenant, brand, localization, Pages 1–5, initial Page 8
-Executive Board lifecycle, and emergency containment; final release gates remain
-Last updated: 2026-08-01
+Executive Board lifecycle, and emergency containment; ADR 0045 Page 9 anchor
+contract accepted and pending
+Last updated: 2026-08-02
 
 ## Purpose and requirements
 
 `maru.organizations` owns tenant structure and recurring-series continuity for
 IDN-002, IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, EVT-001, EVT-003,
-EVT-005, UX-014 through UX-021, and UX-024.
+EVT-005, HR-011, UX-014 through UX-021, UX-024, and UX-025.
 
 ## Owned data and invariants
 
@@ -25,7 +26,9 @@ EVT-005, UX-014 through UX-021, and UX-024.
 - `OrganizationRepresentation`: the one accountable organization-level
   representation root. The first and currently fixed type is Executive Board,
   with Provisioning, Active, and reserved Suspended states plus a positive
-  aggregate version and reasoned provisioning/activation provenance.
+  aggregate version and reasoned provisioning/activation provenance. It is
+  never an edition Department, Position, generic group, or workforce
+  assignment.
 - `RepresentationAppointment`: one exact person account's versioned Controller
   invitation and accepted term in that representation, separately linked to
   the organization membership and eventual root role assignment.
@@ -45,6 +48,15 @@ closes a person's open Board relationships across every organization, revokes
 sessions and authority, deactivates the account, and suspends any Board that
 loses its two-controller quorum. Routine expiry, replacement, voluntary ending,
 reactivation, and quorum recovery are not implemented.
+
+ADR 0045 permits Page 9 to show a minimized Executive Board governance anchor
+above an edition's Helper Board Department. This is presentation composition,
+not a stored parent edge or cross-module write. `maru.organizations` remains the
+only owner of representation state and appointments; `maru.workforce` remains
+the owner of Departments, Positions, and structure-template application. The
+Awoostria reference template cannot create, activate, update, or infer
+representation, membership, appointment, controller identity, or root
+authority.
 
 Organization slug is globally case-insensitively unique. Series slug is
 case-insensitively unique within its organization. Protected relationships
@@ -130,6 +142,15 @@ module-owned commands. A future API must define strict projections,
 enumeration resistance, retry semantics, authentication, approval, and OpenAPI
 evidence rather than saving these models directly.
 
+ADR 0045 accepts a future public, minimized organizations query for Page 9's
+governance anchor. It resolves the exact organization and returns only the
+fixed representation label and truthful absent, Provisioning, Active, or
+Suspended state. It returns no appointment, email, membership, reason,
+controller count, role assignment, or authority provenance. The Page 9 adapter
+composes that query with workforce's edition-owned structure projection; the
+workforce module does not save organization models. This query is design only
+until the Page 9 implementation is verified.
+
 ## Convention series creation fields
 
 Only the recurring public brand name is required. Description, website,
@@ -194,12 +215,21 @@ The registered `organizations.representation.changed.v1` event is deliberately
 minimized to action, fixed representation code, and resulting state. It does
 not carry email, display name, reason text, profile values, or capability lists.
 
+Page 9's governance-anchor rendition is C1 and intentionally narrower than the
+Page 8 directory: fixed label plus current representation state only. It does
+not authorize a workforce mutation, reveal whether a particular person is a
+controller, or turn Board representation into edition participation. Any
+future named access explanation still uses the exact authorization and
+relationship projection required by UX-020.
+
 ## Dependencies and consumers
 
 - depends on the identity account identifier;
 - events reference an owning organization and series;
 - participation references the owning organization;
-- the self-context projection consumes the membership query.
+- the self-context projection consumes the membership query; and
+- the accepted Page 9 presentation consumes the minimized representation-
+  anchor query and never writes through it.
 
 ## Bootstrap administration
 
@@ -209,7 +239,9 @@ links to its record, Page 8 **Representation & access**, and Convention series
 section, with series creation beside that destination while lifecycle permits
 it. Selecting a series adds its own
 record and Convention editions destinations; new-edition availability depends
-on both organization and series state. This is display context only: it
+on both organization and series state. ADR 0045 adds **Organization structure**
+once beneath an exact selected edition and only when the same exact Page 9 view
+decision succeeds. This is display context only: it
 does not query across tenants, infer ownership, or grant authority. The desktop
 shell aligns that menu to ordinary page padding instead of centering the whole
 grid.
@@ -288,6 +320,13 @@ lock identity rows, reject direct/bulk SQL bypass, and defer account-kind
 reclassification validation to commit. See the
 [IDN-011 migration runbook](../operations/idn011-convention-subject-migration-and-recovery.md).
 
+The future ADR 0045 workforce migration must not update organization
+representation rows or derive them from Department names. Existing workforce
+records named Executive Board are migration-review items, not proof of a Board
+and not permission to fabricate or relink governance. Organizations exposes a
+read projection only; workforce structure recovery and template receipts stay
+within workforce's fix-forward or whole-database recovery boundary.
+
 ## Tests
 
 PostgreSQL tests cover case-insensitive scoped uniqueness, protected deletion,
@@ -327,14 +366,23 @@ Focused hardening tests cover generic reserved-role isolation, manager-only
 sensitive-read audit, privileged-denial audit, raw scope/provenance/version
 mutation, fabricated activation, cross-organization evidence isolation,
 pre-existing platform authority, clean reverse, and artifact-fenced downgrade.
+Organizations `0013` hardens the three runtime-executable Board validators and
+every persistent trigger caller that reaches them. It preserves OID, owner, and
+ACL, validates code-owned pre/post source hashes, fixes the function-local path
+to `pg_catalog, public, pg_temp`, qualifies relations and helper calls, restores
+the exact historical definitions on a pristine reverse, and refuses reversal
+after durable authority activation even if the authorization `0009` recorder
+row is missing.
 Page projection tests also cover deterministic history ordering, the 100-row
 ceiling, foreign-tenant exclusion, bounded audit count, and safe 503 behavior
 when the sensitive-read audit append itself fails.
 Populated local upgrade through organizations `0012` and the three other
-IDN-011 module guards passes. The fresh `maru_consolidated_demo` database
-applies all 106 migrations, contains 80 synthetic accounts, two organizations,
-and six editions, and reports readiness 16/16 with zero blockers. The current
-restore into `maru_restore_drill_m21` passes and is cleaned up afterward.
+IDN-011 module guards passes. Before the `0013`/workforce `0005`/authorization
+`0009` hardening boundary, the `maru_consolidated_demo` rehearsal applied the
+then-current 106 migrations, contained 80 synthetic accounts, two
+organizations, and six editions, and reported readiness 16/16 with zero
+blockers. Treat that as a prior baseline, not current-graph evidence; rebuild
+the demo and restore drills at the new convergence leaf before release.
 Fifty-eight combined representation/migration/readiness tests, five emergency-
 focused tests, and a 71-test adjacent IDN-011 batch pass. The readiness/core
 focus passes 10 tests, the representation/platform matrix passes 126, and the
@@ -352,5 +400,7 @@ replacement/ending, planned suspension/reactivation, quorum recovery, legacy
 active-tenant reconciliation, invitation notification delivery, organization
 and series lifecycle transitions beyond initial activation, slug migration, publication,
 processors, ownership transfer, closure/data exit, and the complete
-convention-owned organizer experience remain. Platform administration remains
-non-participating throughout.
+convention-owned organizer experience remain. ADR 0045 defines but does not
+implement or verify Page 9's minimized governance-anchor query, exact
+navigation, structure services, API, migrations, or access header. Platform
+administration remains non-participating throughout.

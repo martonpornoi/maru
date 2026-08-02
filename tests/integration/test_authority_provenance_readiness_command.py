@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
+from dataclasses import replace
 from datetime import timedelta
 from io import StringIO
 from itertools import pairwise
@@ -14,9 +15,15 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.db import connection, transaction
+from django.test import override_settings
 from django.utils import timezone
 
+from maru.audit.services import seal_pending_audit_events, verify_audit_integrity
 from maru.authorization import provenance_readiness
+from maru.authorization.activation import (
+    AuthorityProvenanceActivationBlockedError,
+    activate_authority_provenance,
+)
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.issuance import (
     create_delegated_grant_issuance,
@@ -25,6 +32,7 @@ from maru.authorization.issuance import (
 from maru.authorization.models import (
     AuthorityControl,
     AuthorityIssuance,
+    AuthorityProvenanceActivation,
     CapabilityGrant,
     RoleAssignment,
     RoleBundle,
@@ -34,7 +42,11 @@ from maru.identity.models import Account
 from tests.factories import AccountFactory, EventEditionFactory, OrganizationFactory
 from tests.support.authority import activate_synthetic_board
 
-pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
+pytestmark = [
+    pytest.mark.django_db(transaction=True),
+    pytest.mark.integration,
+    pytest.mark.usefixtures("proves_safe_runtime_database_role"),
+]
 
 
 def _run_readiness(*, no_fail: bool = True) -> tuple[str, dict[str, Any]]:
@@ -49,17 +61,22 @@ def _run_readiness(*, no_fail: bool = True) -> tuple[str, dict[str, Any]]:
     return rendered, json.loads(rendered)
 
 
-def _empty_report() -> dict[str, object]:
+def _empty_report(*, activated: bool = False) -> dict[str, object]:
+    gate_state = "resolved" if activated else "unresolved"
     return {
         "status": "ready",
-        "production_status": "blocked",
+        "activation_status": "blocked" if activated else "ready",
+        "production_status": "ready" if activated else "blocked",
         "blocker_counts": dict.fromkeys(BLOCKER_KEYS, 0),
         "blocker_total": 0,
         "review_counts": dict.fromkeys(REVIEW_KEYS, 0),
         "known_production_gates": {
-            "exact_lineage_policy_cutover": "unresolved",
-            "database_completeness_guards": "unresolved",
-            "provenance_write_downgrade_fence": "unresolved",
+            "postgresql_server_major": "resolved",
+            "runtime_database_role": "resolved",
+            "activation_marker": gate_state,
+            "exact_lineage_policy_cutover": gate_state,
+            "database_completeness_guards": gate_state,
+            "provenance_write_downgrade_fence": gate_state,
         },
     }
 
@@ -77,6 +94,121 @@ def _board_source(controller: Account) -> AuthorityIssuance:
     )
 
 
+def _activate_provenance(
+    *, actor: Account | None = None
+) -> AuthorityProvenanceActivation:
+    administrator = actor or AccountFactory(is_staff=True, is_superuser=True)
+    correlation_id = uuid4()
+    with override_settings(REQUIRE_EXACT_AUTHORITY_PROVENANCE=True):
+        result = activate_authority_provenance(
+            actor=administrator,
+            reason="Private synthetic cutover evidence.",
+            correlation_id=correlation_id,
+            acknowledge_processes_stopped=True,
+            source_channel="integration-test",
+        )
+    assert result.activated
+    assert result.correlation_id == correlation_id
+    return AuthorityProvenanceActivation.objects.get(singleton=True)
+
+
+def _assert_catalog_tamper_blocked(
+    rendered: str,
+    report: dict[str, Any],
+    *,
+    downgrade_fence_resolved: bool = False,
+) -> None:
+    assert report["status"] == "ready"
+    assert report["activation_status"] == "blocked"
+    assert report["production_status"] == "blocked"
+    assert report["known_production_gates"] == {
+        "postgresql_server_major": "resolved",
+        "runtime_database_role": "resolved",
+        "activation_marker": "resolved",
+        "exact_lineage_policy_cutover": "resolved",
+        "database_completeness_guards": "unresolved",
+        "provenance_write_downgrade_fence": (
+            "resolved" if downgrade_fence_resolved else "unresolved"
+        ),
+    }
+    assert "trigger" not in rendered.lower()
+    assert "function" not in rendered.lower()
+
+
+_FOUNDATIONAL_TRIGGER_CONTRACTS = (
+    (
+        "authorization_capabilitygrant",
+        "authorization_capability_grant_guard",
+    ),
+    (
+        "authorization_capabilitygrant",
+        "authorization_capability_grant_no_delete",
+    ),
+    (
+        "authorization_roleassignment",
+        "authorization_role_assignment_guard",
+    ),
+    (
+        "authorization_roleassignment",
+        "authorization_role_assignment_no_delete",
+    ),
+    (
+        "authorization_rolebundle",
+        "authorization_role_bundle_catalog_guard",
+    ),
+    (
+        "authorization_rolebundle",
+        "authorization_role_bundle_immutable",
+    ),
+    (
+        "authorization_scopedresourcebinding",
+        "authorization_scoped_resource_binding_guard",
+    ),
+    (
+        "authorization_scopedresourcebinding",
+        "authorization_scoped_resource_binding_immutable",
+    ),
+    (
+        "authorization_authorityissuance",
+        "authorization_authority_issuance_insert_guard",
+    ),
+    (
+        "authorization_authorityissuance",
+        "authorization_authority_issuance_immutable",
+    ),
+    (
+        "authorization_authoritycontrol",
+        "authorization_authority_control_insert_guard",
+    ),
+    (
+        "authorization_authoritycontrol",
+        "authorization_authority_control_immutable",
+    ),
+    ("audit_auditevent", "audit_event_append_only"),
+    (
+        "audit_auditevent",
+        "authorization_activation_audit_reserved_guard",
+    ),
+)
+
+_FOUNDATIONAL_FUNCTION_CONTRACTS = (
+    "maru_validate_capability_grant",
+    "maru_prevent_authority_record_delete",
+    "maru_validate_role_assignment",
+    "maru_validate_role_bundle_catalog",
+    "maru_prevent_role_bundle_mutation",
+    "maru_validate_scoped_resource_binding",
+    "maru_prevent_scoped_resource_binding_mutation",
+    "maru_validate_authority_issuance_insert",
+    "maru_prevent_authority_issuance_mutation",
+    "maru_validate_authority_control_insert",
+    "maru_prevent_authority_control_mutation",
+    "maru_guard_audit_event",
+    "maru_guard_authority_provenance_activation_audit",
+    "maru_lock_authority_provenance_writer",
+)
+
+
 def test_clean_executive_board_graph_is_data_ready_but_activation_blocked() -> None:
     _organization, _actor, _approver = _board()
 
@@ -89,6 +221,829 @@ def test_clean_executive_board_graph_is_data_ready_but_activation_blocked() -> N
     assert "@" not in first_rendered
     assert "principal" not in first_rendered
     assert "capability_code" not in first_rendered
+
+
+def test_unsupported_postgresql_major_blocks_activation_without_disclosure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _organization, _actor, _approver = _board()
+    catalog = provenance_readiness._inspect_cutover_catalog()
+    monkeypatch.setattr(
+        provenance_readiness,
+        "_inspect_cutover_catalog",
+        lambda: replace(catalog, server_version_supported=False),
+    )
+
+    rendered, report = _run_readiness()
+
+    assert report["status"] == "ready"
+    assert report["activation_status"] == "blocked"
+    assert report["production_status"] == "blocked"
+    assert report["known_production_gates"] == {
+        "postgresql_server_major": "unresolved",
+        "runtime_database_role": "resolved",
+        "activation_marker": "unresolved",
+        "exact_lineage_policy_cutover": "unresolved",
+        "database_completeness_guards": "unresolved",
+        "provenance_write_downgrade_fence": "unresolved",
+    }
+    assert "version" not in rendered.lower()
+    assert "17" not in rendered
+    with pytest.raises(AuthorityProvenanceActivationBlockedError):
+        _activate_provenance()
+    assert not AuthorityProvenanceActivation.objects.exists()
+
+
+@override_settings(RUNTIME_DATABASE_ROLE="synthetic-private-runtime-role")
+def test_unsafe_runtime_database_role_blocks_irreversible_activation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _organization, _actor, _approver = _board()
+    monkeypatch.setattr(
+        provenance_readiness,
+        "_configured_runtime_database_role_is_safe",
+        lambda: False,
+    )
+
+    rendered, report = _run_readiness()
+    expected = _empty_report()
+    expected["activation_status"] = "blocked"
+    expected["known_production_gates"]["runtime_database_role"] = "unresolved"
+
+    assert report == expected
+    assert "synthetic-private-runtime-role" not in rendered
+    with pytest.raises(AuthorityProvenanceActivationBlockedError):
+        _activate_provenance()
+    assert not AuthorityProvenanceActivation.objects.exists()
+
+
+@pytest.mark.parametrize(
+    ("search_path_sql", "private_schema"),
+    [
+        (
+            "SET LOCAL search_path TO information_schema, public",
+            "information_schema",
+        ),
+        ("SET LOCAL search_path TO public, pg_catalog", "pg_catalog"),
+    ],
+)
+def test_unsafe_effective_schema_is_blocked_before_authority_graph_read(
+    monkeypatch: pytest.MonkeyPatch,
+    search_path_sql: str,
+    private_schema: str,
+) -> None:
+    def unexpected_graph_read(*_args: object, **_kwargs: object) -> None:
+        pytest.fail("The authority graph must not be read under another schema.")
+
+    monkeypatch.setattr(provenance_readiness, "_AuthorityGraph", unexpected_graph_read)
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(search_path_sql)
+        report = provenance_readiness.build_authority_provenance_readiness_report()
+        expected = _empty_report()
+        expected["status"] = "blocked"
+        expected["activation_status"] = "blocked"
+        expected["known_production_gates"]["postgresql_server_major"] = "unresolved"
+        expected["known_production_gates"]["runtime_database_role"] = "unresolved"
+        assert report == expected
+
+        output = StringIO()
+        with pytest.raises(CommandError, match="provenance blockers detected") as error:
+            call_command(
+                "check_authority_provenance_readiness",
+                stdout=output,
+            )
+        rendered = output.getvalue()
+        assert json.loads(rendered) == expected
+        assert private_schema not in rendered
+        assert "search_path" not in rendered
+        assert private_schema not in str(error.value)
+        assert "search_path" not in str(error.value)
+
+
+def test_temporary_schema_shadow_is_blocked_before_authority_graph_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def unexpected_graph_read(*_args: object, **_kwargs: object) -> None:
+        pytest.fail("The authority graph must not be read under a temporary shadow.")
+
+    isolated_connection = connection.copy(alias="provenance_pg_temp_shadow_test")
+    try:
+        with isolated_connection.cursor() as cursor:
+            cursor.execute(
+                "CREATE TEMPORARY TABLE django_migrations "
+                "(app text NOT NULL, name text NOT NULL)"
+            )
+            cursor.execute("SET search_path TO public")
+            cursor.execute("SELECT pg_catalog.current_schemas(TRUE)")
+            effective_schemas = tuple(cursor.fetchone()[0])
+        public_position = effective_schemas.index("public")
+        assert any(
+            schema.startswith("pg_temp_")
+            for schema in effective_schemas[:public_position]
+        )
+
+        monkeypatch.setattr(provenance_readiness, "connection", isolated_connection)
+        monkeypatch.setattr(
+            provenance_readiness,
+            "_AuthorityGraph",
+            unexpected_graph_read,
+        )
+        report = provenance_readiness.build_authority_provenance_readiness_report()
+    finally:
+        isolated_connection.close()
+
+    expected = _empty_report()
+    expected["status"] = "blocked"
+    expected["activation_status"] = "blocked"
+    expected["known_production_gates"]["postgresql_server_major"] = "unresolved"
+    expected["known_production_gates"]["runtime_database_role"] = "unresolved"
+    assert report == expected
+
+
+def test_activation_pins_supported_schema_over_unsafe_session_path() -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    with connection.cursor() as cursor:
+        cursor.execute("SET search_path TO information_schema, public")
+    try:
+        marker = _activate_provenance(actor=administrator)
+    finally:
+        with connection.cursor() as cursor:
+            cursor.execute("SET search_path TO public")
+
+    assert marker.activated_by == administrator
+    assert _run_readiness()[1] == _empty_report(activated=True)
+
+
+def test_cutover_status_rechecks_marker_and_guard_catalog_without_cache() -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+
+    before_rendered, before = _run_readiness()
+    assert before == _empty_report()
+    failing_output = StringIO()
+    with pytest.raises(
+        CommandError,
+        match="production gates are unresolved",
+    ):
+        call_command(
+            "check_authority_provenance_readiness",
+            stdout=failing_output,
+        )
+    assert json.loads(failing_output.getvalue()) == before
+
+    marker = _activate_provenance(actor=administrator)
+    active_rendered, active = _run_readiness()
+    repeated_rendered, repeated = _run_readiness()
+
+    assert active == _empty_report(activated=True)
+    assert repeated == active
+    assert repeated_rendered == active_rendered
+    assert active_rendered != before_rendered
+    assert administrator.email not in active_rendered
+    assert str(administrator.id) not in active_rendered
+    assert marker.reason not in active_rendered
+    assert str(marker.correlation_id) not in active_rendered
+
+    successful_output = StringIO()
+    call_command(
+        "check_authority_provenance_readiness",
+        stdout=successful_output,
+    )
+    assert json.loads(successful_output.getvalue()) == active
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "ALTER TABLE authorization_capabilitygrant DISABLE TRIGGER "
+                "authorization_capability_grant_provenance_complete"
+            )
+        disabled_rendered, disabled = _run_readiness()
+        assert disabled["status"] == "ready"
+        assert disabled["activation_status"] == "blocked"
+        assert disabled["production_status"] == "blocked"
+        assert disabled["known_production_gates"] == {
+            "postgresql_server_major": "resolved",
+            "runtime_database_role": "resolved",
+            "activation_marker": "resolved",
+            "exact_lineage_policy_cutover": "resolved",
+            "database_completeness_guards": "unresolved",
+            "provenance_write_downgrade_fence": "resolved",
+        }
+        assert "capability_grant" not in disabled_rendered
+        disabled_output = StringIO()
+        with pytest.raises(
+            CommandError,
+            match="production gates are unresolved",
+        ):
+            call_command(
+                "check_authority_provenance_readiness",
+                stdout=disabled_output,
+            )
+        assert json.loads(disabled_output.getvalue()) == disabled
+        transaction.set_rollback(True)
+
+    restored_rendered, restored = _run_readiness()
+    assert restored == active
+    assert restored_rendered == active_rendered
+
+
+def test_lightweight_runtime_contract_probe_rejects_tampered_guard_without_graph(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _activate_provenance()
+
+    def unexpected_graph_load(*_args: object, **_kwargs: object) -> None:
+        pytest.fail("The lightweight runtime contract must not load authority data.")
+
+    monkeypatch.setattr(
+        provenance_readiness,
+        "_AuthorityGraph",
+        unexpected_graph_load,
+    )
+    assert provenance_readiness.authority_provenance_runtime_contract_is_ready()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                ALTER TABLE public.authorization_capabilitygrant
+                DISABLE TRIGGER authorization_capability_grant_guard
+                """
+            )
+        assert not provenance_readiness.authority_provenance_runtime_contract_is_ready()
+        transaction.set_rollback(True)
+
+    assert provenance_readiness.authority_provenance_runtime_contract_is_ready()
+
+
+@pytest.mark.parametrize("error_type", [KeyError, TypeError, ValueError])
+def test_lightweight_runtime_contract_probe_fails_closed_on_malformed_shape(
+    monkeypatch: pytest.MonkeyPatch,
+    error_type: type[Exception],
+) -> None:
+    def malformed_cutover_state() -> None:
+        raise error_type("malformed restored catalog shape")
+
+    monkeypatch.setattr(
+        provenance_readiness,
+        "_inspect_cutover_state",
+        malformed_cutover_state,
+    )
+
+    assert not provenance_readiness.authority_provenance_runtime_contract_is_ready()
+
+
+def test_sealed_activation_audit_remains_exact_production_ready_evidence() -> None:
+    _activate_provenance()
+    before_rendered, before = _run_readiness()
+    assert before == _empty_report(activated=True)
+
+    batch = seal_pending_audit_events()
+
+    assert batch is not None
+    assert verify_audit_integrity()
+    after_rendered, after = _run_readiness()
+    assert after == before
+    assert after_rendered == before_rendered
+
+
+@pytest.mark.parametrize(
+    ("table", "trigger_name", "mutation_sql"),
+    [
+        (
+            "public.authorization_authorityprovenanceactivation",
+            "authorization_provenance_activation_guard",
+            """
+            UPDATE public.authorization_authorityprovenanceactivation
+               SET reason = '   '
+            """,
+        ),
+        (
+            "public.audit_auditevent",
+            "audit_event_append_only",
+            """
+            UPDATE public.audit_auditevent
+               SET source_channel = '   '
+             WHERE operation = 'authorization.authority_provenance.activate'
+            """,
+        ),
+        (
+            "public.audit_auditevent",
+            "audit_event_append_only",
+            """
+            UPDATE public.audit_auditevent
+               SET schema_version = 2
+             WHERE operation = 'authorization.authority_provenance.activate'
+            """,
+        ),
+        (
+            "public.audit_auditevent",
+            "audit_event_append_only",
+            """
+            UPDATE public.audit_auditevent
+               SET causation_id = '00000000-0000-0000-0000-000000000001'
+             WHERE operation = 'authorization.authority_provenance.activate'
+            """,
+        ),
+        (
+            "public.audit_auditevent",
+            "audit_event_append_only",
+            """
+            UPDATE public.audit_auditevent
+               SET request_id = '00000000-0000-0000-0000-000000000001'
+             WHERE operation = 'authorization.authority_provenance.activate'
+            """,
+        ),
+        (
+            "public.audit_auditevent",
+            "audit_event_append_only",
+            """
+            UPDATE public.audit_auditevent
+               SET idempotency_key_hash = repeat('0', 64)
+             WHERE operation = 'authorization.authority_provenance.activate'
+            """,
+        ),
+    ],
+)
+def test_runtime_rejects_malformed_durable_activation_evidence(
+    table: str,
+    trigger_name: str,
+    mutation_sql: str,
+) -> None:
+    _activate_provenance()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(f"ALTER TABLE {table} DISABLE TRIGGER {trigger_name}")
+            cursor.execute(mutation_sql)
+            cursor.execute(f"ALTER TABLE {table} ENABLE TRIGGER {trigger_name}")
+        rendered, report = _run_readiness()
+        assert report["status"] == "ready"
+        assert report["activation_status"] == "blocked"
+        assert report["production_status"] == "blocked"
+        assert report["known_production_gates"] == {
+            "postgresql_server_major": "resolved",
+            "runtime_database_role": "resolved",
+            "activation_marker": "unresolved",
+            "exact_lineage_policy_cutover": "unresolved",
+            "database_completeness_guards": "unresolved",
+            "provenance_write_downgrade_fence": "unresolved",
+        }
+        assert "source_channel" not in rendered.lower()
+        assert "schema_version" not in rendered.lower()
+        transaction.set_rollback(True)
+
+    assert _run_readiness()[1] == _empty_report(activated=True)
+
+
+def test_disabled_marker_truncate_fence_fails_closed_without_catalog_names() -> None:
+    _activate_provenance()
+    active_rendered, active = _run_readiness()
+    assert active == _empty_report(activated=True)
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "ALTER TABLE authorization_authorityprovenanceactivation "
+                "DISABLE TRIGGER authorization_provenance_activation_no_truncate"
+            )
+        unfenced_rendered, unfenced = _run_readiness()
+        assert unfenced["status"] == "ready"
+        assert unfenced["activation_status"] == "blocked"
+        assert unfenced["production_status"] == "blocked"
+        assert unfenced["known_production_gates"] == {
+            "postgresql_server_major": "resolved",
+            "runtime_database_role": "resolved",
+            "activation_marker": "resolved",
+            "exact_lineage_policy_cutover": "resolved",
+            "database_completeness_guards": "unresolved",
+            "provenance_write_downgrade_fence": "unresolved",
+        }
+        assert "truncate" not in unfenced_rendered.lower()
+        unfenced_output = StringIO()
+        with pytest.raises(
+            CommandError,
+            match="production gates are unresolved",
+        ):
+            call_command(
+                "check_authority_provenance_readiness",
+                stdout=unfenced_output,
+            )
+        assert json.loads(unfenced_output.getvalue()) == unfenced
+        transaction.set_rollback(True)
+
+    final_rendered, final = _run_readiness()
+    assert final == active
+    assert final_rendered == active_rendered
+
+
+def test_weakened_activation_audit_index_fails_closed_without_definition() -> None:
+    _activate_provenance()
+    active_rendered, active = _run_readiness()
+    assert active == _empty_report(activated=True)
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "DROP INDEX authorization_provenance_activation_audit_unique"
+            )
+            cursor.execute(
+                "CREATE UNIQUE INDEX "
+                "authorization_provenance_activation_audit_unique "
+                "ON audit_auditevent (correlation_id, operation) "
+                "WHERE operation = "
+                "'authorization.authority_provenance.activate'"
+            )
+        weakened_rendered, weakened = _run_readiness()
+        assert weakened["status"] == "ready"
+        assert weakened["activation_status"] == "blocked"
+        assert weakened["production_status"] == "blocked"
+        assert weakened["known_production_gates"] == {
+            "postgresql_server_major": "resolved",
+            "runtime_database_role": "resolved",
+            "activation_marker": "resolved",
+            "exact_lineage_policy_cutover": "resolved",
+            "database_completeness_guards": "unresolved",
+            "provenance_write_downgrade_fence": "unresolved",
+        }
+        assert "index" not in weakened_rendered.lower()
+        assert "correlation" not in weakened_rendered.lower()
+        transaction.set_rollback(True)
+
+    final_rendered, final = _run_readiness()
+    assert final == active
+    assert final_rendered == active_rendered
+
+
+def test_same_name_stubbed_fence_function_fails_closed_without_source() -> None:
+    _activate_provenance()
+    active_rendered, active = _run_readiness()
+    assert active == _empty_report(activated=True)
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE OR REPLACE FUNCTION
+                    maru_prevent_authority_provenance_truncate()
+                RETURNS trigger AS $$
+                BEGIN
+                    RETURN NULL;
+                END;
+                $$ LANGUAGE plpgsql
+                """
+            )
+        stubbed_rendered, stubbed = _run_readiness()
+        assert stubbed["status"] == "ready"
+        assert stubbed["activation_status"] == "blocked"
+        assert stubbed["production_status"] == "blocked"
+        assert stubbed["known_production_gates"] == {
+            "postgresql_server_major": "resolved",
+            "runtime_database_role": "resolved",
+            "activation_marker": "resolved",
+            "exact_lineage_policy_cutover": "resolved",
+            "database_completeness_guards": "unresolved",
+            "provenance_write_downgrade_fence": "unresolved",
+        }
+        assert "function" not in stubbed_rendered.lower()
+        assert "truncate" not in stubbed_rendered.lower()
+        transaction.set_rollback(True)
+
+    final_rendered, final = _run_readiness()
+    assert final == active
+    assert final_rendered == active_rendered
+
+
+@pytest.mark.parametrize(("table", "trigger_name"), _FOUNDATIONAL_TRIGGER_CONTRACTS)
+def test_disabled_foundational_guard_fails_closed(
+    table: str,
+    trigger_name: str,
+) -> None:
+    _activate_provenance()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(f"ALTER TABLE {table} DISABLE TRIGGER {trigger_name}")
+        rendered, report = _run_readiness()
+        _assert_catalog_tamper_blocked(rendered, report)
+        transaction.set_rollback(True)
+
+    assert _run_readiness()[1] == _empty_report(activated=True)
+
+
+@pytest.mark.parametrize("function_name", _FOUNDATIONAL_FUNCTION_CONTRACTS)
+def test_stubbed_foundational_function_fails_closed(function_name: str) -> None:
+    _activate_provenance()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                CREATE OR REPLACE FUNCTION {function_name}()
+                RETURNS trigger AS $$
+                BEGIN
+                    RETURN NEW;
+                END;
+                $$ LANGUAGE plpgsql
+                """
+            )
+        rendered, report = _run_readiness()
+        _assert_catalog_tamper_blocked(rendered, report)
+        transaction.set_rollback(True)
+
+    assert _run_readiness()[1] == _empty_report(activated=True)
+
+
+def test_stubbed_privileged_latch_lock_helper_fails_closed() -> None:
+    _activate_provenance()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE OR REPLACE FUNCTION
+                    public.maru_lock_authority_provenance_latch()
+                RETURNS smallint AS $$
+                    SELECT 0::smallint
+                $$ LANGUAGE sql
+                SECURITY DEFINER
+                SET search_path = pg_catalog, public, pg_temp
+                """
+            )
+        rendered, report = _run_readiness()
+        _assert_catalog_tamper_blocked(rendered, report)
+        transaction.set_rollback(True)
+
+    assert _run_readiness()[1] == _empty_report(activated=True)
+
+
+@pytest.mark.parametrize(
+    "replacement_sql",
+    [
+        """
+        CREATE OR REPLACE FUNCTION
+            public.maru_authorization_capability_min_scope(capability_code text)
+        RETURNS smallint AS $$ SELECT 0::smallint $$ LANGUAGE sql
+        SET search_path = pg_catalog, public, pg_temp
+        """,
+        """
+        CREATE OR REPLACE FUNCTION
+            public.maru_authorization_scope_rank(
+                edition_id uuid,
+                department_id uuid,
+                resource_binding_id uuid
+            )
+        RETURNS smallint AS $$ SELECT 3::smallint $$ LANGUAGE sql
+        SET search_path = pg_catalog, public, pg_temp
+        """,
+        """
+        CREATE OR REPLACE FUNCTION public.maru_authorization_scope_contains(
+            parent_organization_id uuid,
+            parent_edition_id uuid,
+            parent_department_id uuid,
+            parent_resource_binding_id uuid,
+            child_organization_id uuid,
+            child_edition_id uuid,
+            child_department_id uuid,
+            child_resource_binding_id uuid
+        )
+        RETURNS boolean AS $$ SELECT TRUE $$ LANGUAGE sql
+        SET search_path = pg_catalog, public, pg_temp
+        """,
+    ],
+)
+def test_stubbed_foundational_scope_helper_fails_closed(
+    replacement_sql: str,
+) -> None:
+    _activate_provenance()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(replacement_sql)
+        rendered, report = _run_readiness()
+        _assert_catalog_tamper_blocked(rendered, report)
+        transaction.set_rollback(True)
+
+    assert _run_readiness()[1] == _empty_report(activated=True)
+
+
+@pytest.mark.parametrize(("table", "trigger_name"), _FOUNDATIONAL_TRIGGER_CONTRACTS)
+def test_dropped_foundational_guard_fails_closed(
+    table: str,
+    trigger_name: str,
+) -> None:
+    _activate_provenance()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(f"DROP TRIGGER {trigger_name} ON {table}")
+        rendered, report = _run_readiness()
+        _assert_catalog_tamper_blocked(rendered, report)
+        transaction.set_rollback(True)
+
+    assert _run_readiness()[1] == _empty_report(activated=True)
+
+
+@pytest.mark.parametrize(
+    "replacement_sql",
+    [
+        """
+        DROP TRIGGER audit_event_append_only ON public.audit_auditevent;
+        CREATE TRIGGER audit_event_append_only
+        BEFORE INSERT OR UPDATE OF reason_code OR DELETE
+        ON public.audit_auditevent
+        FOR EACH ROW EXECUTE FUNCTION public.maru_guard_audit_event();
+        """,
+        """
+        DROP TRIGGER authorization_capability_grant_guard
+        ON public.authorization_capabilitygrant;
+        CREATE TRIGGER authorization_capability_grant_guard
+        BEFORE INSERT OR UPDATE OF revoked_at, revoked_by_id, revocation_reason
+        ON public.authorization_capabilitygrant
+        FOR EACH ROW EXECUTE FUNCTION public.maru_validate_capability_grant();
+        """,
+    ],
+)
+def test_update_of_narrowed_guard_fails_closed(replacement_sql: str) -> None:
+    _activate_provenance()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(replacement_sql)
+        rendered, report = _run_readiness()
+        _assert_catalog_tamper_blocked(rendered, report)
+        transaction.set_rollback(True)
+
+    assert _run_readiness()[1] == _empty_report(activated=True)
+
+
+@pytest.mark.parametrize(
+    ("replacement_sql", "downgrade_fence_resolved"),
+    [
+        (
+            """
+            DROP TRIGGER authorization_provenance_activation_guard
+                ON authorization_authorityprovenanceactivation;
+            CREATE TRIGGER authorization_provenance_activation_guard
+            BEFORE INSERT OR UPDATE OR DELETE
+                ON authorization_authorityprovenanceactivation
+            FOR EACH ROW WHEN (FALSE)
+            EXECUTE FUNCTION maru_guard_authority_provenance_activation();
+            """,
+            False,
+        ),
+        (
+            """
+            DROP TRIGGER authorization_provenance_latch_guard
+                ON authorization_provenanceactivationlatch;
+            CREATE TRIGGER authorization_provenance_latch_guard
+            BEFORE INSERT OR UPDATE OR DELETE
+                ON authorization_provenanceactivationlatch
+            FOR EACH ROW WHEN (FALSE)
+            EXECUTE FUNCTION maru_guard_authority_provenance_latch();
+            """,
+            False,
+        ),
+        (
+            """
+            DROP TRIGGER authorization_capability_grant_provenance_complete
+                ON authorization_capabilitygrant;
+            CREATE CONSTRAINT TRIGGER
+                authorization_capability_grant_provenance_complete
+            AFTER INSERT ON authorization_capabilitygrant
+            DEFERRABLE INITIALLY DEFERRED
+            FOR EACH ROW WHEN (FALSE)
+            EXECUTE FUNCTION maru_deferred_validate_authority_grant();
+            """,
+            True,
+        ),
+    ],
+)
+def test_same_shape_trigger_with_false_predicate_fails_closed(
+    replacement_sql: str,
+    downgrade_fence_resolved: bool,
+) -> None:
+    _activate_provenance()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(replacement_sql)
+        rendered, report = _run_readiness()
+        _assert_catalog_tamper_blocked(
+            rendered,
+            report,
+            downgrade_fence_resolved=downgrade_fence_resolved,
+        )
+        transaction.set_rollback(True)
+
+    assert _run_readiness()[1] == _empty_report(activated=True)
+
+
+def test_stubbed_lineage_validator_only_unresolves_completeness_gate() -> None:
+    _activate_provenance()
+    active_rendered, active = _run_readiness()
+    assert active == _empty_report(activated=True)
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE OR REPLACE FUNCTION maru_authority_issuance_valid_v1(
+                    target_ordinal bigint,
+                    expected_principal uuid,
+                    required_capability varchar,
+                    target_organization uuid,
+                    target_edition uuid,
+                    target_department uuid,
+                    target_binding uuid,
+                    requested_effective_from timestamptz,
+                    requested_expires_at timestamptz,
+                    effective_evaluation timestamptz,
+                    require_current boolean,
+                    persistent_horizon boolean,
+                    lineage_path bigint[],
+                    lineage_depth integer
+                )
+                RETURNS boolean AS $$
+                    SELECT TRUE;
+                $$ LANGUAGE sql STABLE
+                """
+            )
+        stubbed_rendered, stubbed = _run_readiness()
+        assert stubbed["status"] == "ready"
+        assert stubbed["activation_status"] == "blocked"
+        assert stubbed["production_status"] == "blocked"
+        assert stubbed["known_production_gates"] == {
+            "postgresql_server_major": "resolved",
+            "runtime_database_role": "resolved",
+            "activation_marker": "resolved",
+            "exact_lineage_policy_cutover": "resolved",
+            "database_completeness_guards": "unresolved",
+            "provenance_write_downgrade_fence": "resolved",
+        }
+        assert "maru_authority_issuance_valid_v1" not in stubbed_rendered
+        assert "function" not in stubbed_rendered.lower()
+        transaction.set_rollback(True)
+
+    final_rendered, final = _run_readiness()
+    assert final == active
+    assert final_rendered == active_rendered
+
+
+def test_post_activation_corruption_fails_closed_with_count_only_json() -> None:
+    organization, actor, approver = _board()
+    marker = _activate_provenance()
+    recipient = AccountFactory()
+    private_capability = "events.view_basic"
+    private_reason = "Private post-cutover corruption evidence."
+
+    with transaction.atomic():
+        incomplete = CapabilityGrant.objects.create(
+            organization=organization,
+            principal=recipient,
+            capability_code=private_capability,
+            effective_from=timezone.now(),
+            granted_by=actor,
+            approved_by=approver,
+            reason=private_reason,
+        )
+
+        first_rendered, first = _run_readiness()
+        second_rendered, second = _run_readiness()
+
+        assert first["status"] == "blocked"
+        assert first["activation_status"] == "blocked"
+        assert first["production_status"] == "blocked"
+        assert (
+            first["blocker_counts"]["effective_or_future_root_grant_missing_issuance"]
+            == 1
+        )
+        assert (
+            first["known_production_gates"]
+            == _empty_report(activated=True)["known_production_gates"]
+        )
+        assert second == first
+        assert second_rendered == first_rendered
+        for private_value in (
+            recipient.email,
+            str(recipient.id),
+            str(incomplete.id),
+            organization.name,
+            private_capability,
+            private_reason,
+            marker.reason,
+            str(marker.correlation_id),
+        ):
+            assert private_value not in first_rendered
+
+        failing_output = StringIO()
+        with pytest.raises(CommandError, match="provenance blockers detected"):
+            call_command(
+                "check_authority_provenance_readiness",
+                stdout=failing_output,
+            )
+        assert json.loads(failing_output.getvalue()) == first
+        transaction.set_rollback(True)
 
 
 def test_unproven_open_authority_blocks_but_dead_unused_legacy_is_review_only() -> None:

@@ -8,6 +8,7 @@ def test_safe_audit_metadata_accepts_only_bounded_typed_values() -> None:
     validate_safe_metadata(
         {
             "client_kind": "staff-console",
+            "contract_version": "adr-0044-v1",
             "http_method": "POST",
             "policy_version": "2026-07-26.1",
             "target_count": 2,
