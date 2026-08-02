@@ -1,8 +1,8 @@
 """Stable client projections for volunteer opportunities and onboarding evidence."""
 
-from typing import cast
+from typing import Any, cast
 
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema_field
 from rest_framework import serializers
 
 from maru.workforce.models import Position
@@ -49,6 +49,7 @@ class WorkforceStructureDepartmentSerializer(serializers.Serializer[dict[str, ob
     name = serializers.CharField()
     description = serializers.CharField()
     display_order = serializers.IntegerField()
+    state = serializers.ChoiceField(choices=("active", "retired"))
     positions = WorkforceStructurePositionSerializer(many=True)
     children = serializers.SerializerMethodField()
 
@@ -79,13 +80,82 @@ class WorkforceStructureGovernanceSerializer(serializers.Serializer[dict[str, ob
     )
 
 
+class WorkforceStructureEmptySourceSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    kind = serializers.ChoiceField(choices=("empty",))
+
+
+class WorkforceStructureManualSourceSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    kind = serializers.ChoiceField(choices=("manual",))
+
+
+class WorkforceStructureLegacySourceSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    kind = serializers.ChoiceField(choices=("legacy_existing",))
+
+
+class WorkforceStructureBuiltinTemplateSourceSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    kind = serializers.ChoiceField(choices=("builtin_template",))
+    template_code = serializers.CharField()
+    template_version = serializers.IntegerField(min_value=1)
+
+
+_WORKFORCE_STRUCTURE_SOURCE_SERIALIZERS = {
+    "empty": WorkforceStructureEmptySourceSerializer,
+    "manual": WorkforceStructureManualSourceSerializer,
+    "legacy_existing": WorkforceStructureLegacySourceSerializer,
+    "builtin_template": WorkforceStructureBuiltinTemplateSourceSerializer,
+}
+
+
+@extend_schema_field(
+    PolymorphicProxySerializer(
+        component_name="WorkforceStructureSource",
+        serializers=cast(
+            dict[
+                str,
+                serializers.Serializer[Any] | type[serializers.Serializer[Any]],
+            ],
+            _WORKFORCE_STRUCTURE_SOURCE_SERIALIZERS,
+        ),
+        resource_type_field_name="kind",
+    )
+)
+class WorkforceStructureSourceField(
+    serializers.Field[
+        dict[str, object],
+        dict[str, object],
+        dict[str, object],
+        dict[str, object],
+    ]
+):
+    """Render only the fields allowed by the source discriminator."""
+
+    def to_representation(self, value: dict[str, object]) -> dict[str, object]:
+        serializer_class = _WORKFORCE_STRUCTURE_SOURCE_SERIALIZERS.get(
+            str(value.get("kind"))
+        )
+        if serializer_class is None:
+            return {}
+        return cast(dict[str, object], serializer_class(value).data)
+
+
 class WorkforceStructureProjectionSerializer(serializers.Serializer[dict[str, object]]):
     state = serializers.ChoiceField(choices=("complete", "structure_limit_exceeded"))
+    aggregate_version = serializers.IntegerField(min_value=0)
+    source = WorkforceStructureSourceField()  # type: ignore[assignment]
     departments = WorkforceStructureDepartmentSerializer(many=True)
 
 
 class WorkforceStructureSerializer(serializers.Serializer[dict[str, object]]):
     organization_name = serializers.CharField()
+    series_name = serializers.CharField()
     edition_name = serializers.CharField()
     governance = WorkforceStructureGovernanceSerializer()
     structure = WorkforceStructureProjectionSerializer()

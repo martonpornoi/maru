@@ -65,6 +65,47 @@
       </p>
     </header>
 
+    <section class="baseline-panel" aria-labelledby="structure-control-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Structure control</p>
+          <h2 id="structure-control-title">
+            {% if structure.source.kind == "builtin_template" %}
+              Built-in reference
+            {% elif structure.source.kind == "manual" %}
+              Manually established
+            {% elif structure.source.kind == "legacy_existing" %}
+              Existing structure
+            {% else %}
+              Empty structure
+            {% endif %}
+          </h2>
+        </div>
+        <span class="baseline-count">Version {{ structure.aggregate_version }}</span>
+      </div>
+      {% if structure.source.kind == "builtin_template" %}
+        <p>
+          This edition owns an editable copy of
+          <strong>{{ structure.source.template_code }}@{{ structure.source.template_version }}</strong>.
+          The immutable source reference does not link later template changes
+          into this edition.
+        </p>
+      {% elif structure.source.kind == "manual" %}
+        <p>This edition's Department tree was established directly in Maru.</p>
+      {% elif structure.source.kind == "legacy_existing" %}
+        <p>
+          This tree predates the built-in reference and is not labelled as a
+          template copy.
+          {% if structure.aggregate_version == 0 %}
+            It remains read-only while deployment backfill establishes its
+            durable structure-control record.
+          {% endif %}
+        </p>
+      {% else %}
+        <p>No Department source has been selected for this edition.</p>
+      {% endif %}
+    </section>
+
     <section class="baseline-access-summary" aria-labelledby="structure-access-title">
       <div>
         <p class="baseline-kicker" id="structure-access-title">Your effective access</p>

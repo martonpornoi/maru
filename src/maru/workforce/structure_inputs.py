@@ -1,0 +1,210 @@
+"""Pure, bounded input handling for edition Department structure commands.
+
+HTML forms, API serializers, and application services must converge on these
+helpers before they compare idempotency payloads or persist organizer-entered
+values.  Nothing in this module reads or writes the database.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import unicodedata
+from collections.abc import Iterable, Mapping
+from typing import Never
+
+from django.core.exceptions import ValidationError
+from django.utils.text import slugify
+
+MAX_DEPARTMENT_NAME_LENGTH = 160
+MAX_DEPARTMENT_DESCRIPTION_LENGTH = 1_000
+MAX_STRUCTURE_REASON_LENGTH = 240
+MAX_DEPARTMENT_CODE_LENGTH = 80
+MAX_DEPARTMENT_CODE_CANDIDATES = 256
+MIN_DEPARTMENT_DISPLAY_ORDER = 0
+MAX_DEPARTMENT_DISPLAY_ORDER = 65_535
+
+_HYPHEN_RUN = re.compile(r"-+")
+
+
+def _raise_field_error(
+    *,
+    field_name: str,
+    message: str,
+    code: str,
+) -> Never:
+    raise ValidationError(
+        {field_name: ValidationError(message, code=code)},
+    )
+
+
+def _nfc_without_control_characters(value: str, *, field_name: str) -> str:
+    """Reject controls in the submitted value, then return its NFC form."""
+
+    if not isinstance(value, str):
+        _raise_field_error(
+            field_name=field_name,
+            message="Enter text for this field.",
+            code="structure_text_invalid",
+        )
+    # This check deliberately precedes trimming and normalization.  A caller
+    # must not make a forbidden control character disappear before validation.
+    if any(unicodedata.category(character) == "Cc" for character in value):
+        _raise_field_error(
+            field_name=field_name,
+            message="Control characters are not allowed.",
+            code="structure_control_character",
+        )
+    return unicodedata.normalize("NFC", value)
+
+
+def normalize_department_name(value: str) -> str:
+    """Normalize one required Department name to the accepted closed form."""
+
+    normalized = " ".join(
+        _nfc_without_control_characters(value, field_name="name").split()
+    )
+    if not normalized:
+        _raise_field_error(
+            field_name="name",
+            message="Enter a Department name.",
+            code="structure_name_required",
+        )
+    if len(normalized) > MAX_DEPARTMENT_NAME_LENGTH:
+        _raise_field_error(
+            field_name="name",
+            message=(
+                "Ensure this value has at most "
+                f"{MAX_DEPARTMENT_NAME_LENGTH} characters."
+            ),
+            code="structure_name_too_long",
+        )
+    return normalized
+
+
+def normalize_department_description(value: str) -> str:
+    """Normalize optional description Unicode while preserving inner spacing."""
+
+    normalized = _nfc_without_control_characters(
+        value,
+        field_name="description",
+    ).strip()
+    if len(normalized) > MAX_DEPARTMENT_DESCRIPTION_LENGTH:
+        _raise_field_error(
+            field_name="description",
+            message=(
+                "Ensure this value has at most "
+                f"{MAX_DEPARTMENT_DESCRIPTION_LENGTH} characters."
+            ),
+            code="structure_description_too_long",
+        )
+    return normalized
+
+
+def normalize_structure_reason(value: str) -> str:
+    """Normalize one required, retained administrative rationale."""
+
+    normalized = " ".join(
+        _nfc_without_control_characters(value, field_name="reason").split()
+    )
+    if not normalized:
+        _raise_field_error(
+            field_name="reason",
+            message="Enter a reason for this structure change.",
+            code="structure_reason_required",
+        )
+    if len(normalized) > MAX_STRUCTURE_REASON_LENGTH:
+        _raise_field_error(
+            field_name="reason",
+            message=(
+                "Ensure this value has at most "
+                f"{MAX_STRUCTURE_REASON_LENGTH} characters."
+            ),
+            code="structure_reason_too_long",
+        )
+    return normalized
+
+
+def validate_exact_confirmation(value: str, *, expected: str) -> str:
+    """Require byte-for-byte-equivalent text without normalizing either side."""
+
+    if not isinstance(value, str) or value != expected:
+        _raise_field_error(
+            field_name="confirmation_name",
+            message="Enter the exact current name to confirm this action.",
+            code="structure_confirmation_mismatch",
+        )
+    return value
+
+
+def validate_department_display_order(value: int) -> int:
+    """Accept only a strict integer in the Page 9 display-order range."""
+
+    if type(value) is not int or not (
+        MIN_DEPARTMENT_DISPLAY_ORDER <= value <= MAX_DEPARTMENT_DISPLAY_ORDER
+    ):
+        _raise_field_error(
+            field_name="display_order",
+            message=(
+                "Enter a whole number from "
+                f"{MIN_DEPARTMENT_DISPLAY_ORDER} through "
+                f"{MAX_DEPARTMENT_DISPLAY_ORDER}."
+            ),
+            code="structure_display_order_invalid",
+        )
+    return value
+
+
+def canonical_request_json(payload: Mapping[str, object]) -> bytes:
+    """Return deterministic UTF-8 JSON for an already-normalized command."""
+
+    return json.dumps(
+        dict(payload),
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def canonical_request_digest(payload: Mapping[str, object]) -> str:
+    """Return the lower-case SHA-256 digest of a normalized command payload."""
+
+    return hashlib.sha256(canonical_request_json(payload)).hexdigest()
+
+
+def department_code_candidates(name: str) -> tuple[str, ...]:
+    """Return the complete deterministic, bounded code-candidate sequence."""
+
+    normalized_name = normalize_department_name(name)
+    base = _HYPHEN_RUN.sub(
+        "-",
+        slugify(normalized_name, allow_unicode=False).replace("_", "-"),
+    ).strip("-")
+    base = base[:MAX_DEPARTMENT_CODE_LENGTH].rstrip("-") or "department"
+
+    candidates: list[str] = []
+    for attempt in range(1, MAX_DEPARTMENT_CODE_CANDIDATES + 1):
+        suffix = "" if attempt == 1 else f"-{attempt}"
+        stem = base[: MAX_DEPARTMENT_CODE_LENGTH - len(suffix)].rstrip("-")
+        candidates.append(f"{stem}{suffix}")
+    return tuple(candidates)
+
+
+def generate_department_code(
+    name: str,
+    *,
+    existing_codes: Iterable[str] = (),
+) -> str:
+    """Choose the first case-insensitively unused deterministic candidate."""
+
+    occupied = frozenset(code.casefold() for code in existing_codes)
+    for candidate in department_code_candidates(name):
+        if candidate.casefold() not in occupied:
+            return candidate
+    _raise_field_error(
+        field_name="name",
+        message="Maru could not generate an available Department code.",
+        code="structure_code_unavailable",
+    )

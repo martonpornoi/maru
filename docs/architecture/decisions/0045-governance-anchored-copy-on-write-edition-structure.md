@@ -212,10 +212,11 @@ read-only. A Suspended or Closed organization is read-only from this workflow.
 Department retirement is a one-way, reasoned command in this slice. It retains
 the stable record and history and prevents new children, Positions, or access
 targets beneath it. A Department cannot retire while it has a current child,
-open Position, effective assignment, or effective authority that would become
-misleading; dependencies must be moved or ended through their owning commands
-first. Historical closed relationships remain attached and visible only to
-authorized historical projections.
+open Position, an active assignment whose term has not ended, or unclosed
+authority that is effective now or scheduled for later; those dependencies
+must be moved or ended through their owning commands first. Historical closed
+relationships, including immutable Position bindings, remain attached and
+visible only to authorized historical projections.
 
 Hard deletion is exceptional. It requires expected version, exact current-name
 confirmation, reason, and proof under lock that the Department has no child,

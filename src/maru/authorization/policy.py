@@ -183,6 +183,7 @@ def resolve_department_target(
             pk=department_id,
             organization_id=organization_id,
             edition_id=edition_id,
+            retired_at__isnull=True,
         ).values("id", "organization_id", "edition_id")
     )
     if row is None:
@@ -211,6 +212,7 @@ def resolve_resource_target(
             organization_id=organization_id,
             edition_id=edition_id,
             department_id=department_id,
+            department__retired_at__isnull=True,
         ).values(
             "id",
             "organization_id",
@@ -548,7 +550,10 @@ def _bulk_authority_projection_targets(
     }
     departments = {
         row["id"]: (row["organization_id"], row["edition_id"])
-        for row in Department.objects.filter(id__in=requested_department_ids)
+        for row in Department.objects.filter(
+            id__in=requested_department_ids,
+            retired_at__isnull=True,
+        )
         .order_by()
         .values("id", "organization_id", "edition_id")
     }

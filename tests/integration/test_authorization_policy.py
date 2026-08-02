@@ -38,6 +38,10 @@ from tests.factories import (
     RoleBundleFactory,
 )
 from tests.support.authority import activate_synthetic_board
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_for_test,
+)
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -76,11 +80,10 @@ def _workforce_resources() -> tuple[
     edition = EventEditionFactory()
     creator = AccountFactory()
     role_bundle = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code=f"operations-{uuid4().hex[:8]}",
         name="Operations",
+        expected_code="operations",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -93,17 +96,19 @@ def _workforce_resources() -> tuple[
     )
 
     def create_position(code: str) -> tuple[Position, ScopedResourceBinding]:
-        position = Position.objects.create(
-            organization=edition.organization,
-            edition=edition,
-            template=template,
-            department=department,
-            role_bundle=role_bundle,
-            code=code,
-            title=code.replace("-", " ").title(),
-            description="Synthetic exact resource target.",
-            capacity_codes=["staff"],
-            created_by=creator,
+        position = save_position_for_test(
+            position=Position(
+                organization=edition.organization,
+                edition=edition,
+                template=template,
+                department=department,
+                role_bundle=role_bundle,
+                code=code,
+                title=code.replace("-", " ").title(),
+                description="Synthetic exact resource target.",
+                capacity_codes=["staff"],
+                created_by=creator,
+            )
         )
         binding, _ = ScopedResourceBinding.objects.get_or_create(
             resource_kind=ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION,
@@ -428,12 +433,11 @@ def test_resolvers_reject_missing_foreign_and_platform_self_targets() -> None:
 
 def test_department_scope_is_exact_without_hierarchy_inheritance() -> None:
     department, *_ = _workforce_resources()
-    child = Department.objects.create(
-        organization=department.organization,
+    child = create_department_for_test(
         edition=department.edition,
         parent=department,
-        code=f"operations-child-{uuid4().hex[:8]}",
         name="Operations child",
+        expected_code="operations-child",
     )
     principal = AccountFactory()
     CapabilityGrantFactory(

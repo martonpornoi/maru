@@ -1,5 +1,6 @@
 """Closed, versioned domain-event schema registry."""
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -8,6 +9,7 @@ from django.core.exceptions import ValidationError
 
 PayloadValidator = Callable[[dict[str, object]], None]
 MAX_EVENT_PAYLOAD_TEXT_LENGTH = 240
+MAX_EVENT_CODE_LENGTH = 80
 
 
 @dataclass(frozen=True, slots=True)
@@ -204,6 +206,104 @@ def _validate_workforce_assignment_activated(payload: dict[str, object]) -> None
     )
 
 
+_WORKFORCE_STRUCTURE_ACTIONS = frozenset(
+    {
+        "template_applied",
+        "department_created",
+        "department_updated",
+        "department_retired",
+        "department_deleted",
+    }
+)
+_WORKFORCE_STRUCTURE_CHANGED_FIELDS = frozenset(
+    {
+        "departments",
+        "name",
+        "description",
+        "parent_department",
+        "display_order",
+        "retirement",
+    }
+)
+_WORKFORCE_STRUCTURE_DEPARTMENT_FIELDS = frozenset(
+    {"name", "description", "parent_department", "display_order"}
+)
+_EVENT_SLUG_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
+
+
+def _validate_workforce_structure_changed(payload: dict[str, object]) -> None:
+    action = payload.get("action")
+    template_action = action == "template_applied"
+    fields = frozenset(
+        {"action", "aggregate_version", "changed_fields"}
+        | ({"template_code", "template_version"} if template_action else set())
+    )
+    _require_exact_string_fields(payload, fields=fields)
+    if action not in _WORKFORCE_STRUCTURE_ACTIONS:
+        raise ValidationError(
+            "Workforce structure event action is not registered.",
+            code="invalid_domain_event_payload",
+        )
+    aggregate_version = payload["aggregate_version"]
+    if not isinstance(aggregate_version, str) or not (
+        aggregate_version.isascii()
+        and aggregate_version.isdecimal()
+        and int(aggregate_version) >= 1
+    ):
+        raise ValidationError(
+            "Workforce structure event version must be positive.",
+            code="invalid_domain_event_payload",
+        )
+    changed_fields = payload["changed_fields"]
+    if not isinstance(changed_fields, str):
+        raise ValidationError(
+            "Workforce structure changed fields are invalid.",
+            code="invalid_domain_event_payload",
+        )
+    changed_field_values = tuple(changed_fields.split(","))
+    if (
+        not changed_field_values
+        or tuple(sorted(set(changed_field_values))) != changed_field_values
+        or not set(changed_field_values).issubset(_WORKFORCE_STRUCTURE_CHANGED_FIELDS)
+    ):
+        raise ValidationError(
+            "Workforce structure changed fields are not registered.",
+            code="invalid_domain_event_payload",
+        )
+    changed_field_set = frozenset(changed_field_values)
+    if (
+        (
+            action in {"template_applied", "department_created", "department_deleted"}
+            and changed_field_set != {"departments"}
+        )
+        or (action == "department_retired" and changed_field_set != {"retirement"})
+        or (
+            action == "department_updated"
+            and not changed_field_set.issubset(_WORKFORCE_STRUCTURE_DEPARTMENT_FIELDS)
+        )
+    ):
+        raise ValidationError(
+            "Workforce structure action and changed fields do not agree.",
+            code="invalid_domain_event_payload",
+        )
+    if template_action:
+        template_code = payload["template_code"]
+        template_version = payload["template_version"]
+        if (
+            not isinstance(template_code, str)
+            or len(template_code) > MAX_EVENT_CODE_LENGTH
+            or _EVENT_SLUG_PATTERN.fullmatch(template_code) is None
+            or not isinstance(template_version, str)
+            or not template_version.isascii()
+            or not template_version.isdecimal()
+            or int(template_version) < 1
+        ):
+            raise ValidationError(
+                "Workforce structure template reference is invalid.",
+                code="invalid_domain_event_payload",
+            )
+
+
 EVENT_DEFINITIONS = (
     EventDefinition(
         name="organizations.representation.changed.v1",
@@ -393,6 +493,12 @@ EVENT_DEFINITIONS = (
         schema_version=1,
         description="A dual-controlled position assignment activated scoped access.",
         validator=_validate_workforce_assignment_activated,
+    ),
+    EventDefinition(
+        name="workforce.structure.changed.v1",
+        schema_version=1,
+        description="An edition-owned Department structure revision committed.",
+        validator=_validate_workforce_structure_changed,
     ),
 )
 

@@ -1,6 +1,7 @@
 import json
+from datetime import UTC, datetime
 from io import StringIO
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from django.contrib import admin
@@ -9,10 +10,12 @@ from django.core.management.base import CommandError
 from django.test import Client
 from django.urls import reverse
 
-from maru.authorization.models import RoleBundle
+from maru.authorization.models import RoleBundle, ScopedResourceBinding
 from maru.authorization.policy import decide, resolve_edition_target
 from maru.demo.constants import DEMO_ACCOUNT_PASSWORD
+from maru.demo.operational_examples import seed_workforce_examples
 from maru.events.models import EventEdition
+from maru.events.services import transition_edition
 from maru.identity.models import Account
 from maru.organizations.models import (
     ConventionSeries,
@@ -34,6 +37,11 @@ from maru.registration.models import (
     RegistrationTemplate,
     RegistrationTemplateSection,
     RegistrationTimelineEntry,
+)
+from maru.workforce.models import (
+    Department,
+    EditionStructureCommandReceipt,
+    EditionStructureControl,
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -57,9 +65,9 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert result["totals"]["participations"] >= 150
     assert result["totals"]["participation_capacities"] >= 400
     assert result["totals"]["lifecycle_transitions"] == 12
-    assert result["totals"]["audit_events"] == 30
-    assert result["totals"]["domain_events"] == 26
-    assert result["totals"]["outbox_messages"] == 26
+    assert result["totals"]["audit_events"] == 32
+    assert result["totals"]["domain_events"] == 28
+    assert result["totals"]["outbox_messages"] == 28
     assert result["totals"]["registration_templates"] == 2
     assert result["totals"]["registration_configurations"] == 8
     assert result["totals"]["registration_template_sections"] == 6
@@ -101,6 +109,37 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         EventEdition.Lifecycle.PREPARING,
         EventEdition.Lifecycle.DRAFT,
     }
+    structure_receipts = EditionStructureCommandReceipt.objects.filter(
+        action=EditionStructureCommandReceipt.Action.DEPARTMENT_CREATED,
+        source_channel="demo_seed",
+    )
+    assert structure_receipts.count() == 2
+    assert all(
+        receipt.retry_key is not None
+        and receipt.request_digest
+        and len(receipt.affected_department_ids) == 1
+        for receipt in structure_receipts
+    )
+    assert (
+        EditionStructureControl.objects.filter(
+            origin=EditionStructureControl.Origin.MANUAL,
+            aggregate_version=1,
+        ).count()
+        == 2
+    )
+    assert (
+        Department.objects.filter(
+            created_in_structure_version=1,
+            last_changed_in_structure_version=1,
+        ).count()
+        == 2
+    )
+    assert (
+        ScopedResourceBinding.objects.filter(
+            resource_kind=ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION,
+        ).count()
+        == 2
+    )
     assert set(OrganizationMembership.objects.values_list("state", flat=True)) >= {
         OrganizationMembership.State.ACTIVE,
         OrganizationMembership.State.INVITED,
@@ -262,6 +301,43 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert empty_admin_models == []
 
     totals_before = result["totals"]
+    transition_edition(
+        organization_id=danube_current.organization_id,
+        edition_id=danube_current.id,
+        to_state=EventEdition.Lifecycle.READY,
+        actor=danube_chair,
+        reason="Prove demo workforce replay after the editable lifecycle.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    replay_created: list[str] = []
+
+    def record_replay(
+        kind: str,
+        _object_id: UUID,
+        *,
+        created: bool,
+    ) -> None:
+        if created:
+            replay_created.append(kind)
+
+    seed_workforce_examples(
+        convention_key="danube",
+        organization=danube_current.organization,
+        edition=EventEdition.objects.get(pk=danube_current.id),
+        accounts={
+            key: Account.objects.get(email=f"danube.{key}@demo.maru.invalid")
+            for key in (
+                "convention-chair",
+                "registration-lead",
+                "registration-volunteer",
+                "volunteer-applicant",
+            )
+        },
+        own=record_replay,
+        happened_at=datetime(2026, 6, 12, 10, 5, tzinfo=UTC),
+    )
+    assert replay_created == []
     fursuit = AttendeeFursuit.objects.order_by("id").first()
     assert fursuit is not None
     legacy_fursuit_id = uuid4()
@@ -274,7 +350,15 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     )
     second_result = json.loads(second_output.getvalue())
     assert second_result["created"] == {}
-    assert second_result["totals"] == totals_before
+    expected_totals = dict(totals_before)
+    for key in (
+        "lifecycle_transitions",
+        "audit_events",
+        "domain_events",
+        "outbox_messages",
+    ):
+        expected_totals[key] += 1
+    assert second_result["totals"] == expected_totals
     assert second_result["passwords_reset"] == 80
     danube_chair.refresh_from_db()
     assert danube_chair.check_password(DEMO_PASSWORD)

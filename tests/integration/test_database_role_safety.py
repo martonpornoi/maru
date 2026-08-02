@@ -19,6 +19,8 @@ from rest_framework.test import APIClient
 from maru.authorization.activation import activate_authority_provenance
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2,
+    RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
+    RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
     RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
     probe_runtime_database_role_safety,
 )
@@ -28,16 +30,40 @@ from maru.authorization.policy import (
     project_active_authority_scopes,
     resolve_organization_target,
 )
+from maru.events.models import EventEdition
+from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.organizations.services import (
     OrganizationCreationDetails,
     create_draft_organization,
     update_organization_profile,
 )
-from tests.factories import AccountFactory, OrganizationFactory
+from maru.workforce.models import (
+    Department,
+    EditionStructureCommandReceipt,
+    EditionStructureControl,
+)
+from tests.factories import AccountFactory, EventEditionFactory, OrganizationFactory
 from tests.support.authority import activate_synthetic_board
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+_PAGE9_TRIGGER_HELPER_IDENTITIES = (
+    "public.maru_workforce_page9_writer_barrier()",
+    "public.maru_workforce_page9_try_scope_mutex(bigint)",
+    "public.maru_workforce_page9_scope_mutex()",
+    "public.maru_validate_edition_structure_control()",
+    "public.maru_assert_edition_structure_control_evidence()",
+    "public.maru_prevent_edition_structure_control_mutation()",
+    "public.maru_validate_edition_structure_receipt()",
+    "public.maru_prevent_edition_structure_receipt_mutation()",
+    "public.maru_workforce_department_fk_contract_is_current()",
+    "public.maru_validate_department_structure_write()",
+    "public.maru_assert_department_structure_evidence()",
+    "public.maru_prevent_department_structure_truncate()",
+    "public.maru_guard_position_retired_department()",
+    "public.maru_guard_assignment_retired_department()",
+)
 
 
 def _name(kind: str) -> str:
@@ -163,18 +189,54 @@ def _provision_runtime_role(
             )
         for identity in RUNTIME_DATABASE_SELECT_ONLY_RELATIONS:
             cursor.execute(
-                sql.SQL("REVOKE INSERT, UPDATE, DELETE ON TABLE ")
+                sql.SQL("REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE ")
                 + sql.SQL(identity)
                 + sql.SQL(" FROM ")
                 + role
             )
             cursor.execute(
-                sql.SQL("REVOKE INSERT, UPDATE, DELETE ON TABLE ")
+                sql.SQL("REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE ")
                 + sql.SQL(identity)
                 + sql.SQL(" FROM PUBLIC")
             )
             cursor.execute(
                 sql.SQL("GRANT SELECT ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" TO ")
+                + role
+            )
+        for identity in RUNTIME_DATABASE_SELECT_INSERT_RELATIONS:
+            cursor.execute(
+                sql.SQL("REVOKE UPDATE, DELETE, REFERENCES ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" FROM ")
+                + role
+            )
+            cursor.execute(
+                sql.SQL("REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" FROM PUBLIC")
+            )
+            cursor.execute(
+                sql.SQL("GRANT SELECT, INSERT ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" TO ")
+                + role
+            )
+        for identity in RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS:
+            cursor.execute(
+                sql.SQL("REVOKE DELETE, REFERENCES ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" FROM ")
+                + role
+            )
+            cursor.execute(
+                sql.SQL("REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" FROM PUBLIC")
+            )
+            cursor.execute(
+                sql.SQL("GRANT SELECT, INSERT, UPDATE ON TABLE ")
                 + sql.SQL(identity)
                 + sql.SQL(" TO ")
                 + role
@@ -211,6 +273,7 @@ def _provisioning_sql_for_test(
     runtime_role: str,
     database_name: str,
     break_late_function: bool = False,
+    break_required_structure_relation: bool = False,
 ) -> str:
     artifact_path = (
         Path(__file__).resolve().parents[2]
@@ -233,6 +296,11 @@ def _provisioning_sql_for_test(
         statement = statement.replace(
             "public.maru_workforce_role_evidence_matches_position(",
             "public.maru_missing_role_evidence_matches_position(",
+        )
+    if break_required_structure_relation:
+        statement = statement.replace(
+            "public.workforce_editionstructurecommandreceipt",
+            "public.maru_missing_editionstructurecommandreceipt",
         )
     return statement
 
@@ -438,6 +506,181 @@ def _sqlstate(error: BaseException) -> str | None:
     return None
 
 
+def _table_privilege_matrix(
+    *,
+    role_name: str,
+    identity: str,
+) -> tuple[bool, bool, bool, bool, bool, bool, bool, bool]:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                pg_catalog.has_table_privilege(%s, %s, 'SELECT'),
+                pg_catalog.has_table_privilege(%s, %s, 'INSERT'),
+                pg_catalog.has_table_privilege(%s, %s, 'UPDATE'),
+                pg_catalog.has_table_privilege(%s, %s, 'DELETE'),
+                pg_catalog.has_table_privilege(%s, %s, 'TRUNCATE'),
+                pg_catalog.has_table_privilege(%s, %s, 'REFERENCES'),
+                pg_catalog.has_table_privilege(%s, %s, 'TRIGGER'),
+                pg_catalog.has_table_privilege(%s, %s, 'MAINTAIN')
+            """,
+            (role_name, identity) * 8,
+        )
+        row = cursor.fetchone()
+    assert row is not None
+    return tuple(bool(value) for value in row)  # type: ignore[return-value]
+
+
+def _assert_structure_relation_privileges(*, role_name: str) -> None:
+    for identity in RUNTIME_DATABASE_SELECT_ONLY_RELATIONS:
+        assert _table_privilege_matrix(
+            role_name=role_name,
+            identity=identity,
+        ) == (True, False, False, False, False, False, False, False)
+    assert _table_privilege_matrix(
+        role_name=role_name,
+        identity=RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0],
+    ) == (True, True, False, False, False, False, False, False)
+    assert _table_privilege_matrix(
+        role_name=role_name,
+        identity=RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0],
+    ) == (True, True, True, False, False, False, False, False)
+    department_privileges = _table_privilege_matrix(
+        role_name=role_name,
+        identity="public.workforce_department",
+    )
+    assert department_privileges[:4] == (True, True, True, True)
+
+
+def _assert_default_table_privileges(
+    *,
+    migration_role: str,
+    runtime_role: str,
+) -> None:
+    default_table_name = _name("default_acl_table")
+    with connection.cursor() as cursor:
+        cursor.execute(sql.SQL("SET ROLE {}").format(sql.Identifier(migration_role)))
+        try:
+            cursor.execute(
+                sql.SQL("CREATE TABLE public.{} (id integer)").format(
+                    sql.Identifier(default_table_name)
+                )
+            )
+        finally:
+            cursor.execute("RESET ROLE")
+    assert _table_privilege_matrix(
+        role_name=runtime_role,
+        identity=f"public.{default_table_name}",
+    ) == (True, True, True, True, False, False, False, False)
+    assert probe_runtime_database_role_safety(
+        role_name=runtime_role
+    ).target_role_is_safe
+
+
+def _assert_runtime_structure_write_plane(
+    *,
+    edition: EventEdition,
+    actor: Account,
+) -> None:
+    control_id = uuid4()
+    receipt_id = uuid4()
+    department_id = uuid4()
+
+    with transaction.atomic():
+        control = EditionStructureControl.objects.create(
+            id=control_id,
+            organization=edition.organization,
+            edition=edition,
+            origin=EditionStructureControl.Origin.MANUAL,
+            aggregate_version=1,
+        )
+        department = Department.objects.create(
+            id=department_id,
+            organization=edition.organization,
+            edition=edition,
+            code=f"runtime-boundary-{department_id.hex[:12]}",
+            name="Runtime boundary",
+            description="Synthetic runtime privilege evidence.",
+            created_in_structure_version=1,
+            last_changed_in_structure_version=1,
+        )
+        EditionStructureCommandReceipt.objects.create(
+            structure=control,
+            organization=edition.organization,
+            edition=edition,
+            action=EditionStructureCommandReceipt.Action.DEPARTMENT_CREATED,
+            resulting_version=1,
+            actor=actor,
+            reason="Create valid runtime structure evidence.",
+            correlation_id=uuid4(),
+            source_channel="test",
+            changed_fields=["departments"],
+            affected_department_ids=[department.id],
+            retry_key=uuid4(),
+            request_digest="a" * 64,
+        )
+        updated = EditionStructureControl.objects.filter(id=control.id).update(
+            aggregate_version=2,
+        )
+        assert updated == 1
+        control.refresh_from_db()
+        department.name = "Updated runtime boundary"
+        department.last_changed_in_structure_version = 2
+        department.save(
+            update_fields=("name", "last_changed_in_structure_version", "updated_at")
+        )
+        receipt = EditionStructureCommandReceipt.objects.create(
+            id=receipt_id,
+            structure=control,
+            organization=edition.organization,
+            edition=edition,
+            action=EditionStructureCommandReceipt.Action.DEPARTMENT_UPDATED,
+            resulting_version=2,
+            actor=actor,
+            reason="Verify the runtime structure evidence boundary.",
+            correlation_id=uuid4(),
+            source_channel="test",
+            changed_fields=["name"],
+            affected_department_ids=[department.id],
+        )
+        with connection.cursor() as cursor:
+            cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        stored_control = EditionStructureControl.objects.get(id=control.id)
+        assert stored_control.aggregate_version == 2
+        assert EditionStructureCommandReceipt.objects.filter(id=receipt.id).exists()
+
+        forbidden_statements = (
+            (
+                "UPDATE public.workforce_editionstructurecommandreceipt "
+                "SET reason = reason WHERE id = %s",
+                receipt.id,
+            ),
+            (
+                "DELETE FROM public.workforce_editionstructurecommandreceipt "
+                "WHERE id = %s",
+                receipt.id,
+            ),
+            (
+                "DELETE FROM public.workforce_editionstructurecontrol WHERE id = %s",
+                control.id,
+            ),
+        )
+        for statement, target_id in forbidden_statements:
+            with (
+                pytest.raises(DatabaseError) as denied,
+                transaction.atomic(),
+                connection.cursor() as cursor,
+            ):
+                cursor.execute(statement, [target_id])
+            assert _sqlstate(denied.value) == "42501"
+
+        transaction.set_rollback(True)
+
+    assert not EditionStructureControl.objects.filter(id=control_id).exists()
+    assert not EditionStructureCommandReceipt.objects.filter(id=receipt_id).exists()
+    assert not Department.objects.filter(id=department_id).exists()
+
+
 def _assert_protected_relations_are_read_only_for_current_login() -> None:
     for identity in RUNTIME_DATABASE_SELECT_ONLY_RELATIONS:
         with connection.cursor() as cursor:
@@ -496,6 +739,59 @@ def test_explicit_runtime_data_plane_and_function_allowlist_is_accepted() -> Non
     assert result.required_function_execute_available
     assert not result.current_user_matches
     assert not result.current_session_is_safe
+    _assert_structure_relation_privileges(role_name=role_name)
+
+
+def test_page9_trigger_helpers_do_not_expand_runtime_execute_closure() -> None:
+    _prepare_least_privilege_boundary()
+    role_name = _create_role()
+    _provision_runtime_role(role_name)
+
+    assert not set(_PAGE9_TRIGGER_HELPER_IDENTITIES) & set(
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT required.identity,
+                   procedure.prosecdef,
+                   pg_catalog.has_function_privilege(
+                       %s,
+                       procedure.oid,
+                       'EXECUTE'
+                   ),
+                   EXISTS (
+                       SELECT 1
+                         FROM pg_catalog.aclexplode(
+                             COALESCE(
+                                 procedure.proacl,
+                                 pg_catalog.acldefault(
+                                     'f'::pg_catalog."char",
+                                     procedure.proowner
+                                 )
+                             )
+                         ) AS privilege
+                        WHERE privilege.grantee = 0
+                          AND privilege.privilege_type = 'EXECUTE'
+                   )
+              FROM pg_catalog.unnest(%s::text[]) AS required(identity)
+              JOIN pg_catalog.pg_proc AS procedure
+                ON procedure.oid = pg_catalog.to_regprocedure(required.identity)
+             ORDER BY required.identity
+            """,
+            [role_name, list(_PAGE9_TRIGGER_HELPER_IDENTITIES)],
+        )
+        rows = cursor.fetchall()
+
+    assert len(rows) == len(_PAGE9_TRIGGER_HELPER_IDENTITIES)
+    assert all(
+        security_definer and not runtime_execute and not public_execute
+        for _, security_definer, runtime_execute, public_execute in rows
+    )
+    result = probe_runtime_database_role_safety(role_name=role_name)
+    assert result.target_role_is_safe
+    assert result.function_execute_boundary_safe
+    assert result.required_function_execute_available
 
 
 @pytest.mark.parametrize(
@@ -887,6 +1183,147 @@ def test_missing_required_relation_dml_is_rejected() -> None:
     assert not result.target_role_is_safe
 
 
+@pytest.mark.parametrize(
+    ("identity", "privilege"),
+    [
+        (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "INSERT"),
+        (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "INSERT"),
+        (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "UPDATE"),
+    ],
+)
+def test_missing_required_structure_relation_privilege_is_rejected(
+    identity: str,
+    privilege: str,
+) -> None:
+    _prepare_least_privilege_boundary()
+    role_name = _create_role()
+    _provision_runtime_role(role_name)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            sql.SQL("REVOKE ")
+            + sql.SQL(privilege)
+            + sql.SQL(" ON TABLE ")
+            + sql.SQL(identity)
+            + sql.SQL(" FROM ")
+            + sql.Identifier(role_name)
+        )
+
+    result = probe_runtime_database_role_safety(role_name=role_name)
+
+    assert not result.required_relation_privileges_available
+    assert not result.target_role_is_safe
+
+
+@pytest.mark.parametrize(
+    ("identity", "privilege", "column_level"),
+    [
+        (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "UPDATE", False),
+        (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "UPDATE", True),
+        (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "DELETE", False),
+        (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "REFERENCES", False),
+        (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "REFERENCES", True),
+        (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "DELETE", False),
+        (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "REFERENCES", False),
+        (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "REFERENCES", True),
+    ],
+)
+def test_forbidden_structure_relation_privilege_is_rejected(
+    identity: str,
+    privilege: str,
+    column_level: bool,
+) -> None:
+    _prepare_least_privilege_boundary()
+    role_name = _create_role()
+    _provision_runtime_role(role_name)
+    with connection.cursor() as cursor:
+        if column_level:
+            cursor.execute(
+                """
+                SELECT attribute.attname
+                  FROM pg_catalog.pg_attribute AS attribute
+                 WHERE attribute.attrelid = pg_catalog.to_regclass(%s)
+                   AND attribute.attnum > 0
+                   AND NOT attribute.attisdropped
+                 ORDER BY attribute.attnum
+                 LIMIT 1
+                """,
+                [identity],
+            )
+            column_name = str(cursor.fetchone()[0])
+            cursor.execute(
+                sql.SQL("GRANT {} ({}) ON TABLE ").format(
+                    sql.SQL(privilege),
+                    sql.Identifier(column_name),
+                )
+                + sql.SQL(identity)
+                + sql.SQL(" TO ")
+                + sql.Identifier(role_name)
+            )
+        else:
+            cursor.execute(
+                sql.SQL("GRANT ")
+                + sql.SQL(privilege)
+                + sql.SQL(" ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" TO ")
+                + sql.Identifier(role_name)
+            )
+
+    result = probe_runtime_database_role_safety(role_name=role_name)
+
+    assert not result.required_relation_privileges_available
+    assert not result.target_role_is_safe
+
+
+@pytest.mark.parametrize(
+    "identity",
+    [
+        *RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
+        *RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
+    ],
+)
+@pytest.mark.parametrize("privilege", ["TRIGGER", "TRUNCATE"])
+def test_structure_relation_control_plane_privilege_is_rejected(
+    identity: str,
+    privilege: str,
+) -> None:
+    _prepare_least_privilege_boundary()
+    role_name = _create_role()
+    _provision_runtime_role(role_name)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            sql.SQL("GRANT ")
+            + sql.SQL(privilege)
+            + sql.SQL(" ON TABLE ")
+            + sql.SQL(identity)
+            + sql.SQL(" TO ")
+            + sql.Identifier(role_name)
+        )
+
+    result = probe_runtime_database_role_safety(role_name=role_name)
+
+    assert not result.table_privileges_safe
+    assert not result.target_role_is_safe
+
+
+def test_department_remains_on_the_ordinary_runtime_dml_plane() -> None:
+    _prepare_least_privilege_boundary()
+    role_name = _create_role()
+    _provision_runtime_role(role_name)
+
+    _assert_structure_relation_privileges(role_name=role_name)
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            sql.SQL(
+                "REVOKE DELETE ON TABLE public.workforce_department FROM {}"
+            ).format(sql.Identifier(role_name))
+        )
+    result = probe_runtime_database_role_safety(role_name=role_name)
+    assert not result.required_relation_privileges_available
+    assert not result.target_role_is_safe
+
+
 @pytest.mark.parametrize("identity", RUNTIME_DATABASE_SELECT_ONLY_RELATIONS)
 @pytest.mark.parametrize("column_level", [False, True])
 def test_protected_relation_mutation_privileges_are_rejected(
@@ -925,6 +1362,63 @@ def test_protected_relation_mutation_privileges_are_rejected(
                 + sql.SQL(identity)
                 + sql.SQL(" TO ")
                 + sql.Identifier(role_name)
+            )
+
+    result = probe_runtime_database_role_safety(role_name=role_name)
+
+    assert not result.required_relation_privileges_available
+    assert not result.target_role_is_safe
+
+
+@pytest.mark.parametrize("identity", RUNTIME_DATABASE_SELECT_ONLY_RELATIONS)
+@pytest.mark.parametrize(
+    "grant_path",
+    ["table", "column", "inherited", "public"],
+)
+def test_protected_relation_references_privilege_is_rejected(
+    identity: str,
+    grant_path: str,
+) -> None:
+    _prepare_least_privilege_boundary()
+    role_name = _create_role()
+    _provision_runtime_role(role_name)
+    grantee: sql.Composable = sql.Identifier(role_name)
+    with connection.cursor() as cursor:
+        if grant_path == "public":
+            grantee = sql.SQL("PUBLIC")
+        elif grant_path == "inherited":
+            inherited_role = _create_role(login=False)
+            _grant_role(parent=inherited_role, member=role_name)
+            grantee = sql.Identifier(inherited_role)
+
+        if grant_path == "column":
+            cursor.execute(
+                """
+                SELECT attribute.attname
+                  FROM pg_catalog.pg_attribute AS attribute
+                 WHERE attribute.attrelid = pg_catalog.to_regclass(%s)
+                   AND attribute.attnum > 0
+                   AND NOT attribute.attisdropped
+                 ORDER BY attribute.attnum
+                 LIMIT 1
+                """,
+                [identity],
+            )
+            column_name = str(cursor.fetchone()[0])
+            cursor.execute(
+                sql.SQL("GRANT REFERENCES ({}) ON TABLE ").format(
+                    sql.Identifier(column_name)
+                )
+                + sql.SQL(identity)
+                + sql.SQL(" TO ")
+                + grantee
+            )
+        else:
+            cursor.execute(
+                sql.SQL("GRANT REFERENCES ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" TO ")
+                + grantee
             )
 
     result = probe_runtime_database_role_safety(role_name=role_name)
@@ -1298,6 +1792,8 @@ def test_genuine_runtime_login_is_safe_and_persistent_replica_setting_is_not() -
     organization = OrganizationFactory()
     controller, _approver = activate_synthetic_board(organization)
     administrator = AccountFactory(is_staff=True, is_superuser=True)
+    structure_edition = EventEditionFactory()
+    structure_actor = AccountFactory()
     target = resolve_organization_target(organization_id=organization.id)
     assert target is not None
     public_snapshot = _public_privilege_snapshot()
@@ -1352,6 +1848,11 @@ def test_genuine_runtime_login_is_safe_and_persistent_replica_setting_is_not() -
                 assert session_result.authenticated_user_matches
                 assert session_result.current_session_is_safe
                 _assert_protected_relations_are_read_only_for_current_login()
+                _assert_structure_relation_privileges(role_name=role_name)
+                _assert_runtime_structure_write_plane(
+                    edition=structure_edition,
+                    actor=structure_actor,
+                )
                 readiness_response = APIClient().get("/health/ready")
                 assert readiness_response.status_code == 200
                 assert readiness_response.json() == {
@@ -1423,6 +1924,53 @@ def test_genuine_runtime_login_is_safe_and_persistent_replica_setting_is_not() -
             )
             cursor.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role_name)))
             _restore_public_privileges(public_snapshot)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_provisioning_requires_the_page9_structure_migration_first() -> None:
+    """A missing restricted relation aborts role and global ACL changes."""
+
+    public_snapshot = _public_privilege_snapshot()
+    database_name, _schema_names = _database_and_user_schemas()
+    migration_role = _name("migration")
+    runtime_role = _name("runtime")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            sql.SQL(
+                "CREATE ROLE {} NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE "
+                "NOREPLICATION NOBYPASSRLS"
+            ).format(sql.Identifier(migration_role))
+        )
+
+    try:
+        statement = _provisioning_sql_for_test(
+            migration_role=migration_role,
+            runtime_role=runtime_role,
+            database_name=database_name,
+            break_required_structure_relation=True,
+        )
+        with pytest.raises(DatabaseError), connection.cursor() as cursor:
+            cursor.execute(statement)
+        connection.rollback()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = %s)",
+                (runtime_role,),
+            )
+            assert cursor.fetchone() == (False,)
+        assert _public_privilege_snapshot() == public_snapshot
+    finally:
+        if connection.connection is not None:
+            connection.rollback()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                sql.SQL("DROP OWNED BY {}").format(sql.Identifier(migration_role))
+            )
+            cursor.execute(
+                sql.SQL("DROP ROLE {}").format(sql.Identifier(migration_role))
+            )
+        _restore_public_privileges(public_snapshot)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -1511,6 +2059,12 @@ def test_provisioning_artifact_commits_completely_or_rolls_back_completely() -> 
                     ),
                 )
                 assert cursor.fetchone() == (True, False, False, False)
+            _assert_structure_relation_privileges(role_name=runtime_role)
+
+        _assert_default_table_privileges(
+            migration_role=migration_role,
+            runtime_role=runtime_role,
+        )
     finally:
         if connection.connection is not None:
             connection.rollback()

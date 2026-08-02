@@ -18,12 +18,17 @@ from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization, OrganizationMembership
 from maru.participation.models import Participation, ParticipationCapacity
+from maru.workforce.edition_write_scope import (
+    lock_active_department_write_target,
+    lock_workforce_edition_write_scope,
+)
 from maru.workforce.models import (
     Department,
     Position,
     PositionAssignment,
     PositionTemplate,
 )
+from maru.workforce.structure_commands import create_department
 
 
 @dataclass(frozen=True, slots=True)
@@ -244,8 +249,13 @@ def bootstrap_organization_workforce(
     normalized_reason = reason.strip()
     if not normalized_reason:
         raise ValidationError("A bootstrap reason is required.")
-    organization = Organization.objects.select_for_update().get(pk=organization.pk)
-    edition = EventEdition.objects.select_for_update().get(pk=edition.pk)
+    scope = lock_workforce_edition_write_scope(
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+    )
+    organization = Organization.objects.get(pk=scope.organization_id)
+    edition = EventEdition.objects.get(pk=scope.edition_id)
     if not controller.is_active or not controller.is_platform_administrator:
         raise ValidationError(
             "The bootstrap controller must be an active platform administrator."
@@ -254,11 +264,11 @@ def bootstrap_organization_workforce(
         raise ValidationError("Choose a distinct active convention chair account.")
     if organization.lifecycle != Organization.Lifecycle.ACTIVE:
         raise ValidationError("The organization must be active.")
-    if edition.organization_id != organization.id or edition.lifecycle in {
-        EventEdition.Lifecycle.ARCHIVED,
-        EventEdition.Lifecycle.CANCELLED,
+    if edition.organization_id != organization.id or edition.lifecycle not in {
+        EventEdition.Lifecycle.DRAFT,
+        EventEdition.Lifecycle.PREPARING,
     }:
-        raise ValidationError("Choose a matching non-closed edition.")
+        raise ValidationError("Choose a matching Draft or Preparing edition.")
     if (
         CapabilityGrant.objects.filter(organization=organization).exists()
         or RoleAssignment.objects.filter(organization=organization).exists()
@@ -336,12 +346,30 @@ def bootstrap_organization_workforce(
         label="Convention Chair",
         code="convention-chair",
     )
-    leadership = Department.objects.create(
-        organization=organization,
-        edition=edition,
-        code="convention-leadership",
+    structure_result = create_department(
+        actor=controller,
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
         name="Convention Leadership",
         description="Edition leadership and accountable cross-department coordination.",
+        parent_department_id=None,
+        display_order=0,
+        expected_version=0,
+        reason=f"Initial convention structure: {normalized_reason}"[:240],
+        retry_key=correlation_id,
+        correlation_id=correlation_id,
+        request_id=correlation_id,
+        source_channel=source_channel,
+    )
+    leadership = Department.objects.get(
+        pk=structure_result.department_id,
+        organization=organization,
+        edition=edition,
+    )
+    lock_active_department_write_target(
+        scope=scope,
+        department_id=leadership.id,
     )
     chair_position = Position.objects.create(
         organization=organization,
@@ -363,6 +391,10 @@ def bootstrap_organization_workforce(
         edition=edition,
         principal=chair,
         role_bundle=controller_role,
+    )
+    lock_active_department_write_target(
+        scope=scope,
+        department_id=leadership.id,
     )
     PositionAssignment.objects.create(
         position=chair_position,

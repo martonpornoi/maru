@@ -8,6 +8,7 @@ from uuid import UUID
 
 from django import forms
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpRequest
 from django.urls import reverse
@@ -17,7 +18,13 @@ from django.utils.safestring import SafeString
 
 from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.events.admin_context import EditionContextAdmin
+from maru.events.models import EventEdition
 from maru.identity.models import Account
+from maru.workforce.edition_write_scope import (
+    LockedWorkforceEditionWriteScope,
+    lock_active_department_write_target,
+    lock_workforce_edition_write_scope,
+)
 from maru.workforce.models import (
     Department,
     OnboardingDocumentRequest,
@@ -33,6 +40,184 @@ from maru.workforce.services import (
     activate_position_assignment,
     review_onboarding_document,
 )
+
+
+def _position_scope_reference(
+    *,
+    position: Position,
+    change: bool,
+) -> tuple[UUID, UUID, UUID, UUID]:
+    """Resolve an identifier-only candidate scope before taking outer locks."""
+
+    if change:
+        row = (
+            Position.objects.filter(id=position.id)
+            .order_by()
+            .values_list(
+                "organization_id",
+                "edition__series_id",
+                "edition_id",
+                "department_id",
+            )
+            .first()
+        )
+    else:
+        edition_row = (
+            EventEdition.objects.filter(id=position.edition_id)
+            .order_by()
+            .values_list("organization_id", "series_id", "id")
+            .first()
+        )
+        row = (
+            None
+            if edition_row is None
+            else (
+                position.organization_id,
+                edition_row[1],
+                edition_row[2],
+                position.department_id,
+            )
+        )
+    if row is None or any(value is None for value in row):
+        raise ValidationError(
+            "The workforce Position target is unavailable.",
+            code="workforce_position_unavailable",
+        )
+    return row
+
+
+def _lock_position_admin_target(
+    *,
+    position: Position,
+    change: bool,
+) -> LockedWorkforceEditionWriteScope:
+    organization_id, series_id, edition_id, department_id = _position_scope_reference(
+        position=position, change=change
+    )
+    scope = lock_workforce_edition_write_scope(
+        organization_id=organization_id,
+        series_id=series_id,
+        edition_id=edition_id,
+    )
+    lock_active_department_write_target(
+        scope=scope,
+        department_id=department_id,
+    )
+    if change:
+        persisted = (
+            Position.objects.select_for_update()
+            .filter(id=position.id)
+            .order_by()
+            .values_list("organization_id", "edition_id", "department_id")
+            .first()
+        )
+        if persisted is None or persisted != (
+            scope.organization_id,
+            scope.edition_id,
+            department_id,
+        ):
+            raise ValidationError(
+                "The workforce Position target is unavailable.",
+                code="workforce_position_unavailable",
+            )
+        if (
+            position.organization_id != scope.organization_id
+            or position.edition_id != scope.edition_id
+            or position.department_id != department_id
+        ):
+            raise ValidationError(
+                "A bound workforce Position cannot move to another scope.",
+                code="workforce_position_scope_immutable",
+            )
+    return scope
+
+
+def _lock_assignment_admin_target(
+    *,
+    assignment: PositionAssignment,
+    change: bool,
+) -> PositionAssignment | None:
+    if change:
+        reference = (
+            PositionAssignment.objects.filter(id=assignment.id)
+            .order_by()
+            .values_list(
+                "organization_id",
+                "edition__series_id",
+                "edition_id",
+                "position_id",
+                "position__department_id",
+            )
+            .first()
+        )
+    else:
+        reference = (
+            Position.objects.filter(id=assignment.position_id)
+            .order_by()
+            .values_list(
+                "organization_id",
+                "edition__series_id",
+                "edition_id",
+                "id",
+                "department_id",
+            )
+            .first()
+        )
+    if reference is None:
+        raise ValidationError(
+            "The workforce assignment target is unavailable.",
+            code="workforce_assignment_unavailable",
+        )
+    organization_id, series_id, edition_id, position_id, department_id = reference
+    scope = lock_workforce_edition_write_scope(
+        organization_id=organization_id,
+        series_id=series_id,
+        edition_id=edition_id,
+    )
+    lock_active_department_write_target(
+        scope=scope,
+        department_id=department_id,
+    )
+    position_scope = (
+        Position.objects.select_for_update()
+        .filter(id=position_id)
+        .order_by()
+        .values_list("organization_id", "edition_id", "department_id")
+        .first()
+    )
+    if position_scope != (
+        scope.organization_id,
+        scope.edition_id,
+        department_id,
+    ):
+        raise ValidationError(
+            "The workforce assignment target is unavailable.",
+            code="workforce_assignment_unavailable",
+        )
+    if assignment.position_id != position_id:
+        raise ValidationError(
+            "A workforce assignment cannot move to another Position.",
+            code="workforce_assignment_position_immutable",
+        )
+    if not change:
+        return None
+    locked_assignment = (
+        PositionAssignment.objects.select_for_update()
+        .filter(
+            id=assignment.id,
+            organization_id=scope.organization_id,
+            edition_id=scope.edition_id,
+            position_id=position_id,
+        )
+        .order_by()
+        .first()
+    )
+    if locked_assignment is None:
+        raise ValidationError(
+            "The workforce assignment target is unavailable.",
+            code="workforce_assignment_unavailable",
+        )
+    return locked_assignment
 
 
 class PositionAdminForm(forms.ModelForm):  # type: ignore[type-arg]
@@ -141,12 +326,36 @@ class VolunteerOpportunityInline(admin.StackedInline):  # type: ignore[type-arg]
 
 @admin.register(Department)
 class DepartmentAdmin(EditionContextAdmin):
+    """Inspection-only legacy registry; Page 9 owns every Department mutation."""
+
     edition_context_lookup = "edition_id"
-    list_display = ("name", "edition", "parent", "position")
+    list_display = ("name", "edition", "parent", "display_order")
     list_filter = ("organization", "edition")
     search_fields = ("name", "code", "edition__name")
     autocomplete_fields = ("organization", "edition", "parent")
-    prepopulated_fields: ClassVar[dict[str, Sequence[str]]] = {"code": ("name",)}
+
+    @override
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        del request
+        return False
+
+    @override
+    def has_change_permission(
+        self,
+        request: HttpRequest,
+        obj: Department | None = None,
+    ) -> bool:
+        del request, obj
+        return False
+
+    @override
+    def has_delete_permission(
+        self,
+        request: HttpRequest,
+        obj: Department | None = None,
+    ) -> bool:
+        del request, obj
+        return False
 
 
 @admin.register(PositionTemplate)
@@ -220,6 +429,7 @@ class PositionAdmin(EditionContextAdmin):
         change: bool,
     ) -> None:
         _ = form, change
+        _lock_position_admin_target(position=obj, change=change)
         if not obj.created_by_id and isinstance(request.user, Account):
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
@@ -399,6 +609,7 @@ class PositionAssignmentAdmin(EditionContextAdmin):
     )
 
     @override
+    @transaction.atomic
     def save_model(
         self,
         request: HttpRequest,
@@ -407,11 +618,10 @@ class PositionAssignmentAdmin(EditionContextAdmin):
         change: bool,
     ) -> None:
         actor = cast(Account, request.user)
-        if change:
-            previous = PositionAssignment.objects.get(id=obj.id)
-            if previous.status == PositionAssignment.Status.ACTIVE:
-                obj.__dict__.update(previous.__dict__)
-                return
+        previous = _lock_assignment_admin_target(assignment=obj, change=change)
+        if previous is not None and previous.status == PositionAssignment.Status.ACTIVE:
+            obj.__dict__.update(previous.__dict__)
+            return
         obj.organization = obj.position.organization
         obj.edition = obj.position.edition
         if not change:

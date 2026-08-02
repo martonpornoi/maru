@@ -95,6 +95,90 @@ def test_unknown_event_and_version_are_rejected() -> None:
 
 
 @pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "action": "department_created",
+            "aggregate_version": "1",
+            "changed_fields": "departments",
+        },
+        {
+            "action": "department_updated",
+            "aggregate_version": "12",
+            "changed_fields": "description,display_order,name,parent_department",
+        },
+        {
+            "action": "template_applied",
+            "aggregate_version": "1",
+            "changed_fields": "departments",
+            "template_code": "awoostria-reference",
+            "template_version": "1",
+        },
+    ],
+)
+def test_workforce_structure_event_has_minimized_registered_payload(
+    payload: dict[str, object],
+) -> None:
+    validate_event_payload(
+        event_name="workforce.structure.changed.v1",
+        schema_version=1,
+        payload=payload,
+    )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "action": "template_applied",
+            "aggregate_version": "1",
+            "changed_fields": "departments",
+        },
+        {
+            "action": "department_created",
+            "aggregate_version": "0",
+            "changed_fields": "departments",
+        },
+        {
+            "action": "department_created",
+            "aggregate_version": "1",
+            "changed_fields": "name,private_reason",
+        },
+        {
+            "action": "department_updated",
+            "aggregate_version": "1",
+            "changed_fields": "name,name",
+        },
+        {
+            "action": "department_deleted",
+            "aggregate_version": "2",
+            "changed_fields": "departments",
+            "target_department_id": "not-public-evidence",
+        },
+        {
+            "action": "department_retired",
+            "aggregate_version": "2",
+            "changed_fields": "name",
+        },
+        {
+            "action": "department_updated",
+            "aggregate_version": "2",
+            "changed_fields": "departments",
+        },
+    ],
+)
+def test_workforce_structure_event_rejects_unregistered_or_private_evidence(
+    payload: dict[str, object],
+) -> None:
+    with pytest.raises(ValidationError):
+        validate_event_payload(
+            event_name="workforce.structure.changed.v1",
+            schema_version=1,
+            payload=payload,
+        )
+
+
+@pytest.mark.parametrize(
     "value",
     ["provider_timeout", "webhook.rate-limited", "retry.2"],
 )

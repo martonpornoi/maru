@@ -60,13 +60,18 @@ deployment restore/PITR, and the real activation ceremony remain gates before
 production approval.
 Page 9a.0 now mounts the canonical read-only Organization structure page and
 strict GET API. It composes the minimized Executive Board governance anchor
-with one bounded, complete edition tree, validates holder role lineage and
-active-person state before labels, audits the sensitive read before disclosure,
-and removes the duplicate React structure destination. Page 9a.1's structure
-version fence, template application, and Department commands remain next. The
-immutable 22-Department `awoostria-reference@1` catalog itself is implemented
-and pinned with Helper Board as sole root and no Executive Board Department;
-the current multi-query read does not claim a concurrent versioned snapshot.
+with one version-fenced bounded, complete edition tree, validates holder role
+lineage and active-person state before labels, audits the sensitive read before
+disclosure, retries one aggregate movement, and removes the duplicate React
+structure destination. Page 9a.1's aggregate, immutable template application,
+Department command services, repository-owned writer reconciliation, and
+workforce `0006`/`0007` stopped-writer trigger contract are implemented and
+repository-verified by 1,471 tests at 90.13 percent branch coverage. The
+immutable 22-Department
+`awoostria-reference@1` catalog pins Helper Board as sole root and contains no
+Executive Board Department. Strict HTML/API mutation adapters remain
+unmounted; production authority reconciliation, cutover, representative
+restore/PITR, accessibility, and owner evidence remain gates.
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
@@ -199,11 +204,18 @@ Page 9a.0 adds one exact-edition Organization structure read beneath that
 foundation. Platform oversight remains non-participating; ordinary users need
 edition-wide `workforce.view_structure`, and manage-only, Department-only,
 staff, Board placement, or selected context is insufficient. The page/API show
-one complete bounded hierarchy or explicit no-partial overflow and require a
-minimized sensitive-read audit before disclosure. Focused backend/OpenAPI/
-frontend/static checks, the 1,239-test full suite at 90.35 percent branch
-coverage, and authenticated desktop smoke pass. Reliable narrow-viewport,
-accessibility, and owner evidence remain open.
+one version-fenced complete bounded hierarchy or explicit no-partial overflow,
+retry one aggregate movement, and require a minimized sensitive-read audit
+before disclosure. Focused backend/OpenAPI/frontend/static checks, the
+historical 1,239-test Page 9a.0 full suite at 90.35 percent branch coverage,
+and authenticated desktop smoke pass. The later Page 9a.1 backend work adds
+the implemented aggregate/receipt schema, stopped-writer migration, template
+and Department commands, shared writer order, snapshot retry, and exact runtime
+trigger-readiness checks without mounting mutation adapters; its definitive
+current-graph gate passes 1,471 tests at 90.13 percent branch coverage.
+Reliable narrow-
+viewport, accessibility, owner, production cutover, and recovery evidence
+remain open.
 
 The committed M1 spine is locally verified across the complete suite, migration rehearsal,
 OpenAPI/client regeneration, deployment-shaped checks, and desktop/390-pixel
@@ -287,8 +299,11 @@ guarded browser ceremony and management API are retired. The canonical
 Organization structure page shows the minimized Executive Board governance
 anchor above nested Departments, Positions, current permitted holders, and
 multi-department roles under exact edition scope. The old duplicate Convention
-work destination is removed. Department template/create/update/retire/delete
-management remains Page 9a.1 and Position editing remains Page 9b.
+work destination is removed. The Page 9a.1 aggregate, built-in-template
+application, Department create/update/reparent/reorder/retire/protected-delete
+commands, writer reconciliation, versioned read retry, and database/runtime
+trigger contract are implemented below the UI; their strict HTML/API adapters
+remain unmounted. Position editing remains Page 9b.
 Qualifications, availability,
 shifts, work records, purpose-built approval UI, and the programme/schedule
 side of this phase remain.

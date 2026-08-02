@@ -6,12 +6,16 @@ ADR 0030 retained these backend modules while the controlled interface mounted
 Sign in and Pages 1–7. ADR 0039 now integrates that spine, Convention work,
 and specialist records into one `/admin/` shell, ADR 0040 implements Page 8
 Executive Board activation, and Page 9a.0 mounts the canonical bounded
-Organization structure read. Their backend route, authorization, migration-
-drift, frontend build, populated/fresh migration, local restore, sensitive-read
-audit, and existing responsive browser gates pass. The definitive local gate
-passes 1,239 tests at 90.35 percent branch coverage; reliable Page 9 narrow-
-viewport evidence, accessibility, complete visual states, and owner rehearsal
-remain. ADR 0037 and
+Organization structure read. That read now uses the implemented edition
+aggregate/version fence and one complete retry. Page 9a.1's workforce
+`0006`/`0007` stopped-writer database boundary, immutable template application,
+Department command core, repository-owned writer reconciliation, and pinned
+runtime trigger catalog are also implemented and focused-verified, while their
+strict HTML/API mutation adapters remain unmounted. The historical Page 9a.0
+local gate passed 1,239 tests at 90.35 percent branch coverage. Reliable Page 9
+narrow-viewport evidence, accessibility, complete visual states, owner
+rehearsal, production authority reconciliation, cutover, and representative
+restore/PITR remain open. ADR 0037 and
 `docs/project/PRODUCTION_CONSOLIDATION.md` distinguish mounted,
 API-only, preserved/unmounted, partial, absent, and deployment-gated
 capabilities. ADR 0041's exact Department/resource scope prerequisite is

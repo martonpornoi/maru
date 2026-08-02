@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -21,16 +22,6 @@ from maru.registration.models import (
     AttendeeRegistrationProfile,
     ConfigurationStatus,
     Registration,
-)
-from maru.workforce.models import (
-    Department,
-    OnboardingDocumentRequest,
-    OnboardingDocumentType,
-    Position,
-    PositionAssignment,
-    PositionTemplate,
-    VolunteerApplication,
-    VolunteerOpportunity,
 )
 from tests.factories import (
     AccountFactory,
@@ -158,59 +149,63 @@ def _registration_graph() -> tuple[
     return registration, profile, fursuit, attendee
 
 
-def _workforce_parents() -> tuple[
-    EventEdition,
-    Account,
-    Position,
-    VolunteerOpportunity,
-    OnboardingDocumentType,
-]:
+def _workforce_parents(apps: Any) -> tuple[EventEdition, Account, Any, Any, Any]:
+    department_model = apps.get_model("workforce", "Department")
+    position_template_model = apps.get_model("workforce", "PositionTemplate")
+    position_model = apps.get_model("workforce", "Position")
+    opportunity_model = apps.get_model("workforce", "VolunteerOpportunity")
+    document_type_model = apps.get_model("workforce", "OnboardingDocumentType")
     edition = EventEditionFactory()
     actor = AccountFactory()
     role = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
-        edition=edition,
+    department = department_model.objects.create(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
         code="migration-operations",
         name="Migration Operations",
     )
-    template = PositionTemplate.objects.create(
-        organization=edition.organization,
+    template = position_template_model.objects.create(
+        organization_id=edition.organization_id,
         code="migration-volunteer",
         name="Migration Volunteer",
         version=1,
         description="Synthetic migration position.",
         default_headcount=2,
         default_capacity_codes=["volunteer"],
-        role_bundle=role,
-        created_by=actor,
+        role_bundle_id=role.id,
+        created_by_id=actor.id,
     )
-    position = Position.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=role,
+    position = position_model.objects.create(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        template_id=template.id,
+        department_id=department.id,
+        role_bundle_id=role.id,
         code="migration-volunteer",
         title="Migration Volunteer",
         description=template.description,
         headcount=2,
         capacity_codes=["volunteer"],
-        created_by=actor,
+        created_by_id=actor.id,
     )
-    document_type = OnboardingDocumentType.objects.create(
-        organization=edition.organization,
-        edition=edition,
+    opportunity = opportunity_model.objects.create(
+        position_id=position.id,
+        headline=position.title,
+        description=position.description,
+    )
+    document_type = document_type_model.objects.create(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
         code="migration-agreement",
         name="Migration Agreement",
         description="Synthetic migration agreement.",
-        created_by=actor,
+        created_by_id=actor.id,
     )
     return (
         edition,
         actor,
         position,
-        VolunteerOpportunity.objects.get(position=position),
+        opportunity,
         document_type,
     )
 
@@ -302,40 +297,48 @@ def test_registration_preflight_rejects_complete_legacy_platform_subject_graph()
 
 
 def test_workforce_preflight_rejects_every_legacy_platform_subject_table() -> None:
-    _migrate(WORKFORCE_BEFORE)
-    edition, actor, position, opportunity, document_type = _workforce_parents()
+    executor = _migrate(WORKFORCE_BEFORE)
+    historical_apps = executor.loader.project_state([WORKFORCE_BEFORE]).apps
+    edition, actor, position, opportunity, document_type = _workforce_parents(
+        historical_apps
+    )
+    application_model = historical_apps.get_model("workforce", "VolunteerApplication")
+    document_request_model = historical_apps.get_model(
+        "workforce", "OnboardingDocumentRequest"
+    )
+    assignment_model = historical_apps.get_model("workforce", "PositionAssignment")
     administrator = AccountFactory(is_staff=True, is_superuser=True)
-    VolunteerApplication.objects.bulk_create(
+    application_model.objects.bulk_create(
         [
-            VolunteerApplication(
-                opportunity=opportunity,
-                account=administrator,
+            application_model(
+                opportunity_id=opportunity.id,
+                account_id=administrator.id,
                 motivation="Synthetic legacy application.",
                 submitted_at=timezone.now(),
             )
         ]
     )
-    OnboardingDocumentRequest.objects.bulk_create(
+    document_request_model.objects.bulk_create(
         [
-            OnboardingDocumentRequest(
-                organization=edition.organization,
-                edition=edition,
-                document_type=document_type,
-                account=administrator,
-                requested_by=actor,
+            document_request_model(
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+                document_type_id=document_type.id,
+                account_id=administrator.id,
+                requested_by_id=actor.id,
                 requested_at=timezone.now(),
             )
         ]
     )
-    PositionAssignment.objects.bulk_create(
+    assignment_model.objects.bulk_create(
         [
-            PositionAssignment(
-                position=position,
-                organization=edition.organization,
-                edition=edition,
-                account=administrator,
+            assignment_model(
+                position_id=position.id,
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+                account_id=administrator.id,
                 effective_from=timezone.now(),
-                proposed_by=actor,
+                proposed_by_id=actor.id,
                 reason="Synthetic legacy assignment.",
             )
         ]

@@ -17,7 +17,6 @@ from maru.authorization.models import AuthorityProvenanceActivation
 from maru.events.models import EventEdition
 from maru.organizations.models import OrganizationRepresentation
 from maru.workforce.models import (
-    Department,
     Position,
     PositionAssignment,
     PositionTemplate,
@@ -29,6 +28,11 @@ from tests.factories import (
     RoleBundleFactory,
 )
 from tests.support.authority import activate_synthetic_board
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_assignment_for_test,
+    save_position_for_test,
+)
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -222,11 +226,10 @@ def _workforce_graph() -> tuple[EventEdition, Position, PositionAssignment]:
         organization=edition.organization,
         capability_codes=["organizations.view_basic"],
     )
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code=f"runtime-shadow-{uuid4().hex[:8]}",
         name="Runtime shadow department",
+        expected_code="runtime-shadow-department",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -237,26 +240,30 @@ def _workforce_graph() -> tuple[EventEdition, Position, PositionAssignment]:
         role_bundle=role_bundle,
         created_by=actor,
     )
-    position = Position.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=role_bundle,
-        code=f"runtime-shadow-{uuid4().hex[:8]}",
-        title="Runtime shadow position",
-        description="Synthetic trigger resolution position.",
-        capacity_codes=["staff"],
-        created_by=actor,
+    position = save_position_for_test(
+        position=Position(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=role_bundle,
+            code=f"runtime-shadow-{uuid4().hex[:8]}",
+            title="Runtime shadow position",
+            description="Synthetic trigger resolution position.",
+            capacity_codes=["staff"],
+            created_by=actor,
+        )
     )
-    assignment = PositionAssignment.objects.create(
-        position=position,
-        organization=edition.organization,
-        edition=edition,
-        account=assignee,
-        effective_from=timezone.now(),
-        proposed_by=actor,
-        reason="Exercise hardened trigger resolution.",
+    assignment = save_position_assignment_for_test(
+        assignment=PositionAssignment(
+            position=position,
+            organization=edition.organization,
+            edition=edition,
+            account=assignee,
+            effective_from=timezone.now(),
+            proposed_by=actor,
+            reason="Exercise hardened trigger resolution.",
+        )
     )
     return edition, position, assignment
 

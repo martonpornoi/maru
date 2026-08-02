@@ -51,6 +51,11 @@ from tests.support.authority import (
     create_provenance_backed_role_bundle,
     grant_board_controllers_edition_capability,
 )
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_assignment_for_test,
+    save_position_for_test,
+)
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -69,11 +74,10 @@ def _model_world() -> tuple[
     edition = EventEditionFactory()
     actor = AccountFactory()
     role = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -86,18 +90,20 @@ def _model_world() -> tuple[
         role_bundle=role,
         created_by=actor,
     )
-    position = Position.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=role,
-        code="staff-member",
-        title="Staff Member",
-        description=template.description,
-        headcount=3,
-        capacity_codes=["staff"],
-        created_by=actor,
+    position = save_position_for_test(
+        position=Position(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=role,
+            code="staff-member",
+            title="Staff Member",
+            description=template.description,
+            headcount=3,
+            capacity_codes=["staff"],
+            created_by=actor,
+        )
     )
     return edition, edition.organization, actor, department, template, position
 
@@ -105,11 +111,10 @@ def _model_world() -> tuple[
 def test_workforce_models_reject_invalid_scope_cycles_versions_and_evidence() -> None:  # noqa: PLR0915
     edition, organization, actor, department, template, position = _model_world()
     other_edition = EventEditionFactory()
-    other_department = Department.objects.create(
-        organization=other_edition.organization,
+    other_department = create_department_for_test(
         edition=other_edition,
-        code="other",
         name="Other",
+        expected_code="other",
     )
     other_role = RoleBundleFactory(organization=other_edition.organization)
 
@@ -139,12 +144,11 @@ def test_workforce_models_reject_invalid_scope_cycles_versions_and_evidence() ->
     )
     with pytest.raises(ValidationError, match="same edition"):
         cross_parent.clean()
-    child = Department.objects.create(
-        organization=organization,
+    child = create_department_for_test(
         edition=edition,
         parent=department,
-        code="child",
         name="Child",
+        expected_code="child",
     )
     department.parent = child
     with pytest.raises(ValidationError, match="cycle"):
@@ -358,29 +362,31 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
             "registration.manage_configuration",
         ),
     )
-    department = Department.objects.create(
-        organization=organization,
+    department = create_department_for_test(
         edition=edition,
-        code="registration",
         name="Registration",
+        expected_code="registration",
+        actor=controller,
     )
     template = PositionTemplate.objects.get(
         organization=organization,
         code="registration-lead",
     )
-    position = Position.objects.create(
-        organization=organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=assignment_role,
-        code="registration-lead",
-        title="Registration Lead",
-        description=template.description,
-        headcount=1,
-        capacity_codes=["staff", "volunteer"],
-        status=Position.Status.OPEN,
-        created_by=controller,
+    position = save_position_for_test(
+        position=Position(
+            organization=organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=assignment_role,
+            code="registration-lead",
+            title="Registration Lead",
+            description=template.description,
+            headcount=1,
+            capacity_codes=["staff", "volunteer"],
+            status=Position.Status.OPEN,
+            created_by=controller,
+        )
     )
     opportunity = VolunteerOpportunity.objects.get(position=position)
     with pytest.raises(ValidationError, match="why this position"):
@@ -526,14 +532,16 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
             code=code,
             status=ParticipationCapacity.Status.WITHDRAWN,
         )
-    proposed = PositionAssignment.objects.create(
-        position=position,
-        organization=organization,
-        edition=edition,
-        account=person,
-        effective_from=timezone.now(),
-        proposed_by=controller,
-        reason="Await independent approval.",
+    proposed = save_position_assignment_for_test(
+        assignment=PositionAssignment(
+            position=position,
+            organization=organization,
+            edition=edition,
+            account=person,
+            effective_from=timezone.now(),
+            proposed_by=controller,
+            reason="Await independent approval.",
+        )
     )
     with pytest.raises(ValidationError, match="reason"):
         activate_position_assignment(
@@ -586,19 +594,21 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
             correlation_id=uuid4(),
         )
 
-    closed = Position.objects.create(
-        organization=organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=template.role_bundle,
-        code="closed-registration-role",
-        title="Closed Registration Role",
-        description=template.description,
-        headcount=1,
-        capacity_codes=["staff"],
-        status=Position.Status.CLOSED,
-        created_by=controller,
+    closed = save_position_for_test(
+        position=Position(
+            organization=organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=template.role_bundle,
+            code="closed-registration-role",
+            title="Closed Registration Role",
+            description=template.description,
+            headcount=1,
+            capacity_codes=["staff"],
+            status=Position.Status.CLOSED,
+            created_by=controller,
+        )
     )
     with pytest.raises(ValidationError, match="closed position"):
         activate_position_assignment(

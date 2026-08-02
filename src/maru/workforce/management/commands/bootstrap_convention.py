@@ -15,13 +15,18 @@ from maru.workforce.bootstrap import bootstrap_organization_workforce
 
 class Command(BaseCommand):
     help = (
-        "One-time trust-on-first-use bootstrap for an empty organization's "
-        "controller, convention chair, and furry-convention position templates."
+        "Recovery-only one-time bootstrap for an empty active organization's "
+        "Draft or Preparing edition, convention chair, Page 9 leadership "
+        "Department, and position templates."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("--organization", required=True, help="Organization slug.")
-        parser.add_argument("--edition", required=True, help="Edition slug.")
+        parser.add_argument(
+            "--edition",
+            required=True,
+            help="Draft or Preparing edition slug.",
+        )
         parser.add_argument(
             "--controller-email",
             required=True,

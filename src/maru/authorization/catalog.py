@@ -567,6 +567,7 @@ CAPABILITY_DEFINITIONS = (
         delegable=True,
         field_ceiling=frozenset(
             {
+                "structure_control",
                 "departments",
                 "positions",
                 "opportunities",

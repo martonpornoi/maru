@@ -27,6 +27,9 @@ from maru.authorization.policy import (
     resolve_resource_target,
 )
 from maru.authorization.provenance import authority_issuance_is_current
+from maru.authorization.retired_targets import (
+    lock_retired_department_authority_boundaries,
+)
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
@@ -476,6 +479,12 @@ def delegate_capability(
 
     try:
         with transaction.atomic():
+            # Every authority writer enters the shared Page 9/provenance/
+            # retirement boundary before taking tenant or target row locks.
+            # Keeping this legacy delegation path in the same order as the
+            # newer command services prevents a Department editor and a
+            # delegation from waiting on each other's advisory/row locks.
+            lock_retired_department_authority_boundaries()
             locked_target = _lock_target(target)
             locked_parent = _lock_parent_chain(
                 parent_id=parent.id,

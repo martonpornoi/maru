@@ -41,6 +41,9 @@ from maru.authorization.provenance import (
     role_bundle_provenance_is_historical,
     select_authorized_control_source,
 )
+from maru.authorization.retired_targets import (
+    lock_retired_department_authority_boundaries,
+)
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
@@ -447,6 +450,7 @@ def _lock_target(  # noqa: PLR0912
                 pk=department_id,
                 organization_id=target.organization_id,
                 edition_id=edition_id,
+                retired_at__isnull=True,
             )
             .first()
         )
@@ -538,6 +542,82 @@ def _lock_target(  # noqa: PLR0912
         department=department,
         resource_binding=resource_binding,
     )
+
+
+def _require_current_history_container(
+    target: ResolvedAuthorizationTarget,
+) -> None:
+    """Limit retired-scope closure to a current organizer or edition boundary."""
+
+    if target.department_id is not None or target.resource_binding_id is not None:
+        _raise_authorization(
+            "The authority record is unavailable.",
+            reason_code="authority_unavailable",
+        )
+
+
+def _lock_retired_department_history_scope(
+    *,
+    container: _LockedTarget,
+    organization_id: UUID,
+    edition_id: UUID | None,
+    department_id: UUID | None,
+    resource_binding_id: UUID | None,
+) -> ScopeLevel:
+    """Prove one stored retired scope is inside the locked current container."""
+
+    container_target = container.target
+    if (
+        container_target.department_id is not None
+        or container_target.resource_binding_id is not None
+        or organization_id != container_target.organization_id
+        or edition_id is None
+        or department_id is None
+        or (
+            container_target.edition_id is not None
+            and edition_id != container_target.edition_id
+        )
+    ):
+        _raise_authorization(
+            "The authority record is unavailable.",
+            reason_code="authority_unavailable",
+        )
+
+    department_exists = (
+        Department.objects.select_for_update()
+        .filter(
+            pk=department_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            retired_at__isnull=False,
+        )
+        .exists()
+    )
+    if not department_exists:
+        _raise_authorization(
+            "The authority record is unavailable.",
+            reason_code="authority_unavailable",
+        )
+
+    if resource_binding_id is None:
+        return ScopeLevel.DEPARTMENT
+
+    binding_exists = (
+        ScopedResourceBinding.objects.select_for_update()
+        .filter(
+            pk=resource_binding_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            department_id=department_id,
+        )
+        .exists()
+    )
+    if not binding_exists:
+        _raise_authorization(
+            "The authority record is unavailable.",
+            reason_code="authority_unavailable",
+        )
+    return ScopeLevel.RESOURCE
 
 
 def _publish_authority_event(
@@ -664,6 +744,7 @@ def grant_capability_direct(
             )
 
         with transaction.atomic():
+            lock_retired_department_authority_boundaries()
             locked = _lock_target(target)
             locked_target = locked.target
             decision = _require_dual_control(
@@ -811,6 +892,7 @@ def revoke_capability_grant(
         normalized_reason = _normalized_reason(reason)
         effective_revocation = revoked_at or timezone.now()
         with transaction.atomic():
+            lock_retired_department_authority_boundaries()
             locked = _lock_target(target)
             locked_target = locked.target
             grant = (
@@ -991,6 +1073,7 @@ def create_role_bundle_version(
                 )
 
         with transaction.atomic():
+            lock_retired_department_authority_boundaries()
             locked = _lock_target(target)
             organization = locked.organization
             decision = _require_dual_control(
@@ -1134,6 +1217,7 @@ def assign_role(
             expires_at=expires_at,
         )
         with transaction.atomic():
+            lock_retired_department_authority_boundaries()
             locked = _lock_target(target)
             locked_target = locked.target
             organization = locked.organization
@@ -1327,6 +1411,7 @@ def revoke_role_assignment(
         normalized_reason = _normalized_reason(reason)
         effective_revocation = revoked_at or timezone.now()
         with transaction.atomic():
+            lock_retired_department_authority_boundaries()
             locked = _lock_target(target)
             locked_target = locked.target
             assignment = (
@@ -1413,5 +1498,297 @@ def revoke_role_assignment(
             command=command,
             error=error,
             fallback_reason="assignment_revocation_failed",
+        )
+        raise
+
+
+def revoke_expired_retired_department_capability_grant(
+    *,
+    actor: Account,
+    containing_target: ResolvedAuthorizationTarget,
+    grant_id: UUID,
+    reason: str,
+    correlation_id: UUID,
+    request_id: UUID | None = None,
+    source_channel: str = "service",
+) -> CapabilityGrant:
+    """Close expired grant history below a retired Department.
+
+    Retired Departments cannot be resolved as live authorization targets. This
+    deliberately narrow path authorizes at a current organization or edition
+    container, then derives and verifies the exact historical scope from the
+    persisted grant. It can only add revocation evidence to an already expired
+    row; it cannot issue, extend, move, or reopen authority.
+    """
+
+    obligations = tuple(sorted(require_capability(REVOKE_CAPABILITY).obligations))
+    command = _CommandAudit(
+        capability_code=REVOKE_CAPABILITY,
+        operation="authorization.capability.revoke",
+        target_type="authorization.capability_grant",
+        target_id=grant_id,
+        organization_id=containing_target.organization_id,
+        edition_id=containing_target.edition_id,
+        correlation_id=correlation_id,
+        request_id=request_id,
+        source_channel=source_channel,
+        obligations=obligations,
+        changed_fields=("revoked_at",),
+    )
+    try:
+        _require_current_history_container(containing_target)
+        decision = _require_permission(
+            principal=actor,
+            capability_code=REVOKE_CAPABILITY,
+            target=containing_target,
+        )
+        normalized_reason = _normalized_reason(reason)
+        with transaction.atomic():
+            lock_retired_department_authority_boundaries()
+            locked_container = _lock_target(containing_target)
+            decision = _require_permission(
+                principal=actor,
+                capability_code=REVOKE_CAPABILITY,
+                target=locked_container.target,
+            )
+            grant_query = CapabilityGrant.objects.select_for_update().filter(
+                pk=grant_id,
+                organization_id=locked_container.target.organization_id,
+            )
+            if locked_container.target.edition_id is not None:
+                grant_query = grant_query.filter(
+                    edition_id=locked_container.target.edition_id
+                )
+            grant = grant_query.first()
+            if grant is None:
+                _raise_authorization(
+                    "The authority record is unavailable.",
+                    reason_code="authority_unavailable",
+                )
+            scope_level = _lock_retired_department_history_scope(
+                container=locked_container,
+                organization_id=grant.organization_id,
+                edition_id=grant.edition_id,
+                department_id=grant.department_id,
+                resource_binding_id=grant.resource_binding_id,
+            )
+            command = replace(
+                command,
+                organization_id=grant.organization_id,
+                edition_id=grant.edition_id,
+            )
+            if grant.revoked_at is not None:
+                _raise_validation(
+                    "The capability grant is already revoked.",
+                    reason_code="grant_already_revoked",
+                )
+            evaluated_at = timezone.now()
+            if grant.expires_at is None or grant.expires_at > evaluated_at:
+                _raise_validation(
+                    "Only expired authority history can be closed through this path.",
+                    reason_code="historical_authority_not_expired",
+                )
+            grant.revoked_at = evaluated_at
+            grant.revoked_by = actor
+            grant.revocation_reason = normalized_reason
+            grant.save(
+                update_fields=(
+                    "revoked_at",
+                    "revoked_by",
+                    "revocation_reason",
+                    "updated_at",
+                )
+            )
+            audit = _append_command_audit(
+                principal=actor,
+                command=command,
+                outcome=AuditEvent.Outcome.ALLOW,
+                reason_code=decision.reason_code,
+            )
+            _publish_authority_event(
+                event_name="authorization.capability.revoked.v1",
+                organization_id=grant.organization_id,
+                edition_id=grant.edition_id,
+                aggregate_type="authorization.capability_grant",
+                aggregate_id=grant.id,
+                aggregate_version=2,
+                payload={
+                    "capability_code": grant.capability_code,
+                    "scope_level": scope_level,
+                },
+                correlation_id=correlation_id,
+                causation_id=audit.id,
+                actor=actor,
+            )
+            return grant
+    except AuthorizationDenied as error:
+        _deny(
+            actor=actor,
+            command=command,
+            message=str(error),
+            reason_code=error.reason_code,
+        )
+    except AuthorityCommandValidationError as error:
+        _audit_failure(
+            actor=actor,
+            command=command,
+            error=error,
+            fallback_reason="retired_grant_closure_invalid",
+        )
+        raise
+    except Exception as error:
+        _audit_failure(
+            actor=actor,
+            command=command,
+            error=error,
+            fallback_reason="retired_grant_closure_failed",
+        )
+        raise
+
+
+def revoke_expired_retired_department_role_assignment(
+    *,
+    actor: Account,
+    containing_target: ResolvedAuthorizationTarget,
+    assignment_id: UUID,
+    reason: str,
+    correlation_id: UUID,
+    request_id: UUID | None = None,
+    source_channel: str = "service",
+) -> RoleAssignment:
+    """Close expired role history below a retired Department."""
+
+    obligations = tuple(sorted(require_capability(REVOKE_CAPABILITY).obligations))
+    command = _CommandAudit(
+        capability_code=REVOKE_CAPABILITY,
+        operation="authorization.role.revoke",
+        target_type="authorization.role_assignment",
+        target_id=assignment_id,
+        organization_id=containing_target.organization_id,
+        edition_id=containing_target.edition_id,
+        correlation_id=correlation_id,
+        request_id=request_id,
+        source_channel=source_channel,
+        obligations=obligations,
+        changed_fields=("revoked_at",),
+    )
+    try:
+        _require_current_history_container(containing_target)
+        decision = _require_permission(
+            principal=actor,
+            capability_code=REVOKE_CAPABILITY,
+            target=containing_target,
+        )
+        normalized_reason = _normalized_reason(reason)
+        with transaction.atomic():
+            lock_retired_department_authority_boundaries()
+            locked_container = _lock_target(containing_target)
+            decision = _require_permission(
+                principal=actor,
+                capability_code=REVOKE_CAPABILITY,
+                target=locked_container.target,
+            )
+            assignment_query = RoleAssignment.objects.select_for_update().filter(
+                pk=assignment_id,
+                organization_id=locked_container.target.organization_id,
+            )
+            if locked_container.target.edition_id is not None:
+                assignment_query = assignment_query.filter(
+                    edition_id=locked_container.target.edition_id
+                )
+            assignment = assignment_query.first()
+            if assignment is None:
+                _raise_authorization(
+                    "The authority record is unavailable.",
+                    reason_code="authority_unavailable",
+                )
+            role = (
+                RoleBundle.objects.only("code", "version")
+                .filter(pk=assignment.role_bundle_id)
+                .first()
+            )
+            if role is None or role.code.casefold() == EXECUTIVE_BOARD_ROLE_CODE:
+                _raise_authorization(
+                    "The authority record is unavailable.",
+                    reason_code="authority_unavailable",
+                )
+            scope_level = _lock_retired_department_history_scope(
+                container=locked_container,
+                organization_id=assignment.organization_id,
+                edition_id=assignment.edition_id,
+                department_id=assignment.department_id,
+                resource_binding_id=assignment.resource_binding_id,
+            )
+            command = replace(
+                command,
+                organization_id=assignment.organization_id,
+                edition_id=assignment.edition_id,
+            )
+            if assignment.revoked_at is not None:
+                _raise_validation(
+                    "The role assignment is already revoked.",
+                    reason_code="assignment_already_revoked",
+                )
+            evaluated_at = timezone.now()
+            if assignment.expires_at is None or assignment.expires_at > evaluated_at:
+                _raise_validation(
+                    "Only expired authority history can be closed through this path.",
+                    reason_code="historical_authority_not_expired",
+                )
+            assignment.revoked_at = evaluated_at
+            assignment.revoked_by = actor
+            assignment.revocation_reason = normalized_reason
+            assignment.save(
+                update_fields=(
+                    "revoked_at",
+                    "revoked_by",
+                    "revocation_reason",
+                    "updated_at",
+                )
+            )
+            audit = _append_command_audit(
+                principal=actor,
+                command=command,
+                outcome=AuditEvent.Outcome.ALLOW,
+                reason_code=decision.reason_code,
+            )
+            _publish_authority_event(
+                event_name="authorization.role.revoked.v1",
+                organization_id=assignment.organization_id,
+                edition_id=assignment.edition_id,
+                aggregate_type="authorization.role_assignment",
+                aggregate_id=assignment.id,
+                aggregate_version=2,
+                payload={
+                    "role_code": role.code,
+                    "role_version": str(role.version),
+                    "scope_level": scope_level,
+                },
+                correlation_id=correlation_id,
+                causation_id=audit.id,
+                actor=actor,
+            )
+            return assignment
+    except AuthorizationDenied as error:
+        _deny(
+            actor=actor,
+            command=command,
+            message=str(error),
+            reason_code=error.reason_code,
+        )
+    except AuthorityCommandValidationError as error:
+        _audit_failure(
+            actor=actor,
+            command=command,
+            error=error,
+            fallback_reason="retired_assignment_closure_invalid",
+        )
+        raise
+    except Exception as error:
+        _audit_failure(
+            actor=actor,
+            command=command,
+            error=error,
+            fallback_reason="retired_assignment_closure_failed",
         )
         raise

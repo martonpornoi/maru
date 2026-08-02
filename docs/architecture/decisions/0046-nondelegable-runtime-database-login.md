@@ -93,10 +93,10 @@ The exact protected-relation set is versioned in code and contains only:
 - `public.authorization_provenanceactivationlatch`.
 
 Runtime must have table-level `SELECT` on all three and must have no effective
-table- or column-level `INSERT`/`UPDATE` and no table-level `DELETE`. Every
-materialized view is likewise SELECT-only. Other current runtime relations
-retain `SELECT`/`INSERT`/`UPDATE`/`DELETE`; all sequences retain only
-`USAGE`/`SELECT`.
+table- or column-level `INSERT`/`UPDATE`/`REFERENCES` and no table-level
+`DELETE`. Every materialized view is likewise SELECT-only. Other current
+runtime relations retain `SELECT`/`INSERT`/`UPDATE`/`DELETE`; all sequences
+retain only `USAGE`/`SELECT`.
 
 Web and worker processes read migration history during readiness but never
 write it. Only the separately credentialed migration role records an applied

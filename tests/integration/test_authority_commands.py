@@ -48,6 +48,10 @@ from tests.factories import (
     RoleBundleFactory,
 )
 from tests.support.authority import activate_synthetic_board as _board_controllers
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_for_test,
+)
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -167,11 +171,10 @@ def _scoped_positions() -> tuple[
     edition = EventEditionFactory()
     creator = AccountFactory()
     role_bundle = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code=f"operations-{uuid4().hex[:8]}",
         name="Operations",
+        expected_code="operations",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -184,17 +187,19 @@ def _scoped_positions() -> tuple[
     )
 
     def create_binding(code: str) -> ScopedResourceBinding:
-        position = Position.objects.create(
-            organization=edition.organization,
-            edition=edition,
-            template=template,
-            department=department,
-            role_bundle=role_bundle,
-            code=code,
-            title=code.replace("-", " ").title(),
-            description="Synthetic exact authority target.",
-            capacity_codes=["staff"],
-            created_by=creator,
+        position = save_position_for_test(
+            position=Position(
+                organization=edition.organization,
+                edition=edition,
+                template=template,
+                department=department,
+                role_bundle=role_bundle,
+                code=code,
+                title=code.replace("-", " ").title(),
+                description="Synthetic exact authority target.",
+                capacity_codes=["staff"],
+                created_by=creator,
+            )
         )
         binding, _ = ScopedResourceBinding.objects.get_or_create(
             resource_kind=ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION,

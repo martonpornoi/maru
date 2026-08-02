@@ -44,6 +44,14 @@ from tests.factories import (
     RoleBundleFactory,
     ScopedResourceBindingFactory,
 )
+from tests.workforce_helpers import (
+    apply_builtin_structure_template_for_test,
+    create_department_for_test,
+    retire_department_for_test,
+    save_position_assignment_for_test,
+    save_position_for_test,
+    update_position_for_test,
+)
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -93,20 +101,22 @@ def _create_position(
         role_bundle=role_bundle,
         created_by=actor,
     )
-    return Position.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        template=template,
-        department=department,
-        reports_to=reports_to,
-        role_bundle=role_bundle,
-        code=code,
-        title=title,
-        description=f"Synthetic {title} position.",
-        headcount=3,
-        capacity_codes=["staff"],
-        status=Position.Status.OPEN,
-        created_by=actor,
+    return save_position_for_test(
+        position=Position(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            reports_to=reports_to,
+            role_bundle=role_bundle,
+            code=code,
+            title=title,
+            description=f"Synthetic {title} position.",
+            headcount=3,
+            capacity_codes=["staff"],
+            status=Position.Status.OPEN,
+            created_by=actor,
+        )
     )
 
 
@@ -150,19 +160,21 @@ def _assign_position(
         expires_at=role_expires_at,
         revoked_at=role_revoked_at,
     )
-    return PositionAssignment.objects.create(
-        position=position,
-        organization=position.organization,
-        edition=position.edition,
-        account=account,
-        status=PositionAssignment.Status.ACTIVE,
-        effective_from=effective_from,
-        expires_at=expires_at,
-        proposed_by=actor,
-        approved_by=AccountFactory(),
-        reason="Synthetic effective holder evidence.",
-        role_assignment=role_assignment,
-        participation_capacity=capacity,
+    return save_position_assignment_for_test(
+        assignment=PositionAssignment(
+            position=position,
+            organization=position.organization,
+            edition=position.edition,
+            account=account,
+            status=PositionAssignment.Status.ACTIVE,
+            effective_from=effective_from,
+            expires_at=expires_at,
+            proposed_by=actor,
+            approved_by=AccountFactory(),
+            reason="Synthetic effective holder evidence.",
+            role_assignment=role_assignment,
+            participation_capacity=capacity,
+        )
     )
 
 
@@ -177,29 +189,28 @@ def test_structure_projection_composes_minimized_governance_and_nested_tree() ->
         organization=edition.organization,
         provisioned_by=platform,
     )
-    helper = Department.objects.create(
-        organization=edition.organization,
+    helper = create_department_for_test(
         edition=edition,
-        code="helper-board",
         name="Helper Board",
-        description="Supports convention departments.",
-        position=10,
+        expected_code="helper-board",
+        display_order=10,
+        actor=platform,
     )
-    later = Department.objects.create(
-        organization=edition.organization,
+    later = create_department_for_test(
         edition=edition,
         parent=helper,
-        code="z-later",
         name="Z Later",
-        position=20,
+        expected_code="z-later",
+        display_order=20,
+        actor=platform,
     )
-    earlier = Department.objects.create(
-        organization=edition.organization,
+    earlier = create_department_for_test(
         edition=edition,
         parent=helper,
-        code="a-earlier",
         name="A Earlier",
-        position=5,
+        expected_code="a-earlier",
+        display_order=5,
+        actor=platform,
     )
 
     response = _authenticated_client(platform).get(
@@ -212,6 +223,7 @@ def test_structure_projection_composes_minimized_governance_and_nested_tree() ->
     assert response.status_code == 200
     payload = response.json()
     assert payload["organization_name"] == "Marucon Organizers"
+    assert payload["series_name"] == edition.series.name
     assert payload["edition_name"] == "Marucon 2030"
     assert payload["governance"] == {
         "kind": "governance",
@@ -219,6 +231,8 @@ def test_structure_projection_composes_minimized_governance_and_nested_tree() ->
         "state": "provisioning",
     }
     assert payload["structure"]["state"] == "complete"
+    assert payload["structure"]["aggregate_version"] == 3
+    assert payload["structure"]["source"] == {"kind": "manual"}
     assert len(payload["structure"]["departments"]) == 1
     helper_node = payload["structure"]["departments"][0]
     assert helper_node == {
@@ -226,8 +240,9 @@ def test_structure_projection_composes_minimized_governance_and_nested_tree() ->
         "parent_id": None,
         "code": "helper-board",
         "name": "Helper Board",
-        "description": "Supports convention departments.",
+        "description": "Synthetic current-schema fixture.",
         "display_order": 10,
+        "state": "active",
         "positions": [],
         "children": [
             {
@@ -235,8 +250,9 @@ def test_structure_projection_composes_minimized_governance_and_nested_tree() ->
                 "parent_id": str(helper.id),
                 "code": "a-earlier",
                 "name": "A Earlier",
-                "description": "",
+                "description": "Synthetic current-schema fixture.",
                 "display_order": 5,
+                "state": "active",
                 "positions": [],
                 "children": [],
             },
@@ -245,8 +261,9 @@ def test_structure_projection_composes_minimized_governance_and_nested_tree() ->
                 "parent_id": str(helper.id),
                 "code": "z-later",
                 "name": "Z Later",
-                "description": "",
+                "description": "Synthetic current-schema fixture.",
                 "display_order": 20,
+                "state": "active",
                 "positions": [],
                 "children": [],
             },
@@ -269,22 +286,95 @@ def test_structure_projection_composes_minimized_governance_and_nested_tree() ->
     assert "audit_sensitive_read" in audit.obligations
 
 
+def test_builtin_source_is_minimized_and_department_state_is_explicit() -> None:
+    platform = _platform_administrator()
+    edition = EventEditionFactory(name="Synthetic sourced structure")
+    apply_builtin_structure_template_for_test(edition=edition, actor=platform)
+    retired = Department.objects.get(edition=edition, code="charity")
+    retire_department_for_test(department=retired, actor=platform)
+
+    response = _authenticated_client(platform).get(
+        _url(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+        )
+    )
+
+    assert response.status_code == 200
+    structure = response.json()["structure"]
+    assert structure["aggregate_version"] == 2
+    assert structure["source"] == {
+        "kind": "builtin_template",
+        "template_code": "awoostria-reference",
+        "template_version": 1,
+    }
+    assert "template_digest" not in str(structure)
+    child_states = {
+        department["code"]: department["state"]
+        for department in structure["departments"][0]["children"]
+    }
+    assert child_states["charity"] == "retired"
+    assert child_states["art"] == "active"
+
+
+def test_manual_control_source_exposes_no_template_fields() -> None:
+    edition = EventEditionFactory()
+    actor = _platform_administrator()
+    for index in range(3):
+        create_department_for_test(
+            actor=actor,
+            edition=edition,
+            name=f"Manual Department {index + 1}",
+            expected_code=f"manual-department-{index + 1}",
+        )
+
+    projection = project_edition_structure(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+    )
+
+    assert projection.aggregate_version == 3
+    assert asdict(projection.source) == {"kind": "manual"}
+
+
+def test_incomplete_builtin_source_provenance_fails_closed_without_names() -> None:
+    edition = EventEditionFactory(name="Private invalid source")
+    platform = _platform_administrator()
+    apply_builtin_structure_template_for_test(edition=edition, actor=platform)
+
+    with patch(
+        "maru.workforce.queries.EditionStructureCommandReceipt.objects.filter"
+    ) as receipt_query:
+        ordered_receipts = receipt_query.return_value.values.return_value.order_by
+        ordered_receipts.return_value.__getitem__.return_value = []
+        response = _authenticated_client(platform).get(
+            _url(
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+            )
+        )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "service_unavailable"
+    assert "Private invalid source" not in response.content.decode()
+
+
 def test_projection_includes_only_effective_holders_and_display_names() -> None:
     now = timezone.now()
     platform = _platform_administrator()
     edition = EventEditionFactory(name="Minimized holders")
-    helper = Department.objects.create(
-        organization=edition.organization,
+    helper = create_department_for_test(
         edition=edition,
-        code="helper-board",
         name="Helper Board",
+        expected_code="helper-board",
+        actor=platform,
     )
-    operations = Department.objects.create(
-        organization=edition.organization,
+    operations = create_department_for_test(
         edition=edition,
         parent=helper,
-        code="operations",
         name="Operations",
+        expected_code="operations",
+        actor=platform,
     )
     current = AccountFactory(
         email="private-current@example.invalid",
@@ -420,11 +510,11 @@ def test_identity_labels_are_resolved_only_after_current_role_validation() -> No
     now = timezone.now()
     platform = _platform_administrator()
     edition = EventEditionFactory()
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
+        actor=platform,
     )
     position = _create_position(
         edition=edition,
@@ -461,11 +551,11 @@ def test_effective_time_intervals_are_half_open_at_one_captured_instant() -> Non
     now = timezone.now()
     platform = _platform_administrator()
     edition = EventEditionFactory()
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
+        actor=platform,
     )
     exact_start = _create_position(
         edition=edition,
@@ -530,11 +620,11 @@ def test_holder_evidence_accepts_only_the_supported_exact_scope_shapes() -> None
     now = timezone.now()
     platform = _platform_administrator()
     edition = EventEditionFactory()
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
+        actor=platform,
     )
     edition_position = _create_position(
         edition=edition,
@@ -589,49 +679,44 @@ def test_holder_evidence_accepts_only_the_supported_exact_scope_shapes() -> None
     assert positions["resource-role"].holders[0].display_name == "Resource holder"
 
 
-def test_valid_depth_boundary_and_expanded_role_edges_fail_without_partial_data(
+def test_depth_and_expanded_role_edges_fail_without_partial_data(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     platform = _platform_administrator()
     edition = EventEditionFactory()
     parent: Department | None = None
-    for index in range(32):
-        parent = Department.objects.create(
-            organization=edition.organization,
+    for index in range(3):
+        parent = create_department_for_test(
             edition=edition,
             parent=parent,
-            code=f"level-{index + 1}",
             name=f"Level {index + 1}",
-            position=index,
+            expected_code=f"level-{index + 1}",
+            display_order=index,
+            actor=platform,
         )
     complete = project_edition_structure(
         organization_id=edition.organization_id,
         edition_id=edition.id,
     )
     assert complete.state == "complete"
-    Department.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        parent=parent,
-        code="level-33",
-        name="Level 33",
-        position=33,
-    )
+    monkeypatch.setattr("maru.workforce.queries.MAX_STRUCTURE_DEPTH", 2)
     too_deep = project_edition_structure(
         organization_id=edition.organization_id,
         edition_id=edition.id,
     )
     assert asdict(too_deep) == {
         "state": "structure_limit_exceeded",
+        "aggregate_version": 3,
+        "source": {"kind": "manual"},
         "departments": (),
     }
 
     roles_edition = EventEditionFactory()
-    department = Department.objects.create(
-        organization=roles_edition.organization,
+    department = create_department_for_test(
         edition=roles_edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
+        actor=platform,
     )
     holder = AccountFactory(display_name="Bounded multi-role holder")
     for index in range(3):
@@ -655,6 +740,8 @@ def test_valid_depth_boundary_and_expanded_role_edges_fail_without_partial_data(
     )
     assert asdict(expanded) == {
         "state": "structure_limit_exceeded",
+        "aggregate_version": 1,
+        "source": {"kind": "manual"},
         "departments": (),
     }
     assert "Bounded multi-role holder" not in str(asdict(expanded))
@@ -663,11 +750,11 @@ def test_valid_depth_boundary_and_expanded_role_edges_fail_without_partial_data(
 def test_closed_reporting_parent_remains_in_the_complete_position_graph() -> None:
     platform = _platform_administrator()
     edition = EventEditionFactory()
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
+        actor=platform,
     )
     manager = _create_position(
         edition=edition,
@@ -685,7 +772,10 @@ def test_closed_reporting_parent_remains_in_the_complete_position_graph() -> Non
         reports_to=manager,
     )
     manager.status = Position.Status.CLOSED
-    manager.save(update_fields=("status", "updated_at"))
+    update_position_for_test(
+        position=manager,
+        update_fields=("status", "updated_at"),
+    )
 
     projection = project_edition_structure(
         organization_id=edition.organization_id,
@@ -705,11 +795,11 @@ def test_reporting_graph_depth_is_bounded_independently(
 ) -> None:
     platform = _platform_administrator()
     edition = EventEditionFactory()
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
+        actor=platform,
     )
     parent: Position | None = None
     for index in range(3):
@@ -730,6 +820,8 @@ def test_reporting_graph_depth_is_bounded_independently(
 
     assert asdict(projection) == {
         "state": "structure_limit_exceeded",
+        "aggregate_version": 1,
+        "source": {"kind": "manual"},
         "departments": (),
     }
 
@@ -744,15 +836,17 @@ def test_structure_projection_query_count_is_row_count_independent(
             edition_id=empty.id,
         )
     assert empty_projection.state == "complete"
+    assert asdict(empty_projection.source) == {"kind": "empty"}
+    assert empty_projection.aggregate_version == 0
 
     now = timezone.now()
     platform = _platform_administrator()
     populated = EventEditionFactory()
-    department = Department.objects.create(
-        organization=populated.organization,
+    department = create_department_for_test(
         edition=populated,
-        code="operations",
         name="Operations",
+        expected_code="operations",
+        actor=platform,
     )
     holder = AccountFactory(display_name="Multi-role query holder")
     for index in range(3):
@@ -787,11 +881,10 @@ def test_structure_projection_query_count_is_row_count_independent(
 
 def test_structure_access_matrix_is_exact_and_department_scope_is_too_narrow() -> None:
     edition = EventEditionFactory()
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
     )
     viewer = AccountFactory()
     CapabilityGrantFactory(
@@ -888,6 +981,7 @@ def test_incomplete_abstract_field_ceiling_fails_closed_before_projection() -> N
                 "positions",
                 "assignment_counts",
                 "holder_display_labels",
+                "structure_control",
             }
         )
         == WORKFORCE_STRUCTURE_REQUIRED_FIELDS
@@ -909,11 +1003,11 @@ def test_each_code_owned_ceiling_returns_generic_overflow_without_partial_rows(
 ) -> None:
     platform = _platform_administrator()
     edition = EventEditionFactory()
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
+        actor=platform,
     )
     if setup_kind in {"position", "holder"}:
         position = _create_position(
@@ -942,6 +1036,8 @@ def test_each_code_owned_ceiling_returns_generic_overflow_without_partial_rows(
     assert response.status_code == 200
     assert response.json()["structure"] == {
         "state": "structure_limit_exceeded",
+        "aggregate_version": 1,
+        "source": {"kind": "manual"},
         "departments": [],
     }
     assert "Hidden by overflow" not in response.content.decode()
@@ -1006,6 +1102,35 @@ def test_structure_get_rejects_unknown_query_fields() -> None:
     )
     assert response.status_code == 400
     assert response.json()["code"] == "unknown_input_field"
+
+
+def test_second_structure_version_movement_returns_503_without_audit_or_names() -> None:
+    edition = EventEditionFactory(name="Private moving structure")
+    platform = _platform_administrator()
+    with (
+        patch(
+            "maru.workforce.structure_snapshot.current_structure_version",
+            side_effect=(1, 2),
+        ) as probe,
+        patch(
+            "maru.workforce.api.project_edition_structure",
+            wraps=project_edition_structure,
+        ) as projector,
+        patch("maru.workforce.api.append_structure_read_audit") as audit,
+    ):
+        response = _authenticated_client(platform).get(
+            _url(
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+            )
+        )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "service_unavailable"
+    assert "Private moving structure" not in response.content.decode()
+    assert probe.call_count == 2
+    assert projector.call_count == 2
+    audit.assert_not_called()
 
 
 def test_api_uses_one_projection_instant_and_fresh_final_authorization() -> None:
@@ -1092,6 +1217,52 @@ def test_structure_openapi_is_recursive_bounded_and_problem_typed() -> None:
     assert enum_values(
         components["WorkforceStructurePosition"]["properties"]["status"]
     ) == set(Position.Status.values)
+    assert enum_values(
+        components["WorkforceStructureDepartment"]["properties"]["state"]
+    ) == {"active", "retired"}
+    source = components["WorkforceStructureSource"]
+    source_variants = {
+        "empty": "WorkforceStructureEmptySource",
+        "manual": "WorkforceStructureManualSource",
+        "legacy_existing": "WorkforceStructureLegacySource",
+        "builtin_template": "WorkforceStructureBuiltinTemplateSource",
+    }
+    assert source["oneOf"] == [
+        {"$ref": f"#/components/schemas/{component_name}"}
+        for component_name in source_variants.values()
+    ]
+    assert source["discriminator"] == {
+        "propertyName": "kind",
+        "mapping": {
+            kind: f"#/components/schemas/{component_name}"
+            for kind, component_name in source_variants.items()
+        },
+    }
+    for kind, component_name in source_variants.items():
+        variant = components[component_name]
+        expected_properties = (
+            {"kind", "template_code", "template_version"}
+            if kind == "builtin_template"
+            else {"kind"}
+        )
+        assert set(variant["properties"]) == expected_properties
+        assert set(variant["required"]) == expected_properties
+        assert enum_values(variant["properties"]["kind"]) == {kind}
+    assert (
+        components["WorkforceStructureBuiltinTemplateSource"]["properties"][
+            "template_version"
+        ]["minimum"]
+        == 1
+    )
+    assert components["WorkforceStructureProjection"]["properties"]["source"] == {
+        "$ref": "#/components/schemas/WorkforceStructureSource"
+    }
+    assert {
+        "state",
+        "aggregate_version",
+        "source",
+        "departments",
+    }.issubset(components["WorkforceStructureProjection"]["required"])
 
 
 def test_governance_anchor_is_absent_or_fixed_and_identity_free() -> None:

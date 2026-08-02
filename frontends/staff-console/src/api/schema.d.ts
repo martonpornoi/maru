@@ -3639,10 +3639,25 @@ export interface components {
         };
         WorkforceStructure: {
             organization_name: string;
+            series_name: string;
             edition_name: string;
             governance: components["schemas"]["WorkforceStructureGovernance"];
             structure: components["schemas"]["WorkforceStructureProjection"];
         };
+        WorkforceStructureBuiltinTemplateSource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "builtin_template";
+            template_code: string;
+            template_version: number;
+        };
+        /**
+         * @description * `builtin_template` - builtin_template
+         * @enum {string}
+         */
+        WorkforceStructureBuiltinTemplateSourceKindEnum: "builtin_template";
         WorkforceStructureDepartment: {
             /** Format: uuid */
             id: string;
@@ -3652,9 +3667,28 @@ export interface components {
             name: string;
             description: string;
             display_order: number;
+            state: components["schemas"]["WorkforceStructureDepartmentStateEnum"];
             positions: components["schemas"]["WorkforceStructurePosition"][];
             readonly children: components["schemas"]["WorkforceStructureDepartment"][];
         };
+        /**
+         * @description * `active` - active
+         *     * `retired` - retired
+         * @enum {string}
+         */
+        WorkforceStructureDepartmentStateEnum: "active" | "retired";
+        WorkforceStructureEmptySource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "empty";
+        };
+        /**
+         * @description * `empty` - empty
+         * @enum {string}
+         */
+        WorkforceStructureEmptySourceKindEnum: "empty";
         WorkforceStructureGovernance: {
             kind: components["schemas"]["WorkforceStructureGovernanceKindEnum"];
             label: string;
@@ -3677,6 +3711,30 @@ export interface components {
             display_name: string;
             other_roles: components["schemas"]["WorkforceStructureRole"][];
         };
+        WorkforceStructureLegacySource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "legacy_existing";
+        };
+        /**
+         * @description * `legacy_existing` - legacy_existing
+         * @enum {string}
+         */
+        WorkforceStructureLegacySourceKindEnum: "legacy_existing";
+        WorkforceStructureManualSource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "manual";
+        };
+        /**
+         * @description * `manual` - manual
+         * @enum {string}
+         */
+        WorkforceStructureManualSourceKindEnum: "manual";
         WorkforceStructurePosition: {
             /** Format: uuid */
             id: string;
@@ -3700,6 +3758,8 @@ export interface components {
         WorkforceStructurePositionStatusEnum: "planned" | "open" | "filled" | "closed";
         WorkforceStructureProjection: {
             state: components["schemas"]["WorkforceStructureProjectionStateEnum"];
+            aggregate_version: number;
+            source: components["schemas"]["WorkforceStructureSource"];
             departments: components["schemas"]["WorkforceStructureDepartment"][];
         };
         /**
@@ -3712,6 +3772,7 @@ export interface components {
             department_name: string;
             position_title: string;
         };
+        WorkforceStructureSource: components["schemas"]["WorkforceStructureEmptySource"] | components["schemas"]["WorkforceStructureManualSource"] | components["schemas"]["WorkforceStructureLegacySource"] | components["schemas"]["WorkforceStructureBuiltinTemplateSource"];
         WriteProfileExtensionValue: {
             /** Format: uuid */
             field_id: string;

@@ -1,7 +1,7 @@
 """API-first volunteer opportunity and self-service onboarding clients."""
 
 import logging
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Never, cast
 from uuid import UUID
@@ -35,13 +35,17 @@ from maru.core.api_input import reject_unknown_fields
 from maru.core.problems import DependencyUnavailable
 from maru.events.models import EventEdition
 from maru.identity.models import Account
-from maru.organizations.queries import executive_board_governance_anchor
+from maru.organizations.queries import (
+    ExecutiveBoardAnchor,
+    executive_board_governance_anchor,
+)
 from maru.workforce.models import (
     OnboardingDocumentRequest,
     VolunteerOpportunity,
 )
 from maru.workforce.queries import (
     WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+    EditionStructureProjection,
     project_edition_structure,
 )
 from maru.workforce.serializers import (
@@ -58,6 +62,10 @@ from maru.workforce.services import (
     upload_onboarding_document,
 )
 from maru.workforce.structure_audit import append_structure_read_audit
+from maru.workforce.structure_snapshot import (
+    StructureSnapshotRead,
+    load_version_fenced_snapshot,
+)
 
 logger = logging.getLogger(__name__)
 PROBLEM_CONTENT_TYPE = "application/problem+json"
@@ -116,6 +124,69 @@ def _authorize_structure(
     return decision
 
 
+@dataclass(frozen=True, slots=True)
+class _WorkforceStructureSnapshot:
+    organization_name: str
+    series_name: str
+    edition_name: str
+    governance: ExecutiveBoardAnchor
+    structure: EditionStructureProjection
+
+
+def _load_workforce_structure_snapshot(
+    *,
+    account: Account,
+    organization_id: UUID,
+    edition_id: UUID,
+) -> StructureSnapshotRead[_WorkforceStructureSnapshot]:
+    """Read the complete authorized composition in the caller's snapshot."""
+
+    projection_at = timezone_now()
+    _authorize_structure(
+        account=account,
+        organization_id=organization_id,
+        edition_id=edition_id,
+        at=projection_at,
+    )
+    edition = (
+        EventEdition.objects.select_related("organization", "series")
+        .only(
+            "id",
+            "name",
+            "organization_id",
+            "organization__name",
+            "series_id",
+            "series__name",
+            "series__organization_id",
+        )
+        .get(
+            id=edition_id,
+            organization_id=organization_id,
+            series__organization_id=organization_id,
+        )
+    )
+    governance = executive_board_governance_anchor(
+        organization_id=organization_id,
+    )
+    structure = project_edition_structure(
+        organization_id=organization_id,
+        edition_id=edition_id,
+        at=projection_at,
+    )
+    return StructureSnapshotRead(
+        value=_WorkforceStructureSnapshot(
+            organization_name=edition.organization.name,
+            series_name=edition.series.name,
+            edition_name=edition.name,
+            governance=governance,
+            structure=structure,
+        ),
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+        aggregate_version=structure.aggregate_version,
+    )
+
+
 class WorkforceStructureView(APIView):
     """Return the current, human-readable edition organization hierarchy."""
 
@@ -141,46 +212,18 @@ class WorkforceStructureView(APIView):
         edition_id: UUID,
     ) -> Response:
         account = _account(request)
-        projection_at = timezone_now()
         reject_unknown_fields(request.query_params, allowed_fields=frozenset())
         try:
-            _authorize_structure(
-                account=account,
-                organization_id=organization_id,
-                edition_id=edition_id,
-                at=projection_at,
-            )
-        except (DatabaseError, RuntimeError) as error:
-            _raise_dependency_unavailable(
-                "Unable to authorize the workforce structure",
-                error,
-            )
-
-        try:
-            edition = (
-                EventEdition.objects.select_related("organization")
-                .only(
-                    "id",
-                    "name",
-                    "organization_id",
-                    "organization__name",
-                )
-                .get(
-                    id=edition_id,
+            snapshot = load_version_fenced_snapshot(
+                load=lambda: _load_workforce_structure_snapshot(
+                    account=account,
                     organization_id=organization_id,
-                )
+                    edition_id=edition_id,
+                ),
             )
-            governance = executive_board_governance_anchor(
-                organization_id=organization_id,
-            )
-            structure = project_edition_structure(
-                organization_id=organization_id,
-                edition_id=edition_id,
-                at=projection_at,
-            )
-            # The projection has one point-in-time meaning. A fresh final
-            # decision additionally prevents authority that expired or was
-            # revoked during the read from releasing the completed response.
+            # The snapshot is internally coherent. A fresh final decision
+            # additionally prevents authority that expired or was revoked
+            # during either read attempt from releasing its names or labels.
             response_authorized_at = timezone_now()
             final_decision = _authorize_structure(
                 account=account,
@@ -210,10 +253,11 @@ class WorkforceStructureView(APIView):
             )
 
         payload: dict[str, object] = {
-            "organization_name": edition.organization.name,
-            "edition_name": edition.name,
-            "governance": asdict(governance),
-            "structure": asdict(structure),
+            "organization_name": snapshot.organization_name,
+            "series_name": snapshot.series_name,
+            "edition_name": snapshot.edition_name,
+            "governance": asdict(snapshot.governance),
+            "structure": asdict(snapshot.structure),
         }
         return Response(WorkforceStructureSerializer(payload).data)
 
@@ -284,7 +328,7 @@ class PublicVolunteerOpportunityListView(APIView):
                 "position__department",
                 "position__reports_to",
             )
-            .order_by("position__department__position", "position__title", "id")
+            .order_by("position__department__display_order", "position__title", "id")
         )
         payload = [
             _opportunity_payload(item)

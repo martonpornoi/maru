@@ -1,10 +1,10 @@
 # Current project state
 
 Last updated: 2026-08-02
-Phase: Production consolidation M2.4 Page 9a.0 bounded Organization structure
-read implemented and focused-verified; Page 9a.1 structure version fence and
-Department mutations next, while production authority reconciliation, load,
-cutover, and deployment-recovery gates remain
+Phase: Production consolidation M2.4 Page 9a.1 command and database core
+implemented and repository-verified; the canonical read remains mounted and the
+strict HTML/API mutation adapters are next, while production authority
+reconciliation, load, cutover, and deployment-recovery gates remain
 Branch: `codex/full-platform-consolidation`
 
 ## Current outcome
@@ -87,8 +87,14 @@ and authenticated-backend identity through a fresh dedicated-login connection;
 deployment smokes. The credential-free provisioning example and real
 PostgreSQL tamper/login tests cover this contract without recording a password.
 
-Page 9a.0 now mounts one canonical read-only **Organization structure** page
-and strict GET API. It composes the minimized Executive Board representation
+The exact downgrade-fence diagnostic includes all eight authorization `0010`
+retired-Department trigger attachments and all three pinned functions. Clean
+reversal, missing migration evidence, disabled attachments, and function
+tampering therefore leave both the completeness and downgrade-fence gates
+unresolved rather than allowing a partially reversed catalog to be mislabeled.
+
+Page 9's canonical read-only **Organization structure** page and strict GET API
+remain mounted. They compose the minimized Executive Board representation
 anchor above the edition-owned Department tree without persisting governance as
 a Department. Code-owned Department, Position, effective-holder, depth, and
 expanded-role ceilings return either one complete tree or an explicit empty
@@ -96,11 +102,31 @@ expanded-role ceilings return either one complete tree or an explicit empty
 workforce, exact RoleAssignment-lineage, and active-person checks. Both HTML
 and API repeat fresh final authorization, then append minimized
 `workforce.structure.read` sensitive-read audit before releasing labels; audit
-failure returns a name-free `503`. The old React structure destination and
-`?view=structure` link are removed. The immutable
-`awoostria-reference@1` 22-Department catalog is implemented and pinned with
-Helper Board as its sole root and no Executive Board Department. Application,
-receipts, structure versioning, and Department mutations are not mounted.
+failure returns a name-free `503`. Reads now expose the aggregate version,
+minimized source kind, and explicit active/retired Department state. They retry
+once around a version movement and return a name-free `503` instead of mixing
+versions. The old React structure destination and `?view=structure` link remain
+removed.
+
+Page 9a.1's command and database core is implemented but deliberately
+unmounted. Workforce `0006` adds the edition structure control and immutable,
+append-only command receipts; workforce `0007` performs the stopped-writer
+preflight, backfills compatible legacy trees, and installs the complete
+control/receipt/Department evidence handshake. The shared command service can
+apply the pinned `awoostria-reference@1` 22-Department template, whose sole
+root is Helper Board and which contains no Executive Board Department. It can
+also create, completely replace, reparent, reorder, retire, and safely delete
+Departments under exact scope, current authorization, aggregate-version,
+retry, audit, and outbox rules. Strict HTML/API mutation adapters are not yet
+mounted.
+
+Repository-owned production writers have been reconciled with the common
+structure boundary: first-authority bootstrap and the operator command create
+Departments through the command service; demo seeding does the same; Position,
+assignment, binding, Board, and authority paths enter the canonical edition
+scope before narrower locks; and Specialist Department records are
+inspection-only. This is repository writer reconciliation, not evidence that a
+production deployment has completed its authority reconciliation or cutover.
 
 The canonical management routes are:
 
@@ -329,8 +355,12 @@ service remain recovery evidence for an approved legacy reconciliation.
   records the consolidated local migration, restore, audit, fixture, final
   backend/coverage evidence, and residual external release boundary.
 - `docs/checkpoints/2026-08-02-page9-bounded-organization-structure.md`
-  records Page 9a.0's canonical bounded read, minimized audit-before-disclosure,
-  focused verification, and deferred version fence/mutations.
+  records Page 9a.0's canonical bounded read and the then-deferred command
+  boundary; it predates the implemented Page 9a.1 core.
+- `docs/checkpoints/2026-08-02-page9a1-structure-write-cutover.md` records the
+  completed Page 9a.1 aggregate, stopped-writer database boundary, unmounted
+  command core, production-writer reconciliation, focused verification, and
+  remaining adapter/deployment gates.
 - Page contracts 05–07 define the M1 behavior and explicit field tables;
   contract 08 defines the backend-verified initial representation handoff, and contracts
   02–04 document closed HTML input.
@@ -480,6 +510,9 @@ Current exact authority-provenance activation evidence is:
 - `check_authority_provenance_readiness` reports only stable aggregate blocker
   and review counts. Exact-required activation additionally proves the complete
   fingerprinted database contract and the configured safe runtime role;
+- the authorization `0010` downgrade-fence hardening passes 14 dedicated and
+  63 adjacent readiness/migration tests on isolated `maru_page9_review_fence`;
+  Ruff, strict mypy, and whitespace checks pass for the changed implementation;
 - `backfill_provable_authority_provenance` is read-only by default, requires
   both apply and stopped-writer acknowledgement to mutate, handles exact
   active/suspended/ended Board history and parent-first delegation, is
@@ -510,7 +543,7 @@ Current exact authority-provenance activation evidence is:
   legacy reconciliation, production cutover, representative deployment
   restore, or PITR drill has occurred.
 
-Current Page 9a.0 evidence is:
+Current Page 9 focused evidence is:
 
 - 52 focused Page 9/API/capability-catalog/template tests pass in 15.66
   seconds, including audit-before-disclosure and audit-failure `503`;
@@ -520,17 +553,33 @@ Current Page 9a.0 evidence is:
 - repository-wide Ruff, strict mypy, Django checks, migration drift,
   production-setting checks, OpenAPI validation/client regeneration,
   TypeScript type checking, 19 Vitest tests, Vite build, and whitespace pass;
-  and
 - authenticated desktop smoke renders one canonical current link, the complete
   bounded tree and separate governance anchor, with no legacy query link,
-  email, or rendered UUID.
+  email, or rendered UUID;
+- 48 combined structure snapshot, schema, command, scope, and integrity tests
+  pass; the stopped-writer integrity/migration/writer-boundary focus passes 18,
+  and the canonical HTML/API projection focus passes 36;
+- all 16 scope-v2 integrity tests pass in 69.48 seconds on an isolated
+  PostgreSQL database after current-schema setup was moved behind the Page 9
+  command/lock boundary and historical migration cases were moved to their
+  exact migration-state models;
+- the concurrent reparent regression distinguishes one committed command from
+  one exact optimistic-version conflict and verifies that the persisted tree
+  remains acyclic;
+- readiness recognizes workforce `0007` and fingerprints all 14 Page 9
+  functions plus all 28 exact trigger attachments; catalog/tamper and existing
+  readiness/runtime-hardening focuses pass 47 and 107 tests respectively; and
+- repository formatting/lint, strict mypy, documentation validation, Django
+  local/deploy checks in both exact-authority modes, migration drift, OpenAPI
+  and deterministic client generation, frontend tests/typecheck/build,
+  whitespace, dependency integrity, and vulnerability audits pass.
 
-The definitive full repository gate passes 1,239 tests in 1,172.87 seconds
-with 90.35 percent branch coverage and no warnings. The browser viewport
-override did not reliably establish a 390-pixel Page 9 run, so its
-narrow-viewport, keyboard, automated-accessibility, complete-state, and owner
-evidence remain open. The read also lacks Page 9a.1's concurrent
-structure-version fence.
+These focused invocations overlap and must not be summed. The definitive
+current-graph repository gate passes all 1,471 tests in 1,538.40 seconds on a
+fresh isolated PostgreSQL database and reaches 90.13 percent branch coverage.
+The browser viewport override did not reliably establish a 390-pixel Page 9
+run, so narrow-viewport, keyboard, automated-accessibility, complete-state,
+and owner evidence remain open.
 
 The populated synthetic `maru_consolidated_demo` database applied
 authorization `0004`, workforce `0004`, and authorization `0005` in dependency
@@ -629,14 +678,27 @@ point. The complete procedures are in
 transaction-wrapped
 `docs/operations/postgresql-runtime-role-provisioning.sql.example`.
 
+Workforce `0006` and `0007` extend that stopped-writer boundary with the Page 9
+structure aggregate. The ordered cutover performs count-only legacy validation,
+deterministic `legacy_existing` backfill, then installs the global activation
+barrier, exact-edition mutex, immutable evidence, retirement/deletion rules,
+runtime-role restrictions, and downgrade fence. Readiness fails closed unless
+all 14 pinned functions and 28 trigger attachments match. Repository writers
+have been reconciled to this order, but a real deployment must still stop old
+processes, prove the complete readiness graph and runtime role, reconcile
+ordinary legacy authority without inference, and rehearse whole-database
+fix-forward/PITR recovery. The combined procedure is in
+`docs/operations/authority-provenance-migration-and-recovery.md`.
+
 ## Known limits and production gates
 
 - The unified shell is implemented and backend-tested; desktop/responsive
   browser smoke, deploy-shaped settings, and the earlier local migration/
   restore evidence pass. The 876-test/90.43-percent result is the consolidated
-  pre-exact-activation baseline; the current milestone result is recorded in
-  the exact-lineage evidence above. Automated accessibility and complete
-  visual-state coverage remain incomplete.
+  pre-exact-activation baseline, the 1,239-test result is the historical
+  Page-9a.0 baseline, and the current Page 9a.1 graph passes 1,471 tests at
+  90.13 percent branch coverage. Automated accessibility and complete visual-
+  state coverage remain incomplete.
 - Owner tutorial rehearsal is unfinished.
 - Executive Board provisioning, exact invitation, self-response, initial
   activation, bounded read/denial audit, database subject guards, and emergency
@@ -646,10 +708,12 @@ transaction-wrapped
   expiry, replacement, ending, planned suspension/reactivation, invitation
   delivery, production legacy reconciliation/cutover, and complete effective-
   access explanations remain later M2. Exact department/resource scope exists
-  below the UI. Page 9a.0's bounded read and principal-specific view/manage
-  summary are mounted, but its structure-version fence, Department mutations,
-  contextual access editor, and computed named explanation are not. Concurrent
-  multi-query structure reads remain an explicit Page 9a.1 risk.
+  below the UI. Page 9's bounded read, aggregate/source/state projection,
+  principal-specific view/manage summary, and one-retry concurrent-read fence
+  are mounted. Its stopped-writer migrations, template application, Department
+  command core, and repository-writer reconciliation are implemented, but the
+  strict HTML/API mutation adapters, contextual access editor, and computed
+  named explanation are not mounted.
 - Programme, typed applications, venues/mergeable spaces, three-phase
   timetable/layers, shifts, storage/logistics, governed documents, and team/
   on-site communications remain absent current modules.
@@ -666,23 +730,27 @@ transaction-wrapped
 
 ## Smallest sensible next actions
 
-1. Implement Page 9a.1's copy-on-write structure aggregate/version fence,
-   template receipt, and Department commands through staged migrations and
-   shared HTML/API services; do not synthesize people, roles, or authority.
-2. Reconcile every effective ordinary legacy authority row without inference
+1. Mount strict shared HTML/API adapters for template application and
+   Department create/update/reparent/reorder/retire/protected-delete using the
+   completed command core; do not duplicate policy or synthesize people, roles,
+   or authority.
+2. Complete the adapter denial/not-found, stale/retry, concurrency,
+   deactivation, persistence, audit/event/outbox rollback, and responsive state
+   matrix, then rerun and record the adapter-expanded repository gate.
+3. Reconcile every effective ordinary legacy authority row without inference
    on a representative restored deployment and prove a zero-blocker preflight.
-3. Exercise representative unbounded authority-candidate sets under load. The
+4. Exercise representative unbounded authority-candidate sets under load. The
    accepted geometry is five fixed target-resolution queries plus one exact-
    issuance database call per 256-item chunk; latency and memory still need a
    deployment-shaped bound.
-4. Rehearse the stopped-writer production cutover, runtime-role transition,
+5. Rehearse the stopped-writer production cutover, runtime-role transition,
    failure/fix-forward path, and whole-database backup/PITR recovery before any
    real activation.
-5. Add Page 9b's Position workflow and computed effective-access explanation
-   only after the Department aggregate is stable.
-6. Run automated accessibility, reliable keyboard traversal, and the complete
+6. Add Page 9b's Position workflow and computed effective-access explanation
+   only after the Department mutation adapters are stable.
+7. Run automated accessibility, reliable keyboard traversal, and the complete
    blocked/error/stale-state matrix before owner rehearsal.
-7. Deliver the next differentiating vertical: panel application → accepted
+8. Deliver the next differentiating vertical: panel application → accepted
    private programme item → reusable/mergeable venue selection → three-phase
    layered timetable → immutable release/API projection.
 
@@ -693,12 +761,17 @@ Page 1–9 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
 `docs/modules/activity.md`, organization/events/workforce/authorization/audit/
 effects module docs, the edition/scope-v2/authority-provenance migration and
 recovery runbooks, and ADR 0046's PostgreSQL provisioning artifact. Run
-`git status --short --branch` and continue with Page 9a.1 while retaining
-representative legacy reconciliation, unbounded candidate-cardinality load,
-deployment cutover, and PITR as explicit release gates. Do not treat backend
-evidence as proof
-of browser or deployment readiness. Preserve
-concurrent changes and the non-participating platform boundary.
+`git status --short --branch`; retain the implemented Page 9a.1 aggregate,
+workforce `0006`/`0007`, read retry, command core, and writer boundary, then
+continue with the strict shared HTML/API mutation adapters. Do not claim a
+future adapter-expanded full-suite result until that invocation has completed
+and been reviewed; the current command/database core gate is the recorded
+1,471-test result. Keep representative legacy reconciliation, unbounded
+candidate-cardinality load, production authority/cutover, whole-database PITR,
+accessibility, complete visual states, and owner evidence as explicit release
+gates. Do not treat focused backend evidence as browser or deployment
+readiness. Preserve concurrent changes and the non-participating platform
+boundary.
 
 Do not trust selected-edition state or route placement as authority; do not let
 purpose-built platform routes collide with or fall through to Django app-label

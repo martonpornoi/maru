@@ -21,6 +21,9 @@ from rest_framework.test import APIClient
 
 from maru.authorization.models import RoleAssignment
 from maru.authorization.policy import decide, resolve_edition_target
+from maru.events.models import EventEdition
+from maru.organizations.models import OrganizationMembership
+from maru.participation.models import Participation
 from maru.registration.models import (
     AttendeeFursuit,
     ConfigurationStatus,
@@ -38,6 +41,8 @@ from maru.registration.services import (
 from maru.workforce.bootstrap import bootstrap_organization_workforce
 from maru.workforce.models import (
     Department,
+    EditionStructureCommandReceipt,
+    EditionStructureControl,
     OnboardingDocumentRequest,
     OnboardingDocumentType,
     Position,
@@ -50,6 +55,7 @@ from maru.workforce.services import (
     activate_position_assignment,
     review_onboarding_document,
 )
+from maru.workforce.structure_commands import create_department
 from tests.factories import (
     AccountFactory,
     AdmissionProductFactory,
@@ -59,6 +65,10 @@ from tests.factories import (
 from tests.support.authority import (
     create_provenance_backed_role_bundle,
     grant_board_controllers_edition_capability,
+)
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_for_test,
 )
 
 pytestmark = [
@@ -124,13 +134,14 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
     edition = EventEditionFactory()
     organization = edition.organization
 
+    bootstrap_correlation = uuid4()
     created = bootstrap_organization_workforce(
         organization=organization,
         edition=edition,
         controller=controller,
         chair=chair,
         reason="Establish the first accountable convention leadership.",
-        correlation_id=uuid4(),
+        correlation_id=bootstrap_correlation,
     )
 
     assert created["position_templates"] >= 10
@@ -138,6 +149,32 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         organization=organization,
         principal=controller,
     ).exists()
+    assert not OrganizationMembership.objects.filter(
+        organization=organization,
+        account=controller,
+    ).exists()
+    assert not Participation.objects.filter(
+        organization=organization,
+        account=controller,
+    ).exists()
+    assert not PositionAssignment.objects.filter(
+        organization=organization,
+        account=controller,
+    ).exists()
+    leadership = Department.objects.get(
+        edition=edition,
+        code="convention-leadership",
+    )
+    structure = EditionStructureControl.objects.get(edition=edition)
+    receipt = EditionStructureCommandReceipt.objects.get(
+        correlation_id=bootstrap_correlation,
+        action=EditionStructureCommandReceipt.Action.DEPARTMENT_CREATED,
+    )
+    assert structure.origin == EditionStructureControl.Origin.MANUAL
+    assert structure.aggregate_version == 1
+    assert receipt.retry_key == bootstrap_correlation
+    assert receipt.actor_id == controller.id
+    assert receipt.affected_department_ids == [leadership.id]
     assert RoleAssignment.objects.filter(
         organization=organization,
         principal=chair,
@@ -349,16 +386,29 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         correlation_id=uuid4(),
     )
 
-    operations = Department.objects.create(
-        organization=organization,
+    leadership = Department.objects.get(
         edition=edition,
-        parent=Department.objects.get(
-            edition=edition,
-            code="convention-leadership",
-        ),
-        code="operations",
+        code="convention-leadership",
+    )
+    operations_result = create_department(
+        actor=controller,
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
         name="Operations",
         description="Attendee-facing convention operations.",
+        parent_department_id=leadership.id,
+        display_order=10,
+        expected_version=1,
+        reason="Add the attendee operations test Department.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    operations = Department.objects.get(
+        pk=operations_result.department_id,
+        organization=organization,
+        edition=edition,
     )
     template = PositionTemplate.objects.get(
         organization=organization,
@@ -375,20 +425,22 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         edition=edition,
         code="convention-chair",
     )
-    position = Position.objects.create(
-        organization=organization,
-        edition=edition,
-        template=template,
-        department=operations,
-        reports_to=chair_position,
-        role_bundle=assignment_role,
-        code="registration-lead",
-        title="Registration Lead",
-        description=template.description,
-        headcount=1,
-        capacity_codes=template.default_capacity_codes,
-        status=Position.Status.OPEN,
-        created_by=controller,
+    position = save_position_for_test(
+        position=Position(
+            organization=organization,
+            edition=edition,
+            template=template,
+            department=operations,
+            reports_to=chair_position,
+            role_bundle=assignment_role,
+            code="registration-lead",
+            title="Registration Lead",
+            description=template.description,
+            headcount=1,
+            capacity_codes=template.default_capacity_codes,
+            status=Position.Status.OPEN,
+            created_by=controller,
+        )
     )
     PositionDocumentRequirement.objects.create(
         position=position,
@@ -497,11 +549,10 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
 def test_workforce_database_guard_rejects_cross_organization_scope() -> None:
     first_edition = EventEditionFactory()
     other_edition = EventEditionFactory()
-    department = Department.objects.create(
-        organization=first_edition.organization,
+    department = create_department_for_test(
         edition=first_edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
     )
 
     with pytest.raises(DatabaseError), transaction.atomic():
@@ -553,6 +604,30 @@ def test_bootstrap_command_covers_success_and_safe_refusals() -> None:
         slug="other-command-2030",
         series__organization__slug="other-command-organization",
     )
+    ready_edition = EventEditionFactory(
+        slug="ready-command-2030",
+        series__organization__slug="ready-command-organization",
+    )
+    EventEdition.objects.filter(pk=ready_edition.pk).update(
+        lifecycle=EventEdition.Lifecycle.PREPARING,
+        lifecycle_version=1,
+        aggregate_version=2,
+    )
+    EventEdition.objects.filter(pk=ready_edition.pk).update(
+        lifecycle=EventEdition.Lifecycle.READY,
+        lifecycle_version=2,
+        aggregate_version=3,
+    )
+    with pytest.raises(CommandError, match="Draft or Preparing"):
+        call_command(
+            "bootstrap_convention",
+            **{
+                **options,
+                "organization": ready_edition.organization.slug,
+                "confirm_organization": ready_edition.organization.slug,
+                "edition": ready_edition.slug,
+            },
+        )
     with pytest.raises(CommandError, match="edition is unavailable"):
         call_command(
             "bootstrap_convention",

@@ -76,7 +76,11 @@ GRANT USAGE, SELECT
     ON ALL SEQUENCES IN SCHEMA public
     TO maru_runtime;
 
--- Make future tables and sequences usable without granting ownership or DDL.
+-- Make future ordinary tables and sequences usable without granting ownership
+-- or DDL. PostgreSQL default ACLs cannot express per-table exceptions. Apply
+-- schema migrations first, then run or reconcile this artifact while writers
+-- remain stopped so every restricted relation listed below is narrowed before
+-- the runtime login resumes.
 ALTER DEFAULT PRIVILEGES FOR ROLE maru_migration IN SCHEMA public
     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO maru_runtime;
 ALTER DEFAULT PRIVILEGES FOR ROLE maru_migration IN SCHEMA public
@@ -88,12 +92,12 @@ ALTER DEFAULT PRIVILEGES FOR ROLE maru_migration IN SCHEMA public
 -- or activate, acknowledge, or reset exact provenance itself.  Keep these
 -- revokes after blanket/default table grants, and reapply them if any protected
 -- relation is ever recreated.
-REVOKE INSERT, UPDATE, DELETE ON TABLE
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.django_migrations,
     public.authorization_authorityprovenanceactivation,
     public.authorization_provenanceactivationlatch
     FROM maru_runtime;
-REVOKE INSERT, UPDATE, DELETE ON TABLE
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.django_migrations,
     public.authorization_authorityprovenanceactivation,
     public.authorization_provenanceactivationlatch
@@ -102,6 +106,33 @@ GRANT SELECT ON TABLE
     public.django_migrations,
     public.authorization_authorityprovenanceactivation,
     public.authorization_provenanceactivationlatch
+    TO maru_runtime;
+
+-- Page 9 structure receipts are append-only runtime evidence. Structure
+-- controls are optimistic-concurrency aggregates that may be inserted and
+-- advanced, but never deleted, by runtime. REFERENCES is unnecessary for both
+-- relations and remains denied at table and column level by the catalog proof.
+-- Keep these explicit exceptions after blanket/default grants. Department is
+-- intentionally absent: it retains ordinary runtime DML and its stopped-writer
+-- retirement trigger remains the database integrity boundary.
+REVOKE UPDATE, DELETE, REFERENCES ON TABLE
+    public.workforce_editionstructurecommandreceipt
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.workforce_editionstructurecommandreceipt
+    FROM PUBLIC;
+GRANT SELECT, INSERT ON TABLE
+    public.workforce_editionstructurecommandreceipt
+    TO maru_runtime;
+
+REVOKE DELETE, REFERENCES ON TABLE
+    public.workforce_editionstructurecontrol
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.workforce_editionstructurecontrol
+    FROM PUBLIC;
+GRANT SELECT, INSERT, UPDATE ON TABLE
+    public.workforce_editionstructurecontrol
     TO maru_runtime;
 
 -- setval() is authorized by UPDATE and changes a sequence outside ordinary
@@ -208,7 +239,8 @@ REVOKE TRIGGER, TRUNCATE, MAINTAIN
 -- Activation itself runs only through the controlled migration/cutover owner.
 -- Readiness also rejects effective parameter ACLs, non-origin role/database
 -- settings, sequence UPDATE, reachable membership ADMIN OPTION, object grant
--- options, and any runtime DML on migration metadata or the two cutover-state
--- relations.
+-- options, any runtime DML on migration metadata or the two cutover-state
+-- relations, REFERENCES on the SELECT-only control trio, DELETE/REFERENCES on
+-- the structure control, or UPDATE/DELETE/REFERENCES on structure receipts.
 
 COMMIT;

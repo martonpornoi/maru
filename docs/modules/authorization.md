@@ -191,9 +191,19 @@ four remaining runtime-executable Board/workforce helpers, and their persistent
 trigger callers, to `pg_catalog, public, pg_temp` with `public`-qualified object
 and helper references. Authorization `0009` is the convergence leaf and central
 downgrade fence; each owning migration also retains its own active-state fence
-if the recorder row is damaged. Readiness fingerprints the complete 19-helper
-runtime closure, all 12 hardened persistent callers, and their exact trigger
-attachments (including `UPDATE OF` column lists) on PostgreSQL 17.
+if the recorder row is damaged. Authorization `0010` and workforce `0007`
+extend that same production contract across retired-Department authority and
+the Page 9 structure writer boundary. Readiness now fingerprints 74
+security-critical functions, including the complete 19-helper runtime closure
+and all 14 Page 9 trigger helpers, and verifies 93 exact trigger attachments.
+The Page 9 subset is exactly 28 attachments, including statement/row event
+types, enabled state, `UPDATE OF` column lists, and deferred timing, on
+PostgreSQL 17. The downgrade-fence subset also includes all eight
+authorization `0010` retired-Department trigger attachments and all three of
+their pinned functions. A clean reverse fails readiness through the required
+migration-recorder set; partial trigger or function loss fails both the
+database-completeness and downgrade-fence gates, so the latter cannot remain
+misleadingly resolved.
 Activation requires the exact-required external fence, an owned top-level
 `READ COMMITTED` transaction, zero blockers, and a stopped-process
 acknowledgement. It is irreversible and idempotent after its one successful
@@ -212,9 +222,14 @@ creation and temporary objects, table trigger/truncate/maintenance, explicit
 effective parameter ACLs, non-origin persistent/live trigger settings,
 sequence update, object/column grant options, and an unusable data plane. A
 safe role has database `CONNECT`, schema `USAGE`, ordinary four-operation DML,
-and sequence `USAGE`/`SELECT`; materialized views and the exact activation
-control trio (`django_migrations`, marker, and latch) are SELECT-only. The
-current-session proof additionally
+`SELECT`/`INSERT` on Page 9 structure receipts,
+`SELECT`/`INSERT`/`UPDATE` on Page 9 structure controls, and sequence
+`USAGE`/`SELECT`; materialized views and the exact activation control trio
+(`django_migrations`, marker, and latch) are SELECT-only and deny table- and
+column-level `REFERENCES`. Both Page 9 relations deny `DELETE` and
+`REFERENCES`, and receipts additionally deny `UPDATE`.
+Department remains on the ordinary DML plane behind its stopped-writer
+retirement trigger. The current-session proof additionally
 matches `CURRENT_USER`, `SESSION_USER`, and this backend's
 `pg_stat_activity.usesysid` to the configured target. Role switching and
 session-authorization impersonation therefore prove privileges but never a
@@ -232,6 +247,10 @@ reserved-activation operation guard is pinned too. Only the controlled owner
 mutates the migration recorder, marker, or latch; the reserved
 audit append is valid only as its exact same-transaction companion. The
 credential-free operator SQL is the matching executable grant specification.
+The 14 `SECURITY DEFINER` Page 9 trigger helpers are definition-fingerprinted
+but deliberately absent from this executable allowlist: PostgreSQL invokes
+them only through the 28 pinned triggers, and both `PUBLIC` and the runtime
+role remain unable to call them directly.
 
 Policy accepts only `ResolvedAuthorizationTarget` values sealed by explicit
 database resolvers. Route UUIDs can narrow a query but cannot assert tenant,
@@ -249,6 +268,20 @@ relationship-only capabilities. Delegation cannot change capability or tenant,
 move sideways or upward, start before or outlive a parent, or form a cycle.
 The full chain is evaluated on every decision, so ancestor revocation remains
 immediate.
+
+Department retirement preserves immutable resource bindings and expired or
+revoked authority as history; those rows do not keep the Department live. New
+bindings and current authority remain forbidden beneath the retired target,
+and any retained binding still blocks hard deletion. Because normal target
+resolvers intentionally exclude retired Departments, two dedicated close-only
+commands may add revocation evidence to an expired, unrevoked capability grant
+or non-reserved role assignment. They first authorize and recheck
+`authorization.revoke` at a current containing organization or exact edition,
+then lock and prove the stored organization/edition/Department/resource chain.
+Audit and event scope comes from that persisted historical row. Wrong tenant,
+wrong edition, current Department, unexpired authority, and already-revoked
+authority fail closed; the commands cannot issue, extend, move, or reopen
+authority.
 
 `ensure_workforce_position_binding(position=...)` is the explicit live-write
 integration for the currently supported typed resource. It locks and re-reads

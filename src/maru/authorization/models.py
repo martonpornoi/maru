@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
+from django.utils import timezone
 
 from maru.authorization.catalog import ScopeLevel, capability
 from maru.core.models import UUIDTimeStampedModel
@@ -274,6 +275,14 @@ class ScopedResourceBinding(UUIDTimeStampedModel):
                     )
                 }
             )
+        if self.department_id and self.department.retired_at is not None:
+            raise ValidationError(
+                {
+                    "department": (
+                        "A retired Department cannot receive a resource binding."
+                    )
+                }
+            )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         if not self._state.adding:
@@ -400,6 +409,26 @@ def _validate_revocation_evidence(
         )
 
 
+def _validate_authority_department_is_current(
+    *,
+    adding: bool,
+    department_id: Any,
+    department: Any,
+    revoked_at: Any,
+    expires_at: Any,
+) -> None:
+    if department_id is None:
+        return
+    is_closed_history = not adding and (
+        revoked_at is not None
+        or (expires_at is not None and expires_at <= timezone.now())
+    )
+    if not is_closed_history and department.retired_at is not None:
+        raise ValidationError(
+            {"department": "A retired Department cannot receive current authority."}
+        )
+
+
 class CapabilityGrant(UUIDTimeStampedModel):
     organization = models.ForeignKey(
         "organizations.Organization",
@@ -521,6 +550,13 @@ class CapabilityGrant(UUIDTimeStampedModel):
             resource_binding=(
                 self.resource_binding if self.resource_binding_id else None
             ),
+        )
+        _validate_authority_department_is_current(
+            adding=self._state.adding,
+            department_id=self.department_id,
+            department=self.department if self.department_id else None,
+            revoked_at=self.revoked_at,
+            expires_at=self.expires_at,
         )
         _validate_revocation_evidence(
             revoked_at=self.revoked_at,
@@ -713,6 +749,13 @@ class RoleAssignment(UUIDTimeStampedModel):
             resource_binding=(
                 self.resource_binding if self.resource_binding_id else None
             ),
+        )
+        _validate_authority_department_is_current(
+            adding=self._state.adding,
+            department_id=self.department_id,
+            department=self.department if self.department_id else None,
+            revoked_at=self.revoked_at,
+            expires_at=self.expires_at,
         )
         if self.role_bundle_id:
             definitions = [

@@ -11,7 +11,10 @@ from django.db import transaction
 
 from maru.audit.models import AuditEvent
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
-from maru.demo.operational_examples import seed_operational_examples
+from maru.demo.operational_examples import (
+    seed_operational_examples,
+    seed_workforce_examples,
+)
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.models import EditionLifecycleTransition, EventEdition
 from maru.events.services import transition_edition
@@ -3092,6 +3095,14 @@ class _DemoSeeder:
                 account=accounts["convention-chair"],
                 capability_code="registration.manage_configuration",
                 granted_by=administrator,
+            )
+            seed_workforce_examples(
+                convention_key=convention.key,
+                organization=organization,
+                edition=editions["current"],
+                accounts=accounts,
+                own=self._own,
+                happened_at=datetime(2026, 6, 12, 10, 5, tzinfo=UTC),
             )
             template = self._registration_template(
                 convention=convention,

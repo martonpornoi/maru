@@ -8,6 +8,9 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from maru.authorization.models import ScopedResourceBinding
+from maru.authorization.retired_targets import (
+    lock_retired_department_authority_boundaries,
+)
 from maru.workforce.models import Position
 
 _WORKFORCE_POSITION_BINDING_NAME_PREFIX = (
@@ -49,6 +52,8 @@ def ensure_workforce_position_binding(
             code="workforce_position_unavailable",
         )
 
+    lock_retired_department_authority_boundaries()
+
     try:
         locked_position = (
             Position.objects.select_for_update()
@@ -60,6 +65,12 @@ def ensure_workforce_position_binding(
             "The workforce position is no longer available.",
             code="workforce_position_unavailable",
         ) from exc
+
+    if locked_position.department.retired_at is not None:
+        raise ValidationError(
+            "A retired Department cannot receive a workforce position binding.",
+            code="workforce_department_retired",
+        )
 
     resource_kind = ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION
     expected_id = workforce_position_binding_id(locked_position.pk)

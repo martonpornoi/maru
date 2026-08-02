@@ -31,6 +31,9 @@ from maru.authorization.policy import (
     decide,
     resolve_edition_target,
 )
+from maru.authorization.retired_targets import (
+    lock_retired_department_authority_boundaries,
+)
 from maru.authorization.serializers import (
     AccessAssignmentCreateSerializer,
     AccessAssignmentReplaceSerializer,
@@ -474,6 +477,11 @@ class EditionAccessAssignmentView(APIView):
         )
         try:
             with transaction.atomic():
+                # The replacement transaction intentionally holds the old
+                # assignment across revoke-and-create. Enter the canonical
+                # writer boundary before that row lock; the nested commands
+                # rejoin these transaction-scoped locks.
+                lock_retired_department_authority_boundaries()
                 assignment = (
                     RoleAssignment.objects.select_for_update()
                     .select_related("principal")

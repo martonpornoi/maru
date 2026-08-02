@@ -13,8 +13,9 @@ from enum import StrEnum
 from typing import Protocol, TypeVar
 from uuid import UUID
 
-from django.db import connection, models
+from django.db import DatabaseError, connection, models
 from django.db.models import Q, QuerySet
+from django.db.transaction import TransactionManagementError
 from django.utils import timezone
 
 from maru.authorization.catalog import ScopeLevel
@@ -37,9 +38,77 @@ MAX_AUTHORITY_LINEAGE_DEPTH = 64
 _POSTGRESQL_BIGINT_MAX = 9_223_372_036_854_775_807
 _CURRENT_CHECK_DATABASE_BATCH_SIZE = 256
 _REQUIRED_CONTROL_COUNT = 2
+_AUTHORITY_PROVENANCE_ACTIVATION_LOCK = 4_400_440_007
 _GRANT_CONTROL_CAPABILITY = "authorization.grant_direct"
 _ROLE_CONTROL_CAPABILITY = "authorization.manage_roles"
 _ModelT = TypeVar("_ModelT", bound=models.Model)
+
+
+class AuthorityProvenanceWriterBoundaryError(DatabaseError):
+    """A writer cannot safely join the active provenance generation."""
+
+
+class AuthorityProvenanceWriterRestartRequiredError(
+    AuthorityProvenanceWriterBoundaryError
+):
+    """The caller must restart its whole transaction in the new generation."""
+
+    sqlstate = "40001"
+
+
+def lock_authority_provenance_writer_boundary() -> int:
+    """Join ADR 0044's writer boundary before taking narrower row locks.
+
+    Structure and other cross-module commands call this inside their outermost
+    transaction and before locking Organization or Department rows. The shared
+    advisory lock serializes with cutover; the allowlisted latch helper retains
+    the least-privilege runtime role and current trigger contract.
+    """
+
+    if connection.get_autocommit() or not connection.in_atomic_block:
+        raise TransactionManagementError(
+            "The authority writer boundary requires an atomic transaction."
+        )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                pg_catalog.pg_advisory_xact_lock_shared(%s),
+                public.maru_lock_authority_provenance_latch(),
+                pg_catalog.transaction_timestamp()
+            """,
+            [_AUTHORITY_PROVENANCE_ACTIVATION_LOCK],
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise AuthorityProvenanceWriterBoundaryError(
+                "The authority provenance latch is unavailable."
+            )
+        generation = int(row[1])
+        transaction_started_at = row[2]
+        if generation == 0:
+            return generation
+        if generation != 1:
+            raise AuthorityProvenanceWriterBoundaryError(
+                "The authority provenance latch generation is unsupported."
+            )
+        cursor.execute(
+            """
+            SELECT activated_at
+              FROM public.authorization_authorityprovenanceactivation
+             WHERE singleton IS TRUE
+            """
+        )
+        marker = cursor.fetchone()
+        if marker is None or marker[0] is None:
+            raise AuthorityProvenanceWriterBoundaryError(
+                "The authority provenance cutover state is inconsistent."
+            )
+        if transaction_started_at < marker[0]:
+            raise AuthorityProvenanceWriterRestartRequiredError(
+                "The writer transaction predates authority provenance activation."
+            )
+        return generation
 
 
 class _ResolvedTarget(Protocol):

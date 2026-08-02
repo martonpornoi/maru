@@ -51,6 +51,10 @@ from tests.factories import (
     ParticipationFactory,
     RoleBundleFactory,
 )
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_for_test,
+)
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -70,11 +74,10 @@ def _exact_scope() -> _ExactScope:
     edition = EventEditionFactory()
     creator = AccountFactory()
     role_bundle = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code=f"scope-runtime-{uuid4().hex[:8]}",
         name="Scope runtime",
+        expected_code="scope-runtime",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -85,17 +88,19 @@ def _exact_scope() -> _ExactScope:
         role_bundle=role_bundle,
         created_by=creator,
     )
-    position = Position.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=role_bundle,
-        code=f"scope-runtime-{uuid4().hex[:8]}",
-        title="Scope runtime position",
-        description="Synthetic runtime-branch position.",
-        capacity_codes=["staff"],
-        created_by=creator,
+    position = save_position_for_test(
+        position=Position(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=role_bundle,
+            code=f"scope-runtime-{uuid4().hex[:8]}",
+            title="Scope runtime position",
+            description="Synthetic runtime-branch position.",
+            capacity_codes=["staff"],
+            created_by=creator,
+        )
     )
     binding = ensure_workforce_position_binding(position=position)
     return _ExactScope(
@@ -204,11 +209,10 @@ def test_scope_models_reject_incomplete_and_cross_scope_evidence() -> None:
     second = EventEditionFactory()
     principal = AccountFactory()
     revoker = AccountFactory()
-    second_department = Department.objects.create(
-        organization=second.organization,
+    second_department = create_department_for_test(
         edition=second,
-        code="foreign-runtime-department",
         name="Foreign runtime department",
+        expected_code="foreign-runtime-department",
     )
 
     assert str(AuthorizationScopeWriteFence()) == "Authorization scope-v2 writes exist"

@@ -23,7 +23,6 @@ from maru.registration.models import (
     Registration,
 )
 from maru.workforce.models import (
-    Department,
     OnboardingDocumentRequest,
     OnboardingDocumentType,
     Position,
@@ -44,6 +43,7 @@ from tests.factories import (
     RepresentationAppointmentFactory,
     RoleBundleFactory,
 )
+from tests.workforce_helpers import create_department_for_test, save_position_for_test
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -170,11 +170,10 @@ def _workforce_world() -> tuple[
     edition = EventEditionFactory()
     actor = AccountFactory()
     role = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="idn011-operations",
         name="IDN-011 Operations",
+        expected_code="idn-011-operations",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -187,18 +186,20 @@ def _workforce_world() -> tuple[
         role_bundle=role,
         created_by=actor,
     )
-    position = Position.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=role,
-        code="idn011-volunteer",
-        title="IDN-011 Volunteer",
-        description=template.description,
-        headcount=3,
-        capacity_codes=["volunteer"],
-        created_by=actor,
+    position = save_position_for_test(
+        position=Position(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=role,
+            code="idn011-volunteer",
+            title="IDN-011 Volunteer",
+            description=template.description,
+            headcount=3,
+            capacity_codes=["volunteer"],
+            created_by=actor,
+        )
     )
     opportunity = VolunteerOpportunity.objects.get(position=position)
     document_type = OnboardingDocumentType.objects.create(

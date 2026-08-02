@@ -14,7 +14,17 @@ from django.utils import timezone
 
 from maru.authorization.policy import current_role_assignment_ids
 from maru.identity.queries import active_person_account_display_labels
-from maru.workforce.models import Department, Position, PositionAssignment
+from maru.workforce.models import (
+    Department,
+    EditionStructureCommandReceipt,
+    EditionStructureControl,
+    Position,
+    PositionAssignment,
+)
+from maru.workforce.structure_templates import (
+    UnknownBuiltinStructureTemplateError,
+    get_builtin_structure_template,
+)
 
 # These limits are deliberately code-owned. Every relation is fetched with a
 # limit+1 probe so a response is either complete or contains no partial tree.
@@ -29,10 +39,12 @@ WORKFORCE_STRUCTURE_REQUIRED_FIELDS = frozenset(
         "positions",
         "assignment_counts",
         "holder_display_labels",
+        "structure_control",
     }
 )
 
 StructureProjectionState = Literal["complete", "structure_limit_exceeded"]
+DepartmentState = Literal["active", "retired"]
 
 
 class StructureProjectionIntegrityError(RuntimeError):
@@ -69,6 +81,21 @@ class PositionNode:
 
 
 @dataclass(frozen=True, slots=True)
+class StructureSource:
+    kind: Literal["empty", "manual", "legacy_existing"]
+
+
+@dataclass(frozen=True, slots=True)
+class BuiltinTemplateStructureSource:
+    kind: Literal["builtin_template"]
+    template_code: str
+    template_version: int
+
+
+StructureSourceProjection = StructureSource | BuiltinTemplateStructureSource
+
+
+@dataclass(frozen=True, slots=True)
 class DepartmentNode:
     id: UUID
     parent_id: UUID | None
@@ -76,6 +103,7 @@ class DepartmentNode:
     name: str
     description: str
     display_order: int
+    state: DepartmentState
     positions: tuple[PositionNode, ...]
     children: tuple[DepartmentNode, ...]
 
@@ -83,6 +111,8 @@ class DepartmentNode:
 @dataclass(frozen=True, slots=True)
 class EditionStructureProjection:
     state: StructureProjectionState
+    aggregate_version: int
+    source: StructureSourceProjection
     departments: tuple[DepartmentNode, ...]
 
 
@@ -94,6 +124,13 @@ class _DepartmentRow:
     name: str
     description: str
     display_order: int
+    state: DepartmentState
+
+
+@dataclass(frozen=True, slots=True)
+class _StructureControlProjection:
+    aggregate_version: int
+    source: StructureSourceProjection
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,10 +154,119 @@ class _HolderRow:
     display_name: str
 
 
-def _overflow() -> EditionStructureProjection:
+def _overflow(
+    control: _StructureControlProjection,
+) -> EditionStructureProjection:
     return EditionStructureProjection(
         state="structure_limit_exceeded",
+        aggregate_version=control.aggregate_version,
+        source=control.source,
         departments=(),
+    )
+
+
+def _transitional_legacy_control() -> _StructureControlProjection:
+    """Represent an expand-before-backfill tree without inventing provenance."""
+
+    return _StructureControlProjection(
+        aggregate_version=0,
+        source=StructureSource(kind="legacy_existing"),
+    )
+
+
+def _structure_control_projection(
+    *, organization_id: UUID, edition_id: UUID
+) -> _StructureControlProjection:
+    control = (
+        EditionStructureControl.objects.filter(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        .values("id", "origin", "aggregate_version")
+        .first()
+    )
+    if control is None:
+        return _StructureControlProjection(
+            aggregate_version=0,
+            source=StructureSource(kind="empty"),
+        )
+
+    aggregate_version = int(control["aggregate_version"])
+    if aggregate_version < 1:
+        raise StructureProjectionIntegrityError(
+            "The workforce structure has an invalid aggregate version."
+        )
+    origin = control["origin"]
+    template_receipts = list(
+        EditionStructureCommandReceipt.objects.filter(
+            structure_id=control["id"],
+            organization_id=organization_id,
+            edition_id=edition_id,
+            action=EditionStructureCommandReceipt.Action.TEMPLATE_APPLIED,
+        )
+        .values(
+            "resulting_version",
+            "template_code",
+            "template_version",
+            "template_digest",
+        )
+        .order_by("resulting_version", "id")[:2]
+    )
+    if origin == EditionStructureControl.Origin.BUILTIN_TEMPLATE:
+        if len(template_receipts) != 1:
+            raise StructureProjectionIntegrityError(
+                "The built-in structure source has incomplete provenance."
+            )
+        receipt = template_receipts[0]
+        template_code = receipt["template_code"]
+        template_version = receipt["template_version"]
+        template_digest = receipt["template_digest"]
+        resulting_version = int(receipt["resulting_version"])
+        if (
+            not template_code
+            or template_version is None
+            or int(template_version) < 1
+            or resulting_version != 1
+            or resulting_version > aggregate_version
+        ):
+            raise StructureProjectionIntegrityError(
+                "The built-in structure source has invalid provenance."
+            )
+        try:
+            template = get_builtin_structure_template(
+                f"{template_code}@{int(template_version)}"
+            )
+        except UnknownBuiltinStructureTemplateError as error:
+            raise StructureProjectionIntegrityError(
+                "The built-in structure source is not available in this release."
+            ) from error
+        if template_digest != template.sha256_digest:
+            raise StructureProjectionIntegrityError(
+                "The built-in structure source digest does not match its catalog."
+            )
+        return _StructureControlProjection(
+            aggregate_version=aggregate_version,
+            source=BuiltinTemplateStructureSource(
+                kind="builtin_template",
+                template_code=str(template_code),
+                template_version=int(template_version),
+            ),
+        )
+    if template_receipts:
+        raise StructureProjectionIntegrityError(
+            "A non-template structure has conflicting template provenance."
+        )
+    if origin == EditionStructureControl.Origin.MANUAL:
+        source_kind: Literal["manual", "legacy_existing"] = "manual"
+    elif origin == EditionStructureControl.Origin.LEGACY_EXISTING:
+        source_kind = "legacy_existing"
+    else:
+        raise StructureProjectionIntegrityError(
+            "The workforce structure has an unsupported source."
+        )
+    return _StructureControlProjection(
+        aggregate_version=aggregate_version,
+        source=StructureSource(kind=source_kind),
     )
 
 
@@ -178,8 +324,16 @@ def _department_rows(
             organization_id=organization_id,
             edition_id=edition_id,
         )
-        .values("id", "parent_id", "code", "name", "description", "position")
-        .order_by("position", "name", "id")[: MAX_STRUCTURE_DEPARTMENTS + 1]
+        .values(
+            "id",
+            "parent_id",
+            "code",
+            "name",
+            "description",
+            "display_order",
+            "retired_at",
+        )
+        .order_by("display_order", "name", "id")[: MAX_STRUCTURE_DEPARTMENTS + 1]
     )
     if len(raw_rows) > MAX_STRUCTURE_DEPARTMENTS:
         return None
@@ -190,7 +344,8 @@ def _department_rows(
             code=row["code"],
             name=row["name"],
             description=row["description"],
-            display_order=row["position"],
+            display_order=row["display_order"],
+            state="active" if row["retired_at"] is None else "retired",
         )
         for row in raw_rows
     )
@@ -331,6 +486,7 @@ def _project_complete_edition_structure(  # noqa: PLR0912
     *,
     organization_id: UUID,
     edition_id: UUID,
+    control: _StructureControlProjection,
     at: datetime | None = None,
 ) -> EditionStructureProjection:
     """Build one complete minimized tree or signal a code-owned limit."""
@@ -346,6 +502,12 @@ def _project_complete_edition_structure(  # noqa: PLR0912
     )
     if departments is None:
         raise _StructureProjectionLimitExceededError
+    if control.aggregate_version == 0 and departments:
+        # During the additive 0006 -> stopped-writer/backfill 0007 deployment
+        # window, pre-existing trees have no control yet. This is a read-only,
+        # version-zero compatibility projection, not durable source evidence;
+        # adapters suppress management until the explicit legacy control lands.
+        control = _transitional_legacy_control()
     department_by_id = {row.id: row for row in departments}
     if not _validate_parent_graph(
         rows_by_id=department_by_id,
@@ -459,6 +621,7 @@ def _project_complete_edition_structure(  # noqa: PLR0912
             name=row.name,
             description=row.description,
             display_order=row.display_order,
+            state=row.state,
             positions=tuple(positions_by_department.get(row.id, ())),
             children=tuple(
                 build_department(child) for child in children_by_parent.get(row.id, ())
@@ -467,6 +630,8 @@ def _project_complete_edition_structure(  # noqa: PLR0912
 
     return EditionStructureProjection(
         state="complete",
+        aggregate_version=control.aggregate_version,
+        source=control.source,
         departments=tuple(
             build_department(row) for row in children_by_parent.get(None, ())
         ),
@@ -481,11 +646,18 @@ def project_edition_structure(
 ) -> EditionStructureProjection:
     """Return one complete minimized tree, or an explicit generic overflow."""
 
+    control = _structure_control_projection(
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
     try:
         return _project_complete_edition_structure(
             organization_id=organization_id,
             edition_id=edition_id,
+            control=control,
             at=at,
         )
     except _StructureProjectionLimitExceededError:
-        return _overflow()
+        if control.aggregate_version == 0:
+            control = _transitional_legacy_control()
+        return _overflow(control)

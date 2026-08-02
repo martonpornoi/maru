@@ -277,7 +277,13 @@ architecture documents, implementation issues, tests, and release notes.
   registration relationship. The Executive Board remains the separate
   OrganizationRepresentation governance anchor and may be composed visually
   above Helper Board without becoming a Department or an authority-inheritance
-  edge. Position editing is a later substep unless its immutable role-bundle,
+  edge. Retirement preserves immutable typed-resource bindings and closed
+  authority as historical evidence: those rows do not by themselves block
+  retirement, but they continue to block hard deletion, and no new binding or
+  current authority may target a retired Department. Retirement must first end
+  every active assignment whose term has not ended and every unclosed authority
+  term that is effective now or scheduled for later. Position editing is a
+  later substep unless its immutable role-bundle,
   typed-resource, dual-control, lifecycle, and recovery implications are
   explicitly satisfied.
 

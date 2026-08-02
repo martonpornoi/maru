@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import cast
 from uuid import UUID
 
@@ -34,7 +35,11 @@ from maru.authorization.policy import (
 from maru.events.admin_context import authorized_admin_edition_for_route
 from maru.events.models import EventEdition
 from maru.identity.models import Account
-from maru.organizations.queries import executive_board_governance_anchor
+from maru.organizations.models import ConventionSeries, Organization
+from maru.organizations.queries import (
+    ExecutiveBoardAnchor,
+    executive_board_governance_anchor,
+)
 from maru.workforce.forms import (
     OnboardingDocumentUploadForm,
     VolunteerApplicationForm,
@@ -46,6 +51,7 @@ from maru.workforce.models import (
 )
 from maru.workforce.queries import (
     WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+    EditionStructureProjection,
     project_edition_structure,
 )
 from maru.workforce.services import (
@@ -53,6 +59,10 @@ from maru.workforce.services import (
     upload_onboarding_document,
 )
 from maru.workforce.structure_audit import append_structure_read_audit
+from maru.workforce.structure_snapshot import (
+    StructureSnapshotRead,
+    load_version_fenced_snapshot,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +94,132 @@ def _required_organization_target(
     if target is None:
         raise RuntimeError("The resolved edition lost its organization target.")
     return target
+
+
+@dataclass(frozen=True, slots=True)
+class _OrganizationStructureSnapshot:
+    organization: Organization
+    series: ConventionSeries
+    edition: EventEdition
+    governance: ExecutiveBoardAnchor
+    structure: EditionStructureProjection
+    can_manage_structure: bool
+    can_view_organization: bool
+    can_manage_representation: bool
+    can_create_series: bool
+    can_create_edition: bool
+    can_view_edition: bool
+
+
+def _load_organization_structure_snapshot(
+    *,
+    request: HttpRequest,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> StructureSnapshotRead[_OrganizationStructureSnapshot]:
+    """Compose every Page 9 label and relationship in one MVCC snapshot."""
+
+    evaluated_at = timezone_now()
+    organization, series, edition = authorized_admin_edition_for_route(
+        request=request,
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        capability_code="workforce.view_structure",
+    )
+    edition_target = resolve_edition_target(
+        organization_id=organization.id,
+        edition_id=edition.id,
+    )
+    view_decision = decide(
+        principal=actor,
+        capability_code="workforce.view_structure",
+        resource=edition_target,
+        requested_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+        at=evaluated_at,
+    )
+    if not view_decision.allowed:
+        raise PermissionDenied
+    try:
+        require_complete_projection(
+            required_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+            permitted_fields=view_decision.fields,
+        )
+    except FieldProjectionDeniedError as error:
+        raise PermissionDenied from error
+    manage_decision = decide(
+        principal=actor,
+        capability_code="workforce.manage_structure",
+        resource=edition_target,
+        at=evaluated_at,
+    )
+    organization_target = _required_organization_target(
+        organization_id=organization.id,
+    )
+    can_view_organization = decide(
+        principal=actor,
+        capability_code="organizations.view_basic",
+        resource=organization_target,
+        at=evaluated_at,
+    ).allowed
+    can_manage_representation = decide(
+        principal=actor,
+        capability_code="organizations.manage_representation",
+        resource=organization_target,
+        at=evaluated_at,
+    ).allowed
+    can_create_series = decide(
+        principal=actor,
+        capability_code="organizations.create_series",
+        resource=organization_target,
+        at=evaluated_at,
+    ).allowed
+    can_create_edition = decide(
+        principal=actor,
+        capability_code="events.create",
+        resource=organization_target,
+        at=evaluated_at,
+    ).allowed
+    can_view_edition = decide(
+        principal=actor,
+        capability_code="events.view_basic",
+        resource=edition_target,
+        at=evaluated_at,
+    ).allowed
+    governance = executive_board_governance_anchor(
+        organization_id=organization.id,
+    )
+    structure = project_edition_structure(
+        organization_id=organization.id,
+        edition_id=edition.id,
+        at=evaluated_at,
+    )
+    transitional_uncontrolled_legacy = (
+        structure.aggregate_version == 0 and structure.source.kind == "legacy_existing"
+    )
+    return StructureSnapshotRead(
+        value=_OrganizationStructureSnapshot(
+            organization=organization,
+            series=series,
+            edition=edition,
+            governance=governance,
+            structure=structure,
+            can_manage_structure=(
+                manage_decision.allowed and not transitional_uncontrolled_legacy
+            ),
+            can_view_organization=can_view_organization,
+            can_manage_representation=can_manage_representation,
+            can_create_series=can_create_series,
+            can_create_edition=can_create_edition,
+            can_view_edition=can_view_edition,
+        ),
+        organization_id=organization.id,
+        edition_id=edition.id,
+        aggregate_version=structure.aggregate_version,
+    )
 
 
 def _organization_structure_dependency_failure(
@@ -128,97 +264,53 @@ def organization_structure(
     """Render one complete bounded edition structure in the shared shell."""
 
     actor = _active_admin_account(request)
-    evaluated_at = timezone_now()
     try:
-        organization, series, edition = authorized_admin_edition_for_route(
-            request=request,
-            actor=actor,
-            organization_slug=organization_slug,
-            series_slug=series_slug,
-            edition_slug=edition_slug,
-            capability_code="workforce.view_structure",
+        snapshot = load_version_fenced_snapshot(
+            load=lambda: _load_organization_structure_snapshot(
+                request=request,
+                actor=actor,
+                organization_slug=organization_slug,
+                series_slug=series_slug,
+                edition_slug=edition_slug,
+            )
         )
-        edition_target = resolve_edition_target(
-            organization_id=organization.id,
-            edition_id=edition.id,
-        )
-        view_decision = decide(
-            principal=actor,
-            capability_code="workforce.view_structure",
-            resource=edition_target,
-            requested_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
-            at=evaluated_at,
-        )
-        if not view_decision.allowed:
-            raise PermissionDenied
-        require_complete_projection(
-            required_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
-            permitted_fields=view_decision.fields,
-        )
-        manage_decision = decide(
-            principal=actor,
-            capability_code="workforce.manage_structure",
-            resource=edition_target,
-            at=evaluated_at,
-        )
-        organization_target = _required_organization_target(
-            organization_id=organization.id,
-        )
-
-        can_view_organization = decide(
-            principal=actor,
-            capability_code="organizations.view_basic",
-            resource=organization_target,
-            at=evaluated_at,
-        ).allowed
-        can_manage_representation = decide(
-            principal=actor,
-            capability_code="organizations.manage_representation",
-            resource=organization_target,
-            at=evaluated_at,
-        ).allowed
-        can_create_series = decide(
-            principal=actor,
-            capability_code="organizations.create_series",
-            resource=organization_target,
-            at=evaluated_at,
-        ).allowed
-        can_create_edition = decide(
-            principal=actor,
-            capability_code="events.create",
-            resource=organization_target,
-            at=evaluated_at,
-        ).allowed
-        can_view_edition = decide(
-            principal=actor,
-            capability_code="events.view_basic",
-            resource=edition_target,
-            at=evaluated_at,
-        ).allowed
-        governance = executive_board_governance_anchor(
-            organization_id=organization.id,
-        )
-        structure = project_edition_structure(
-            organization_id=organization.id,
-            edition_id=edition.id,
-            at=evaluated_at,
-        )
-        # Keep the hierarchy internally coherent at ``evaluated_at`` while a
-        # fresh final decision prevents mid-request expiry or revocation from
+        organization = snapshot.organization
+        series = snapshot.series
+        edition = snapshot.edition
+        governance = snapshot.governance
+        structure = snapshot.structure
+        # The snapshot is internally coherent. A genuinely fresh target and
+        # decision prevent mid-read expiry, revocation, or target loss from
         # releasing the completed name-bearing response.
         response_authorized_at = timezone_now()
+        response_target = resolve_edition_target(
+            organization_id=organization.id,
+            edition_id=edition.id,
+        )
         view_decision = decide(
             principal=actor,
             capability_code="workforce.view_structure",
-            resource=edition_target,
+            resource=response_target,
             requested_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
             at=response_authorized_at,
         )
         if not view_decision.allowed:
             raise PermissionDenied
-        require_complete_projection(
-            required_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
-            permitted_fields=view_decision.fields,
+        try:
+            require_complete_projection(
+                required_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+                permitted_fields=view_decision.fields,
+            )
+        except FieldProjectionDeniedError as error:
+            raise PermissionDenied from error
+        response_manage_decision = decide(
+            principal=actor,
+            capability_code="workforce.manage_structure",
+            resource=response_target,
+            at=response_authorized_at,
+        )
+        can_manage_structure = (
+            snapshot.can_manage_structure and response_manage_decision.allowed
         )
         append_structure_read_audit(
             actor=actor,
@@ -234,7 +326,6 @@ def organization_structure(
         DatabaseError,
         RuntimeError,
         ValidationError,
-        FieldProjectionDeniedError,
     ):
         logger.exception("Unable to load the edition organization structure")
         return _organization_structure_dependency_failure(request)
@@ -248,13 +339,13 @@ def organization_structure(
             "baseline_use_admin_shell": True,
             "baseline_page_id": "organization-structure",
             "baseline_page_class": "",
-            "baseline_can_view_organization": can_view_organization,
-            "baseline_can_manage_representation": can_manage_representation,
-            "baseline_can_create_series": can_create_series,
-            "baseline_can_create_edition": can_create_edition,
-            "baseline_can_view_edition": can_view_edition,
+            "baseline_can_view_organization": snapshot.can_view_organization,
+            "baseline_can_manage_representation": (snapshot.can_manage_representation),
+            "baseline_can_create_series": snapshot.can_create_series,
+            "baseline_can_create_edition": snapshot.can_create_edition,
+            "baseline_can_view_edition": snapshot.can_view_edition,
             "baseline_can_view_structure": True,
-            "baseline_can_manage_structure": manage_decision.allowed,
+            "baseline_can_manage_structure": can_manage_structure,
             "organization": organization,
             "convention_series": series,
             "edition": edition,
@@ -262,7 +353,7 @@ def organization_structure(
             "structure": structure,
             "structure_load_failed": False,
             "structure_access_label": _structure_access_label(view_decision),
-            "can_manage_structure": manage_decision.allowed,
+            "can_manage_structure": can_manage_structure,
         }
     )
     return TemplateResponse(
@@ -291,7 +382,7 @@ def volunteer_opportunities(
             "position__reports_to",
         )
         .prefetch_related("position__assignments")
-        .order_by("position__department__position", "position__title", "id")
+        .order_by("position__department__display_order", "position__title", "id")
     )
     opportunities = [
         opportunity

@@ -21,6 +21,10 @@ from maru.workforce.admin import PositionAdmin
 from maru.workforce.bootstrap import bootstrap_organization_workforce
 from maru.workforce.models import Department, Position, PositionTemplate
 from tests.factories import AccountFactory, EventEditionFactory, RoleBundleFactory
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_for_test,
+)
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -41,11 +45,10 @@ def _position_scope() -> _PositionScope:
     edition = EventEditionFactory()
     creator = AccountFactory()
     role_bundle = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -70,17 +73,19 @@ def _create_position(
     *,
     code: str = "operations-lead",
 ) -> Position:
-    return Position.objects.create(
-        organization=scope.edition.organization,
-        edition=scope.edition,
-        template=scope.template,
-        department=scope.department,
-        role_bundle=scope.role_bundle,
-        code=code,
-        title="Operations lead",
-        description="Synthetic position.",
-        capacity_codes=["volunteer"],
-        created_by=scope.creator,
+    return save_position_for_test(
+        position=Position(
+            organization=scope.edition.organization,
+            edition=scope.edition,
+            template=scope.template,
+            department=scope.department,
+            role_bundle=scope.role_bundle,
+            code=code,
+            title="Operations lead",
+            description="Synthetic position.",
+            capacity_codes=["volunteer"],
+            created_by=scope.creator,
+        )
     )
 
 
@@ -140,11 +145,10 @@ def test_service_is_idempotent_and_uses_the_persisted_position_scope() -> None:
     scope = _position_scope()
     position = _create_position(scope)
     first = ensure_workforce_position_binding(position=position)
-    other_department = Department.objects.create(
-        organization=scope.edition.organization,
+    other_department = create_department_for_test(
         edition=scope.edition,
-        code="programming",
         name="Programming",
+        expected_code="programming",
     )
     position.department = other_department
 
@@ -164,11 +168,10 @@ def test_service_is_idempotent_and_uses_the_persisted_position_scope() -> None:
 def test_service_fails_closed_for_an_existing_mismatched_binding() -> None:
     scope = _position_scope()
     position = _create_position(scope)
-    other_department = Department.objects.create(
-        organization=scope.edition.organization,
+    other_department = create_department_for_test(
         edition=scope.edition,
-        code="programming",
         name="Programming",
+        expected_code="programming",
     )
 
     with connection.cursor() as cursor:

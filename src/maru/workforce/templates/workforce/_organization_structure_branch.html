@@ -6,11 +6,10 @@
           <p class="baseline-kicker">Department</p>
           <h3>{{ department.name }}</h3>
         </div>
-        {% if department.positions %}
-          <span class="baseline-count">
-            {{ department.positions|length }} position{{ department.positions|length|pluralize }}
-          </span>
-        {% endif %}
+        <span class="baseline-count">
+          {{ department.state|capfirst }}{% if department.positions %} &middot;
+          {{ department.positions|length }} position{{ department.positions|length|pluralize }}{% endif %}
+        </span>
       </header>
       {% if department.description %}
         <p>{{ department.description }}</p>

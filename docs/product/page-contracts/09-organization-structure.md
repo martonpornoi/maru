@@ -1,16 +1,15 @@
 # Page 9 contract: Organization structure
 
-- Status: Page 9a.0 bounded read projection and canonical HTML/API routes
-  implemented and focused-backend verified; Department mutations remain
-  accepted design only
+- Status: Page 9a.1 bounded version-fenced read plus shared Department command
+  and stopped-writer database core implemented and focused-backend verified;
+  mutation adapters remain unmounted
 - Route: `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`
 - Current mutations: none mounted in Page 9a.0
-- Accepted future mutations: POST-only template application, create, retire,
-  and delete actions; complete PUT-style Department update through HTML POST
-  and API PUT
+- Implemented unmounted mutations: POST-only template application, create,
+  retire, and delete commands; complete PUT-style Department update command
 - Current API: strict
   `/api/v1/organizations/<organization-id>/editions/<edition-id>/workforce/structure`
-  GET projection; child template/Department commands remain unmounted
+  GET projection; child template/Department HTTP adapters remain unmounted
 - Requirements: IDN-002, IDN-004, IDN-009, IDN-011, IDN-012, EVT-002,
   EVT-003, HR-007, HR-010, HR-011, UX-019, UX-020, UX-025, AUD-001,
   AUD-005, INT-001, NFR-001 through NFR-004, NFR-008, and NFR-009
@@ -36,7 +35,7 @@ It is not a Board appointment page, people directory, general access editor,
 Position/role-bundle editor, volunteer assignment tool, or generic specialist
 model form.
 
-## Implemented Page 9a.0 read slice
+## Implemented Page 9a.1 read and command core
 
 The current implementation mounts the canonical HTML route and the strict GET
 projection in the shared administration shell. It removes the older React
@@ -44,7 +43,8 @@ Convention work `structure` destination and `?view=structure` path, so there
 is one browser workflow and one current navigation action. Page 9a.0 is
 read-only: it does not mount the built-in-template action, Department create,
 update, reparent, reorder, retire, or delete commands described later in this
-contract.
+contract. The shared application services and their database write protocol
+are implemented; only their HTTP/browser adapters remain unmounted.
 
 The organizations module returns only the fixed **Executive Board** label and
 its `absent`, `provisioning`, `active`, or `suspended` representation state.
@@ -92,14 +92,13 @@ is part of the disclosure boundary: a
 failure returns the same generic name-free `503` and releases no holder label
 or partial structure.
 
-Page 9a.0 deliberately does not claim a transactionally version-fenced
-structure snapshot. Departments, Positions, assignments, identity labels, and
-governance are bounded module queries but are read in more than one database
-statement; a concurrent structure write could therefore produce a coherent
-yet cross-version result. Page 9a.1 must introduce the accepted structure
-aggregate/version fence and repeat-or-retry semantics before Department
-mutations are mounted. Integrity failures already fail closed, but fresh final
-authorization is not a substitute for that data-version fence.
+The read is fenced by the exact edition structure aggregate version. Its
+Department, Position, assignment, identity-label, and governance queries run
+inside one snapshot attempt; READ COMMITTED adapters compare the control
+version before and after composition and retry the complete read once. A
+second movement fails through the generic name-free dependency boundary.
+Fresh final authorization remains independently required because snapshot
+coherence is not a substitute for current authority.
 
 ## Placement, scope, and navigation
 
@@ -164,13 +163,15 @@ identifiers used for links and commands are not rendered as human content.
 
 ## Empty state and built-in reference
 
-Page 9a.1 will offer **Use the Awoostria reference** to an authorized manager
-when an edition has no workforce structure. The immutable built-in selection is
+The implemented command core can offer **Use the Awoostria reference** to an
+authorized manager when an edition has no workforce structure. The browser
+action remains unmounted. The immutable built-in selection is
 `awoostria-reference@1`; a later template is another version, never an edit of
 version 1.
 
-Page 9a.0 implements and pins the code-owned template catalog but does not yet
-mount application. The catalog is immutable, resolves only the exact versioned
+Page 9a.1 implements and pins both the code-owned template catalog and its
+transactional application command, but does not yet mount the adapter. The
+catalog is immutable, resolves only the exact versioned
 identifier without aliases, validates bounded unique codes/names/order,
 requires exactly one root whose parent precedes every child, forbids an
 Executive Board Department, and retains canonical UTF-8 JSON plus SHA-256
@@ -265,11 +266,16 @@ does not merge fields automatically.
 
 Retirement is a separate one-way POST action in Page 9a. It accepts only the
 current expected structure version and reason. It is refused while the
-Department has a current child, open Position, effective assignment, effective
-authority, or another dependency whose meaning would be obscured. Successful
-retirement preserves the Department, stable code, parent history, and every
-closed relationship, and prevents new children, Positions, or access targets.
-Reactivation needs a future explicit contract.
+Department has a current child, open Position, an active assignment whose term
+has not ended, unclosed authority that is effective now or scheduled for later,
+or another dependency whose meaning would be obscured. Successful retirement
+preserves the Department, stable code, parent history, and every closed
+relationship, including immutable Position bindings, and prevents new
+children, Positions, or access targets.
+An immutable typed-resource binding is retained historical evidence and does
+not by itself block retirement, even though it still prevents hard deletion
+and a new binding cannot be created beneath a retired Department. Reactivation
+needs a future explicit contract.
 
 Hard deletion is limited to an unused leaf Department. In addition to expected
 version and reason, the form requires `confirmation_name` exactly equal to the
@@ -305,7 +311,7 @@ the repository's RFC 9457 media type and stable codes for validation, stale,
 protected, lifecycle, limit, denied, not-found, idempotency-conflict, and
 dependency failures. OpenAPI and generated clients must remain deterministic.
 
-Only the GET route is mounted in Page 9a.0. Its accepted response is the exact
+Only the GET route is mounted. Its accepted response is the exact
 organization and edition labels, the minimized governance discriminator, and
 either one complete nested structure or the explicit empty overflow state.
 Its declared problem statuses are `400`, `403`, and `503`; it does not declare
@@ -344,7 +350,8 @@ evidence without horizontal overflow.
 
 ## Migration and recovery implications
 
-The future Page 9a.1 additive migration creates one structure-control aggregate per existing
+Workforce `0006` and the stopped-writer `0007` cutover create one
+structure-control aggregate per existing
 populated edition without changing Department identifiers, names, parents, or
 codes. Such rows are marked legacy-existing and receive no template receipt.
 Names such as Executive Board or Helper Board never trigger representation,
@@ -358,7 +365,7 @@ organization/edition/code and receipt provenance, monotonic aggregate version,
 same-edition parents, cycle freedom, non-cascading retirement, and incompatible
 downgrade after the first new write.
 
-After that future activation, generic Department/Position specialist records are
+After that activation, generic Department/Position specialist records are
 inspection-only for mutations covered by Page 9. Recovery fixes forward or
 restores workforce, authorization bindings, audit, events, and outbox to one
 consistent point. It never deletes only the structure control/receipt or

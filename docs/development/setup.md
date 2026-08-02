@@ -107,6 +107,25 @@ Do not use `--fake`, disable the triggers, or roll old writers over the new
 guards. Follow the [Executive Board recovery runbook](../operations/executive-board-migration-and-recovery.md)
 and [IDN-011 subject-boundary runbook](../operations/idn011-convention-subject-migration-and-recovery.md).
 
+### Page 9 write-integrity and readiness boundary
+
+Workforce `0006_edition_structure_schema`, authorization
+`0010_retired_department_authority_guards`, and workforce
+`0007_structure_write_integrity` form one migration-first, stopped-writer
+sequence. The last migration scans only aggregate blocker counts, preserves
+legacy Department identity/tree/order, creates legacy structure controls
+without invented receipts, and installs the final control/receipt/Department
+write boundary.
+
+Production readiness requires the `0007` recorder row, definition fingerprints
+for all 14 Page 9 `SECURITY DEFINER` helpers, and the exact catalog shape of all
+28 trigger attachments. Those helpers stay outside
+`RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2`; direct `PUBLIC` and runtime
+execution remains revoked. Do not use table presence, a successful ORM save,
+or a manually recreated trigger as readiness evidence. Follow the
+[exact authority-provenance runbook](../operations/authority-provenance-migration-and-recovery.md)
+for the combined catalog/runtime-role proof.
+
 ### Unified shell and preserved workflows
 
 The domain services, APIs, fixtures, and former browser implementation remain
@@ -184,6 +203,8 @@ The command creates:
 - archived 2025, preparing 2026, and draft 2027 editions for each series;
 - board, convention leadership, department leads, volunteers, attendees,
   programme hosts, dealers, guests, performers, media, and edge cases;
+- versioned Page 9 structure controls and immutable retry receipts for the
+  synthetic workforce Departments, created before lifecycle progression;
 - memberships, overlapping participation capacities, historical snapshots,
   versioned role bundles, and scoped role assignments;
 - convention-specific registration sections, questions, and products,
@@ -320,11 +341,14 @@ adapting
 [`postgresql-runtime-role-provisioning.sql.example`](../operations/postgresql-runtime-role-provisioning.sql.example);
 deliver its credential only through the deployment secret manager. Production
 health accepts only a fresh connection genuinely authenticated as that login;
-`SET ROLE` is not equivalent. The runtime role has ordinary application DML
-but only SELECT on provenance marker/latch controls, no sequence update,
-parameter-control ACL, persistent trigger-disable setting, membership admin
-option, or database-object grant option. Activation remains a controlled
-migration/cutover-owner operation.
+`SET ROLE` is not equivalent. The runtime role has four-operation DML on
+ordinary application tables, `SELECT`/`INSERT` on Page 9 structure receipts,
+and `SELECT`/`INSERT`/`UPDATE` on Page 9 structure controls, but only SELECT on
+provenance marker/latch controls. It has no structure-table `REFERENCES`,
+sequence update, parameter-control ACL, persistent trigger-disable setting,
+membership admin option, or database-object grant option. Department remains
+ordinary DML because its stopped-writer trigger owns retirement integrity.
+Activation remains a controlled migration/cutover-owner operation.
 
 ## Test data
 

@@ -17,6 +17,7 @@ from django.utils import timezone
 
 from maru.authorization import policy
 from maru.authorization.activation import activate_authority_provenance
+from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.authorization.commands import (
     assign_role,
     create_role_bundle_version,
@@ -27,7 +28,6 @@ from maru.authorization.models import (
     AuthorityControl,
     CapabilityGrant,
     RoleAssignment,
-    ScopedResourceBinding,
 )
 from maru.authorization.policy import (
     resolve_department_target,
@@ -46,7 +46,7 @@ from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.organizations.representation import EXECUTIVE_BOARD_ROLE_CODE
-from maru.workforce.models import Department, Position, PositionTemplate
+from maru.workforce.models import Position, PositionTemplate
 from tests.factories import (
     AccountFactory,
     EventEditionFactory,
@@ -55,6 +55,7 @@ from tests.factories import (
     RoleBundleFactory,
 )
 from tests.support.authority import activate_synthetic_board
+from tests.workforce_helpers import create_department_for_test, save_position_for_test
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -103,11 +104,10 @@ def test_name_free_scope_resolution_has_a_constant_query_ceiling() -> None:
     organizations = OrganizationFactory.create_batch(257)
     edition = EventEditionFactory()
     organization = edition.organization
-    department = Department.objects.create(
-        organization=organization,
+    department = create_department_for_test(
         edition=edition,
-        code="bounded-scope-resolution",
         name="Bounded scope resolution",
+        expected_code="bounded-scope-resolution",
     )
     creator = AccountFactory()
     role_bundle = RoleBundleFactory(
@@ -123,25 +123,21 @@ def test_name_free_scope_resolution_has_a_constant_query_ceiling() -> None:
         role_bundle=role_bundle,
         created_by=creator,
     )
-    position = Position.objects.create(
-        organization=organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=role_bundle,
-        code="bounded-scope-position",
-        title="Bounded scope position",
-        description="Synthetic target-resolution evidence.",
-        capacity_codes=["volunteer"],
-        created_by=creator,
+    position = save_position_for_test(
+        position=Position(
+            organization=organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=role_bundle,
+            code="bounded-scope-position",
+            title="Bounded scope position",
+            description="Synthetic target-resolution evidence.",
+            capacity_codes=["volunteer"],
+            created_by=creator,
+        )
     )
-    binding = ScopedResourceBinding.objects.create(
-        organization=organization,
-        edition=edition,
-        department=department,
-        resource_kind=ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION,
-        resource_id=position.id,
-    )
+    binding = ensure_workforce_position_binding(position=position)
     foreign_edition = EventEditionFactory()
 
     scope_keys: set[tuple[UUID, UUID | None, UUID | None, UUID | None]] = {
@@ -534,11 +530,10 @@ def test_edition_selector_and_routes_require_target_matching_capabilities(
     )
     assert organization_target is not None
     assert edition_target is not None
-    department = Department.objects.create(
-        organization=graph.organization,
+    department = create_department_for_test(
         edition=graph.edition,
-        code="selector-containment",
         name="Selector containment",
+        expected_code="selector-containment",
     )
     department_target = resolve_department_target(
         organization_id=graph.organization.id,
@@ -704,11 +699,10 @@ def test_database_batch_matches_python_for_exact_mixed_scope_lineage(
     _activate_exact_contract()
     assert graph.role_assignment is not None
 
-    department = Department.objects.create(
-        organization=graph.organization,
+    department = create_department_for_test(
         edition=graph.edition,
-        code="lineage-parity",
         name="Lineage parity",
+        expected_code="lineage-parity",
     )
     role_bundle = graph.role_assignment.role_bundle
     template = PositionTemplate.objects.create(
@@ -720,25 +714,21 @@ def test_database_batch_matches_python_for_exact_mixed_scope_lineage(
         role_bundle=role_bundle,
         created_by=graph.actor,
     )
-    position = Position.objects.create(
-        organization=graph.organization,
-        edition=graph.edition,
-        template=template,
-        department=department,
-        role_bundle=role_bundle,
-        code="lineage-parity-position",
-        title="Lineage parity position",
-        description="Synthetic exact-lineage parity position.",
-        capacity_codes=["volunteer"],
-        created_by=graph.actor,
+    position = save_position_for_test(
+        position=Position(
+            organization=graph.organization,
+            edition=graph.edition,
+            template=template,
+            department=department,
+            role_bundle=role_bundle,
+            code="lineage-parity-position",
+            title="Lineage parity position",
+            description="Synthetic exact-lineage parity position.",
+            capacity_codes=["volunteer"],
+            created_by=graph.actor,
+        )
     )
-    binding = ScopedResourceBinding.objects.create(
-        organization=graph.organization,
-        edition=graph.edition,
-        department=department,
-        resource_kind=ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION,
-        resource_id=position.id,
-    )
+    binding = ensure_workforce_position_binding(position=position)
 
     organization_target = resolve_organization_target(
         organization_id=graph.organization.id

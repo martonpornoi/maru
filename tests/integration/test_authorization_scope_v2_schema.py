@@ -23,6 +23,10 @@ from tests.factories import (
     RoleBundleFactory,
     ScopedResourceBindingFactory,
 )
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_for_test,
+)
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -42,11 +46,10 @@ def _workforce_position() -> tuple[Department, Position]:
     edition = EventEditionFactory()
     creator = AccountFactory()
     role_bundle = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="operations",
         name="Operations",
+        expected_code="operations",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -57,17 +60,19 @@ def _workforce_position() -> tuple[Department, Position]:
         role_bundle=role_bundle,
         created_by=creator,
     )
-    position = Position.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=role_bundle,
-        code="operations-lead",
-        title="Operations lead",
-        description="Synthetic scope-v2 position.",
-        capacity_codes=["volunteer"],
-        created_by=creator,
+    position = save_position_for_test(
+        position=Position(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=role_bundle,
+            code="operations-lead",
+            title="Operations lead",
+            description="Synthetic scope-v2 position.",
+            capacity_codes=["volunteer"],
+            created_by=creator,
+        )
     )
     return department, position
 
@@ -155,11 +160,10 @@ def test_model_rejects_partial_foreign_and_relationship_only_scope() -> None:
             reason="Invalid partial scope.",
         ).full_clean()
 
-    other_department = Department.objects.create(
-        organization=organization,
+    other_department = create_department_for_test(
         edition=edition,
-        code="registration",
         name="Registration",
+        expected_code="registration",
     )
     with pytest.raises(ValidationError, match="exact department scope"):
         CapabilityGrant(

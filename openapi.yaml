@@ -9192,6 +9192,8 @@ components:
       properties:
         organization_name:
           type: string
+        series_name:
+          type: string
         edition_name:
           type: string
         governance:
@@ -9202,7 +9204,27 @@ components:
       - edition_name
       - governance
       - organization_name
+      - series_name
       - structure
+    WorkforceStructureBuiltinTemplateSource:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/WorkforceStructureBuiltinTemplateSourceKindEnum'
+        template_code:
+          type: string
+        template_version:
+          type: integer
+          minimum: 1
+      required:
+      - kind
+      - template_code
+      - template_version
+    WorkforceStructureBuiltinTemplateSourceKindEnum:
+      enum:
+      - builtin_template
+      type: string
+      description: '* `builtin_template` - builtin_template'
     WorkforceStructureDepartment:
       type: object
       properties:
@@ -9222,6 +9244,8 @@ components:
           type: string
         display_order:
           type: integer
+        state:
+          $ref: '#/components/schemas/WorkforceStructureDepartmentStateEnum'
         positions:
           type: array
           items:
@@ -9240,6 +9264,27 @@ components:
       - name
       - parent_id
       - positions
+      - state
+    WorkforceStructureDepartmentStateEnum:
+      enum:
+      - active
+      - retired
+      type: string
+      description: |-
+        * `active` - active
+        * `retired` - retired
+    WorkforceStructureEmptySource:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/WorkforceStructureEmptySourceKindEnum'
+      required:
+      - kind
+    WorkforceStructureEmptySourceKindEnum:
+      enum:
+      - empty
+      type: string
+      description: '* `empty` - empty'
     WorkforceStructureGovernance:
       type: object
       properties:
@@ -9282,6 +9327,30 @@ components:
       required:
       - display_name
       - other_roles
+    WorkforceStructureLegacySource:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/WorkforceStructureLegacySourceKindEnum'
+      required:
+      - kind
+    WorkforceStructureLegacySourceKindEnum:
+      enum:
+      - legacy_existing
+      type: string
+      description: '* `legacy_existing` - legacy_existing'
+    WorkforceStructureManualSource:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/WorkforceStructureManualSourceKindEnum'
+      required:
+      - kind
+    WorkforceStructureManualSourceKindEnum:
+      enum:
+      - manual
+      type: string
+      description: '* `manual` - manual'
     WorkforceStructurePosition:
       type: object
       properties:
@@ -9338,12 +9407,19 @@ components:
       properties:
         state:
           $ref: '#/components/schemas/WorkforceStructureProjectionStateEnum'
+        aggregate_version:
+          type: integer
+          minimum: 0
+        source:
+          $ref: '#/components/schemas/WorkforceStructureSource'
         departments:
           type: array
           items:
             $ref: '#/components/schemas/WorkforceStructureDepartment'
       required:
+      - aggregate_version
       - departments
+      - source
       - state
     WorkforceStructureProjectionStateEnum:
       enum:
@@ -9363,6 +9439,19 @@ components:
       required:
       - department_name
       - position_title
+    WorkforceStructureSource:
+      oneOf:
+      - $ref: '#/components/schemas/WorkforceStructureEmptySource'
+      - $ref: '#/components/schemas/WorkforceStructureManualSource'
+      - $ref: '#/components/schemas/WorkforceStructureLegacySource'
+      - $ref: '#/components/schemas/WorkforceStructureBuiltinTemplateSource'
+      discriminator:
+        propertyName: kind
+        mapping:
+          empty: '#/components/schemas/WorkforceStructureEmptySource'
+          manual: '#/components/schemas/WorkforceStructureManualSource'
+          legacy_existing: '#/components/schemas/WorkforceStructureLegacySource'
+          builtin_template: '#/components/schemas/WorkforceStructureBuiltinTemplateSource'
     WriteProfileExtensionValue:
       type: object
       properties:

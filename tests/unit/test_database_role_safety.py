@@ -6,11 +6,33 @@ from maru.authorization import provenance_readiness
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V1,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2,
+    RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
+    RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
     RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
     RuntimeDatabaseRoleProbeError,
     RuntimeDatabaseRoleSafety,
     probe_runtime_database_role_safety,
 )
+
+
+def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
+    assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
+        "public.workforce_editionstructurecommandreceipt",
+    )
+    assert RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS == (
+        "public.workforce_editionstructurecontrol",
+    )
+    profiles = (
+        set(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS),
+        set(RUNTIME_DATABASE_SELECT_INSERT_RELATIONS),
+        set(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
+    )
+    assert all(
+        not left & right
+        for index, left in enumerate(profiles)
+        for right in profiles[index + 1 :]
+    )
+    assert "public.workforce_department" not in set().union(*profiles)
 
 
 def test_v2_function_allowlist_preserves_frozen_v1_and_adds_latch_helper() -> None:
@@ -130,6 +152,8 @@ def test_probe_binds_the_role_and_required_function_identities(
     assert parameters == [
         injected_name,
         list(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS),
+        list(RUNTIME_DATABASE_SELECT_INSERT_RELATIONS),
+        list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2),
     ]
     configured_connections.__getitem__.assert_called_once_with("security")
@@ -157,7 +181,13 @@ def test_probe_query_covers_identity_integrity_and_nondelegation_boundaries(
     assert "privilege.is_grantable" in query
     assert "has_sequence_privilege" in query
     assert "'UPDATE'" in query
-    for identity in RUNTIME_DATABASE_SELECT_ONLY_RELATIONS:
+    assert "'REFERENCES'" in query
+    assert "FALSE,\n        FALSE,\n        FALSE,\n        TRUE" in query
+    for identity in (
+        *RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
+        *RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
+        *RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
+    ):
         assert identity not in query
 
 

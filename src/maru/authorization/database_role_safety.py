@@ -72,6 +72,20 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.authorization_provenanceactivationlatch",
 )
 
+# Page 9 structure evidence is append-only at runtime.  The separately
+# credentialed migration/cutover owner retains recovery authority.
+RUNTIME_DATABASE_SELECT_INSERT_RELATIONS: Final[tuple[str, ...]] = (
+    "public.workforce_editionstructurecommandreceipt",
+)
+
+# The Page 9 optimistic-concurrency aggregate advances in place, but runtime
+# commands never delete it.  This is deliberately not a Department-wide DML
+# restriction: Department lifecycle remains protected by its stopped-writer
+# database trigger and the owning application service.
+RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
+    "public.workforce_editionstructurecontrol",
+)
+
 _RUNTIME_DATABASE_ROLE_RESULT_FIELD_COUNT: Final = 25
 
 _RUNTIME_DATABASE_ROLE_SAFETY_QUERY = r"""
@@ -144,10 +158,39 @@ applicable_role_setting(setting) AS (
      WHERE role_setting.setrole IN (0, target.oid)
        AND role_setting.setdatabase IN (0, database.oid)
 ),
-required_select_only_relation(identity, relation_oid) AS (
+required_limited_relation(
+    identity,
+    relation_oid,
+    allow_insert,
+    allow_update,
+    allow_delete,
+    forbid_references
+) AS (
     SELECT
         required.identity,
-        pg_catalog.to_regclass(required.identity)
+        pg_catalog.to_regclass(required.identity),
+        FALSE,
+        FALSE,
+        FALSE,
+        TRUE
+      FROM pg_catalog.unnest(%s::text[]) AS required(identity)
+    UNION ALL
+    SELECT
+        required.identity,
+        pg_catalog.to_regclass(required.identity),
+        TRUE,
+        FALSE,
+        FALSE,
+        TRUE
+      FROM pg_catalog.unnest(%s::text[]) AS required(identity)
+    UNION ALL
+    SELECT
+        required.identity,
+        pg_catalog.to_regclass(required.identity),
+        TRUE,
+        TRUE,
+        FALSE,
+        TRUE
       FROM pg_catalog.unnest(%s::text[]) AS required(identity)
 ),
 required_runtime_function(identity, procedure_oid) AS (
@@ -333,7 +376,7 @@ SELECT
     EXISTS (SELECT 1 FROM target_role)
     AND NOT EXISTS (
         SELECT 1
-          FROM required_select_only_relation AS required
+          FROM required_limited_relation AS required
           LEFT JOIN user_relation AS relation
             ON relation.oid = required.relation_oid
          WHERE relation.oid IS NULL
@@ -342,6 +385,8 @@ SELECT
         SELECT 1
           FROM target_role AS target
           CROSS JOIN user_relation AS relation
+          LEFT JOIN required_limited_relation AS required
+            ON required.relation_oid = relation.oid
          WHERE NOT pg_catalog.has_table_privilege(
                    target.oid,
                    relation.oid,
@@ -350,58 +395,119 @@ SELECT
             OR (
                 (
                     relation.relkind = 'm'
-                    OR EXISTS (
-                        SELECT 1
-                          FROM required_select_only_relation AS required
-                         WHERE required.relation_oid = relation.oid
-                    )
+                    OR required.relation_oid IS NOT NULL
                 )
-                AND EXISTS (
-                    SELECT 1
-                      FROM reachable_role AS reachable
-                     WHERE pg_catalog.has_table_privilege(
-                               reachable.role_oid,
-                               relation.oid,
-                               'INSERT'
-                           )
-                        OR pg_catalog.has_table_privilege(
-                               reachable.role_oid,
-                               relation.oid,
-                               'UPDATE'
-                           )
-                        OR pg_catalog.has_table_privilege(
-                               reachable.role_oid,
-                               relation.oid,
-                               'DELETE'
-                           )
-                        OR EXISTS (
+                AND (
+                    (
+                        COALESCE(required.allow_insert, FALSE)
+                        AND NOT pg_catalog.has_table_privilege(
+                            target.oid,
+                            relation.oid,
+                            'INSERT'
+                        )
+                    )
+                    OR (
+                        NOT COALESCE(required.allow_insert, FALSE)
+                        AND EXISTS (
                             SELECT 1
-                              FROM user_column AS attribute
-                             WHERE attribute.attrelid = relation.oid
-                               AND (
-                                   pg_catalog.has_column_privilege(
+                              FROM reachable_role AS reachable
+                             WHERE pg_catalog.has_table_privilege(
                                        reachable.role_oid,
-                                       attribute.attrelid,
-                                       attribute.attnum,
+                                       relation.oid,
                                        'INSERT'
                                    )
-                                   OR pg_catalog.has_column_privilege(
+                                OR EXISTS (
+                                    SELECT 1
+                                      FROM user_column AS attribute
+                                     WHERE attribute.attrelid = relation.oid
+                                       AND pg_catalog.has_column_privilege(
+                                           reachable.role_oid,
+                                           attribute.attrelid,
+                                           attribute.attnum,
+                                           'INSERT'
+                                       )
+                                )
+                        )
+                    )
+                    OR (
+                        COALESCE(required.allow_update, FALSE)
+                        AND NOT pg_catalog.has_table_privilege(
+                            target.oid,
+                            relation.oid,
+                            'UPDATE'
+                        )
+                    )
+                    OR (
+                        NOT COALESCE(required.allow_update, FALSE)
+                        AND EXISTS (
+                            SELECT 1
+                              FROM reachable_role AS reachable
+                             WHERE pg_catalog.has_table_privilege(
                                        reachable.role_oid,
-                                       attribute.attrelid,
-                                       attribute.attnum,
+                                       relation.oid,
                                        'UPDATE'
                                    )
-                               )
+                                OR EXISTS (
+                                    SELECT 1
+                                      FROM user_column AS attribute
+                                     WHERE attribute.attrelid = relation.oid
+                                       AND pg_catalog.has_column_privilege(
+                                           reachable.role_oid,
+                                           attribute.attrelid,
+                                           attribute.attnum,
+                                           'UPDATE'
+                                       )
+                                )
                         )
+                    )
+                    OR (
+                        COALESCE(required.allow_delete, FALSE)
+                        AND NOT pg_catalog.has_table_privilege(
+                            target.oid,
+                            relation.oid,
+                            'DELETE'
+                        )
+                    )
+                    OR (
+                        NOT COALESCE(required.allow_delete, FALSE)
+                        AND EXISTS (
+                            SELECT 1
+                              FROM reachable_role AS reachable
+                             WHERE pg_catalog.has_table_privilege(
+                                 reachable.role_oid,
+                                 relation.oid,
+                                 'DELETE'
+                             )
+                        )
+                    )
+                    OR (
+                        COALESCE(required.forbid_references, FALSE)
+                        AND EXISTS (
+                            SELECT 1
+                              FROM reachable_role AS reachable
+                             WHERE pg_catalog.has_table_privilege(
+                                       reachable.role_oid,
+                                       relation.oid,
+                                       'REFERENCES'
+                                   )
+                                OR EXISTS (
+                                    SELECT 1
+                                      FROM user_column AS attribute
+                                     WHERE attribute.attrelid = relation.oid
+                                       AND pg_catalog.has_column_privilege(
+                                           reachable.role_oid,
+                                           attribute.attrelid,
+                                           attribute.attnum,
+                                           'REFERENCES'
+                                       )
+                                )
+                        )
+                    )
                 )
             )
             OR (
                 relation.relkind <> 'm'
-                AND NOT EXISTS (
-                    SELECT 1
-                      FROM required_select_only_relation AS required
-                     WHERE required.relation_oid = relation.oid
-                )
+                AND required.relation_oid IS NULL
                 AND (
                        NOT pg_catalog.has_table_privilege(
                            target.oid,
@@ -715,9 +821,9 @@ def probe_runtime_database_role_safety(
 ) -> RuntimeDatabaseRoleSafety:
     """Inspect ``role_name`` without assuming the current session uses it.
 
-    The role name, protected relations, and required function identities are
-    bound query values.  The result intentionally contains no role, owner,
-    relation, setting, ACL, or credential name.
+    The role name, restricted relation profiles, and required function
+    identities are bound query values.  The result intentionally contains no
+    role, owner, relation, setting, ACL, or credential name.
     """
 
     database: BaseDatabaseWrapper = connections[using]
@@ -727,6 +833,8 @@ def probe_runtime_database_role_safety(
             [
                 role_name,
                 list(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS),
+                list(RUNTIME_DATABASE_SELECT_INSERT_RELATIONS),
+                list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2),
             ],
         )

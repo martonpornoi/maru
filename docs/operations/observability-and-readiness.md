@@ -138,7 +138,8 @@ creation, temporary-table, table-maintenance, parameter-control, persistent
 non-origin trigger-setting, sequence-update, or object/column grant-option
 paths. It also positively proves database connection, every user-schema usage
 path, ordinary runtime relation DML, SELECT-only materialized-view and exact
-marker/latch access, sequence use/read, live
+marker/latch access with no table- or column-level `REFERENCES`, sequence
+use/read, live
 `session_replication_role=origin`, and the exact versioned v2 policy/trigger-
 helper function closure. `PUBLIC` function execution or an extra/missing
 runtime execute grant fails closed. The same minimized dependency fails closed
@@ -147,6 +148,17 @@ contract, the effective schema order is not `pg_catalog, public, ...`, or the
 exact rows cannot be read through their `public`-qualified relations. Public
 health never reports the role name, membership, object, credential, or database
 error that caused the denial.
+
+The exact catalog gate also requires workforce
+`0007_structure_write_integrity`. It fingerprints all 14 Page 9
+`SECURITY DEFINER` trigger helpers and matches all 28 Page 9 trigger
+attachments by table, function signature, event/row type, enabled state,
+`UPDATE OF` columns, and deferred timing. A missing migration-recorder row,
+altered helper definition, disabled/replaced trigger, changed update-column
+set, or changed constraint timing makes readiness unavailable. These helpers
+remain outside the 19-function runtime execute allowlist: they are callable
+only through their pinned PostgreSQL triggers, with direct execution revoked
+from both `PUBLIC` and the runtime login.
 
 ## Alert design
 

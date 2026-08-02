@@ -8,6 +8,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Protocol
 from uuid import UUID, uuid5
 
+from django.db import transaction
+
 from maru.accreditation.models import (
     Credential,
     CredentialEvent,
@@ -15,6 +17,7 @@ from maru.accreditation.models import (
     OfflineCredentialManifest,
     RelayDevice,
 )
+from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.authorization.models import RoleBundle
 from maru.communications.models import (
     NotificationDelivery,
@@ -62,8 +65,13 @@ from maru.registration.models import (
     SettlementAllocation,
     SettlementBatch,
 )
+from maru.workforce.edition_write_scope import (
+    lock_active_department_write_target,
+    lock_workforce_edition_write_scope,
+)
 from maru.workforce.models import (
     Department,
+    EditionStructureCommandReceipt,
     OnboardingDocumentRequest,
     OnboardingDocumentType,
     Position,
@@ -73,6 +81,7 @@ from maru.workforce.models import (
     VolunteerApplication,
     VolunteerOpportunity,
 )
+from maru.workforce.structure_commands import create_department
 
 DEMO_NAMESPACE = UUID("6c4b5775-8251-4f11-98e1-b29e09d8fbe6")
 
@@ -105,7 +114,8 @@ def _own(
     own(kind, record.id, created=created)  # type: ignore[attr-defined]
 
 
-def _seed_workforce_examples(
+@transaction.atomic
+def seed_workforce_examples(  # noqa: PLR0915
     *,
     convention_key: str,
     organization: Organization,
@@ -120,24 +130,64 @@ def _seed_workforce_examples(
     registration_lead = accounts["registration-lead"]
     applicant = accounts["volunteer-applicant"]
     assigned = accounts["registration-volunteer"]
+    scope = lock_workforce_edition_write_scope(
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+    )
     role = RoleBundle.objects.get(
         organization=organization,
         code="demo-staff",
         version=1,
     )
-    department, created = Department.objects.get_or_create(
-        id=_id("workforce-department", convention_key),
-        defaults={
-            "organization": organization,
-            "edition": edition,
-            "code": "registration",
-            "name": "Registration and Front Desk",
-            "description": (
+    legacy_department_id = _id("workforce-department", convention_key)
+    department = Department.objects.filter(pk=legacy_department_id).first()
+    created = False
+    if department is not None:
+        if (
+            department.organization_id != organization.id
+            or department.edition_id != edition.id
+            or department.name != "Registration and Front Desk"
+        ):
+            raise RuntimeError("Stable demo workforce Department scope conflicts.")
+    else:
+        retry_key = _id("workforce-department-retry", convention_key)
+        retry_exists = EditionStructureCommandReceipt.objects.filter(
+            organization=organization,
+            edition=edition,
+            actor=chair,
+            retry_key=retry_key,
+        ).exists()
+        collision = Department.objects.filter(
+            organization=organization,
+            edition=edition,
+            name__iexact="Registration and Front Desk",
+        ).first()
+        if collision is not None and not retry_exists:
+            raise RuntimeError("Demo workforce Department name is already in use.")
+        result = create_department(
+            actor=chair,
+            organization_id=organization.id,
+            series_id=edition.series_id,
+            edition_id=edition.id,
+            name="Registration and Front Desk",
+            description=(
                 "Synthetic attendee registration, payment support, and arrival."
             ),
-            "position": 10,
-        },
-    )
+            parent_department_id=None,
+            display_order=10,
+            expected_version=0,
+            reason="Create the synthetic Registration workforce example.",
+            retry_key=retry_key,
+            correlation_id=_id(
+                "workforce-department-correlation",
+                convention_key,
+            ),
+            request_id=_id("workforce-department-request", convention_key),
+            source_channel="demo_seed",
+        )
+        department = Department.objects.get(pk=result.department_id)
+        created = not result.replayed
     _own(own, "workforce_departments", department, created=created)
     document_type, created = OnboardingDocumentType.objects.get_or_create(
         id=_id("workforce-document-type", convention_key),
@@ -173,8 +223,25 @@ def _seed_workforce_examples(
         },
     )
     _own(own, "workforce_position_templates", template, created=created)
+    lock_active_department_write_target(
+        scope=scope,
+        department_id=department.id,
+    )
+    position_id = _id("workforce-position", convention_key)
+    assignment_id = _id("workforce-position-assignment", convention_key)
+    if edition.lifecycle not in {
+        EventEdition.Lifecycle.DRAFT,
+        EventEdition.Lifecycle.PREPARING,
+    } and (
+        not Position.objects.filter(pk=position_id).exists()
+        or not PositionAssignment.objects.filter(pk=assignment_id).exists()
+    ):
+        raise RuntimeError(
+            "Synthetic workforce examples must be created before the edition "
+            "leaves Draft or Preparing."
+        )
     position, position_created = Position.objects.get_or_create(
-        id=_id("workforce-position", convention_key),
+        id=position_id,
         defaults={
             "organization": organization,
             "edition": edition,
@@ -191,6 +258,30 @@ def _seed_workforce_examples(
         },
     )
     _own(own, "workforce_positions", position, created=position_created)
+    ensure_workforce_position_binding(position=position)
+    position_scope = (
+        Position.objects.select_for_update()
+        .filter(id=position_id)
+        .order_by()
+        .values_list(
+            "organization_id",
+            "edition_id",
+            "department_id",
+            "template_id",
+            "role_bundle_id",
+            "code",
+        )
+        .first()
+    )
+    if position_scope != (
+        scope.organization_id,
+        scope.edition_id,
+        department.id,
+        template.id,
+        role.id,
+        "registration-team-member",
+    ):
+        raise RuntimeError("Stable demo workforce Position scope conflicts.")
     requirement, created = PositionDocumentRequirement.objects.get_or_create(
         id=_id("workforce-position-document", convention_key),
         defaults={
@@ -254,8 +345,27 @@ def _seed_workforce_examples(
         },
     )
     _own(own, "workforce_document_requests", document_request, created=created)
+    assignment_scope = (
+        PositionAssignment.objects.select_for_update()
+        .filter(id=assignment_id)
+        .order_by()
+        .values_list(
+            "position_id",
+            "organization_id",
+            "edition_id",
+            "account_id",
+        )
+        .first()
+    )
+    if assignment_scope is not None and assignment_scope != (
+        position.id,
+        scope.organization_id,
+        scope.edition_id,
+        assigned.id,
+    ):
+        raise RuntimeError("Stable demo workforce assignment scope conflicts.")
     assignment, created = PositionAssignment.objects.get_or_create(
-        id=_id("workforce-position-assignment", convention_key),
+        id=assignment_id,
         defaults={
             "position": position,
             "organization": organization,
@@ -293,15 +403,6 @@ def seed_operational_examples(  # noqa: PLR0915
     checked_in = registrations["guest-of-honour"]
     cancelled = registrations["cancelled-attendee"]
     happened_at = datetime(2026, 6, 12, 10, 5, tzinfo=UTC)
-    _seed_workforce_examples(
-        convention_key=convention_key,
-        organization=organization,
-        edition=current,
-        accounts=accounts,
-        own=own,
-        happened_at=happened_at,
-    )
-
     provider, created = PaymentProviderAccount.objects.get_or_create(
         id=_id("payment-provider", convention_key),
         defaults={

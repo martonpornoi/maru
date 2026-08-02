@@ -98,7 +98,7 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 | Spreadsheet formula injection | exported name executes when opened | neutralize formulas, explicit raw-data mode warning, tests for CSV/XLSX cells |
 | Search/index leak | unauthorized result title or count appears | policy-scoped indexes or filters, projection testing, no shared cache without authorization dimension |
 | Hierarchy projection leak or exhaustion | a foreign edition name, hidden holder, or partial oversized tree is disclosed | name-free capability prefilter, fresh final authorization, exact-role and active-person checks, code-owned row/depth/expanded-edge ceilings, explicit no-partial overflow, generic dependency response |
-| Cross-version structure read | concurrent Department/Position/assignment writes produce a coherent but mixed-version tree | Page 9a.0 documents the residual risk and fails malformed graphs closed; Page 9a.1 must add a structure aggregate/version fence and retry semantics before mounting mutations |
+| Cross-version structure read | concurrent Department/Position/assignment writes produce a coherent but mixed-version tree | short repeatable-read snapshot, exact edition aggregate version, fresh post-snapshot probe, one complete retry, name-free failure after a second movement, and one canonical boundary for every repository-owned writer |
 | Unsafe automation | rule mass-mails or grants access repeatedly | permission ceiling, dry run, action limits, idempotency, approval, versioned rollout, kill switch |
 | Connector compromise | social token publishes abuse; provider payload injects data | secret vault, narrow scopes, verified endpoints, input validation, egress allowlist, disable/reconcile, no implicit trust |
 | SSRF through webhooks/imports | attacker reaches internal metadata or control plane | destination verification, DNS/IP policy, egress proxy, redirect limits, network segmentation |
@@ -159,11 +159,21 @@ untrusted channel, bounded, observable, and assumed capable of failure.
   trigger/truncate/maintenance, parameter-control ACL, non-origin trigger
   setting, sequence update, object/column grant option, or credential detail in
   health output. Prove the required connection, schema, ordinary DML,
-  SELECT-only cutover-control, and sequence use/read data plane so an unusable
-  role cannot appear safe. Revoke non-system function execution from `PUBLIC`
+  append-only Page 9 structure-receipt, non-deletable structure-control,
+  SELECT-only cutover-control, and sequence use/read data planes so an unusable
+  role cannot appear safe. Deny excess structure-table mutation and
+  `REFERENCES` without removing Department from the trigger-governed ordinary
+  DML plane. Revoke non-system function execution from `PUBLIC`
   and grant the runtime role only the versioned v2 policy/trigger-helper
   closure. Require current, session, and authenticated-backend identity for
   runtime health; owner role switching is not authentication evidence.
+- Treat workforce `0006`/`0007` as a stopped-writer security boundary, not only
+  schema evolution. Readiness pins all 14 Page 9 helper definitions and 28
+  exact trigger attachments, including statement/row timing, `UPDATE OF`
+  columns, enabled state, and deferred evidence. Those trigger-only helpers
+  remain outside the runtime role's direct function-execute allowlist. Missing
+  migration evidence or any altered function/attachment blocks completeness
+  and downgrade-fence readiness.
 - Secrets live outside code and logs and rotate without a deploy.
 - Dependency, secret, static, dynamic, container, and infrastructure scanning
   feed release gates with human triage.

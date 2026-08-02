@@ -31,6 +31,10 @@ from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.identity.models import Account
 from maru.participation.models import Participation, ParticipationCapacity
+from maru.workforce.edition_write_scope import (
+    lock_active_department_write_target,
+    lock_workforce_edition_write_scope,
+)
 from maru.workforce.models import (
     MAX_ONBOARDING_DOCUMENT_BYTES,
     OnboardingDocumentRequest,
@@ -463,11 +467,49 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
             {"approved_by": "A different controller must approve this assignment."}
         )
     with transaction.atomic():
+        position_reference = (
+            Position.objects.filter(id=position_id)
+            .order_by()
+            .values_list(
+                "organization_id",
+                "edition__series_id",
+                "edition_id",
+                "department_id",
+            )
+            .first()
+        )
+        if position_reference is None:
+            raise ValidationError(
+                "The workforce Position target is unavailable.",
+                code="workforce_position_unavailable",
+            )
+        organization_id, series_id, edition_id, department_id = position_reference
+        write_scope = lock_workforce_edition_write_scope(
+            organization_id=organization_id,
+            series_id=series_id,
+            edition_id=edition_id,
+        )
+        lock_active_department_write_target(
+            scope=write_scope,
+            department_id=department_id,
+        )
         position = (
             Position.objects.select_for_update()
             .select_related("role_bundle", "edition", "department")
-            .get(id=position_id)
+            .filter(
+                id=position_id,
+                organization_id=write_scope.organization_id,
+                edition_id=write_scope.edition_id,
+                department_id=department_id,
+            )
+            .order_by()
+            .first()
         )
+        if position is None:
+            raise ValidationError(
+                "The workforce Position target is unavailable.",
+                code="workforce_position_unavailable",
+            )
         for controller in (actor, approver):
             _require(
                 actor=controller,
@@ -482,19 +524,41 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
                 "A closed position cannot receive assignments.",
                 code="position_closed",
             )
-        active_count = (
+        active_assignment_ids = tuple(
             PositionAssignment.objects.select_for_update()
             .filter(
                 position=position,
                 status=PositionAssignment.Status.ACTIVE,
             )
-            .count()
+            .order_by("id")
+            .values_list("id", flat=True)
         )
+        active_count = len(active_assignment_ids)
         if active_count >= position.headcount:
             raise ValidationError(
                 "This position has reached its approved headcount.",
                 code="position_headcount_reached",
             )
+        proposed_assignment: PositionAssignment | None = None
+        if proposed_assignment_id is not None:
+            proposed_assignment = (
+                PositionAssignment.objects.select_for_update()
+                .filter(
+                    id=proposed_assignment_id,
+                    position=position,
+                    organization_id=write_scope.organization_id,
+                    edition_id=write_scope.edition_id,
+                    account=account,
+                    status=PositionAssignment.Status.PROPOSED,
+                )
+                .order_by()
+                .first()
+            )
+            if proposed_assignment is None:
+                raise ValidationError(
+                    "The proposed workforce assignment is unavailable.",
+                    code="workforce_assignment_unavailable",
+                )
         required_type_ids = set(
             position.document_requirements.values_list("document_type_id", flat=True)
         )
@@ -618,12 +682,12 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
                 participation_capacity=position_capacity,
             )
         else:
-            assignment = PositionAssignment.objects.select_for_update().get(
-                id=proposed_assignment_id,
-                position=position,
-                account=account,
-                status=PositionAssignment.Status.PROPOSED,
-            )
+            if proposed_assignment is None:
+                raise ValidationError(
+                    "The proposed workforce assignment is unavailable.",
+                    code="workforce_assignment_unavailable",
+                )
+            assignment = proposed_assignment
             assignment.status = PositionAssignment.Status.ACTIVE
             assignment.effective_from = effective_from
             assignment.expires_at = expires_at

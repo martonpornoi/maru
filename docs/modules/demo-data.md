@@ -62,6 +62,16 @@ settings do not expose its management command.
 - authorized lifecycle and configuration transitions with correlated audit,
   domain-event, and outbox records.
 
+The current-edition workforce examples are seeded before lifecycle
+progression. Each fresh Department is created through the Page 9 command with
+a deterministic retry key and immutable receipt; its Position and assignment
+are then written beneath the canonical edition mutex and active-Department
+lock, and the Position receives its typed resource binding. A rerun replays
+that receipt rather than writing the Department directly. Complete examples
+remain verifiable after the edition becomes read-only, but the fixture refuses
+to create a missing Position or assignment after Draft/Preparing. Existing
+legacy demo Department identifiers are preserved for upgrade compatibility.
+
 Every Maru model registered under `/admin/` has at least one deterministic
 example after seeding. The registration detail page is a person-focused
 read-only dossier: it renders the actual submitted questions and answers,
@@ -168,8 +178,9 @@ capacities, and executable authority:
   authority merely because of their capacity label.
 
 Direct model creation remains explicitly limited to synthetic bootstrap data
-while V02 lacks audited creation commands for these aggregates. Lifecycle
-changes use the implemented application service.
+for aggregates that still lack audited commands. Department creation uses the
+Page 9 command, lifecycle changes use the implemented events service, and
+Position/assignment writes use the shared edition write scope.
 
 ## Tests and observability
 
@@ -190,7 +201,8 @@ The integration test runs the command twice and verifies:
 - familiar Convention work access groups, current assignments, exact-person
   display, chair revocation authority, and independent approval authority;
 - password authentication;
-- idempotency; and
+- deterministic Department-command receipt replay, Page 9 structure versions,
+  Position bindings, idempotency after the editable lifecycle; and
 - refusal under production settings.
 
 The command reports created rows separately from fixture totals. Lifecycle

@@ -20,6 +20,9 @@ from maru.authorization.policy import (
     decide,
     resolve_organization_target,
 )
+from maru.authorization.retired_targets import (
+    lock_retired_department_authority_boundaries,
+)
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.identity.models import Account
 from maru.identity.policies import validate_convention_subject
@@ -708,6 +711,10 @@ def activate_executive_board(
 
     _require_platform_administrator(actor)
     normalized_reason = _normalized_reason(reason)
+    # Representation activation writes organization-scoped RoleAssignments.
+    # Join the same global order as ordinary authority and Page 9 writers
+    # before taking subject, representation, or organization locks.
+    lock_retired_department_authority_boundaries()
     activation_subject_ids = list(
         RepresentationAppointment.objects.filter(
             representation_id=representation_id,
@@ -1365,6 +1372,10 @@ def emergency_remove_executive_board_controller(
 
     _require_platform_administrator(actor)
     normalized_reason = _normalized_reason(reason)
+    # Emergency containment closes RoleAssignments after locking a broad
+    # cross-organization inventory. Acquire the common writer boundary first
+    # so a concurrent authority/structure writer cannot invert that order.
+    lock_retired_department_authority_boundaries()
     subject_id = _resolve_emergency_subject(
         representation_id=representation_id,
         appointment_id=appointment_id,

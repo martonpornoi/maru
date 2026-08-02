@@ -2,9 +2,10 @@
 
 Status: staged writer and irreversible exact-lineage activation procedure
 Last updated: 2026-08-02
-Scope: ADR 0044, authorization `0006` through `0009`, audit `0005` and `0006`,
-organizations `0013`, workforce `0005`, compatible Board/authority writers,
-count-only readiness, and the one-way activation command
+Scope: ADRs 0044–0046, authorization `0006` through `0010`, audit `0005` and
+`0006`, organizations `0013`, workforce `0005` through `0007`, compatible
+Board/authority/Page 9 writers, count-only readiness, and the one-way
+activation command
 
 ## Purpose and current boundary
 
@@ -29,6 +30,14 @@ runtime-executable Board/workforce helpers plus their persistent trigger
 callers. Authorization `0009` converges those owning migrations with `0008` and
 adds a central reverse fence; each owning migration also refuses an activated
 reverse if that convergence recorder row is lost.
+Authorization `0010` installs the retired-Department authority boundary;
+workforce `0006` adds the Page 9 structure aggregate schema, and workforce
+`0007` performs its stopped-writer preflight before installing the final write
+barrier, scope mutexes, immutable control/receipt handshake, Department and
+retirement guards, and downgrade fence. Production readiness treats those
+Page 9 guards as part of the same fail-closed catalog contract: 14 function
+definitions and 28 exact trigger attachments are pinned, while none of those
+trigger helpers enters the runtime function-execute allowlist.
 
 Applying the migrations does not itself switch policy: compatibility readers
 remain selected while the marker is absent. The marker may be inserted only by
@@ -94,8 +103,10 @@ even when another leaf happened to produce a safe order in an older graph.
    it does not waive any blocker.
 6. Inspect the exact plan and confirm identity `0010`, organizations `0009`
    through `0013`, workforce `0004` and `0005`, authorization `0005` through
-   `0008`, audit `0005` and `0006`, then authorization `0009` are ordered
-   safely:
+   `0009`, workforce `0006`, authorization `0010`, and workforce `0007` are
+   ordered safely. The Page 9 cutover must run only after its authorization
+   retirement dependency and while every old structure/authority writer is
+   stopped:
 
    ```powershell
    & ".\.venv\Scripts\python.exe" src/manage.py migrate --plan
@@ -117,10 +128,17 @@ With writers still stopped:
 ```
 
 The provenance command is available after authorization `0006` creates the
-ledger tables. Authorization `0007`, audit `0006`, authorization `0008`,
-organizations `0013`, workforce `0005`, and authorization `0009` let it verify
-the complete guard, migration, function-definition, and least-privilege helper
-catalog as well as the data. `status` describes reachable data,
+ledger tables. Authorization `0007` through `0010`, audit `0006`,
+organizations `0013`, and workforce `0005` through `0007` let it verify the
+complete guard, migration, function-definition, trigger-attachment, and
+least-privilege helper catalog as well as the data. It must report the
+database-completeness and downgrade-fence gates unresolved if workforce
+`0007` is missing or any Page 9 function/trigger fingerprint differs. The same
+rule covers authorization `0010`: a normal reverse removes its required
+migration record, while partial loss or tampering of any of its eight retired-
+Department trigger attachments or three functions makes both catalog gates
+unresolved.
+`status` describes reachable data,
 `activation_status` describes whether the one-way transition is presently
 allowed, and `production_status` remains blocked until the marker exists and
 every guard/policy/fence gate is resolved.
@@ -255,8 +273,9 @@ blocker count alone is not permission to proceed.
    an old binary does not understand the marker and can continue making legacy
    existential access decisions even though the database rejects its writes.
 3. Apply the complete authorization `0007`, audit `0006`, authorization `0008`,
-   organizations `0013`, workforce `0005`, and authorization `0009` boundary
-   while processes remain stopped, then run:
+   organizations `0013`, workforce `0005`, authorization `0009` and `0010`,
+   then workforce `0006` and `0007` boundary while processes remain stopped,
+   then run:
 
    ```powershell
    & ".\.venv\Scripts\python.exe" src/manage.py migrate
@@ -291,10 +310,16 @@ blocker count alone is not permission to proceed.
    Keep the migration and break-glass roles separate. The runtime role must
    positively prove database `CONNECT`, `USAGE` on every intentional
    non-system schema, four-operation DML on ordinary runtime relations,
+   `SELECT`/`INSERT` on `workforce_editionstructurecommandreceipt`,
+   `SELECT`/`INSERT`/`UPDATE` on `workforce_editionstructurecontrol`,
    `USAGE`/`SELECT` (never `UPDATE`) on sequences, and `EXECUTE` on the exact
-   versioned 19-function v2 policy/trigger-helper closure. Materialized views
-   and the exact control trio (`django_migrations`, activation marker, and
-   generation latch) are SELECT-only. `PUBLIC` must not execute any non-system
+   versioned 19-function v2 policy/trigger-helper closure. The structure
+   receipt and control deny `REFERENCES` and `DELETE`; the receipt also denies
+   `UPDATE`. Department retains ordinary DML and its stopped-writer retirement
+   trigger. Materialized views and the exact control trio
+   (`django_migrations`, activation marker, and generation latch) are
+   SELECT-only and deny table- and column-level `REFERENCES`. `PUBLIC` must not
+   execute any non-system
    function and the runtime role must not execute a function outside that
    allowlist. It must not:
 
@@ -305,9 +330,11 @@ blocker count alone is not permission to proceed.
    - have effective database `CREATE`/`TEMPORARY` or `CREATE` on any non-system
      schema, whether directly, through `PUBLIC`, or through membership; or
    - have effective table `TRIGGER`, `TRUNCATE`, or `MAINTAIN`;
-   - have table- or column-level migration-recorder/marker/latch mutation,
-     sequence `UPDATE`, or a grant option on the database, a non-system schema,
-     relation, column, sequence, or function;
+   - have table- or column-level migration-recorder/marker/latch mutation or
+     `REFERENCES`,
+     excess Page 9 structure-table mutation or `REFERENCES`, sequence `UPDATE`,
+     or a grant option on the database, a non-system schema, relation, column,
+     sequence, or function;
    - receive any explicit effective parameter `SET`/`ALTER SYSTEM` ACL; or
    - receive an applicable persistent `session_replication_role` value other
      than `origin` through global, current-database, or role settings.
@@ -321,6 +348,15 @@ blocker count alone is not permission to proceed.
    `session_replication_role=origin`; otherwise activation is unsafe even when
    the future role's stored ACLs are correct. Never record the role credential
    or database URL.
+   Apply both Page 9 migrations—workforce `0006_edition_structure_schema` and
+   `0007_structure_write_integrity`—before reconciling this role. Readiness
+   must recognize `0007` and all 14 function plus 28 trigger fingerprints;
+   presence of the two tables alone is insufficient.
+   PostgreSQL default ACLs provide the ordinary four-operation table plane but
+   cannot express per-table exceptions, so keep writers stopped until the
+   provisioning artifact has narrowed both structure tables and the probe is
+   resolved. A missing structure relation is a migration/readiness blocker,
+   not a reason to remove it from the code-owned contract.
    After activation, start web and worker processes with that role and require
    `/health/ready` to prove that `CURRENT_USER`, `SESSION_USER`, and the
    backend-authenticated `pg_stat_activity` identity all match the configured
@@ -413,8 +449,9 @@ post-cutover replica accidentally configured `false` cannot appear healthy.
   The required-exact configuration intentionally keeps organizer policy closed
   and public readiness unavailable during this state.
 - If the full authorization `0007`/audit `0006`/authorization `0008`/
-  organizations `0013`/workforce `0005`/authorization `0009` boundary is
-  installed but no marker or reserved audit exists, database-selected
+  organizations `0013`/workforce `0005`/authorization `0009` and `0010`/
+  workforce `0006` and `0007` boundary is installed but no marker or reserved
+  audit exists, database-selected
   compatibility remains
   available only while the required-exact setting is `false`. The cutover
   release's `true` external fence instead keeps organizer policy closed and
@@ -423,8 +460,8 @@ post-cutover replica accidentally configured `false` cannot appear healthy.
   the full graph and respecting authorization `0006`'s issuance downgrade
   fence.
 - If a marker or reserved activation audit exists, never reverse authorization
-  `0009`, organizations `0013`, workforce `0005`, authorization `0008`, audit
-  `0006`, or authorization `0007`; never delete or truncate
+  `0010` or `0009`, workforce `0007`, `0006`, or `0005`, organizations `0013`,
+  authorization `0008`, audit `0006`, or authorization `0007`; never delete or truncate
   evidence, disable guards, fake a migration, or deploy an old reader/writer.
   Fix forward with
   compatible code. If forward recovery cannot preserve the history, restore

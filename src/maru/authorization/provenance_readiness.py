@@ -108,8 +108,11 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0007_authority_provenance_activation_guards"),
     ("authorization", "0008_runtime_latch_lock_helper"),
     ("authorization", "0009_runtime_executable_function_contract"),
+    ("authorization", "0010_retired_department_authority_guards"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("workforce", "0005_runtime_executable_function_hardening"),
+    ("workforce", "0006_edition_structure_schema"),
+    ("workforce", "0007_structure_write_integrity"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -169,16 +172,21 @@ class _CutoverState:
 
 _ROW_AFTER_INSERT = 1 | 4
 _ROW_AFTER_UPDATE = 1 | 16
+_ROW_AFTER_INSERT_UPDATE = 1 | 4 | 16
 _ROW_AFTER_INSERT_UPDATE_DELETE = 1 | 4 | 8 | 16
 _ROW_BEFORE_INSERT = 1 | 2 | 4
+_ROW_BEFORE_UPDATE = 1 | 2 | 16
 _ROW_BEFORE_DELETE = 1 | 2 | 8
 _ROW_BEFORE_INSERT_UPDATE = 1 | 2 | 4 | 16
 _ROW_BEFORE_UPDATE_DELETE = 1 | 2 | 8 | 16
 _ROW_BEFORE_INSERT_UPDATE_DELETE = 1 | 2 | 4 | 8 | 16
 _STATEMENT_AFTER_TRUNCATE = 32
 _STATEMENT_BEFORE_INSERT = 2 | 4
+_STATEMENT_BEFORE_UPDATE = 2 | 16
+_STATEMENT_BEFORE_INSERT_UPDATE = 2 | 4 | 16
 _STATEMENT_BEFORE_UPDATE_DELETE = 2 | 8 | 16
 _STATEMENT_BEFORE_INSERT_UPDATE_DELETE = 2 | 4 | 8 | 16
+_STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE = 2 | 4 | 8 | 16 | 32
 _STATEMENT_BEFORE_TRUNCATE = 2 | 32
 
 _TRIGGER_CONTRACTS = (
@@ -229,6 +237,56 @@ _TRIGGER_CONTRACTS = (
         "authorization_scopedresourcebinding",
         "maru_prevent_scoped_resource_binding_mutation()",
         _ROW_BEFORE_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "authorization_retired_binding_guard",
+        "authorization_scopedresourcebinding",
+        "maru_reject_retired_authority_target()",
+        _ROW_BEFORE_INSERT,
+    ),
+    _TriggerContract(
+        "authorization_retired_capability_guard",
+        "authorization_capabilitygrant",
+        "maru_reject_retired_authority_target()",
+        _ROW_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "authorization_retired_role_guard",
+        "authorization_roleassignment",
+        "maru_reject_retired_authority_target()",
+        _ROW_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "authorization_retired_department_authority_guard",
+        "workforce_department",
+        "maru_guard_department_retirement_authority()",
+        _ROW_BEFORE_UPDATE,
+        columns=("retired_at",),
+    ),
+    _TriggerContract(
+        "authorization_retired_binding_writer_lock",
+        "authorization_scopedresourcebinding",
+        "maru_lock_retired_department_authority_writer()",
+        _STATEMENT_BEFORE_INSERT,
+    ),
+    _TriggerContract(
+        "authorization_retired_capability_writer_lock",
+        "authorization_capabilitygrant",
+        "maru_lock_retired_department_authority_writer()",
+        _STATEMENT_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "authorization_retired_role_writer_lock",
+        "authorization_roleassignment",
+        "maru_lock_retired_department_authority_writer()",
+        _STATEMENT_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "authorization_retired_department_writer_lock",
+        "workforce_department",
+        "maru_lock_retired_department_authority_writer()",
+        _STATEMENT_BEFORE_UPDATE,
+        columns=("retired_at",),
     ),
     _TriggerContract(
         "authorization_authority_issuance_insert_guard",
@@ -560,6 +618,180 @@ _TRIGGER_CONTRACTS = (
         "maru_guard_workforce_assignment()",
         _ROW_BEFORE_INSERT_UPDATE_DELETE,
     ),
+    _TriggerContract(
+        "aa_workforce_page9_department_barrier",
+        "workforce_department",
+        "maru_workforce_page9_writer_barrier()",
+        _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "aa_workforce_page9_control_barrier",
+        "workforce_editionstructurecontrol",
+        "maru_workforce_page9_writer_barrier()",
+        _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "aa_workforce_page9_receipt_barrier",
+        "workforce_editionstructurecommandreceipt",
+        "maru_workforce_page9_writer_barrier()",
+        _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "aa_workforce_page9_position_barrier",
+        "workforce_position",
+        "maru_workforce_page9_writer_barrier()",
+        _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "aa_workforce_page9_assignment_barrier",
+        "workforce_positionassignment",
+        "maru_workforce_page9_writer_barrier()",
+        _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "aa_workforce_page9_binding_barrier",
+        "authorization_scopedresourcebinding",
+        "maru_workforce_page9_writer_barrier()",
+        _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "aa_workforce_page9_capability_barrier",
+        "authorization_capabilitygrant",
+        "maru_workforce_page9_writer_barrier()",
+        _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "aa_workforce_page9_role_barrier",
+        "authorization_roleassignment",
+        "maru_workforce_page9_writer_barrier()",
+        _STATEMENT_BEFORE_INSERT_UPDATE_DELETE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "ab_workforce_page9_department_scope",
+        "workforce_department",
+        "maru_workforce_page9_scope_mutex()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ab_workforce_page9_control_scope",
+        "workforce_editionstructurecontrol",
+        "maru_workforce_page9_scope_mutex()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ab_workforce_page9_receipt_scope",
+        "workforce_editionstructurecommandreceipt",
+        "maru_workforce_page9_scope_mutex()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ab_workforce_page9_position_scope",
+        "workforce_position",
+        "maru_workforce_page9_scope_mutex()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ab_workforce_page9_assignment_scope",
+        "workforce_positionassignment",
+        "maru_workforce_page9_scope_mutex()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ab_workforce_page9_binding_scope",
+        "authorization_scopedresourcebinding",
+        "maru_workforce_page9_scope_mutex()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ab_workforce_page9_capability_scope",
+        "authorization_capabilitygrant",
+        "maru_workforce_page9_scope_mutex()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ab_workforce_page9_role_scope",
+        "authorization_roleassignment",
+        "maru_workforce_page9_scope_mutex()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_control_guard",
+        "workforce_editionstructurecontrol",
+        "maru_validate_edition_structure_control()",
+        _ROW_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_control_no_delete",
+        "workforce_editionstructurecontrol",
+        "maru_prevent_edition_structure_control_mutation()",
+        _ROW_BEFORE_DELETE,
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_control_no_truncate",
+        "workforce_editionstructurecontrol",
+        "maru_prevent_edition_structure_control_mutation()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_receipt_guard",
+        "workforce_editionstructurecommandreceipt",
+        "maru_validate_edition_structure_receipt()",
+        _ROW_BEFORE_INSERT,
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_receipt_immutable",
+        "workforce_editionstructurecommandreceipt",
+        "maru_prevent_edition_structure_receipt_mutation()",
+        _ROW_BEFORE_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_receipt_no_truncate",
+        "workforce_editionstructurecommandreceipt",
+        "maru_prevent_edition_structure_receipt_mutation()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_department_guard",
+        "workforce_department",
+        "maru_validate_department_structure_write()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_department_no_truncate",
+        "workforce_department",
+        "maru_prevent_department_structure_truncate()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_position_retired_guard",
+        "workforce_position",
+        "maru_guard_position_retired_department()",
+        _ROW_BEFORE_INSERT_UPDATE,
+        columns=("department_id", "organization_id", "edition_id", "status"),
+    ),
+    _TriggerContract(
+        "ac_workforce_page9_assignment_retired_guard",
+        "workforce_positionassignment",
+        "maru_guard_assignment_retired_department()",
+        _ROW_BEFORE_INSERT_UPDATE,
+        columns=("position_id", "organization_id", "edition_id", "status"),
+    ),
+    _TriggerContract(
+        "workforce_page9_control_evidence",
+        "workforce_editionstructurecontrol",
+        "maru_assert_edition_structure_control_evidence()",
+        _ROW_AFTER_INSERT_UPDATE,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "workforce_page9_department_evidence",
+        "workforce_department",
+        "maru_assert_department_structure_evidence()",
+        _ROW_AFTER_INSERT_UPDATE_DELETE,
+        deferrable=True,
+        initially_deferred=True,
+    ),
 )
 
 _CORE_FUNCTIONS = (
@@ -589,6 +821,9 @@ _CORE_FUNCTIONS = (
     "maru_prevent_role_bundle_mutation()",
     "maru_validate_scoped_resource_binding()",
     "maru_prevent_scoped_resource_binding_mutation()",
+    "maru_reject_retired_authority_target()",
+    "maru_guard_department_retirement_authority()",
+    "maru_lock_retired_department_authority_writer()",
     "maru_validate_authority_issuance_insert()",
     "maru_prevent_authority_issuance_mutation()",
     "maru_validate_authority_control_insert()",
@@ -624,9 +859,32 @@ _CORE_FUNCTIONS = (
     "maru_deferred_validate_authority_control()",
     "maru_deferred_validate_provenance_activation()",
     "maru_deferred_validate_provenance_latch()",
+    "maru_workforce_page9_writer_barrier()",
+    "maru_workforce_page9_try_scope_mutex(bigint)",
+    "maru_workforce_page9_scope_mutex()",
+    "maru_validate_edition_structure_control()",
+    "maru_assert_edition_structure_control_evidence()",
+    "maru_prevent_edition_structure_control_mutation()",
+    "maru_validate_edition_structure_receipt()",
+    "maru_prevent_edition_structure_receipt_mutation()",
+    "maru_workforce_department_fk_contract_is_current()",
+    "maru_validate_department_structure_write()",
+    "maru_assert_department_structure_evidence()",
+    "maru_prevent_department_structure_truncate()",
+    "maru_guard_position_retired_department()",
+    "maru_guard_assignment_retired_department()",
 )
 
 _FUNCTION_DEFINITION_SHA256 = {
+    "maru_lock_retired_department_authority_writer()": (
+        "159e4167b0d335bd0733ca60bc9bfdf6a5bb4b31c527b590152a7f584818d2fc"
+    ),
+    "maru_guard_department_retirement_authority()": (
+        "32786c0653be2c3cce55e3fba2f6e6630e282355e4ceac601133496fa40b13e3"
+    ),
+    "maru_reject_retired_authority_target()": (
+        "3f48371907ea1a45e56bbebf69a92f695fa27dcf95032d55e39afdd6f4158a15"
+    ),
     "maru_assert_active_board_membership_provenance(uuid)": (
         "b585585ccd82abf19501694426c707bb641526115aa87b5bb12c9cfb4fbf93e0"
     ),
@@ -800,6 +1058,48 @@ _FUNCTION_DEFINITION_SHA256 = {
     "maru_validate_scoped_resource_binding()": (
         "373dce06449225b69a38446de4931e47d441675b01b04e8a120ac941788cf77d"
     ),
+    "maru_assert_department_structure_evidence()": (
+        "7887c7c42b9770b592af5743b74f2ac47891e1d021aed3c9de45db3c5fe0a3bf"
+    ),
+    "maru_assert_edition_structure_control_evidence()": (
+        "1c37f07d8fa5b7b6765ddeb2fccc0f852c21b0e55e1ed6b27e432d0559fb60f8"
+    ),
+    "maru_guard_assignment_retired_department()": (
+        "e6265228b38fd359960c4e5e3506265b221f6bfb29628873f8d9df0e206611da"
+    ),
+    "maru_guard_position_retired_department()": (
+        "6518f7456d68cd68fba7bf3eb3b2056de1c9a2308c49160bfcca7e052834c19d"
+    ),
+    "maru_prevent_department_structure_truncate()": (
+        "747cdf967ed6a518d641beed4abba918ae69938ad5f4ae4c5b99e3129b8cce1f"
+    ),
+    "maru_prevent_edition_structure_control_mutation()": (
+        "3f765a5c19d7da7c2796b15ef175251492fe5302f0590c6ded011b9f048a282f"
+    ),
+    "maru_prevent_edition_structure_receipt_mutation()": (
+        "f5f6dc38198cf2978e3c7613152b869375f1d26232ebcd4560986104e00f11fa"
+    ),
+    "maru_validate_department_structure_write()": (
+        "e4a44adc84bce76b97a4e6d0f8fef19825b891d94bf41dc17f92225d1808f22a"
+    ),
+    "maru_validate_edition_structure_control()": (
+        "52daa0c470438ca34cdd2a00e1b0aa5e61b9bed98a9cfc320b21a92fc6911686"
+    ),
+    "maru_validate_edition_structure_receipt()": (
+        "a8c475fcea8a338e07b91ad0ba1bb9d64cebc31b5fb53c89b49d14a477bb1e8a"
+    ),
+    "maru_workforce_department_fk_contract_is_current()": (
+        "378a3cf2cb86f8d91967be6355fa9dadde4244fd68e4a867f6548b1bfa516d3b"
+    ),
+    "maru_workforce_page9_scope_mutex()": (
+        "75e5f8a98fd059d1e5d2de0db420e77beec79f3c6eb12b051388ab66c85790c6"
+    ),
+    "maru_workforce_page9_try_scope_mutex(bigint)": (
+        "4ebf99f0177936704c44598ee63a058e57bf6aaca130c51b8a8fa4fb799cb86f"
+    ),
+    "maru_workforce_page9_writer_barrier()": (
+        "a5ca2897e19293a78e805a1a8fb4484f6822def7713c35141c0e7f2fbb4ad429"
+    ),
 }
 
 _DOWNGRADE_FENCE_TRIGGER_NAMES = frozenset(
@@ -812,6 +1112,14 @@ _DOWNGRADE_FENCE_TRIGGER_NAMES = frozenset(
         "authorization_role_bundle_immutable",
         "authorization_scoped_resource_binding_guard",
         "authorization_scoped_resource_binding_immutable",
+        "authorization_retired_binding_guard",
+        "authorization_retired_capability_guard",
+        "authorization_retired_role_guard",
+        "authorization_retired_department_authority_guard",
+        "authorization_retired_binding_writer_lock",
+        "authorization_retired_capability_writer_lock",
+        "authorization_retired_role_writer_lock",
+        "authorization_retired_department_writer_lock",
         "authorization_authority_issuance_insert_guard",
         "authorization_authority_issuance_immutable",
         "authorization_authority_control_insert_guard",
@@ -842,6 +1150,34 @@ _DOWNGRADE_FENCE_TRIGGER_NAMES = frozenset(
         "organizations_parent_deferred_board_integrity",
         "workforce_position_guard",
         "workforce_assignment_guard",
+        "aa_workforce_page9_department_barrier",
+        "aa_workforce_page9_control_barrier",
+        "aa_workforce_page9_receipt_barrier",
+        "aa_workforce_page9_position_barrier",
+        "aa_workforce_page9_assignment_barrier",
+        "aa_workforce_page9_binding_barrier",
+        "aa_workforce_page9_capability_barrier",
+        "aa_workforce_page9_role_barrier",
+        "ab_workforce_page9_department_scope",
+        "ab_workforce_page9_control_scope",
+        "ab_workforce_page9_receipt_scope",
+        "ab_workforce_page9_position_scope",
+        "ab_workforce_page9_assignment_scope",
+        "ab_workforce_page9_binding_scope",
+        "ab_workforce_page9_capability_scope",
+        "ab_workforce_page9_role_scope",
+        "ac_workforce_page9_control_guard",
+        "ac_workforce_page9_control_no_delete",
+        "ac_workforce_page9_control_no_truncate",
+        "ac_workforce_page9_receipt_guard",
+        "ac_workforce_page9_receipt_immutable",
+        "ac_workforce_page9_receipt_no_truncate",
+        "ac_workforce_page9_department_guard",
+        "ac_workforce_page9_department_no_truncate",
+        "ac_workforce_page9_position_retired_guard",
+        "ac_workforce_page9_assignment_retired_guard",
+        "workforce_page9_control_evidence",
+        "workforce_page9_department_evidence",
     }
 )
 _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
@@ -875,6 +1211,9 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_prevent_role_bundle_mutation()",
         "maru_validate_scoped_resource_binding()",
         "maru_prevent_scoped_resource_binding_mutation()",
+        "maru_reject_retired_authority_target()",
+        "maru_guard_department_retirement_authority()",
+        "maru_lock_retired_department_authority_writer()",
         "maru_validate_authority_issuance_insert()",
         "maru_prevent_authority_issuance_mutation()",
         "maru_validate_authority_control_insert()",
@@ -892,6 +1231,20 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_assert_authority_provenance_activation()",
         "maru_deferred_validate_provenance_activation()",
         "maru_deferred_validate_provenance_latch()",
+        "maru_workforce_page9_writer_barrier()",
+        "maru_workforce_page9_try_scope_mutex(bigint)",
+        "maru_workforce_page9_scope_mutex()",
+        "maru_validate_edition_structure_control()",
+        "maru_assert_edition_structure_control_evidence()",
+        "maru_prevent_edition_structure_control_mutation()",
+        "maru_validate_edition_structure_receipt()",
+        "maru_prevent_edition_structure_receipt_mutation()",
+        "maru_workforce_department_fk_contract_is_current()",
+        "maru_validate_department_structure_write()",
+        "maru_assert_department_structure_evidence()",
+        "maru_prevent_department_structure_truncate()",
+        "maru_guard_position_retired_department()",
+        "maru_guard_assignment_retired_department()",
     }
 )
 

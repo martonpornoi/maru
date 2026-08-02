@@ -143,6 +143,48 @@ EXPECTED_TRIGGER_CONTRACTS = {
         "maru_prevent_scoped_resource_binding_mutation",
         27,
     ),
+    "authorization_retired_binding_guard": _trigger_contract(
+        "authorization_scopedresourcebinding",
+        "maru_reject_retired_authority_target",
+        7,
+    ),
+    "authorization_retired_capability_guard": _trigger_contract(
+        "authorization_capabilitygrant",
+        "maru_reject_retired_authority_target",
+        23,
+    ),
+    "authorization_retired_role_guard": _trigger_contract(
+        "authorization_roleassignment",
+        "maru_reject_retired_authority_target",
+        23,
+    ),
+    "authorization_retired_department_authority_guard": _trigger_contract(
+        "workforce_department",
+        "maru_guard_department_retirement_authority",
+        19,
+        columns=("retired_at",),
+    ),
+    "authorization_retired_binding_writer_lock": _trigger_contract(
+        "authorization_scopedresourcebinding",
+        "maru_lock_retired_department_authority_writer",
+        6,
+    ),
+    "authorization_retired_capability_writer_lock": _trigger_contract(
+        "authorization_capabilitygrant",
+        "maru_lock_retired_department_authority_writer",
+        22,
+    ),
+    "authorization_retired_role_writer_lock": _trigger_contract(
+        "authorization_roleassignment",
+        "maru_lock_retired_department_authority_writer",
+        22,
+    ),
+    "authorization_retired_department_writer_lock": _trigger_contract(
+        "workforce_department",
+        "maru_lock_retired_department_authority_writer",
+        18,
+        columns=("retired_at",),
+    ),
     "authorization_capability_grant_provenance_lock": _trigger_contract(
         "authorization_capabilitygrant",
         "maru_lock_authority_provenance_writer",
@@ -428,6 +470,9 @@ EXPECTED_FUNCTIONS = {
     "maru_prevent_role_bundle_mutation",
     "maru_validate_scoped_resource_binding",
     "maru_prevent_scoped_resource_binding_mutation",
+    "maru_reject_retired_authority_target",
+    "maru_guard_department_retirement_authority",
+    "maru_lock_retired_department_authority_writer",
     "maru_guard_audit_event",
     "maru_guard_authority_provenance_activation_audit",
     "maru_audit_test_reset_allowed",

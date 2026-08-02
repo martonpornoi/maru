@@ -157,9 +157,16 @@ database or non-system schema/relation/function ownership, no database
 `TRUNCATE`, or `MAINTAIN`. It also denies effective parameter-control ACLs,
 non-origin trigger settings, sequence `UPDATE`, and database/schema/relation/
 column/sequence/function grant options. It must positively retain database
-`CONNECT`, schema `USAGE`, ordinary runtime-relation DML, sequence
-`USAGE`/`SELECT`, SELECT-only materialized-view and activation-control reads,
+`CONNECT`, schema `USAGE`, four-operation DML on ordinary runtime relations,
+`SELECT`/`INSERT` on Page 9 structure command receipts,
+`SELECT`/`INSERT`/`UPDATE` on Page 9 structure controls, sequence
+`USAGE`/`SELECT`, SELECT-only materialized-view and activation-control reads
+with no table- or column-level `REFERENCES`,
 and the exact versioned 19-function v2 policy/trigger-helper execute closure.
+The two Page 9 relations deny `REFERENCES`; receipts additionally deny
+`UPDATE`, while both deny `DELETE`. Department remains on the ordinary DML
+plane because its stopped-writer retirement trigger, not a table-wide ACL
+revoke, enforces that lifecycle boundary.
 `PUBLIC` may
 execute no non-system function and the runtime role may execute no function
 outside that closure. Adapt and rehearse

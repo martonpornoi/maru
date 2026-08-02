@@ -18,7 +18,6 @@ from django.utils import timezone
 
 from maru.authorization.models import RoleAssignment
 from maru.workforce.models import (
-    Department,
     Position,
     PositionAssignment,
     PositionTemplate,
@@ -29,6 +28,11 @@ from tests.factories import (
     RoleAssignmentFactory,
     RoleBundleFactory,
     ScopedResourceBindingFactory,
+)
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_assignment_for_test,
+    save_position_for_test,
 )
 
 pytestmark = [
@@ -222,11 +226,10 @@ def _create_runtime_position() -> tuple[Position, RoleAssignment]:
     account = AccountFactory()
     creator = AccountFactory()
     role_bundle = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="readiness-operations",
         name="Readiness Operations",
+        expected_code="readiness-operations",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -237,17 +240,19 @@ def _create_runtime_position() -> tuple[Position, RoleAssignment]:
         role_bundle=role_bundle,
         created_by=creator,
     )
-    position = Position.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=role_bundle,
-        code="readiness-lead",
-        title="Readiness lead",
-        description="Synthetic readiness position.",
-        capacity_codes=["volunteer"],
-        created_by=creator,
+    position = save_position_for_test(
+        position=Position(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=role_bundle,
+            code="readiness-lead",
+            title="Readiness lead",
+            description="Synthetic readiness position.",
+            capacity_codes=["volunteer"],
+            created_by=creator,
+        )
     )
     ScopedResourceBindingFactory(
         department=department,
@@ -259,15 +264,17 @@ def _create_runtime_position() -> tuple[Position, RoleAssignment]:
         principal=account,
         role_bundle=role_bundle,
     )
-    PositionAssignment.objects.create(
-        position=position,
-        organization=edition.organization,
-        edition=edition,
-        account=account,
-        effective_from=timezone.now(),
-        proposed_by=creator,
-        reason="Synthetic legacy edition-wide authority evidence.",
-        role_assignment=role_assignment,
+    save_position_assignment_for_test(
+        assignment=PositionAssignment(
+            position=position,
+            organization=edition.organization,
+            edition=edition,
+            account=account,
+            effective_from=timezone.now(),
+            proposed_by=creator,
+            reason="Synthetic legacy edition-wide authority evidence.",
+            role_assignment=role_assignment,
+        )
     )
     return position, role_assignment
 

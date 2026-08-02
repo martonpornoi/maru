@@ -37,6 +37,7 @@ def test_catalog_distinguishes_scope_depth_from_persistability() -> None:
     assert not relationship_only.persistable
     assert edition_capability.maximum_scope is ScopeLevel.EDITION
     assert edition_capability.persistable
+    assert "structure_control" in edition_capability.field_ceiling
     assert "holder_display_labels" in edition_capability.field_ceiling
 
 

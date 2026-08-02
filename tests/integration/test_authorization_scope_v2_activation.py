@@ -19,7 +19,7 @@ from maru.authorization.models import (
     RoleAssignment,
     RoleBundle,
 )
-from maru.workforce.models import Department, Position, PositionTemplate
+from maru.workforce.models import Position, PositionTemplate
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
@@ -27,6 +27,10 @@ from tests.factories import (
     RoleAssignmentFactory,
     RoleBundleFactory,
     ScopedResourceBindingFactory,
+)
+from tests.workforce_helpers import (
+    create_department_for_test,
+    save_position_for_test,
 )
 
 pytestmark = [
@@ -160,15 +164,31 @@ def _create_second_historical_position(
     )
 
 
+def _delete_historical_scope(scope: SimpleNamespace) -> None:
+    """Remove old-graph edition workforce rows before Page 9 restoration."""
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "ALTER TABLE workforce_position DISABLE TRIGGER workforce_position_guard"
+        )
+        try:
+            scope.position_model.objects.filter(edition_id=scope.edition.id).delete()
+        finally:
+            cursor.execute(
+                "ALTER TABLE workforce_position ENABLE TRIGGER workforce_position_guard"
+            )
+    type(scope.template).objects.filter(pk=scope.template.id).delete()
+    type(scope.department).objects.filter(pk=scope.department.id).delete()
+
+
 def _create_runtime_scope(suffix: str) -> SimpleNamespace:
     edition = EventEditionFactory()
     creator = AccountFactory()
     role_bundle = RoleBundleFactory(organization=edition.organization)
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code=f"operations-{suffix}",
         name=f"Operations {suffix}",
+        expected_code=f"operations-{suffix}",
     )
     template = PositionTemplate.objects.create(
         organization=edition.organization,
@@ -179,17 +199,19 @@ def _create_runtime_scope(suffix: str) -> SimpleNamespace:
         role_bundle=role_bundle,
         created_by=creator,
     )
-    position = Position.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        template=template,
-        department=department,
-        role_bundle=role_bundle,
-        code=f"operations-lead-{suffix}",
-        title=f"Operations lead {suffix}",
-        description="Synthetic activation-test position.",
-        capacity_codes=["volunteer"],
-        created_by=creator,
+    position = save_position_for_test(
+        position=Position(
+            organization=edition.organization,
+            edition=edition,
+            template=template,
+            department=department,
+            role_bundle=role_bundle,
+            code=f"operations-lead-{suffix}",
+            title=f"Operations lead {suffix}",
+            description="Synthetic activation-test position.",
+            capacity_codes=["volunteer"],
+            created_by=creator,
+        )
     )
     binding = ScopedResourceBindingFactory(
         department=department,
@@ -379,6 +401,7 @@ def test_populated_preflight_rejects_nonpersistable_or_too_broad_grant(
             )
     finally:
         grant_before.objects.filter(pk=invalid_grant.id).delete()
+        _delete_historical_scope(scope)
 
 
 def test_populated_preflight_rejects_a_delegation_cycle() -> None:
@@ -428,6 +451,7 @@ def test_populated_preflight_rejects_a_delegation_cycle() -> None:
         grant_model.objects.filter(pk=parent.id).update(delegated_from_id=None)
         grant_model.objects.filter(pk=child.id).delete()
         grant_model.objects.filter(pk=parent.id).delete()
+        _delete_historical_scope(scope)
 
 
 def test_active_guards_reject_scope_forgery_mutation_and_catalog_bypass() -> None:
@@ -473,11 +497,10 @@ def test_active_guards_reject_scope_forgery_mutation_and_catalog_bypass() -> Non
         edition=first.edition,
         department=first.department,
     )
-    other_department = Department.objects.create(
-        organization=first.organization,
+    other_department = create_department_for_test(
         edition=first.edition,
-        code="registration-first",
         name="Registration first",
+        expected_code="registration-first",
     )
     with (
         pytest.raises(IntegrityError, match="immutable"),
@@ -595,11 +618,10 @@ def test_revocation_requires_complete_evidence_and_is_one_way() -> None:
 
 def test_delegation_guard_enforces_ancestry_scope_and_horizon() -> None:
     scope = _create_runtime_scope("delegation")
-    sibling_department = Department.objects.create(
-        organization=scope.organization,
+    sibling_department = create_department_for_test(
         edition=scope.edition,
-        code="registration-delegation",
         name="Registration delegation",
+        expected_code="registration-delegation",
     )
     now = timezone.now()
     parent_principal = AccountFactory()
@@ -753,7 +775,7 @@ def test_downgrade_fence_refuses_any_scoped_authority(authority_kind: str) -> No
     assert not type(authority).objects.filter(pk=authority.pk).exists()
     assert AuthorizationScopeWriteFence.objects.filter(singleton=True).exists()
 
-    with pytest.raises(IntegrityError, match="downgrade refused"):
+    with pytest.raises(RuntimeError, match="Cannot remove Page 9 structure integrity"):
         _migrate(
             AUTHORIZATION_BEFORE_ACTIVATION,
             WORKFORCE_SCOPE_V2_INTEGRITY,

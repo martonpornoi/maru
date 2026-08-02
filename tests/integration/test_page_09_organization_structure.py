@@ -18,6 +18,7 @@ from maru.registration.models import Registration
 from maru.workforce.models import Department, PositionAssignment
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.support.authority import activate_synthetic_board
+from tests.workforce_helpers import create_department_for_test
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
@@ -97,6 +98,8 @@ def test_platform_oversight_sees_an_honest_empty_tree_without_participating() ->
     assert "Executive Board" in content
     assert "Absent" in content
     assert "No operational Departments yet" in content
+    assert "Empty structure" in content
+    assert "Version 0" in content
     assert "Platform oversight" in content
     assert "Structure manager" in content
     assert "not a Department" in content
@@ -121,31 +124,18 @@ def test_platform_oversight_sees_an_honest_empty_tree_without_participating() ->
 def test_page_09_renders_the_persisted_tree_beneath_separate_governance() -> None:
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     edition = EventEditionFactory(name="Synthetic Nested Structure Edition")
-    helper = Department.objects.create(
-        organization=edition.organization,
+    helper = create_department_for_test(
         edition=edition,
-        code="helper-board",
         name="Helper Board",
-        description="Coordinates the edition Departments.",
-        position=0,
+        expected_code="helper-board",
+        display_order=0,
     )
-    Department.objects.create(
-        organization=edition.organization,
+    registration = create_department_for_test(
         edition=edition,
         parent=helper,
-        code="registration",
         name="Registration",
-        description="Runs attendee registration.",
-        position=20,
-    )
-    Department.objects.create(
-        organization=edition.organization,
-        edition=edition,
-        parent=helper,
-        code="executive-board",
-        name="Executive Board",
-        description="A deliberately same-named legacy operational Department.",
-        position=10,
+        expected_code="registration",
+        display_order=20,
     )
 
     response = _client(administrator).get(_url(edition))
@@ -155,13 +145,17 @@ def test_page_09_renders_the_persisted_tree_beneath_separate_governance() -> Non
     assert "Complete bounded tree" in content
     assert "Helper Board" in content
     assert "Registration" in content
-    assert "Runs attendee registration." in content
-    # The fixed governance anchor and same-named operational record remain
-    # separate and truthful; the read projector does not repair or infer either.
-    assert content.count("Executive Board") >= 2
+    assert "Synthetic current-schema fixture." in content
+    assert "Manually established" in content
+    assert "Version 2" in content
+    assert "remains read-only" not in content
+    assert "Structure manager" in content
+    assert "Active" in content
+    # The fixed governance anchor remains separate from the edition-owned tree.
+    assert content.count("Executive Board") >= 1
     assert content.index("Executive Board") < content.index("Helper Board")
-    assert content.index("A deliberately same-named") > content.index("Helper Board")
     assert str(helper.id) not in content
+    assert str(registration.id) not in content
 
 
 def test_exact_view_and_manage_decisions_are_independent_and_discoverable() -> None:
@@ -218,11 +212,10 @@ def test_board_staff_department_and_session_context_do_not_imply_page_access() -
     department_user = AccountFactory()
     staff_only = AccountFactory(is_staff=True, is_superuser=False)
     selected_only = AccountFactory()
-    department = Department.objects.create(
-        organization=edition.organization,
+    department = create_department_for_test(
         edition=edition,
-        code="narrow-department",
         name="Narrow Department",
+        expected_code="narrow-department",
     )
     _grant(account=department_user, edition=edition, department=department)
 
@@ -294,6 +287,8 @@ def test_projection_overflow_is_explicit_and_never_renders_partial_rows() -> Non
     edition = EventEditionFactory()
     overflow = SimpleNamespace(
         state="structure_limit_exceeded",
+        aggregate_version=0,
+        source=SimpleNamespace(kind="empty"),
         departments=(),
     )
 
