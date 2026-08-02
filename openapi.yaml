@@ -2836,6 +2836,304 @@ paths:
               schema:
                 $ref: '#/components/schemas/EditionTransitionResult'
           description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments:
+    post:
+      operationId: workforce_create_department
+      description: Reach explicit uniform denials while retaining authenticated CSRF
+        checks.
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        description: A canonical lower-case hyphenated UUID. Repeating the same request
+          with the same key returns HTTP 200 and the original minimized result.
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceDepartmentCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceDepartmentMutationResult'
+          description: The identical creation request was replayed.
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceDepartmentMutationResult'
+          description: The Department was created.
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The closed request or Idempotency-Key is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The mutation route or required authority is unavailable.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A submitted exact target is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The request conflicts with structure state or prior retry evidence.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical command dependency is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments/{department_id}:
+    put:
+      operationId: workforce_update_department
+      description: Reach explicit uniform denials while retaining authenticated CSRF
+        checks.
+      parameters:
+      - in: path
+        name: department_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceDepartmentUpdate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceDepartmentMutationResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The complete replacement request is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The mutation route or required authority is unavailable.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The exact Department or parent target is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The request conflicts with current structure state.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical command dependency is temporarily unavailable.
+    delete:
+      operationId: workforce_delete_department
+      description: Reach explicit uniform denials while retaining authenticated CSRF
+        checks.
+      parameters:
+      - in: path
+        name: department_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceDepartmentDelete'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceDepartmentMutationResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The protected deletion request is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The mutation route or required authority is unavailable.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The exact Department target is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The request conflicts with retained dependencies or current
+            state.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical command dependency is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments/{department_id}/retire:
+    post:
+      operationId: workforce_retire_department
+      description: Reach explicit uniform denials while retaining authenticated CSRF
+        checks.
+      parameters:
+      - in: path
+        name: department_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceDepartmentRetire'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceDepartmentMutationResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The retirement request is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The mutation route or required authority is unavailable.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The exact Department target is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The request conflicts with retained dependencies or current
+            state.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical command dependency is temporarily unavailable.
   /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/documents/me:
     get:
       operationId: workforce_list_my_onboarding_documents
@@ -2996,6 +3294,81 @@ paths:
               schema:
                 $ref: '#/components/schemas/WorkforceProblem'
           description: The complete structure projection is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure/template-applications:
+    post:
+      operationId: workforce_apply_structure_template
+      description: Reach explicit uniform denials while retaining authenticated CSRF
+        checks.
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        description: A canonical lower-case hyphenated UUID. Repeating the same request
+          with the same key returns HTTP 200 and the original minimized result.
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceStructureTemplateApply'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceStructureTemplateMutationResult'
+          description: The identical request was replayed.
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceStructureTemplateMutationResult'
+          description: The built-in structure copy was created.
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The closed request or Idempotency-Key is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The mutation route or required authority is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The request conflicts with structure state or prior retry evidence.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical command dependency is temporarily unavailable.
   /api/v1/organizations/{organization_id}/editions/autocomplete:
     get:
       operationId: events_autocomplete_basic_editions
@@ -8943,6 +9316,11 @@ components:
       required:
       - answers
       - product_id
+    TemplateEnum:
+      enum:
+      - awoostria-reference@1
+      type: string
+      description: '* `awoostria-reference@1` - awoostria-reference@1'
     Token:
       type: object
       properties:
@@ -9157,6 +9535,118 @@ components:
           maxLength: 500
       required:
       - reason
+    WorkforceDepartmentCreate:
+      type: object
+      description: Closed API input for one idempotent Department creation.
+      properties:
+        name:
+          type: string
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 1000
+        parent_department_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        display_order:
+          type: integer
+          maximum: 65535
+          minimum: 0
+        expected_version:
+          type: integer
+          minimum: 0
+        reason:
+          type: string
+          maxLength: 240
+      required:
+      - description
+      - display_order
+      - expected_version
+      - name
+      - parent_department_id
+      - reason
+      additionalProperties: false
+    WorkforceDepartmentDelete:
+      type: object
+      description: Closed API input for one protected Department deletion.
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          maxLength: 240
+        confirmation_name:
+          type: string
+          maxLength: 160
+      required:
+      - confirmation_name
+      - expected_version
+      - reason
+      additionalProperties: false
+    WorkforceDepartmentMutationResult:
+      type: object
+      properties:
+        department_id:
+          type: string
+          format: uuid
+        aggregate_version:
+          type: integer
+          minimum: 1
+      required:
+      - aggregate_version
+      - department_id
+    WorkforceDepartmentRetire:
+      type: object
+      description: Closed API input for one dependency-safe Department retirement.
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          maxLength: 240
+      required:
+      - expected_version
+      - reason
+      additionalProperties: false
+    WorkforceDepartmentUpdate:
+      type: object
+      description: Complete replacement input; creation retry metadata is header-only.
+      properties:
+        name:
+          type: string
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 1000
+        parent_department_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        display_order:
+          type: integer
+          maximum: 65535
+          minimum: 0
+        expected_version:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          maxLength: 240
+      required:
+      - description
+      - display_order
+      - expected_version
+      - name
+      - parent_department_id
+      - reason
+      additionalProperties: false
     WorkforceProblem:
       type: object
       description: RFC 9457 response shape used by workforce endpoints.
@@ -9452,6 +9942,36 @@ components:
           manual: '#/components/schemas/WorkforceStructureManualSource'
           legacy_existing: '#/components/schemas/WorkforceStructureLegacySource'
           builtin_template: '#/components/schemas/WorkforceStructureBuiltinTemplateSource'
+    WorkforceStructureTemplateApply:
+      type: object
+      description: Closed API input for one immutable built-in template application.
+      properties:
+        template:
+          $ref: '#/components/schemas/TemplateEnum'
+        expected_version:
+          type: integer
+          maximum: 0
+          minimum: 0
+        confirmation_name:
+          type: string
+          maxLength: 160
+        reason:
+          type: string
+          maxLength: 240
+      required:
+      - confirmation_name
+      - expected_version
+      - reason
+      - template
+      additionalProperties: false
+    WorkforceStructureTemplateMutationResult:
+      type: object
+      properties:
+        aggregate_version:
+          type: integer
+          minimum: 1
+      required:
+      - aggregate_version
     WriteProfileExtensionValue:
       type: object
       properties:

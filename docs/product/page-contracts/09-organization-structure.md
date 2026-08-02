@@ -1,15 +1,16 @@
 # Page 9 contract: Organization structure
 
-- Status: Page 9a.1 bounded version-fenced read plus shared Department command
-  and stopped-writer database core implemented and focused-backend verified;
-  mutation adapters remain unmounted
+- Status: Page 9a.1 bounded version-fenced read, shared Department command and
+  stopped-writer database core, and strict HTML/API mutation adapters mounted;
+  definitive repository/coverage acceptance passes, while responsive-browser,
+  accessibility, owner, and deployment-recovery acceptance remains pending
 - Route: `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`
-- Current mutations: none mounted in Page 9a.0
-- Implemented unmounted mutations: POST-only template application, create,
-  retire, and delete commands; complete PUT-style Department update command
+- Current browser mutations: separate POST-only template application,
+  Department create, complete update/reparent/reorder, retire, and protected
+  delete actions reached through same-shell child GET pages
 - Current API: strict
   `/api/v1/organizations/<organization-id>/editions/<edition-id>/workforce/structure`
-  GET projection; child template/Department HTTP adapters remain unmounted
+  GET projection plus five strict template/Department mutation operations
 - Requirements: IDN-002, IDN-004, IDN-009, IDN-011, IDN-012, EVT-002,
   EVT-003, HR-007, HR-010, HR-011, UX-019, UX-020, UX-025, AUD-001,
   AUD-005, INT-001, NFR-001 through NFR-004, NFR-008, and NFR-009
@@ -35,16 +36,15 @@ It is not a Board appointment page, people directory, general access editor,
 Position/role-bundle editor, volunteer assignment tool, or generic specialist
 model form.
 
-## Implemented Page 9a.1 read and command core
+## Implemented Page 9a.1 read and management slice
 
-The current implementation mounts the canonical HTML route and the strict GET
-projection in the shared administration shell. It removes the older React
-Convention work `structure` destination and `?view=structure` path, so there
-is one browser workflow and one current navigation action. Page 9a.0 is
-read-only: it does not mount the built-in-template action, Department create,
-update, reparent, reorder, retire, or delete commands described later in this
-contract. The shared application services and their database write protocol
-are implemented; only their HTTP/browser adapters remain unmounted.
+The current implementation mounts the canonical overview, its same-shell child
+pages, five browser mutation actions, the strict GET projection, and five API
+mutation operations. It removes the older React Convention work `structure`
+destination and `?view=structure` path, so there is one browser workflow and
+one current navigation action. Every adapter calls the shared application
+services and database write protocol; no Page 9 adapter writes a Department
+through a model form or direct ORM save.
 
 The organizations module returns only the fixed **Executive Board** label and
 its `absent`, `provisioning`, `active`, or `suspended` representation state.
@@ -77,18 +77,21 @@ name and other operational role labels only. It excludes login handle, email,
 account kind/state, assignment identifier, entered reason, and authority
 provenance.
 
-The HTML and API adapters capture one projection instant and repeat a fresh
-final `workforce.view_structure` decision before releasing the name-bearing
-response. The GET rejects every query parameter with a typed `400`, uses a
-non-disclosing `403` for missing authority or unavailable route scope, and a
-generic `503` for database, integrity, or policy dependencies. Those
-`400`/`403`/`503` RFC 9457 responses are explicit in OpenAPI.
+The HTML and API read adapters capture one projection instant and repeat a
+fresh final `workforce.view_structure` decision before releasing the
+name-bearing response. The GET rejects every query parameter with a typed
+`400`, uses a non-disclosing `403` for missing authority or unavailable route
+scope, and a generic `503` for database, integrity, or policy dependencies.
+Those `400`/`403`/`503` RFC 9457 responses are explicit in OpenAPI.
 
-After the fresh final decision, both adapters append one minimized
+After the fresh final decision, the overview, child forms, and any audited
+invalid/conflict rerender append one minimized
 `workforce.structure.read` sensitive-read audit containing actor, exact
 organization/edition target, source channel, outcome, obligation, and only the
-policy version, route name, and HTTP method as safe metadata. Audit persistence
-is part of the disclosure boundary: a
+policy version, actual resolved route name, and actual HTTP method as safe
+metadata. A failed POST therefore records its POST action provenance rather
+than pretending that the rerender was a GET. Audit persistence is part of the
+disclosure boundary: a
 failure returns the same generic name-free `503` and releases no holder label
 or partial structure.
 
@@ -103,10 +106,33 @@ coherence is not a substitute for current authority.
 ## Placement, scope, and navigation
 
 The shared sidebar reveals **Organization structure** once beneath the selected
-edition. It is current exactly once on Page 9 and uses the same Maru logo,
-record header, modules, form language, focus treatment, and responsive stacking
-as Pages 3 through 8. No second menu, workspace selector, or Quick Start panel
-is added.
+edition. It is current exactly once on the overview and each Page 9 child page,
+and uses the same Maru logo, record header, modules, form language, focus
+treatment, and responsive stacking as Pages 3 through 8. No second menu,
+workspace selector, or Quick Start panel is added.
+
+The canonical browser surface is:
+
+```text
+GET  .../structure/
+GET  .../structure/template-application/
+POST .../structure/template-applications/
+GET  .../structure/departments/new/
+POST .../structure/departments/
+GET  .../structure/departments/{department_id}/
+POST .../structure/departments/{department_id}/update/
+POST .../structure/departments/{department_id}/retire/
+POST .../structure/departments/{department_id}/delete/
+```
+
+The ellipsis is the exact persisted organization/series/edition slug chain.
+Overview access requires view authority; every management child and action
+requires both the exact view and manage decisions. GET and POST responsibilities
+are separate, every action is CSRF protected, every rendered name-bearing or
+form response is private `no-store`, and a successful mutation uses
+POST/Redirect/GET. Child pages and actions reject query parameters rather than
+accepting an alternate mode. Framework-generated denied/not-found responses
+remain name-free but are not claimed by this rendered-response cache contract.
 
 The route's organization, series, and edition slugs are untrusted locators. The
 view resolves the complete persisted chain before a tenant name enters the
@@ -163,15 +189,14 @@ identifiers used for links and commands are not rendered as human content.
 
 ## Empty state and built-in reference
 
-The implemented command core can offer **Use the Awoostria reference** to an
-authorized manager when an edition has no workforce structure. The browser
-action remains unmounted. The immutable built-in selection is
+The overview offers **Use the Awoostria reference** to an authorized manager
+when an edition has no workforce structure. The immutable built-in selection is
 `awoostria-reference@1`; a later template is another version, never an edit of
 version 1.
 
-Page 9a.1 implements and pins both the code-owned template catalog and its
-transactional application command, but does not yet mount the adapter. The
-catalog is immutable, resolves only the exact versioned
+Page 9a.1 implements and pins the code-owned template catalog, transactional
+application command, and strict browser/API adapters. The catalog is
+immutable, resolves only the exact versioned
 identifier without aliases, validates bounded unique codes/names/order,
 requires exactly one root whose parent precedes every child, forbids an
 Executive Board Department, and retains canonical UTF-8 JSON plus SHA-256
@@ -260,7 +285,10 @@ final protection against raw, bulk, or concurrent cycles.
 
 A normalized no-op returns success without advancing the version, audit, event,
 or outbox. A stale expected version returns a conflict with reload guidance and
-does not merge fields automatically.
+does not merge fields automatically. Browser validation and conflict responses
+retain the exact submitted retry key and expected version, disable a stale
+submission, and require an explicit reload; they never silently refresh those
+control values.
 
 ## Retirement and protected deletion
 
@@ -291,9 +319,9 @@ template receipt remains truthful even after the copy diverges.
 
 ## Shared service and API boundary
 
-The current HTML and API GET adapters share the same bounded workforce query
-and organizations governance-anchor query. The complete intended Page 9a
-surface is:
+The HTML and API adapters share the same bounded workforce query,
+organizations governance-anchor query, and mutation services. The mounted Page
+9a API surface is:
 
 ```text
 GET    /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure
@@ -304,18 +332,44 @@ POST   /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/d
 DELETE /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments/{department_id}
 ```
 
-API scope comes only from the route. POST creation/application uses a required
-UUID `Idempotency-Key` header and rejects that key in JSON. Update, retire, and
-delete use the expected aggregate version in their closed body. Problems use
-the repository's RFC 9457 media type and stable codes for validation, stale,
-protected, lifecycle, limit, denied, not-found, idempotency-conflict, and
-dependency failures. OpenAPI and generated clients must remain deterministic.
+API scope comes only from the route. Template application and creation require
+one canonical UUID `Idempotency-Key` header and reject that key in JSON. The
+same supplied key must be retained by a caller that retries; client helpers do
+not invent a replacement. Update, retire, and delete use the expected aggregate
+version in their closed body. DELETE has a required JSON body containing
+`expected_version`, exact `confirmation_name`, and `reason`.
 
-Only the GET route is mounted. Its accepted response is the exact
-organization and edition labels, the minimized governance discriminator, and
-either one complete nested structure or the explicit empty overflow state.
-Its declared problem statuses are `400`, `403`, and `503`; it does not declare
-a separate not-found shape that could reveal whether a foreign route exists.
+The mutation status contract is:
+
+| Operation | Success | Declared problems |
+| --- | --- | --- |
+| template application | `201`; identical replay `200` | `400`, `403`, `409`, `503` |
+| Department creation | `201`; identical replay `200` | `400`, `403`, `404`, `409`, `503` |
+| complete Department update | `200` | `400`, `403`, `404`, `409`, `503` |
+| Department retirement | `200` | `400`, `403`, `404`, `409`, `503` |
+| protected Department deletion | `200` | `400`, `403`, `404`, `409`, `503` |
+
+Template success returns only `aggregate_version`. Department success returns
+only `department_id` and `aggregate_version`. Closed JSON serializers reject
+unknown properties and type coercion, including strings or booleans submitted
+for integer fields. Canonical UUID fields accept only the lower-case,
+hyphenated form.
+
+Authentication and exact view/manage authorization occur before an
+idempotency header or body is parsed. Missing authority and unavailable route
+scope share the non-disclosing `403` code `structure_authorization_denied`.
+Only after authorization may an unavailable, foreign, retired, or otherwise
+ineligible Department/parent target return the name-free `404` code
+`structure_department_unavailable`. Problems use the repository's RFC 9457
+media type and stable codes for validation, stale, protected, lifecycle,
+limit, denied, not-found, idempotency-conflict, and dependency failures.
+
+The GET response is the exact organization and edition labels, minimized
+governance discriminator, and either one complete nested structure or the
+explicit empty overflow state. Its declared problem statuses are `400`, `403`,
+and `503`; it does not declare a separate not-found shape that could reveal
+whether a foreign route exists. OpenAPI and generated clients must remain
+deterministic.
 
 Each mutation locks and verifies the organization -> series -> edition chain,
 structure aggregate, and affected Departments, repeats policy and lifecycle,
@@ -331,7 +385,9 @@ fall back to direct model save.
 - **Populated:** complete nested Department tree, existing minimized Position
   projection, source/version summary, and controls according to exact access.
 - **Diverged copy:** source receipt remains visible while explaining that the
-  edition is independent of the built-in version.
+  edition is independent of the built-in version; once its aggregate advances
+  beyond the template application result, the overview says **Reference copy
+  changed** rather than implying live synchronization.
 - **Read-only lifecycle:** Ready, Live, Closing, Archived, Cancelled, Suspended,
   or Closed reason shown with no mutation controls.
 - **Validation:** field-local errors, safe entered values retained, no partial
@@ -347,6 +403,34 @@ fall back to direct model save.
 Every state needs keyboard order, visible focus, associated errors, semantic
 tree/list or heading structure, sufficient contrast, and desktop plus 390-pixel
 evidence without horizontal overflow.
+
+The overview is the only page that renders the complete tree. Child editors
+use bounded parent labels and native form controls, never a copy of the full
+hierarchy. At narrow widths hierarchy indentation is reduced, actions stack,
+and the parent selector remains within the viewport. These are implemented
+interaction rules; the final authenticated desktop/390-pixel state matrix,
+keyboard traversal, and automated accessibility evidence remain release gates.
+
+## Current implementation evidence
+
+The pre-adapter command/database graph passes 1,471 tests in 1,538.40 seconds
+on fresh isolated PostgreSQL at 90.13 percent branch coverage. The strict
+mutation API focus passes 48 tests. A fresh isolated combined Page 9 gate
+passes 159 tests in 102.89 seconds across core/forms, bounded reads, HTML
+mutations, mutation and adjacent workforce APIs, exact-lineage navigation, and
+unified routing. These invocations overlap and must not be summed.
+
+Adapter hardening adds 118 targeted cases: 59 HTML, 50 API/contract, and 9
+immutable-template invariants. The HTML selection passes 59 tests with 27
+deselected in 28.13 seconds, and the adjacent API/contract batch passes 152
+tests in 73.90 seconds. The definitive adapter-expanded repository invocation
+passes all 1,693 tests in 1,653.43 seconds at 90.50 percent total
+branch-inclusive coverage. Final Ruff, mypy, Django/system/migration,
+deploy-shaped production-settings, deterministic OpenAPI/client, frontend, and
+dependency gates pass. Chrome was unavailable to current desktop automation,
+so the authenticated desktop/390-pixel state matrix, keyboard/automated
+accessibility, owner rehearsal, representative production cutover, and whole-
+database restore/PITR evidence remain pending.
 
 ## Migration and recovery implications
 
@@ -395,6 +479,9 @@ invents template provenance for legacy rows.
 - query-count ceilings and prefilter-before-name proof for every scope level;
 - HTML/API service parity, strict RFC 9457 problems, OpenAPI validation, and
   deterministic generated client;
+- separate same-shell child GET/POST routes, CSRF, rendered-response no-store,
+  PRG, one current navigation item, strict browser input, retained
+  retry/version controls, and actual method/route read-audit provenance;
 - fresh and populated migration, raw/bulk SQL guards, concurrency, downgrade
   fence, restore/fix-forward rehearsal, and no inferred legacy provenance; and
 - empty/populated/diverged/read-only/validation/stale/protected/denied/limit/

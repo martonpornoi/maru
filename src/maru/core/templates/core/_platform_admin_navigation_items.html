@@ -155,7 +155,7 @@
             <a
               class="baseline-sidebar-link baseline-sidebar-link--standalone"
               href="{{ organization_structure_url }}"
-              {% if request.resolver_match.url_name == "organization-structure" %}aria-current="page"{% endif %}
+              {% if baseline_structure_navigation_current or request.resolver_match.url_name == "organization-structure" %}aria-current="page"{% endif %}
             >
               Organization structure
             </a>

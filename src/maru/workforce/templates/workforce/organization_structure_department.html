@@ -1,0 +1,155 @@
+{% extends "workforce/organization_structure_action_base.html" %}
+
+{% block structure_action_title %}{{ department.name }}{% endblock %}
+{% block structure_action_breadcrumb %}{{ department.name }}{% endblock %}
+{% block structure_action_heading %}{{ department.name }}{% endblock %}
+{% block structure_action_intro %}
+  Maintain this edition-owned Department without changing its stable identity
+  or implying authority inheritance.
+{% endblock %}
+{% block structure_reload_link %}
+  <a href="{% url 'organization-structure-department' organization.slug convention_series.slug edition.slug department.id %}">Reload the latest Department record</a>
+{% endblock %}
+
+{% block structure_action_content %}
+  <section class="baseline-panel" aria-labelledby="department-record-summary-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Department record</p>
+        <h2 id="department-record-summary-title">Current operational placement</h2>
+      </div>
+      <span class="baseline-count">{{ department.state|capfirst }}</span>
+    </div>
+    <dl class="workforce-structure-record-summary">
+      <div>
+        <dt>Parent</dt>
+        <dd>
+          {% if department.parent_id %}
+            {{ department_parent_label }}
+          {% else %}
+            No parent — top-level Department
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt>Display order</dt>
+        <dd>{{ department.display_order }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  {% if update_form %}
+    {% if update_form.non_field_errors or update_form.expected_version.errors %}
+      <div class="baseline-errors" role="alert">
+        {{ update_form.non_field_errors }}
+        {{ update_form.expected_version.errors }}
+      </div>
+    {% endif %}
+    <form
+      method="post"
+      action="{% url 'update-organization-structure-department' organization.slug convention_series.slug edition.slug department.id %}"
+      class="baseline-form workforce-structure-form"
+      novalidate
+    >
+      {% csrf_token %}
+      {{ update_form.expected_version }}
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="department-update-title">
+        <div class="baseline-section-heading">
+          <p class="baseline-kicker">Complete replacement</p>
+          <h2 id="department-update-title">Name, description, and placement</h2>
+          <p>
+            Saving replaces all editable Department properties together. A
+            normalized no-op writes no new version or evidence.
+          </p>
+        </div>
+        {% include "core/_baseline_form_field.html" with field=update_form.name %}
+        {% include "core/_baseline_form_field.html" with field=update_form.description %}
+        <div class="baseline-field-grid">
+          {% include "core/_baseline_form_field.html" with field=update_form.parent_department_id %}
+          {% include "core/_baseline_form_field.html" with field=update_form.display_order %}
+        </div>
+        {% include "core/_baseline_form_field.html" with field=update_form.reason %}
+      </section>
+      <div class="baseline-form-actions workforce-structure-primary-actions">
+        <button type="submit"{% if reload_required or not structure_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Save Department</button>
+        <a
+          class="baseline-secondary-link"
+          href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}"
+        >Cancel</a>
+      </div>
+    </form>
+  {% endif %}
+
+  {% if retirement_form %}
+    <details class="workforce-structure-command-disclosure"{% if active_action == "retire" %} open{% endif %}>
+      <summary>Retire Department</summary>
+      <section class="baseline-panel workforce-structure-secondary-action" aria-labelledby="department-retire-title">
+      <div class="baseline-section-heading">
+        <p class="baseline-kicker">One-way history</p>
+        <h2 id="department-retire-title">Retire Department</h2>
+        <p>
+          Retirement keeps this stable record and closed history. Maru refuses
+          while a current child, open Position, active assignment, or current
+          or future authority still depends on it.
+        </p>
+      </div>
+      {% if retirement_form.non_field_errors or retirement_form.expected_version.errors %}
+        <div class="baseline-errors" role="alert">
+          {{ retirement_form.non_field_errors }}
+          {{ retirement_form.expected_version.errors }}
+        </div>
+      {% endif %}
+      <form
+        method="post"
+        action="{% url 'retire-organization-structure-department' organization.slug convention_series.slug edition.slug department.id %}"
+        class="baseline-form"
+        novalidate
+      >
+        {% csrf_token %}
+        {{ retirement_form.expected_version }}
+        {% include "core/_baseline_form_field.html" with field=retirement_form.reason %}
+        <div class="baseline-form-actions">
+          <button type="submit" class="workforce-structure-warning-button"{% if reload_required or not structure_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Retire Department</button>
+        </div>
+      </form>
+      </section>
+    </details>
+  {% endif %}
+
+  {% if deletion_form %}
+    <details class="workforce-structure-command-disclosure workforce-structure-command-disclosure--danger"{% if active_action == "delete" %} open{% endif %}>
+      <summary>Delete unused Department</summary>
+      <section class="baseline-danger-zone" aria-labelledby="department-delete-title">
+      <div class="baseline-section-heading">
+        <p class="baseline-kicker">Permanent operation</p>
+        <h2 id="department-delete-title">Delete unused Department</h2>
+        <p>
+          Hard deletion never cascades. It succeeds only for a command-created,
+          unchanged leaf with no Position, assignment, binding, authority,
+          cross-module reference, or other operational history.
+        </p>
+      </div>
+      {% if deletion_form.non_field_errors or deletion_form.expected_version.errors %}
+        <div class="baseline-errors" role="alert">
+          {{ deletion_form.non_field_errors }}
+          {{ deletion_form.expected_version.errors }}
+        </div>
+      {% endif %}
+      <form
+        method="post"
+        action="{% url 'delete-organization-structure-department' organization.slug convention_series.slug edition.slug department.id %}"
+        class="baseline-form baseline-danger-form"
+        novalidate
+      >
+        {% csrf_token %}
+        {{ deletion_form.expected_version }}
+        {% include "core/_baseline_form_field.html" with field=deletion_form.confirmation_name %}
+        {% include "core/_baseline_form_field.html" with field=deletion_form.reason %}
+        <div class="baseline-form-actions">
+          <button type="submit"{% if reload_required or not structure_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Delete unused Department</button>
+        </div>
+      </form>
+      </section>
+    </details>
+  {% endif %}
+{% endblock %}

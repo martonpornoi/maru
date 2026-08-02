@@ -66,12 +66,21 @@ disclosure, retries one aggregate movement, and removes the duplicate React
 structure destination. Page 9a.1's aggregate, immutable template application,
 Department command services, repository-owned writer reconciliation, and
 workforce `0006`/`0007` stopped-writer trigger contract are implemented and
-repository-verified by 1,471 tests at 90.13 percent branch coverage. The
+first repository-verified by the pre-adapter 1,471-test baseline at 90.13
+percent branch coverage. The
 immutable 22-Department
 `awoostria-reference@1` catalog pins Helper Board as sole root and contains no
-Executive Board Department. Strict HTML/API mutation adapters remain
-unmounted; production authority reconciliation, cutover, representative
-restore/PITR, accessibility, and owner evidence remain gates.
+Executive Board Department. Page 9a.1 now mounts same-shell child forms and
+five strict API mutation operations for template application and Department
+create/update/reparent/reorder/retire/protected-delete. The definitive
+adapter-expanded repository gate passes 1,693 tests in 1,653.43 seconds at
+90.50 percent total branch-inclusive coverage. Its 118 targeted new cases
+comprise 59 HTML, 50 API/contract, and 9 immutable-template invariant cases;
+the adjacent API/contract batch passes 152 tests in 73.90 seconds. The
+authenticated responsive-browser matrix remains pending. Production authority
+reconciliation,
+cutover, representative restore/PITR, accessibility, and owner evidence remain
+gates.
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
@@ -208,14 +217,16 @@ one version-fenced complete bounded hierarchy or explicit no-partial overflow,
 retry one aggregate movement, and require a minimized sensitive-read audit
 before disclosure. Focused backend/OpenAPI/frontend/static checks, the
 historical 1,239-test Page 9a.0 full suite at 90.35 percent branch coverage,
-and authenticated desktop smoke pass. The later Page 9a.1 backend work adds
-the implemented aggregate/receipt schema, stopped-writer migration, template
-and Department commands, shared writer order, snapshot retry, and exact runtime
-trigger-readiness checks without mounting mutation adapters; its definitive
-current-graph gate passes 1,471 tests at 90.13 percent branch coverage.
-Reliable narrow-
-viewport, accessibility, owner, production cutover, and recovery evidence
-remain open.
+and authenticated desktop smoke pass. Page 9a.1 adds the implemented
+aggregate/receipt schema, stopped-writer migration, template and Department
+commands, shared writer order, snapshot retry, exact runtime trigger-readiness,
+same-shell child forms, and five strict API mutations. Its pre-adapter
+definitive current-graph gate passes 1,471 tests at 90.13 percent branch
+coverage and the mutation API focus passes 48 tests. The adapter-expanded
+definitive repository gate passes 1,693 tests in 1,653.43 seconds at 90.50
+percent total branch-inclusive coverage. Reliable narrow-viewport,
+accessibility, owner,
+production cutover, and recovery evidence remain open.
 
 The committed M1 spine is locally verified across the complete suite, migration rehearsal,
 OpenAPI/client regeneration, deployment-shaped checks, and desktop/390-pixel
@@ -302,8 +313,10 @@ multi-department roles under exact edition scope. The old duplicate Convention
 work destination is removed. The Page 9a.1 aggregate, built-in-template
 application, Department create/update/reparent/reorder/retire/protected-delete
 commands, writer reconciliation, versioned read retry, and database/runtime
-trigger contract are implemented below the UI; their strict HTML/API adapters
-remain unmounted. Position editing remains Page 9b.
+trigger contract are now exposed through strict same-shell HTML and versioned
+API adapters. Their definitive adapter-expanded repository and coverage gate
+passes; authenticated responsive acceptance is still pending. Position editing
+remains Page 9b.
 Qualifications, availability,
 shifts, work records, purpose-built approval UI, and the programme/schedule
 side of this phase remain.

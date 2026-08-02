@@ -154,8 +154,12 @@ def test_page_09_renders_the_persisted_tree_beneath_separate_governance() -> Non
     # The fixed governance anchor remains separate from the edition-owned tree.
     assert content.count("Executive Board") >= 1
     assert content.index("Executive Board") < content.index("Helper Board")
-    assert str(helper.id) not in content
-    assert str(registration.id) not in content
+    # Department identifiers are transport-only anchors/links for management;
+    # they never appear as visible human content.
+    assert f">{helper.id}<" not in content
+    assert f">{registration.id}<" not in content
+    assert "Department index" in content
+    assert "Manage Helper Board Department" in content
 
 
 def test_exact_view_and_manage_decisions_are_independent_and_discoverable() -> None:

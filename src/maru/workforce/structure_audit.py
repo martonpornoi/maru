@@ -9,6 +9,8 @@ from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import PolicyDecision
 from maru.identity.models import Account
 
+_STRUCTURE_AUDIT_HTTP_METHODS = frozenset({"GET", "HEAD", "POST"})
+
 
 def append_structure_read_audit(
     *,
@@ -18,6 +20,7 @@ def append_structure_read_audit(
     decision: PolicyDecision,
     correlation_id: UUID,
     route_name: str,
+    http_method: str,
     source_channel: str,
     occurred_at: datetime,
 ) -> AuditEvent:
@@ -25,6 +28,8 @@ def append_structure_read_audit(
 
     if not decision.allowed:
         raise ValueError("A denied structure decision cannot produce an allow audit.")
+    if http_method not in _STRUCTURE_AUDIT_HTTP_METHODS:
+        raise ValueError("Use an exact supported structure audit HTTP method.")
     obligations = frozenset(decision.obligations) | {"audit_sensitive_read"}
     return append_audit(
         AuditRecord(
@@ -47,7 +52,7 @@ def append_structure_read_audit(
             safe_metadata={
                 "policy_version": POLICY_VERSION,
                 "route_name": route_name,
-                "http_method": "GET",
+                "http_method": http_method,
             },
             retention_class="workforce-restricted",
         ),

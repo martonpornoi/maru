@@ -1,8 +1,10 @@
 # Maru hands-on tutorial: organization authority to edition
 
-Status: M1.1/M2.1 plus Page 9a.0 read journey locally verified in focused
-backend and desktop smoke; full suite, narrow viewport,
-accessibility/state-matrix, and owner rehearsal pending
+Status: M1.1/M2.1 plus Page 9a.1 Department management mounted; the definitive
+adapter-expanded repository gate passes 1,693 tests in 1,653.43 seconds at
+90.50 percent total branch-inclusive coverage. Authenticated narrow-viewport,
+accessibility/state-matrix, deployment-recovery, and owner-rehearsal evidence
+remains pending because Chrome was unavailable to current desktop automation
 Last updated: 2026-08-02
 
 This tutorial follows the intended first coherent Maru journey: a
@@ -367,7 +369,7 @@ Select **Use as working edition**. The POST stores display/query context in
 your session and returns to the record. It does not grant access or create a
 relationship. Select **Clear working edition** to remove that context.
 
-## 13. Inspect Organization structure (Page 9a.0)
+## 13. Establish and inspect Organization structure (Page 9a.1)
 
 With the edition selected, choose **Organization structure** beneath that
 edition in the shared sidebar. Its canonical route ends in `/structure/`, for
@@ -382,15 +384,44 @@ Board** governance anchor as Active, followed by an honest **No operational
 Departments yet** state. The Board is not a Department, and this read creates
 no Helper Board, account, role, participation, or assignment.
 
-Page 9a.0 is deliberately read-only. The Awoostria reference action and manual
-Department create/update/reparent/retire/delete controls belong to Page 9a.1
-and are not mounted yet. Maru already pins the immutable 22-Department
-`awoostria-reference@1` catalog with Helper Board as sole root and no Executive
-Board Department, but there is intentionally no application receipt or copy
-command yet. Do not use the specialist Department form to simulate
-that future tutorial step. There should be exactly one current Organization
-structure link, no `?view=structure` link, and no rendered email, login handle,
-or technical UUID.
+If you have exact structure-management authority, select **Use the Awoostria
+reference**. Confirm the exact edition name, enter a short operational reason,
+and choose **Copy 22 Departments**. Maru supplies and preserves the browser
+retry key. After the redirect, verify:
+
+- **Built-in reference applied** and structure version 1 are shown;
+- Helper Board is the sole top-level Department beneath the separate Executive
+  Board governance anchor;
+- all 21 operational Departments are beneath Helper Board; and
+- no person, Position, assignment, access grant, registration, or
+  participation was created.
+
+The immutable source is `awoostria-reference@1`. It contains no Executive Board
+Department. Do not use the specialist Department form for this workflow; it is
+inspection-only behind the stopped-writer boundary.
+
+Next, select **Create Department** and create a synthetic leaf such as
+`Tutorial Desk`, placing it beneath an existing Department. Open its **Manage
+Department** record, change its description, parent, or display order, enter a
+reason, and save. Return to the overview and confirm the source summary now
+says **Reference copy changed**: this edition owns an independent copy and no
+edit changes the built-in source or another edition.
+
+Use the same record's **Retire Department** disclosure to retire that
+dependency-free tutorial leaf. Retirement is one-way in this slice and keeps
+the row and history. To exercise protected deletion separately, create another
+unused leaf and immediately choose **Delete unused Department**, entering its
+exact current name and a reason. Deletion never cascades and fails once a
+child, Position, assignment, binding, authority, cross-module reference, or
+other operational history protects the record.
+
+Each successful browser mutation redirects before showing the refreshed
+structure. A validation or stale-version response retains the entered form and
+control values and asks for an explicit reload; do not edit hidden expected
+versions or retry keys. Every child page remains in the same shell, keeps
+exactly one current **Organization structure** navigation item, and is served
+with private `no-store` caching. There is no `?view=structure` link and no
+rendered email, login handle, or technical UUID as primary content.
 
 The page either shows a complete bounded tree or explicitly says the structure
 limit was exceeded and shows none of the partial tree. A generic dependency
@@ -410,6 +441,11 @@ POST /api/v1/organizations/{organization_id}/editions
 GET  /api/v1/organizations/{organization_id}/editions/{edition_id}
 PUT  /api/v1/organizations/{organization_id}/editions/{edition_id}
 GET  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure/template-applications
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments
+PUT  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments/{department_id}
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments/{department_id}/retire
+DELETE /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments/{department_id}
 ```
 
 Edition creation requires a UUID `Idempotency-Key` HTTP header; the JSON body
@@ -429,8 +465,24 @@ to model-admin endpoints or invent an undocumented representation API.
 The structure GET accepts no query parameters. It returns the minimized
 governance anchor and either one complete recursive workforce tree or the
 explicit `structure_limit_exceeded` state. OpenAPI declares typed
-`400`/`403`/`503` problems. Mutation routes shown in the Page 9 contract are
-not mounted yet.
+`400`/`403`/`503` problems.
+
+Template application and Department creation require one canonical UUID
+`Idempotency-Key` HTTP header; the JSON body must not contain that key. Keep the
+same key for an identical retry. The first successful request returns `201`
+and an identical replay returns the same result with `200`. Complete update,
+retire, and protected delete return `200`; DELETE requires a JSON body rather
+than query parameters. Template success contains only `aggregate_version`;
+Department success contains only `department_id` and `aggregate_version`.
+
+Mutation bodies are closed and JSON-native: unknown fields, string/boolean
+integer substitutes, noncanonical UUIDs, route scope in the body, and silent
+type coercion are rejected. Authorization occurs before header or body parsing.
+An unavailable route or missing exact view/manage authority returns the same
+name-free `403`; only an already authorized caller can receive the name-free
+`404` for an unavailable Department or parent. Current-state, stale,
+dependency, lifecycle, or changed-key reuse conflicts return `409`; canonical
+dependency failure returns `503`.
 
 ## 15. What to test as different users
 
@@ -449,11 +501,14 @@ or workforce assignment. The platform administrator must still have zero rows
 as a subject in all of those convention-owned tables.
 
 Pages 1–7 show a truthful principal-specific authority summary. Page 8 adds the
-root representation/invitation explanation. Page 9a.0 requires edition-wide
+root representation/invitation explanation. Page 9a.1 requires edition-wide
 `workforce.view_structure`; a Department-only capability, Django staff flag,
 Board visual position, or selected-edition session is insufficient. Manage
-authority alone does not imply view. Awoostria-shaped Department creation and
-the complete computed access header remain later M2 work.
+authority alone does not imply view, and mutations additionally require
+edition-wide `workforce.manage_structure`. The platform administrator may act
+through explicit oversight but still receives no convention participation.
+Position creation and the complete computed access header remain later M2
+work.
 
 ## Troubleshooting
 
@@ -469,21 +524,25 @@ the complete computed access header remain later M2 work.
 | Reserved Executive Board role conflict | Stop and reconcile the existing authority record; do not overwrite or rename it through model admin |
 | 409 on edition creation | Check for Closed organization, Inactive series, or changed-payload reuse of a retry key |
 | 409 while saving | Another write advanced the profile/aggregate version or the lifecycle is read-only; reload before deciding |
+| 409 while changing structure | Reload the exact Page 9 child form. Check the current aggregate version, edition/organization lifecycle, retained Department dependencies, and whether an idempotency key was reused for different input; do not replace hidden controls manually |
 | 503 | Keep the submitted values, restore the named dependency, and retry; do not create a parallel record through raw model saves |
 | Outbox remains pending | Follow the effects worker runbook; do not edit domain-event or receipt rows |
 
 ## Current stopping point
 
 You have followed the implemented organization → representation → series →
-edition → structure-read journey. Local migration, restore, frontend,
-sensitive-read/denial, and the earlier responsive shell gates pass. The
-canonical Page 9 route also has focused backend and authenticated desktop smoke
-evidence, but its reliable 390-pixel check remains open. The definitive local
-full-suite/coverage gate passes; this tutorial is not release acceptance
+edition → versioned Department-structure journey. Local migration, restore,
+frontend, sensitive-read/denial, and the earlier responsive shell gates pass.
+The command/database baseline passes 1,471 tests at 90.13 percent branch
+coverage and the strict mutation API focus passes 48 tests. The adapter-expanded
+combined Page 9 gate passes 159 tests in 102.89 seconds, and the definitive
+repository gate passes 1,693 tests at 90.50 percent total branch-inclusive
+coverage. The authenticated responsive Page 9 management state matrix remains
+pending. This tutorial is not release acceptance
 evidence until representative deployment/PITR recovery, keyboard/automated
 accessibility, complete visual states, and owner rehearsal pass. Ongoing Board
-term management, Department hierarchy editing, typed applications, venues,
-timetable planning, shifts, storage/logistics, governed documents, and on-site
+term management, Position editing, typed applications, venues, timetable
+planning, shifts, storage/logistics, governed documents, and on-site
 communications remain ordered milestones in
 `docs/project/PRODUCTION_CONSOLIDATION.md`. Reachable preserved screens or APIs
 do not change their honest capability-ledger state.

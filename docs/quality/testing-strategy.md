@@ -67,18 +67,19 @@ Test:
 Breaking API changes require an explicit migration and versioning decision.
 
 Page 9 structure contract tests additionally require recursive OpenAPI and
-typed `400`/`403`/`503` problems; denial before any name query; one captured
+typed read and mutation problems; denial before any name query; one captured
 projection instant plus fresh final authorization; exact holder-role lineage
 and active-person filtering; row, depth, and expanded-edge limit-plus-one
 boundaries; an explicit no-partial overflow; malformed-graph/dependency `503`;
 and stable query ceilings as row count grows. The implemented snapshot tests
 also prove a short repeatable-read, read-only attempt, exact aggregate-version
 comparison after the snapshot, one complete retry, and generic failure after a
-second movement. The unmounted mutation core additionally requires stale and
+second movement. The mounted mutation adapters additionally prove stale and
 concurrent optimistic-version conflicts, exact retry/digest replay, atomic
 template application, hierarchy races, normalized no-ops, dependency-safe
-retirement/deletion, and audit/event/outbox rollback tests before adapters may
-be mounted.
+retirement/deletion, strict input and non-disclosure, and audit/event/outbox
+rollback. Authenticated responsive, keyboard, automated-accessibility, and
+complete rendered-state evidence remain separate acceptance gates.
 
 ### Authorization and isolation tests
 

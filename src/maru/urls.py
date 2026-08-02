@@ -157,13 +157,25 @@ from maru.workforce.api import (
     MyOnboardingDocumentUploadView,
     MyVolunteerApplicationCreateView,
     PublicVolunteerOpportunityListView,
+    WorkforceDepartmentCollectionView,
+    WorkforceDepartmentDetailView,
+    WorkforceDepartmentRetireView,
+    WorkforceStructureTemplateApplicationView,
     WorkforceStructureView,
 )
 from maru.workforce.views import (
     apply_for_opportunity,
+    apply_organization_structure_template,
+    create_organization_structure_department,
+    delete_organization_structure_department,
     download_onboarding_document,
     my_onboarding_documents,
     organization_structure,
+    organization_structure_department,
+    organization_structure_department_create,
+    organization_structure_template_application,
+    retire_organization_structure_department,
+    update_organization_structure_department,
     upload_onboarding_document_view,
     volunteer_opportunities,
 )
@@ -361,6 +373,78 @@ urlpatterns: list[URLPattern | URLResolver] = [
         (
             "admin/platform/organizations/<slug:organization_slug>/series/"
             "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "template-application/"
+        ),
+        organization_structure_template_application,
+        name="organization-structure-template-application",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "template-applications/"
+        ),
+        apply_organization_structure_template,
+        name="apply-organization-structure-template",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "departments/new/"
+        ),
+        organization_structure_department_create,
+        name="organization-structure-department-create",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "departments/"
+        ),
+        create_organization_structure_department,
+        name="create-organization-structure-department",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "departments/<uuid:department_id>/update/"
+        ),
+        update_organization_structure_department,
+        name="update-organization-structure-department",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "departments/<uuid:department_id>/retire/"
+        ),
+        retire_organization_structure_department,
+        name="retire-organization-structure-department",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "departments/<uuid:department_id>/delete/"
+        ),
+        delete_organization_structure_department,
+        name="delete-organization-structure-department",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "departments/<uuid:department_id>/"
+        ),
+        organization_structure_department,
+        name="organization-structure-department",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
         ),
         organization_structure,
         name="organization-structure",
@@ -428,6 +512,41 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         WorkforceStructureView.as_view(),
         name="api-workforce-structure",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/structure/"
+            "template-applications"
+        ),
+        WorkforceStructureTemplateApplicationView.as_view(),
+        name="api-workforce-structure-template-applications",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/departments"
+        ),
+        WorkforceDepartmentCollectionView.as_view(),
+        name="api-workforce-departments",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/departments/"
+            "<uuid:department_id>/retire"
+        ),
+        WorkforceDepartmentRetireView.as_view(),
+        name="api-workforce-department-retire",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/departments/"
+            "<uuid:department_id>"
+        ),
+        WorkforceDepartmentDetailView.as_view(),
+        name="api-workforce-department-detail",
     ),
     path(
         (

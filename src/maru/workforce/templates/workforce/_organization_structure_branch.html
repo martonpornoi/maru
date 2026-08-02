@@ -1,6 +1,6 @@
 {% for department in departments %}
   <li class="baseline-structure-branch">
-    <article class="baseline-structure-node">
+    <article class="baseline-structure-node" id="department-{{ department.id }}">
       <header>
         <div>
           <p class="baseline-kicker">Department</p>
@@ -14,9 +14,22 @@
       {% if department.description %}
         <p>{{ department.description }}</p>
       {% endif %}
+      {% if show_management and department.state == "active" %}
+        <p class="workforce-structure-node-action">
+          <a
+            href="{% url 'organization-structure-department' organization.slug convention_series.slug edition.slug department.id %}"
+            aria-label="{{ department.management_accessible_name }}"
+          >Manage Department</a>
+        </p>
+      {% endif %}
 
       {% if department.positions %}
-        <ol class="baseline-structure-positions" aria-label="Positions in {{ department.name }}">
+        <details class="workforce-structure-positions-disclosure">
+          <summary>
+            {{ department.positions|length }} position{{ department.positions|length|pluralize }}
+            in {{ department.name }}
+          </summary>
+          <ol class="baseline-structure-positions" aria-label="Positions in {{ department.name }}">
           {% for position in department.positions %}
             <li>
               <div class="baseline-structure-position-heading">
@@ -51,13 +64,14 @@
               {% endif %}
             </li>
           {% endfor %}
-        </ol>
+          </ol>
+        </details>
       {% endif %}
     </article>
 
     {% if department.children %}
       <ol aria-label="Departments within {{ department.name }}">
-        {% include "workforce/_organization_structure_branch.html" with departments=department.children only %}
+        {% include "workforce/_organization_structure_branch.html" with departments=department.children organization=organization convention_series=convention_series edition=edition show_management=show_management only %}
       </ol>
     {% endif %}
   </li>

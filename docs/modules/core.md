@@ -1,8 +1,8 @@
 # Core module
 
 Status: Implemented backend foundation, unified `/admin/` shell, Page 8
-governance integration, and Page 9a.0 canonical read route; final suite,
-browser/accessibility, and owner gates remain
+governance integration, and Page 9a.1 structure management; the definitive
+repository gate passes while browser/accessibility and owner gates remain
 Last updated: 2026-08-02
 
 ## Purpose and requirements
@@ -63,8 +63,9 @@ representation-manager, and exact-invitee policies. The shell mounts:
   and
 - Page 8 organization representation, exact controller invitations,
   self-response, and initial Draft-to-Active activation; and
-- Page 9a.0 read-only Organization structure at the exact edition route, with
-  the separate Executive Board governance anchor and bounded workforce tree.
+- Page 9a.1 Organization structure at the exact edition route, with the
+  separate Executive Board governance anchor, bounded workforce tree, and
+  same-shell template and Department management child pages.
 
 Sign-out and edition context select/clear are POST actions. The shell creates
 no convention relationship for the platform administrator. Convention work
@@ -72,7 +73,7 @@ and specialist records use their existing independent policy/model-permission
 boundaries; being visible in one menu does not broaden them. Public and
 personal HTML routes remain outside `/admin/` according to purpose.
 
-Focused route, authorization, shell/sidebar, Page 8, and Page 9a.0 backend verification
+Focused route, authorization, shell/sidebar, Page 8, and Page 9 backend verification
 passes. Populated and fresh migrations, a local populated restore drill,
 desktop/390-pixel smoke, and the Page 8 sensitive-read/denial audit boundary
 also pass. The final consolidated local backend gate passes 792 tests in
@@ -86,13 +87,14 @@ exactly once each, the correct `demo.admin` account, and no new console warning
 or error. Keyboard, automated accessibility, complete visual-state, and
 owner-tutorial evidence remain open.
 
-Page 9a.0 appears once beneath an authorized selected edition and is also
+Page 9 appears once beneath an authorized selected edition and is also
 discoverable to an ordinary account whose only qualifying edition-wide
 capability is `workforce.view_structure`. Its canonical route is
 `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`.
 The former React Convention work structure destination and `?view=structure`
-path are removed; generated API types remain because the strict GET projection
-is a supported client boundary. Department mutation controls are not mounted.
+path are removed. The strict GET projection and five template/Department
+mutation operations remain supported generated-client boundaries. Separate
+same-shell child pages expose the browser mutation controls.
 
 Every mounted page has bounded empty/populated/conflict/failure states. A
 database dependency failure produces safe `503` guidance and a server exception
@@ -215,14 +217,15 @@ authority. Database-level representation tests cover cross-approval,
 constraints, atomicity, and platform exclusion. The responsive smoke, local
 migration/restore, bounded Page 8 read/denial audit, final local full suite/
 coverage gate, nine-test focused routing regression, live Board logout, and
-platform-administrator reload pass. Page 9a.0 focused tests additionally cover
+platform-administrator reload pass. The historical Page 9a.0 focused tests
+additionally cover
 canonical/current navigation, structure-only edition discovery, view/manage
 independence, department-only denial, non-participating platform oversight,
 explicit overflow, safe dependency failure, and absence of the retired React
 destination. Both HTML and API require the minimized structure-read audit to
-persist before disclosure. The current Page 9/API/catalog/template focus
-passes 52 tests, and the adjacent navigation/shell/admin/representation focus
-passes 65 tests.
+persist before disclosure. Page 9a.1 adds 118 targeted adapter and invariant
+cases; the definitive repository invocation passes 1,693 tests at 90.50
+percent total branch-inclusive coverage.
 Keyboard/automated accessibility, complete
 visual states, and owner evidence remain required.
 
@@ -231,9 +234,9 @@ visual states, and owner evidence remain required.
 Complete computed effective access, invitation notification discovery,
 metrics/tracing export, error capture, rate limiting, and a public status
 service remain. Page 8's root-representation explanation is only the first
-policy-derived slice; Page 9a.0 adds a current principal-specific structure
+policy-derived slice; Page 9 adds a current principal-specific structure
 view/manage summary but not named relationship disclosure or the complete
-department/resource/field explanation. Page 9a.1's structure version fence and
-Department commands must precede department-owned mutations. The unified
-shell, initial Page 8 lifecycle, and Page 9a.0 read are implemented backend
-milestones, not production-ready release claims.
+department/resource/field explanation. Page 9a.1's version fence, commands,
+and strict adapters are mounted; Page 9b Position management and the computed
+access explanation remain separate. The unified shell and Pages 8â€“9 are
+implemented backend milestones, not production-ready release claims.

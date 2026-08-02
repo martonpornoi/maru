@@ -1,9 +1,10 @@
-"""API-first volunteer opportunity and self-service onboarding clients."""
+"""Policy-scoped workforce management and self-service API boundaries."""
 
 import logging
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Never, cast
+from typing import Any, Never, cast
 from uuid import UUID
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -11,9 +12,14 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db import DatabaseError
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
 from django.utils.timezone import now as timezone_now
-from drf_spectacular.utils import OpenApiResponse, extend_schema
-from rest_framework.exceptions import NotFound, PermissionDenied
+from django.views.decorators.cache import never_cache
+from drf_spectacular.openapi import AutoSchema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from rest_framework import serializers, status
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
@@ -54,14 +60,40 @@ from maru.workforce.serializers import (
     VolunteerApplicationSerializer,
     VolunteerApplicationSubmitSerializer,
     VolunteerOpportunitySerializer,
+    WorkforceDepartmentCreateSerializer,
+    WorkforceDepartmentDeleteSerializer,
+    WorkforceDepartmentMutationResultSerializer,
+    WorkforceDepartmentRetireSerializer,
+    WorkforceDepartmentUpdateSerializer,
     WorkforceProblemSerializer,
     WorkforceStructureSerializer,
+    WorkforceStructureTemplateApplySerializer,
+    WorkforceStructureTemplateMutationResultSerializer,
 )
 from maru.workforce.services import (
     submit_volunteer_application,
     upload_onboarding_document,
 )
 from maru.workforce.structure_audit import append_structure_read_audit
+from maru.workforce.structure_commands import (
+    BuiltinStructureTemplateResult,
+    DepartmentStructureResult,
+    StructureAuthorizationDeniedError,
+    StructureCommandError,
+    StructureDepartmentUnavailableError,
+    StructureDependencyConflictError,
+    StructureLifecycleConflictError,
+    StructureLimitConflictError,
+    StructureRetryConflictError,
+    StructureStateConflictError,
+    StructureVersionConflictError,
+    apply_builtin_structure_template,
+    create_department,
+    delete_unused_department,
+    retire_department,
+    update_department,
+)
+from maru.workforce.structure_inputs import CANONICAL_UUID_PATTERN
 from maru.workforce.structure_snapshot import (
     StructureSnapshotRead,
     load_version_fenced_snapshot,
@@ -69,6 +101,9 @@ from maru.workforce.structure_snapshot import (
 
 logger = logging.getLogger(__name__)
 PROBLEM_CONTENT_TYPE = "application/problem+json"
+IDEMPOTENCY_HEADER_NAME = "Idempotency-Key"
+MAX_IDEMPOTENCY_HEADER_LENGTH = 64
+_STRUCTURE_MUTATION_UNAVAILABLE_DETAIL = "The requested structure is unavailable."
 
 
 def _problem_response(description: str) -> OpenApiResponse:
@@ -87,6 +122,331 @@ def _account(request: Request) -> Account:
 def _raise_dependency_unavailable(message: str, error: Exception) -> Never:
     logger.exception(message)
     raise DependencyUnavailable from error
+
+
+class WorkforceStructureConflict(APIException):
+    """Name-free RFC 9457 boundary for current-state command conflicts."""
+
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "The structure change conflicts with current state."
+    default_code = "structure_conflict"
+
+    def __init__(
+        self,
+        *,
+        code: str,
+        errors: Mapping[str, list[str]],
+    ) -> None:
+        super().__init__(
+            detail=cast(
+                Any,
+                {
+                    "detail": self.default_detail,
+                    "code": code,
+                    "errors": dict(errors),
+                },
+            ),
+            code=code,
+        )
+
+
+_STRUCTURE_CONFLICT_ERRORS: dict[
+    type[StructureCommandError],
+    tuple[str, dict[str, list[str]]],
+] = {
+    StructureVersionConflictError: (
+        StructureVersionConflictError.reason_code,
+        {"expected_version": ["Reload the structure and try the change again."]},
+    ),
+    StructureRetryConflictError: (
+        StructureRetryConflictError.reason_code,
+        {
+            IDEMPOTENCY_HEADER_NAME: [
+                "Use a new Idempotency-Key for a different request."
+            ]
+        },
+    ),
+    StructureLifecycleConflictError: (
+        StructureLifecycleConflictError.reason_code,
+        {"non_field_errors": ["This structure is currently read-only."]},
+    ),
+    StructureStateConflictError: (
+        StructureStateConflictError.reason_code,
+        {"non_field_errors": ["Reload the complete structure before retrying."]},
+    ),
+    StructureDependencyConflictError: (
+        StructureDependencyConflictError.reason_code,
+        {"non_field_errors": ["Retained dependencies protect this Department."]},
+    ),
+    StructureLimitConflictError: (
+        StructureLimitConflictError.reason_code,
+        {"non_field_errors": ["The bounded structure limit has been reached."]},
+    ),
+}
+
+
+def _raise_structure_mutation_unavailable() -> Never:
+    raise PermissionDenied(
+        _STRUCTURE_MUTATION_UNAVAILABLE_DETAIL,
+        code=StructureAuthorizationDeniedError.reason_code,
+    )
+
+
+def _raise_structure_department_unavailable() -> Never:
+    raise NotFound(
+        _STRUCTURE_MUTATION_UNAVAILABLE_DETAIL,
+        code=StructureDepartmentUnavailableError.reason_code,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _StructureMutationScope:
+    account: Account
+    series_id: UUID
+
+
+def _authorize_structure_mutation(
+    *,
+    request: Request,
+    organization_id: UUID,
+    edition_id: UUID,
+) -> _StructureMutationScope:
+    """Require exact view and manage authority before parsing header or body."""
+
+    account = request.user
+    if not isinstance(account, Account) or not account.is_active:
+        _raise_structure_mutation_unavailable()
+    try:
+        target = resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        if target is None:
+            _raise_structure_mutation_unavailable()
+        evaluated_at = timezone_now()
+        view = decide(
+            principal=account,
+            capability_code="workforce.view_structure",
+            resource=target,
+            at=evaluated_at,
+        )
+        manage = decide(
+            principal=account,
+            capability_code="workforce.manage_structure",
+            resource=target,
+            at=evaluated_at,
+        )
+        if not view.allowed or not manage.allowed:
+            _raise_structure_mutation_unavailable()
+        edition = (
+            EventEdition.objects.only("series_id")
+            .filter(
+                id=edition_id,
+                organization_id=organization_id,
+                series__organization_id=organization_id,
+            )
+            .first()
+        )
+        if edition is None:
+            _raise_structure_mutation_unavailable()
+    except (DatabaseError, RuntimeError) as error:
+        _raise_dependency_unavailable(
+            "Unable to authorize a workforce structure mutation",
+            error,
+        )
+    return _StructureMutationScope(account=account, series_id=edition.series_id)
+
+
+def _raise_idempotency_header_error(*, detail: str, code: str) -> Never:
+    raise ApiValidationError(
+        cast(
+            Any,
+            {
+                "detail": detail,
+                "code": code,
+                "errors": {IDEMPOTENCY_HEADER_NAME: [detail]},
+            },
+        ),
+        code=code,
+    )
+
+
+def _structure_idempotency_key(request: Request) -> UUID:
+    """Parse exactly one canonical lower-case, hyphenated UUID header."""
+
+    raw_value = request.headers.get(IDEMPOTENCY_HEADER_NAME)
+    if raw_value is None or not raw_value.strip():
+        _raise_idempotency_header_error(
+            detail="The Idempotency-Key header is required.",
+            code="missing_idempotency_key",
+        )
+    if len(raw_value) > MAX_IDEMPOTENCY_HEADER_LENGTH:
+        _raise_idempotency_header_error(
+            detail="The Idempotency-Key header must contain one canonical UUID.",
+            code="invalid_idempotency_key",
+        )
+    canonical_candidate = raw_value.strip()
+    try:
+        value = UUID(canonical_candidate)
+    except (AttributeError, ValueError):
+        _raise_idempotency_header_error(
+            detail="The Idempotency-Key header must contain one canonical UUID.",
+            code="invalid_idempotency_key",
+        )
+    if str(value) != canonical_candidate:
+        _raise_idempotency_header_error(
+            detail="The Idempotency-Key header must contain one canonical UUID.",
+            code="invalid_idempotency_key",
+        )
+    return value
+
+
+def _validated_structure_payload(
+    request: Request,
+    *,
+    serializer_class: type[serializers.Serializer[dict[str, object]]],
+) -> dict[str, object]:
+    reject_unknown_fields(request.query_params, allowed_fields=frozenset())
+    payload = request.data
+    serializer = serializer_class(data=payload)
+    reject_unknown_fields(payload, allowed_fields=frozenset(serializer.fields))
+    serializer.is_valid(raise_exception=True)
+    return cast(dict[str, object], serializer.validated_data)
+
+
+_SAFE_STRUCTURE_VALIDATION_FIELDS = frozenset(
+    {
+        "template",
+        "expected_version",
+        "confirmation_name",
+        "name",
+        "description",
+        "parent_department_id",
+        "display_order",
+        "reason",
+    }
+)
+
+
+def _django_structure_validation_code(error: DjangoValidationError) -> str:
+    if hasattr(error, "error_dict"):
+        for field_name, field_errors in error.error_dict.items():
+            if field_name in _SAFE_STRUCTURE_VALIDATION_FIELDS and field_errors:
+                return str(field_errors[0].code or "structure_input_invalid")
+    if hasattr(error, "error_list") and error.error_list:
+        return str(error.error_list[0].code or "structure_input_invalid")
+    return "structure_input_invalid"
+
+
+def _django_structure_validation_errors(
+    error: DjangoValidationError,
+) -> dict[str, list[str]]:
+    if hasattr(error, "message_dict"):
+        safe_errors = {
+            field_name: messages
+            for field_name, messages in error.message_dict.items()
+            if field_name in _SAFE_STRUCTURE_VALIDATION_FIELDS
+        }
+        if safe_errors:
+            return safe_errors
+    return {"non_field_errors": ["The structure input is invalid."]}
+
+
+def _is_safe_structure_input_validation(error: DjangoValidationError) -> bool:
+    """Return whether every reported error belongs to submitted organizer input."""
+
+    if not hasattr(error, "error_dict"):
+        return False
+    field_names = frozenset(error.error_dict)
+    return bool(field_names) and field_names.issubset(_SAFE_STRUCTURE_VALIDATION_FIELDS)
+
+
+def _execute_structure_command[
+    CommandResult: (BuiltinStructureTemplateResult, DepartmentStructureResult)
+](
+    command: Callable[[], CommandResult],
+) -> CommandResult:
+    try:
+        return command()
+    except StructureAuthorizationDeniedError:
+        _raise_structure_mutation_unavailable()
+    except StructureDepartmentUnavailableError:
+        _raise_structure_department_unavailable()
+    except DjangoValidationError as error:
+        if not _is_safe_structure_input_validation(error):
+            _raise_dependency_unavailable(
+                "A workforce structure command rejected server-owned input",
+                error,
+            )
+        code = _django_structure_validation_code(error)
+        raise ApiValidationError(
+            cast(
+                Any,
+                {
+                    "detail": "The structure input is invalid.",
+                    "code": code,
+                    "errors": _django_structure_validation_errors(error),
+                },
+            ),
+            code=code,
+        ) from error
+    except tuple(_STRUCTURE_CONFLICT_ERRORS) as error:
+        code, errors = _STRUCTURE_CONFLICT_ERRORS[type(error)]
+        raise WorkforceStructureConflict(code=code, errors=errors) from error
+    except (DatabaseError, StructureCommandError, RuntimeError) as error:
+        _raise_dependency_unavailable(
+            "Unable to apply a workforce structure command",
+            error,
+        )
+
+
+_STRUCTURE_IDEMPOTENCY_PARAMETER = OpenApiParameter(
+    name=IDEMPOTENCY_HEADER_NAME,
+    type=OpenApiTypes.UUID,
+    location=OpenApiParameter.HEADER,
+    required=True,
+    pattern=CANONICAL_UUID_PATTERN,
+    description=(
+        "A canonical lower-case hyphenated UUID. Repeating the same request with "
+        "the same key returns HTTP 200 and the original minimized result."
+    ),
+)
+
+
+class _WorkforceStructureMutationAutoSchema(AutoSchema):
+    """Keep runtime uniform denials without advertising anonymous mutation access."""
+
+    def get_auth(self) -> list[dict[str, Any]]:
+        return [requirement for requirement in super().get_auth() if requirement]
+
+
+class _WorkforceStructureAutoSchema(_WorkforceStructureMutationAutoSchema):
+    """Document the required JSON body on the contract's DELETE command.
+
+    drf-spectacular intentionally omits DELETE bodies in its default schema
+    builder. OpenAPI 3.1 permits this request body and Page 9 requires exact-name
+    confirmation, so the one affected view registers its closed serializer
+    explicitly while every other method retains the library implementation.
+    """
+
+    def _get_request_body(self, direction: str = "request") -> dict[str, Any] | None:
+        if self.method != "DELETE":
+            return cast(
+                dict[str, Any] | None,
+                super()._get_request_body(direction),  # type: ignore[no-untyped-call]
+            )
+        schema, required = self._get_request_for_media_type(  # type: ignore[no-untyped-call]
+            WorkforceDepartmentDeleteSerializer(),
+            direction,
+        )
+        if schema is None:
+            return None
+        request_body: dict[str, Any] = {
+            "content": {"application/json": {"schema": schema}}
+        }
+        if required:
+            request_body["required"] = True
+        return request_body
 
 
 def _authorize_structure(
@@ -187,6 +547,7 @@ def _load_workforce_structure_snapshot(
     )
 
 
+@method_decorator(never_cache, name="dispatch")
 class WorkforceStructureView(APIView):
     """Return the current, human-readable edition organization hierarchy."""
 
@@ -231,6 +592,7 @@ class WorkforceStructureView(APIView):
                 edition_id=edition_id,
                 at=response_authorized_at,
             )
+            http_method = cast(str, request.method)
             append_structure_read_audit(
                 actor=account,
                 organization_id=organization_id,
@@ -238,6 +600,7 @@ class WorkforceStructureView(APIView):
                 decision=final_decision,
                 correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
                 route_name="workforce-structure",
+                http_method=http_method,
                 source_channel="api",
                 occurred_at=response_authorized_at,
             )
@@ -260,6 +623,352 @@ class WorkforceStructureView(APIView):
             "structure": asdict(snapshot.structure),
         }
         return Response(WorkforceStructureSerializer(payload).data)
+
+
+@method_decorator(never_cache, name="dispatch")
+class _WorkforceStructureMutationView(APIView):
+    """Reach explicit uniform denials while retaining authenticated CSRF checks."""
+
+    permission_classes = (AllowAny,)
+    schema = _WorkforceStructureMutationAutoSchema()
+
+
+class WorkforceStructureTemplateApplicationView(_WorkforceStructureMutationView):
+    @extend_schema(
+        operation_id="workforce_apply_structure_template",
+        parameters=[_STRUCTURE_IDEMPOTENCY_PARAMETER],
+        request=WorkforceStructureTemplateApplySerializer,
+        responses={
+            200: OpenApiResponse(
+                response=WorkforceStructureTemplateMutationResultSerializer,
+                description="The identical request was replayed.",
+            ),
+            201: OpenApiResponse(
+                response=WorkforceStructureTemplateMutationResultSerializer,
+                description="The built-in structure copy was created.",
+            ),
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The closed request or Idempotency-Key is invalid."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The mutation route or required authority is unavailable."
+            ),
+            (409, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The request conflicts with structure state or prior retry evidence."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A canonical command dependency is temporarily unavailable."
+            ),
+        },
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> Response:
+        scope = _authorize_structure_mutation(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        retry_key = _structure_idempotency_key(request)
+        values = _validated_structure_payload(
+            request,
+            serializer_class=WorkforceStructureTemplateApplySerializer,
+        )
+        correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
+        result = _execute_structure_command(
+            lambda: apply_builtin_structure_template(
+                actor=scope.account,
+                organization_id=organization_id,
+                series_id=scope.series_id,
+                edition_id=edition_id,
+                template_identifier=cast(str, values["template"]),
+                expected_version=cast(int, values["expected_version"]),
+                confirmation_name=cast(str, values["confirmation_name"]),
+                reason=cast(str, values["reason"]),
+                retry_key=retry_key,
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+        )
+        payload: dict[str, object] = {"aggregate_version": result.resulting_version}
+        return Response(
+            WorkforceStructureTemplateMutationResultSerializer(payload).data,
+            status=(status.HTTP_200_OK if result.replayed else status.HTTP_201_CREATED),
+        )
+
+
+class WorkforceDepartmentCollectionView(_WorkforceStructureMutationView):
+    @extend_schema(
+        operation_id="workforce_create_department",
+        parameters=[_STRUCTURE_IDEMPOTENCY_PARAMETER],
+        request=WorkforceDepartmentCreateSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=WorkforceDepartmentMutationResultSerializer,
+                description="The identical creation request was replayed.",
+            ),
+            201: OpenApiResponse(
+                response=WorkforceDepartmentMutationResultSerializer,
+                description="The Department was created.",
+            ),
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The closed request or Idempotency-Key is invalid."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The mutation route or required authority is unavailable."
+            ),
+            (404, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A submitted exact target is unavailable."
+            ),
+            (409, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The request conflicts with structure state or prior retry evidence."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A canonical command dependency is temporarily unavailable."
+            ),
+        },
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> Response:
+        scope = _authorize_structure_mutation(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        retry_key = _structure_idempotency_key(request)
+        values = _validated_structure_payload(
+            request,
+            serializer_class=WorkforceDepartmentCreateSerializer,
+        )
+        correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
+        result = _execute_structure_command(
+            lambda: create_department(
+                actor=scope.account,
+                organization_id=organization_id,
+                series_id=scope.series_id,
+                edition_id=edition_id,
+                name=cast(str, values["name"]),
+                description=cast(str, values["description"]),
+                parent_department_id=cast(
+                    UUID | None,
+                    values["parent_department_id"],
+                ),
+                display_order=cast(int, values["display_order"]),
+                expected_version=cast(int, values["expected_version"]),
+                reason=cast(str, values["reason"]),
+                retry_key=retry_key,
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+        )
+        payload = {
+            "department_id": result.department_id,
+            "aggregate_version": result.resulting_version,
+        }
+        return Response(
+            WorkforceDepartmentMutationResultSerializer(payload).data,
+            status=(status.HTTP_200_OK if result.replayed else status.HTTP_201_CREATED),
+        )
+
+
+class WorkforceDepartmentDetailView(_WorkforceStructureMutationView):
+    schema = _WorkforceStructureAutoSchema()
+
+    @extend_schema(
+        operation_id="workforce_update_department",
+        request=WorkforceDepartmentUpdateSerializer,
+        responses={
+            200: WorkforceDepartmentMutationResultSerializer,
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The complete replacement request is invalid."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The mutation route or required authority is unavailable."
+            ),
+            (404, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The exact Department or parent target is unavailable."
+            ),
+            (409, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The request conflicts with current structure state."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A canonical command dependency is temporarily unavailable."
+            ),
+        },
+    )
+    def put(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        department_id: UUID,
+    ) -> Response:
+        scope = _authorize_structure_mutation(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        values = _validated_structure_payload(
+            request,
+            serializer_class=WorkforceDepartmentUpdateSerializer,
+        )
+        correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
+        result = _execute_structure_command(
+            lambda: update_department(
+                actor=scope.account,
+                organization_id=organization_id,
+                series_id=scope.series_id,
+                edition_id=edition_id,
+                department_id=department_id,
+                name=cast(str, values["name"]),
+                description=cast(str, values["description"]),
+                parent_department_id=cast(
+                    UUID | None,
+                    values["parent_department_id"],
+                ),
+                display_order=cast(int, values["display_order"]),
+                expected_version=cast(int, values["expected_version"]),
+                reason=cast(str, values["reason"]),
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+        )
+        payload = {
+            "department_id": result.department_id,
+            "aggregate_version": result.resulting_version,
+        }
+        return Response(WorkforceDepartmentMutationResultSerializer(payload).data)
+
+    @extend_schema(
+        operation_id="workforce_delete_department",
+        request=WorkforceDepartmentDeleteSerializer,
+        responses={
+            200: WorkforceDepartmentMutationResultSerializer,
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The protected deletion request is invalid."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The mutation route or required authority is unavailable."
+            ),
+            (404, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The exact Department target is unavailable."
+            ),
+            (409, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The request conflicts with retained dependencies or current state."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A canonical command dependency is temporarily unavailable."
+            ),
+        },
+    )
+    def delete(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        department_id: UUID,
+    ) -> Response:
+        scope = _authorize_structure_mutation(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        values = _validated_structure_payload(
+            request,
+            serializer_class=WorkforceDepartmentDeleteSerializer,
+        )
+        correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
+        result = _execute_structure_command(
+            lambda: delete_unused_department(
+                actor=scope.account,
+                organization_id=organization_id,
+                series_id=scope.series_id,
+                edition_id=edition_id,
+                department_id=department_id,
+                expected_version=cast(int, values["expected_version"]),
+                confirmation_name=cast(str, values["confirmation_name"]),
+                reason=cast(str, values["reason"]),
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+        )
+        payload = {
+            "department_id": result.department_id,
+            "aggregate_version": result.resulting_version,
+        }
+        return Response(WorkforceDepartmentMutationResultSerializer(payload).data)
+
+
+class WorkforceDepartmentRetireView(_WorkforceStructureMutationView):
+    @extend_schema(
+        operation_id="workforce_retire_department",
+        request=WorkforceDepartmentRetireSerializer,
+        responses={
+            200: WorkforceDepartmentMutationResultSerializer,
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The retirement request is invalid."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The mutation route or required authority is unavailable."
+            ),
+            (404, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The exact Department target is unavailable."
+            ),
+            (409, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The request conflicts with retained dependencies or current state."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A canonical command dependency is temporarily unavailable."
+            ),
+        },
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        department_id: UUID,
+    ) -> Response:
+        scope = _authorize_structure_mutation(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        values = _validated_structure_payload(
+            request,
+            serializer_class=WorkforceDepartmentRetireSerializer,
+        )
+        correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
+        result = _execute_structure_command(
+            lambda: retire_department(
+                actor=scope.account,
+                organization_id=organization_id,
+                series_id=scope.series_id,
+                edition_id=edition_id,
+                department_id=department_id,
+                expected_version=cast(int, values["expected_version"]),
+                reason=cast(str, values["reason"]),
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+        )
+        payload = {
+            "department_id": result.department_id,
+            "aggregate_version": result.resulting_version,
+        }
+        return Response(WorkforceDepartmentMutationResultSerializer(payload).data)
 
 
 def _opportunity_payload(opportunity: VolunteerOpportunity) -> dict[str, object]:

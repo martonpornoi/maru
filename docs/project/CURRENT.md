@@ -1,10 +1,11 @@
 # Current project state
 
 Last updated: 2026-08-02
-Phase: Production consolidation M2.4 Page 9a.1 command and database core
-implemented and repository-verified; the canonical read remains mounted and the
-strict HTML/API mutation adapters are next, while production authority
-reconciliation, load, cutover, and deployment-recovery gates remain
+Phase: Production consolidation M2.4 Page 9a.1 command/database boundary and
+strict HTML/API Department mutation adapters implemented; the definitive
+adapter-expanded repository and coverage gate passes, while authenticated
+browser/accessibility acceptance plus production authority reconciliation,
+load, cutover, and deployment-recovery gates remain
 Branch: `codex/full-platform-consolidation`
 
 ## Current outcome
@@ -93,8 +94,9 @@ reversal, missing migration evidence, disabled attachments, and function
 tampering therefore leave both the completeness and downgrade-fence gates
 unresolved rather than allowing a partially reversed catalog to be mislabeled.
 
-Page 9's canonical read-only **Organization structure** page and strict GET API
-remain mounted. They compose the minimized Executive Board representation
+Page 9's canonical **Organization structure** overview, same-shell management
+children, strict GET, and five mutation APIs are mounted. They compose the
+minimized Executive Board representation
 anchor above the edition-owned Department tree without persisting governance as
 a Department. Code-owned Department, Position, effective-holder, depth, and
 expanded-role ceilings return either one complete tree or an explicit empty
@@ -108,8 +110,8 @@ once around a version movement and return a name-free `503` instead of mixing
 versions. The old React structure destination and `?view=structure` link remain
 removed.
 
-Page 9a.1's command and database core is implemented but deliberately
-unmounted. Workforce `0006` adds the edition structure control and immutable,
+Page 9a.1's command and database core is implemented and exposed only through
+the shared strict adapters. Workforce `0006` adds the edition structure control and immutable,
 append-only command receipts; workforce `0007` performs the stopped-writer
 preflight, backfills compatible legacy trees, and installs the complete
 control/receipt/Department evidence handshake. The shared command service can
@@ -117,8 +119,13 @@ apply the pinned `awoostria-reference@1` 22-Department template, whose sole
 root is Helper Board and which contains no Executive Board Department. It can
 also create, completely replace, reparent, reorder, retire, and safely delete
 Departments under exact scope, current authorization, aggregate-version,
-retry, audit, and outbox rules. Strict HTML/API mutation adapters are not yet
-mounted.
+retry, audit, and outbox rules. Browser mutations use separate audited child
+GET pages and POST actions with CSRF, strict closed fields, retained retry and
+version controls, rendered-response no-store, and PRG success. The APIs expose
+template application plus Department create, complete update, retire, and
+protected delete with untrusted route locators resolved from persisted scope,
+authorization before header/body parsing, RFC 9457 failures, and a required
+JSON body for DELETE.
 
 Repository-owned production writers have been reconciled with the common
 structure boundary: first-authority bootstrap and the operator command create
@@ -150,7 +157,11 @@ The canonical management routes are:
   — Page 7 edition record/profile/activity, with separate POST-only `select/`
   and `clear/` working-context actions; and
 - `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`
-  — Page 9a.0 canonical bounded read-only Organization structure.
+  — Page 9a.1 canonical bounded Organization structure overview; its
+  `template-application/`, `departments/new/`, and
+  `departments/<department-id>/` child GET pages submit only to separate
+  `template-applications/`, `departments/`, and Department `update/`,
+  `retire/`, or `delete/` POST actions.
 
 The reserved `platform` route segment keeps purpose-built platform pages from
 colliding with Django application-label routes such as specialist
@@ -179,7 +190,7 @@ warnings or errors. A platform-administrator reload showed one searchable
 `#nav-filter`, Specialist records and Platform administration exactly once
 each, the correct `demo.admin` account, and zero new console warnings or errors.
 
-Page 9a.0 additionally has live authenticated desktop evidence: its canonical
+The earlier Page 9a.0 read has live authenticated desktop evidence: its canonical
 route rendered one current canonical navigation link, the complete bounded
 tree and separate governance anchor, and no legacy query link, email, or UUID.
 The viewport override did not reliably establish 390-pixel evidence for this
@@ -198,9 +209,10 @@ organization/edition capabilities, with backend coverage for scoped Board
 controllers. Page 8 defines bounded access for platform oversight, an exact organization-scoped
 representation manager, and an invitee's own open appointment. The platform account remains
 ineligible as organization member, representation holder, participant,
-registrant, volunteer, onboarding subject, or workforce assignee. Page 9a.0
+registrant, volunteer, onboarding subject, or workforce assignee. Page 9a.1
 requires exact edition-wide structure view; manage-only, Department-only,
-staff, Board placement, and selected-session state do not imply it. The current
+staff, Board placement, and selected-session state do not imply it. Every
+mutation additionally requires exact edition-wide structure manage. The current
 Pages 3–9 authority explanation is only the first M2 slice, not computed
 department/resource/field access or the
 complete **Manage access** workflow.
@@ -302,12 +314,19 @@ New M1 API operations are:
 - `PUT /api/v1/organizations/{organization_id}/editions/{edition_id}` beside
   the existing edition GET/list/lifecycle endpoints.
 
-Page 9a.0 adds the strict read-only
+Page 9 adds the strict
 `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure`.
 It accepts no query parameters, returns the minimized governance anchor plus a
 complete bounded recursive structure or explicit empty overflow, and declares
-typed RFC 9457 `400`, `403`, and `503` responses in OpenAPI. No Page 9 mutation
-route is mounted.
+typed RFC 9457 `400`, `403`, and `503` responses in OpenAPI. Page 9a.1 also
+mounts template application plus Department create, complete update, retire,
+and protected-delete operations. Template/create require a caller-retained
+canonical UUID `Idempotency-Key` and return `201` initially or `200` on exact
+replay; update/retire/delete return `200`, and DELETE has a required closed
+JSON body. Mutation problems declare strict `400`, non-disclosing `403`,
+authorized target-only `404` where applicable, `409`, and `503` boundaries.
+Untrusted route locators are resolved and authorized from persisted scope
+before header or body parsing.
 
 HTML and API mutations call the same domain services. Edition mutation response
 projections are bounded by capability field ceilings; the platform-only series
@@ -361,14 +380,19 @@ service remain recovery evidence for an approved legacy reconciliation.
   completed Page 9a.1 aggregate, stopped-writer database boundary, unmounted
   command core, production-writer reconciliation, focused verification, and
   remaining adapter/deployment gates.
+- `docs/checkpoints/2026-08-02-page9a1-structure-mutation-adapters.md` records
+  the mounted strict HTML/API mutation surface, focused adapter evidence, and
+  definitive repository/coverage result. Authenticated responsive-browser,
+  accessibility, owner, and deployment evidence remains outside that final
+  repository checkpoint.
 - Page contracts 05–07 define the M1 behavior and explicit field tables;
   contract 08 defines the backend-verified initial representation handoff, and contracts
   02–04 document closed HTML input.
 - The module index includes Activity and updated organization/events/effects/
   identity/core/authorization/audit boundaries.
 - The hands-on tutorial covers the implemented organization → representation
-  → series → edition → structure-read exercise with synthetic accounts and retains
-  the owner-led rehearsal gate.
+  → series → edition → versioned Department-structure exercise with synthetic
+  accounts and retains the owner-led rehearsal gate.
 - The edition, Executive Board, and IDN-011 migration/recovery runbooks require
   a maintenance window, compatible writers, and fix-forward recovery.
 
@@ -559,6 +583,18 @@ Current Page 9 focused evidence is:
 - 48 combined structure snapshot, schema, command, scope, and integrity tests
   pass; the stopped-writer integrity/migration/writer-boundary focus passes 18,
   and the canonical HTML/API projection focus passes 36;
+- the separate strict mutation API focus passes 48 tests, covering route and
+  authorization non-disclosure, closed JSON/native types, caller-retained
+  idempotency, replay and conflicts, Department/parent unavailability,
+  deactivation and rollback, CSRF/method handling, and declared OpenAPI
+  responses;
+- the fresh isolated PostgreSQL combined Page 9 gate passes 159 tests in
+  102.89 seconds across core/forms, Page 9 read and HTML mutations, mutation
+  and adjacent workforce APIs, exact-lineage navigation, and unified routing;
+- the adapter hardening adds 118 targeted cases: 59 HTML adapter cases, 50 API
+  and contract cases, and 9 immutable-template invariant cases. The focused
+  HTML run passes all 59 selected cases with 27 deselected in 28.13 seconds;
+- the adjacent API/contract batch passes 152 tests in 73.90 seconds;
 - all 16 scope-v2 integrity tests pass in 69.48 seconds on an isolated
   PostgreSQL database after current-schema setup was moved behind the Page 9
   command/lock boundary and historical migration cases were moved to their
@@ -569,17 +605,33 @@ Current Page 9 focused evidence is:
 - readiness recognizes workforce `0007` and fingerprints all 14 Page 9
   functions plus all 28 exact trigger attachments; catalog/tamper and existing
   readiness/runtime-hardening focuses pass 47 and 107 tests respectively; and
-- repository formatting/lint, strict mypy, documentation validation, Django
-  local/deploy checks in both exact-authority modes, migration drift, OpenAPI
-  and deterministic client generation, frontend tests/typecheck/build,
-  whitespace, dependency integrity, and vulnerability audits pass.
+- final Ruff check and format pass across 369 files; strict mypy passes across
+  218 source files; Django system and migration-drift checks pass;
+- deploy-shaped production settings pass both exact-authority checks with zero
+  issues;
+- OpenAPI validation and deterministic regeneration pass with closed Page 9
+  mutation request objects, canonical UUID request/header patterns, schema
+  SHA-256
+  `2E38F52D467E94DB248BBB99C695D0D606B531EA1E68E5BC5215086EEE669C05`, and
+  generated-client SHA-256
+  `B381BC5F0432655E593C04EEE45F07C39F4B7FFBED65C67E5C9F6B710CEDFF48`;
+- Staff Console type checking, all 19 frontend tests, and the production build
+  pass; and
+- Python and production Node dependency audits report no known
+  vulnerabilities; `pip-audit` skips only the local `maru` package; and
+- documentation validation passes for 181 Markdown files and 198 unique
+  requirement identifiers.
 
-These focused invocations overlap and must not be summed. The definitive
-current-graph repository gate passes all 1,471 tests in 1,538.40 seconds on a
-fresh isolated PostgreSQL database and reaches 90.13 percent branch coverage.
-The browser viewport override did not reliably establish a 390-pixel Page 9
-run, so narrow-viewport, keyboard, automated-accessibility, complete-state,
-and owner evidence remain open.
+These focused invocations overlap and must not be summed. The earlier
+pre-adapter current-graph baseline passed all 1,471 tests in 1,538.40 seconds
+at 90.13 percent branch coverage. The definitive adapter-expanded repository
+invocation passes all 1,693 tests in 1,653.43 seconds (27:33) and reaches 90.50
+percent total branch-inclusive coverage. Chrome was unavailable to the current
+desktop browser automation, so no new authenticated Page 9 mutation visual QA
+is claimed. The earlier viewport override also did not reliably establish a
+390-pixel Page 9 run. Authenticated desktop/390-pixel mutation states,
+narrow-viewport, keyboard, automated-accessibility, complete-state, and owner
+evidence therefore remain open.
 
 The populated synthetic `maru_consolidated_demo` database applied
 authorization `0004`, workforce `0004`, and authorization `0005` in dependency
@@ -696,9 +748,10 @@ fix-forward/PITR recovery. The combined procedure is in
   browser smoke, deploy-shaped settings, and the earlier local migration/
   restore evidence pass. The 876-test/90.43-percent result is the consolidated
   pre-exact-activation baseline, the 1,239-test result is the historical
-  Page-9a.0 baseline, and the current Page 9a.1 graph passes 1,471 tests at
-  90.13 percent branch coverage. Automated accessibility and complete visual-
-  state coverage remain incomplete.
+  Page-9a.0 baseline, and the definitive adapter-expanded Page 9a.1 graph
+  passes 1,693 tests at 90.50 percent total branch-inclusive coverage.
+  Automated accessibility and complete visual-state coverage remain
+  incomplete.
 - Owner tutorial rehearsal is unfinished.
 - Executive Board provisioning, exact invitation, self-response, initial
   activation, bounded read/denial audit, database subject guards, and emergency
@@ -711,9 +764,10 @@ fix-forward/PITR recovery. The combined procedure is in
   below the UI. Page 9's bounded read, aggregate/source/state projection,
   principal-specific view/manage summary, and one-retry concurrent-read fence
   are mounted. Its stopped-writer migrations, template application, Department
-  command core, and repository-writer reconciliation are implemented, but the
-  strict HTML/API mutation adapters, contextual access editor, and computed
-  named explanation are not mounted.
+  command core, repository-writer reconciliation, and strict HTML/API mutation
+  adapters are implemented and pass the adapter-expanded full repository gate.
+  Authenticated responsive acceptance, the contextual access editor, and the
+  computed named explanation remain open.
 - Programme, typed applications, venues/mergeable spaces, three-phase
   timetable/layers, shifts, storage/logistics, governed documents, and team/
   on-site communications remain absent current modules.
@@ -730,27 +784,22 @@ fix-forward/PITR recovery. The combined procedure is in
 
 ## Smallest sensible next actions
 
-1. Mount strict shared HTML/API adapters for template application and
-   Department create/update/reparent/reorder/retire/protected-delete using the
-   completed command core; do not duplicate policy or synthesize people, roles,
-   or authority.
-2. Complete the adapter denial/not-found, stale/retry, concurrency,
-   deactivation, persistence, audit/event/outbox rollback, and responsive state
-   matrix, then rerun and record the adapter-expanded repository gate.
-3. Reconcile every effective ordinary legacy authority row without inference
+1. Complete the authenticated desktop/390-pixel, keyboard, automated
+   accessibility, and validation/stale/protected/dependency state matrix.
+2. Reconcile every effective ordinary legacy authority row without inference
    on a representative restored deployment and prove a zero-blocker preflight.
-4. Exercise representative unbounded authority-candidate sets under load. The
+3. Exercise representative unbounded authority-candidate sets under load. The
    accepted geometry is five fixed target-resolution queries plus one exact-
    issuance database call per 256-item chunk; latency and memory still need a
    deployment-shaped bound.
-5. Rehearse the stopped-writer production cutover, runtime-role transition,
+4. Rehearse the stopped-writer production cutover, runtime-role transition,
    failure/fix-forward path, and whole-database backup/PITR recovery before any
    real activation.
-6. Add Page 9b's Position workflow and computed effective-access explanation
+5. Add Page 9b's Position workflow and computed effective-access explanation
    only after the Department mutation adapters are stable.
-7. Run automated accessibility, reliable keyboard traversal, and the complete
+6. Run automated accessibility, reliable keyboard traversal, and the complete
    blocked/error/stale-state matrix before owner rehearsal.
-8. Deliver the next differentiating vertical: panel application → accepted
+7. Deliver the next differentiating vertical: panel application → accepted
    private programme item → reusable/mergeable venue selection → three-phase
    layered timetable → immutable release/API projection.
 
@@ -762,11 +811,12 @@ Page 1–9 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
 effects module docs, the edition/scope-v2/authority-provenance migration and
 recovery runbooks, and ADR 0046's PostgreSQL provisioning artifact. Run
 `git status --short --branch`; retain the implemented Page 9a.1 aggregate,
-workforce `0006`/`0007`, read retry, command core, and writer boundary, then
-continue with the strict shared HTML/API mutation adapters. Do not claim a
-future adapter-expanded full-suite result until that invocation has completed
-and been reviewed; the current command/database core gate is the recorded
-1,471-test result. Keep representative legacy reconciliation, unbounded
+workforce `0006`/`0007`, read retry, command core, writer boundary, and strict
+HTML/API mutation adapters. Their definitive adapter-expanded repository gate
+is 1,693 tests in 1,653.43 seconds at 90.50 percent total branch-inclusive
+coverage; continue with authenticated responsive-browser acceptance and the
+computed access explanation. Keep
+representative legacy reconciliation, unbounded
 candidate-cardinality load, production authority/cutover, whole-database PITR,
 accessibility, complete visual states, and owner evidence as explicit release
 gates. Do not treat focused backend evidence as browser or deployment

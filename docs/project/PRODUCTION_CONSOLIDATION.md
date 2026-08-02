@@ -1,8 +1,9 @@
 # Maru production consolidation
 
 Status: Active master checklist; M2.4 Page 9a.1 structure aggregate, command
-core, and stopped-writer database cutover repository-verified, with strict
-HTML/API mutation adapters and production authority reconciliation, load,
+core, stopped-writer database cutover, and strict HTML/API mutation adapters
+implemented and definitive repository/coverage verified, with authenticated
+browser/accessibility evidence and production authority reconciliation, load,
 cutover, and recovery evidence next
 Branch: `codex/full-platform-consolidation`
 Base: `327a7d63574d0118356a0fd11ca5a316d78b2aed`  
@@ -81,7 +82,7 @@ The state vocabulary is deliberately small:
 | Edition browser workspace | Mounted | Pages 6–7 and scoped non-staff routes pass backend checks; current browser and owner rehearsal remain. |
 | Unified administration shell | Mounted | `maru.urls`, reserved route ordering, one sidebar, Convention work, scoped non-staff access, staff-only specialist records, desktop/390-pixel smoke, and the final 792-test/90.01-percent local backend gate pass without warnings. The custom sidebar preserves Django's single `#nav-filter` contract when Specialist records are unavailable; the focused routing regression and live Board reload pass. Accessibility/state-matrix/owner gates remain. |
 | Organization representation | Mounted / partial | Page 8 implements provision, exact verified-account invitation, own response, two-person cross-approval, atomic Draft-to-Active activation, and platform emergency containment. Database guards through organizations `0012`, sensitive read/deny audit, the 106-migration fresh synthetic database/current restore drill, focused readiness/representation matrices, and the final local backend gate pass. Representative PITR, accessibility, owner evidence, and routine term management remain. |
-| Department hierarchy | Mounted read / unmounted command core | Canonical Page 9 and strict GET compose the minimized Executive Board anchor with one version-fenced bounded tree, current exact-role/active-person holder labels, sensitive-read audit, explicit source/version/state, and no-partial overflow. Page 9a.1's stopped-writer aggregate, immutable template application, and Department command core are implemented; strict HTML/API mutation adapters remain unmounted. Page 9b Positions remains separate. |
+| Department hierarchy | Mounted Page 9a.1 / release acceptance pending | Canonical Page 9 composes the minimized Executive Board anchor with one version-fenced bounded tree and mounts same-shell template/Department forms plus five strict API mutations over the stopped-writer command core. The definitive adapter-expanded gate passes 1,693 tests in 1,653.43 seconds at 90.50 percent total branch-inclusive coverage; responsive-browser, accessibility, owner, and deployment evidence remain. Page 9b Positions remains separate. |
 | Department/resource authorization | Implemented backend / unmounted editor | ADR 0041 exact department and typed-resource policy, commands, bindings, migrations, and database guards are implemented without implicit hierarchy inheritance. ADR 0044's ledger, writers, readiness, provable backfill, completeness guards, one-way marker, exact policy switch, runtime-role proof, and synthetic activation/recovery are locally verified. No ordinary production legacy reconciliation, real cutover, representative restore/PITR drill, or unbounded candidate-cardinality load gate has completed. The contextual editor/effective-access UX remains unmounted. |
 | Effective-access explanation | Partial | Pages 3–9 distinguish platform, scoped Board, exact-edition, own-invitation, and structure view/manage access. Exact department/resource decisions now work below the UI; computed named relationship and field-purpose detail remain M2. |
 | Attendee registration | Partial | Large tested domain, headless API, and preserved HTML become reachable through the intended URL set, but coherent-shell review and deployment gates remain. |
@@ -96,7 +97,7 @@ The state vocabulary is deliberately small:
 | Team conversations and on-site messaging | Absent | Needs scoped inbox/thread domain and delivery adapters. |
 | Credentials/offline check-in | API-only | Tested domain; hardware, printing, recovery, and load gates remain. |
 | Audit and activity | API-only audit / mounted record history | Append-only audit plus bounded Page 5/7 domain-fact history; cross-domain access-aware activity remains M2. |
-| Stable API/OpenAPI | Partial | Series GET/PUT, edition POST/PUT, and bounded workforce-structure GET are implemented and generated artifacts are stable; Page 9 mutations, organization writes, external credentials, and new domains remain. |
+| Stable API/OpenAPI | Partial | Series GET/PUT, edition POST/PUT, bounded workforce-structure GET, and five Page 9 template/Department mutations are implemented. Repository-recorded deterministic schema/client verification passes; organization writes, external credentials, and new domains remain. |
 | Synthetic demo governance | Mounted local-only | ADR 0042 makes `seed_demo_data` the canonical synthetic fixture and establishes two active Executive Boards through real services. The old public-roster scenario is deleted and its compatibility command fails before validation, file/network access, or database writes. |
 | Production infrastructure | Deployment-gated | Provider selection, SMTP, object storage, scanner, workers, secrets, monitoring, restore, load, and legal/security review. |
 
@@ -588,12 +589,13 @@ not production approval.
 - [x] Implement and pin immutable `awoostria-reference@1` catalog content:
   exact 22 Departments, Helper Board sole root, no Executive Board Department,
   exact identifier/no aliases, bounded graph validation, canonical JSON, and
-  SHA-256 evidence. Keep application unmounted.
-- [ ] Page 9a.1: complete the edition-owned structure write boundary.
+  SHA-256 evidence. Application now uses only the mounted shared command.
+- [x] Page 9a.1: complete the edition-owned structure write boundary in the
+  repository; responsive-browser, accessibility, owner, and deployment
+  acceptance remain separate gates.
   - [x] Add the expansion schema, immutable built-in template catalog,
     optimistic aggregate model, minimized command-receipt model, coherent
-    version-fenced read projection, and unmounted shared Department command
-    core.
+    version-fenced read projection, and shared Department command core.
   - [x] Preserve immutable resource bindings as retirement history rather than
     live blockers while retaining new-target and hard-delete protection; add
     exact-scope close-only services for expired authority below retired
@@ -611,18 +613,34 @@ not production approval.
   - [x] Pass the definitive current-graph repository gate on a fresh isolated
     PostgreSQL database: 1,471 tests in 1,538.40 seconds at 90.13 percent branch
     coverage.
-  - [ ] Mount the shared strict HTML/API Department create, update, reparent,
-    order, retire, and protected-delete adapters only after the cutover is
-    ready; prove uniform denied/not-found behavior, stale/version conflicts,
-    idempotent races, deactivation races, and audit/event/outbox rollback.
+  - [x] Mount the shared strict HTML/API template application and Department
+    create, update, reparent, order, retire, and protected-delete adapters over
+    the stopped-writer command boundary. The mutation API focus passes 48 tests
+    for strict input, denial/non-disclosure, replay/conflict, lifecycle,
+    rollback, method/CSRF, and OpenAPI behavior.
+  - [x] Pass the fresh isolated PostgreSQL combined Page 9 gate: 159 tests in
+    102.89 seconds across core/forms, Page 9 read and HTML mutations, mutation
+    and adjacent workforce APIs, exact-lineage navigation, and unified routing.
+  - [x] Add 118 targeted adapter/contract invariants: 59 HTML, 50 API/contract,
+    and 9 immutable-template cases. The focused HTML selection passes 59 tests
+    with 27 deselected in 28.13 seconds; the adjacent API/contract batch passes
+    152 tests in 73.90 seconds.
+  - [x] Pass the definitive adapter-expanded repository gate: 1,693 tests in
+    1,653.43 seconds (27:33) at 90.50 percent total branch-inclusive coverage.
+- [ ] Complete the authenticated desktop/390-pixel, keyboard, accessibility,
+  and complete validation/stale/protected/denied/limit/dependency state matrix.
+  Chrome was unavailable during the definitive repository evidence run, so no
+  new visual QA result is claimed.
 - [ ] Page 9b: mount Position/template/reporting/opportunity management only
   after its authority-bearing dual-control and recovery contract is complete.
 - [x] Page 9a.0 focused evidence: 52 Page 9/API/catalog/template tests, the
   standalone query-count regression, 65 adjacent navigation/shell/admin/
   representation tests, OpenAPI validation/client regeneration, TypeScript,
   19 Vitest tests, Vite build, repository-wide Ruff/mypy/Django/migration/
-  production checks, and authenticated desktop smoke pass. Full pytest and a
-  reliable 390-pixel Page 9 run remain open.
+  production checks, and authenticated desktop smoke pass. The later
+  definitive adapter-expanded graph passes 1,693 tests at 90.50 percent total
+  branch-inclusive coverage; a reliable 390-pixel Page 9 management run remains
+  open.
 - [x] Implement ADR 0041 department and typed-resource constraints in
   authorization policy, grants, assignments, migrations, and trusted targets.
 - [x] Add deterministic immutable `workforce.position` bindings, including
@@ -783,8 +801,9 @@ count.
    cardinality load gate, and stopped-writer cutover/PITR rehearsal; only then
    consider a real production activation. Page 9a.1's aggregate, stopped-
    writer cutover, immutable template application, and shared Department
-   command core are implemented; continue by mounting the strict HTML/API
-   mutation adapters and then the computed access explanation.
+   command core and strict HTML/API mutation adapters are implemented and pass
+   the definitive adapter-expanded repository/coverage gate; continue with
+   authenticated responsive acceptance, then the computed access explanation.
    Keep representative deployment/PITR, accessibility, complete visual states,
    and owner evidence open. Update this checklist before switching domains.
 

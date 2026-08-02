@@ -284,6 +284,26 @@ def test_structure_projection_composes_minimized_governance_and_nested_tree() ->
         "http_method": "GET",
     }
     assert "audit_sensitive_read" in audit.obligations
+    assert "private" in response.headers["Cache-Control"]
+    assert "no-store" in response.headers["Cache-Control"]
+
+
+def test_structure_head_read_audit_records_the_actual_http_method() -> None:
+    platform = _platform_administrator()
+    edition = EventEditionFactory()
+
+    response = _authenticated_client(platform).head(
+        _url(
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+        )
+    )
+
+    assert response.status_code == 200
+    assert response.content == b""
+    assert "no-store" in response.headers["Cache-Control"]
+    audit = AuditEvent.objects.get(operation="workforce.structure.read")
+    assert audit.safe_metadata["http_method"] == "HEAD"
 
 
 def test_builtin_source_is_minimized_and_department_state_is_explicit() -> None:
@@ -1102,6 +1122,8 @@ def test_structure_get_rejects_unknown_query_fields() -> None:
     )
     assert response.status_code == 400
     assert response.json()["code"] == "unknown_input_field"
+    assert "private" in response.headers["Cache-Control"]
+    assert "no-store" in response.headers["Cache-Control"]
 
 
 def test_second_structure_version_movement_returns_503_without_audit_or_names() -> None:

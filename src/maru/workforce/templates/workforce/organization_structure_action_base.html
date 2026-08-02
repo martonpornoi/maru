@@ -1,0 +1,104 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'workforce/organization_structure.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}{% block structure_action_title %}Organization structure{% endblock %} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if baseline_can_view_organization %}
+    <a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>
+  {% else %}
+    {{ organization.name }}
+  {% endif %}
+  &rsaquo;
+  {% if baseline_can_view_organization %}
+    <a href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}">{{ convention_series.name }}</a>
+  {% else %}
+    {{ convention_series.name }}
+  {% endif %}
+  &rsaquo;
+  {% if baseline_can_view_edition %}
+    <a href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}">{{ edition.name }}</a>
+  {% else %}
+    {{ edition.name }}
+  {% endif %}
+  &rsaquo;
+  <a href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}">Organization structure</a>
+  &rsaquo; {% block structure_action_breadcrumb %}Manage{% endblock %}
+{% endblock %}
+
+{% block baseline_content %}
+  <a
+    class="baseline-back-link"
+    href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}"
+  >← Organization structure</a>
+
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">{{ edition.name }} · Department structure</p>
+    <h1>{% block structure_action_heading %}Manage organization structure{% endblock %}</h1>
+    <p class="baseline-intro">{% block structure_action_intro %}{% endblock %}</p>
+    <p class="baseline-record-meta">
+      <span>Structure version: <strong>{{ structure.aggregate_version }}</strong></span>
+      <span>Edition lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+    </p>
+  </header>
+
+  <section class="baseline-access-summary" aria-labelledby="structure-action-access-title">
+    <div>
+      <p class="baseline-kicker" id="structure-action-access-title">Your effective access</p>
+      <p class="baseline-access-line">
+        <strong>{{ structure_access_label }}</strong>
+        <span>allows you to view this exact edition's complete hierarchy.</span>
+      </p>
+      <p class="baseline-access-line">
+        <strong>Structure manager</strong>
+        <span>allows reasoned Department changes while the lifecycle permits them.</span>
+      </p>
+    </div>
+    <details>
+      <summary>What does this access mean?</summary>
+      <p>
+        Management is a separate current policy decision. Department nesting
+        changes reporting presentation and never widens software authority.
+      </p>
+      {% if structure_access_label == "Platform oversight" %}
+        <p>
+          Platform oversight attributes this action to your account without
+          making it a convention member, participant, or workforce assignee.
+        </p>
+      {% endif %}
+    </details>
+  </section>
+
+  {% if action_error %}
+    <div class="baseline-state baseline-state--error workforce-structure-action-error" role="alert">
+      <h2>The structure was not changed</h2>
+      <p>{{ action_error }}</p>
+      {% if reload_required %}
+        <p>{% block structure_reload_link %}{% endblock %}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if not structure_mutations_allowed and not show_submitted_form %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>Structure changes are read-only</h2>
+      <p>{{ structure_mutation_blocked_reason }}</p>
+    </div>
+  {% else %}
+    {% block structure_action_content %}{% endblock %}
+  {% endif %}
+
+  <aside class="baseline-boundary" aria-labelledby="structure-action-boundary-title">
+    <p class="baseline-kicker">Authority boundary</p>
+    <h2 id="structure-action-boundary-title">Changing the tree does not change access</h2>
+    <p>
+      Department parents explain operational responsibility only. Capabilities,
+      role assignments, people, participation, and Executive Board governance
+      remain in their own explicit workflows.
+    </p>
+  </aside>
+{% endblock %}

@@ -1064,6 +1064,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        post: operations["workforce_create_department"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments/{department_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        put: operations["workforce_update_department"];
+        post?: never;
+        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        delete: operations["workforce_delete_department"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments/{department_id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        post: operations["workforce_retire_department"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/documents/me": {
         parameters: {
             query?: never;
@@ -1123,6 +1175,23 @@ export interface paths {
         get: operations["workforce_retrieve_structure"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure/template-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        post: operations["workforce_apply_structure_template"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3551,6 +3620,11 @@ export interface components {
             product_id: string;
             answers: unknown;
         };
+        /**
+         * @description * `awoostria-reference@1` - awoostria-reference@1
+         * @enum {string}
+         */
+        TemplateEnum: "awoostria-reference@1";
         Token: {
             token: string;
         };
@@ -3623,6 +3697,42 @@ export interface components {
             applications_close_at: string | null;
         };
         WaivePayment: {
+            reason: string;
+        };
+        /** @description Closed API input for one idempotent Department creation. */
+        WorkforceDepartmentCreate: {
+            name: string;
+            description: string;
+            /** Format: uuid */
+            parent_department_id: string | null;
+            display_order: number;
+            expected_version: number;
+            reason: string;
+        };
+        /** @description Closed API input for one protected Department deletion. */
+        WorkforceDepartmentDelete: {
+            expected_version: number;
+            reason: string;
+            confirmation_name: string;
+        };
+        WorkforceDepartmentMutationResult: {
+            /** Format: uuid */
+            department_id: string;
+            aggregate_version: number;
+        };
+        /** @description Closed API input for one dependency-safe Department retirement. */
+        WorkforceDepartmentRetire: {
+            expected_version: number;
+            reason: string;
+        };
+        /** @description Complete replacement input; creation retry metadata is header-only. */
+        WorkforceDepartmentUpdate: {
+            name: string;
+            description: string;
+            /** Format: uuid */
+            parent_department_id: string | null;
+            display_order: number;
+            expected_version: number;
             reason: string;
         };
         /** @description RFC 9457 response shape used by workforce endpoints. */
@@ -3773,6 +3883,16 @@ export interface components {
             position_title: string;
         };
         WorkforceStructureSource: components["schemas"]["WorkforceStructureEmptySource"] | components["schemas"]["WorkforceStructureManualSource"] | components["schemas"]["WorkforceStructureLegacySource"] | components["schemas"]["WorkforceStructureBuiltinTemplateSource"];
+        /** @description Closed API input for one immutable built-in template application. */
+        WorkforceStructureTemplateApply: {
+            template: components["schemas"]["TemplateEnum"];
+            expected_version: number;
+            confirmation_name: string;
+            reason: string;
+        };
+        WorkforceStructureTemplateMutationResult: {
+            aggregate_version: number;
+        };
         WriteProfileExtensionValue: {
             /** Format: uuid */
             field_id: string;
@@ -5950,6 +6070,306 @@ export interface operations {
             };
         };
     };
+    workforce_create_department: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A canonical lower-case hyphenated UUID. Repeating the same request with the same key returns HTTP 200 and the original minimized result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkforceDepartmentCreate"];
+            };
+        };
+        responses: {
+            /** @description The identical creation request was replayed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforceDepartmentMutationResult"];
+                };
+            };
+            /** @description The Department was created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforceDepartmentMutationResult"];
+                };
+            };
+            /** @description The closed request or Idempotency-Key is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The mutation route or required authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A submitted exact target is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The request conflicts with structure state or prior retry evidence. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A canonical command dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+        };
+    };
+    workforce_update_department: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                department_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkforceDepartmentUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforceDepartmentMutationResult"];
+                };
+            };
+            /** @description The complete replacement request is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The mutation route or required authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The exact Department or parent target is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The request conflicts with current structure state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A canonical command dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+        };
+    };
+    workforce_delete_department: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                department_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkforceDepartmentDelete"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforceDepartmentMutationResult"];
+                };
+            };
+            /** @description The protected deletion request is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The mutation route or required authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The exact Department target is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The request conflicts with retained dependencies or current state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A canonical command dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+        };
+    };
+    workforce_retire_department: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                department_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkforceDepartmentRetire"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforceDepartmentMutationResult"];
+                };
+            };
+            /** @description The retirement request is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The mutation route or required authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The exact Department target is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The request conflicts with retained dependencies or current state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A canonical command dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+        };
+    };
     workforce_list_my_onboarding_documents: {
         parameters: {
             query?: never;
@@ -6066,6 +6486,81 @@ export interface operations {
                 };
             };
             /** @description The complete structure projection is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+        };
+    };
+    workforce_apply_structure_template: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A canonical lower-case hyphenated UUID. Repeating the same request with the same key returns HTTP 200 and the original minimized result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkforceStructureTemplateApply"];
+            };
+        };
+        responses: {
+            /** @description The identical request was replayed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforceStructureTemplateMutationResult"];
+                };
+            };
+            /** @description The built-in structure copy was created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforceStructureTemplateMutationResult"];
+                };
+            };
+            /** @description The closed request or Idempotency-Key is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The mutation route or required authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The request conflicts with structure state or prior retry evidence. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A canonical command dependency is temporarily unavailable. */
             503: {
                 headers: {
                     [name: string]: unknown;

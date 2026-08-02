@@ -1,6 +1,17 @@
 """Domain-neutral form defaults."""
 
+from django import forms
+from django.http import QueryDict
+
 from maru.core.forms import HttpsURLField, StrictInputForm
+
+
+class _CardinalityForm(StrictInputForm):
+    single = forms.CharField(required=False)
+    multiple = forms.MultipleChoiceField(
+        required=False,
+        choices=(("one", "One"), ("two", "Two")),
+    )
 
 
 def test_https_url_field_uses_secure_default_scheme() -> None:
@@ -18,3 +29,26 @@ def test_strict_input_form_bounds_unknown_field_error_detail() -> None:
     assert not form.is_valid()
     assert "unexpected_0" in form.non_field_errors()[0]
     assert "and 1 more" in form.non_field_errors()[0]
+
+
+def test_strict_input_form_rejects_duplicate_single_value_fields() -> None:
+    data = QueryDict(mutable=True)
+    data.setlist("single", ["first", "second"])
+    data.setlist("multiple", ["one", "two"])
+
+    form = _CardinalityForm(data)
+
+    assert not form.is_valid()
+    assert "single-value field at most once" in form.non_field_errors()[0]
+
+
+def test_strict_input_form_preserves_multi_value_fields_and_explicit_blank() -> None:
+    data = QueryDict(mutable=True)
+    data.setlist("single", [""])
+    data.setlist("multiple", ["one", "two"])
+
+    form = _CardinalityForm(data)
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["single"] == ""
+    assert form.cleaned_data["multiple"] == ["one", "two"]

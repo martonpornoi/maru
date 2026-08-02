@@ -1,11 +1,142 @@
-"""Stable client projections for volunteer opportunities and onboarding evidence."""
+"""Stable workforce request and response contracts."""
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Never, cast
+from uuid import UUID
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema_field
 from rest_framework import serializers
 
 from maru.workforce.models import Position
+from maru.workforce.structure_inputs import (
+    CANONICAL_UUID_PATTERN,
+    MAX_DEPARTMENT_DESCRIPTION_LENGTH,
+    MAX_DEPARTMENT_NAME_LENGTH,
+    MAX_STRUCTURE_REASON_LENGTH,
+    normalize_department_description,
+    normalize_department_name,
+    normalize_structure_reason,
+)
+from maru.workforce.structure_templates import AWOOSTRIA_REFERENCE_V1
+
+if TYPE_CHECKING:
+    from drf_spectacular.openapi import AutoSchema
+    from drf_spectacular.utils import Direction
+
+
+def _django_validation_code(
+    error: DjangoValidationError,
+    *,
+    fallback: str,
+) -> str:
+    if hasattr(error, "error_dict"):
+        for field_errors in error.error_dict.values():
+            if field_errors:
+                return str(field_errors[0].code or fallback)
+    if hasattr(error, "error_list") and error.error_list:
+        return str(error.error_list[0].code or fallback)
+    return fallback
+
+
+def _raise_serializer_validation(
+    error: DjangoValidationError,
+    *,
+    fallback: str,
+) -> Never:
+    raise serializers.ValidationError(
+        error.messages,
+        code=_django_validation_code(error, fallback=fallback),
+    ) from error
+
+
+class _StrictStructureTextField(serializers.CharField):
+    """A JSON string field which never coerces numbers or booleans."""
+
+    default_error_messages: ClassVar[dict[str, Any]] = {
+        "invalid_type": "Enter a JSON string for this field.",
+    }
+
+    def to_internal_value(self, data: object) -> str:
+        if not isinstance(data, str):
+            self.fail("invalid_type")
+        return super().to_internal_value(data)
+
+
+class _NormalizedDepartmentNameField(_StrictStructureTextField):
+    def to_internal_value(self, data: object) -> str:
+        raw = super().to_internal_value(data)
+        try:
+            return normalize_department_name(raw)
+        except DjangoValidationError as error:
+            _raise_serializer_validation(error, fallback="structure_name_invalid")
+
+
+class _NormalizedDepartmentDescriptionField(_StrictStructureTextField):
+    def to_internal_value(self, data: object) -> str:
+        raw = super().to_internal_value(data)
+        try:
+            return normalize_department_description(raw)
+        except DjangoValidationError as error:
+            _raise_serializer_validation(
+                error,
+                fallback="structure_description_invalid",
+            )
+
+
+class _NormalizedStructureReasonField(_StrictStructureTextField):
+    def to_internal_value(self, data: object) -> str:
+        raw = super().to_internal_value(data)
+        try:
+            return normalize_structure_reason(raw)
+        except DjangoValidationError as error:
+            _raise_serializer_validation(error, fallback="structure_reason_invalid")
+
+
+class _StrictStructureIntegerField(serializers.IntegerField):
+    """Accept a JSON integer, excluding bool, string and float coercion."""
+
+    default_error_messages: ClassVar[dict[str, Any]] = {
+        "invalid_type": "Enter a JSON integer for this field.",
+    }
+
+    def to_internal_value(self, data: object) -> int:
+        if type(data) is not int:
+            self.fail("invalid_type")
+        return super().to_internal_value(data)
+
+
+@extend_schema_field(
+    {
+        "type": "string",
+        "format": "uuid",
+        "pattern": CANONICAL_UUID_PATTERN,
+    }
+)
+class _CanonicalStructureUUIDField(serializers.UUIDField):
+    """Accept only the lower-case hyphenated UUID spelling used by Maru."""
+
+    default_error_messages: ClassVar[dict[str, Any]] = {
+        "non_canonical": "Enter a canonical lower-case hyphenated UUID.",
+    }
+
+    def to_internal_value(self, data: object) -> UUID:
+        if not isinstance(data, str):
+            self.fail("invalid")
+        try:
+            value = UUID(data)
+        except (AttributeError, ValueError):
+            self.fail("invalid")
+        if str(value) != data:
+            self.fail("non_canonical")
+        return value
+
+
+class _StrictStructureChoiceField(serializers.ChoiceField):
+    def to_internal_value(self, data: object) -> str:
+        if not isinstance(data, str):
+            self.fail("invalid_choice", input=data)
+        return super().to_internal_value(data)
 
 
 class WorkforceProblemSerializer(serializers.Serializer[dict[str, object]]):
@@ -159,6 +290,106 @@ class WorkforceStructureSerializer(serializers.Serializer[dict[str, object]]):
     edition_name = serializers.CharField()
     governance = WorkforceStructureGovernanceSerializer()
     structure = WorkforceStructureProjectionSerializer()
+
+
+class _ClosedStructureRequestSerializer(serializers.Serializer[dict[str, object]]):
+    """Marker base for Page 9 request objects that reject unknown properties."""
+
+
+class _ClosedStructureRequestSchema(OpenApiSerializerExtension):
+    """Expose the runtime closed-object contract in generated OpenAPI."""
+
+    target_class = "maru.workforce.serializers._ClosedStructureRequestSerializer"
+    match_subclasses = True
+
+    def map_serializer(
+        self,
+        auto_schema: "AutoSchema",
+        direction: "Direction",
+    ) -> dict[str, Any]:
+        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]
+            self.target,
+            direction,
+            bypass_extensions=True,
+        )
+        schema["additionalProperties"] = False
+        return cast(dict[str, Any], schema)
+
+
+class WorkforceStructureTemplateApplySerializer(_ClosedStructureRequestSerializer):
+    """Closed API input for one immutable built-in template application."""
+
+    template = _StrictStructureChoiceField(
+        choices=(AWOOSTRIA_REFERENCE_V1.identifier,),
+    )
+    expected_version = _StrictStructureIntegerField(min_value=0, max_value=0)
+    confirmation_name = _StrictStructureTextField(
+        max_length=160,
+        trim_whitespace=False,
+    )
+    reason = _NormalizedStructureReasonField(
+        max_length=MAX_STRUCTURE_REASON_LENGTH,
+        trim_whitespace=False,
+    )
+
+
+class WorkforceDepartmentCreateSerializer(_ClosedStructureRequestSerializer):
+    """Closed API input for one idempotent Department creation."""
+
+    name = _NormalizedDepartmentNameField(
+        max_length=MAX_DEPARTMENT_NAME_LENGTH,
+        trim_whitespace=False,
+    )
+    description = _NormalizedDepartmentDescriptionField(
+        max_length=MAX_DEPARTMENT_DESCRIPTION_LENGTH,
+        trim_whitespace=False,
+        allow_blank=True,
+    )
+    parent_department_id = _CanonicalStructureUUIDField(allow_null=True)
+    display_order = _StrictStructureIntegerField(min_value=0, max_value=65_535)
+    expected_version = _StrictStructureIntegerField(min_value=0)
+    reason = _NormalizedStructureReasonField(
+        max_length=MAX_STRUCTURE_REASON_LENGTH,
+        trim_whitespace=False,
+    )
+
+
+class WorkforceDepartmentUpdateSerializer(WorkforceDepartmentCreateSerializer):
+    """Complete replacement input; creation retry metadata is header-only."""
+
+    expected_version = _StrictStructureIntegerField(min_value=1)
+
+
+class WorkforceDepartmentRetireSerializer(_ClosedStructureRequestSerializer):
+    """Closed API input for one dependency-safe Department retirement."""
+
+    expected_version = _StrictStructureIntegerField(min_value=1)
+    reason = _NormalizedStructureReasonField(
+        max_length=MAX_STRUCTURE_REASON_LENGTH,
+        trim_whitespace=False,
+    )
+
+
+class WorkforceDepartmentDeleteSerializer(WorkforceDepartmentRetireSerializer):
+    """Closed API input for one protected Department deletion."""
+
+    confirmation_name = _StrictStructureTextField(
+        max_length=MAX_DEPARTMENT_NAME_LENGTH,
+        trim_whitespace=False,
+    )
+
+
+class WorkforceStructureTemplateMutationResultSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    aggregate_version = serializers.IntegerField(min_value=1)
+
+
+class WorkforceDepartmentMutationResultSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    department_id = serializers.UUIDField()
+    aggregate_version = serializers.IntegerField(min_value=1)
 
 
 class VolunteerOpportunitySerializer(serializers.Serializer[dict[str, object]]):

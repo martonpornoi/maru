@@ -1,9 +1,10 @@
 # Workforce module
 
 Status: Position, hierarchy, opportunity, agreement, authority onboarding,
-ADR 0041 containment, and the version-fenced Page 9 read implemented; Page
-9a.1's aggregate, command, and stopped-writer database core is implemented
-with strict HTML/API mutation adapters still unmounted
+ADR 0041 containment, and Page 9a.1's version-fenced read, aggregate, commands,
+stopped-writer database core, and strict HTML/API Department mutation adapters
+implemented; the focused combined gate passes while full/browser/deployment
+acceptance remains open
 Last updated: 2026-08-02
 
 ## Purpose and requirements
@@ -98,8 +99,9 @@ default headcount, and capacity codes.
 
 ## Organization structure projection
 
-Page 9a.0 mounts one read-only **Organization structure** page at the exact
-selected-edition route and backs other clients with:
+Page 9a.1 mounts one **Organization structure** overview with same-shell
+management child pages at the exact selected-edition route and backs other
+clients with the strict API described below. The read projection is:
 
 ```text
 GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure
@@ -144,7 +146,8 @@ required because snapshot coherence is not proof of current authority.
 After the fresh final decision, HTML and API append one minimized
 `workforce.structure.read` sensitive-read audit with exact scope, source
 channel, outcome, obligation, and only policy version, route name, and HTTP
-method as safe metadata. Audit persistence
+method as safe metadata. Child GET pages and audited POST validation/conflict
+rerenders preserve their actual route and method provenance. Audit persistence
 precedes disclosure; failure returns a generic name-free `503` and releases no
 holder label or partial hierarchy.
 
@@ -169,15 +172,15 @@ places it visually beneath the organization-owned governance anchor. Every
 other parent edge remains an exact same-organization, same-edition Department
 relationship. Neither visual nor Department ancestry implies authority.
 
-The implemented, deliberately unmounted management core owns one
+The implemented management slice owns one
 workforce-owned edition structure aggregate with monotonic optimistic
 versioning and shared application services for built-in-template application
 plus Department create, complete update/reparent/reorder, retire, and protected
 delete. Workforce `0006` adds the aggregate and append-only command receipts;
 the stopped-writer `0007` migration reconciles legacy trees and installs the
-complete writer/evidence boundary. Page 9a.0's route, version-fenced read
-projector, governance composition, strict GET API, and exact navigation remain
-the only mounted Page 9 adapters.
+complete writer/evidence boundary. The overview, three child GET page shapes,
+five POST actions, strict GET plus five API mutations, and exact navigation now
+mount those shared services without reopening specialist Department writes.
 
 ### Built-in reference and independent copy
 
@@ -194,7 +197,7 @@ any Executive Board Department, and computes canonical UTF-8 JSON plus pinned
 SHA-256 content evidence. Helper Board is the sole root and all 21 operational
 records are direct children.
 
-The unmounted command lets an authorized manager apply that exact version only
+The mounted command adapters let an authorized manager apply that exact version only
 to an empty Draft or Preparing edition workforce structure. One atomic,
 idempotent application copies 22 independent Department rows and retains
 immutable source code, version, digest, actor, retry, correlation, request
@@ -221,6 +224,13 @@ server-owned. Unknown fields, stale versions, cross-tenant parents, cycles, and
 silent truncation fail closed. Successful changes advance the aggregate once
 and commit minimized audit, `workforce.structure.changed.v1`, and outbox
 evidence together; normalized no-ops write nothing.
+
+Browser mutations use closed strict forms, CSRF, private `no-store` rendered
+form/responses, separate GET and POST routes, and POST/Redirect/GET on success. Validation or
+conflict rerenders retain the submitted expected version and browser retry key
+and require an explicit reload when stale. The overview truthfully changes its
+source summary from **Built-in reference applied** to **Reference copy
+changed** after an edition copy diverges.
 
 Retirement preserves used Departments and is refused while a current child,
 open Position, active assignment whose term has not ended, current-or-future
@@ -352,7 +362,7 @@ GET  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/doc
 POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/documents/me/<request_id>/upload
 ```
 
-Page 9 API surface; only the GET route is currently mounted:
+Mounted Page 9 API surface:
 
 ```text
 GET    /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/structure
@@ -374,9 +384,15 @@ positive `template_version`. Optional template fields never leak into the
 non-template variants.
 The old React structure destination is removed, so the generated API contract
 does not imply a duplicate browser workflow. New mutation routes must use the
-same application services as HTML, strict problems, route-owned scope, UUID
-`Idempotency-Key` for create/application, and deterministic OpenAPI/client
-generation.
+same application services as HTML. Template application and Department create
+require a caller-supplied canonical UUID `Idempotency-Key`; an identical replay
+returns `200`, while the first successful creation returns `201`. Update,
+retire, and protected delete return `200`. DELETE has a required closed JSON
+body. Mutation problems declare `400`, non-disclosing `403`, authorized
+target-only `404` where applicable, `409`, and `503`; template application has
+no `404`. Authorization precedes header/body parsing; every route locator is
+untrusted and is resolved and authorized from persisted scope. Generated
+OpenAPI/client output remains deterministic.
 
 Specialist records:
 
@@ -393,9 +409,9 @@ Specialist records:
 
 These specialist routes are not the accepted Page 9 mutation contract. The
 shared commands and migration fence are active, so Department records are
-inspection-only here even though the strict Page 9 HTML/API mutation adapters
-remain unmounted. Position writes remain a separate Page 9b decision rather
-than an implicit exception.
+inspection-only here. Managers use the strict Page 9 HTML/API mutation
+adapters. Position writes remain a separate Page 9b decision rather than an
+implicit exception.
 
 ## Database integrity and recovery
 
@@ -479,20 +495,27 @@ and whitespace checks pass. The definitive full repository gate also passes
 1,239 tests at 90.35 percent branch coverage. Reliable responsive-browser
 evidence for that read milestone remains pending. The later focused aggregate,
 snapshot, command, migration, writer-boundary, trigger-readiness, concurrency,
-and runtime-role suites now verify the unmounted Page 9a.1 core. This remains
-local backend evidence, not a production cutover or recovery certification.
+and runtime-role suites now verify the Page 9a.1 core. The adapter API focus
+passes 48 tests covering strict inputs and types, exact authorization and
+non-disclosure, idempotent replay/conflict, lifecycle/version/dependency
+conflicts, rollback, CSRF/method handling, and the declared OpenAPI surface.
+A fresh isolated PostgreSQL combined gate passes 159 tests in 102.89 seconds
+across core/forms, Page 9 read and HTML mutations, mutation and adjacent
+workforce APIs, exact-lineage navigation, and unified routing. The definitive
+adapter-expanded repository invocation passes 1,693 tests in 1,653.43 seconds
+at 90.50 percent total branch-inclusive coverage. Authenticated responsive,
+keyboard, and automated-accessibility evidence is still pending. This remains
+local repository evidence, not a production cutover or recovery certification.
 
 ## Current limitations
 
 Qualifications, availability, shifts, time records, acceptance decisions,
 position ending/replacement UX, approval notifications, document download
-through the REST API, mounted Page 9 Department management adapters, Page 9b
-Position editing, and a separately authenticated approval inbox remain work.
-The read-only HTML route and GET API use the implemented aggregate/version
-fence and bounded retry, while the schema, template/Department commands,
-repository-owned writer reconciliation, stopped-writer migration rehearsal,
-and runtime trigger catalog are implemented and focused-verified below those
-unmounted adapters. Reliable browser/accessibility states, the owner
+through the REST API, Page 9b Position editing, and a separately authenticated
+approval inbox remain work. The HTML/API Page 9 read and Department mutation
+adapters use the implemented aggregate/version fence, bounded retry, shared
+commands, stopped-writer migration, and runtime trigger catalog. Reliable
+browser/accessibility states, the owner
 walkthrough, ordinary production authority reconciliation, real cutover, and
 representative restore/PITR evidence remain open. The implemented first
 assignment slice continues to prove the safe path from a known person and

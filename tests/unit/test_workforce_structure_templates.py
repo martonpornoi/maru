@@ -160,3 +160,75 @@ def test_invalid_builtin_templates_fail_during_construction(
             version=1,
             departments=departments,
         )
+
+
+@pytest.mark.parametrize(
+    "department",
+    [
+        StructureDepartmentDefinition("Not-A-Slug", "Root", "Valid", None, 0),
+        StructureDepartmentDefinition("root", " Root", "Valid", None, 0),
+        StructureDepartmentDefinition("root", "Root", " Invalid", None, 0),
+        StructureDepartmentDefinition("root", "Root", "Valid", None, -1),
+    ],
+    ids=("code", "name", "description", "display-order"),
+)
+def test_department_definition_bounds_fail_during_template_construction(
+    department: StructureDepartmentDefinition,
+) -> None:
+    with pytest.raises(ValueError, match=r".+"):
+        BuiltinStructureTemplate(
+            code="test-reference",
+            version=1,
+            departments=(department,),
+        )
+
+
+@pytest.mark.parametrize(
+    ("code", "version"),
+    [
+        ("Not-A-Slug", 1),
+        ("test-reference", 0),
+    ],
+    ids=("code", "version"),
+)
+def test_template_identity_bounds_fail_during_construction(
+    code: str,
+    version: int,
+) -> None:
+    with pytest.raises(ValueError, match=r".+"):
+        BuiltinStructureTemplate(
+            code=code,
+            version=version,
+            departments=(
+                StructureDepartmentDefinition("root", "Root", "Valid", None, 0),
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    "departments",
+    [
+        (
+            StructureDepartmentDefinition("root", "Root", "Valid", None, 0),
+            StructureDepartmentDefinition("root", "Child", "Valid", "root", 1),
+        ),
+        (
+            StructureDepartmentDefinition("root", "Root", "Valid", None, 0),
+            StructureDepartmentDefinition("child", "ROOT", "Valid", "root", 1),
+        ),
+        (
+            StructureDepartmentDefinition("root", "Root", "Valid", None, 0),
+            StructureDepartmentDefinition("child", "Child", "Valid", "root", 0),
+        ),
+    ],
+    ids=("duplicate-code", "duplicate-name", "duplicate-display-order"),
+)
+def test_duplicate_department_identity_fails_during_template_construction(
+    departments: tuple[StructureDepartmentDefinition, ...],
+) -> None:
+    with pytest.raises(ValueError, match=r".+"):
+        BuiltinStructureTemplate(
+            code="test-reference",
+            version=1,
+            departments=departments,
+        )

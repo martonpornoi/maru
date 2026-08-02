@@ -1,0 +1,59 @@
+{% extends "workforce/organization_structure_action_base.html" %}
+
+{% block structure_action_title %}Create Department{% endblock %}
+{% block structure_action_breadcrumb %}Create Department{% endblock %}
+{% block structure_action_heading %}Create Department{% endblock %}
+{% block structure_action_intro %}
+  Add one operational Department to {{ edition.name }}. Maru creates its stable
+  code and records this reasoned structure version.
+{% endblock %}
+{% block structure_reload_link %}
+  <a href="{% url 'organization-structure-department-create' organization.slug convention_series.slug edition.slug %}">Reload the latest creation form</a>
+{% endblock %}
+
+{% block structure_action_content %}
+  {% if form.non_field_errors or form.expected_version.errors or form.retry_key.errors %}
+    <div class="baseline-errors" role="alert">
+      {{ form.non_field_errors }}
+      {{ form.expected_version.errors }}
+      {{ form.retry_key.errors }}
+    </div>
+  {% endif %}
+
+  <form
+    method="post"
+    action="{% url 'create-organization-structure-department' organization.slug convention_series.slug edition.slug %}"
+    class="baseline-form workforce-structure-form"
+    novalidate
+  >
+    {% csrf_token %}
+    {{ form.expected_version }}
+    {{ form.retry_key }}
+
+    <section class="baseline-panel baseline-form-panel" aria-labelledby="department-create-details-title">
+      <div class="baseline-section-heading">
+        <p class="baseline-kicker">Edition-owned operations</p>
+        <h2 id="department-create-details-title">Department details</h2>
+        <p>
+          Names and descriptions are visible in the authorized structure. Do
+          not enter private HR, conduct, legal-case, or personal information.
+        </p>
+      </div>
+      {% include "core/_baseline_form_field.html" with field=form.name %}
+      {% include "core/_baseline_form_field.html" with field=form.description %}
+      <div class="baseline-field-grid">
+        {% include "core/_baseline_form_field.html" with field=form.parent_department_id %}
+        {% include "core/_baseline_form_field.html" with field=form.display_order %}
+      </div>
+      {% include "core/_baseline_form_field.html" with field=form.reason %}
+    </section>
+
+    <div class="baseline-form-actions workforce-structure-primary-actions">
+      <button type="submit"{% if reload_required or not structure_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Create Department</button>
+      <a
+        class="baseline-secondary-link"
+        href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}"
+      >Cancel</a>
+    </div>
+  </form>
+{% endblock %}

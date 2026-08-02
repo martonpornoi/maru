@@ -1,0 +1,77 @@
+{% extends "workforce/organization_structure_action_base.html" %}
+
+{% block structure_action_title %}Use built-in reference{% endblock %}
+{% block structure_action_breadcrumb %}Use built-in reference{% endblock %}
+{% block structure_action_heading %}Use the Awoostria reference{% endblock %}
+{% block structure_action_intro %}
+  Copy Maru's immutable 22-Department reference into this empty edition as an
+  independent starting point. You can edit the copy afterward.
+{% endblock %}
+{% block structure_reload_link %}
+  <a href="{% url 'organization-structure-template-application' organization.slug convention_series.slug edition.slug %}">Reload the latest template form</a>
+{% endblock %}
+
+{% block structure_action_content %}
+  {% if template_application_available or show_submitted_form %}
+    {% if form.non_field_errors or form.expected_version.errors or form.retry_key.errors %}
+      <div class="baseline-errors" role="alert">
+        {{ form.non_field_errors }}
+        {{ form.expected_version.errors }}
+        {{ form.retry_key.errors }}
+      </div>
+    {% endif %}
+
+    <form
+      method="post"
+      action="{% url 'apply-organization-structure-template' organization.slug convention_series.slug edition.slug %}"
+      class="baseline-form workforce-structure-form"
+      novalidate
+    >
+      {% csrf_token %}
+      {{ form.expected_version }}
+      {{ form.retry_key }}
+
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="structure-template-title">
+        <div class="baseline-section-heading">
+          <p class="baseline-kicker">Immutable source</p>
+          <h2 id="structure-template-title">Awoostria reference, version 1</h2>
+          <p>
+            Helper Board becomes the sole top-level Department. The 21
+            operational Departments are copied beneath it. Executive Board
+            remains the separate organization-governance anchor.
+          </p>
+        </div>
+        {% include "core/_baseline_form_field.html" with field=form.template %}
+        {% include "core/_baseline_form_field.html" with field=form.confirmation_name %}
+        {% include "core/_baseline_form_field.html" with field=form.reason %}
+      </section>
+
+      <aside class="baseline-boundary workforce-structure-copy-boundary" aria-labelledby="template-copy-boundary-title">
+        <p class="baseline-kicker">Exactly what this creates</p>
+        <h2 id="template-copy-boundary-title">Departments and command evidence only</h2>
+        <p>
+          This action creates 22 edition-owned Departments, a versioned source
+          receipt, minimized audit, and delivery evidence. It creates no
+          account, person relationship, Position, assignment, authority,
+          registration, or participation.
+        </p>
+      </aside>
+
+      <div class="baseline-form-actions workforce-structure-primary-actions">
+        <button type="submit"{% if reload_required or not structure_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Copy 22 Departments</button>
+        <a
+          class="baseline-secondary-link"
+          href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}"
+        >Cancel</a>
+      </div>
+    </form>
+  {% else %}
+    <div class="baseline-state" role="status">
+      <h2>The built-in reference is available only for an empty structure</h2>
+      <p>
+        This edition already has workforce structure evidence, so Maru will
+        not merge or overwrite it. Create or manage Departments individually.
+      </p>
+    </div>
+  {% endif %}
+{% endblock %}

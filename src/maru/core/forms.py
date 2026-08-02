@@ -17,6 +17,23 @@ class StrictInputForm(forms.Form):
 
     def clean(self) -> dict[str, Any] | None:
         cleaned = super().clean()
+        getlist = getattr(self.data, "getlist", None)
+        if getlist is not None:
+            invalid_cardinality = sorted(
+                field_name
+                for field_name, field in self.fields.items()
+                if not isinstance(
+                    field,
+                    (forms.MultipleChoiceField, forms.ModelMultipleChoiceField),
+                )
+                and len(getlist(field_name)) > 1
+            )
+            if invalid_cardinality:
+                visible = ", ".join(invalid_cardinality)
+                raise forms.ValidationError(
+                    f"Submit each single-value field at most once: {visible}.",
+                    code="invalid_input_cardinality",
+                )
         unknown = sorted(
             str(field_name)
             for field_name in self.data

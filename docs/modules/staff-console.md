@@ -2,7 +2,8 @@
 
 Status: API-backed workflow mounted in the unified shell; backend/frontend and
 responsive smoke evidence pass; legacy structure destination removed in favor
-of canonical Page 9a.0; final release evidence remains
+of canonical server-rendered Page 9a.1 with strict mutations; final release
+evidence remains
 Last updated: 2026-08-02
 
 ## Purpose and requirements
@@ -70,7 +71,7 @@ public clients may use independent seasonal themes.
   arrival-ready Front Desk work;
 - role-aware denial when staff People summaries are unavailable;
 - no duplicate Organization structure destination: the shared Django sidebar
-  links the exact edition to canonical Page 9a.0 instead;
+  links the exact edition to canonical Page 9a.1 instead;
 - People search, capacity/status filters, bounded pagination, and counts;
 - a side person workspace that preserves the current list and filter context;
 - `My registration`, with edition-defined products, conditional questions,
@@ -122,12 +123,15 @@ clarity but never grant access. People results contain exactly account ID,
 display name, participation status, and active/proposed capacity labels.
 The selected edition is working context, not proof of authority.
 
-The generated schema still contains the strict workforce structure GET for
-supported API consumers, but this React client no longer declares a
-`structure` destination, fetches that projection, or supports the former
-`?view=structure` route. The canonical browser experience is the server-
-rendered Page 9a.0 route inside the same shell. Its holder projection omits the
-login handles that the retired duplicate view exposed.
+The generated schema contains the strict workforce structure GET plus template
+application and Department create/update/retire/delete operations for supported
+API consumers. Template application and creation require a caller-supplied
+canonical UUID `Idempotency-Key`; generated helpers retain rather than invent
+that retry identity. The DELETE operation has a required JSON body. This React
+client still does not declare a `structure` destination, fetch that projection,
+or support the former `?view=structure` route. The canonical browser experience
+is the server-rendered Page 9a.1 route and same-shell child forms. Its holder
+projection omits the login handles that the retired duplicate view exposed.
 
 ## Development
 
@@ -208,6 +212,6 @@ actions remain V03 work. The Forms section currently contains implemented
 registration/workforce entry points; a generic module-registration contract
 will let future form modules add cards without editing the shell. Registration
 draft content is edited in specialist records until complete visual builders
-exist. Department management specifically remains Page 9a.1 work rather than
-a return to the retired React destination. Convention work is not yet a
-complete convention operating surface.
+exist. Department management now belongs to the server-rendered Page 9a.1
+workflow, not a return to the retired React destination. Page 9b Position
+management and the wider Convention work operating surface remain incomplete.

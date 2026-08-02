@@ -25,6 +25,14 @@ MAX_DEPARTMENT_CODE_CANDIDATES = 256
 MIN_DEPARTMENT_DISPLAY_ORDER = 0
 MAX_DEPARTMENT_DISPLAY_ORDER = 65_535
 
+# JSON Schema-compatible spelling shared by the runtime validators and OpenAPI.
+# Do not replace the anchors with Python-only ``\Z``: API consumers need to be
+# able to apply this expression without translation.
+CANONICAL_UUID_PATTERN = (
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-"
+    r"[0-9a-f]{4}-[0-9a-f]{12}$"
+)
+
 _HYPHEN_RUN = re.compile(r"-+")
 
 

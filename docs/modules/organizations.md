@@ -1,8 +1,8 @@
 # Organizations module
 
 Status: Implemented tenant, brand, localization, Pages 1–5, initial Page 8
-Executive Board lifecycle, emergency containment, and Page 9a.0 minimized
-governance-anchor query; Page 9 Department mutations remain workforce work
+Executive Board lifecycle, emergency containment, and Page 9 minimized
+governance-anchor query; mounted Department mutations remain workforce-owned
 Last updated: 2026-08-02
 
 ## Purpose and requirements
@@ -155,11 +155,11 @@ ADR 0045's public, minimized `executive_board_governance_anchor(...)` query
 for Page 9 resolves the exact organization and returns only the
 fixed representation label and truthful absent, Provisioning, Active, or
 Suspended state. It returns no appointment, email, membership, reason,
-controller count, role assignment, or authority provenance. The Page 9 adapter
-composes that query with workforce's edition-owned structure projection; the
+controller count, role assignment, or authority provenance. The Page 9 adapters
+compose that query with workforce's edition-owned structure projection; the
 workforce module does not save organization models. The bounded read query and
-focused Page 9/API verification are implemented; template application and
-Department mutation remain unmounted and do not write organization state.
+strict template/Department mutation adapters are implemented. Those mutations
+write only edition-owned workforce state and do not write organization state.
 
 ## Convention series creation fields
 
@@ -333,8 +333,8 @@ lock identity rows, reject direct/bulk SQL bypass, and defer account-kind
 reclassification validation to commit. See the
 [IDN-011 migration runbook](../operations/idn011-convention-subject-migration-and-recovery.md).
 
-The future ADR 0045 workforce migration must not update organization
-representation rows or derive them from Department names. Existing workforce
+ADR 0045's implemented workforce `0006`/`0007` migration does not update
+organization representation rows or derive them from Department names. Existing workforce
 records named Executive Board are migration-review items, not proof of a Board
 and not permission to fabricate or relink governance. Organizations exposes a
 read projection only; workforce structure recovery and template receipts stay
@@ -403,13 +403,14 @@ final consolidated backend invocation passes 792 tests with 90.01 percent
 coverage and no warnings. Automated accessibility, complete visual states,
 representative deployment/PITR, and owner rehearsal remain release gates.
 
-Page 9a.0 tests additionally prove absent and Provisioning anchor states, the
+The historical Page 9a.0 tests additionally prove absent and Provisioning anchor states, the
 fixed identity-free label, separation from a same-named operational Executive
 Board Department, platform non-participation, canonical navigation, and safe
 foreign/dependency denial. They are included in the current 52-test Page 9/API/
 catalog/template focused run and the definitive 1,239-test full-suite run at
-90.35 percent branch coverage; narrow-viewport evidence for this slice remains
-open.
+90.35 percent branch coverage. Page 9a.1's adapter-expanded repository gate
+passes 1,693 tests at 90.50 percent total branch-inclusive coverage;
+authenticated responsive evidence for the management slice remains open.
 
 ## Limitations
 
@@ -421,9 +422,10 @@ replacement/ending, planned suspension/reactivation, quorum recovery, legacy
 active-tenant reconciliation, invitation notification delivery, organization
 and series lifecycle transitions beyond initial activation, slug migration, publication,
 processors, ownership transfer, closure/data exit, and the complete
-convention-owned organizer experience remain. Page 9a.0 implements and
-focused-tests the minimized governance-anchor query, exact navigation, strict
-read API, and principal-specific view/manage summary. ADR 0045's structure
-aggregate, Department mutation services/routes, migrations, full effective-
-access header, responsive/accessibility evidence, and owner walkthrough remain
-open. Platform administration remains non-participating throughout.
+convention-owned organizer experience remain. Page 9 implements and tests the
+minimized governance-anchor query, exact navigation, strict read API, and
+principal-specific view/manage summary. ADR 0045's structure aggregate,
+Department mutation services/routes, and migrations are implemented. The full
+effective-access header, responsive/accessibility evidence, and owner
+walkthrough remain open. Platform administration remains non-participating
+throughout.
