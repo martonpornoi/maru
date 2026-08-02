@@ -1,11 +1,10 @@
 # Current project state
 
 Last updated: 2026-08-02
-Phase: Production consolidation M2.4 Page 9a.1 command/database boundary and
-strict HTML/API Department mutation adapters implemented; the definitive
-adapter-expanded repository and coverage gate passes, while authenticated
-browser/accessibility acceptance plus production authority reconciliation,
-load, cutover, and deployment-recovery gates remain
+Phase: Production consolidation M2.5 Page 10 contract accepted and staged
+implementation started; Page 9a.1 remains implemented and repository-verified,
+while authenticated browser/accessibility acceptance plus production
+authority reconciliation, load, cutover, and deployment-recovery gates remain
 Branch: `codex/full-platform-consolidation`
 
 ## Current outcome
@@ -134,6 +133,22 @@ assignment, binding, Board, and authority paths enter the canonical edition
 scope before narrower locks; and Specialist Department records are
 inspection-only. This is repository writer reconciliation, not evidence that a
 production deployment has completed its authority reconciliation or cutover.
+
+ADR 0047 and the accepted Page 10 contract now define the next coherent
+journey. Active platform administrators may optionally invite an inactive
+person account, but the recipient owns password selection and acceptance and
+the invitation creates no convention relationship. An edition-scoped
+Registration workspace will copy on write from blank, one exact published
+template version, or one exact eligible prior edition; expose governed draft
+sections, questions, products, minor policy, and profile-extension definitions;
+and activate immutable versions through shared HTML/API commands. The contract
+requires durable platform identity delivery with an envelope-encrypted token
+payload, separate configuration command and form-schema versions, exact-scope
+authorization, closed inputs, idempotency, audit/outbox evidence, zero-question
+validity, explicit-zero rejection, and staged retirement of direct admin and
+fixture writers. This paragraph records an accepted target and implementation
+start only; the Page 10 schema, commands, adapters, writer cutover, and release
+evidence are not yet complete.
 
 The canonical management routes are:
 
@@ -775,6 +790,10 @@ fix-forward/PITR recovery. The combined procedure is in
   substantial backend capabilities remain preserved, remounting, partial, or
   API-only; route reachability and passing backend tests do not make their
   browser journeys current.
+- Page 10's account-invitation and registration-setup contract is accepted, but
+  its durable invitation delivery, recipient acceptance, configuration command
+  boundary, canonical same-shell pages, writer retirement, deployment
+  readiness, and browser/accessibility evidence remain implementation work.
 - Payment provider, SMTP, object storage/malware scanning, worker supervision,
   telemetry/alerts, secrets, printers/scanners, backup/PITR restore evidence,
   representative load, accessibility/security review, and partner legal/
@@ -784,29 +803,38 @@ fix-forward/PITR recovery. The combined procedure is in
 
 ## Smallest sensible next actions
 
-1. Complete the authenticated desktop/390-pixel, keyboard, automated
+1. Implement Page 10's platform account invitation aggregate, durable
+   encrypted delivery worker, recipient acceptance, strict HTML/API adapters,
+   and platform Accounts navigation without creating convention relationships.
+2. Add the registration-configuration aggregate control and command receipts;
+   move copy-on-write setup, builder mutations, activation, minor policy, and
+   profile-extension definition changes behind common exact-scope commands.
+3. Reconcile and retire direct Django-admin, fixture, and ORM registration
+   writers through the staged readiness and stopped-writer boundary in ADR
+   0047.
+4. Complete the authenticated desktop/390-pixel, keyboard, automated
    accessibility, and validation/stale/protected/dependency state matrix.
-2. Reconcile every effective ordinary legacy authority row without inference
+5. Reconcile every effective ordinary legacy authority row without inference
    on a representative restored deployment and prove a zero-blocker preflight.
-3. Exercise representative unbounded authority-candidate sets under load. The
+6. Exercise representative unbounded authority-candidate sets under load. The
    accepted geometry is five fixed target-resolution queries plus one exact-
    issuance database call per 256-item chunk; latency and memory still need a
    deployment-shaped bound.
-4. Rehearse the stopped-writer production cutover, runtime-role transition,
+7. Rehearse the stopped-writer production cutover, runtime-role transition,
    failure/fix-forward path, and whole-database backup/PITR recovery before any
    real activation.
-5. Add Page 9b's Position workflow and computed effective-access explanation
+8. Add Page 9b's Position workflow and computed effective-access explanation
    only after the Department mutation adapters are stable.
-6. Run automated accessibility, reliable keyboard traversal, and the complete
+9. Run automated accessibility, reliable keyboard traversal, and the complete
    blocked/error/stale-state matrix before owner rehearsal.
-7. Deliver the next differentiating vertical: panel application → accepted
-   private programme item → reusable/mergeable venue selection → three-phase
-   layered timetable → immutable release/API projection.
+10. Deliver the next differentiating vertical: panel application → accepted
+    private programme item → reusable/mergeable venue selection → three-phase
+    layered timetable → immutable release/API projection.
 
 ## Resume instructions
 
-Read `AGENTS.md`, this file, `PRODUCTION_CONSOLIDATION.md`, ADRs 0037–0046,
-Page 1–9 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
+Read `AGENTS.md`, this file, `PRODUCTION_CONSOLIDATION.md`, ADRs 0037–0047,
+Page 1–10 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
 `docs/modules/activity.md`, organization/events/workforce/authorization/audit/
 effects module docs, the edition/scope-v2/authority-provenance migration and
 recovery runbooks, and ADR 0046's PostgreSQL provisioning artifact. Run
@@ -820,8 +848,10 @@ representative legacy reconciliation, unbounded
 candidate-cardinality load, production authority/cutover, whole-database PITR,
 accessibility, complete visual states, and owner evidence as explicit release
 gates. Do not treat focused backend evidence as browser or deployment
-readiness. Preserve concurrent changes and the non-participating platform
-boundary.
+readiness. Continue Page 10 in the order recorded by ADR 0047: invitation
+vertical, registration aggregate controls and commands, profile-extension
+capabilities, direct-writer retirement, then the synthetic educational journey.
+Preserve concurrent changes and the non-participating platform boundary.
 
 Do not trust selected-edition state or route placement as authority; do not let
 purpose-built platform routes collide with or fall through to Django app-label

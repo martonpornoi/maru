@@ -277,6 +277,17 @@ policy without changing the immutable submission. Authoritative Infinity,
 payment, entitlement, capacity, role, and restriction facts cannot be
 reintroduced as extension fields.
 
+ADR 0047 and the Page 10 contract are accepted as the canonical remount and
+writer-cutover target. They add a platform-admin-only Accounts inventory with
+optional recipient-owned account invitations, plus one edition-scoped
+Registration workspace for explicit copy-on-write setup, governed builder
+commands, activation, and profile-extension definitions. The contract requires
+durable encrypted platform identity delivery, separate aggregate and schema
+versions, exact-scope authorization, closed inputs, idempotency, atomic audit
+and outbox evidence, and staged retirement of direct admin/fixture writers.
+Implementation and release evidence are in progress; acceptance of the
+contract is not a production-readiness claim.
+
 The repository-controlled safety boundary is complete, but the phase exit
 criterion is not an automatic production approval. A concrete provider and
 deployment must be certified; workers, SMTP, scanner/storage, telemetry, relay,

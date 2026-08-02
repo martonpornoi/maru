@@ -1,7 +1,7 @@
 # Product requirements
 
 Status: Baseline  
-Last updated: 2026-08-01
+Last updated: 2026-08-02
 
 This document defines stable product requirements. Identifiers are used by
 architecture documents, implementation issues, tests, and release notes.
@@ -118,6 +118,21 @@ architecture documents, implementation issues, tests, and release notes.
   organization governance anchor, not an edition Department, Position, generic
   group, or workforce assignment; a structure projection may place operational
   departments visually beneath it but must not mirror it into those records.
+- **IDN-013 — Platform-issued account invitations:** An active platform
+  administrator may reserve and invite a person account as an optional identity
+  onboarding convenience, independently of public registration. The command
+  must normalize and reserve an exact unique email and optional login handle,
+  create only an inactive person account with an unusable password, and send a
+  single-use, expiring acceptance challenge through a durable retryable effect.
+  The recipient chooses their own policy-valid password and proves control of
+  the invited address; no administrator-selected or shared production password
+  is allowed. Reissue, revocation, expiry, delivery state, acceptance, and safe
+  replay must be versioned and audited without persisting or emitting the raw
+  bearer secret. An invitation must never overwrite or disclose an existing
+  identity and must create no organization membership, representation,
+  authority, participation, registration, application, onboarding, workforce,
+  or other convention relationship. Fixtures, tests, and tutorials may use
+  only deterministic synthetic identities and reserved example domains.
 
 ### Multi-convention and event editions
 
@@ -586,6 +601,20 @@ architecture documents, implementation issues, tests, and release notes.
   explicit and leave no partial tree. Ready, Live, Closing, Archived, and
   Cancelled editions are read-only until a separately accepted structural
   change-control workflow permits otherwise.
+- **UX-026 — Registration setup and account onboarding:** Page 10 must expose
+  one edition-scoped **Registration** workspace in the shared `/admin/` shell
+  and one platform-scoped **Accounts** inventory with an adjacent **Invite**
+  action for active platform administrators. The registration workspace guides
+  an authorized organizer from an explicit blank, published-template, or exact
+  prior-edition source through target review, draft form and product setup,
+  minor policy, profile extensions, activation, and current status without a
+  second application shell or global Quick Start. Every page shows truthful
+  lifecycle, provenance, validation, downstream effects, and computed
+  effective-access explanations; denied, empty, dependency-failure, stale,
+  overflow, replay, and delivery-failure states disclose no unauthorized
+  tenant or person data. Browser and versioned API adapters use the same
+  command/query contracts, and platform account onboarding remains visibly
+  separate from convention participation and registration.
 
 ### Registration, orders, and attendee service
 
@@ -717,6 +746,29 @@ architecture documents, implementation issues, tests, and release notes.
   artwork, document, or other typed record only through an explicit accepted
   transition. Application state alone grants no ticket, payment state,
   convention role, or access.
+- **REG-024 — Governed registration setup:** Registration configuration,
+  reusable template versions, sections, questions, products, ordering, minor
+  policy, and post-submission profile-extension definitions must be changed
+  only through purpose-built commands once the Page 10 writer migration is
+  activated. Each command must resolve and lock the exact organization and
+  edition, enforce lifecycle and exact capabilities, reject unknown or
+  client-owned scope/evidence fields, require a positive expected aggregate
+  version where state may be stale, and provide scope-bound idempotent replay.
+  Successful tenant mutations atomically preserve source version and digest,
+  append value-minimized audit evidence, and enqueue the minimized domain
+  event or required downstream effect; failure changes nothing. Active or
+  published definitions are immutable, later change creates a traceable new
+  version, and value revisions remain append-only. Zero custom questions is a
+  valid configuration because purpose-specific typed edition-profile fields
+  remain independently available. An omitted import value may use a documented
+  source/default, but an explicit invalid value such as capacity zero must be
+  rejected rather than treated as omission. HTML, versioned APIs, fixtures,
+  and internal tools must call the same application services.
+  Direct model-admin, inline, fixture, or ORM writers may remain only during a
+  documented additive migration with legacy-origin reconciliation, readiness
+  evidence, a rollback fence, and an explicit final stage that makes those
+  paths read-only or removes them; their temporary presence must never be
+  described as the canonical workflow.
 
 ### Programme intake and curation
 

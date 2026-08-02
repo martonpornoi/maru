@@ -51,6 +51,7 @@ the system.
 | [0044](0044-exact-authority-issuance-provenance.md) | Accepted | Pin immutable actor and approver authority sources, propagate controller loss, and preserve a non-cyclic initial Executive Board root |
 | [0045](0045-governance-anchored-copy-on-write-edition-structure.md) | Accepted | Present organization governance above an edition-owned, copy-on-write, versioned and safely editable workforce Department tree |
 | [0046](0046-nondelegable-runtime-database-login.md) | Accepted | Require a genuine non-delegable PostgreSQL runtime login, select-only cutover controls, and trigger-integrity ACL proof |
+| [0047](0047-governed-registration-setup-and-platform-account-invitations.md) | Accepted | Govern Page 10 registration setup and optional recipient-owned platform account invitations through strict shared commands and staged direct-writer retirement |
 
 New ADRs use the next four-digit number and contain:
 
