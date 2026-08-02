@@ -1,8 +1,8 @@
 # Organizations module
 
 Status: Implemented tenant, brand, localization, Pages 1–5, initial Page 8
-Executive Board lifecycle, and emergency containment; ADR 0045 Page 9 anchor
-contract accepted and pending
+Executive Board lifecycle, emergency containment, and Page 9a.0 minimized
+governance-anchor query; Page 9 Department mutations remain workforce work
 Last updated: 2026-08-02
 
 ## Purpose and requirements
@@ -57,6 +57,15 @@ the owner of Departments, Positions, and structure-template application. The
 Awoostria reference template cannot create, activate, update, or infer
 representation, membership, appointment, controller identity, or root
 authority.
+
+Page 9a.0 now implements that read composition. The public organizations query
+accepts one already-authorized organization identifier and returns exactly a
+`governance` discriminator, the fixed **Executive Board** label, and the
+truthful `absent`, `provisioning`, `active`, or `suspended` state. It never
+returns a representation identifier, appointment, controller, membership,
+reason, count, or authority record. Page 9 authorizes the exact edition before
+calling it and repeats fresh authorization before releasing the composed
+response.
 
 Organization slug is globally case-insensitively unique. Series slug is
 case-insensitively unique within its organization. Protected relationships
@@ -142,14 +151,15 @@ module-owned commands. A future API must define strict projections,
 enumeration resistance, retry semantics, authentication, approval, and OpenAPI
 evidence rather than saving these models directly.
 
-ADR 0045 accepts a future public, minimized organizations query for Page 9's
-governance anchor. It resolves the exact organization and returns only the
+ADR 0045's public, minimized `executive_board_governance_anchor(...)` query
+for Page 9 resolves the exact organization and returns only the
 fixed representation label and truthful absent, Provisioning, Active, or
 Suspended state. It returns no appointment, email, membership, reason,
 controller count, role assignment, or authority provenance. The Page 9 adapter
 composes that query with workforce's edition-owned structure projection; the
-workforce module does not save organization models. This query is design only
-until the Page 9 implementation is verified.
+workforce module does not save organization models. The bounded read query and
+focused Page 9/API verification are implemented; template application and
+Department mutation remain unmounted and do not write organization state.
 
 ## Convention series creation fields
 
@@ -228,7 +238,7 @@ relationship projection required by UX-020.
 - events reference an owning organization and series;
 - participation references the owning organization;
 - the self-context projection consumes the membership query; and
-- the accepted Page 9 presentation consumes the minimized representation-
+- the Page 9 presentation consumes the minimized representation-
   anchor query and never writes through it.
 
 ## Bootstrap administration
@@ -239,9 +249,12 @@ links to its record, Page 8 **Representation & access**, and Convention series
 section, with series creation beside that destination while lifecycle permits
 it. Selecting a series adds its own
 record and Convention editions destinations; new-edition availability depends
-on both organization and series state. ADR 0045 adds **Organization structure**
-once beneath an exact selected edition and only when the same exact Page 9 view
-decision succeeds. This is display context only: it
+on both organization and series state. Page 9a.0 adds **Organization
+structure** once beneath an exact selected edition and only when the same exact
+Page 9 view decision succeeds. A user with edition-wide
+`workforce.view_structure` can discover that edition even without
+`events.view_basic`; inaccessible sibling record links remain hidden. This is
+display context only: it
 does not query across tenants, infer ownership, or grant authority. The desktop
 shell aligns that menu to ordinary page padding instead of centering the whole
 grid.
@@ -390,6 +403,14 @@ final consolidated backend invocation passes 792 tests with 90.01 percent
 coverage and no warnings. Automated accessibility, complete visual states,
 representative deployment/PITR, and owner rehearsal remain release gates.
 
+Page 9a.0 tests additionally prove absent and Provisioning anchor states, the
+fixed identity-free label, separation from a same-named operational Executive
+Board Department, platform non-participation, canonical navigation, and safe
+foreign/dependency denial. They are included in the current 52-test Page 9/API/
+catalog/template focused run and the definitive 1,239-test full-suite run at
+90.35 percent branch coverage; narrow-viewport evidence for this slice remains
+open.
+
 ## Limitations
 
 Page 8's Executive Board provisioning, invitation, acceptance, initial
@@ -400,7 +421,9 @@ replacement/ending, planned suspension/reactivation, quorum recovery, legacy
 active-tenant reconciliation, invitation notification delivery, organization
 and series lifecycle transitions beyond initial activation, slug migration, publication,
 processors, ownership transfer, closure/data exit, and the complete
-convention-owned organizer experience remain. ADR 0045 defines but does not
-implement or verify Page 9's minimized governance-anchor query, exact
-navigation, structure services, API, migrations, or access header. Platform
-administration remains non-participating throughout.
+convention-owned organizer experience remain. Page 9a.0 implements and
+focused-tests the minimized governance-anchor query, exact navigation, strict
+read API, and principal-specific view/manage summary. ADR 0045's structure
+aggregate, Department mutation services/routes, migrations, full effective-
+access header, responsive/accessibility evidence, and owner walkthrough remain
+open. Platform administration remains non-participating throughout.

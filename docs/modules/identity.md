@@ -56,6 +56,9 @@ registrants, volunteers, onboarding subjects, or workforce assignees.
 - `account_display_labels(account_ids)`, a bounded internal read projection
   returning display name or the generic `Maru account` fallback without email,
   login handle, authentication state, or contact data;
+- `active_person_account_display_labels(account_ids)`, the narrower bounded
+  Page 9a.0 adapter that returns a minimized display label only while the
+  already-authorized relationship points to an active `person` account;
 - `GET /api/v1/me/security-history`
 
 Successful sign-in and sign-out signals append safe event type, outcome, source
@@ -111,6 +114,13 @@ tenant/resource authorization and domain-event filtering. The query is a safe
 label adapter, not permission to enumerate accounts; missing/deleted actors
 remain a generic label and raw account identifiers are not rendered.
 
+The workforce structure projector may call
+`active_person_account_display_labels(...)` only after bounding its holder set
+and validating each linked RoleAssignment's current exact lineage. Identity
+then owns the final active-person filter. Inactive accounts, platform
+administrators, invalid role evidence, and missing identities release no
+holder label; login handles and email are never part of this projection.
+
 ## Retention and archive
 
 Account deletion cannot cascade into organizer or event records. Subject-rights
@@ -132,6 +142,9 @@ session inventory/revocation, privileged step-up, rate limits, append-only
 security history, scoped restriction issue/revoke/consequence, appeal decision,
 authorization, and cross-tenant denial. `identity_delivery` durably delivers
 pending challenges and reports success/failure for supervision.
+Page 9a.0 integration tests additionally prove that identity labels are not
+queried until authorization has retained current role evidence and that
+inactive or platform-classified accounts are omitted.
 
 ## Limitations
 

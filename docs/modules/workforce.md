@@ -1,7 +1,8 @@
 # Workforce module
 
-Status: Position, hierarchy, opportunity, agreement, authority onboarding, and
-ADR 0041 containment implemented; ADR 0045 Page 9 design accepted and pending
+Status: Position, hierarchy, opportunity, agreement, authority onboarding,
+ADR 0041 containment, and Page 9a.0 bounded read projection implemented;
+Page 9a.1 Department mutations remain pending
 Last updated: 2026-08-02
 
 ## Purpose and requirements
@@ -86,26 +87,60 @@ default headcount, and capacity codes.
 
 ## Organization structure projection
 
-The current Convention work client has a read-only **Organization structure**
-view backed by:
+Page 9a.0 mounts one read-only **Organization structure** page at the exact
+selected-edition route and backs other clients with:
 
 ```text
 GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure
 ```
 
-The projection requires `workforce.view_structure`, exact organization and
-edition scope, and returns nested department relationships, positions, current
-holders, login handles, and each holder's other current positions. It omits
-email, document evidence, application data, private profile data, and technical
-authority records. Department parents support arbitrary same-edition nesting;
-position headcount supports several leads or deputies; one account may hold
-several positions in several departments.
+The projection requires `workforce.view_structure` effective at the exact
+edition. Department- or resource-only authority is too narrow for the complete
+tree, and `workforce.manage_structure` by itself does not imply read. Active
+platform-administrator oversight is explicit and creates no convention
+relationship. Route scope is resolved and policy-filtered before organization
+or edition names are loaded, and both the HTML and API adapters repeat a fresh
+final decision before returning the name-bearing result.
+
+The response composes nested Department relationships, Positions, reporting
+labels, current minimized holders, and each holder's other current operational
+roles. It deliberately excludes login handle, email, account state/kind,
+assignment identifiers, document/application/profile data, reason text, and
+authority provenance. Identity labels are queried only after the workforce
+relationship is time-effective, the linked RoleAssignment agrees with one of
+the supported exact edition/Department/resource scope shapes, authorization
+confirms the assignment's current pinned lineage, and identity confirms the
+account is an active person. A missing, malformed, revoked, or stale lineage
+therefore releases no holder name.
+
+The projector owns fixed ceilings of 256 Departments, 1,024 Positions, 4,096
+effective holder relationships, depth 32 for both Department and Position
+reporting graphs, and 16,384 expanded `other_roles` edges. Row-limited queries
+use limit-plus-one. The output is either one complete, stably ordered tree or
+`structure_limit_exceeded` with no Department rows; it never silently
+truncates. Cycles and unavailable parents fail through a generic dependency
+boundary rather than being repaired, promoted, or partially shown.
+
+The current read executes several bounded queries without the future structure
+aggregate/version fence. A concurrent Department, Position, assignment,
+identity, or governance write could therefore yield a coherent but
+cross-version composition. Page 9a.1 must introduce the accepted version fence
+and retry/conflict behavior before mounting Department mutations. The fresh
+final authorization check closes mid-read authority expiry/revocation; it does
+not solve this separate data-snapshot risk.
+
+After the fresh final decision, HTML and API append one minimized
+`workforce.structure.read` sensitive-read audit with exact scope, source
+channel, outcome, obligation, and only policy version, route name, and HTTP
+method as safe metadata. Audit persistence
+precedes disclosure; failure returns a generic name-free `503` and releases no
+holder label or partial hierarchy.
 
 ADR 0042 removed the former public-roster rehearsal. Repository fixtures and
 tutorials use synthetic people only; public labels never become accounts,
 appointments, assignments, or authority.
 
-ADR 0045 accepts Page 9 **Organization structure** at the selected-edition
+ADR 0045 defines Page 9 **Organization structure** at the selected-edition
 route documented in
 [`09-organization-structure.md`](../product/page-contracts/09-organization-structure.md).
 Its governance-anchored projection is deliberately composed from two sources:
@@ -122,11 +157,13 @@ places it visually beneath the organization-owned governance anchor. Every
 other parent edge remains an exact same-organization, same-edition Department
 relationship. Neither visual nor Department ancestry implies authority.
 
-The accepted first management slice introduces one workforce-owned edition
+The accepted next management slice introduces one workforce-owned edition
 structure aggregate with monotonic optimistic versioning and shared HTML/API
 application services for built-in-template application plus Department create,
 update, reparent, order, retire, and protected delete. The design is accepted;
-those services, schema, Page 9 route, and verification are not implemented yet.
+those mutation services and schema are not implemented yet. Page 9a.0's route,
+read projector, governance composition, strict GET API, exact navigation, and
+focused backend verification are implemented independently of them.
 
 ### Built-in reference and independent copy
 
@@ -136,8 +173,17 @@ Decorations, Events & Programming, Front Desk, Fursuit Support, Graphics
 Design, Human Resources, IT, Legal & Compliance, Logistics, Maid Café,
 Multimedia, PEER, Registration, Security, Social Media, Stage Tech, and Story.
 
-An authorized manager may apply that exact version only to an empty Draft or
-Preparing edition workforce structure. One atomic, idempotent application
+The code-owned catalog is implemented and pinned. It is immutable, accepts only
+the exact versioned identifier, validates unique bounded fields and one
+parent-before-child root graph, rejects any Executive Board Department, and
+computes canonical UTF-8 JSON plus pinned SHA-256 content evidence. Helper
+Board is the sole root and all 21 operational records are direct children. Its
+nine focused unit tests are included in the current 52-test Page 9 slice. The
+catalog is not yet an application service: Page 9a.1 still owns receipt,
+idempotent copy, structure-version, audit/event/outbox, and rollback behavior.
+
+Page 9a.1 will let an authorized manager apply that exact version only to an
+empty Draft or Preparing edition workforce structure. One atomic, idempotent application
 copies 22 independent Department rows and retains immutable source code,
 version, digest, actor, retry, correlation, and resulting-version provenance.
 It does not create or infer representation, people, membership, participation,
@@ -264,8 +310,7 @@ GET  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/doc
 POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/documents/me/<request_id>/upload
 ```
 
-Accepted Page 9 API surface; the mutation routes are not mounted until ADR
-0045 is implemented:
+Page 9 API surface; only the GET route is currently mounted:
 
 ```text
 GET    /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/structure
@@ -276,11 +321,15 @@ POST   /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/d
 DELETE /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/departments/<department_id>
 ```
 
-The existing structure GET remains the compatibility projection until Page 9
-adopts its bounded complete-tree and governance-anchor response. New mutation
-routes must use the same application services as HTML, strict RFC 9457
-problems, route-owned scope, UUID `Idempotency-Key` for create/application, and
-deterministic OpenAPI/client generation.
+The structure GET now returns the bounded complete-tree and minimized
+governance-anchor response used by Page 9a.0. It accepts no query parameters.
+OpenAPI declares its `200` response and typed RFC 9457 `400`, `403`, and `503`
+problems; generated TypeScript types retain the recursive Department schema.
+The old React structure destination is removed, so the generated API contract
+does not imply a duplicate browser workflow. New mutation routes must use the
+same application services as HTML, strict problems, route-owned scope, UUID
+`Idempotency-Key` for create/application, and deterministic OpenAPI/client
+generation.
 
 Specialist records:
 
@@ -351,23 +400,45 @@ or requests into authority and do not inspect actor/provenance foreign keys.
 Use the maintenance-window, reconciliation, and fix-forward procedure in
 [`idn011-convention-subject-migration-and-recovery.md`](../operations/idn011-convention-subject-migration-and-recovery.md).
 
-ADR 0045's future additive migration must preserve every existing Department
-identifier and parent edge, create at most one structure-control aggregate for
+ADR 0045's future Page 9a.1 additive migration must preserve every existing
+Department identifier and parent edge, create at most one structure-control aggregate for
 each populated edition, and mark it as legacy-existing without inventing a
 template receipt. It must never infer Executive Board, Helper Board, a person,
 Position, assignment, authority, or template version from names. Preflight and
 database checks cover exact scope, cycles, immutable source receipt, monotonic
 aggregate version, incompatible direct writers, non-cascading retirement, and
-downgrade/recovery behavior. This paragraph is an accepted migration contract,
-not evidence that the schema exists.
+downgrade/recovery behavior. This paragraph is an accepted mutation/migration
+contract, not evidence that the structure-control schema exists. Page 9a.0
+adds no migration and does not change current Department write compatibility.
+
+## Page 9a.0 verification
+
+Focused Page 9, structure API, capability-catalog, and template tests pass 52
+tests. They cover the exact access matrix, denial before name lookup,
+fresh final authorization, current exact-role and active-person holder checks,
+all code-owned ceilings, depth and expanded-edge bounds, recursive OpenAPI,
+safe `400`/`403`/`503` problems, governance minimization, audit-before-
+disclosure and audit-failure `503`, stable query-count ceilings, and the
+explicit no-partial-tree overflow. The standalone populated
+query-count regression also passes. Adjacent navigation/shell/admin/
+representation coverage passes 65 tests. OpenAPI validation, generated-client
+regeneration, TypeScript type checking, 19 Vitest tests, Vite production build,
+focused Ruff, strict mypy for the changed source boundary, Django system check,
+and whitespace checks pass. The definitive full repository gate also passes
+1,239 tests at 90.35 percent branch coverage. Reliable responsive-browser
+evidence for this slice remains pending.
 
 ## Current limitations
 
 Qualifications, availability, shifts, time records, acceptance decisions,
 position ending/replacement UX, approval notifications, document download
-through the REST API, Page 9 implementation and Page 9b Position editing, and a
-separately authenticated approval inbox remain work. ADR 0045 and the Page 9
-contract define the Department editor but do not claim its schema, routes,
-services, API, tests, migration rehearsal, accessibility, or owner walkthrough
-are complete. The implemented first assignment slice continues to prove the
-safe path from a known person and reviewed agreement to scoped working access.
+through the REST API, Page 9a.1 Department management, Page 9b Position
+editing, and a separately authenticated approval inbox remain work. Page
+9a.0's read-only HTML route, GET API, bounded query, exact access/discovery
+behavior, governance anchor, generated schema, and focused backend tests are
+implemented. Its concurrent multi-query structure-version fence, browser/
+accessibility matrix, and owner walkthrough remain open. ADR 0045 and the Page
+9 contract define the Department editor but do not claim its schema, commands,
+mutation routes, migration rehearsal, or recovery evidence are complete. The
+implemented first assignment slice continues to prove the safe path from a
+known person and reviewed agreement to scoped working access.

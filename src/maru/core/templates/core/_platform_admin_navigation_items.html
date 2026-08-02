@@ -92,20 +92,26 @@
       >
         {{ convention_series.name }}
       </p>
-      <a
-        class="baseline-sidebar-link baseline-sidebar-link--standalone"
-        href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}"
-        {% if request.resolver_match.url_name == "baseline-convention-series-record" %}aria-current="page"{% endif %}
-      >
-        Series record
-      </a>
-      <div class="baseline-sidebar-row">
+      {% if baseline_can_view_organization %}
         <a
-          class="baseline-sidebar-link"
-          href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}#event-editions-title"
+          class="baseline-sidebar-link baseline-sidebar-link--standalone"
+          href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}"
+          {% if request.resolver_match.url_name == "baseline-convention-series-record" %}aria-current="page"{% endif %}
         >
-          Convention editions
+          Series record
         </a>
+      {% endif %}
+      <div class="baseline-sidebar-row">
+        {% if baseline_can_view_organization %}
+          <a
+            class="baseline-sidebar-link"
+            href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}#event-editions-title"
+          >
+            Convention editions
+          </a>
+        {% else %}
+          <span class="baseline-sidebar-link">Convention editions</span>
+        {% endif %}
         {% if baseline_can_create_edition and organization.lifecycle != "closed" and convention_series.is_active %}
           <a
             class="baseline-sidebar-add"
@@ -135,13 +141,25 @@
           >
             {{ edition.name }}
           </p>
-          <a
-            class="baseline-sidebar-link baseline-sidebar-link--standalone"
-            href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}"
-            {% if request.resolver_match.url_name == "baseline-event-edition-record" %}aria-current="page"{% endif %}
-          >
-            Overview
-          </a>
+          {% if baseline_can_view_edition %}
+            <a
+              class="baseline-sidebar-link baseline-sidebar-link--standalone"
+              href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}"
+              {% if request.resolver_match.url_name == "baseline-event-edition-record" %}aria-current="page"{% endif %}
+            >
+              Overview
+            </a>
+          {% endif %}
+          {% url 'organization-structure' organization.slug convention_series.slug edition.slug as organization_structure_url %}
+          {% if baseline_can_view_structure and organization_structure_url %}
+            <a
+              class="baseline-sidebar-link baseline-sidebar-link--standalone"
+              href="{{ organization_structure_url }}"
+              {% if request.resolver_match.url_name == "organization-structure" %}aria-current="page"{% endif %}
+            >
+              Organization structure
+            </a>
+          {% endif %}
         </section>
       {% endif %}
     </section>

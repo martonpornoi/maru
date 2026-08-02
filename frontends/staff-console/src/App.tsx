@@ -38,7 +38,6 @@ import {
   loadRegistrationReconciliation,
   loadSecurityHistory,
   loadStaffRegistrations,
-  loadWorkforceStructure,
   type MyContext,
   type MyRegistrationWorkspace,
   type Participation,
@@ -57,8 +56,6 @@ import {
   type SecurityEvent,
   type StaffRegistration,
   type StaffRegistrationPage,
-  type WorkforceStructure,
-  type WorkforceStructureDepartment,
   publishRegistrationTemplate,
   replaceAccessAssignment,
   reviewProfileMedia,
@@ -82,7 +79,6 @@ import {
 type Destination =
   | "today"
   | "my-registration"
-  | "structure"
   | "people"
   | "commerce"
   | "reports"
@@ -100,7 +96,6 @@ const upcomingDestinations = [
 const destinationLabels: Record<Destination, string> = {
   today: "Today",
   "my-registration": "My registration",
-  structure: "Organization structure",
   people: "People",
   commerce: "Registration",
   reports: "Reports & badges",
@@ -111,14 +106,6 @@ const destinationLabels: Record<Destination, string> = {
 const recommendedGroups: Record<Destination, string[]> = {
   today: ["convention-chair", "vice-chair", "board-member"],
   "my-registration": [],
-  structure: [
-    "convention-chair",
-    "vice-chair",
-    "board-member",
-    "department-lead",
-    "staff-member",
-    "volunteer",
-  ],
   people: ["department-lead", "staff-member", "board-member"],
   commerce: [
     "registration-lead",
@@ -315,13 +302,6 @@ function Sidebar({
             onClick={() => onNavigate("my-registration")}
           >
             <Icon>◇</Icon> My registration
-          </button>
-          <button
-            className={destination === "structure" ? "nav-item active" : "nav-item"}
-            aria-current={destination === "structure" ? "page" : undefined}
-            onClick={() => onNavigate("structure")}
-          >
-            <Icon>├</Icon> Organization structure
           </button>
         </details>
 
@@ -758,197 +738,6 @@ function PersonDrawer({
           outside this view.
         </p>
       </aside>
-    </div>
-  );
-}
-
-function DepartmentBranch({
-  department,
-  departments,
-  visited,
-}: {
-  department: WorkforceStructureDepartment;
-  departments: WorkforceStructureDepartment[];
-  visited: ReadonlySet<string>;
-}) {
-  if (visited.has(department.id)) return null;
-  const nextVisited = new Set(visited);
-  nextVisited.add(department.id);
-  const children = departments.filter(
-    (candidate) => candidate.parent_id === department.id,
-  );
-  return (
-    <li className="structure-branch">
-      <section className="panel structure-department">
-        <div className="panel-heading">
-          <div>
-            <p className="section-kicker">
-              {department.parent_id ? "Subdepartment" : "Top-level department"}
-            </p>
-            <h2>{department.name}</h2>
-          </div>
-          <span className="quiet-badge">
-            {department.positions.length} position
-            {department.positions.length === 1 ? "" : "s"}
-          </span>
-        </div>
-        {department.description && (
-          <p className="muted-copy">{department.description}</p>
-        )}
-        {department.positions.length ? (
-          <div className="structure-positions">
-            {department.positions.map((position) => (
-              <article className="structure-position" key={position.id}>
-                <header>
-                  <div>
-                    <h3>{position.title}</h3>
-                    {position.description && <p>{position.description}</p>}
-                  </div>
-                  <span className="status-pill">
-                    {position.holders.length}/{position.headcount}
-                  </span>
-                </header>
-                {position.holders.length ? (
-                  <ul className="structure-holders">
-                    {position.holders.map((holder) => (
-                      <li key={holder.assignment_id}>
-                        <span>
-                          <strong>{holder.display_name}</strong>
-                          {holder.login_handle &&
-                            holder.login_handle !== holder.display_name && (
-                              <small>@{holder.login_handle}</small>
-                            )}
-                        </span>
-                        {holder.other_roles.length > 0 && (
-                          <span
-                            className="quiet-badge"
-                            title={holder.other_roles
-                              .map(
-                                (role) =>
-                                  `${role.position_title} · ${role.department_name}`,
-                              )
-                              .join("\n")}
-                          >
-                            +{holder.other_roles.length} other role
-                            {holder.other_roles.length === 1 ? "" : "s"}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="muted-copy">No active holder.</p>
-                )}
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="muted-copy">No current positions.</p>
-        )}
-      </section>
-      {children.length > 0 && (
-        <ol className="structure-children">
-          {children.map((child) => (
-            <DepartmentBranch
-              key={child.id}
-              department={child}
-              departments={departments}
-              visited={nextVisited}
-            />
-          ))}
-        </ol>
-      )}
-    </li>
-  );
-}
-
-function StructureView({ edition }: { edition: EditionContext }) {
-  const [structure, setStructure] = useState<WorkforceStructure>();
-  const [denied, setDenied] = useState(false);
-  const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    setStructure(undefined);
-    setDenied(false);
-    setError(undefined);
-    void loadWorkforceStructure(edition)
-      .then(setStructure)
-      .catch((caught: unknown) => {
-        if (caught instanceof ApiError && caught.status === 403) {
-          setDenied(true);
-          return;
-        }
-        setError(
-          caught instanceof Error
-            ? caught.message
-            : "The organization structure could not be loaded.",
-        );
-      });
-  }, [edition]);
-
-  const roots =
-    structure?.departments.filter(
-      (department) =>
-        department.parent_id === null ||
-        !structure.departments.some(
-          (candidate) => candidate.id === department.parent_id,
-        ),
-    ) ?? [];
-
-  return (
-    <div className="view">
-      <div className="page-heading compact">
-        <div>
-          <p className="eyebrow">People &amp; responsibilities</p>
-          <h1>Organization structure</h1>
-          <PageHelp
-            purpose="Use this page to understand departments, reporting relationships, and current position holders."
-            examples="find a department lead or see another role held by the same volunteer"
-          />
-        </div>
-      </div>
-      {denied && (
-        <section className="panel">
-          <h2>Structure is not available to this account</h2>
-          <p className="muted-copy">
-            Ask an organizer for an edition role that can view the organization
-            structure.
-          </p>
-        </section>
-      )}
-      {error && <p className="form-error" role="alert">{error}</p>}
-      {!structure && !denied && !error && (
-        <section className="panel">
-          <p className="muted-copy">Loading organization structure…</p>
-        </section>
-      )}
-      {structure && (
-        <>
-          <p className="structure-context">
-            {structure.organization_name} · {structure.edition_name}
-          </p>
-          {roots.length ? (
-            <ol className="structure-tree">
-              {roots.map((department) => (
-                <DepartmentBranch
-                  key={department.id}
-                  department={department}
-                  departments={structure.departments}
-                  visited={new Set()}
-                />
-              ))}
-            </ol>
-          ) : (
-            <section className="panel">
-              <h2>No departments yet</h2>
-              <p className="muted-copy">
-                Create the first department and its positions in Specialist
-                records.
-              </p>
-            </section>
-          )}
-        </>
-      )}
     </div>
   );
 }
@@ -2805,7 +2594,7 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
                   <div>
                     <dt>Provider paid</dt>
                     <dd>
-                      {product.provider_paid} Â·{" "}
+                      {product.provider_paid} ·{" "}
                       {formatMoney(
                         product.provider_paid_minor,
                         product.currency,
@@ -2815,7 +2604,7 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
                   <div>
                     <dt>Waived</dt>
                     <dd>
-                      {product.waived} Â·{" "}
+                      {product.waived} ·{" "}
                       {formatMoney(product.waived_minor, product.currency)}
                     </dd>
                   </div>
@@ -3564,7 +3353,7 @@ function SetupView({
         )}
         {readinessDenied ? (
           <div className="permission-state compact-permission">
-            <span className="permission-lock" aria-hidden="true">â—‡</span>
+            <span className="permission-lock" aria-hidden="true">◇</span>
             <h3>Readiness review is restricted</h3>
             <p>
               Ask a convention leader to assign a group with edition lifecycle
@@ -3586,7 +3375,7 @@ function SetupView({
             ))}
           </div>
         ) : (
-          <p className="muted-copy">Loading readiness evidenceâ€¦</p>
+          <p className="muted-copy">Loading readiness evidence…</p>
         )}
       </section>
     </div>
@@ -4266,7 +4055,6 @@ export default function App({
       {destination === "my-registration" && (
         <MyRegistrationView edition={edition} />
       )}
-      {destination === "structure" && <StructureView edition={edition} />}
       {destination === "people" && (
         <PeopleView
           page={people}

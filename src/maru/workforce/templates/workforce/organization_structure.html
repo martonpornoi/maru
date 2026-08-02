@@ -1,0 +1,174 @@
+{% extends "core/baseline_admin_base.html" %}
+
+{% block baseline_page_title %}{% if edition %}Organization structure · {{ edition.name }}{% else %}Organization structure unavailable{% endif %} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if organization %}
+    {% if baseline_can_view_organization %}
+      <a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>
+    {% else %}
+      {{ organization.name }}
+    {% endif %}
+  {% endif %}
+  {% if convention_series %}
+    &rsaquo;
+    {% if baseline_can_view_organization %}
+      <a href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}">{{ convention_series.name }}</a>
+    {% else %}
+      {{ convention_series.name }}
+    {% endif %}
+  {% endif %}
+  {% if edition %}
+    &rsaquo;
+    {% if baseline_can_view_edition %}
+      <a href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}">{{ edition.name }}</a>
+    {% else %}
+      {{ edition.name }}
+    {% endif %}
+    &rsaquo; Organization structure
+  {% else %}
+    Organization structure unavailable
+  {% endif %}
+{% endblock %}
+
+{% block baseline_content %}
+  {% if structure_load_failed %}
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Edition workforce</p>
+      <h1>Organization structure unavailable</h1>
+    </header>
+    <div class="baseline-state baseline-state--error" role="alert">
+      <h2>The organization structure could not be loaded</h2>
+      <p>
+        Try again after the database is available. Maru did not show a partial
+        hierarchy or change any convention data.
+      </p>
+    </div>
+  {% else %}
+    {% if baseline_can_view_edition %}
+      <a
+        class="baseline-back-link"
+        href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}"
+      >← {{ edition.name }}</a>
+    {% endif %}
+
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Edition workforce</p>
+      <h1>Organization structure</h1>
+      <p class="baseline-intro">
+        See how {{ edition.name }} places its operational Departments beneath
+        {{ organization.name }}'s accountable governance. Reporting lines are
+        not software-access inheritance.
+      </p>
+      <p class="baseline-record-meta">
+        <span>Edition: <strong>{{ edition.name }}</strong></span>
+        <span>Lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+      </p>
+    </header>
+
+    <section class="baseline-access-summary" aria-labelledby="structure-access-title">
+      <div>
+        <p class="baseline-kicker" id="structure-access-title">Your effective access</p>
+        <p class="baseline-access-line">
+          <strong>{{ structure_access_label }}</strong>
+          <span>allows you to view this exact edition's complete operational hierarchy.</span>
+        </p>
+        {% if can_manage_structure %}
+          <p class="baseline-access-line">
+            <strong>Structure manager</strong>
+            <span>may use the audited Department controls as each management slice becomes available.</span>
+          </p>
+        {% endif %}
+      </div>
+      <details>
+        <summary>Why can I access this?</summary>
+        {% if structure_access_label == "Platform oversight" %}
+          <p>
+            Your platform-administrator classification provides explicit
+            oversight. It did not make you a member, participant, controller,
+            volunteer, or workforce assignee.
+          </p>
+        {% else %}
+          <p>
+            Your current exact edition grant or immutable scoped role includes
+            <strong>View workforce structure</strong>. Selected navigation and
+            Department ancestry do not grant this access.
+          </p>
+        {% endif %}
+        {% if can_manage_structure %}
+          <p>
+            Management is a separate current decision. It does not follow from
+            merely viewing this page or from Executive Board status.
+          </p>
+        {% endif %}
+      </details>
+    </section>
+
+    <section class="baseline-panel" aria-labelledby="governance-anchor-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Organization governance</p>
+          <h2 id="governance-anchor-title">{{ governance.label }}</h2>
+        </div>
+        <span class="baseline-count">{{ governance.state|capfirst }}</span>
+      </div>
+      <div class="baseline-structure-governance">
+        <p>
+          This is the accountable OrganizationRepresentation from
+          {{ organization.name }}. It is not a Department, Position, generic
+          group, or workforce assignment.
+        </p>
+        {% if baseline_can_manage_representation %}
+          <p>
+            <a href="{% url 'organization-representation' organization.slug %}">
+              Review representation &amp; access
+            </a>
+          </p>
+        {% endif %}
+      </div>
+    </section>
+
+    {% if structure.state == "structure_limit_exceeded" %}
+      <section class="baseline-state baseline-state--warning" role="status" aria-labelledby="structure-limit-title">
+        <h2 id="structure-limit-title">The complete hierarchy is too large to show safely</h2>
+        <p>
+          Maru did not truncate or present a partial tree. Ask a platform
+          operator to review the edition's structure size before trying again.
+        </p>
+      </section>
+    {% elif not structure.departments %}
+      <section class="baseline-state" aria-labelledby="structure-empty-title">
+        <h2 id="structure-empty-title">No operational Departments yet</h2>
+        <p>
+          This edition has an empty workforce structure. No person, role,
+          authority, participation, or registration was inferred from its
+          governance record.
+        </p>
+      </section>
+    {% else %}
+      <section class="baseline-panel" aria-labelledby="department-tree-title">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">Edition-owned operations</p>
+            <h2 id="department-tree-title">Department hierarchy</h2>
+          </div>
+          <span class="baseline-count">Complete bounded tree</span>
+        </div>
+        <div class="baseline-structure-tree-wrap">
+          <ol class="baseline-structure-tree" aria-label="Department hierarchy">
+            {% include "workforce/_organization_structure_branch.html" with departments=structure.departments only %}
+          </ol>
+        </div>
+      </section>
+    {% endif %}
+
+    <aside class="baseline-boundary" aria-labelledby="structure-boundary-title">
+      <p class="baseline-kicker">Access boundary</p>
+      <h2 id="structure-boundary-title">Hierarchy explains work, not permission inheritance</h2>
+      <p>
+        A parent Department does not automatically control its children, and a
+        child does not grant access upward. Maru evaluates every capability at
+        its exact organization, edition, Department, or typed-resource scope.
+      </p>
+    </aside>
+  {% endif %}
+{% endblock %}

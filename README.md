@@ -24,13 +24,13 @@ permission-controlled operational record.
 
 Reflex is not part of the platform core. The active browser milestone is one
 record-oriented `/admin/` shell: Administration home, embedded Convention
-work, permission-filtered specialist records, and Pages 1–8 under the reserved
+work, permission-filtered specialist records, and Pages 1–9 under the reserved
 `/admin/platform/` route space. Platform administration remains separate from
 convention participation. Backend route, authorization, frontend build,
 populated and fresh migration, local restore-drill, and desktop/390-pixel
 browser smoke evidence pass. Dependency audits also report no known Python or
-JavaScript vulnerabilities. The current consolidated backend gate passes 876
-tests with 90.43 percent branch coverage. Accessibility, complete visual states,
+JavaScript vulnerabilities. The current consolidated backend gate passes 1,239
+tests with 90.35 percent branch coverage. Accessibility, complete visual states,
 and owner rehearsal remain before
 release acceptance.
 

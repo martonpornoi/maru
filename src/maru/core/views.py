@@ -46,7 +46,7 @@ from maru.core.forms import StrictInputForm
 from maru.events.admin_context import (
     ADMIN_EDITION_SESSION_KEY,
     admin_shell_access,
-    authorized_admin_edition_ids,
+    authorized_admin_edition_for_route,
     authorized_admin_organization_ids,
     has_active_admin_scope,
     selected_admin_edition,
@@ -238,6 +238,7 @@ def _baseline_page_response(
     if use_admin_shell:
         template_context["has_permission"] = True
     organization = template_context.get("organization")
+    edition = template_context.get("edition")
     actor = request.user
     if isinstance(organization, Organization) and isinstance(actor, Account):
         template_context.setdefault(
@@ -272,6 +273,34 @@ def _baseline_page_response(
                 capability_code="events.create",
             ),
         )
+        if isinstance(edition, EventEdition):
+            template_context.setdefault(
+                "baseline_can_view_edition",
+                _can(
+                    actor=actor,
+                    organization_id=organization.id,
+                    capability_code="events.view_basic",
+                    edition_id=edition.id,
+                ),
+            )
+            template_context.setdefault(
+                "baseline_can_view_structure",
+                _can(
+                    actor=actor,
+                    organization_id=organization.id,
+                    capability_code="workforce.view_structure",
+                    edition_id=edition.id,
+                ),
+            )
+            template_context.setdefault(
+                "baseline_can_manage_structure",
+                _can(
+                    actor=actor,
+                    organization_id=organization.id,
+                    capability_code="workforce.manage_structure",
+                    edition_id=edition.id,
+                ),
+            )
     template_context.update(
         {
             "baseline_admin_parent_template": (
@@ -405,36 +434,6 @@ def _organization_for_authorized_route(
     if organization is None:
         raise PermissionDenied
     return organization
-
-
-def _edition_chain_for_authorized_route(
-    *,
-    request: HttpRequest,
-    actor: Account,
-    organization_slug: str,
-    series_slug: str,
-    edition_slug: str,
-    capability_code: str,
-) -> tuple[Organization, ConventionSeries, EventEdition]:
-    """Resolve a complete edition chain only inside its name-free authority set."""
-
-    editions = EventEdition.objects.select_related("organization", "series").filter(
-        organization__slug__iexact=organization_slug,
-        series__slug__iexact=series_slug,
-        slug__iexact=edition_slug,
-    )
-    if not actor.is_platform_administrator:
-        candidate_ids = authorized_admin_edition_ids(
-            request,
-            capability_codes=frozenset({capability_code}),
-        )
-        editions = editions.filter(id__in=candidate_ids)
-    edition = editions.order_by("id").first()
-    if edition is None:
-        if actor.is_platform_administrator:
-            raise Http404
-        raise PermissionDenied
-    return edition.organization, edition.series, edition
 
 
 def _add_validation_errors(
@@ -1013,7 +1012,7 @@ def baseline_event_edition_record(
     actor = _active_account(request)
     _require_possible_organization_authority(request, actor)
     try:
-        organization, series, edition = _edition_chain_for_authorized_route(
+        organization, series, edition = authorized_admin_edition_for_route(
             request=request,
             actor=actor,
             organization_slug=organization_slug,
@@ -1193,7 +1192,7 @@ def baseline_select_event_edition(
     if input_error is not None:
         return input_error
     try:
-        organization, series, edition = _edition_chain_for_authorized_route(
+        organization, series, edition = authorized_admin_edition_for_route(
             request=request,
             actor=actor,
             organization_slug=organization_slug,
@@ -1246,7 +1245,7 @@ def baseline_clear_event_edition(
     if input_error is not None:
         return input_error
     try:
-        organization, series, edition = _edition_chain_for_authorized_route(
+        organization, series, edition = authorized_admin_edition_for_route(
             request=request,
             actor=actor,
             organization_slug=organization_slug,

@@ -1,8 +1,9 @@
 # Maru hands-on tutorial: organization authority to edition
 
-Status: M1.1/M2.1 locally migrated and responsive-smoke verified journey;
-final suite, accessibility/state-matrix, and owner rehearsal pending
-Last updated: 2026-08-01
+Status: M1.1/M2.1 plus Page 9a.0 read journey locally verified in focused
+backend and desktop smoke; full suite, narrow viewport,
+accessibility/state-matrix, and owner rehearsal pending
+Last updated: 2026-08-02
 
 This tutorial follows the intended first coherent Maru journey: a
 non-participating platform administrator creates an organization, hands
@@ -366,7 +367,36 @@ Select **Use as working edition**. The POST stores display/query context in
 your session and returns to the record. It does not grant access or create a
 relationship. Select **Clear working edition** to remove that context.
 
-## 13. Inspect the API contract
+## 13. Inspect Organization structure (Page 9a.0)
+
+With the edition selected, choose **Organization structure** beneath that
+edition in the shared sidebar. Its canonical route ends in `/structure/`, for
+example:
+
+```text
+http://127.0.0.1:8000/admin/platform/organizations/synthetic-awoostria-organizers/series/awoostria/editions/awoostria-2031/structure/
+```
+
+Use the actual generated slugs. The page must show the separate **Executive
+Board** governance anchor as Active, followed by an honest **No operational
+Departments yet** state. The Board is not a Department, and this read creates
+no Helper Board, account, role, participation, or assignment.
+
+Page 9a.0 is deliberately read-only. The Awoostria reference action and manual
+Department create/update/reparent/retire/delete controls belong to Page 9a.1
+and are not mounted yet. Maru already pins the immutable 22-Department
+`awoostria-reference@1` catalog with Helper Board as sole root and no Executive
+Board Department, but there is intentionally no application receipt or copy
+command yet. Do not use the specialist Department form to simulate
+that future tutorial step. There should be exactly one current Organization
+structure link, no `?view=structure` link, and no rendered email, login handle,
+or technical UUID.
+
+The page either shows a complete bounded tree or explicitly says the structure
+limit was exceeded and shows none of the partial tree. A generic dependency
+failure also withholds the organization/edition names and partial hierarchy.
+
+## 14. Inspect the API contract
 
 The supported schema is available at
 <http://127.0.0.1:8000/api/v1/schema>. The M1 endpoints are:
@@ -379,6 +409,7 @@ GET  /api/v1/organizations/{organization_id}/editions
 POST /api/v1/organizations/{organization_id}/editions
 GET  /api/v1/organizations/{organization_id}/editions/{edition_id}
 PUT  /api/v1/organizations/{organization_id}/editions/{edition_id}
+GET  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure
 ```
 
 Edition creation requires a UUID `Idempotency-Key` HTTP header; the JSON body
@@ -395,7 +426,13 @@ Page 8 deliberately has no declared API in M2.1. Its browser adapters must use
 the same module commands a future strict, versioned API would call; do not post
 to model-admin endpoints or invent an undocumented representation API.
 
-## 14. What to test as different users
+The structure GET accepts no query parameters. It returns the minimized
+governance anchor and either one complete recursive workforce tree or the
+explicit `structure_limit_exceeded` state. OpenAPI declares typed
+`400`/`403`/`503` problems. Mutation routes shown in the Page 9 contract are
+not mounted yet.
+
+## 15. What to test as different users
 
 Pages 1–2 remain platform-administrator setup. Backend tests verify Pages 3–7
 for platform oversight and active Board-capability paths. Page 8 is
@@ -412,16 +449,19 @@ or workforce assignment. The platform administrator must still have zero rows
 as a subject in all of those convention-owned tables.
 
 Pages 1–7 show a truthful principal-specific authority summary. Page 8 adds the
-root representation/invitation explanation. Awoostria-shaped departments,
-department/resource/field capabilities, and the complete computed access
-header remain later M2 work.
+root representation/invitation explanation. Page 9a.0 requires edition-wide
+`workforce.view_structure`; a Department-only capability, Django staff flag,
+Board visual position, or selected-edition session is insufficient. Manage
+authority alone does not imply view. Awoostria-shaped Department creation and
+the complete computed access header remain later M2 work.
 
 ## Troubleshooting
 
 | Symptom | Safe response |
 | --- | --- |
 | `column ... does not exist` | Stop the server, confirm the intended database URL, run `migrate`, and restart the current build; do not fake migrations |
-| 403 after sign-in | Pages 1–2 require an active platform administrator. On Pages 3–8, confirm exact current organization/edition authority or an own open invitation; staff status alone is insufficient |
+| 403 after sign-in | Pages 1–2 require an active platform administrator. On Pages 3–8, confirm exact current organization/edition authority or an own open invitation. Page 9 needs exact edition-wide `workforce.view_structure`; staff, selected context, manage-only, or Department-only scope is insufficient |
+| Structure limit exceeded | The response intentionally contains no partial hierarchy. Reduce/reconcile the persisted structure or wait for a separately reviewed larger-bound design; do not bypass the ceiling |
 | 404 under a nested URL | Return through the inventory; the organization, series, and edition route chain must match exactly |
 | Exact Board email is rejected | Confirm the account already exists, is active, is a person rather than platform administrator, and completed email verification; the UI must not reveal which test failed |
 | Activation says invitations are pending | Every invited controller must accept or decline before activation; do not bypass the pending row |
@@ -435,12 +475,14 @@ header remain later M2 work.
 ## Current stopping point
 
 You have followed the implemented organization → representation → series →
-edition journey. Local migration, restore, frontend, sensitive-read/denial, and
-responsive smoke gates pass, but this tutorial is not release acceptance
-evidence until the final consolidated full-suite/coverage rerun, representative
-deployment/PITR recovery, keyboard/automated accessibility, complete visual
-states, and owner rehearsal pass. Ongoing Board term
-management, department hierarchy editing, typed applications, venues,
+edition → structure-read journey. Local migration, restore, frontend,
+sensitive-read/denial, and the earlier responsive shell gates pass. The
+canonical Page 9 route also has focused backend and authenticated desktop smoke
+evidence, but its reliable 390-pixel check remains open. The definitive local
+full-suite/coverage gate passes; this tutorial is not release acceptance
+evidence until representative deployment/PITR recovery, keyboard/automated
+accessibility, complete visual states, and owner rehearsal pass. Ongoing Board
+term management, Department hierarchy editing, typed applications, venues,
 timetable planning, shifts, storage/logistics, governed documents, and on-site
 communications remain ordered milestones in
 `docs/project/PRODUCTION_CONSOLIDATION.md`. Reachable preserved screens or APIs

@@ -163,6 +163,7 @@ from maru.workforce.views import (
     apply_for_opportunity,
     download_onboarding_document,
     my_onboarding_documents,
+    organization_structure,
     upload_onboarding_document_view,
     volunteer_opportunities,
 )
@@ -355,6 +356,14 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         baseline_event_edition_record,
         name="baseline-event-edition-record",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+        ),
+        organization_structure,
+        name="organization-structure",
     ),
     path(
         (

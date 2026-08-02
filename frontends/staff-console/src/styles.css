@@ -2917,87 +2917,6 @@ a.nav-item:hover {
   color: var(--link-hover-color);
 }
 
-.structure-context {
-  margin: 0 0 0.8rem;
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-
-.structure-tree,
-.structure-children,
-.structure-holders {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.structure-tree {
-  display: grid;
-  gap: 1rem;
-}
-
-.structure-children {
-  display: grid;
-  gap: 0.8rem;
-  margin: 0.8rem 0 0 1.35rem;
-  padding-left: 1rem;
-  border-left: 3px solid var(--line);
-}
-
-.structure-positions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  gap: 0.75rem;
-}
-
-.structure-position {
-  padding: 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--paper);
-}
-
-.structure-position > header,
-.structure-holders li {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.structure-position h3 {
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.structure-position header p {
-  margin: 0.25rem 0 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-
-.structure-holders {
-  display: grid;
-  gap: 0.4rem;
-  margin-top: 0.75rem;
-}
-
-.structure-holders li {
-  padding-top: 0.45rem;
-  border-top: 1px solid var(--line);
-  font-size: 0.78rem;
-}
-
-.structure-holders strong,
-.structure-holders small {
-  display: block;
-}
-
-.structure-holders small {
-  margin-top: 0.1rem;
-  color: var(--muted);
-}
-
 .profile-extensions-panel {
   margin-top: 1rem;
 }
@@ -3031,8 +2950,4 @@ a.nav-item:hover {
     grid-template-columns: 1fr;
   }
 
-  .structure-children {
-    margin-left: 0.5rem;
-    padding-left: 0.65rem;
-  }
 }

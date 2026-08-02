@@ -66,6 +66,14 @@ Test:
 
 Breaking API changes require an explicit migration and versioning decision.
 
+Page 9a.0 structure contract tests additionally require recursive OpenAPI and
+typed `400`/`403`/`503` problems; denial before any name query; one captured
+projection instant plus fresh final authorization; exact holder-role lineage
+and active-person filtering; row, depth, and expanded-edge limit-plus-one
+boundaries; an explicit no-partial overflow; malformed-graph/dependency `503`;
+and stable query ceilings as row count grows. Page 9a.1 must add concurrent
+structure-version-fence tests before any Department mutation is mounted.
+
 ### Authorization and isolation tests
 
 Every endpoint and query must cover:
@@ -130,6 +138,12 @@ The attendee and staff clients require:
 - representative large tables and histories;
 - visual regression tests for printable and repeated layouts;
 - explicit loading, empty, partial failure, permission-denied, and offline states.
+
+The canonical Organization structure page must also prove one current sidebar
+link, no retired React `?view=structure` link, no rendered technical UUID or
+email, semantic nested hierarchy, explicit overflow/dependency states, and
+desktop plus reliable 390-pixel evidence. Desktop evidence alone does not
+satisfy the narrow-viewport gate.
 
 Registration profile UI checks include keyboard-accessible conditional pronouns,
 searchable multi-language selection and count feedback, repeatable fursuits,

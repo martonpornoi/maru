@@ -34,6 +34,7 @@ from maru.identity.models import Account
 _TARGET_SEAL = object()
 EXACT_LINEAGE_POLICY_CONTRACT_VERSION = AUTHORITY_PROVENANCE_CONTRACT_VERSION
 EXACT_LINEAGE_POLICY_VERSION = AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION
+MAX_ROLE_ASSIGNMENT_CURRENTNESS_CHECKS = 4_096
 type _AuthorityScopeKey = tuple[UUID, UUID | None, UUID | None, UUID | None]
 
 
@@ -648,6 +649,105 @@ def _persistable_authority_capability_codes(
             for code in raw_codes
             if (definition := capability(code)) is not None and definition.persistable
         )
+    )
+
+
+def current_role_assignment_ids(
+    *,
+    assignment_ids: Collection[UUID],
+    at: datetime | None = None,
+) -> frozenset[UUID]:
+    """Return only current, exact-lineage-valid rows from one bounded ID set.
+
+    This is the public authorization-owned read boundary for another module
+    that already resolved its own relationship records. Dormant deployments
+    retain compatible term checks. Once exact lineage is selected, every row
+    must retain and pass its own pinned issuance; a missing or malformed
+    required-exact contract fails closed instead of rebinding to equivalent
+    authority.
+    """
+
+    requested_ids = frozenset(assignment_ids)
+    if len(requested_ids) > MAX_ROLE_ASSIGNMENT_CURRENTNESS_CHECKS:
+        raise ValueError("Too many role assignments for one currentness check.")
+    if not requested_ids:
+        return frozenset()
+
+    evaluation_time = at or timezone.now()
+    if not timezone.is_aware(evaluation_time):
+        return frozenset()
+    marker_present, exact_lineage_active = _exact_lineage_policy_state()
+    if (
+        marker_present or settings.REQUIRE_EXACT_AUTHORITY_PROVENANCE
+    ) and not exact_lineage_active:
+        return frozenset()
+
+    assignments = tuple(
+        RoleAssignment.objects.filter(
+            _active_at(evaluation_time),
+            id__in=requested_ids,
+        )
+        .select_related("authority_issuance", "role_bundle")
+        .order_by("id")
+    )
+    if not exact_lineage_active:
+        return frozenset(assignment.id for assignment in assignments)
+
+    target_cache = _bulk_authority_projection_targets(
+        {
+            (
+                assignment.organization_id,
+                assignment.edition_id,
+                assignment.department_id,
+                assignment.resource_binding_id,
+            )
+            for assignment in assignments
+        }
+    )
+    pending: list[tuple[UUID, AuthorityIssuanceCurrentCheck]] = []
+    for assignment in assignments:
+        scope_key = (
+            assignment.organization_id,
+            assignment.edition_id,
+            assignment.department_id,
+            assignment.resource_binding_id,
+        )
+        target = target_cache.get(scope_key)
+        capability_codes = _persistable_authority_capability_codes(assignment)
+        if target is None or not capability_codes:
+            continue
+        try:
+            issuance_ordinal = assignment.authority_issuance.ordinal
+        except ObjectDoesNotExist:
+            continue
+        pending.append(
+            (
+                assignment.id,
+                AuthorityIssuanceCurrentCheck(
+                    issuance_ordinal=issuance_ordinal,
+                    principal_id=assignment.principal_id,
+                    capability_code=capability_codes[0],
+                    target=target,
+                    requested_effective_from=evaluation_time,
+                    requested_expires_at=None,
+                    horizon_mode=ControlHorizonMode.POINT_IN_TIME,
+                ),
+            )
+        )
+    if not pending:
+        return frozenset()
+    results = authority_issuances_are_current(
+        checks=tuple(item[1] for item in pending),
+        evaluated_at=evaluation_time,
+    )
+    return frozenset(
+        assignment_id
+        for (assignment_id, _check), is_current in zip(
+            pending,
+            results,
+            strict=True,
+        )
+        if is_current
     )
 
 

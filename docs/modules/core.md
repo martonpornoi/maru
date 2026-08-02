@@ -1,8 +1,9 @@
 # Core module
 
-Status: Implemented backend foundation, unified `/admin/` shell, and Page 8
-governance integration; final suite/accessibility/owner gates remain
-Last updated: 2026-08-01
+Status: Implemented backend foundation, unified `/admin/` shell, Page 8
+governance integration, and Page 9a.0 canonical read route; final suite,
+browser/accessibility, and owner gates remain
+Last updated: 2026-08-02
 
 ## Purpose and requirements
 
@@ -19,7 +20,7 @@ NFR-001, NFR-004, NFR-006, NFR-008, and NFR-009.
 - RFC 9457-style DRF problem responses
 - liveness, database readiness, and build identity endpoints
 - focused local sign-in and the unified `/admin/` host boundary;
-- responsive, progressively scoped Pages 1–8 adapters under the reserved
+- responsive, progressively scoped Pages 1–9 adapters under the reserved
   `/admin/platform/` route space;
 - the shared administration host, safety mixins, platform navigation, and
   record-oriented visual grammar selected by ADR 0039;
@@ -42,7 +43,7 @@ authenticated `/admin/` namespace:
 
 - `/admin/` is the permission-filtered administration home;
 - `/admin/workspace/` embeds API-backed Convention work;
-- `/admin/platform/organizations/...` owns the purpose-built Pages 1–8 spine;
+- `/admin/platform/organizations/...` owns the purpose-built Pages 1–9 spine;
   and
 - `/admin/<app-label>/<model-name>/...` retains specialist records.
 
@@ -61,7 +62,9 @@ representation-manager, and exact-invitee policies. The shell mounts:
 - Page 7 event-edition record/update and explicit working-context selection;
   and
 - Page 8 organization representation, exact controller invitations,
-  self-response, and initial Draft-to-Active activation.
+  self-response, and initial Draft-to-Active activation; and
+- Page 9a.0 read-only Organization structure at the exact edition route, with
+  the separate Executive Board governance anchor and bounded workforce tree.
 
 Sign-out and edition context select/clear are POST actions. The shell creates
 no convention relationship for the platform administrator. Convention work
@@ -69,7 +72,7 @@ and specialist records use their existing independent policy/model-permission
 boundaries; being visible in one menu does not broaden them. Public and
 personal HTML routes remain outside `/admin/` according to purpose.
 
-Focused route, authorization, shell/sidebar, and Page 8 backend verification
+Focused route, authorization, shell/sidebar, Page 8, and Page 9a.0 backend verification
 passes. Populated and fresh migrations, a local populated restore drill,
 desktop/390-pixel smoke, and the Page 8 sensitive-read/denial audit boundary
 also pass. The final consolidated local backend gate passes 792 tests in
@@ -82,6 +85,14 @@ searchable `#nav-filter`, Specialist records and Platform administration
 exactly once each, the correct `demo.admin` account, and no new console warning
 or error. Keyboard, automated accessibility, complete visual-state, and
 owner-tutorial evidence remain open.
+
+Page 9a.0 appears once beneath an authorized selected edition and is also
+discoverable to an ordinary account whose only qualifying edition-wide
+capability is `workforce.view_structure`. Its canonical route is
+`/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`.
+The former React Convention work structure destination and `?view=structure`
+path are removed; generated API types remain because the strict GET projection
+is a supported client boundary. Department mutation controls are not mounted.
 
 Every mounted page has bounded empty/populated/conflict/failure states. A
 database dependency failure produces safe `503` guidance and a server exception
@@ -204,7 +215,15 @@ authority. Database-level representation tests cover cross-approval,
 constraints, atomicity, and platform exclusion. The responsive smoke, local
 migration/restore, bounded Page 8 read/denial audit, final local full suite/
 coverage gate, nine-test focused routing regression, live Board logout, and
-platform-administrator reload pass. Keyboard/automated accessibility, complete
+platform-administrator reload pass. Page 9a.0 focused tests additionally cover
+canonical/current navigation, structure-only edition discovery, view/manage
+independence, department-only denial, non-participating platform oversight,
+explicit overflow, safe dependency failure, and absence of the retired React
+destination. Both HTML and API require the minimized structure-read audit to
+persist before disclosure. The current Page 9/API/catalog/template focus
+passes 52 tests, and the adjacent navigation/shell/admin/representation focus
+passes 65 tests.
+Keyboard/automated accessibility, complete
 visual states, and owner evidence remain required.
 
 ## Limitations
@@ -212,7 +231,9 @@ visual states, and owner evidence remain required.
 Complete computed effective access, invitation notification discovery,
 metrics/tracing export, error capture, rate limiting, and a public status
 service remain. Page 8's root-representation explanation is only the first
-policy-derived slice; M2 must still add department/resource/field explanations
-before department-owned mutation pages are mounted. The unified shell and
-initial Page 8 lifecycle are implemented backend milestones, not production-
-ready release claims.
+policy-derived slice; Page 9a.0 adds a current principal-specific structure
+view/manage summary but not named relationship disclosure or the complete
+department/resource/field explanation. Page 9a.1's structure version fence and
+Department commands must precede department-owned mutations. The unified
+shell, initial Page 8 lifecycle, and Page 9a.0 read are implemented backend
+milestones, not production-ready release claims.

@@ -1,10 +1,16 @@
 # Page 9 contract: Organization structure
 
-- Status: Accepted design; implementation and verification not started
+- Status: Page 9a.0 bounded read projection and canonical HTML/API routes
+  implemented and focused-backend verified; Department mutations remain
+  accepted design only
 - Route: `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`
-- Mutations: POST-only template application, create, retire, and delete actions;
-  complete PUT-style department update through HTML POST and API PUT
-- API: strict `/api/v1/organizations/<organization-id>/editions/<edition-id>/workforce/structure` projection and child template/Department commands
+- Current mutations: none mounted in Page 9a.0
+- Accepted future mutations: POST-only template application, create, retire,
+  and delete actions; complete PUT-style Department update through HTML POST
+  and API PUT
+- Current API: strict
+  `/api/v1/organizations/<organization-id>/editions/<edition-id>/workforce/structure`
+  GET projection; child template/Department commands remain unmounted
 - Requirements: IDN-002, IDN-004, IDN-009, IDN-011, IDN-012, EVT-002,
   EVT-003, HR-007, HR-010, HR-011, UX-019, UX-020, UX-025, AUD-001,
   AUD-005, INT-001, NFR-001 through NFR-004, NFR-008, and NFR-009
@@ -29,6 +35,71 @@ The first management slice serves:
 It is not a Board appointment page, people directory, general access editor,
 Position/role-bundle editor, volunteer assignment tool, or generic specialist
 model form.
+
+## Implemented Page 9a.0 read slice
+
+The current implementation mounts the canonical HTML route and the strict GET
+projection in the shared administration shell. It removes the older React
+Convention work `structure` destination and `?view=structure` path, so there
+is one browser workflow and one current navigation action. Page 9a.0 is
+read-only: it does not mount the built-in-template action, Department create,
+update, reparent, reorder, retire, or delete commands described later in this
+contract.
+
+The organizations module returns only the fixed **Executive Board** label and
+its `absent`, `provisioning`, `active`, or `suspended` representation state.
+The workforce projector separately returns edition Departments, Positions,
+reporting labels, and current minimized holders. The governance anchor has no
+Department identifier or workforce parent and remains separate even when a
+legacy operational Department is also named Executive Board.
+
+The current projector owns these hard ceilings:
+
+| Projection dimension | Page 9a.0 ceiling |
+| --- | ---: |
+| Departments | 256 |
+| Positions | 1,024 |
+| effective holder relationships | 4,096 |
+| Department or Position reporting depth | 32 |
+| expanded cross-position `other_roles` edges | 16,384 |
+
+Every row-limited query uses a limit-plus-one probe. Crossing any ceiling or
+depth/expanded-edge bound returns `structure_limit_exceeded` with an empty
+Department collection; no partial hierarchy or holder label is returned.
+Malformed parent/reporting graphs fail through the generic dependency boundary
+instead of being repaired or presented incompletely.
+
+A holder label is resolved only after the workforce relationship is current,
+the linked RoleAssignment has one supported exact edition/Department/resource
+scope shape, authorization confirms that assignment's current pinned lineage,
+and identity confirms an active person account. The projection exposes display
+name and other operational role labels only. It excludes login handle, email,
+account kind/state, assignment identifier, entered reason, and authority
+provenance.
+
+The HTML and API adapters capture one projection instant and repeat a fresh
+final `workforce.view_structure` decision before releasing the name-bearing
+response. The GET rejects every query parameter with a typed `400`, uses a
+non-disclosing `403` for missing authority or unavailable route scope, and a
+generic `503` for database, integrity, or policy dependencies. Those
+`400`/`403`/`503` RFC 9457 responses are explicit in OpenAPI.
+
+After the fresh final decision, both adapters append one minimized
+`workforce.structure.read` sensitive-read audit containing actor, exact
+organization/edition target, source channel, outcome, obligation, and only the
+policy version, route name, and HTTP method as safe metadata. Audit persistence
+is part of the disclosure boundary: a
+failure returns the same generic name-free `503` and releases no holder label
+or partial structure.
+
+Page 9a.0 deliberately does not claim a transactionally version-fenced
+structure snapshot. Departments, Positions, assignments, identity labels, and
+governance are bounded module queries but are read in more than one database
+statement; a concurrent structure write could therefore produce a coherent
+yet cross-version result. Page 9a.1 must introduce the accepted structure
+aggregate/version fence and repeat-or-retry semantics before Department
+mutations are mounted. Integrity failures already fail closed, but fresh final
+authorization is not a substitute for that data-version fence.
 
 ## Placement, scope, and navigation
 
@@ -93,10 +164,18 @@ identifiers used for links and commands are not rendered as human content.
 
 ## Empty state and built-in reference
 
-An edition with no workforce structure offers **Use the Awoostria reference**
-to an authorized manager. The immutable built-in selection is
+Page 9a.1 will offer **Use the Awoostria reference** to an authorized manager
+when an edition has no workforce structure. The immutable built-in selection is
 `awoostria-reference@1`; a later template is another version, never an edit of
 version 1.
+
+Page 9a.0 implements and pins the code-owned template catalog but does not yet
+mount application. The catalog is immutable, resolves only the exact versioned
+identifier without aliases, validates bounded unique codes/names/order,
+requires exactly one root whose parent precedes every child, forbids an
+Executive Board Department, and retains canonical UTF-8 JSON plus SHA-256
+content evidence. Version 1 has Helper Board as its sole root and all 21
+operational Departments as its direct children.
 
 Version 1 creates these 22 Department records:
 
@@ -206,8 +285,9 @@ template receipt remains truthful even after the copy diverges.
 
 ## Shared service and API boundary
 
-HTML and API adapters call the same typed, transaction-owning workforce
-services. The intended API surface is:
+The current HTML and API GET adapters share the same bounded workforce query
+and organizations governance-anchor query. The complete intended Page 9a
+surface is:
 
 ```text
 GET    /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure
@@ -224,6 +304,12 @@ delete use the expected aggregate version in their closed body. Problems use
 the repository's RFC 9457 media type and stable codes for validation, stale,
 protected, lifecycle, limit, denied, not-found, idempotency-conflict, and
 dependency failures. OpenAPI and generated clients must remain deterministic.
+
+Only the GET route is mounted in Page 9a.0. Its accepted response is the exact
+organization and edition labels, the minimized governance discriminator, and
+either one complete nested structure or the explicit empty overflow state.
+Its declared problem statuses are `400`, `403`, and `503`; it does not declare
+a separate not-found shape that could reveal whether a foreign route exists.
 
 Each mutation locks and verifies the organization -> series -> edition chain,
 structure aggregate, and affected Departments, repeats policy and lifecycle,
@@ -258,7 +344,7 @@ evidence without horizontal overflow.
 
 ## Migration and recovery implications
 
-The additive migration creates one structure-control aggregate per existing
+The future Page 9a.1 additive migration creates one structure-control aggregate per existing
 populated edition without changing Department identifiers, names, parents, or
 codes. Such rows are marked legacy-existing and receive no template receipt.
 Names such as Executive Board or Helper Board never trigger representation,
@@ -272,7 +358,7 @@ organization/edition/code and receipt provenance, monotonic aggregate version,
 same-edition parents, cycle freedom, non-cascading retirement, and incompatible
 downgrade after the first new write.
 
-After activation, generic Department/Position specialist records are
+After that future activation, generic Department/Position specialist records are
 inspection-only for mutations covered by Page 9. Recovery fixes forward or
 restores workforce, authorization bindings, audit, events, and outbox to one
 consistent point. It never deletes only the structure control/receipt or
@@ -296,6 +382,9 @@ invents template provenance for legacy rows.
 - retirement dependency matrix and exact-confirmation non-cascading deletion;
 - deterministic bounded complete projection, explicit overflow, no email,
   account state, private evidence, hidden count, or rendered technical ID;
+- fresh final authorization plus minimized HTML/API sensitive-read audit before
+  disclosure, with audit failure returning a name-free `503` and no partial
+  labels;
 - query-count ceilings and prefilter-before-name proof for every scope level;
 - HTML/API service parity, strict RFC 9457 problems, OpenAPI validation, and
   deterministic generated client;

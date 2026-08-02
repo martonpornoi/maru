@@ -1,7 +1,8 @@
 # Authorization model
 
-Status: Baseline  
-Last updated: 2026-07-27
+Status: Implemented foundation with exact scope and lineage; broader domain
+coverage remains incremental
+Last updated: 2026-08-02
 
 Maru uses deny-by-default policy decisions over capabilities, scopes,
 relationships, resource state, and fields. Django's built-in model permissions
@@ -158,6 +159,22 @@ Authorization begins at the candidate query, not after serialization:
 
 Fetching broadly and filtering in Python is prohibited for tenant or restricted
 data.
+
+Page 9a.0 applies this rule in two stages. A name-free exact-edition
+`workforce.view_structure` decision runs before organization, edition, or
+holder names are queried; a fresh final decision runs before the completed
+name-bearing response is released. `workforce.manage_structure` is independent
+and does not imply read, while Department/resource-only authority is too narrow
+for an edition-wide tree. Current holder labels are loaded only after bounded
+workforce relationships pass time, exact-scope, pinned-lineage, and active-
+person checks.
+
+The structure projection is all-or-explicit-overflow. Code-owned row, depth,
+and expanded-edge ceilings return `structure_limit_exceeded` with no partial
+Department tree. The current multi-query read is not yet protected by Page
+9a.1's planned aggregate/version fence, so concurrent structure writes remain
+a documented cross-version snapshot risk even though malformed graphs and
+dependency failures fail closed.
 
 The V02 reference implementation provides a reusable field-projection guard
 and transactional bulk-target freezer. A bulk command supplies an already

@@ -527,7 +527,7 @@ def test_edition_record_authorization_scope_and_database_failure(
         raise AssertionError("denied requests must not resolve edition scope")
 
     monkeypatch.setattr(
-        "maru.core.views._edition_chain_for_authorized_route",
+        "maru.core.views.authorized_admin_edition_for_route",
         unexpected_lookup,
     )
     assert (
@@ -552,7 +552,7 @@ def test_edition_record_authorization_scope_and_database_failure(
         raise DatabaseError("synthetic private record failure")
 
     monkeypatch.setattr(
-        "maru.core.views._edition_chain_for_authorized_route",
+        "maru.core.views.authorized_admin_edition_for_route",
         unavailable,
     )
     failed = client.get(
@@ -711,7 +711,7 @@ def test_edition_record_context_and_context_actions_fail_safely(
 
     monkeypatch.undo()
     monkeypatch.setattr(
-        "maru.core.views._edition_chain_for_authorized_route",
+        "maru.core.views.authorized_admin_edition_for_route",
         unavailable,
     )
     selected = client.post(f"{_record_url(edition)}select/")

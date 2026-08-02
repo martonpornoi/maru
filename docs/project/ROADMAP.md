@@ -58,6 +58,15 @@ verified with synthetic data. Production has not been cut over: explicit
 ordinary legacy recreation, representative candidate-cardinality load,
 deployment restore/PITR, and the real activation ceremony remain gates before
 production approval.
+Page 9a.0 now mounts the canonical read-only Organization structure page and
+strict GET API. It composes the minimized Executive Board governance anchor
+with one bounded, complete edition tree, validates holder role lineage and
+active-person state before labels, audits the sensitive read before disclosure,
+and removes the duplicate React structure destination. Page 9a.1's structure
+version fence, template application, and Department commands remain next. The
+immutable 22-Department `awoostria-reference@1` catalog itself is implemented
+and pinned with Helper Board as sole root and no Executive Board Department;
+the current multi-query read does not claim a concurrent versioned snapshot.
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
@@ -186,6 +195,16 @@ planned suspension/reactivation, invitation delivery, the contextual
 department/resource assignment editor, and the full
 effective-access header remain later M2 work.
 
+Page 9a.0 adds one exact-edition Organization structure read beneath that
+foundation. Platform oversight remains non-participating; ordinary users need
+edition-wide `workforce.view_structure`, and manage-only, Department-only,
+staff, Board placement, or selected context is insufficient. The page/API show
+one complete bounded hierarchy or explicit no-partial overflow and require a
+minimized sensitive-read audit before disclosure. Focused backend/OpenAPI/
+frontend/static checks, the 1,239-test full suite at 90.35 percent branch
+coverage, and authenticated desktop smoke pass. Reliable narrow-viewport,
+accessibility, and owner evidence remain open.
+
 The committed M1 spine is locally verified across the complete suite, migration rehearsal,
 OpenAPI/client regeneration, deployment-shaped checks, and desktop/390-pixel
 visual smoke. Owner rehearsal, automated accessibility analysis, reliable
@@ -264,10 +283,12 @@ position templates, edition department/reporting hierarchy, publishable
 position opportunities, applications, reviewed PDF agreements, headcount, and
 dual-controlled role/capacity activation. The old one-shot bootstrap remains
 only as an operator command/service for an approved legacy reconciliation; its
-guarded browser ceremony and management API are retired. A minimized
-Organization structure page shows
-nested departments, positions, several holders, and multi-department roles
-under exact edition scope.
+guarded browser ceremony and management API are retired. The canonical
+Organization structure page shows the minimized Executive Board governance
+anchor above nested Departments, Positions, current permitted holders, and
+multi-department roles under exact edition scope. The old duplicate Convention
+work destination is removed. Department template/create/update/retire/delete
+management remains Page 9a.1 and Position editing remains Page 9b.
 Qualifications, availability,
 shifts, work records, purpose-built approval UI, and the programme/schedule
 side of this phase remain.

@@ -1,7 +1,8 @@
 # Threat model
 
-Status: Initial baseline  
-Last updated: 2026-07-26
+Status: Living baseline with implemented tenant, authority, and bounded-read
+controls
+Last updated: 2026-08-02
 
 This living threat model covers the proposed architecture before code exists.
 Every vertical slice must refine its assets, data flows, abuse cases, controls,
@@ -96,6 +97,8 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 | File attack | malware, active PDF, SVG/script, decompression bomb | type and size allowlist, quarantine, malware/CDR strategy, safe rendering, isolated metadata extraction, signed download |
 | Spreadsheet formula injection | exported name executes when opened | neutralize formulas, explicit raw-data mode warning, tests for CSV/XLSX cells |
 | Search/index leak | unauthorized result title or count appears | policy-scoped indexes or filters, projection testing, no shared cache without authorization dimension |
+| Hierarchy projection leak or exhaustion | a foreign edition name, hidden holder, or partial oversized tree is disclosed | name-free capability prefilter, fresh final authorization, exact-role and active-person checks, code-owned row/depth/expanded-edge ceilings, explicit no-partial overflow, generic dependency response |
+| Cross-version structure read | concurrent Department/Position/assignment writes produce a coherent but mixed-version tree | Page 9a.0 documents the residual risk and fails malformed graphs closed; Page 9a.1 must add a structure aggregate/version fence and retry semantics before mounting mutations |
 | Unsafe automation | rule mass-mails or grants access repeatedly | permission ceiling, dry run, action limits, idempotency, approval, versioned rollout, kill switch |
 | Connector compromise | social token publishes abuse; provider payload injects data | secret vault, narrow scopes, verified endpoints, input validation, egress allowlist, disable/reconcile, no implicit trust |
 | SSRF through webhooks/imports | attacker reaches internal metadata or control plane | destination verification, DNS/IP policy, egress proxy, redirect limits, network segmentation |

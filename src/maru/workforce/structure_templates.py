@@ -1,0 +1,278 @@
+"""Immutable built-in Department structure templates.
+
+The names and order in ``awoostria-reference@1`` are the accepted taxonomy in
+ADR 0045 and the Page 9 contract.  Its descriptions use only the matching
+non-personal workflow phrases accepted in the production-consolidation ledger;
+they do not describe people, private reporting lines, or authority.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import unicodedata
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from types import MappingProxyType
+
+_CODE_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
+_MAX_CODE_LENGTH = 80
+_MAX_NAME_LENGTH = 160
+_MAX_DESCRIPTION_LENGTH = 1_000
+_MAX_DISPLAY_ORDER = 65_535
+
+
+@dataclass(frozen=True, slots=True)
+class StructureDepartmentDefinition:
+    """One immutable Department definition inside a built-in template."""
+
+    code: str
+    name: str
+    description: str
+    parent_code: str | None
+    display_order: int
+
+
+@dataclass(frozen=True, slots=True)
+class BuiltinStructureTemplate:
+    """A validated immutable template with pinned canonical content evidence."""
+
+    code: str
+    version: int
+    departments: tuple[StructureDepartmentDefinition, ...]
+    canonical_json: bytes = field(init=False, repr=False)
+    sha256_digest: str = field(init=False)
+
+    def __post_init__(self) -> None:
+        _validate_template(self)
+        canonical_json = _canonical_json(self)
+        object.__setattr__(self, "canonical_json", canonical_json)
+        object.__setattr__(
+            self,
+            "sha256_digest",
+            hashlib.sha256(canonical_json).hexdigest(),
+        )
+
+    @property
+    def identifier(self) -> str:
+        """Return the closed external template identifier."""
+
+        return f"{self.code}@{self.version}"
+
+
+class UnknownBuiltinStructureTemplateError(LookupError):
+    """Raised when a caller requests a template outside the code-owned catalog."""
+
+
+def _contains_control_character(value: str) -> bool:
+    return any(unicodedata.category(character) == "Cc" for character in value)
+
+
+def _is_bounded_code(value: str) -> bool:
+    return bool(_CODE_PATTERN.fullmatch(value)) and len(value) <= _MAX_CODE_LENGTH
+
+
+def _validate_department_fields(department: StructureDepartmentDefinition) -> None:
+    if not _is_bounded_code(department.code):
+        raise ValueError("Department codes must be bounded lower-case slugs.")
+    if (
+        not department.name
+        or department.name != department.name.strip()
+        or len(department.name) > _MAX_NAME_LENGTH
+        or _contains_control_character(department.name)
+    ):
+        raise ValueError("Department names must satisfy the closed input bounds.")
+    if department.name.casefold() == "executive board":
+        raise ValueError("Executive Board is a governance anchor, not a Department.")
+    if (
+        len(department.description) > _MAX_DESCRIPTION_LENGTH
+        or department.description != department.description.strip()
+        or _contains_control_character(department.description)
+    ):
+        raise ValueError("Department descriptions must satisfy the input bounds.")
+    if type(department.display_order) is not int or not (
+        0 <= department.display_order <= _MAX_DISPLAY_ORDER
+    ):
+        raise ValueError("Department display order is outside the accepted range.")
+
+
+def _validate_template(template: BuiltinStructureTemplate) -> None:
+    if not _is_bounded_code(template.code):
+        raise ValueError("Template code must be a bounded lower-case slug.")
+    if type(template.version) is not int or template.version < 1:
+        raise ValueError("Template version must be a positive integer.")
+    if not isinstance(template.departments, tuple) or not template.departments:
+        raise ValueError("A built-in template requires an immutable Department tuple.")
+
+    seen_codes: set[str] = set()
+    seen_names: set[str] = set()
+    seen_display_orders: set[int] = set()
+    root_count = 0
+    for department in template.departments:
+        _validate_department_fields(department)
+        if department.code in seen_codes:
+            raise ValueError("Department codes must be unique within a template.")
+        normalized_name = department.name.casefold()
+        if normalized_name in seen_names:
+            raise ValueError("Department names must be unique within a template.")
+        if department.display_order in seen_display_orders:
+            raise ValueError(
+                "Department display orders must be unique within a template."
+            )
+        if department.parent_code is None:
+            root_count += 1
+        elif department.parent_code not in seen_codes:
+            raise ValueError(
+                "A Department parent must precede its child in the template."
+            )
+
+        seen_codes.add(department.code)
+        seen_names.add(normalized_name)
+        seen_display_orders.add(department.display_order)
+
+    if root_count != 1:
+        raise ValueError("A built-in structure template requires exactly one root.")
+
+
+def _canonical_json(template: BuiltinStructureTemplate) -> bytes:
+    payload = {
+        "code": template.code,
+        "departments": [
+            {
+                "code": department.code,
+                "description": department.description,
+                "display_order": department.display_order,
+                "name": department.name,
+                "parent_code": department.parent_code,
+            }
+            for department in template.departments
+        ],
+        "version": template.version,
+    }
+    return json.dumps(
+        payload,
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+_BOARD_DESCRIPTION = (
+    "Readiness, risks, approvals, cross-department blockers, and material changes."
+)
+_REGISTRATION_DESCRIPTION = (
+    "Attendee lookup, payment and check-in state, badges, service requests, "
+    "knowledge, and surge staffing."
+)
+_PROGRAMME_DESCRIPTION = (
+    "Calls, proposals, review, readiness, timetable, hosts, and public copy."
+)
+_TECH_DESCRIPTION = (
+    "Riders, cues, equipment, rehearsals, setup and teardown, operator shifts, "
+    "and media consent."
+)
+_SAFETY_DESCRIPTION = (
+    "Narrowly scoped cases, duty routing, access policy, retention, and ordinary "
+    "minimum-disclosure tasks."
+)
+_HR_DESCRIPTION = (
+    "Opportunities, applications, onboarding, qualifications, assignments, "
+    "availability, hours, and handover."
+)
+_OPERATIONS_DESCRIPTION = (
+    "Storage, boxes, kits, manifests, movements, maintenance, deployment, and return."
+)
+_APPLICATIONS_DESCRIPTION = (
+    "Configured applications, allocations, content classification, inventory, "
+    "staffing, payments, and reconciliation."
+)
+_CONTENT_DESCRIPTION = (
+    "Briefs, assets, approvals, rights, publishing schedule, and public content "
+    "renditions."
+)
+_SERVICE_DESCRIPTION = (
+    "Service capacity, spaces, programme dependencies, queues, shifts, and run of show."
+)
+
+
+def _department(
+    code: str,
+    name: str,
+    description: str,
+    display_order: int,
+    *,
+    parent_code: str | None = "helper-board",
+) -> StructureDepartmentDefinition:
+    return StructureDepartmentDefinition(
+        code=code,
+        name=name,
+        description=description,
+        parent_code=parent_code,
+        display_order=display_order,
+    )
+
+
+AWOOSTRIA_REFERENCE_V1 = BuiltinStructureTemplate(
+    code="awoostria-reference",
+    version=1,
+    departments=(
+        _department(
+            "helper-board",
+            "Helper Board",
+            _BOARD_DESCRIPTION,
+            0,
+            parent_code=None,
+        ),
+        _department("art", "Art", _APPLICATIONS_DESCRIPTION, 1),
+        _department("charity", "Charity", _APPLICATIONS_DESCRIPTION, 2),
+        _department("ceremonies", "Ceremonies", _SERVICE_DESCRIPTION, 3),
+        _department("dealers-den", "Dealers' Den", _APPLICATIONS_DESCRIPTION, 4),
+        _department("decorations", "Decorations", _OPERATIONS_DESCRIPTION, 5),
+        _department(
+            "events-programming",
+            "Events & Programming",
+            _PROGRAMME_DESCRIPTION,
+            6,
+        ),
+        _department("front-desk", "Front Desk", _REGISTRATION_DESCRIPTION, 7),
+        _department("fursuit-support", "Fursuit Support", _SERVICE_DESCRIPTION, 8),
+        _department("graphics-design", "Graphics Design", _CONTENT_DESCRIPTION, 9),
+        _department("human-resources", "Human Resources", _HR_DESCRIPTION, 10),
+        _department("it", "IT", _OPERATIONS_DESCRIPTION, 11),
+        _department(
+            "legal-compliance",
+            "Legal & Compliance",
+            _SAFETY_DESCRIPTION,
+            12,
+        ),
+        _department("logistics", "Logistics", _OPERATIONS_DESCRIPTION, 13),
+        _department("maid-cafe", "Maid Café", _APPLICATIONS_DESCRIPTION, 14),
+        _department("multimedia", "Multimedia", _TECH_DESCRIPTION, 15),
+        _department("peer", "PEER", _SAFETY_DESCRIPTION, 16),
+        _department(
+            "registration",
+            "Registration",
+            _REGISTRATION_DESCRIPTION,
+            17,
+        ),
+        _department("security", "Security", _SAFETY_DESCRIPTION, 18),
+        _department("social-media", "Social Media", _CONTENT_DESCRIPTION, 19),
+        _department("stage-tech", "Stage Tech", _TECH_DESCRIPTION, 20),
+        _department("story", "Story", _CONTENT_DESCRIPTION, 21),
+    ),
+)
+
+BUILTIN_STRUCTURE_TEMPLATES: Mapping[str, BuiltinStructureTemplate] = MappingProxyType(
+    {AWOOSTRIA_REFERENCE_V1.identifier: AWOOSTRIA_REFERENCE_V1}
+)
+
+
+def get_builtin_structure_template(identifier: str) -> BuiltinStructureTemplate:
+    """Resolve one exact code-owned template identifier without aliases."""
+
+    try:
+        return BUILTIN_STRUCTURE_TEMPLATES[identifier]
+    except KeyError as error:
+        raise UnknownBuiltinStructureTemplateError(identifier) from error

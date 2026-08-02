@@ -44,6 +44,13 @@ _ORGANIZATION_NAVIGATION_CAPABILITIES = frozenset(
     }
 )
 
+_EDITION_WORKSPACE_NAVIGATION_CAPABILITIES = frozenset(
+    {
+        "events.view_basic",
+        "workforce.view_structure",
+    }
+)
+
 
 def _active_account(request: HttpRequest) -> Account | None:
     user = request.user
@@ -147,6 +154,43 @@ def authorized_admin_edition_ids(
             Q(organization_id__in=organization_ids) | Q(id__in=edition_ids)
         ).values_list("id", flat=True)
     )
+
+
+def authorized_admin_edition_for_route(
+    *,
+    request: HttpRequest,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    capability_code: str,
+) -> tuple[Organization, ConventionSeries, EventEdition]:
+    """Resolve one complete route chain inside a name-free authority set.
+
+    Platform oversight has its own explicit branch. Ordinary accounts first
+    project exact current authority to edition identifiers, so a foreign
+    organization, series, or edition name cannot enter the response before
+    authorization. Every destination must still repeat its sealed-target
+    policy decision after this candidate-resolution gate.
+    """
+
+    editions = EventEdition.objects.select_related("organization", "series").filter(
+        organization__slug__iexact=organization_slug,
+        series__slug__iexact=series_slug,
+        slug__iexact=edition_slug,
+    )
+    if not actor.is_platform_administrator:
+        candidate_ids = authorized_admin_edition_ids(
+            request,
+            capability_codes=frozenset({capability_code}),
+        )
+        editions = editions.filter(id__in=candidate_ids)
+    edition = editions.order_by("id").first()
+    if edition is None:
+        if actor.is_platform_administrator:
+            raise Http404
+        raise PermissionDenied
+    return edition.organization, edition.series, edition
 
 
 def has_active_admin_scope(request: HttpRequest) -> bool:
@@ -258,7 +302,7 @@ def _authorized_admin_editions(request: HttpRequest) -> QuerySet[EventEdition]:
     else:
         organization_ids, edition_ids = _authorized_admin_edition_scope_ids(
             request,
-            capability_codes=frozenset({"events.view_basic"}),
+            capability_codes=_EDITION_WORKSPACE_NAVIGATION_CAPABILITIES,
         )
         if organization_ids or edition_ids:
             authorized_editions = editions.filter(
@@ -302,9 +346,24 @@ def admin_edition_options(request: HttpRequest) -> dict[str, object]:
     if not has_active_admin_scope(request):
         selected_admin_edition(request)
         return {"available": False, "selected": None, "editions": ()}
+    selected = selected_admin_edition(request)
+    account = _active_account(request)
+    selected_can_view_structure = bool(
+        selected
+        and account
+        and (
+            account.is_platform_administrator
+            or selected.id
+            in authorized_admin_edition_ids(
+                request,
+                capability_codes=frozenset({"workforce.view_structure"}),
+            )
+        )
+    )
     return {
         "available": True,
-        "selected": selected_admin_edition(request),
+        "selected": selected,
+        "selected_can_view_structure": selected_can_view_structure,
         "editions": _authorized_admin_editions(request).order_by(
             "-starts_on",
             "organization__name",

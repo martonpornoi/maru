@@ -1,0 +1,65 @@
+{% for department in departments %}
+  <li class="baseline-structure-branch">
+    <article class="baseline-structure-node">
+      <header>
+        <div>
+          <p class="baseline-kicker">Department</p>
+          <h3>{{ department.name }}</h3>
+        </div>
+        {% if department.positions %}
+          <span class="baseline-count">
+            {{ department.positions|length }} position{{ department.positions|length|pluralize }}
+          </span>
+        {% endif %}
+      </header>
+      {% if department.description %}
+        <p>{{ department.description }}</p>
+      {% endif %}
+
+      {% if department.positions %}
+        <ol class="baseline-structure-positions" aria-label="Positions in {{ department.name }}">
+          {% for position in department.positions %}
+            <li>
+              <div class="baseline-structure-position-heading">
+                <h4>{{ position.title }}</h4>
+                <span>{{ position.status|capfirst }} · {{ position.headcount }} planned</span>
+              </div>
+              {% if position.description %}<p>{{ position.description }}</p>{% endif %}
+              {% if position.reports_to_title %}
+                <p class="baseline-structure-reports-to">
+                  Reports to <strong>{{ position.reports_to_title }}</strong>
+                </p>
+              {% endif %}
+              {% if position.holders %}
+                <div class="baseline-structure-holders">
+                  <p class="baseline-kicker">Current holders</p>
+                  <ul>
+                    {% for holder in position.holders %}
+                      <li>
+                        <strong>{{ holder.display_name }}</strong>
+                        {% if holder.other_roles %}
+                          <span>
+                            Also
+                            {% for role in holder.other_roles %}
+                              {{ role.position_title }} in {{ role.department_name }}{% if not forloop.last %}; {% endif %}
+                            {% endfor %}
+                          </span>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      {% endif %}
+    </article>
+
+    {% if department.children %}
+      <ol aria-label="Departments within {{ department.name }}">
+        {% include "workforce/_organization_structure_branch.html" with departments=department.children only %}
+      </ol>
+    {% endif %}
+  </li>
+{% endfor %}

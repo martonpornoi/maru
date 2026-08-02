@@ -1,9 +1,10 @@
 # Current project state
 
 Last updated: 2026-08-02
-Phase: Production consolidation M2.3 exact authority-provenance activation
-implemented and locally rehearsed; production reconciliation, load, cutover,
-and deployment-recovery evidence next
+Phase: Production consolidation M2.4 Page 9a.0 bounded Organization structure
+read implemented and focused-verified; Page 9a.1 structure version fence and
+Department mutations next, while production authority reconciliation, load,
+cutover, and deployment-recovery gates remain
 Branch: `codex/full-platform-consolidation`
 
 ## Current outcome
@@ -86,6 +87,21 @@ and authenticated-backend identity through a fresh dedicated-login connection;
 deployment smokes. The credential-free provisioning example and real
 PostgreSQL tamper/login tests cover this contract without recording a password.
 
+Page 9a.0 now mounts one canonical read-only **Organization structure** page
+and strict GET API. It composes the minimized Executive Board representation
+anchor above the edition-owned Department tree without persisting governance as
+a Department. Code-owned Department, Position, effective-holder, depth, and
+expanded-role ceilings return either one complete tree or an explicit empty
+`structure_limit_exceeded` state. Holder names are loaded only after current
+workforce, exact RoleAssignment-lineage, and active-person checks. Both HTML
+and API repeat fresh final authorization, then append minimized
+`workforce.structure.read` sensitive-read audit before releasing labels; audit
+failure returns a name-free `503`. The old React structure destination and
+`?view=structure` link are removed. The immutable
+`awoostria-reference@1` 22-Department catalog is implemented and pinned with
+Helper Board as its sole root and no Executive Board Department. Application,
+receipts, structure versioning, and Department mutations are not mounted.
+
 The canonical management routes are:
 
 - `/admin/` — permission-filtered administration home and shared shell;
@@ -106,7 +122,9 @@ The canonical management routes are:
   — Page 6 edition creation; and
 - `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/`
   — Page 7 edition record/profile/activity, with separate POST-only `select/`
-  and `clear/` working-context actions.
+  and `clear/` working-context actions; and
+- `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`
+  — Page 9a.0 canonical bounded read-only Organization structure.
 
 The reserved `platform` route segment keeps purpose-built platform pages from
 colliding with Django application-label routes such as specialist
@@ -120,7 +138,7 @@ Convention work, and permission-filtered specialist records; embedded pages do
 not add a second global menu or workspace selector. Unmounted domains do not
 appear as placeholders. The same Maru logo, record-oriented modules, form
 language, viewport-aligned sidebar, and stacked narrow layout continue across
-Pages 1–8. Current desktop and 390-pixel smoke evidence covers Pages 3, 7, 8,
+Pages 1–9. Current desktop and 390-pixel smoke evidence covers Pages 3, 7, 8,
 Convention work, platform administration, and a scoped non-staff Board
 controller without horizontal overflow or browser console warnings.
 The custom sidebar preserves Django `nav_sidebar.js`'s `#nav-filter` contract:
@@ -135,6 +153,12 @@ warnings or errors. A platform-administrator reload showed one searchable
 `#nav-filter`, Specialist records and Platform administration exactly once
 each, the correct `demo.admin` account, and zero new console warnings or errors.
 
+Page 9a.0 additionally has live authenticated desktop evidence: its canonical
+route rendered one current canonical navigation link, the complete bounded
+tree and separate governance anchor, and no legacy query link, email, or UUID.
+The viewport override did not reliably establish 390-pixel evidence for this
+new page, so its narrow-layout gate remains open.
+
 Every active account may enter the Maru shell. Active scoped non-staff accounts
 see only current organization/edition work derived from effective grants or
 role assignments, plus their own open governance invitations. Specialist model
@@ -148,8 +172,10 @@ organization/edition capabilities, with backend coverage for scoped Board
 controllers. Page 8 defines bounded access for platform oversight, an exact organization-scoped
 representation manager, and an invitee's own open appointment. The platform account remains
 ineligible as organization member, representation holder, participant,
-registrant, volunteer, onboarding subject, or workforce assignee. The current
-Pages 3–8 authority explanation is only the first M2 slice, not computed
+registrant, volunteer, onboarding subject, or workforce assignee. Page 9a.0
+requires exact edition-wide structure view; manage-only, Department-only,
+staff, Board placement, and selected-session state do not imply it. The current
+Pages 3–9 authority explanation is only the first M2 slice, not computed
 department/resource/field access or the
 complete **Manage access** workflow.
 
@@ -250,6 +276,13 @@ New M1 API operations are:
 - `PUT /api/v1/organizations/{organization_id}/editions/{edition_id}` beside
   the existing edition GET/list/lifecycle endpoints.
 
+Page 9a.0 adds the strict read-only
+`GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure`.
+It accepts no query parameters, returns the minimized governance anchor plus a
+complete bounded recursive structure or explicit empty overflow, and declares
+typed RFC 9457 `400`, `403`, and `503` responses in OpenAPI. No Page 9 mutation
+route is mounted.
+
 HTML and API mutations call the same domain services. Edition mutation response
 projections are bounded by capability field ceilings; the platform-only series
 mutation uses its fixed documented serializer. RFC 9457-style failures use
@@ -275,6 +308,9 @@ service remain recovery evidence for an approved legacy reconciliation.
   ADR 0024's broad ceremony as the normal authority path. ADR 0041 defines
   exact department/resource scope v2. ADR 0042 makes educational fixtures
   synthetic-only. ADR 0043 defines global emergency controller containment.
+  ADR 0044 defines exact authority lineage, ADR 0045 defines governance-
+  anchored copy-on-write edition structure, and ADR 0046 defines the runtime
+  database login boundary.
 - `docs/project/PRODUCTION_CONSOLIDATION.md` is the crash-safe capability ledger
   and milestone checklist.
 - `docs/checkpoints/2026-08-01-unified-admin-shell-migration-start.md` is the
@@ -292,13 +328,16 @@ service remain recovery evidence for an approved legacy reconciliation.
 - `docs/checkpoints/2026-08-01-m21-integrity-recovery-and-subject-boundary.md`
   records the consolidated local migration, restore, audit, fixture, final
   backend/coverage evidence, and residual external release boundary.
+- `docs/checkpoints/2026-08-02-page9-bounded-organization-structure.md`
+  records Page 9a.0's canonical bounded read, minimized audit-before-disclosure,
+  focused verification, and deferred version fence/mutations.
 - Page contracts 05–07 define the M1 behavior and explicit field tables;
   contract 08 defines the backend-verified initial representation handoff, and contracts
   02–04 document closed HTML input.
 - The module index includes Activity and updated organization/events/effects/
   identity/core/authorization/audit boundaries.
 - The hands-on tutorial covers the implemented organization → representation
-  → series → edition exercise with synthetic accounts and explicitly retains
+  → series → edition → structure-read exercise with synthetic accounts and retains
   the owner-led rehearsal gate.
 - The edition, Executive Board, and IDN-011 migration/recovery runbooks require
   a maintenance window, compatible writers, and fix-forward recovery.
@@ -471,6 +510,28 @@ Current exact authority-provenance activation evidence is:
   legacy reconciliation, production cutover, representative deployment
   restore, or PITR drill has occurred.
 
+Current Page 9a.0 evidence is:
+
+- 52 focused Page 9/API/capability-catalog/template tests pass in 15.66
+  seconds, including audit-before-disclosure and audit-failure `503`;
+- the standalone populated query-count regression passes;
+- 65 adjacent navigation/shell/admin/representation tests pass in 58.18
+  seconds;
+- repository-wide Ruff, strict mypy, Django checks, migration drift,
+  production-setting checks, OpenAPI validation/client regeneration,
+  TypeScript type checking, 19 Vitest tests, Vite build, and whitespace pass;
+  and
+- authenticated desktop smoke renders one canonical current link, the complete
+  bounded tree and separate governance anchor, with no legacy query link,
+  email, or rendered UUID.
+
+The definitive full repository gate passes 1,239 tests in 1,172.87 seconds
+with 90.35 percent branch coverage and no warnings. The browser viewport
+override did not reliably establish a 390-pixel Page 9 run, so its
+narrow-viewport, keyboard, automated-accessibility, complete-state, and owner
+evidence remain open. The read also lacks Page 9a.1's concurrent
+structure-version fence.
+
 The populated synthetic `maru_consolidated_demo` database applied
 authorization `0004`, workforce `0004`, and authorization `0005` in dependency
 order. Both scope-v2 and representation readiness report zero blockers;
@@ -585,7 +646,10 @@ transaction-wrapped
   expiry, replacement, ending, planned suspension/reactivation, invitation
   delivery, production legacy reconciliation/cutover, and complete effective-
   access explanations remain later M2. Exact department/resource scope exists
-  below the UI, but a contextual editor and computed explanation are not mounted.
+  below the UI. Page 9a.0's bounded read and principal-specific view/manage
+  summary are mounted, but its structure-version fence, Department mutations,
+  contextual access editor, and computed named explanation are not. Concurrent
+  multi-query structure reads remain an explicit Page 9a.1 risk.
 - Programme, typed applications, venues/mergeable spaces, three-phase
   timetable/layers, shifts, storage/logistics, governed documents, and team/
   on-site communications remain absent current modules.
@@ -602,9 +666,9 @@ transaction-wrapped
 
 ## Smallest sensible next actions
 
-1. Implement Page 9a's bounded, governance-anchored edition Department tree
-   and canonical navigation without synthesizing people, roles, or authority;
-   then add its copy-on-write structure controls in staged migrations.
+1. Implement Page 9a.1's copy-on-write structure aggregate/version fence,
+   template receipt, and Department commands through staged migrations and
+   shared HTML/API services; do not synthesize people, roles, or authority.
 2. Reconcile every effective ordinary legacy authority row without inference
    on a representative restored deployment and prove a zero-blocker preflight.
 3. Exercise representative unbounded authority-candidate sets under load. The
@@ -629,7 +693,7 @@ Page 1–9 contracts, `docs/modules/core.md`, `docs/modules/staff-console.md`,
 `docs/modules/activity.md`, organization/events/workforce/authorization/audit/
 effects module docs, the edition/scope-v2/authority-provenance migration and
 recovery runbooks, and ADR 0046's PostgreSQL provisioning artifact. Run
-`git status --short --branch` and continue with Page 9a while retaining
+`git status --short --branch` and continue with Page 9a.1 while retaining
 representative legacy reconciliation, unbounded candidate-cardinality load,
 deployment cutover, and PITR as explicit release gates. Do not treat backend
 evidence as proof

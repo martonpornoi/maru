@@ -1,7 +1,7 @@
 # Integrations and extensions
 
-Status: Baseline  
-Last updated: 2026-07-26
+Status: Active contract baseline
+Last updated: 2026-08-02
 
 Maru removes app hell by becoming the canonical event record and action center.
 It does not remove every specialist provider. Integrations must reduce duplicate
@@ -41,6 +41,21 @@ The supported REST API provides:
 
 An API version is a compatibility contract, not a copy of internal Django URLs.
 Breaking change requires a new major boundary or supported transition period.
+
+Page 9a.0 demonstrates the read-projection form at
+`GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure`.
+It accepts no query parameters and returns exact organization/edition labels,
+a minimized Executive Board governance discriminator, and either one complete
+bounded recursive Department tree or `structure_limit_exceeded` with no
+partial rows. Current holder labels appear only after exact role-lineage and
+active-person checks. OpenAPI declares the recursive response plus RFC 9457
+`400`, `403`, and `503` problems. The endpoint exposes stable transport UUIDs
+for clients, while the canonical HTML page does not render them as human
+content.
+
+The endpoint repeats fresh exact authorization and persists one minimized
+sensitive-read audit before releasing its name-bearing response. Audit failure
+uses the same generic `503` dependency boundary.
 
 ### Domain event envelope
 

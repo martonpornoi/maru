@@ -1,8 +1,9 @@
 # Embedded Convention work
 
 Status: API-backed workflow mounted in the unified shell; backend/frontend and
-responsive smoke evidence pass; final release evidence remains
-Last updated: 2026-08-01
+responsive smoke evidence pass; legacy structure destination removed in favor
+of canonical Page 9a.0; final release evidence remains
+Last updated: 2026-08-02
 
 ## Purpose and requirements
 
@@ -68,8 +69,8 @@ public clients may use independent seasonal themes.
 - a typed action center for registration configuration review and
   arrival-ready Front Desk work;
 - role-aware denial when staff People summaries are unavailable;
-- an edition-scoped **Organization structure** page with nested departments,
-  positions, several holders, login handles, and each person's other roles;
+- no duplicate Organization structure destination: the shared Django sidebar
+  links the exact edition to canonical Page 9a.0 instead;
 - People search, capacity/status filters, bounded pagination, and counts;
 - a side person workspace that preserves the current list and filter context;
 - `My registration`, with edition-defined products, conditional questions,
@@ -104,7 +105,6 @@ The frontend generates TypeScript types from checked-in `openapi.yaml` and uses:
 - `GET /api/v1/me/context`;
 - `GET /api/v1/me/security-history`;
 - `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/participations`;
-- `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure`;
 - `POST /api/v1/organizations/{organization_id}/editions/{edition_id}/transition`;
 - the edition-scoped access workspace and assignment routes documented in
   [`authorization.md`](authorization.md);
@@ -121,6 +121,13 @@ The API remains authoritative. Client navigation and denial states improve
 clarity but never grant access. People results contain exactly account ID,
 display name, participation status, and active/proposed capacity labels.
 The selected edition is working context, not proof of authority.
+
+The generated schema still contains the strict workforce structure GET for
+supported API consumers, but this React client no longer declares a
+`structure` destination, fetches that projection, or supports the former
+`?view=structure` route. The canonical browser experience is the server-
+rendered Page 9a.0 route inside the same shell. Its holder projection omits the
+login handles that the retired duplicate view exposed.
 
 ## Development
 
@@ -187,6 +194,11 @@ consolidated suite/coverage rerun after all later integrity work, keyboard and
 automated accessibility, complete visual states, and owner evidence remain
 required.
 
+After removing the duplicate structure destination, TypeScript type checking,
+19 Vitest tests, and the production Vite build pass. OpenAPI regeneration
+retains the workforce structure types for API consumers without reintroducing
+the React page.
+
 ## Limitations
 
 Inbox, global search, command palette, arbitrary saved views, XLSX/background
@@ -195,6 +207,7 @@ registration contract, production identity integration, and non-registration
 actions remain V03 work. The Forms section currently contains implemented
 registration/workforce entry points; a generic module-registration contract
 will let future form modules add cards without editing the shell. Registration
-draft content and workforce structure are edited in specialist records until
-complete visual builders exist. Convention work is not yet a complete
-convention operating surface.
+draft content is edited in specialist records until complete visual builders
+exist. Department management specifically remains Page 9a.1 work rather than
+a return to the retired React destination. Convention work is not yet a
+complete convention operating surface.

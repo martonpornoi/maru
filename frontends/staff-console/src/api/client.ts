@@ -52,39 +52,6 @@ export type ClosureReadiness = {
   gates: ReadinessGate[];
   manifest: unknown | null;
 };
-export type WorkforceStructureRole = {
-  department_name: string;
-  position_title: string;
-};
-export type WorkforceStructureHolder = {
-  assignment_id: string;
-  display_name: string;
-  login_handle: string;
-  other_roles: WorkforceStructureRole[];
-};
-export type WorkforceStructurePosition = {
-  id: string;
-  reports_to_id: string | null;
-  code: string;
-  title: string;
-  description: string;
-  headcount: number;
-  status: string;
-  holders: WorkforceStructureHolder[];
-};
-export type WorkforceStructureDepartment = {
-  id: string;
-  parent_id: string | null;
-  code: string;
-  name: string;
-  description: string;
-  positions: WorkforceStructurePosition[];
-};
-export type WorkforceStructure = {
-  organization_name: string;
-  edition_name: string;
-  departments: WorkforceStructureDepartment[];
-};
 export type ProfileExtensionField = {
   id: string;
   key: string;
@@ -212,14 +179,6 @@ function editionApiPath(edition: EditionContext): string {
   return (
     `/api/v1/organizations/${edition.organization_id}` +
     `/editions/${edition.edition_id}`
-  );
-}
-
-export function loadWorkforceStructure(
-  edition: EditionContext,
-): Promise<WorkforceStructure> {
-  return requestJson<WorkforceStructure>(
-    `${editionApiPath(edition)}/workforce/structure`,
   );
 }
 

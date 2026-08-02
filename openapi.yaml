@@ -2978,6 +2978,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/WorkforceStructure'
           description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The structure query contains unsupported input.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The caller cannot view this edition's organization structure.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The complete structure projection is temporarily unavailable.
   /api/v1/organizations/{organization_id}/editions/autocomplete:
     get:
       operationId: events_autocomplete_basic_editions
@@ -9139,6 +9157,36 @@ components:
           maxLength: 500
       required:
       - reason
+    WorkforceProblem:
+      type: object
+      description: RFC 9457 response shape used by workforce endpoints.
+      properties:
+        type:
+          type: string
+          format: uri
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        status:
+          type: integer
+          readOnly: true
+        detail:
+          type: string
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+        request_id:
+          type: string
+          format: uuid
+        errors: {}
+      required:
+      - code
+      - detail
+      - status
+      - title
+      - type
     WorkforceStructure:
       type: object
       properties:
@@ -9146,14 +9194,15 @@ components:
           type: string
         edition_name:
           type: string
-        departments:
-          type: array
-          items:
-            $ref: '#/components/schemas/WorkforceStructureDepartment'
+        governance:
+          $ref: '#/components/schemas/WorkforceStructureGovernance'
+        structure:
+          $ref: '#/components/schemas/WorkforceStructureProjection'
       required:
-      - departments
       - edition_name
+      - governance
       - organization_name
+      - structure
     WorkforceStructureDepartment:
       type: object
       properties:
@@ -9171,35 +9220,67 @@ components:
           type: string
         description:
           type: string
+        display_order:
+          type: integer
         positions:
           type: array
           items:
             $ref: '#/components/schemas/WorkforceStructurePosition'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkforceStructureDepartment'
+          readOnly: true
       required:
+      - children
       - code
       - description
+      - display_order
       - id
       - name
       - parent_id
       - positions
+    WorkforceStructureGovernance:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/WorkforceStructureGovernanceKindEnum'
+        label:
+          type: string
+        state:
+          $ref: '#/components/schemas/WorkforceStructureGovernanceStateEnum'
+      required:
+      - kind
+      - label
+      - state
+    WorkforceStructureGovernanceKindEnum:
+      enum:
+      - governance
+      type: string
+      description: '* `governance` - governance'
+    WorkforceStructureGovernanceStateEnum:
+      enum:
+      - absent
+      - provisioning
+      - active
+      - suspended
+      type: string
+      description: |-
+        * `absent` - absent
+        * `provisioning` - provisioning
+        * `active` - active
+        * `suspended` - suspended
     WorkforceStructureHolder:
       type: object
       properties:
-        assignment_id:
-          type: string
-          format: uuid
         display_name:
-          type: string
-        login_handle:
           type: string
         other_roles:
           type: array
           items:
             $ref: '#/components/schemas/WorkforceStructureRole'
       required:
-      - assignment_id
       - display_name
-      - login_handle
       - other_roles
     WorkforceStructurePosition:
       type: object
@@ -9212,6 +9293,10 @@ components:
           - string
           - 'null'
           format: uuid
+        reports_to_title:
+          type:
+          - string
+          - 'null'
         code:
           type: string
         title:
@@ -9221,7 +9306,7 @@ components:
         headcount:
           type: integer
         status:
-          type: string
+          $ref: '#/components/schemas/WorkforceStructurePositionStatusEnum'
         holders:
           type: array
           items:
@@ -9233,8 +9318,41 @@ components:
       - holders
       - id
       - reports_to_id
+      - reports_to_title
       - status
       - title
+    WorkforceStructurePositionStatusEnum:
+      enum:
+      - planned
+      - open
+      - filled
+      - closed
+      type: string
+      description: |-
+        * `planned` - Planned
+        * `open` - Open
+        * `filled` - Filled
+        * `closed` - Closed
+    WorkforceStructureProjection:
+      type: object
+      properties:
+        state:
+          $ref: '#/components/schemas/WorkforceStructureProjectionStateEnum'
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkforceStructureDepartment'
+      required:
+      - departments
+      - state
+    WorkforceStructureProjectionStateEnum:
+      enum:
+      - complete
+      - structure_limit_exceeded
+      type: string
+      description: |-
+        * `complete` - complete
+        * `structure_limit_exceeded` - structure_limit_exceeded
     WorkforceStructureRole:
       type: object
       properties:

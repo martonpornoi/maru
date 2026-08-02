@@ -1,9 +1,9 @@
 # Authorization module
 
 Status: Implemented exact organization/edition/department/resource authority,
-sealed target resolution, protected Executive Board root, and provenance-
-writing/source-selection stage; legacy reconciliation and dynamic policy
-activation remain a production gate
+sealed target resolution, protected Executive Board root, provenance-writing,
+and guarded exact-lineage policy/runtime activation; production legacy
+reconciliation and cutover remain gates
 Last updated: 2026-08-02
 
 ## Purpose and requirements
@@ -60,6 +60,8 @@ bypassed. Revoking any ancestor invalidates its delegated descendants.
   `authority_issuance_is_current(...)`, and
   `role_bundle_provenance_is_historical(...)` boundaries for compatible
   writers and sensitive explanations
+- `current_role_assignment_ids(...)`, the bounded, identifier-only public read
+  boundary used after another module has resolved its own relationships
 - `resolve_organization_target(...)`, `resolve_edition_target(...)`,
   `resolve_department_target(...)`, `resolve_resource_target(...)`, and
   persisted owner/self target resolvers
@@ -71,6 +73,11 @@ Draft/Preparing profile change, edition transition,
 self-history, minimized staff participation viewing, capability delegation,
 direct-grant management, immediate authority revocation, role management, and
 security-audit viewing.
+
+Page 9a.0 uses the separate edition-capable
+`workforce.view_structure` and `workforce.manage_structure` declarations.
+Manage does not imply view, and a capability stored only at Department or
+resource scope is deliberately too narrow for the complete edition tree.
 
 M2 adds organization basic view, organization profile change, series creation,
 series change, and the security-critical
@@ -286,15 +293,23 @@ capability from its immutable, provenance-validated bundle, then projects only
 known persistable capabilities from that same bundle. A 257-scope regression
 guards both query amplification boundaries without loading tenant names.
 
+`current_role_assignment_ids(...)` accepts at most 4,096 already bounded
+RoleAssignment identifiers. In compatibility mode it applies current term and
+revocation checks. In exact mode it additionally resolves the stored scope and
+validates each row's pinned issuance lineage through the existing bounded
+authorization evaluator; a required-but-dormant or malformed exact contract
+returns no IDs. The workforce structure query calls this before asking identity
+for any holder label, so invalid role evidence cannot disclose a person's
+name.
+
 `check_scope_v2_readiness` emits a count-only JSON report. Migration-data
-`status` is intentionally separate from `production_status`: the latter stays
-blocked until ADR 0044's remaining provable backfill, explicit legacy
-reconciliation, recursive readiness, dynamic policy cutover, completeness
-guards, and final fence are verified. The additive schema, Board writer,
-ordinary command writer, deterministic recursive source evaluator, and
-delegated writer are implementation stages, not permission to infer legacy
-evidence or relabel the platform production-ready. No current claim describes
-ADR 0041 as solving that independent IDN-005 invariant.
+`status` is intentionally separate from `production_status`. The guarded exact
+policy, recursive readiness, completeness guards, and final fence are locally
+implemented and activated with synthetic data. A real deployment remains
+blocked until ordinary legacy authority is explicitly reconciled and the
+stopped-writer cutover/recovery ceremony is completed. No current claim treats
+the local activation as permission to infer legacy evidence or relabel the
+platform production-ready.
 
 After authorization `0006` is present,
 `check_authority_provenance_readiness` inspects the reachable issuance graph
@@ -415,9 +430,9 @@ here.
 
 ## Limitations
 
-Provable legacy reconciliation, final completeness guards, dynamic
-source-lineage policy activation, a complete computed effective-access
-explanation, step-up execution, service/device principals,
+Production legacy reconciliation/cutover, representative authority load, a
+complete computed effective-access explanation, step-up execution,
+service/device principals,
 asynchronous approval workflow, grant review reminders, purpose binding, and
 policy caching are not implemented. The synchronous independent approver
 argument is a command invariant, not yet an approval inbox or pending request

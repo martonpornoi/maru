@@ -1,12 +1,12 @@
 # Maru production consolidation
 
-Status: Active master checklist; M2.3 exact authority-provenance activation
-locally verified, with production reconciliation, load, cutover, and recovery
-evidence next
+Status: Active master checklist; M2.4 Page 9a.0 bounded Organization structure
+read focused-verified, with Page 9a.1 mutation/version fencing and production
+authority reconciliation, load, cutover, and recovery evidence next
 Branch: `codex/full-platform-consolidation`
 Base: `327a7d63574d0118356a0fd11ca5a316d78b2aed`  
 Started: 2026-08-01  
-Decisions: ADRs 0037–0044
+Decisions: ADRs 0037–0046
 
 This is the crash-safe delivery map for turning the retained Maru foundation
 into one understandable convention operating platform. Update this file after
@@ -80,9 +80,9 @@ The state vocabulary is deliberately small:
 | Edition browser workspace | Mounted | Pages 6–7 and scoped non-staff routes pass backend checks; current browser and owner rehearsal remain. |
 | Unified administration shell | Mounted | `maru.urls`, reserved route ordering, one sidebar, Convention work, scoped non-staff access, staff-only specialist records, desktop/390-pixel smoke, and the final 792-test/90.01-percent local backend gate pass without warnings. The custom sidebar preserves Django's single `#nav-filter` contract when Specialist records are unavailable; the focused routing regression and live Board reload pass. Accessibility/state-matrix/owner gates remain. |
 | Organization representation | Mounted / partial | Page 8 implements provision, exact verified-account invitation, own response, two-person cross-approval, atomic Draft-to-Active activation, and platform emergency containment. Database guards through organizations `0012`, sensitive read/deny audit, the 106-migration fresh synthetic database/current restore drill, focused readiness/representation matrices, and the final local backend gate pass. Representative PITR, accessibility, owner evidence, and routine term management remain. |
-| Department hierarchy | Partial | Workforce model/projection and preserved structure view exist; no accepted mounted editor or M2 scope exists. |
+| Department hierarchy | Mounted read / partial management | Canonical Page 9a.0 and strict GET compose the minimized Executive Board anchor with one bounded complete edition tree, current exact-role/active-person holder labels, sensitive-read audit, and explicit no-partial overflow. The duplicate React view is removed. Page 9a.1 structure version fence/template/Department commands and Page 9b Positions remain. |
 | Department/resource authorization | Implemented backend / unmounted editor | ADR 0041 exact department and typed-resource policy, commands, bindings, migrations, and database guards are implemented without implicit hierarchy inheritance. ADR 0044's ledger, writers, readiness, provable backfill, completeness guards, one-way marker, exact policy switch, runtime-role proof, and synthetic activation/recovery are locally verified. No ordinary production legacy reconciliation, real cutover, representative restore/PITR drill, or unbounded candidate-cardinality load gate has completed. The contextual editor/effective-access UX remains unmounted. |
-| Effective-access explanation | Partial | Pages 3–8 distinguish platform, scoped Board, exact-edition, and own-invitation access. Exact department/resource decisions now work below the UI; computed human explanations and field-purpose detail remain M2. |
+| Effective-access explanation | Partial | Pages 3–9 distinguish platform, scoped Board, exact-edition, own-invitation, and structure view/manage access. Exact department/resource decisions now work below the UI; computed named relationship and field-purpose detail remain M2. |
 | Attendee registration | Partial | Large tested domain, headless API, and preserved HTML become reachable through the intended URL set, but coherent-shell review and deployment gates remain. |
 | Registration extension fields | Partial | Append-only, permission-aware API/workflow exists; ADR 0039 integration and current browser evidence remain. |
 | Generic application/form portfolio | Absent | KNO-009 and REG-023. |
@@ -95,7 +95,7 @@ The state vocabulary is deliberately small:
 | Team conversations and on-site messaging | Absent | Needs scoped inbox/thread domain and delivery adapters. |
 | Credentials/offline check-in | API-only | Tested domain; hardware, printing, recovery, and load gates remain. |
 | Audit and activity | API-only audit / mounted record history | Append-only audit plus bounded Page 5/7 domain-fact history; cross-domain access-aware activity remains M2. |
-| Stable API/OpenAPI | Partial | Series GET/PUT and edition POST/PUT are implemented and generated artifacts are stable; organization writes, external credentials, and new domains remain. |
+| Stable API/OpenAPI | Partial | Series GET/PUT, edition POST/PUT, and bounded workforce-structure GET are implemented and generated artifacts are stable; Page 9 mutations, organization writes, external credentials, and new domains remain. |
 | Synthetic demo governance | Mounted local-only | ADR 0042 makes `seed_demo_data` the canonical synthetic fixture and establishes two active Executive Boards through real services. The old public-roster scenario is deleted and its compatibility command fails before validation, file/network access, or database writes. |
 | Production infrastructure | Deployment-gated | Provider selection, SMTP, object storage, scanner, workers, secrets, monitoring, restore, load, and legal/security review. |
 
@@ -123,7 +123,7 @@ Administration home
 │              └─ Convention editions     + Add
 │                 └─ Selected edition
 │                    ├─ Overview
-│                    ├─ People & departments
+│                    ├─ Organization structure
 │                    ├─ Registration
 │                    ├─ Applications
 │                    ├─ Programme
@@ -579,8 +579,26 @@ not production approval.
 - [ ] Run keyboard/axe, complete visual states, and the revised owner tutorial.
 - [x] Accept ADR 0041's exact department/typed-resource scope design with no
   implicit department-tree inheritance.
-- [ ] Awoostria-shaped editable department template using synthetic data.
-- [ ] Mounted hierarchy/position editor and minimized structure view.
+- [x] Mount Page 9a.0's canonical read-only Organization structure page and
+  strict GET API; compose the minimized governance anchor, enforce exact
+  edition-wide view, code-owned complete-tree ceilings, exact-role/active-
+  person holder checks, fresh final authorization, audit-before-disclosure,
+  safe typed failures, and remove the duplicate React destination.
+- [x] Implement and pin immutable `awoostria-reference@1` catalog content:
+  exact 22 Departments, Helper Board sole root, no Executive Board Department,
+  exact identifier/no aliases, bounded graph validation, canonical JSON, and
+  SHA-256 evidence. Keep application unmounted.
+- [ ] Page 9a.1: add the structure aggregate/version fence, immutable
+  Awoostria reference application receipt, and shared HTML/API Department create/update/
+  reparent/order/retire/protected-delete commands using synthetic data.
+- [ ] Page 9b: mount Position/template/reporting/opportunity management only
+  after its authority-bearing dual-control and recovery contract is complete.
+- [x] Page 9a.0 focused evidence: 52 Page 9/API/catalog/template tests, the
+  standalone query-count regression, 65 adjacent navigation/shell/admin/
+  representation tests, OpenAPI validation/client regeneration, TypeScript,
+  19 Vitest tests, Vite build, repository-wide Ruff/mypy/Django/migration/
+  production checks, and authenticated desktop smoke pass. Full pytest and a
+  reliable 390-pixel Page 9 run remain open.
 - [x] Implement ADR 0041 department and typed-resource constraints in
   authorization policy, grants, assignments, migrations, and trusted targets.
 - [x] Add deterministic immutable `workforce.position` bindings, including
@@ -731,7 +749,7 @@ count.
 
 1. Read `docs/project/CURRENT.md`.
 2. Read this file and find the first unchecked item in the active milestone.
-3. Read ADRs 0037–0044 and the page/domain contract being changed, including
+3. Read ADRs 0037–0046 and the page/domain contract being changed, including
    Page 8 for representation work.
 4. Run `git status --short --branch`; do not discard unrelated changes.
 5. Confirm the latest local checkpoint/commit and test result in `CURRENT.md`.
@@ -739,8 +757,9 @@ count.
    implemented and locally verified with synthetic data. Resume with ordinary
    legacy reconciliation on a representative restore, the unbounded candidate-
    cardinality load gate, and stopped-writer cutover/PITR rehearsal; only then
-   consider a real production activation. Continue afterward with the synthetic
-   department template/editor and computed access explanation.
+   consider a real production activation. Page 9a.0's bounded canonical read
+   is implemented; continue with Page 9a.1's structure version fence,
+   synthetic Department template/editor, and then computed access explanation.
    Keep representative deployment/PITR, accessibility, complete visual states,
    and owner evidence open. Update this checklist before switching domains.
 

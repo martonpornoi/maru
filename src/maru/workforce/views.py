@@ -2,21 +2,39 @@
 
 from __future__ import annotations
 
+import logging
 from typing import cast
 from uuid import UUID
 
+from django.contrib import admin
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import DatabaseError
 from django.http import FileResponse, Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
+from django.utils.timezone import now as timezone_now
+from django.views.decorators.http import require_GET
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import decide, resolve_owned_target
+from maru.authorization.enforcement import (
+    FieldProjectionDeniedError,
+    require_complete_projection,
+)
+from maru.authorization.policy import (
+    PolicyDecision,
+    ResolvedAuthorizationTarget,
+    decide,
+    resolve_edition_target,
+    resolve_organization_target,
+    resolve_owned_target,
+)
+from maru.events.admin_context import authorized_admin_edition_for_route
 from maru.events.models import EventEdition
 from maru.identity.models import Account
+from maru.organizations.queries import executive_board_governance_anchor
 from maru.workforce.forms import (
     OnboardingDocumentUploadForm,
     VolunteerApplicationForm,
@@ -26,14 +44,232 @@ from maru.workforce.models import (
     VolunteerApplication,
     VolunteerOpportunity,
 )
+from maru.workforce.queries import (
+    WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+    project_edition_structure,
+)
 from maru.workforce.services import (
     submit_volunteer_application,
     upload_onboarding_document,
 )
+from maru.workforce.structure_audit import append_structure_read_audit
+
+logger = logging.getLogger(__name__)
 
 
 def _account(request: HttpRequest) -> Account | None:
     return request.user if isinstance(request.user, Account) else None
+
+
+def _active_admin_account(request: HttpRequest) -> Account:
+    account = _account(request)
+    if account is None or not account.is_active:
+        raise PermissionDenied
+    return account
+
+
+def _structure_access_label(decision: PolicyDecision) -> str:
+    return {
+        "platform_administration": "Platform oversight",
+        "direct_grant": "Exact edition capability",
+        "role_assignment": "Scoped edition role",
+    }.get(decision.reason_code, "Current scoped authority")
+
+
+def _required_organization_target(
+    *,
+    organization_id: UUID,
+) -> ResolvedAuthorizationTarget:
+    target = resolve_organization_target(organization_id=organization_id)
+    if target is None:
+        raise RuntimeError("The resolved edition lost its organization target.")
+    return target
+
+
+def _organization_structure_dependency_failure(
+    request: HttpRequest,
+) -> TemplateResponse:
+    context = admin.site.each_context(request)
+    context.update(
+        {
+            "title": "Organization structure unavailable",
+            "has_permission": True,
+            "baseline_admin_parent_template": "admin/base_site.html",
+            "baseline_use_admin_shell": True,
+            "baseline_page_id": "organization-structure",
+            "baseline_page_class": "",
+            "baseline_can_view_organization": False,
+            "baseline_can_manage_representation": False,
+            "baseline_can_create_series": False,
+            "baseline_can_create_edition": False,
+            "baseline_can_view_edition": False,
+            "baseline_can_view_structure": False,
+            "baseline_can_manage_structure": False,
+            "baseline_hide_admin_scoped_navigation": True,
+            "structure_load_failed": True,
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/organization_structure.html",
+        context,
+        status=503,
+    )
+
+
+@login_required(login_url="staff-login")
+@require_GET
+def organization_structure(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Render one complete bounded edition structure in the shared shell."""
+
+    actor = _active_admin_account(request)
+    evaluated_at = timezone_now()
+    try:
+        organization, series, edition = authorized_admin_edition_for_route(
+            request=request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            capability_code="workforce.view_structure",
+        )
+        edition_target = resolve_edition_target(
+            organization_id=organization.id,
+            edition_id=edition.id,
+        )
+        view_decision = decide(
+            principal=actor,
+            capability_code="workforce.view_structure",
+            resource=edition_target,
+            requested_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+            at=evaluated_at,
+        )
+        if not view_decision.allowed:
+            raise PermissionDenied
+        require_complete_projection(
+            required_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+            permitted_fields=view_decision.fields,
+        )
+        manage_decision = decide(
+            principal=actor,
+            capability_code="workforce.manage_structure",
+            resource=edition_target,
+            at=evaluated_at,
+        )
+        organization_target = _required_organization_target(
+            organization_id=organization.id,
+        )
+
+        can_view_organization = decide(
+            principal=actor,
+            capability_code="organizations.view_basic",
+            resource=organization_target,
+            at=evaluated_at,
+        ).allowed
+        can_manage_representation = decide(
+            principal=actor,
+            capability_code="organizations.manage_representation",
+            resource=organization_target,
+            at=evaluated_at,
+        ).allowed
+        can_create_series = decide(
+            principal=actor,
+            capability_code="organizations.create_series",
+            resource=organization_target,
+            at=evaluated_at,
+        ).allowed
+        can_create_edition = decide(
+            principal=actor,
+            capability_code="events.create",
+            resource=organization_target,
+            at=evaluated_at,
+        ).allowed
+        can_view_edition = decide(
+            principal=actor,
+            capability_code="events.view_basic",
+            resource=edition_target,
+            at=evaluated_at,
+        ).allowed
+        governance = executive_board_governance_anchor(
+            organization_id=organization.id,
+        )
+        structure = project_edition_structure(
+            organization_id=organization.id,
+            edition_id=edition.id,
+            at=evaluated_at,
+        )
+        # Keep the hierarchy internally coherent at ``evaluated_at`` while a
+        # fresh final decision prevents mid-request expiry or revocation from
+        # releasing the completed name-bearing response.
+        response_authorized_at = timezone_now()
+        view_decision = decide(
+            principal=actor,
+            capability_code="workforce.view_structure",
+            resource=edition_target,
+            requested_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+            at=response_authorized_at,
+        )
+        if not view_decision.allowed:
+            raise PermissionDenied
+        require_complete_projection(
+            required_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+            permitted_fields=view_decision.fields,
+        )
+        append_structure_read_audit(
+            actor=actor,
+            organization_id=organization.id,
+            edition_id=edition.id,
+            decision=view_decision,
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            route_name="organization-structure",
+            source_channel="web",
+            occurred_at=response_authorized_at,
+        )
+    except (
+        DatabaseError,
+        RuntimeError,
+        ValidationError,
+        FieldProjectionDeniedError,
+    ):
+        logger.exception("Unable to load the edition organization structure")
+        return _organization_structure_dependency_failure(request)
+
+    context = admin.site.each_context(request)
+    context.update(
+        {
+            "title": f"Organization structure — {edition.name}",
+            "has_permission": True,
+            "baseline_admin_parent_template": "admin/base_site.html",
+            "baseline_use_admin_shell": True,
+            "baseline_page_id": "organization-structure",
+            "baseline_page_class": "",
+            "baseline_can_view_organization": can_view_organization,
+            "baseline_can_manage_representation": can_manage_representation,
+            "baseline_can_create_series": can_create_series,
+            "baseline_can_create_edition": can_create_edition,
+            "baseline_can_view_edition": can_view_edition,
+            "baseline_can_view_structure": True,
+            "baseline_can_manage_structure": manage_decision.allowed,
+            "organization": organization,
+            "convention_series": series,
+            "edition": edition,
+            "governance": governance,
+            "structure": structure,
+            "structure_load_failed": False,
+            "structure_access_label": _structure_access_label(view_decision),
+            "can_manage_structure": manage_decision.allowed,
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/organization_structure.html",
+        context,
+    )
 
 
 def volunteer_opportunities(

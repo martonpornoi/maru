@@ -3625,10 +3625,23 @@ export interface components {
         WaivePayment: {
             reason: string;
         };
+        /** @description RFC 9457 response shape used by workforce endpoints. */
+        WorkforceProblem: {
+            /** Format: uri */
+            readonly type: string;
+            readonly title: string;
+            readonly status: number;
+            readonly detail: string;
+            readonly code: string;
+            /** Format: uuid */
+            request_id?: string;
+            errors?: unknown;
+        };
         WorkforceStructure: {
             organization_name: string;
             edition_name: string;
-            departments: components["schemas"]["WorkforceStructureDepartment"][];
+            governance: components["schemas"]["WorkforceStructureGovernance"];
+            structure: components["schemas"]["WorkforceStructureProjection"];
         };
         WorkforceStructureDepartment: {
             /** Format: uuid */
@@ -3638,13 +3651,30 @@ export interface components {
             code: string;
             name: string;
             description: string;
+            display_order: number;
             positions: components["schemas"]["WorkforceStructurePosition"][];
+            readonly children: components["schemas"]["WorkforceStructureDepartment"][];
         };
+        WorkforceStructureGovernance: {
+            kind: components["schemas"]["WorkforceStructureGovernanceKindEnum"];
+            label: string;
+            state: components["schemas"]["WorkforceStructureGovernanceStateEnum"];
+        };
+        /**
+         * @description * `governance` - governance
+         * @enum {string}
+         */
+        WorkforceStructureGovernanceKindEnum: "governance";
+        /**
+         * @description * `absent` - absent
+         *     * `provisioning` - provisioning
+         *     * `active` - active
+         *     * `suspended` - suspended
+         * @enum {string}
+         */
+        WorkforceStructureGovernanceStateEnum: "absent" | "provisioning" | "active" | "suspended";
         WorkforceStructureHolder: {
-            /** Format: uuid */
-            assignment_id: string;
             display_name: string;
-            login_handle: string;
             other_roles: components["schemas"]["WorkforceStructureRole"][];
         };
         WorkforceStructurePosition: {
@@ -3652,13 +3682,32 @@ export interface components {
             id: string;
             /** Format: uuid */
             reports_to_id: string | null;
+            reports_to_title: string | null;
             code: string;
             title: string;
             description: string;
             headcount: number;
-            status: string;
+            status: components["schemas"]["WorkforceStructurePositionStatusEnum"];
             holders: components["schemas"]["WorkforceStructureHolder"][];
         };
+        /**
+         * @description * `planned` - Planned
+         *     * `open` - Open
+         *     * `filled` - Filled
+         *     * `closed` - Closed
+         * @enum {string}
+         */
+        WorkforceStructurePositionStatusEnum: "planned" | "open" | "filled" | "closed";
+        WorkforceStructureProjection: {
+            state: components["schemas"]["WorkforceStructureProjectionStateEnum"];
+            departments: components["schemas"]["WorkforceStructureDepartment"][];
+        };
+        /**
+         * @description * `complete` - complete
+         *     * `structure_limit_exceeded` - structure_limit_exceeded
+         * @enum {string}
+         */
+        WorkforceStructureProjectionStateEnum: "complete" | "structure_limit_exceeded";
         WorkforceStructureRole: {
             department_name: string;
             position_title: string;
@@ -5935,6 +5984,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkforceStructure"];
+                };
+            };
+            /** @description The structure query contains unsupported input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The caller cannot view this edition's organization structure. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The complete structure projection is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
                 };
             };
         };

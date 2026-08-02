@@ -560,8 +560,8 @@ CAPABILITY_DEFINITIONS = (
     Capability(
         code="workforce.view_structure",
         description=(
-            "View edition departments, positions, reporting lines, and minimized "
-            "application status."
+            "View edition departments, positions, reporting lines, minimized "
+            "holder labels, and application status."
         ),
         maximum_scope=ScopeLevel.EDITION,
         delegable=True,
@@ -571,6 +571,7 @@ CAPABILITY_DEFINITIONS = (
                 "positions",
                 "opportunities",
                 "assignment_counts",
+                "holder_display_labels",
             }
         ),
     ),

@@ -342,6 +342,13 @@ h1 {
   background: #f9e8e5;
 }
 
+.baseline-state--warning {
+  margin-top: 2.25rem;
+  border-left: 0.3rem solid #956822;
+  color: #5c3c12;
+  background: #fbf7ee;
+}
+
 .baseline-table-wrap {
   overflow-x: auto;
 }
@@ -631,6 +638,106 @@ button:focus-visible {
   margin: 0.65rem 0 0;
 }
 
+.baseline-structure-governance,
+.baseline-structure-tree-wrap {
+  padding: 1.25rem 1.5rem;
+}
+
+.baseline-structure-governance p {
+  max-width: 48rem;
+  margin: 0;
+  color: #45536a;
+  line-height: 1.6;
+}
+
+.baseline-structure-governance p + p {
+  margin-top: 0.75rem;
+}
+
+.baseline-structure-tree,
+.baseline-structure-tree ol,
+.baseline-structure-positions,
+.baseline-structure-holders ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.baseline-structure-tree ol {
+  margin-left: 1.25rem;
+  padding-left: 1.25rem;
+  border-left: 1px solid #d9d3c7;
+}
+
+.baseline-structure-branch + .baseline-structure-branch {
+  margin-top: 1rem;
+}
+
+.baseline-structure-node {
+  padding: 1rem 1.1rem;
+  border: 1px solid #d9d3c7;
+  border-left: 0.3rem solid #b9822e;
+  background: #fff;
+}
+
+.baseline-structure-node > header,
+.baseline-structure-position-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+}
+
+.baseline-structure-node h3,
+.baseline-structure-node h4 {
+  margin: 0.2rem 0 0;
+  color: #071b3a;
+}
+
+.baseline-structure-node h3 {
+  font-size: 1.2rem;
+}
+
+.baseline-structure-node h4 {
+  font-size: 1rem;
+}
+
+.baseline-structure-node > p,
+.baseline-structure-positions > li > p,
+.baseline-structure-holders span {
+  color: #45536a;
+  line-height: 1.55;
+}
+
+.baseline-structure-positions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.baseline-structure-positions > li {
+  padding: 0.85rem 0.9rem;
+  background: #f5f1e8;
+}
+
+.baseline-structure-position-heading > span,
+.baseline-structure-reports-to {
+  color: #68758a;
+  font-size: 0.86rem;
+}
+
+.baseline-structure-holders {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #d9d3c7;
+}
+
+.baseline-structure-holders li {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: 0.5rem;
+}
+
 .baseline-context-control {
   display: flex;
   align-items: center;
@@ -873,9 +980,31 @@ button:focus-visible {
 .baseline-unified-admin .baseline-boundary,
 .baseline-unified-admin .baseline-access-summary,
 .baseline-unified-admin .baseline-context-control,
-.baseline-unified-admin .baseline-form-actions--sticky {
+.baseline-unified-admin .baseline-form-actions--sticky,
+.baseline-unified-admin .baseline-structure-node {
   border-color: var(--hairline-color);
   background: var(--body-bg);
+}
+
+.baseline-unified-admin .baseline-structure-tree ol,
+.baseline-unified-admin .baseline-structure-holders {
+  border-color: var(--hairline-color);
+}
+
+.baseline-unified-admin .baseline-structure-positions > li {
+  background: var(--darkened-bg);
+}
+
+.baseline-unified-admin .baseline-structure-node h3,
+.baseline-unified-admin .baseline-structure-node h4 {
+  color: var(--body-fg);
+}
+
+.baseline-unified-admin .baseline-structure-governance p,
+.baseline-unified-admin .baseline-structure-node > p,
+.baseline-unified-admin .baseline-structure-positions > li > p,
+.baseline-unified-admin .baseline-structure-holders span {
+  color: var(--body-quiet-color);
 }
 
 .baseline-unified-admin .baseline-panel-heading {
@@ -1029,6 +1158,16 @@ button:focus-visible {
 
   .baseline-access-summary {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .baseline-structure-tree ol {
+    margin-left: 0.45rem;
+    padding-left: 0.65rem;
+  }
+
+  .baseline-structure-node > header,
+  .baseline-structure-position-heading {
+    flex-direction: column;
   }
 
   .baseline-context-control {

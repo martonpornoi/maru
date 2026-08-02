@@ -59,6 +59,16 @@ allow, deny, validation error, and safe unexpected-error outcomes. A
 successful audit event and domain event share correlation; the domain event
 uses the audit event as its causation identifier.
 
+Page 9a.0 HTML and API structure reads append
+`workforce.structure.read` after fresh final exact authorization and before
+releasing organization, edition, Department, Position, or holder labels. The
+allow record contains exact actor/organization/edition target, source channel,
+the `audit_sensitive_read` obligation, and only policy version, route name,
+and HTTP method as safe metadata. It contains no names, email, login handle,
+authority identifier, reason, count, projection state, or tree payload. If the
+audit append fails, the adapter returns a
+generic name-free `503` and releases no partial projection.
+
 Direct grants, role-bundle versions, and role assignments record separate
 actor and independent-approver allow events. Immediate grant and assignment
 revocation records the revoker. Failed canonical transactions retain one safe
@@ -94,7 +104,9 @@ one-time sealing, multiple linked batches, empty reruns, sequence gaps, digest
 and count mismatch, batch immutability, batch-size bounds, command output, and
 command failure. Activation-evidence tests cover ordinary-operation
 pass-through, same-transaction marker/latch binding, fresh-correlation forgery,
-active upgrade, dormant reverse, and fail-closed catalog tampering.
+active upgrade, dormant reverse, and fail-closed catalog tampering. Page 9a.0
+tests cover HTML/API source channels, exact minimized metadata, and audit-
+append failure before disclosure.
 
 ## Limitations
 

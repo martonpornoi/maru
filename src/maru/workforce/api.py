@@ -1,14 +1,18 @@
 """API-first volunteer opportunity and self-service onboarding clients."""
 
-from typing import cast
+import logging
+from dataclasses import asdict
+from datetime import datetime
+from typing import Never, cast
 from uuid import UUID
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.uploadedfile import UploadedFile
-from django.db.models import Prefetch
+from django.db import DatabaseError
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from django.utils.timezone import now as timezone_now
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -17,19 +21,28 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from maru.authorization.enforcement import (
+    FieldProjectionDeniedError,
+    require_complete_projection,
+)
 from maru.authorization.policy import (
+    PolicyDecision,
     decide,
     resolve_edition_target,
     resolve_self_target,
 )
+from maru.core.api_input import reject_unknown_fields
+from maru.core.problems import DependencyUnavailable
 from maru.events.models import EventEdition
 from maru.identity.models import Account
+from maru.organizations.queries import executive_board_governance_anchor
 from maru.workforce.models import (
-    Department,
     OnboardingDocumentRequest,
-    Position,
-    PositionAssignment,
     VolunteerOpportunity,
+)
+from maru.workforce.queries import (
+    WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+    project_edition_structure,
 )
 from maru.workforce.serializers import (
     OnboardingDocumentRequestSerializer,
@@ -37,12 +50,24 @@ from maru.workforce.serializers import (
     VolunteerApplicationSerializer,
     VolunteerApplicationSubmitSerializer,
     VolunteerOpportunitySerializer,
+    WorkforceProblemSerializer,
     WorkforceStructureSerializer,
 )
 from maru.workforce.services import (
     submit_volunteer_application,
     upload_onboarding_document,
 )
+from maru.workforce.structure_audit import append_structure_read_audit
+
+logger = logging.getLogger(__name__)
+PROBLEM_CONTENT_TYPE = "application/problem+json"
+
+
+def _problem_response(description: str) -> OpenApiResponse:
+    return OpenApiResponse(
+        response=WorkforceProblemSerializer,
+        description=description,
+    )
 
 
 def _account(request: Request) -> Account:
@@ -51,12 +76,63 @@ def _account(request: Request) -> Account:
     return request.user
 
 
+def _raise_dependency_unavailable(message: str, error: Exception) -> Never:
+    logger.exception(message)
+    raise DependencyUnavailable from error
+
+
+def _authorize_structure(
+    *,
+    account: Account,
+    organization_id: UUID,
+    edition_id: UUID,
+    at: datetime,
+) -> PolicyDecision:
+    decision = decide(
+        principal=account,
+        capability_code="workforce.view_structure",
+        resource=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
+        requested_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+        at=at,
+    )
+    if not decision.allowed:
+        raise PermissionDenied(
+            "This account cannot view the organization structure.",
+            code=decision.reason_code,
+        )
+    try:
+        require_complete_projection(
+            required_fields=WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
+            permitted_fields=decision.fields,
+        )
+    except FieldProjectionDeniedError as error:
+        raise PermissionDenied(
+            "The permitted organization-structure projection is incomplete.",
+            code="field_projection_denied",
+        ) from error
+    return decision
+
+
 class WorkforceStructureView(APIView):
     """Return the current, human-readable edition organization hierarchy."""
 
     @extend_schema(
         operation_id="workforce_retrieve_structure",
-        responses=WorkforceStructureSerializer,
+        responses={
+            200: WorkforceStructureSerializer,
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The structure query contains unsupported input."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The caller cannot view this edition's organization structure."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The complete structure projection is temporarily unavailable."
+            ),
+        },
     )
     def get(
         self,
@@ -65,129 +141,79 @@ class WorkforceStructureView(APIView):
         edition_id: UUID,
     ) -> Response:
         account = _account(request)
-        edition = get_object_or_404(
-            EventEdition.objects.select_related("organization"),
-            id=edition_id,
-            organization_id=organization_id,
-        )
-        decision = decide(
-            principal=account,
-            capability_code="workforce.view_structure",
-            resource=resolve_edition_target(
+        projection_at = timezone_now()
+        reject_unknown_fields(request.query_params, allowed_fields=frozenset())
+        try:
+            _authorize_structure(
+                account=account,
                 organization_id=organization_id,
                 edition_id=edition_id,
-            ),
-        )
-        if not decision.allowed:
+                at=projection_at,
+            )
+        except (DatabaseError, RuntimeError) as error:
+            _raise_dependency_unavailable(
+                "Unable to authorize the workforce structure",
+                error,
+            )
+
+        try:
+            edition = (
+                EventEdition.objects.select_related("organization")
+                .only(
+                    "id",
+                    "name",
+                    "organization_id",
+                    "organization__name",
+                )
+                .get(
+                    id=edition_id,
+                    organization_id=organization_id,
+                )
+            )
+            governance = executive_board_governance_anchor(
+                organization_id=organization_id,
+            )
+            structure = project_edition_structure(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                at=projection_at,
+            )
+            # The projection has one point-in-time meaning. A fresh final
+            # decision additionally prevents authority that expired or was
+            # revoked during the read from releasing the completed response.
+            response_authorized_at = timezone_now()
+            final_decision = _authorize_structure(
+                account=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                at=response_authorized_at,
+            )
+            append_structure_read_audit(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                decision=final_decision,
+                correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+                route_name="workforce-structure",
+                source_channel="api",
+                occurred_at=response_authorized_at,
+            )
+        except EventEdition.DoesNotExist as error:
             raise PermissionDenied(
                 "This account cannot view the organization structure.",
-                code=decision.reason_code,
-            )
-
-        active_assignments = (
-            PositionAssignment.objects.filter(
-                organization_id=organization_id,
-                edition_id=edition_id,
-                status=PositionAssignment.Status.ACTIVE,
-            )
-            .select_related("account", "position", "position__department")
-            .order_by(
-                "account__login_handle",
-                "account__display_name",
-                "account_id",
-                "id",
-            )
-        )
-        positions = (
-            Position.objects.filter(
-                organization_id=organization_id,
-                edition_id=edition_id,
-            )
-            .exclude(status=Position.Status.CLOSED)
-            .prefetch_related(
-                Prefetch(
-                    "assignments",
-                    queryset=active_assignments,
-                    to_attr="active_holders",
-                )
-            )
-            .order_by("title", "id")
-        )
-        departments = list(
-            Department.objects.filter(
-                organization_id=organization_id,
-                edition_id=edition_id,
-            )
-            .prefetch_related(
-                Prefetch("positions", queryset=positions, to_attr="current_positions")
-            )
-            .order_by("position", "name", "id")
-        )
-
-        roles_by_account: dict[UUID, list[dict[str, str]]] = {}
-        for department in departments:
-            for position in department.current_positions:
-                for assignment in position.active_holders:
-                    roles_by_account.setdefault(assignment.account_id, []).append(
-                        {
-                            "department_name": department.name,
-                            "position_title": position.title,
-                        }
-                    )
-
-        department_payload: list[dict[str, object]] = []
-        for department in departments:
-            position_payload: list[dict[str, object]] = []
-            for position in department.current_positions:
-                holder_payload: list[dict[str, object]] = []
-                for assignment in position.active_holders:
-                    account_roles = roles_by_account.get(assignment.account_id, [])
-                    holder_payload.append(
-                        {
-                            "assignment_id": assignment.id,
-                            "display_name": (
-                                assignment.account.display_name
-                                or assignment.account.login_handle
-                                or "Maru account"
-                            ),
-                            "login_handle": assignment.account.login_handle,
-                            "other_roles": [
-                                role
-                                for role in account_roles
-                                if not (
-                                    role["department_name"] == department.name
-                                    and role["position_title"] == position.title
-                                )
-                            ],
-                        }
-                    )
-                position_payload.append(
-                    {
-                        "id": position.id,
-                        "reports_to_id": position.reports_to_id,
-                        "code": position.code,
-                        "title": position.title,
-                        "description": position.description,
-                        "headcount": position.headcount,
-                        "status": position.status,
-                        "holders": holder_payload,
-                    }
-                )
-            department_payload.append(
-                {
-                    "id": department.id,
-                    "parent_id": department.parent_id,
-                    "code": department.code,
-                    "name": department.name,
-                    "description": department.description,
-                    "positions": position_payload,
-                }
+                code="target_unavailable",
+            ) from error
+        except (DatabaseError, DjangoValidationError, RuntimeError) as error:
+            _raise_dependency_unavailable(
+                "Unable to project the workforce structure",
+                error,
             )
 
         payload: dict[str, object] = {
             "organization_name": edition.organization.name,
             "edition_name": edition.name,
-            "departments": department_payload,
+            "governance": asdict(governance),
+            "structure": asdict(structure),
         }
         return Response(WorkforceStructureSerializer(payload).data)
 
