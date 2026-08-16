@@ -113,6 +113,17 @@ pass. An authenticated read-only Logistics browser journey also passes at
 browser slice only; deployment/stopped-writer cutover, broader visual and
 mutation-role coverage, keyboard/automated accessibility, representative
 restore/PITR, and owner/governance gates remain.
+
+GitHub acceptance is now being moved from one impossible 45-minute job to
+separate static, Django/generated-contract, frontend, unit, dependency-
+security, and combined-coverage gates plus 12 isolated PostgreSQL integration
+shards. Every integration file remains whole and serialized inside its shard,
+while independent Actions runners provide database-safe parallelism. One
+stable `CI gate` is the branch-protection target. Pull-request browser smoke,
+nightly compatibility/concurrency/visual matrices, CodeQL/dependency review,
+and release recovery/attestation remain the next testing-infrastructure
+outcomes; ephemeral Actions databases do not satisfy production restore/PITR.
+
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current

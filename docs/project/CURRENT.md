@@ -7,7 +7,7 @@ accepted. ADR 0055's first task-oriented management slice is repository-
 verified; its complete authenticated reflow, keyboard, screen-reader, and owner
 matrix remains open alongside deployment, stopped-writer/cutover, restore/PITR,
 and production-governance gates.
-Branch: `main`
+Branch: `codex/current-tree-consolidation`
 
 ## Current outcome
 
@@ -65,6 +65,24 @@ cross-domain-save design.
   registration-client CORS. Swagger submit methods are disabled.
 - Pinned sidecar assets are served locally and ReDoc makes no external font or
   CDN request. The controlled `maru.baseline_urls` surface remains JSON-only.
+
+### Parallel GitHub acceptance
+
+- The former single 45-minute GitHub job could not represent the recorded
+  4:19:18 canonical suite and failed before tests because its duplicated
+  production fixture omitted the four invitation public/digest settings.
+- One deterministic production-settings verifier now strips inherited Maru
+  configuration, supplies synthetic verification-only invitation material,
+  excludes worker private keys, and checks both exact-provenance modes in
+  isolated subprocesses. Local PowerShell and GitHub call the same verifier.
+- GitHub acceptance is split into static, Django/generated-contract, frontend,
+  unit, 12 isolated PostgreSQL integration, combined-coverage, dependency-
+  security, and stable `CI gate` jobs. Integration files remain whole and
+  serialized within each shard; only isolated runners/databases run in parallel.
+- Unit and shard JUnit/coverage artifacts feed one branch-aware 90-percent
+  verdict. Matrix fail-fast is disabled, superseded pull-request runs are
+  cancelled, and reviewed external actions plus PostgreSQL 17.11 are pinned by
+  immutable digest.
 
 ### Registration, profile, and admission commerce
 
@@ -208,6 +226,14 @@ as the repository-wide gate:
   assets. Fresh OpenAPI 3.1 validation reports zero errors and exactly matches
   checked-in `openapi.yaml` at SHA-256
   `bc65826a8ceb93ca5cbe5e977e9f71dac50430c8168feb5c673fa8f0dccbb6fb`.
+- The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
+  seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
+  formatting/lint passes over 633 files, strict mypy passes over 356 source
+  files, the 78-package lock is current, and documentation validation passes
+  over 242 Markdown files and 202 requirement identifiers. YAML loading,
+  deterministic 157-file/12-shard inventory validation, and both real
+  production-settings modes also pass. The first complete GitHub matrix run is
+  the remaining acceptance evidence for this operational change.
 
 These results accept the repository gate and that bounded browser slice. They
 are not deployment, production-readiness, recovery, accessibility, or owner
@@ -296,16 +322,24 @@ approval.
   records still need conversion and the full 320/390/768/958/1,024/1,280/1,920,
   200-percent-zoom, keyboard, automated-accessibility, screen-reader, and owner
   evidence matrix.
+- GitHub browser/accessibility, multi-Python compatibility, CodeQL, dependency-
+  review, secret-scanning policy, nightly concurrency repetition, and release
+  restore/attestation workflows remain later testing layers. The first complete
+  12-shard remote run must pass before the new `CI gate` is made the
+  protected required check.
 
 ## Smallest sensible next actions
 
-1. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
+1. Complete the first parallel GitHub acceptance run, make `CI gate` the
+   protected required check, then add the bounded pull-request
+   Playwright/keyboard/automated-accessibility matrix.
+2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
-2. Resume Page 10 compatibility-writer retirement/stopped-writer cutover,
+3. Resume Page 10 compatibility-writer retirement/stopped-writer cutover,
    representative authority reconciliation/runtime-role activation, and
    whole-database restore/PITR rehearsal.
-3. Complete provider/infrastructure, load, owner, privacy/legal, finance,
+4. Complete provider/infrastructure, load, owner, privacy/legal, finance,
    safeguarding, and operating-governance acceptance before production use.
 
 ## Resume instructions

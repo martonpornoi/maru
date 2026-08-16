@@ -1,20 +1,83 @@
 name: CI
 
 on:
+  merge_group:
   pull_request:
   push:
     branches: [main, master]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  UV_CACHE_DIR: .uv-cache
+
 jobs:
-  quality:
+  static:
+    name: Static quality
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Restore uv cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .uv-cache
+          key: uv-${{ runner.os }}-py312-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py312-
+
+      - name: Install uv bootstrap
+        run: python -m pip install uv==0.11.29
+
+      - name: Install locked dependencies
+        run: uv sync --all-groups --locked
+
+      - name: Verify dependency lock
+        run: uv lock --check
+
+      - name: Formatting
+        run: uv run ruff format --check .
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Type check
+        run: uv run mypy src
+
+      - name: Documentation
+        run: uv run python scripts/validate_docs.py
+
+      - name: Whitespace in submitted change
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+        run: |
+          if [ -n "${BASE_SHA//0/}" ]; then
+            git diff --check "$BASE_SHA" "$GITHUB_SHA"
+          else
+            git diff-tree --check --no-commit-id -r "$GITHUB_SHA"
+          fi
+
+  django-contracts:
+    name: Django and generated contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:17.11-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
         env:
           POSTGRES_DB: maru
           POSTGRES_USER: maru
@@ -26,23 +89,28 @@ jobs:
           --health-interval 2s
           --health-timeout 3s
           --health-retries 15
-
     env:
       MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:5432/maru
-      UV_CACHE_DIR: .uv-cache
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
 
-      - uses: pnpm/action-setup@v4
+      - name: Restore uv cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .uv-cache
+          key: uv-${{ runner.os }}-py312-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py312-
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
           version: "11.9.0"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "24"
           cache: pnpm
@@ -58,69 +126,304 @@ jobs:
         working-directory: frontends/staff-console
         run: pnpm install --frozen-lockfile
 
-      - name: Formatting
-        run: uv run ruff format --check .
-
-      - name: Lint
-        run: uv run ruff check .
-
-      - name: Type check
-        run: uv run mypy src
-
-      - name: Documentation
-        run: uv run python scripts/validate_docs.py
-
       - name: Django configuration and migration drift
         run: |
           uv run python src/manage.py check --settings=maru.settings.local
           uv run python src/manage.py makemigrations --check --dry-run --settings=maru.settings.local
 
       - name: Production settings validation
-        env:
-          MARU_SETTINGS_MODULE: maru.settings.production
-          MARU_SECRET_KEY: verification-only-not-a-production-secret-at-least-50-characters
-          MARU_ALLOWED_HOSTS: maru.example.invalid
-          MARU_PUBLIC_BASE_URL: https://maru.example.invalid
-          MARU_DEFAULT_FROM_EMAIL: registration@example.com
-          MARU_EMAIL_HOST: smtp.example.com
-          MARU_EMAIL_PORT: "587"
-          MARU_EMAIL_HOST_USER: verification-user
-          MARU_EMAIL_HOST_PASSWORD: verification-password
-          MARU_EMAIL_USE_TLS: "true"
-          MARU_EMAIL_USE_SSL: "false"
-          MARU_CSRF_TRUSTED_ORIGINS: https://maru.example.invalid,https://register.maru.example.invalid
-          MARU_PAYMENT_RETURN_ORIGINS: https://register.maru.example.invalid
-          MARU_PAYMENT_PROVIDER_HOSTS: payments.example.invalid,checkout.example.invalid
-          MARU_REGISTRATION_CLIENT_ORIGINS: https://register.maru.example.invalid
-          MARU_MEDIA_SCANNER: clamav
-          MARU_MEDIA_SCANNER_HOST: scanner.internal
-          MARU_OFFLINE_MANIFEST_SECRET: verification-only-offline-secret-value
-          MARU_RUNTIME_DATABASE_ROLE: maru_runtime
-        run: |
-          for exact_provenance_required in false true; do
-            MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE="$exact_provenance_required" \
-              uv run python src/manage.py check --deploy
-          done
+        run: uv run python scripts/verify_production_settings.py
 
-      - name: OpenAPI compatibility artifact
+      - name: OpenAPI and generated client compatibility
         run: |
           uv run python src/manage.py spectacular --file openapi.yaml --validate --settings=maru.settings.local
           pnpm --dir frontends/staff-console run generate:api
           git diff --exit-code -- openapi.yaml
           git diff --exit-code -- frontends/staff-console/src/api/schema.d.ts
 
-      - name: Staff Console
+  frontend:
+    name: Staff Console
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: "11.9.0"
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: frontends/staff-console/pnpm-lock.yaml
+
+      - name: Install locked dependencies
+        working-directory: frontends/staff-console
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        working-directory: frontends/staff-console
+        run: pnpm run typecheck
+
+      - name: Unit tests
+        working-directory: frontends/staff-console
+        run: pnpm run test
+
+      - name: Production build
         working-directory: frontends/staff-console
         run: |
-          pnpm run typecheck
-          pnpm run test
           pnpm run build
           git diff --exit-code -- ../../src/maru/core/static/staff-console
 
-      - name: Tests and coverage
-        run: uv run pytest --cov=maru --cov-report=term-missing
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17.11-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+        env:
+          POSTGRES_DB: maru
+          POSTGRES_USER: maru
+          POSTGRES_PASSWORD: maru
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U maru -d maru"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:5432/maru
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Restore uv cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .uv-cache
+          key: uv-${{ runner.os }}-py312-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py312-
+
+      - name: Install uv bootstrap
+        run: python -m pip install uv==0.11.29
+
+      - name: Install locked dependencies
+        run: uv sync --all-groups --locked
+
+      - name: Run unit tests with partial coverage
+        run: |
+          mkdir -p coverage-parts reports
+          COVERAGE_FILE=coverage-parts/.coverage.unit uv run pytest tests/unit -q \
+            --cov=maru --cov-report= --cov-fail-under=0 \
+            --junitxml=reports/unit.xml --durations=25
+
+      - name: Upload unit diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: unit-results
+          path: |
+            coverage-parts
+            reports
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+
+  integration:
+    name: PostgreSQL integration (${{ matrix.shard }}/12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    services:
+      postgres:
+        image: postgres:17.11-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+        env:
+          POSTGRES_DB: maru
+          POSTGRES_USER: maru
+          POSTGRES_PASSWORD: maru
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U maru -d maru"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:5432/maru
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Restore uv cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .uv-cache
+          key: uv-${{ runner.os }}-py312-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py312-
+
+      - name: Install uv bootstrap
+        run: python -m pip install uv==0.11.29
+
+      - name: Install locked dependencies
+        run: uv sync --all-groups --locked
+
+      - name: Run deterministic file-level shard
+        run: |
+          mkdir -p coverage-parts reports
+          COVERAGE_FILE=coverage-parts/.coverage.integration-${{ matrix.shard }} \
+            uv run python scripts/run_ci_test_shard.py \
+            --shard-index ${{ matrix.shard }} --shard-count 12 -- \
+            -q --cov=maru --cov-report= --cov-fail-under=0 \
+            --junitxml=reports/integration-${{ matrix.shard }}.xml \
+            --durations=25
+
+      - name: Upload integration diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-${{ matrix.shard }}-results
+          path: |
+            coverage-parts
+            reports
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+
+  coverage:
+    name: Combined coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [unit, integration]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Restore uv cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .uv-cache
+          key: uv-${{ runner.os }}-py312-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py312-
+
+      - name: Install uv bootstrap
+        run: python -m pip install uv==0.11.29
+
+      - name: Install locked dependencies
+        run: uv sync --all-groups --locked
+
+      - name: Download partial results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: "*-results"
+          path: .ci-artifacts
+          merge-multiple: true
+
+      - name: Enforce repository coverage
+        run: |
+          uv run coverage combine .ci-artifacts/coverage-parts
+          uv run coverage report --fail-under=90
+          uv run coverage xml -o coverage.xml
+          uv run coverage html -d htmlcov
+
+      - name: Upload combined coverage
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: combined-coverage
+          path: |
+            coverage.xml
+            htmlcov
+          if-no-files-found: warn
+          retention-days: 14
+
+  security:
+    name: Dependency security
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Restore uv cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .uv-cache
+          key: uv-${{ runner.os }}-py312-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-py312-
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: "11.9.0"
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: frontends/staff-console/pnpm-lock.yaml
+
+      - name: Install uv bootstrap
+        run: python -m pip install uv==0.11.29
+
+      - name: Install locked dependencies
+        run: uv sync --all-groups --locked
+
+      - name: Install locked Staff Console dependencies
+        working-directory: frontends/staff-console
+        run: pnpm install --frozen-lockfile
 
       - name: Dependency vulnerability audit
         run: |
           uv run pip-audit
           pnpm --dir frontends/staff-console audit --prod --audit-level high
+
+  ci-gate:
+    name: CI gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ always() }}
+    needs:
+      - static
+      - django-contracts
+      - frontend
+      - unit
+      - integration
+      - coverage
+      - security
+    steps:
+      - name: Require every acceptance job
+        if: >-
+          ${{
+            needs.static.result != 'success' ||
+            needs.django-contracts.result != 'success' ||
+            needs.frontend.result != 'success' ||
+            needs.unit.result != 'success' ||
+            needs.integration.result != 'success' ||
+            needs.coverage.result != 'success' ||
+            needs.security.result != 'success'
+          }}
+        run: exit 1
+
+      - name: Record acceptance
+        run: echo "All required Maru CI jobs passed."
