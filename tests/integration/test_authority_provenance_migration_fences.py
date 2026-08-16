@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from importlib import import_module
 from threading import Event
 from time import monotonic
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from django.apps import apps as django_apps
@@ -202,22 +202,28 @@ def _activation_audit_without_marker() -> None:
     )
 
 
-def _exact_activation_pair() -> None:
-    administrator = AccountFactory(is_staff=True, is_superuser=True)
+def _exact_activation_pair(*, administrator_id: UUID) -> None:
     correlation_id = uuid4()
     with transaction.atomic():
-        marker = AuthorityProvenanceActivation.objects.create(
-            contract_version=AUTHORITY_PROVENANCE_CONTRACT_VERSION,
-            policy_version=AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
-            activated_by=administrator,
-            reason="Prove an exact active database can install the reciprocal guard.",
-            correlation_id=correlation_id,
-        )
+        marker = AuthorityProvenanceActivation.objects.bulk_create(
+            [
+                AuthorityProvenanceActivation(
+                    contract_version=AUTHORITY_PROVENANCE_CONTRACT_VERSION,
+                    policy_version=AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
+                    activated_by_id=administrator_id,
+                    reason=(
+                        "Prove an exact active database can install the reciprocal "
+                        "guard."
+                    ),
+                    correlation_id=correlation_id,
+                )
+            ]
+        )[0]
         marker.refresh_from_db(fields=("activated_at",))
         append_audit(
             AuditRecord(
                 principal_kind="platform_administrator",
-                principal_id=administrator.id,
+                principal_id=administrator_id,
                 principal_context_id=None,
                 organization_id=None,
                 event_edition_id=None,
@@ -387,8 +393,9 @@ def test_reserved_audit_guard_upgrade_rejects_legacy_orphan() -> None:
 
 
 def test_reserved_audit_guard_accepts_exact_active_upgrade_and_fences_reverse() -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
     _migrate(AUTHORIZATION_WITH_BASE_ACTIVATION, AUDIT_WITH_GUARDS)
-    _exact_activation_pair()
+    _exact_activation_pair(administrator_id=administrator.id)
 
     _migrate(AUDIT_WITH_RESERVED_GUARD)
     reciprocal_guard, _latch_helper, trigger_count = _reciprocal_guard_objects()

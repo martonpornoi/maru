@@ -406,6 +406,29 @@ capacities, or publish an official role. Use the workforce position-assignment
 workflow when those consequences are required; use access sharing for a
 reasoned system-access assignment.
 
+## Shared page Access component and preview
+
+The stable `{% maru_page_access %}` template contract mounts one computed
+**Access** explanation in the administration, baseline-management, and public
+registration shells. It resolves the persisted organization, edition, exact
+Department, or supported typed resource before evaluating capabilities. The
+signed workspace locator is only a tamper-evident pointer; the server re-resolves
+the complete tenant chain and current authority on every request.
+
+Mutable scoped pages link to the canonical role-assignment commands. They do
+not store page ACLs. Platform, own-record, attendee/public audience,
+representation, safeguarding, and security pages explain their fixed policy
+and omit mutation. Named people and immutable role versions are released only
+after `authorization.manage_roles` succeeds and the sensitive relationship read
+is audited.
+
+The server-rendered workspace supports exact-person and hypothetical immutable-
+role previews. Preview never changes the session principal, never enables write
+controls, is capped by the real viewer's field authority, is private/no-store,
+and appends minimized audit evidence. Assignment and revocation POSTs ignore
+all preview concepts and authorize the real signed-in account against the exact
+resolved target.
+
 ## Specialist records
 
 Capability grants, role-bundle versions, and role assignments are searchable,
@@ -463,8 +486,8 @@ here.
 
 ## Limitations
 
-Production legacy reconciliation/cutover, representative authority load, a
-complete computed effective-access explanation, step-up execution,
+Production legacy reconciliation/cutover, representative authority load,
+step-up execution,
 service/device principals,
 asynchronous approval workflow, grant review reminders, purpose binding, and
 policy caching are not implemented. The synchronous independent approver
@@ -475,8 +498,9 @@ enforcement contracts must be adopted
 and extended with each domain slice; they are not a generic shortcut around
 domain-specific relationships and state.
 
-The current access workspace remains edition-oriented. Exact department and
-Position authority is supported by policy, commands, and database records, but
-a complete UX-020 effective-access explanation and purpose-built nested access
-editor remain open. Appointment expiry/replacement/end and explicit legacy
-authority reconciliation also remain open.
+The shared contextual workspace resolves organization, edition, exact
+Department, workforce Position, charity selection, and venue-space targets.
+Additional future typed-resource kinds must register their deterministic
+binding resolver before receiving a mutation link. Appointment
+expiry/replacement/end and explicit legacy authority reconciliation remain
+open.

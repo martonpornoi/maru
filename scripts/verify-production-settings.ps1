@@ -34,6 +34,25 @@ $env:MARU_MEDIA_SCANNER_HOST = "scanner.internal"
 $env:MARU_OFFLINE_MANIFEST_SECRET = (
     "verification-only-offline-manifest-secret-value"
 )
+$env:MARU_IDENTITY_INVITATION_ENCRYPTION_KEY_ID = "verification-key-2026-08"
+$env:MARU_IDENTITY_INVITATION_PUBLIC_KEY_B64 = (
+    "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0" +
+    "FROEFNSUlCQ2dLQ0FRRUF0TVUwd1ZQVVZwSzZEOFU5RXVjOQpIY3Irc2YrL3l5ay9ya3NEYTdT" +
+    "YWpDR0lqSDFCOVZKSG0wZnh1am52azk5SWhPNHdkZ3BKeXltNUlIdUd0cmtoCm5JSTlvdHRGRF" +
+    "RqWHlSKzZ5Yis3a0NkTlRvU2xoU1lFaitPYnFiTXJaaTBFdHZrRmFTYzl3SHV3WFZVMHFSTG8K" +
+    "SHhUdUpwMXkxQmNMY1dLd0xjSU9mUmJMdTJpMEJ3eDN4YytLV3FLUFM5ZVNta0tKUnh3VE1obG" +
+    "d3OGNBK3dQUApBRm1uQXZQRnVLRUxnYXVseEw3L2FkdFJsaTEvZVpiNm4wWjZKS09iWGJHWmo1" +
+    "bEtPVEw5OHpUWURpRXlzcFdDClF6OTZmd3A5R0xLeHlob0dUSmdaV2JqMlE0ZUoxRjFGMFMraE" +
+    "xPZmdtS3RtNkNYQzgzYzRmUWhzQnFzNkdnREwKWFFJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtF" +
+    "WS0tLS0tCg=="
+)
+$env:MARU_IDENTITY_INVITATION_DIGEST_ACTIVE_KEY_ID = (
+    "verification-digest-2026-08"
+)
+$verificationDigestKey = [Convert]::ToBase64String([byte[]](1..32))
+$env:MARU_IDENTITY_INVITATION_DIGEST_KEYS_JSON = (
+    "{`"verification-digest-2026-08`":`"$verificationDigestKey`"}"
+)
 foreach ($exactProvenanceRequired in @("false", "true")) {
     $env:MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE = $exactProvenanceRequired
     if (Test-Path -LiteralPath $localPython) {

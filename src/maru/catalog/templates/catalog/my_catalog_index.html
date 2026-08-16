@@ -1,0 +1,35 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Shop &amp; orders{% endblock %}
+{% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-maru-home' %}">My Maru</a> &rsaquo; Shop &amp; orders</div>{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="baseline-page">
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">My Maru</p>
+      <h1>Shop &amp; orders</h1>
+      <p>Browse active edition catalogs, support convention charities, and return to your order history.</p>
+    </header>
+    {% for catalog in catalogs %}
+      <section class="baseline-panel">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">{{ catalog.edition.series.name }}</p>
+            <h2>{{ catalog.edition.name }}</h2>
+          </div>
+          <span class="baseline-count">{{ catalog.currency }}</span>
+        </div>
+        <p>
+          <a class="button" href="{% url 'my-catalog' catalog.edition_id %}">Browse products</a>
+          <a class="button secondary" href="{% url 'my-catalog-orders' catalog.edition_id %}">Order history</a>
+        </p>
+      </section>
+    {% empty %}
+      <section class="baseline-panel">
+        <p>No edition catalog is open right now.</p>
+      </section>
+    {% endfor %}
+  </div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-management-page">
+    <header class="maru-page-header">
+      <div>
+        <p class="maru-eyebrow">{{ organization.name }} / {{ convention_series.name }} / {{ edition.name }} / Logistics</p>
+        <h1>{{ manifest.manifest_number }} — {{ manifest.title }}</h1>
+        <p>{{ manifest.kind|capfirst }} / {{ manifest.status|capfirst }} / version {{ manifest.aggregate_version }}</p>
+      </div>
+    </header>
+
+    <section class="module" aria-labelledby="manifest-route-title">
+      <h2 id="manifest-route-title">Route and receiving</h2>
+      <dl>
+        <dt>Source</dt><dd>{{ manifest.source_name|default:"Not specified" }}</dd>
+        <dt>Destination</dt><dd>{{ manifest.destination_name|default:"Not specified" }}</dd>
+        <dt>Vehicle</dt><dd>{{ manifest.vehicle_name|default:"Not specified" }}</dd>
+        <dt>Loading window</dt><dd>{{ manifest.loading_starts_at|default:"Not specified" }} – {{ manifest.loading_ends_at|default:"Not specified" }}</dd>
+        <dt>Box count</dt><dd>{{ manifest.box_count }}</dd>
+      </dl>
+    </section>
+
+    <section class="module" aria-labelledby="manifest-content-title">
+      <h2 id="manifest-content-title">Box and item contents</h2>
+      {% if receipt_rows %}
+        <table>
+          <thead><tr><th>Label</th><th>Kind</th><th>Quantity</th><th>Packed in</th><th>State</th><th>Notes</th><th>Receiving action</th></tr></thead>
+          <tbody>
+            {% for row in receipt_rows %}
+              <tr>
+                <th scope="row">{{ row.line.label_snapshot }}</th>
+                <td>{{ row.line.subject_kind }}</td>
+                <td>{{ row.line.quantity }}</td>
+                <td>{{ row.line.packed_in_label|default:"—" }}</td>
+                <td>{{ row.line.current_state|capfirst }}</td>
+                <td>{{ row.line.notes|default:"—" }}</td>
+                <td>
+                  {% if row.receipt_form %}
+                    <form method="post" action="{% url 'logistics-manifest-receipt' organization.slug convention_series.slug edition.slug manifest.id row.line.id %}">
+                      {% csrf_token %}
+                      {{ row.receipt_form.as_p }}
+                      <button type="submit">Record receipt</button>
+                    </form>
+                  {% else %}
+                    <span>Already received or unavailable</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}<p>This manifest has no visible content lines.</p>{% endif %}
+    </section>
+  </div>
+{% endblock %}

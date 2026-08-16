@@ -60,10 +60,29 @@ const accessWorkspace = {
   organization_name: "Pannon Paws Foundation (Demo)",
   edition_name: "Danube Furry Convention 2026",
   can_revoke_assignments: true,
+  effective_access: {
+    scope_level: "edition",
+    scope_label: "Danube Furry Convention 2026",
+    can_manage_access: true,
+    actions: [
+      {
+        capability_code: "authorization.manage_roles",
+        label: "Review, assign, and change scoped access",
+        allowed: true,
+        permitted_fields: [],
+        obligations: ["audit"],
+        reason_code: "role_assignment",
+        source_category: "immutable_role",
+        source_label: "Assigned immutable role",
+      },
+    ],
+  },
   groups: [
     {
+      role_version_id: "10101010-1010-4010-8010-101010101010",
       code: "board-member",
       name: "Board",
+      version: 1,
       description: "Oversee convention preparation and accountable decisions.",
       capability_count: 1,
       capabilities: [
@@ -75,8 +94,10 @@ const accessWorkspace = {
       ],
     },
     {
+      role_version_id: "20202020-2020-4020-8020-202020202020",
       code: "front-desk",
       name: "Front Desk",
+      version: 2,
       description: "Serve attendees through arrival and check-in.",
       capability_count: 1,
       capabilities: [
@@ -103,6 +124,31 @@ const accessWorkspace = {
       approved_by_name: "Board Approver",
     },
   ],
+};
+
+const accessPreview = {
+  mode: "person",
+  subject_id: "30303030-3030-4030-8030-303030303030",
+  subject_label: "Helpful Volunteer",
+  scope_level: "edition",
+  scope_label: "Danube Furry Convention 2026",
+  evaluated_at: "2026-07-27T09:00:00Z",
+  capabilities: [
+    {
+      capability_code: "participation.view_staff_summary",
+      label: "Participation · View Staff Summary",
+      description: "View minimized participant summaries.",
+      source_category: "immutable_role",
+      source_label: "Assigned immutable role",
+      obligations: ["audit_sensitive_read"],
+      visible_fields: [],
+      data_preview_available: false,
+      disclosure_limited: true,
+    },
+  ],
+  disclosure_limited_count: 1,
+  session_unchanged: true,
+  mutation_allowed: false,
 };
 
 const closureReadiness = {
@@ -322,6 +368,7 @@ describe("Management Console", () => {
         if (url === "/api/v1/me/context") return jsonResponse(context);
         if (url.includes("/participations?")) return jsonResponse(people);
         if (url.endsWith("/actions")) return jsonResponse(actions);
+        if (url.endsWith("/access/preview")) return jsonResponse(accessPreview);
         if (url.endsWith("/access")) return jsonResponse(accessWorkspace);
         if (url.endsWith("/closure-readiness")) {
           return jsonResponse(closureReadiness);
@@ -748,6 +795,56 @@ describe("Management Console", () => {
         }),
       );
     });
+  });
+
+  it("previews an exact person without impersonation or mutation controls", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", {
+      name: "Danube Furry Convention 2026",
+    });
+
+    await user.click(await screen.findByRole("button", { name: "Manage access" }));
+    const drawer = screen.getByRole("dialog", { name: "Access to Today" });
+    expect(
+      within(drawer).getByRole("heading", { name: "Your effective access" }),
+    ).toBeInTheDocument();
+    expect(within(drawer).getByText("Assigned immutable role"))
+      .toBeInTheDocument();
+
+    await user.type(
+      within(drawer).getByRole("textbox", { name: "Exact person email" }),
+      "helper@example.invalid",
+    );
+    await user.click(
+      within(drawer).getByRole("button", { name: "Preview person" }),
+    );
+
+    expect(
+      await within(drawer).findByText("Preview only · your session has not changed"),
+    ).toBeInTheDocument();
+    expect(
+      within(drawer).getByRole("heading", { name: "Helpful Volunteer" }),
+    ).toBeInTheDocument();
+    expect(within(drawer).getByText("Details capped")).toBeInTheDocument();
+    expect(
+      within(drawer).queryByRole("button", { name: "Share access" }),
+    ).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringMatching(/\/access\/preview$/),
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining("helper@example.invalid"),
+        }),
+      );
+    });
+
+    await user.click(within(drawer).getByRole("button", { name: "Exit preview" }));
+    expect(
+      within(drawer).getByRole("button", { name: "Share access" }),
+    ).toBeInTheDocument();
   });
 
   it("does not reveal people, counts, or filters after a policy denial", async () => {

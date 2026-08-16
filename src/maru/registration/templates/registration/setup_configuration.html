@@ -1,0 +1,179 @@
+{% extends "registration/setup_action_base.html" %}
+
+{% block registration_action_title %}Registration builder{% endblock %}
+{% block registration_action_breadcrumb %}Builder{% endblock %}
+{% block registration_action_heading %}Registration builder{% endblock %}
+{% block registration_action_intro %}
+  Review {{ configuration.name }} as one record-oriented, edition-owned form
+  version. Sections, questions, products, and minor policy share one governed
+  setup version and evidence trail.
+{% endblock %}
+{% block registration_reload_link %}
+  <a href="{% url 'registration-setup-configuration' organization.slug convention_series.slug edition.slug configuration.id %}">Reload the latest registration builder</a>
+{% endblock %}
+
+{% block registration_action_content %}
+  <section class="baseline-panel" aria-labelledby="registration-configuration-summary-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Configuration record</p>
+        <h2 id="registration-configuration-summary-title">{{ configuration.name }}</h2>
+      </div>
+      <span class="baseline-count">{{ configuration.status|capfirst }}</span>
+    </div>
+    <dl class="registration-configuration-summary">
+      <div><dt>Origin</dt><dd>{% if configuration.origin == "blank" %}Blank setup{% elif configuration.origin == "published_template" %}Published template copy{% elif configuration.origin == "prior_edition" %}Prior edition copy{% else %}Existing setup{% endif %}</dd></div>
+      <div><dt>Review</dt><dd>{% if configuration.review_required %}Required{% else %}Recorded{% endif %}</dd></div>
+      <div><dt>Sections</dt><dd>{{ registration_workspace.sections|length }}</dd></div>
+      <div><dt>Questions</dt><dd>{{ registration_workspace.question_count }}</dd></div>
+      <div><dt>Products</dt><dd>{{ registration_workspace.product_count }}</dd></div>
+      <div><dt>Content evidence</dt><dd><code>{{ configuration.content_digest|slice:":12" }}…</code></dd></div>
+    </dl>
+    {% if registration_mutations_allowed %}
+      <div class="registration-setup-actions" aria-label="Builder actions">
+        <a class="registration-setup-action" href="{% url 'registration-setup-section-create' organization.slug convention_series.slug edition.slug configuration.id %}">Add section</a>
+        <a class="registration-setup-action" href="{% url 'registration-setup-question-create' organization.slug convention_series.slug edition.slug configuration.id %}">Add question</a>
+        <a class="registration-setup-action" href="{% url 'registration-setup-product-create' organization.slug convention_series.slug edition.slug configuration.id %}">Add product</a>
+        <a class="registration-setup-action" href="{% url 'registration-setup-minor-policy' organization.slug convention_series.slug edition.slug configuration.id %}">Minor policy</a>
+        <a class="registration-setup-action" href="{% url 'registration-setup-profile-fields' organization.slug convention_series.slug edition.slug %}">Profile extensions</a>
+      </div>
+    {% else %}
+      <div class="baseline-state baseline-state--warning" role="status">
+        <h3>Builder is read-only</h3>
+        <p>{{ registration_mutation_blocked_reason }}</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="baseline-panel registration-sections-panel" aria-labelledby="registration-sections-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Stable order</p>
+        <h2 id="registration-sections-title">Registration sections</h2>
+      </div>
+      <span class="baseline-count">{{ section_editors|length }} of 64</span>
+    </div>
+    {% if not section_editors %}
+      <div class="baseline-state" data-state="empty">
+        <h3>Zero custom sections is valid</h3>
+        <p>
+          Core attendee profile fields remain in their typed domains. Maru does
+          not invent a placeholder question merely to make this draft valid.
+        </p>
+        {% if registration_mutations_allowed %}<p><a href="{% url 'registration-setup-section-create' organization.slug convention_series.slug edition.slug configuration.id %}">Create the first section</a></p>{% endif %}
+      </div>
+    {% else %}
+      <ol class="registration-section-list">
+        {% for editor in section_editors %}
+          <li id="registration-section-{{ editor.ordinal }}" class="registration-section-card">
+            <article aria-labelledby="registration-section-title-{{ editor.ordinal }}">
+              <header>
+                <div>
+                  <p class="baseline-kicker">Section {{ editor.ordinal }}</p>
+                  <h3 id="registration-section-title-{{ editor.ordinal }}">{{ editor.section.title }}</h3>
+                  <p><code>{{ editor.section.key }}</code> · {{ editor.section.question_count }} question{{ editor.section.question_count|pluralize }}</p>
+                </div>
+                <span class="baseline-count">Position {{ editor.section.position }}</span>
+              </header>
+              {% if editor.section.description %}<p class="registration-section-description">{{ editor.section.description }}</p>{% endif %}
+
+              {% if registration_mutations_allowed %}
+                <div class="registration-section-controls" aria-label="Manage {{ editor.accessible_name }}">
+                  <details{% if active_section_id == editor.section.id and active_action == "update" %} open{% endif %}>
+                    <summary>Edit section</summary>
+                    <form method="post" action="{% url 'update-registration-setup-section' organization.slug convention_series.slug edition.slug configuration.id editor.section.id %}" class="baseline-form" novalidate>
+                      {% csrf_token %}
+                      {{ editor.update_form.expected_version }}
+                      {{ editor.update_form.retry_key }}
+                      {% if editor.update_form.non_field_errors or editor.update_form.expected_version.errors or editor.update_form.retry_key.errors %}<div class="baseline-errors" role="alert">{{ editor.update_form.non_field_errors }}{{ editor.update_form.expected_version.errors }}{{ editor.update_form.retry_key.errors }}</div>{% endif %}
+                      {% include "core/_baseline_form_field.html" with field=editor.update_form.key %}
+                      {% include "core/_baseline_form_field.html" with field=editor.update_form.title %}
+                      {% include "core/_baseline_form_field.html" with field=editor.update_form.description %}
+                      {% include "core/_baseline_form_field.html" with field=editor.update_form.reason %}
+                      <div class="baseline-form-actions"><button type="submit"{% if reload_required %} disabled aria-disabled="true"{% endif %}>Save section</button></div>
+                    </form>
+                  </details>
+
+                  <details{% if active_section_id == editor.section.id and active_action == "move" %} open{% endif %}>
+                    <summary>Move section</summary>
+                    <form method="post" action="{% url 'move-registration-setup-section' organization.slug convention_series.slug edition.slug configuration.id editor.section.id %}" class="baseline-form" novalidate>
+                      {% csrf_token %}
+                      {{ editor.move_form.expected_version }}
+                      {{ editor.move_form.retry_key }}
+                      {% if editor.move_form.non_field_errors or editor.move_form.expected_version.errors or editor.move_form.retry_key.errors %}<div class="baseline-errors" role="alert">{{ editor.move_form.non_field_errors }}{{ editor.move_form.expected_version.errors }}{{ editor.move_form.retry_key.errors }}</div>{% endif %}
+                      {% include "core/_baseline_form_field.html" with field=editor.move_form.after_section_id %}
+                      {% include "core/_baseline_form_field.html" with field=editor.move_form.reason %}
+                      <div class="baseline-form-actions"><button type="submit"{% if reload_required %} disabled aria-disabled="true"{% endif %}>Move section</button></div>
+                    </form>
+                  </details>
+
+                  <details class="registration-section-danger"{% if active_section_id == editor.section.id and active_action == "delete" %} open{% endif %}>
+                    <summary>Remove section</summary>
+                    <form method="post" action="{% url 'remove-registration-setup-section' organization.slug convention_series.slug edition.slug configuration.id editor.section.id %}" class="baseline-form" novalidate>
+                      {% csrf_token %}
+                      {{ editor.delete_form.expected_version }}
+                      {{ editor.delete_form.retry_key }}
+                      {% if editor.delete_form.non_field_errors or editor.delete_form.expected_version.errors or editor.delete_form.retry_key.errors %}<div class="baseline-errors" role="alert">{{ editor.delete_form.non_field_errors }}{{ editor.delete_form.expected_version.errors }}{{ editor.delete_form.retry_key.errors }}</div>{% endif %}
+                      <p>
+                        Removal is permanent and never cascades. Maru refuses if
+                        any question still belongs to this section.
+                      </p>
+                      {% include "core/_baseline_form_field.html" with field=editor.delete_form.reason %}
+                      <div class="baseline-form-actions"><button type="submit" class="registration-danger-button"{% if reload_required %} disabled aria-disabled="true"{% endif %}>Remove unused section</button></div>
+                    </form>
+                  </details>
+                </div>
+              {% endif %}
+            </article>
+          </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+  </section>
+
+  <section class="baseline-panel registration-sections-panel" aria-labelledby="registration-questions-title">
+    <div class="baseline-panel-heading">
+      <div><p class="baseline-kicker">Typed schema</p><h2 id="registration-questions-title">Registration questions</h2></div>
+      <span class="baseline-count">{{ question_editors|length }} of 256</span>
+    </div>
+    {% if not question_editors %}
+      <div class="baseline-state" data-state="empty"><h3>Zero custom questions is valid</h3><p>Typed core profile records remain available without duplicating them here.</p></div>
+    {% else %}
+      <ol class="registration-section-list">
+        {% for editor in question_editors %}
+          <li class="registration-section-card"><article>
+            <header><div><p class="baseline-kicker">Question {{ editor.ordinal }}</p><h3>{{ editor.question.label }}</h3><p><code>{{ editor.question.key }}</code> · {{ editor.question.field_type }}</p></div><span class="baseline-count">Position {{ editor.question.position }}</span></header>
+            <p>{{ editor.question.purpose }}</p>
+            {% if registration_mutations_allowed %}<div class="registration-section-controls">
+              <details><summary>Edit question</summary><form method="post" action="{% url 'update-registration-setup-question' organization.slug convention_series.slug edition.slug configuration.id editor.question.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ editor.update_form.expected_version }}{{ editor.update_form.retry_key }}
+                {% include "core/_baseline_form_field.html" with field=editor.update_form.key %}{% include "core/_baseline_form_field.html" with field=editor.update_form.label %}{% include "core/_baseline_form_field.html" with field=editor.update_form.help_text %}{% include "core/_baseline_form_field.html" with field=editor.update_form.field_type %}{% include "core/_baseline_form_field.html" with field=editor.update_form.options %}{% include "core/_baseline_form_field.html" with field=editor.update_form.purpose %}{% include "core/_baseline_form_field.html" with field=editor.update_form.classification %}{% include "core/_baseline_form_field.html" with field=editor.update_form.required %}{% include "core/_baseline_form_field.html" with field=editor.update_form.visibility %}{% include "core/_baseline_form_field.html" with field=editor.update_form.section_id %}{% include "core/_baseline_form_field.html" with field=editor.update_form.condition_question_key %}{% include "core/_baseline_form_field.html" with field=editor.update_form.condition_value %}{% include "core/_baseline_form_field.html" with field=editor.update_form.reason %}<div class="baseline-form-actions"><button type="submit">Save question</button></div>
+              </form></details>
+              <details><summary>Move question</summary><form method="post" action="{% url 'move-registration-setup-question' organization.slug convention_series.slug edition.slug configuration.id editor.question.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ editor.move_form.expected_version }}{{ editor.move_form.retry_key }}{% include "core/_baseline_form_field.html" with field=editor.move_form.after_question_id %}{% include "core/_baseline_form_field.html" with field=editor.move_form.reason %}<div class="baseline-form-actions"><button type="submit">Move question</button></div></form></details>
+              <details class="registration-section-danger"><summary>Remove question</summary><form method="post" action="{% url 'remove-registration-setup-question' organization.slug convention_series.slug edition.slug configuration.id editor.question.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ editor.delete_form.expected_version }}{{ editor.delete_form.retry_key }}<p>Removal never cascades into conditional questions or protected evidence.</p>{% include "core/_baseline_form_field.html" with field=editor.delete_form.reason %}<div class="baseline-form-actions"><button class="registration-danger-button" type="submit">Remove unused question</button></div></form></details>
+            </div>{% endif %}
+          </article></li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+  </section>
+
+  <section class="baseline-panel registration-sections-panel" aria-labelledby="registration-products-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">Admission catalog</p><h2 id="registration-products-title">Admission products</h2></div><span class="baseline-count">{{ product_editors|length }} of 128</span></div>
+    {% if not product_editors %}<div class="baseline-state" data-state="empty"><h3>No admission product yet</h3><p>Create a bounded priced or free admission product before activation.</p></div>{% else %}
+      <ol class="registration-section-list">{% for editor in product_editors %}<li class="registration-section-card"><article>
+        <header><div><p class="baseline-kicker">Product {{ editor.ordinal }}</p><h3>{{ editor.product.name }}</h3><p><code>{{ editor.product.code }}</code> · {{ editor.product.price_minor }} minor units</p></div><span class="baseline-count">{{ editor.product.capacity }} initial / {{ editor.product.capacity_ceiling }} ceiling</span></header>
+        {% if editor.product.description %}<p>{{ editor.product.description }}</p>{% endif %}
+        {% if registration_mutations_allowed %}<div class="registration-section-controls">
+          <details><summary>Edit product</summary><form method="post" action="{% url 'update-registration-setup-product' organization.slug convention_series.slug edition.slug configuration.id editor.product.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ editor.update_form.expected_version }}{{ editor.update_form.retry_key }}
+            {% include "core/_baseline_form_field.html" with field=editor.update_form.capacity_ceiling %}
+            {% include "core/_baseline_form_field.html" with field=editor.update_form.code %}{% include "core/_baseline_form_field.html" with field=editor.update_form.name %}{% include "core/_baseline_form_field.html" with field=editor.update_form.description %}{% include "core/_baseline_form_field.html" with field=editor.update_form.price_minor %}{% include "core/_baseline_form_field.html" with field=editor.update_form.capacity %}{% include "core/_baseline_form_field.html" with field=editor.update_form.entitlement_code %}{% include "core/_baseline_form_field.html" with field=editor.update_form.entitlement_name %}{% include "core/_baseline_form_field.html" with field=editor.update_form.sales_open_at %}{% include "core/_baseline_form_field.html" with field=editor.update_form.sales_close_at %}{% include "core/_baseline_form_field.html" with field=editor.update_form.required_capacity_codes %}{% include "core/_baseline_form_field.html" with field=editor.update_form.eligibility_explanation %}{% include "core/_baseline_form_field.html" with field=editor.update_form.waitlist_enabled %}{% include "core/_baseline_form_field.html" with field=editor.update_form.payment_window_minutes %}{% include "core/_baseline_form_field.html" with field=editor.update_form.reason %}<div class="baseline-form-actions"><button type="submit">Save product</button></div>
+          </form></details>
+          <details><summary>Move product</summary><form method="post" action="{% url 'move-registration-setup-product' organization.slug convention_series.slug edition.slug configuration.id editor.product.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ editor.move_form.expected_version }}{{ editor.move_form.retry_key }}{% include "core/_baseline_form_field.html" with field=editor.move_form.after_product_id %}{% include "core/_baseline_form_field.html" with field=editor.move_form.reason %}<div class="baseline-form-actions"><button type="submit">Move product</button></div></form></details>
+          <details class="registration-section-danger"><summary>Remove product</summary><form method="post" action="{% url 'remove-registration-setup-product' organization.slug convention_series.slug edition.slug configuration.id editor.product.id %}" class="baseline-form" novalidate>{% csrf_token %}{{ editor.delete_form.expected_version }}{{ editor.delete_form.retry_key }}<p>Referenced registrations, offers, orders, and finance evidence always block removal.</p>{% include "core/_baseline_form_field.html" with field=editor.delete_form.reason %}<div class="baseline-form-actions"><button class="registration-danger-button" type="submit">Remove unused product</button></div></form></details>
+        </div>{% endif %}
+      </article></li>{% endfor %}</ol>
+    {% endif %}
+  </section>
+
+  <section class="baseline-panel" aria-labelledby="minor-policy-summary-title"><div class="baseline-panel-heading"><div><p class="baseline-kicker">Guardian workflow</p><h2 id="minor-policy-summary-title">Minor registration policy</h2></div><span class="baseline-count">{% if minor_policy %}{% if minor_policy.enabled %}Enabled{% else %}Disabled{% endif %}{% else %}Not configured{% endif %}</span></div><p>An enabled policy requires server-attributed jurisdiction review evidence. Removing it never removes guardian consent history.</p><p><a href="{% url 'registration-setup-minor-policy' organization.slug convention_series.slug edition.slug configuration.id %}">Review minor policy</a></p></section>
+{% endblock %}

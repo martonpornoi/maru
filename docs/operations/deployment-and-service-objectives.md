@@ -1,7 +1,7 @@
 # Deployment and service objectives
 
 Status: Registration safety services defined; target deployment certification required  
-Last updated: 2026-07-28
+Last updated: 2026-08-16
 
 Maru must be operable by a small professional team and approachable to
 community contributors. It should not require a distributed-systems department
@@ -123,6 +123,11 @@ MARU_PAYMENT_PROVIDER_HOSTS
 MARU_MEDIA_SCANNER=clamav
 MARU_MEDIA_SCANNER_HOST
 MARU_OFFLINE_MANIFEST_SECRET
+MARU_IDENTITY_INVITATION_ENCRYPTION_KEY_ID
+MARU_IDENTITY_INVITATION_PUBLIC_KEY_B64
+MARU_IDENTITY_INVITATION_DIGEST_ACTIVE_KEY_ID
+MARU_IDENTITY_INVITATION_DIGEST_KEYS_JSON
+MARU_IDENTITY_INVITATION_RETENTION_POLICY_JSON
 MARU_RUNTIME_DATABASE_ROLE
 MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE=true|false
 ```
@@ -130,6 +135,112 @@ MARU_REQUIRE_EXACT_AUTHORITY_PROVENANCE=true|false
 Along with the ordinary strong secret, explicit hosts, PostgreSQL URL, and
 secure settings. Provider account rows name credential/webhook-secret
 environment variables; their values are injected by the secret manager.
+
+`MARU_PUBLIC_BASE_URL` is the bearer-link origin for account invitations. It
+must be one already-normalized HTTPS origin: lowercase canonical host, optional
+non-default port, and no userinfo, path, query, fragment, trailing slash, or
+explicit `:443`. The invitation public encryption key is web-visible; its
+private-key ring exists only in the delivery-worker environment. The dedicated
+digest keyring contains one active 32–64 byte HMAC key plus at most three
+fallback keys for controlled rotation. It must not reuse `MARU_SECRET_KEY`.
+
+Invitation contact retention has no code-owned duration. Legal/controller
+review must provide one exact closed JSON document in
+`MARU_IDENTITY_INVITATION_RETENTION_POLICY_JSON`:
+
+```text
+{
+  "policy_id": "replace-with-approved-policy-id",
+  "version": APPROVED_POSITIVE_INTEGER,
+  "jurisdiction_code": "REPLACE_WITH_APPROVED_JURISDICTION",
+  "trigger": "terminal_transition",
+  "period_days": APPROVED_NONNEGATIVE_INTEGER,
+  "action": "anonymize_abandoned_invitation_contact",
+  "approved_by_reference": "replace-with-review-reference",
+  "approved_at": "REPLACE_WITH_APPROVED_UTC_TIMESTAMP"
+}
+```
+
+The example values are not legal advice or production defaults. Replace every
+value, including `period_days`, with the approved deployment policy. Unknown,
+missing, overlong, naive/future-time, wrong-trigger, or wrong-action values
+fail closed. After migration, run the following once with the migration-owner
+database credential; the runtime role is deliberately SELECT-only on this
+control:
+
+```text
+python src/manage.py activate_platform_invitation_retention_policy
+```
+
+Any policy change must advance `version`, receive a new approval reference and
+time, and be reactivated before cleanup can resume. Policy timestamps and all
+hold, receipt, assessment, heartbeat, and cursor evidence are compared with
+the PostgreSQL clock without an application-host tolerance. Retention evidence
+accepts only the exact source channels `operator` and `scheduler`.
+
+Run invitation expiry, delivery, and retention as separate supervised jobs:
+
+```text
+python src/manage.py expire_platform_account_invitations --limit 1000
+python src/manage.py platform_invitation_delivery --delivery-limit 1000
+python src/manage.py run_platform_invitation_retention --limit 100
+```
+
+Expiry is key-independent and must continue when every delivery private key is
+unavailable; it invalidates elapsed challenges and destroys their encrypted
+payloads. The delivery job refuses startup unless its private ring matches the
+active public key and covers every undestroyed delivery envelope. One missing
+retired key is quarantined by direct batch processing and cannot starve later
+healthy rows, but release readiness remains blocked until coverage is complete.
+Alert on command failure and schedule both jobs frequently enough that the
+oldest eligible row remains within the declared delivery and expiry objectives.
+Each successful run appends a recipient-free heartbeat with only its worker
+generation, database-materialized run time, processed count, remaining count,
+and delivery-key coverage result. PostgreSQL rejects future or incoherent
+heartbeat/cursor inserts. The production readiness contract currently
+requires:
+
+- a successful delivery heartbeat no more than 10 minutes old and no eligible
+  delivery waiting more than 15 minutes;
+- a successful expiry heartbeat no more than two hours old and no overdue
+  pending invitation left for more than two hours;
+- a matching `retention-v2` policy-digest heartbeat no more than 26 hours old,
+  no unheld due cleanup backlog older than 24 hours, and no surviving C4
+  envelope on a terminal invitation; and
+- complete delivery private-key coverage before a delivery heartbeat may be
+  recorded.
+
+Schedule delivery at least every five minutes, expiry at least hourly, and
+retention at least daily so a single missed run does not immediately exhaust
+an objective. Retention processes at most 100 candidates per run; repeat a run
+under supervision when `remaining` is non-zero. An active audited hold remains
+in fair traversal, records `active_hold`, advances the cursor, and increments
+`held`, but is excluded from actionable due backlog until an active platform
+administrator records an audited release. Alert before the readiness ceiling,
+not only after it fails. A command error records no success heartbeat; do not
+synthesize one in a process supervisor.
+
+Digest rotation is add-new, promote-new, retain-old, drain, then remove-old.
+Before removing a fallback, the count-only readiness gate must prove that no
+active invitation challenge names it. Identity migration `0013` deliberately
+refuses an upgrade with any live pre-key-lineage invitation: revoke or expire
+those invitations under the old release, verify that their ciphertext is
+destroyed, and rerun the migration. Never force the recorder row or rewrite a
+digest key identifier. Reversing the key-lineage migration after keyed traffic
+is a forward-fix recovery event, not a routine rollback.
+
+Identity migration `0017` refuses reversal when any invitation, hold, or
+retention receipt exists. Corrective migration `0018` can reverse only while
+there is no receipt, retention assessment, or `retention-v2` scheduler/cursor
+evidence. It upgrades existing v7 receipts by tombstoning the complete provider
+reference graph, including already pattern-shaped provider values, and adding
+the matching disposed assessment. That assessment uses the immutable receipt's
+historical policy digest; a later monotonic control activation does not rewrite
+or invalidate already-applied disposal evidence. New non-disposed assessments
+still require the active control digest. Once any v8
+evidence exists, keep compatible code and fix forward or restore the complete
+database and application to one reviewed pre-v8 point. Never fake an empty
+recorder, disable guards, or clear evidence to force rollback.
 
 Safe production defaults are:
 
@@ -159,14 +270,22 @@ non-origin trigger settings, sequence `UPDATE`, and database/schema/relation/
 column/sequence/function grant options. It must positively retain database
 `CONNECT`, schema `USAGE`, four-operation DML on ordinary runtime relations,
 `SELECT`/`INSERT` on Page 9 structure command receipts,
-`SELECT`/`INSERT`/`UPDATE` on Page 9 structure controls, sequence
-`USAGE`/`SELECT`, SELECT-only materialized-view and activation-control reads
-with no table- or column-level `REFERENCES`,
+`SELECT`/`INSERT`/`UPDATE` on Page 9 structure controls,
+`SELECT`/`INSERT` on Page 10 invitation transitions, receipts, delivery
+attempts, late outcomes, reconciliation receipts, scheduler heartbeats, and
+retention receipts, `SELECT`/`UPDATE` on its seeded inventory control,
+`SELECT` on its owner-activated retention-policy control, and
+`SELECT`/`INSERT`/`UPDATE` on identity challenges, invitations, deliveries, and
+retention holds, sequence `USAGE`/`SELECT`, SELECT-only materialized-view and
+activation-control reads with no table- or column-level `REFERENCES`,
 and the exact versioned 19-function v2 policy/trigger-helper execute closure.
 The two Page 9 relations deny `REFERENCES`; receipts additionally deny
 `UPDATE`, while both deny `DELETE`. Department remains on the ordinary DML
 plane because its stopped-writer retirement trigger, not a table-wide ACL
 revoke, enforces that lifecycle boundary.
+Every Page 10 restricted relation denies `DELETE` and `REFERENCES`; its
+additive ACL/catalog readiness is not evidence that the separate stopped-writer
+generation has been activated.
 `PUBLIC` may
 execute no non-system function and the runtime role may execute no function
 outside that closure. Adapt and rehearse
@@ -206,6 +325,12 @@ A release contains:
 
 Build once, then promote the identical artifact. Environment configuration does
 not rebuild application code.
+
+The immutable application artifact must run `collectstatic` and include the
+locked `drf-spectacular-sidecar` Swagger/ReDoc assets. Release smoke verifies
+that an active platform administrator can load both private references without
+third-party script, stylesheet, or font requests; the raw schema must remain
+private, non-cacheable, and excluded from registration-client CORS.
 
 ## Database evolution
 

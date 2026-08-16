@@ -1,0 +1,1172 @@
+"""One permission-filtered navigation registry for Maru's authenticated shells."""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, replace
+from typing import Any
+
+from django.http import HttpRequest
+from django.urls import reverse
+
+from maru.authorization.policy import (
+    decide,
+    resolve_edition_target,
+)
+from maru.events.admin_context import (
+    admin_edition_options,
+    admin_organization_navigation,
+    admin_shell_access,
+)
+from maru.events.models import EventEdition
+from maru.identity.models import Account
+from maru.identity.navigation_preferences import navigation_pin_codes
+from maru.organizations.models import Organization
+
+_SUPPORTED_PIN_NAMESPACES = frozenset(
+    {"my", "work", "platform", "organization", "series", "edition", "record"}
+)
+_DESTINATION_CODE_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,159}$")
+_SECTION_ORDER = (
+    "Pinned",
+    "Convention work",
+    "Platform",
+    "Personal",
+    "Organizations",
+    "Convention tools",
+    "Account",
+    "Actions",
+    "Specialist records",
+    "Work",
+)
+
+
+@dataclass(frozen=True, slots=True)
+class NavigationItem:
+    code: str
+    label: str
+    url: str
+    section: str
+    context_label: str = ""
+    description: str = ""
+    keywords: tuple[str, ...] = ()
+    kind: str = "destination"
+    current: bool = False
+    pinnable: bool = True
+    pinned: bool = False
+
+    @property
+    def search_text(self) -> str:
+        return " ".join(
+            part
+            for part in (
+                self.label,
+                self.description,
+                *self.keywords,
+                self.context_label,
+                self.section,
+            )
+            if part
+        )
+
+
+def destination_code_is_supported(destination_code: str) -> bool:
+    """Validate preference syntax without resolving or disclosing a resource."""
+
+    return bool(
+        _DESTINATION_CODE_PATTERN.fullmatch(destination_code)
+        and destination_code.partition(".")[0] in _SUPPORTED_PIN_NAMESPACES
+    )
+
+
+def _route_is(request: HttpRequest, *names: str) -> bool:
+    match = request.resolver_match
+    return bool(match and match.url_name in names)
+
+
+def _scoped_route_is(request: HttpRequest, name: str, *args: object) -> bool:
+    """Match both the route and its exact tenant-owned path parameters."""
+
+    return _route_is(request, name) and request.path == reverse(name, args=args)
+
+
+def _workspace_item(
+    request: HttpRequest,
+    *,
+    code: str,
+    label: str,
+    view: str,
+    description: str,
+    keywords: tuple[str, ...],
+    section: str = "Convention work",
+) -> NavigationItem:
+    url = reverse("management-console")
+    if view != "today":
+        url = f"{url}?view={view}"
+    requested_view = request.GET.get("view", "today")
+    return NavigationItem(
+        code=code,
+        label=label,
+        url=url,
+        section=section,
+        description=description,
+        keywords=keywords,
+        current=_route_is(request, "management-console") and requested_view == view,
+    )
+
+
+def _personal_items(request: HttpRequest) -> list[NavigationItem]:
+    return [
+        NavigationItem(
+            code="my.home",
+            label="My Maru",
+            url=reverse("my-maru-home"),
+            section="Personal",
+            description="Your personal Maru home, profile, and convention activity.",
+            keywords=("account", "profile", "dashboard"),
+            current=_route_is(request, "my-maru-home"),
+        ),
+        NavigationItem(
+            code="my.registrations",
+            label="Registration & tickets",
+            url=reverse("public-registration-index"),
+            section="Personal",
+            description="Register for a convention and manage admission tickets.",
+            keywords=("attendee", "admission", "payment", "booking"),
+            current=_route_is(
+                request,
+                "public-registration-index",
+                "public-registration-form",
+                "public-registration-profile",
+                "edit-attendee-profile",
+                "public-registration-tier-replacement",
+                "public-registration-hosted-payment",
+            ),
+        ),
+        NavigationItem(
+            code="my.catalog",
+            label="Shop & orders",
+            url=reverse("my-catalog-index"),
+            section="Personal",
+            description="Browse convention products and review your orders.",
+            keywords=("store", "merchandise", "merch", "purchase"),
+            current=_route_is(
+                request,
+                "my-catalog-index",
+                "my-catalog",
+                "my-catalog-orders",
+                "my-catalog-order",
+                "my-catalog-checkout",
+                "my-catalog-hosted-payment",
+                "my-catalog-demo-payment",
+            ),
+        ),
+        NavigationItem(
+            code="my.applications",
+            label="My applications",
+            url=reverse("my-application-index"),
+            section="Personal",
+            description="Complete and review your submitted convention forms.",
+            keywords=("volunteer", "staff", "helper", "programme", "forms"),
+            current=_route_is(
+                request,
+                "my-application-index",
+                "my-applications",
+                "my-application-detail",
+                "application-submission-start",
+                "application-answer-append",
+                "application-submit",
+            ),
+        ),
+        NavigationItem(
+            code="my.schedule",
+            label="My schedule",
+            url=reverse("my-maru-schedule-index"),
+            section="Personal",
+            description="See your published convention timetable and locations.",
+            keywords=("programme", "calendar", "events", "agenda"),
+            current=_route_is(
+                request,
+                "my-maru-schedule-index",
+                "my-maru-venue-schedule",
+            ),
+        ),
+        NavigationItem(
+            code="my.equipment_offers",
+            label="Equipment offers",
+            url=reverse("my-logistics-offer-index"),
+            section="Personal",
+            description="Offer equipment for convention logistics use.",
+            keywords=("assets", "inventory", "loan", "gear"),
+            current=_route_is(
+                request,
+                "my-logistics-offer-index",
+                "my-logistics-offers",
+            ),
+        ),
+        NavigationItem(
+            code="my.governance-invitations",
+            label="Governance invitations",
+            url=reverse("my-representation-invitations"),
+            section="Personal",
+            description="Review invitations to represent an organization.",
+            keywords=("board", "controller", "leadership", "authority"),
+            current=_route_is(request, "my-representation-invitations"),
+        ),
+    ]
+
+
+def _management_items(request: HttpRequest) -> list[NavigationItem]:
+    shell_access = admin_shell_access(request)
+    if not shell_access["workspace_available"]:
+        return []
+    return [
+        _workspace_item(
+            request,
+            code="work.today",
+            label="Today",
+            view="today",
+            description="See current convention status, assigned work, and warnings.",
+            keywords=("home", "dashboard", "tasks", "deadlines", "actions"),
+        ),
+        _workspace_item(
+            request,
+            code="work.people",
+            label="People",
+            view="people",
+            description="Find attendees and the people working on the convention.",
+            keywords=(
+                "users",
+                "accounts",
+                "staff",
+                "volunteers",
+                "crew",
+                "team",
+            ),
+        ),
+        _workspace_item(
+            request,
+            code="work.attendee-service",
+            label="Attendee service",
+            view="commerce",
+            description="Help attendees with registration, admission, and payments.",
+            keywords=("registration", "tickets", "orders", "support"),
+        ),
+        _workspace_item(
+            request,
+            code="work.reports",
+            label="Reports & badges",
+            view="reports",
+            description="Review attendance and prepare minimized badge exports.",
+            keywords=("analytics", "exports", "participants", "labels"),
+        ),
+        _workspace_item(
+            request,
+            code="work.setup",
+            label="Setup guide",
+            view="setup",
+            description="Continue the safe, ordered setup of this convention.",
+            keywords=(
+                "onboarding",
+                "checklist",
+                "board",
+                "governance",
+                "departments",
+            ),
+        ),
+        _workspace_item(
+            request,
+            code="work.security",
+            label="Security history",
+            view="security",
+            description="Review important security events for your account.",
+            keywords=("audit", "login", "sign in", "sessions"),
+            section="Account",
+        ),
+    ]
+
+
+def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
+    options = admin_edition_options(request)
+    selected = options.get("selected")
+    if not isinstance(selected, EventEdition):
+        return []
+    edition = selected
+    context_label = (
+        f"{edition.organization.name} / {edition.series.name} / {edition.name}"
+    )
+    items: list[NavigationItem] = []
+    if options.get("selected_can_view_structure"):
+        items.append(
+            NavigationItem(
+                code=f"edition.{edition.id}.structure",
+                label="Organization structure",
+                url=reverse(
+                    "organization-structure",
+                    args=(
+                        edition.organization.slug,
+                        edition.series.slug,
+                        edition.slug,
+                    ),
+                ),
+                section="Convention",
+                context_label=context_label,
+                current=_scoped_route_is(
+                    request,
+                    "organization-structure",
+                    edition.organization.slug,
+                    edition.series.slug,
+                    edition.slug,
+                ),
+            )
+        )
+    if options.get("selected_can_manage_registration"):
+        items.append(
+            NavigationItem(
+                code=f"edition.{edition.id}.registration",
+                label="Registration setup",
+                url=reverse(
+                    "registration-setup",
+                    args=(
+                        edition.organization.slug,
+                        edition.series.slug,
+                        edition.slug,
+                    ),
+                ),
+                section="Convention",
+                context_label=context_label,
+                current=_scoped_route_is(
+                    request,
+                    "registration-setup",
+                    edition.organization.slug,
+                    edition.series.slug,
+                    edition.slug,
+                ),
+            )
+        )
+    actor = request.user
+    edition_target = resolve_edition_target(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+    )
+    if isinstance(actor, Account) and edition_target is not None:
+        if decide(
+            principal=actor,
+            capability_code="applications.manage_definitions",
+            resource=edition_target,
+        ).allowed:
+            items.append(
+                NavigationItem(
+                    code=f"edition.{edition.id}.application-studio",
+                    label="Application studio",
+                    url=reverse(
+                        "application-definition-workspace",
+                        args=(edition.organization_id, edition.id),
+                    ),
+                    section="Convention",
+                    context_label=context_label,
+                    current=_scoped_route_is(
+                        request,
+                        "application-definition-workspace",
+                        edition.organization_id,
+                        edition.id,
+                    ),
+                )
+            )
+        if decide(
+            principal=actor,
+            capability_code="applications.review",
+            resource=edition_target,
+        ).allowed:
+            items.append(
+                NavigationItem(
+                    code=f"edition.{edition.id}.application-review",
+                    label="Application review",
+                    url=reverse(
+                        "application-review-workspace",
+                        args=(edition.organization_id, edition.id),
+                    ),
+                    section="Convention",
+                    context_label=context_label,
+                    current=_scoped_route_is(
+                        request,
+                        "application-review-workspace",
+                        edition.organization_id,
+                        edition.id,
+                    ),
+                )
+            )
+        if decide(
+            principal=actor,
+            capability_code="registration.manage_exceptions",
+            resource=edition_target,
+        ).allowed:
+            items.append(
+                NavigationItem(
+                    code=f"edition.{edition.id}.registration-commerce",
+                    label="Registration commerce",
+                    url=reverse(
+                        "registration-commerce-workspace",
+                        args=(
+                            edition.organization.slug,
+                            edition.series.slug,
+                            edition.slug,
+                        ),
+                    ),
+                    section="Convention",
+                    context_label=context_label,
+                    current=_route_is(
+                        request,
+                        "registration-commerce-workspace",
+                        "registration-commerce-adjust-overall",
+                        "registration-commerce-adjust-product",
+                        "registration-commerce-offer-batch",
+                    ),
+                )
+            )
+        if decide(
+            principal=actor,
+            capability_code="catalog.view_activity",
+            resource=edition_target,
+        ).allowed:
+            catalog_url = reverse(
+                "catalog-staff-workspace",
+                args=(
+                    edition.organization.slug,
+                    edition.series.slug,
+                    edition.slug,
+                ),
+            )
+            items.append(
+                NavigationItem(
+                    code=f"edition.{edition.id}.catalog",
+                    label="Catalog commerce",
+                    url=catalog_url,
+                    section="Convention",
+                    context_label=context_label,
+                    current=(
+                        _scoped_route_is(
+                            request,
+                            "catalog-staff-workspace",
+                            edition.organization.slug,
+                            edition.series.slug,
+                            edition.slug,
+                        )
+                        or (
+                            _route_is(request, "catalog-stock-adjust-page")
+                            and request.path.startswith(catalog_url)
+                        )
+                    ),
+                )
+            )
+        if decide(
+            principal=actor,
+            capability_code="venues.view_workspace",
+            resource=edition_target,
+        ).allowed:
+            items.append(
+                NavigationItem(
+                    code=f"edition.{edition.id}.venues",
+                    label="Venues and spaces",
+                    url=reverse(
+                        "venue-workspace",
+                        args=(
+                            edition.organization.slug,
+                            edition.series.slug,
+                            edition.slug,
+                        ),
+                    ),
+                    section="Convention",
+                    context_label=context_label,
+                    current=_route_is(
+                        request,
+                        "venue-workspace",
+                        "venue-space-schedule-page",
+                    ),
+                )
+            )
+        if decide(
+            principal=actor,
+            capability_code="logistics.view_workspace",
+            resource=edition_target,
+        ).allowed:
+            items.append(
+                NavigationItem(
+                    code=f"edition.{edition.id}.logistics",
+                    label="Logistics",
+                    url=reverse(
+                        "logistics-workspace",
+                        args=(
+                            edition.organization.slug,
+                            edition.series.slug,
+                            edition.slug,
+                        ),
+                    ),
+                    section="Convention",
+                    context_label=context_label,
+                    current=_route_is(
+                        request,
+                        "logistics-workspace",
+                        "logistics-manifest-detail-page",
+                        "logistics-manifest-receipt",
+                        "logistics-staff-object-command",
+                        "logistics-staff-command",
+                        "logistics-stage-receiving-page",
+                        "logistics-restricted-contact-request",
+                        "logistics-restricted-contact-result",
+                    ),
+                )
+            )
+    if (
+        isinstance(actor, Account)
+        and decide(
+            principal=actor,
+            capability_code="charities.view_review_queue",
+            resource=resolve_edition_target(
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+            ),
+        ).allowed
+    ):
+        items.append(
+            NavigationItem(
+                code=f"edition.{edition.id}.charities",
+                label="Charity partners",
+                url=reverse(
+                    "charity-workspace",
+                    args=(
+                        edition.organization.slug,
+                        edition.series.slug,
+                        edition.slug,
+                    ),
+                ),
+                section="Convention",
+                context_label=context_label,
+                current=_route_is(
+                    request,
+                    "charity-workspace",
+                    "charity-selection-review-page",
+                ),
+            )
+        )
+    return items
+
+
+def _scoped_organization_items(request: HttpRequest) -> list[NavigationItem]:
+    items: list[NavigationItem] = []
+    for projection in admin_organization_navigation(request):
+        projected_organization = projection["organization"]
+        if not isinstance(projected_organization, Organization):
+            continue
+        organization = projected_organization
+        context_label = organization.name
+        if projection["can_view_organization"]:
+            items.extend(
+                (
+                    NavigationItem(
+                        code=f"organization.{organization.id}.record",
+                        label="Organization record",
+                        url=reverse(
+                            "baseline-organization-record",
+                            args=(organization.slug,),
+                        ),
+                        section="Organizations",
+                        context_label=context_label,
+                        current=_scoped_route_is(
+                            request,
+                            "baseline-organization-record",
+                            organization.slug,
+                        ),
+                    ),
+                    NavigationItem(
+                        code=f"organization.{organization.id}.series",
+                        label="Convention series",
+                        url=(
+                            reverse(
+                                "baseline-organization-record",
+                                args=(organization.slug,),
+                            )
+                            + "#convention-series-title"
+                        ),
+                        section="Organizations",
+                        context_label=context_label,
+                    ),
+                )
+            )
+        if (
+            projection["can_view_organization"]
+            or projection["can_manage_representation"]
+        ):
+            items.append(
+                NavigationItem(
+                    code=f"organization.{organization.id}.representation",
+                    label="Representation & access",
+                    url=reverse(
+                        "organization-representation",
+                        args=(organization.slug,),
+                    ),
+                    section="Organizations",
+                    context_label=context_label,
+                    current=_scoped_route_is(
+                        request,
+                        "organization-representation",
+                        organization.slug,
+                    ),
+                )
+            )
+        if projection["can_create_series"] and organization.lifecycle != "closed":
+            items.append(
+                NavigationItem(
+                    code=f"organization.{organization.id}.series-add",
+                    label="Add convention series",
+                    url=reverse(
+                        "baseline-create-convention-series",
+                        args=(organization.slug,),
+                    ),
+                    section="Organizations",
+                    context_label=context_label,
+                    current=_scoped_route_is(
+                        request,
+                        "baseline-create-convention-series",
+                        organization.slug,
+                    ),
+                )
+            )
+    return items
+
+
+def _page_context_items(
+    request: HttpRequest,
+    page_context: Mapping[str, Any],
+) -> list[NavigationItem]:
+    """Flatten already-authorized route context without re-querying tenant names."""
+
+    organization = page_context.get("organization")
+    series = page_context.get("convention_series")
+    edition = page_context.get("edition")
+    if organization is None:
+        return []
+    organization_label = str(organization.name)
+    items: list[NavigationItem] = []
+    if page_context.get("baseline_can_view_organization"):
+        items.extend(
+            (
+                NavigationItem(
+                    code=f"organization.{organization.id}.record",
+                    label="Organization record",
+                    url=reverse(
+                        "baseline-organization-record",
+                        args=(organization.slug,),
+                    ),
+                    section="Organizations",
+                    context_label=organization_label,
+                    current=_scoped_route_is(
+                        request,
+                        "baseline-organization-record",
+                        organization.slug,
+                    ),
+                ),
+                NavigationItem(
+                    code=f"organization.{organization.id}.series",
+                    label="Convention series",
+                    url=(
+                        reverse(
+                            "baseline-organization-record",
+                            args=(organization.slug,),
+                        )
+                        + "#convention-series-title"
+                    ),
+                    section="Organizations",
+                    context_label=organization_label,
+                ),
+            )
+        )
+    if page_context.get("baseline_can_view_organization") or page_context.get(
+        "baseline_can_manage_representation"
+    ):
+        items.append(
+            NavigationItem(
+                code=f"organization.{organization.id}.representation",
+                label="Representation & access",
+                url=reverse("organization-representation", args=(organization.slug,)),
+                section="Organizations",
+                context_label=organization_label,
+                current=_scoped_route_is(
+                    request,
+                    "organization-representation",
+                    organization.slug,
+                ),
+            )
+        )
+    if (
+        page_context.get("baseline_can_create_series")
+        and organization.lifecycle != "closed"
+    ):
+        items.append(
+            NavigationItem(
+                code=f"organization.{organization.id}.series-add",
+                label="Add convention series",
+                url=reverse(
+                    "baseline-create-convention-series",
+                    args=(organization.slug,),
+                ),
+                section="Organizations",
+                context_label=organization_label,
+                current=_scoped_route_is(
+                    request,
+                    "baseline-create-convention-series",
+                    organization.slug,
+                ),
+            )
+        )
+    if series is None:
+        return items
+    series_label = f"{organization.name} / {series.name}"
+    if page_context.get("baseline_can_view_organization"):
+        items.extend(
+            (
+                NavigationItem(
+                    code=f"series.{series.id}.record",
+                    label="Series record",
+                    url=reverse(
+                        "baseline-convention-series-record",
+                        args=(organization.slug, series.slug),
+                    ),
+                    section="Organizations",
+                    context_label=series_label,
+                    current=_scoped_route_is(
+                        request,
+                        "baseline-convention-series-record",
+                        organization.slug,
+                        series.slug,
+                    ),
+                ),
+                NavigationItem(
+                    code=f"series.{series.id}.editions",
+                    label="Convention editions",
+                    url=(
+                        reverse(
+                            "baseline-convention-series-record",
+                            args=(organization.slug, series.slug),
+                        )
+                        + "#event-editions-title"
+                    ),
+                    section="Organizations",
+                    context_label=series_label,
+                ),
+            )
+        )
+    if (
+        page_context.get("baseline_can_create_edition")
+        and organization.lifecycle != "closed"
+        and series.is_active
+    ):
+        items.append(
+            NavigationItem(
+                code=f"series.{series.id}.edition-add",
+                label="Add convention edition",
+                url=reverse(
+                    "baseline-create-event-edition",
+                    args=(organization.slug, series.slug),
+                ),
+                section="Organizations",
+                context_label=series_label,
+                current=_scoped_route_is(
+                    request,
+                    "baseline-create-event-edition",
+                    organization.slug,
+                    series.slug,
+                ),
+            )
+        )
+    if edition is None:
+        return items
+    edition_label = f"{organization.name} / {series.name} / {edition.name}"
+    if page_context.get("baseline_can_view_edition"):
+        items.append(
+            NavigationItem(
+                code=f"edition.{edition.id}.overview",
+                label="Edition overview",
+                url=reverse(
+                    "baseline-event-edition-record",
+                    args=(organization.slug, series.slug, edition.slug),
+                ),
+                section="Convention",
+                context_label=edition_label,
+                current=_scoped_route_is(
+                    request,
+                    "baseline-event-edition-record",
+                    organization.slug,
+                    series.slug,
+                    edition.slug,
+                ),
+            )
+        )
+    if page_context.get("baseline_can_view_structure"):
+        items.append(
+            NavigationItem(
+                code=f"edition.{edition.id}.structure",
+                label="Organization structure",
+                url=reverse(
+                    "organization-structure",
+                    args=(organization.slug, series.slug, edition.slug),
+                ),
+                section="Convention",
+                context_label=edition_label,
+                current=bool(
+                    page_context.get("baseline_structure_navigation_current")
+                    or _route_is(request, "organization-structure")
+                ),
+            )
+        )
+    if page_context.get("baseline_can_manage_registration"):
+        items.append(
+            NavigationItem(
+                code=f"edition.{edition.id}.registration",
+                label="Registration setup",
+                url=reverse(
+                    "registration-setup",
+                    args=(organization.slug, series.slug, edition.slug),
+                ),
+                section="Convention",
+                context_label=edition_label,
+                current=bool(
+                    page_context.get("baseline_registration_navigation_current")
+                    or _route_is(request, "registration-setup")
+                ),
+            )
+        )
+    return items
+
+
+def _platform_items(request: HttpRequest) -> list[NavigationItem]:
+    actor = request.user
+    if not isinstance(actor, Account) or not actor.is_platform_administrator:
+        return []
+    return [
+        NavigationItem(
+            code="platform.organizations",
+            label="Organizations",
+            url=reverse("baseline-admin-home"),
+            section="Platform",
+            current=_route_is(request, "baseline-admin-home"),
+        ),
+        NavigationItem(
+            code="platform.organizations-add",
+            label="Add organization",
+            url=reverse("baseline-create-organization"),
+            section="Platform",
+            current=_route_is(request, "baseline-create-organization"),
+        ),
+        NavigationItem(
+            code="platform.accounts",
+            label="User accounts",
+            url=reverse("platform-account-inventory"),
+            section="Platform",
+            current=_route_is(
+                request,
+                "platform-account-inventory",
+                "platform-account-invitation-detail",
+                "platform-account-invitation-reissue",
+                "platform-account-invitation-revoke",
+            ),
+        ),
+        NavigationItem(
+            code="platform.accounts-invite",
+            label="Invite account",
+            url=reverse("platform-account-invite"),
+            section="Platform",
+            current=_route_is(request, "platform-account-invite"),
+        ),
+    ]
+
+
+def _specialist_items(
+    request: HttpRequest,
+    available_apps: Iterable[Mapping[str, Any]],
+) -> list[NavigationItem]:
+    items: list[NavigationItem] = []
+    for app in available_apps:
+        app_label = str(app.get("app_label", ""))
+        app_name = str(app.get("name", ""))
+        for model in app.get("models", ()):
+            url = model.get("admin_url")
+            object_name = str(model.get("object_name", "")).lower()
+            if not url or not app_label or not object_name:
+                continue
+            items.append(
+                NavigationItem(
+                    code=f"record.{app_label}.{object_name}",
+                    label=str(model.get("name", object_name)),
+                    url=str(url),
+                    section="Specialist records",
+                    context_label=app_name,
+                    description=(
+                        f"Inspect the technical {model.get('name', object_name)} "
+                        "record list."
+                    ),
+                    keywords=(
+                        "technical",
+                        "advanced",
+                        "database",
+                        "records",
+                        app_label,
+                        object_name,
+                    ),
+                    kind="specialist",
+                    current=str(url) in request.path,
+                )
+            )
+    return items
+
+
+def _decorate_navigation_item(item: NavigationItem) -> NavigationItem:
+    """Attach task language without changing route or authorization behavior."""
+
+    code = item.code
+    if code == "platform.organizations":
+        return replace(
+            item,
+            description="Find and continue setting up organizer organizations.",
+            keywords=("organizers", "conventions", "tenants", "foundation"),
+        )
+    if code == "platform.accounts":
+        return replace(
+            item,
+            description="Find login identities and review invitation state.",
+            keywords=(
+                "users",
+                "people",
+                "staff",
+                "volunteers",
+                "email",
+                "login",
+                "credentials",
+            ),
+        )
+
+    action_metadata: tuple[str, tuple[str, ...]] | None = None
+    if code == "platform.organizations-add":
+        action_metadata = (
+            "Create a new organizer organization.",
+            ("new", "organizer", "convention", "tenant"),
+        )
+    elif code == "platform.accounts-invite":
+        action_metadata = (
+            "Invite a person to create a recipient-owned Maru account.",
+            ("new", "user", "staff", "volunteer", "email", "onboarding"),
+        )
+    elif code.endswith(".series-add"):
+        action_metadata = (
+            "Create a convention series for this organization.",
+            ("new", "convention", "event"),
+        )
+    elif code.endswith(".edition-add"):
+        action_metadata = (
+            "Create the next convention edition in this series.",
+            ("new", "event", "year", "occurrence"),
+        )
+    if action_metadata is not None:
+        description, keywords = action_metadata
+        return replace(
+            item,
+            section="Actions",
+            description=description,
+            keywords=keywords,
+            kind="action",
+            pinnable=False,
+        )
+
+    metadata_by_suffix: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+        (
+            ".representation",
+            "Review the Executive Board and delegated organization authority.",
+            ("board", "controllers", "governance", "leadership", "roles"),
+        ),
+        (
+            ".application-studio",
+            "Build and publish application forms for this convention.",
+            ("volunteers", "staff", "forms", "intake", "submissions"),
+        ),
+        (
+            ".application-review",
+            "Review submitted applications assigned to you.",
+            ("volunteers", "staff", "forms", "decisions", "submissions"),
+        ),
+        (
+            ".registration-commerce",
+            "Manage admission capacity, offers, and registration exceptions.",
+            ("tickets", "payments", "waitlist", "attendees", "sales"),
+        ),
+        (
+            ".registration",
+            "Configure the attendee registration form and admission products.",
+            ("tickets", "attendees", "questions", "profile", "forms"),
+        ),
+        (
+            ".catalog",
+            "Manage convention products, stock, orders, and fulfilment activity.",
+            ("shop", "merchandise", "sales", "inventory", "orders"),
+        ),
+        (
+            ".venues",
+            "Manage selected venues, spaces, and physical occupancy.",
+            ("rooms", "buildings", "locations", "schedule"),
+        ),
+        (
+            ".logistics",
+            "Manage equipment, storage, custody, and movement.",
+            ("inventory", "assets", "keys", "transport", "warehouse"),
+        ),
+        (
+            ".charities",
+            "Review and publish convention charity partners.",
+            ("fundraising", "beneficiary", "donations", "review"),
+        ),
+        (
+            ".structure",
+            "Review departments, positions, and the convention team structure.",
+            ("staff", "volunteers", "team", "departments", "org chart"),
+        ),
+        (
+            ".overview",
+            "Review this convention edition and its current setup state.",
+            ("event", "year", "status", "workspace"),
+        ),
+        (
+            ".editions",
+            "Review the convention editions in this series.",
+            ("events", "years", "occurrences"),
+        ),
+        (
+            ".series",
+            "Review the recurring convention series for this organization.",
+            ("events", "editions", "convention"),
+        ),
+        (
+            ".record",
+            "Review this organizer or convention record.",
+            ("details", "settings", "profile"),
+        ),
+    )
+    for suffix, description, keywords in metadata_by_suffix:
+        if code.endswith(suffix):
+            section = (
+                "Convention tools" if code.startswith("edition.") else item.section
+            )
+            return replace(
+                item,
+                section=section,
+                description=description,
+                keywords=keywords,
+                kind="record" if suffix in {".record", ".overview"} else item.kind,
+            )
+    return item
+
+
+def _deduplicate(items: Iterable[NavigationItem]) -> list[NavigationItem]:
+    by_code: dict[str, NavigationItem] = {}
+    for raw_item in items:
+        item = _decorate_navigation_item(raw_item)
+        existing = by_code.get(item.code)
+        if existing is None or (item.current and not existing.current):
+            by_code[item.code] = item
+    return list(by_code.values())
+
+
+def project_shell_navigation(
+    request: HttpRequest,
+    *,
+    available_apps: Iterable[Mapping[str, Any]] = (),
+    page_context: Mapping[str, Any],
+    personal_surface: bool,
+) -> dict[str, object]:
+    """Build one live, permission-filtered menu and reauthorize every pin."""
+
+    actor = request.user
+    if (
+        not isinstance(actor, Account)
+        or not actor.is_authenticated
+        or not actor.is_active
+    ):
+        return {"groups": (), "count": 0}
+
+    personal_items = _personal_items(request)
+    management_items = _management_items(request)
+    items = _deduplicate(
+        (
+            *personal_items,
+            *management_items,
+            *_selected_edition_items(request),
+            *_scoped_organization_items(request),
+            *_page_context_items(request, page_context),
+            *_platform_items(request),
+            *_specialist_items(request, available_apps),
+        )
+    )
+    eligible_by_code = {item.code: item for item in items}
+    pin_codes = navigation_pin_codes(account=actor)
+    pinned_items = [
+        replace(eligible_by_code[code], section="Pinned", pinned=True)
+        for code in pin_codes
+        if code in eligible_by_code
+    ]
+    pinned_code_set = {item.code for item in pinned_items}
+
+    if personal_surface:
+        personal_codes = {item.code for item in personal_items}
+        visible_items = [
+            item
+            for item in items
+            if item.code in personal_codes and item.code not in pinned_code_set
+        ]
+        if admin_shell_access(request)["workspace_available"] or actor.is_staff:
+            visible_items.append(
+                NavigationItem(
+                    code="work.administration",
+                    label="Administration",
+                    url=reverse("admin:index"),
+                    section="Work",
+                    description="Open organizer and platform administration tools.",
+                    keywords=("staff", "organizer", "management"),
+                )
+            )
+    else:
+        visible_items = [item for item in items if item.code not in pinned_code_set]
+
+    grouped: dict[str, list[NavigationItem]] = {}
+    if pinned_items:
+        grouped["Pinned"] = pinned_items
+    for item in visible_items:
+        grouped.setdefault(item.section, []).append(item)
+    ordered_labels = sorted(
+        grouped,
+        key=lambda label: (
+            _SECTION_ORDER.index(label) if label in _SECTION_ORDER else 999,
+            label.casefold(),
+        ),
+    )
+    groups: tuple[dict[str, object], ...] = tuple(
+        {
+            "label": label,
+            "items": tuple(grouped[label]),
+            "collapsed": label
+            in {
+                "Account",
+                "Actions",
+                "Convention tools",
+                "Organizations",
+                "Specialist records",
+            }
+            or (label == "Personal" and not personal_surface),
+            "search_only": label == "Actions",
+            "current": any(item.current for item in grouped[label]),
+        }
+        for label in ordered_labels
+        if grouped[label]
+    )
+    visible_count = sum(
+        len(grouped[label]) for label in ordered_labels if grouped[label]
+    )
+    return {"groups": groups, "count": visible_count}

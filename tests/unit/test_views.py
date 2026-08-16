@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, call, patch
 
+import pytest
 from django.db.utils import OperationalError
 from django.test import override_settings
 from rest_framework.test import APIClient
@@ -11,6 +12,41 @@ from maru.authorization.models import (
     AUTHORITY_PROVENANCE_CONTRACT_VERSION,
 )
 from maru.core import views
+
+
+@pytest.fixture(autouse=True)
+def _default_logistics_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep existing health cases focused unless one integrity gate is under test."""
+
+    monkeypatch.setattr(views, "logistics_current_session_is_ready", lambda: True)
+    monkeypatch.setattr(
+        views,
+        "applications_database_integrity_is_ready",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        views,
+        "charities_database_integrity_is_ready",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        views,
+        "catalog_database_integrity_is_ready",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        views,
+        "venues_database_integrity_is_ready",
+        lambda: True,
+    )
+
+
+_READY_BOUNDED_DOMAIN_DEPENDENCIES = {
+    "applications_integrity": "ok",
+    "charities_integrity": "ok",
+    "catalog_integrity": "ok",
+    "venues_integrity": "ok",
+}
 
 
 def _runtime_role_safety(
@@ -57,7 +93,7 @@ def test_platform_home_is_a_browser_friendly_start_page() -> None:
     assert "Use this page to enter the local Maru environment" in content
     assert "For example:" in content
     assert 'href="/health/ready"' in content
-    assert 'href="/api/v1/schema"' in content
+    assert 'href="/api/v1/docs/"' in content
     assert 'href="/admin/"' in content
     assert 'href="/admin/records/"' not in content
     assert 'href="/manage/"' not in content
@@ -93,7 +129,11 @@ def test_readiness_checks_database(cursor: MagicMock) -> None:
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok",
-        "dependencies": {"database": "ok"},
+        "dependencies": {
+            "database": "ok",
+            **_READY_BOUNDED_DOMAIN_DEPENDENCIES,
+            "logistics": "ok",
+        },
     }
     cursor.return_value.__enter__.return_value.execute.assert_called_once_with(
         views._AUTHORITY_PROVENANCE_TABLE_HEALTH_QUERY
@@ -165,6 +205,8 @@ def test_readiness_accepts_active_exact_authority_provenance(
         "dependencies": {
             "database": "ok",
             "authority_provenance": "ok",
+            **_READY_BOUNDED_DOMAIN_DEPENDENCIES,
+            "logistics": "ok",
         },
     }
     cursor.return_value.__enter__.return_value.execute.assert_has_calls(
@@ -323,6 +365,14 @@ def test_readiness_accepts_an_explicitly_dormant_compatibility_contract(
     response = APIClient().get("/health/ready")
 
     assert response.status_code == 200
+    assert response.json() == {
+        "status": "ok",
+        "dependencies": {
+            "database": "ok",
+            **_READY_BOUNDED_DOMAIN_DEPENDENCIES,
+            "logistics": "ok",
+        },
+    }
     cursor.return_value.__enter__.return_value.execute.assert_has_calls(
         [
             call(views._AUTHORITY_PROVENANCE_TABLE_HEALTH_QUERY),
@@ -415,5 +465,176 @@ def test_readiness_rejects_an_unsafe_effective_database_schema_order(
         "dependencies": {
             "database": "ok",
             "authority_provenance": "unavailable",
+        },
+    }
+
+
+@override_settings(
+    REQUIRE_EXACT_AUTHORITY_PROVENANCE=False,
+    IDENTITY_INVITATION_ENCRYPTION_REQUIRED=True,
+)
+@patch(
+    "maru.core.views.platform_invitation_runtime_contract_is_ready",
+    return_value=False,
+)
+@patch("maru.core.views.connection.cursor")
+def test_readiness_rejects_an_unactivated_invitation_runtime_contract(
+    cursor: MagicMock,
+    invitation_contract: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.return_value = (False, False)
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            "identity_invitations": "unavailable",
+            **_READY_BOUNDED_DOMAIN_DEPENDENCIES,
+            "logistics": "ok",
+        },
+    }
+    invitation_contract.assert_called_once_with()
+
+
+@override_settings(
+    REQUIRE_EXACT_AUTHORITY_PROVENANCE=False,
+    IDENTITY_INVITATION_ENCRYPTION_REQUIRED=True,
+)
+@patch(
+    "maru.core.views.platform_invitation_runtime_contract_is_ready",
+    return_value=True,
+)
+@patch("maru.core.views.connection.cursor")
+def test_readiness_reports_a_proved_invitation_runtime_contract(
+    cursor: MagicMock,
+    invitation_contract: MagicMock,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.return_value = (False, False)
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "ok",
+        "dependencies": {
+            "database": "ok",
+            "identity_invitations": "ok",
+            **_READY_BOUNDED_DOMAIN_DEPENDENCIES,
+            "logistics": "ok",
+        },
+    }
+    invitation_contract.assert_called_once_with()
+
+
+@patch("maru.core.views.connection.cursor")
+def test_readiness_requires_logistics_current_session_integrity(
+    cursor: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.return_value = (False, False)
+    monkeypatch.setattr(views, "logistics_current_session_is_ready", lambda: False)
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            **_READY_BOUNDED_DOMAIN_DEPENDENCIES,
+            "logistics": "unavailable",
+        },
+    }
+
+
+@patch("maru.core.views.connection.cursor")
+def test_readiness_minimizes_logistics_helper_errors(
+    cursor: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.return_value = (False, False)
+
+    def unavailable() -> bool:
+        raise OperationalError("private Logistics catalog detail")
+
+    monkeypatch.setattr(views, "logistics_current_session_is_ready", unavailable)
+
+    response = APIClient().get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            **_READY_BOUNDED_DOMAIN_DEPENDENCIES,
+            "logistics": "unavailable",
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("probe_name", "status_key"),
+    [
+        ("applications_database_integrity_is_ready", "applications_integrity"),
+        ("charities_database_integrity_is_ready", "charities_integrity"),
+        ("catalog_database_integrity_is_ready", "catalog_integrity"),
+        ("venues_database_integrity_is_ready", "venues_integrity"),
+    ],
+)
+@patch("maru.core.views.connection.cursor")
+def test_readiness_requires_each_bounded_domain_integrity_contract(
+    cursor: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+    probe_name: str,
+    status_key: str,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.return_value = (False, False)
+    monkeypatch.setattr(views, probe_name, lambda: False)
+
+    response = APIClient().get("/health/ready")
+
+    expected_domains = dict(_READY_BOUNDED_DOMAIN_DEPENDENCIES)
+    expected_domains[status_key] = "unavailable"
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            **expected_domains,
+            "logistics": "ok",
+        },
+    }
+
+
+@patch("maru.core.views.connection.cursor")
+def test_readiness_minimizes_bounded_domain_catalog_errors(
+    cursor: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cursor.return_value.__enter__.return_value.fetchone.return_value = (False, False)
+
+    def unavailable() -> bool:
+        raise OperationalError("private bounded-domain catalog detail")
+
+    monkeypatch.setattr(
+        views,
+        "applications_database_integrity_is_ready",
+        unavailable,
+    )
+
+    response = APIClient().get("/health/ready")
+
+    expected_domains = dict(_READY_BOUNDED_DOMAIN_DEPENDENCIES)
+    expected_domains["applications_integrity"] = "unavailable"
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "unavailable",
+        "dependencies": {
+            "database": "ok",
+            **expected_domains,
+            "logistics": "ok",
         },
     }

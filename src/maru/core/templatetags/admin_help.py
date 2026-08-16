@@ -12,12 +12,12 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
         "identity",
         "account",
     ): (
-        "Use this page to find bootstrap platform accounts. With a convention "
-        "workspace selected, only accounts already linked to that edition by a "
-        "participation are listed. A newly created account is still saved but "
-        "remains hidden here until it joins the edition; choose All foundation "
-        "data to find it. For example: clear the workspace before checking a "
-        "new Chair account."
+        "Use this read-only specialist page to inspect minimized identity "
+        "facts. Invite person accounts through Platform administration > "
+        "Accounts; create the first platform administrator only with the "
+        "createsuperuser management command. For example: confirm the login "
+        "handle of an existing account without changing its credentials, "
+        "privileges, lifecycle, or convention relationships."
     ),
     (
         "identity",
@@ -176,6 +176,22 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
     ),
     (
         "registration",
+        "registrationprofileextensionvaluecontrol",
+    ): (
+        "Use this read-only page to inspect the current sequence and latest "
+        "revision for one attendee profile field. For example: diagnose a "
+        "stale update without changing the attendee's value history."
+    ),
+    (
+        "registration",
+        "registrationprofileextensionvaluecommandreceipt",
+    ): (
+        "Use this read-only page to inspect idempotent profile-value command "
+        "evidence. For example: confirm that retrying one exact update returned "
+        "the original result instead of appending a duplicate revision."
+    ),
+    (
+        "registration",
         "paymentattempt",
     ): (
         "Use this page to inspect append-only payment reconciliation evidence. "
@@ -214,8 +230,10 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
         "identity",
         "identitychallenge",
     ): (
-        "Use this page to inspect verification and account-recovery challenges. "
-        "For example: troubleshoot an email verification or password-reset link."
+        "Use this read-only page to inspect minimized challenge lifecycle facts. "
+        "Invitation delivery truth belongs to Platform administration > Accounts; "
+        "legacy delivery fields and C3 digests are intentionally hidden here. "
+        "For example: confirm whether a recovery challenge was consumed."
     ),
     (
         "identity",
@@ -230,6 +248,14 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
     ): (
         "Use this page to inspect identity rate-limit and abuse evidence. "
         "For example: investigate repeated failed recovery attempts."
+    ),
+    (
+        "identity",
+        "platforminvitationschedulerrun",
+    ): (
+        "Use this read-only page to inspect count-only invitation delivery and "
+        "expiry scheduler evidence. For example: confirm that the latest worker "
+        "run completed without exposing any recipient identity."
     ),
     (
         "identity",

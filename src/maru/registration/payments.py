@@ -24,8 +24,10 @@ from maru.audit.models import AuditEvent
 from maru.audit.services import append_audit
 from maru.authorization.policy import resolve_edition_target
 from maru.identity.models import Account
+from maru.registration.commerce import complete_admission_tier_replacement
 from maru.registration.finance import record_provider_payment, record_provider_refund
 from maru.registration.models import (
+    AdmissionTierReplacement,
     FinancialLedgerEntry,
     FinancialOperation,
     PaymentAttempt,
@@ -204,26 +206,56 @@ def create_payment_intent(
                     code="payment_idempotency_conflict",
                 )
             return existing
-        if locked.state != Registration.State.PAYMENT_PENDING:
+        replacement = (
+            AdmissionTierReplacement.objects.select_for_update()
+            .filter(
+                registration=locked,
+                status=AdmissionTierReplacement.Status.PAYMENT_PENDING,
+                payment_due_at__gt=created_at,
+            )
+            .first()
+        )
+        ordinary_payment = locked.state == Registration.State.PAYMENT_PENDING
+        replacement_payment = (
+            replacement is not None
+            and locked.state
+            in {Registration.State.CONFIRMED, Registration.State.CHECKED_IN}
+            and locked.product_id == replacement.source_product_id
+        )
+        if not ordinary_payment and not replacement_payment:
             raise ValidationError(
                 "This registration is not waiting for payment.",
                 code="registration_not_payment_pending",
             )
-        if locked.payment_due_at is None or locked.payment_due_at <= created_at:
+        payment_deadline = (
+            replacement.payment_due_at
+            if replacement_payment and replacement is not None
+            else locked.payment_due_at
+        )
+        if payment_deadline is None or payment_deadline <= created_at:
             raise ValidationError(
                 "The payment reservation has expired.",
                 code="registration_payment_deadline_passed",
             )
         intent = PaymentIntent.objects.create(
             registration=locked,
+            tier_replacement=replacement if replacement_payment else None,
             organization_id=locked.organization_id,
             edition_id=locked.edition_id,
             provider_account=provider,
             idempotency_key=idempotency_key,
-            amount_minor=locked.price_minor_snapshot,
-            currency=locked.currency_snapshot,
+            amount_minor=(
+                replacement.amount_due_minor
+                if replacement_payment and replacement is not None
+                else locked.price_minor_snapshot
+            ),
+            currency=(
+                replacement.currency
+                if replacement_payment and replacement is not None
+                else locked.currency_snapshot
+            ),
             status=PaymentIntent.Status.CREATING,
-            expires_at=locked.payment_due_at,
+            expires_at=payment_deadline,
         )
     adapter = ADAPTERS.get(provider.adapter)
     if adapter is None:
@@ -427,6 +459,13 @@ def reconcile_verified_payment_event(  # noqa: PLR0912, PLR0915
         registration = Registration.objects.select_for_update().get(
             id=intent.registration_id
         )
+        replacement = (
+            AdmissionTierReplacement.objects.select_for_update()
+            .filter(id=intent.tier_replacement_id)
+            .first()
+            if intent.tier_replacement_id is not None
+            else None
+        )
         if event.event_type == "payment.refunded":
             if event.currency != intent.currency:
                 _open_payment_exception(
@@ -549,11 +588,20 @@ def reconcile_verified_payment_event(  # noqa: PLR0912, PLR0915
             outcome = PaymentWebhookReceipt.Outcome.EXCEPTION
             result_code = "currency_mismatch"
         elif event.event_type == "payment.succeeded":
-            if (
-                registration.state != Registration.State.PAYMENT_PENDING
-                or registration.payment_due_at is None
-                or event.occurred_at >= registration.payment_due_at
-            ):
+            ordinary_payment_is_current = (
+                replacement is None
+                and registration.state == Registration.State.PAYMENT_PENDING
+                and registration.payment_due_at is not None
+                and event.occurred_at < registration.payment_due_at
+            )
+            replacement_payment_is_current = (
+                replacement is not None
+                and replacement.status
+                == AdmissionTierReplacement.Status.PAYMENT_PENDING
+                and registration.product_id == replacement.source_product_id
+                and event.occurred_at < replacement.payment_due_at
+            )
+            if not ordinary_payment_is_current and not replacement_payment_is_current:
                 intent.status = PaymentIntent.Status.LATE
                 intent.safe_result_code = "late_success"
                 intent.last_provider_event_at = event.occurred_at
@@ -602,63 +650,71 @@ def reconcile_verified_payment_event(  # noqa: PLR0912, PLR0915
                     currency=event.currency,
                     occurred_at=event.occurred_at,
                 )
-                previous_state = registration.state
-                registration.state = Registration.State.CONFIRMED
-                registration.aggregate_version += 1
-                registration.confirmed_at = event.occurred_at
-                registration.confirmation_basis = (
-                    Registration.ConfirmationBasis.PROVIDER
-                )
-                registration.save(
-                    update_fields=(
-                        "state",
-                        "aggregate_version",
-                        "confirmed_at",
-                        "confirmation_basis",
-                        "updated_at",
+                if replacement is not None:
+                    complete_admission_tier_replacement(
+                        replacement_id=replacement.id,
+                        correlation_id=correlation_id,
+                        completed_at=event.occurred_at,
                     )
-                )
-                _grant_product_entitlement(
-                    registration=registration,
-                    granted_at=event.occurred_at,
-                )
-                _append_timeline(
-                    registration=registration,
-                    kind="payment_confirmed",
-                    title="Payment confirmed",
-                    summary=(
-                        "The hosted payment provider confirmed payment and "
-                        "admission is active."
-                    ),
-                    occurred_at=event.occurred_at,
-                    actor_kind="provider",
-                    actor_id=None,
-                    correlation_id=correlation_id,
-                )
-                audit = _system_audit(
-                    registration=registration,
-                    operation="registration.payment.webhook_reconcile",
-                    reason_code="provider_payment_reconciled",
-                    correlation_id=correlation_id,
-                    changed_fields=(
-                        "state",
-                        "payment_attempt",
-                        "entitlement",
-                        "timeline",
-                    ),
-                )
-                _publish_registration_transition(
-                    registration=registration,
-                    event_name="registration.payment.reconciled.v1",
-                    from_state=previous_state,
-                    correlation_id=correlation_id,
-                    actor_kind="provider",
-                    actor_id=None,
-                    causation_id=audit.id,
-                    workload_pool="payments",
-                )
+                    intent.safe_result_code = "tier_replacement_payment_reconciled"
+                else:
+                    previous_state = registration.state
+                    registration.state = Registration.State.CONFIRMED
+                    registration.aggregate_version += 1
+                    registration.confirmed_at = event.occurred_at
+                    registration.confirmation_basis = (
+                        Registration.ConfirmationBasis.PROVIDER
+                    )
+                    registration.save(
+                        update_fields=(
+                            "state",
+                            "aggregate_version",
+                            "confirmed_at",
+                            "confirmation_basis",
+                            "updated_at",
+                        )
+                    )
+                    _grant_product_entitlement(
+                        registration=registration,
+                        granted_at=event.occurred_at,
+                    )
+                    _append_timeline(
+                        registration=registration,
+                        kind="payment_confirmed",
+                        title="Payment confirmed",
+                        summary=(
+                            "The hosted payment provider confirmed payment and "
+                            "admission is active."
+                        ),
+                        occurred_at=event.occurred_at,
+                        actor_kind="provider",
+                        actor_id=None,
+                        correlation_id=correlation_id,
+                    )
+                    audit = _system_audit(
+                        registration=registration,
+                        operation="registration.payment.webhook_reconcile",
+                        reason_code="provider_payment_reconciled",
+                        correlation_id=correlation_id,
+                        changed_fields=(
+                            "state",
+                            "payment_attempt",
+                            "entitlement",
+                            "timeline",
+                        ),
+                    )
+                    _publish_registration_transition(
+                        registration=registration,
+                        event_name="registration.payment.reconciled.v1",
+                        from_state=previous_state,
+                        correlation_id=correlation_id,
+                        actor_kind="provider",
+                        actor_id=None,
+                        causation_id=audit.id,
+                        workload_pool="payments",
+                    )
+                    intent.safe_result_code = "payment_reconciled"
                 intent.status = PaymentIntent.Status.SUCCEEDED
-                intent.safe_result_code = "payment_reconciled"
                 intent.last_provider_event_at = event.occurred_at
                 intent.save(
                     update_fields=(
@@ -669,7 +725,7 @@ def reconcile_verified_payment_event(  # noqa: PLR0912, PLR0915
                     )
                 )
                 outcome = PaymentWebhookReceipt.Outcome.APPLIED
-                result_code = "payment_reconciled"
+                result_code = intent.safe_result_code
         elif event.event_type in {"payment.failed", "payment.abandoned"}:
             target = (
                 PaymentIntent.Status.FAILED

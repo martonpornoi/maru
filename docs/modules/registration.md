@@ -1,7 +1,7 @@
 # Registration module
 
-Status: Registration, extensible profiles, staff-assisted intake, reporting, provider-payment, finance, media, minor, credential, and closure boundaries implemented
-Last updated: 2026-08-01
+Status: Registration domains implemented; governed Page 10 definition builder mounted; lifecycle corrective candidates pending independent review; adapters and writer cutover remain open
+Last updated: 2026-08-03
 
 ## Purpose and requirements
 
@@ -9,7 +9,7 @@ Last updated: 2026-08-01
 registration state, staff-assisted intake evidence, provider-neutral payment and operational finance evidence,
 admission entitlements, direct check-in evidence, and audience-specific
 operational timelines. The implemented vertical covers EVT-002, EVT-003,
-AUD-002, ACT-001, IDN-006, IDN-011, and REG-001 through REG-022.
+AUD-002, ACT-001, IDN-006, IDN-011, and REG-001 through REG-024.
 
 ADR 0007 governs configuration reuse. ADR 0009 governs public registration and
 the edition-owned profile foundation. ADR 0010 governs headless clients and
@@ -49,10 +49,14 @@ An organizer can create a registration configuration draft:
 
 Every copy creates independent edition-owned question and product records. It
 retains source provenance, starts in `review required`, and cannot become active
-until an authorized organizer records a review reason. Activating a draft
-retires the former active version and freezes the selected version. Editing an
-open or historical form in place is prohibited by model validation and
-PostgreSQL triggers.
+until an authorized organizer records a review note for imported content. Page
+10 review evidence is authoritative only when an exact review receipt matches
+the current setup version and freshly recomputed content digest; the legacy
+`review_required` field remains display compatibility, not proof. Activation
+freezes the selected version and refuses to retire an already-active version
+silently. Retirement and successor creation remain separate reasoned commands.
+Editing an open or historical form in place is prohibited by model validation
+and PostgreSQL triggers.
 
 An active configuration can be published as a new immutable template version.
 Templates may be limited to one convention series or available to all
@@ -86,7 +90,163 @@ The configuration owns the default payment window, overall waitlist switch, and
 automatic FIFO promotion switch. Volunteer, early-bird, and normal prices are
 separate immutable offers.
 
-Bootstrap editing is available at:
+The purpose-built Page 10 builder is the current coherent organizer surface.
+It uses the shared `/admin/` shell and exposes explicit create, edit, bounded
+move, and non-cascading remove actions for draft sections, questions, and
+products, plus explicit minor-policy and versioned profile-definition pages.
+The same exact-scope commands back the HTML forms and canonical v1 APIs. Every
+mutation requires the current setup aggregate version and a scope-bound retry
+key, then commits minimized audit and outbox evidence atomically. Unknown form
+or JSON fields are rejected. The profile-definition catalog never projects
+attendee values.
+
+The canonical definition API families are:
+
+```text
+GET  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/setup
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/setup
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration/{configuration_id}/commands
+GET  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-extension-fields
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-extension-fields
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-extension-fields/{field_id}/commands
+```
+
+Configuration commands use a closed `operation` discriminator for section,
+question, product, and minor-policy variants. Profile field commands use their
+own closed update/move/retire variants. API mutations require a canonical UUID
+`Idempotency-Key` header and never accept a retry key in JSON.
+
+### Page 10 configuration lifecycle core
+
+The working tree contains a second corrective candidate for the exact-scope
+setup-start, reusable-template publication, configuration preview, explicit
+review, and immutable activation services. Its author-side focused gates pass,
+but a separate reviewer must accept it. This core is not yet a claim that the canonical
+HTML/API adapters, compatibility writers, or stopped-writer cutover are
+complete.
+
+- Preview locks one organization, series, edition, setup, persisted actor, and
+  configuration generation; recomputes current and source digests; projects
+  ordered sections, questions, and products; and applies the same typed answer
+  validator used by registration intake for attendee and staff projections.
+- Preview may append only its required minimized sensitive-read audit. It
+  creates no account, registration, submission, reservation, wait-list entry,
+  payment evidence, entitlement, consent, domain event, outbox message, or
+  configuration/setup mutation. Audit failure releases no projection.
+- Review and activation are separate positive-version commands. Imported
+  content requires a review note. Both commands reauthorize under the locked
+  scope, require the exact current digest and source evidence, and use immutable
+  receipt targets plus exact audit, domain-event, and outbox evidence to resolve
+  review state. Review validity follows the configuration's own last-changed
+  setup version, not unrelated profile-definition commands or the current
+  authorization-catalog version.
+- Activation requires the exact case-sensitive current edition name, one or
+  more admission products, valid product/configuration capacities and windows,
+  available required capacity codes, coherent wait-list/payment settings, and
+  complete current minor-policy review evidence when the minimum age is below
+  18. Zero custom questions remains valid.
+- A successful review or activation advances the setup aggregate once and
+  atomically commits its command receipt/target, minimized audit, domain event,
+  and outbox message. Same-key retries replay exact historical evidence;
+  changed intent conflicts. Concurrent distinct activation attempts produce
+  one activation and one lifecycle conflict.
+- Historical review attribution is bound to the persisted reviewer identifier,
+  database time, receipt target, audit, event, and outbox. Later reviewer
+  deactivation does not rewrite that completed administrative act.
+- Blank, immutable code-owned platform starter, complete published-template,
+  and exact active prior-edition sources
+  are verified against freshly recomputed canonical digests and their original
+  setup-start binding. Source pickers omit legacy or unstamped candidates, and
+  selection repeats exact authorization and digest validation transactionally.
+  A prior-edition candidate additionally proves its exact review and activation
+  receipt, target, audit, domain-event, and outbox graphs. Eligibility is
+  retained from the successful import instead of being re-evaluated from later
+  mutable edition dates; later edition renames do not invalidate exact command
+  replay. Same-organization cross-series imports authorize policy evidence
+  against the source edition's real series. A platform starter is resolved by
+  a deterministic code-owned identifier and exact version/digest, then copied
+  into new edition-owned rows. The copied draft remains review-required and
+  never tracks later catalog changes.
+  Successor creation and retirement are intentionally outside this lifecycle-
+  core milestone.
+- Registration migration `0035` freezes the configuration source tuple and
+  setup-control scope/origin/provenance in PostgreSQL, requires complete
+  configuration/control pairs and an exact setup-start configuration target,
+  rejects ordinary delete/truncate and aggregate-version rollback, and fences
+  populated reversal. It is additive hardening and does not activate the final
+  stopped-writer generation.
+- Registration migration `0037` adds the canonical reusable-template publish
+  ceremony and deferred complete-graph guards for catalog publication and
+  configuration activation. Template source listings require the exact catalog
+  receipt, target, audit, event, outbox, and child-generation stamps. Legacy
+  rows remain honest compatibility evidence and cannot masquerade as complete
+  published sources.
+
+### Page 10 profile-definition lifecycle core
+
+The working tree contains an independently accepted exact-scope command core
+for profile-extension approval, activation, successor creation, and retirement.
+Independent review rejected the first candidate
+after finding a direct-writer second-open-successor branch that its green
+focused matrix missed. The second repair then passed 38 fresh focused and 23
+fresh adjacent cases plus direct probes and is accepted at this boundary;
+strict HTML/API lifecycle adapters and the
+stopped-writer cutover remain separate work.
+
+- Approval is available only for a current draft. It records the persisted
+  current actor and database-server time, advances the setup aggregate once,
+  and binds an immutable reviewed target to that field's exact schema and
+  content digest.
+- Activation proves approval through the complete receipt, target, audit,
+  domain-event, and required internal-outbox graph. It binds the review to the
+  field's own last-changed setup version, so an unrelated field mutation does
+  not discard valid approval. The current activator is freshly authorized;
+  later reviewer deactivation does not rewrite historical review evidence.
+- A successor can start only from the active definition. It copies an
+  independent draft with the same stable key, the exact next version, and an
+  explicit `supersedes` relation; review evidence is reset. Template and prior-
+  edition source pointers are deliberately not carried into this successor
+  lineage, so later source retirement cannot strand correction work.
+- The sole-open-successor rule is mirrored in the model and a partial unique
+  PostgreSQL constraint, not only in the command. Activation also requires the
+  exact canonical successor-start evidence graph and refuses any other open
+  branch. Retired versions are terminal while remaining available as history.
+- A historical template source may later retire without blocking direct field
+  retirement or successor activation. New canonical profile definitions are
+  currently blank-source only: template and prior-edition source selectors are
+  rejected until the schema can persist one exact source definition identity,
+  generation, and digest. Existing legacy pointers remain preserved as
+  historical evidence and cannot be used to manufacture a new source claim.
+- Successor activation atomically retires the exact predecessor and activates
+  the reviewed successor. A first version refuses an existing active field of
+  the same key, and a second open successor conflicts instead of creating an
+  ambiguous branch.
+- Retirement preserves all value revisions. An active field with an open draft
+  successor cannot be retired directly; the operator must explicitly retire
+  that draft first. Active definitions otherwise remain immutable in both the
+  model and PostgreSQL guard.
+- Every transition uses current positive aggregate versions and UUID retry
+  keys, authorizes before protected parsing and again under the locked scope,
+  and commits state plus minimized evidence atomically. Historical replay
+  validates the exact durable evidence graph and rejects incomplete or forged
+  receipts. Concurrent activation commits one transition.
+- Replay recomputes the current definition digest and requires the exact
+  action-specific target kind, identifier, change kind, schema version, audit,
+  event, and outbox graph. Receipt and target evidence reject update, delete,
+  and truncate at the PostgreSQL boundary. Migration `0034` also revokes
+  `PUBLIC` execute from its `SECURITY DEFINER` evidence guard.
+- Reversing migration `0034` is supported only before successor action or
+  lineage evidence exists. A populated installation fails closed and requires
+  reviewed fix-forward recovery; operators must not edit lifecycle evidence to
+  force a downgrade.
+
+These definition commands do not query, rewrite, or delete attendee values.
+The compatibility-writer inventory and stopped-writer migration must still
+close raw legacy mutation paths before deployment.
+
+Legacy bootstrap inspection/editing remains present at the following model
+administration paths until the accepted direct-writer retirement gate is
+implemented. It is not the canonical Page 10 workflow:
 
 ```text
 /admin/identity/account/
@@ -97,7 +257,15 @@ Bootstrap editing is available at:
 /admin/registration/attendeeregistrationprofile/
 /admin/registration/registrationprofileextensionfield/
 /admin/registration/registrationprofileextensionvaluerevision/
+/admin/registration/registrationprofileextensionvaluecontrol/
+/admin/registration/registrationprofileextensionvaluecommandreceipt/
 ```
+
+Value revisions, current-sequence controls, and command receipts are read-only
+evidence in model administration. The remaining compatibility warning applies
+to definition/configuration/template bootstrap writers, not to an alternate
+profile-value writer: migration `0036` rejects unreceipted value appends and
+the earlier unsequenced service was removed.
 
 Sections, questions, and products are inline on draft records. A question can
 be assigned to a section on the same draft. Draft configurations also set the
@@ -188,18 +356,64 @@ publish an outbox event. They never update `RegistrationSubmission`.
 
 An organizer may add a reviewed, versioned edition profile field after
 registration opens. Definitions record key, version, purpose, classification,
-attendee visibility, writer policy, source provenance, reviewer, and lifecycle
-state. An active definition is immutable; corrections create a new version and
-retire the old version.
+one governed reader audience, a separate writer policy, source provenance,
+reviewer, and lifecycle state. Reader audiences are owner self-service, exact
+registration staff, one exact active Department/team, all confirmed attendees,
+or the public directory. An active definition is immutable; corrections create
+a new version and retire the old version.
 
-Each write appends a `RegistrationProfileExtensionValueRevision` with a stable
-field key and increasing sequence. Attendee writes are allowed only for the
-owning registration and an attendee-visible `attendee` or
-`attendee_and_staff` field. Registration staff may write
-`registration_staff` or shared fields with `registration.register_on_behalf`
-and a mandatory reason. Staff-only definitions and values are absent from the
-attendee projection. Database triggers enforce edition scope, reviewed active
-definitions, active-definition immutability, and append-only values.
+Each canonical write appends a `RegistrationProfileExtensionValueRevision`
+through a per-registration/stable-key sequence control and immutable command
+receipt. It requires the caller's current sequence, a scope-bound retry key,
+and exact audit/event/outbox evidence. An exact historical retry remains valid
+after later revisions advance the current pointer. Attendee writes are allowed
+only for the owning registration, a `self`, `confirmed_attendees`, or `public`
+reader audience, and an `attendee` or `attendee_and_staff` writer policy.
+Registration staff require the dedicated
+`registration.update_profile_extensions` capability, a `registration_staff`
+or exact-Department reader audience, a `registration_staff` or
+`attendee_and_staff` writer policy, and a mandatory reason. Staff reads use the
+separate `registration.view_profile_extensions` capability at the edition or
+exact Department target selected by the definition. Platform-administrator
+status alone is not a value-reading relationship. Staff-only and Department-
+only definitions and values are absent from the attendee projection.
+
+The current projection is deterministic, audited, and limited to 128 active
+fields. It exposes each field's current sequence plus a snapshot digest; it
+does not scan or return revision history. Database triggers enforce exact
+scope, active definitions at append time, sequence and current-pointer
+movement, immutable receipts/revisions, no truncation, and one complete
+audit/domain-event/outbox graph. Migration `0036` refuses to bless legacy
+histories with gaps, impossible writer/source provenance, draft definitions,
+or values incompatible with the historical field definition.
+
+Migration `0039` performs its legacy audience backfill inside one transaction.
+It disables only the existing active-field immutability trigger for that exact
+UPDATE and re-enables it before the operation completes; a failed migration
+rolls the trigger state back with the data change. The populated-upgrade
+regression starts from an approved active field and proves the guard rejects a
+raw mutation after the upgrade.
+
+The same command/query boundary powers browser editing. An attendee reaches
+their policy-filtered editor from the registration profile at
+`/register/<edition_id>/profile/extensions/`. Exact registration staff reach
+the staff editor from the governed Registration admin record. Both surfaces
+preauthorize the actor, edition, registration, and field before binding input;
+then submit a canonical expected sequence and idempotency key and redirect
+after success. Attendee forms contain only self-writable fields. Staff forms
+contain only staff-writable fields and require a reason. Platform-admin status
+alone does not reveal or write a value, and neither surface turns audience
+policy into a page ACL. Authenticated profile and staff responses are private
+and `no-store`.
+
+Optional boolean, integer, and single-choice values use JSON `null` as their
+canonical clear value. Required definitions reject it, and text or
+multiple-choice fields retain their typed empty representation. Migration
+`0040` keeps the revision column SQL `NOT NULL`, permits JSON `null` only for
+those optional scalar types, and fences reverse migration once a clear
+revision exists. A clear is an ordinary append-only revision: directory and
+public projections stop returning the value immediately, and a later value is
+another governed append rather than an in-place mutation.
 
 The Marucon rehearsal includes an attendee/staff address-detail field and a
 staff-only identity-check field. It deliberately does not create an
@@ -213,6 +427,11 @@ or checked-in state. It exposes display name, pronouns, bio, spoken languages,
 fursuit names/species, and approved images; it excludes real name, birth date,
 address, email, phone, Telegram, emergency contact, registration answers,
 product, price, and payment state. Withdrawal removes the row immediately.
+Approved `public` extension values may join that minimized row. A confirmed
+person viewer may additionally receive approved `confirmed_attendees` values.
+Both projections recheck confirmation and the subject's current consent at the
+release boundary, audit the sensitive read, and omit definition internals and
+revision history.
 
 Under consent version 3, an attendee may separately enter a two-letter country
 for the directory. It is never copied from the registration address or a prior
@@ -434,6 +653,13 @@ The self profile `PUT` is a complete metadata replacement command; media
 uploads are separate multipart commands so clients do not need to encode files
 inside nested JSON.
 
+Profile-extension value `POST` bodies are closed and require `field_id`,
+`value`, and `expected_sequence`. A canonical lower-case UUID is required in
+the `Idempotency-Key` header; the response reports `Idempotent-Replay` and
+returns the complete bounded workspace. Unknown scope/evidence fields are
+rejected. Sequence or retry conflicts return `409`; hidden targets return a
+non-disclosing `404`; incomplete atomic evidence returns an RFC 9457 `503`.
+
 All edition paths contain both organization and edition identifiers. Queries
 scope by both before resolving records. Missing and unauthorized targets use
 non-disclosing responses.
@@ -449,6 +675,8 @@ The module defines:
 - `registration.view_payment_summary`;
 - `registration.view_self_profile`;
 - `registration.manage_self_profile`;
+- `registration.view_profile_extensions`;
+- `registration.update_profile_extensions`;
 - `registration.moderate_public_profile`;
 - `registration.view_attendee_reporting`;
 - `registration.view_self`; and
@@ -457,7 +685,9 @@ The module defines:
 Self capabilities require the current account as resource owner and an edition
 participation. Staff capabilities require explicit edition-scoped authority.
 Profile-extension self writes require `registration.manage_self_profile`;
-staff writes require `registration.register_on_behalf` and a reason.
+staff reads and writes require the two dedicated profile-extension
+capabilities, and staff writes also require a reason. A service-summary or
+register-on-behalf grant does not imply access to extension values.
 Sensitive service-list and detail reads are audited.
 Self-profile and suggestion reads use a relationship-derived restricted-data
 projection and are audited. Media queue and preview reads are edition-scoped
@@ -519,6 +749,11 @@ silently dropped.
 
 Integration coverage includes:
 
+- Page 10 preview non-mutation and sensitive-read audit failure, complete
+  validation issue projection, zero-question review/activation, exact
+  blank/template/prior source digests, receipt-derived review invalidation,
+  replay/conflict behavior, rollback at receipt/audit/outbox boundaries, and
+  same-key plus distinct-key activation races;
 - template and prior-edition copy-on-write;
 - cross-tenant and cross-series denial;
 - explicit review and immutable activation;
@@ -543,6 +778,14 @@ Integration coverage includes:
   registration-submission mutation;
 - append-only extension value revisions, reviewed versioned definitions,
   tenant isolation, reserved authoritative keys, and database guards;
+- 47 fresh PostgreSQL command/migration cases for current identity, dedicated
+  staff capabilities, typed and 16 KiB-bounded input, exact sequence/retry and
+  historical replay, concurrent/nested writes, atomic evidence rollback,
+  bounded audited reads, raw/truncate guards, compatible legacy backfill,
+  helper ACL/search path, and rollback fences;
+- 13 owner/staff API cases for closed inputs, typed writes, non-disclosure,
+  write-plus-read rollback, snapshot sequences/digests, canonical idempotency,
+  replay/conflict responses, and OpenAPI problem contracts;
 - controlled pronoun write-in and five-language maximum;
 - multiple fursuits and database scope/retention guards;
 - public attendee field minimization and consent withdrawal;

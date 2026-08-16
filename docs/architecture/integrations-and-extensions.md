@@ -57,6 +57,44 @@ The endpoint repeats fresh exact authorization and persists one minimized
 sensitive-read audit before releasing its name-bearing response. Audit failure
 uses the same generic `503` dependency boundary.
 
+Page 10 adds the platform identity invitation contract:
+
+```text
+POST /api/v1/platform/account-invitations
+GET  /api/v1/platform/account-invitations/{invitation_id}
+POST /api/v1/platform/account-invitations/{invitation_id}/reissue
+POST /api/v1/platform/account-invitations/{invitation_id}/revoke
+POST /api/v1/public/account-invitations/accept
+```
+
+The four protected operations require fresh active platform-administrator
+authority; mutations additionally satisfy production step-up before the
+adapter reads `Idempotency-Key` or JSON. All four mutation requests use a
+canonical UUID `Idempotency-Key` header and closed schemas. The acceptance
+operation has no session authentication: its expiring single-use bearer
+challenge is the sole authority, and its response never identifies the
+reserved account. Passwords and raw challenges are write-only input, never URL
+material, audit/event/log data, or error content. Every failure is RFC 9457;
+missing identities and invalid, expired, revoked, consumed, or superseded
+public challenges follow non-disclosing boundaries.
+
+Page 10 also adds the governed Registration definition contract:
+
+```text
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration/{configuration_id}/commands
+GET  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-extension-fields
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-extension-fields
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-extension-fields/{field_id}/commands
+```
+
+The configuration endpoint has closed section, question, product, ordering,
+and minor-policy variants selected by `operation`; fields from another variant
+are rejected. Profile catalog responses contain definitions and provenance but
+never attendee values. Mutations authorize before reading the idempotency
+header or JSON, require a canonical UUID `Idempotency-Key`, compare the setup
+aggregate version under lock, and return the original receipt/resource marker
+on an exact replay. Failures use RFC 9457 problem details.
+
 ### Domain event envelope
 
 ```json

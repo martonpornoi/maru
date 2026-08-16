@@ -1,14 +1,16 @@
 {% extends "admin/base_site.html" %}
-{% load static admin_help admin_edition_context %}
+{% load static admin_help admin_edition_context page_access %}
 
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'core/brand.css' %}">
   <link rel="stylesheet" href="{% static 'core/admin-help.css' %}">
+  <link rel="stylesheet" href="{% static 'core/access.css' %}">
 {% endblock %}
 
 {% block extrahead %}
   {{ block.super }}
+  <script src="{% static 'core/navigation.js' %}" defer></script>
   <meta name="theme-color" content="#071B3A">
   <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
   <link rel="apple-touch-icon" href="{% static 'core/brand/apple-touch-icon.png' %}">
@@ -23,15 +25,26 @@
 {% block branding %}
   {% maru_admin_shell_access request as maru_shell_access %}
   <div id="site-name">
-    <a class="maru-admin-brand" href="{% url 'admin:index' %}">
+    <a class="maru-admin-brand" href="{% if maru_personal_surface %}{% url 'my-maru-home' %}{% else %}{% url 'admin:index' %}{% endif %}">
       <img
         class="maru-brand-wordmark"
         src="{% static 'core/brand/maru_rectangle_full_logo.png' %}"
         alt="Maru Convention Planning"
       >
-      <span>Administration</span>
+      <span>{% if maru_personal_surface %}My Maru{% else %}Administration{% endif %}</span>
     </a>
-    {% if maru_shell_access.workspace_available %}
+    {% if maru_personal_surface %}
+      {% if maru_shell_access.workspace_available or request.user.is_staff %}
+        <a class="maru-admin-surface" href="{% url 'admin:index' %}">
+          Administration
+        </a>
+      {% endif %}
+    {% else %}
+      <a class="maru-admin-surface" href="{% url 'my-maru-home' %}">
+        My Maru
+      </a>
+    {% endif %}
+    {% if not maru_personal_surface and maru_shell_access.workspace_available %}
       <a class="maru-admin-surface" href="{% url 'management-console' %}">
         Convention work
       </a>
@@ -41,7 +54,7 @@
 
 {% block nav-global %}
   {{ block.super }}
-  {% if not baseline_hide_admin_scoped_navigation %}
+  {% if not maru_personal_surface and not baseline_hide_admin_scoped_navigation %}
     {% admin_edition_context request as maru_edition_context %}
     {% if maru_edition_context.available %}
       <form
@@ -51,8 +64,26 @@
       >
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.get_full_path }}">
-        <label for="maru-edition-context">
-          <span>Convention workspace</span>
+        <p
+          class="maru-edition-context-trail"
+          aria-label="Current workspace"
+        >
+          {% if edition %}
+            {{ organization.name }} <span aria-hidden="true">/</span>
+            {{ convention_series.name }} <span aria-hidden="true">/</span>
+            <strong>{{ edition.name }}</strong>
+          {% elif maru_edition_context.selected %}
+            {{ maru_edition_context.selected.organization.name }}
+            <span aria-hidden="true">/</span>
+            {{ maru_edition_context.selected.series.name }}
+            <span aria-hidden="true">/</span>
+            <strong>{{ maru_edition_context.selected.name }}</strong>
+          {% else %}
+            <strong>All foundation data</strong>
+          {% endif %}
+        </p>
+        <label class="maru-edition-context-picker" for="maru-edition-context">
+          <span>Change workspace</span>
           <select id="maru-edition-context" name="edition_id">
             <option value="">All foundation data</option>
             {% for edition in maru_edition_context.editions %}
@@ -71,10 +102,193 @@
   {% endif %}
 {% endblock %}
 
+{% block messages %}
+  {{ block.super }}
+  {% if not is_popup %}
+    {% maru_page_access as maru_page_access_summary %}
+    {% include "core/_page_access_summary.html" with maru_page_access=maru_page_access_summary only %}
+  {% endif %}
+{% endblock %}
+
 {% block content_title %}
   {{ block.super }}
   {% admin_page_help request.path opts.app_label opts.model_name as maru_page_help %}
   {% if maru_page_help %}
     <p class="maru-page-help">{{ maru_page_help }}</p>
   {% endif %}
+{% endblock %}
+
+{% block extrabody %}
+  {{ block.super }}
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const originalToggle = document.getElementById("toggle-nav-sidebar");
+      const sidebar = document.getElementById("nav-sidebar");
+      const main = document.getElementById("main");
+      const backdrop = document.querySelector("[data-navigation-backdrop]");
+      const closeButton = document.querySelector("[data-navigation-close]");
+      if (!originalToggle || !sidebar || !main || !backdrop || !closeButton) {
+        return;
+      }
+
+      // Deferred stock scripts have attached by DOMContentLoaded. Replacing only
+      // their button node prevents a desktop-column listener from double-toggling
+      // the same control when this shell becomes a modal drawer.
+      const toggle = originalToggle.cloneNode(true);
+      originalToggle.replaceWith(toggle);
+      const drawerWidth = window.matchMedia("(max-width: 1100px)");
+      const focusableSelector = [
+        "a[href]",
+        "button:not([disabled])",
+        "input:not([disabled])",
+        "select:not([disabled])",
+        "textarea:not([disabled])",
+        "[tabindex]:not([tabindex='-1'])",
+      ].join(",");
+      let returnFocus = null;
+
+      const readDesktopPreference = () => {
+        try {
+          return localStorage.getItem("django.admin.navSidebarIsOpen");
+        } catch {
+          return null;
+        }
+      };
+
+      const writeDesktopPreference = (expanded) => {
+        try {
+          localStorage.setItem(
+            "django.admin.navSidebarIsOpen",
+            expanded ? "true" : "false",
+          );
+        } catch {
+          // A storage-denied browser still receives a fully operable drawer.
+        }
+      };
+
+      const drawerIsOpen = () =>
+        drawerWidth.matches && main.classList.contains("shifted");
+
+      const focusableElements = () =>
+        Array.from(sidebar.querySelectorAll(focusableSelector)).filter(
+          (element) =>
+            !element.closest("[hidden]") && element.getClientRects().length > 0,
+        );
+
+      const setExpanded = (expanded, { focusDrawer = false, persist = true } = {}) => {
+        main.classList.toggle("shifted", expanded);
+        toggle.setAttribute("aria-expanded", String(expanded));
+        sidebar.setAttribute("aria-expanded", String(expanded));
+
+        if (drawerWidth.matches) {
+          sidebar.setAttribute("aria-hidden", String(!expanded));
+          sidebar.inert = !expanded;
+          backdrop.hidden = !expanded;
+          document.body.classList.toggle("maru-navigation-drawer-open", expanded);
+          toggle.setAttribute(
+            "aria-label",
+            expanded ? "Navigation open" : "Open navigation",
+          );
+          if (expanded && focusDrawer) {
+            window.requestAnimationFrame(() => closeButton.focus());
+          }
+          return;
+        }
+
+        sidebar.removeAttribute("aria-hidden");
+        sidebar.inert = false;
+        backdrop.hidden = true;
+        document.body.classList.remove("maru-navigation-drawer-open");
+        toggle.setAttribute(
+          "aria-label",
+          expanded ? "Collapse navigation" : "Expand navigation",
+        );
+        if (persist) {
+          writeDesktopPreference(expanded);
+        }
+      };
+
+      const closeDrawer = ({ restoreFocus = true } = {}) => {
+        if (!drawerWidth.matches) {
+          return;
+        }
+        setExpanded(false, { persist: false });
+        if (restoreFocus && returnFocus instanceof HTMLElement) {
+          returnFocus.focus();
+        }
+        returnFocus = null;
+      };
+
+      toggle.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const expanded = !main.classList.contains("shifted");
+        if (drawerWidth.matches && expanded) {
+          returnFocus = document.activeElement;
+        }
+        setExpanded(expanded, {
+          focusDrawer: drawerWidth.matches && expanded,
+          persist: !drawerWidth.matches,
+        });
+      });
+      closeButton.addEventListener("click", () => closeDrawer());
+      backdrop.addEventListener("click", () => closeDrawer());
+      sidebar.addEventListener("click", (event) => {
+        if (
+          drawerWidth.matches &&
+          event.target instanceof Element &&
+          event.target.closest("a[href]")
+        ) {
+          closeDrawer({ restoreFocus: false });
+        }
+      });
+
+      document.addEventListener(
+        "keydown",
+        (event) => {
+          if (!drawerIsOpen()) {
+            return;
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            closeDrawer();
+            return;
+          }
+          if (event.key !== "Tab") {
+            return;
+          }
+
+          const elements = focusableElements();
+          if (!elements.length) {
+            event.preventDefault();
+            closeButton.focus();
+            return;
+          }
+          const first = elements[0];
+          const last = elements[elements.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        },
+        true,
+      );
+
+      const updateLayoutMode = () => {
+        returnFocus = null;
+        if (drawerWidth.matches) {
+          setExpanded(false, { persist: false });
+          return;
+        }
+        const persisted = readDesktopPreference();
+        setExpanded(persisted === null || persisted === "true", { persist: false });
+      };
+      drawerWidth.addEventListener("change", updateLayoutMode);
+      updateLayoutMode();
+    }, { once: true });
+  </script>
 {% endblock %}

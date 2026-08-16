@@ -217,7 +217,7 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
         "a8c475fcea8a338e07b91ad0ba1bb9d64cebc31b5fb53c89b49d14a477bb1e8a"
     ),
     "maru_workforce_department_fk_contract_is_current()": (
-        "378a3cf2cb86f8d91967be6355fa9dadde4244fd68e4a867f6548b1bfa516d3b"
+        "83e5707405156ec49bd70059a1cdcdf78c7d6472a198ea0151bc63efd84fa935"
     ),
     "maru_workforce_page9_scope_mutex()": (
         "75e5f8a98fd059d1e5d2de0db420e77beec79f3c6eb12b051388ab66c85790c6"
@@ -229,6 +229,25 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
         "a5ca2897e19293a78e805a1a8fb4484f6822def7713c35141c0e7f2fbb4ad429"
     ),
 }
+
+PAGE9_DEPARTMENT_FK_CONTRACT = (
+    ("applications_applicationownerdepartment", ("department_id",)),
+    ("authorization_capabilitygrant", ("department_id",)),
+    ("authorization_roleassignment", ("department_id",)),
+    ("authorization_scopedresourcebinding", ("department_id",)),
+    ("charities_charityselection", ("responsible_department_id",)),
+    ("logistics_equipmentoffer", ("responsible_department_id",)),
+    ("logistics_logisticsmanifest", ("responsible_department_id",)),
+    (
+        "registration_registrationprofileextensionfield",
+        ("audience_department_id",),
+    ),
+    ("venues_editionspaceselection", ("responsible_department_id",)),
+    ("venues_editionvenueselection", ("responsible_department_id",)),
+    ("venues_venuebooking", ("responsible_department_id",)),
+    ("workforce_department", ("parent_id",)),
+    ("workforce_position", ("department_id",)),
+)
 
 
 def _declared_page9_triggers() -> dict[str, tuple[object, ...]]:
@@ -430,20 +449,78 @@ def test_page9_constraint_timing_tamper_blocks_readiness() -> None:
     assert not catalog.downgrade_fence_installed
 
 
-def test_missing_page9_migration_recorder_row_blocks_readiness() -> None:
+@pytest.mark.parametrize(
+    "migration_name",
+    [
+        "0007_structure_write_integrity",
+        "0008_department_fk_contract_successor",
+    ],
+)
+def test_missing_page9_migration_recorder_row_blocks_readiness(
+    migration_name: str,
+) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
             """
             DELETE FROM public.django_migrations
              WHERE app = 'workforce'
-               AND name = '0007_structure_write_integrity'
-            """
+               AND name = %s
+            """,
+            [migration_name],
         )
 
     catalog = provenance_readiness._inspect_cutover_catalog()
     assert not catalog.migration_applied
     assert not catalog.guards_installed
     assert not catalog.downgrade_fence_installed
+
+
+def test_page9_department_fk_contract_is_installed_exactly() -> None:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT local_relation.relname::text,
+                   ARRAY(
+                       SELECT local_attribute.attname::text
+                         FROM pg_catalog.unnest(constraint_record.conkey)
+                              WITH ORDINALITY AS local_key(attnum, position)
+                         JOIN pg_catalog.pg_attribute AS local_attribute
+                           ON local_attribute.attrelid = constraint_record.conrelid
+                          AND local_attribute.attnum = local_key.attnum
+                        ORDER BY local_key.position
+                   ),
+                   ARRAY(
+                       SELECT referenced_attribute.attname::text
+                         FROM pg_catalog.unnest(constraint_record.confkey)
+                              WITH ORDINALITY AS referenced_key(attnum, position)
+                         JOIN pg_catalog.pg_attribute AS referenced_attribute
+                           ON referenced_attribute.attrelid =
+                              constraint_record.confrelid
+                          AND referenced_attribute.attnum = referenced_key.attnum
+                        ORDER BY referenced_key.position
+                   ),
+                   constraint_record.confdeltype::text
+              FROM pg_catalog.pg_constraint AS constraint_record
+              JOIN pg_catalog.pg_class AS local_relation
+                ON local_relation.oid = constraint_record.conrelid
+             WHERE constraint_record.contype = 'f'
+               AND constraint_record.confrelid =
+                   'public.workforce_department'::pg_catalog.regclass
+             ORDER BY local_relation.relname, constraint_record.conname
+            """
+        )
+        rows = cursor.fetchall()
+        cursor.execute(
+            "SELECT public.maru_workforce_department_fk_contract_is_current()"
+        )
+        contract_is_current = cursor.fetchone()
+
+    assert tuple((str(row[0]), tuple(row[1])) for row in rows) == (
+        PAGE9_DEPARTMENT_FK_CONTRACT
+    )
+    assert all(tuple(row[2]) == ("id",) for row in rows)
+    assert all(str(row[3]) in {"a", "r"} for row in rows)
+    assert contract_is_current == (True,)
 
 
 def test_page9_contract_sets_are_inside_the_downgrade_fence() -> None:

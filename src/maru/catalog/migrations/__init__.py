@@ -1,0 +1,1 @@
+"""Catalog database migrations."""

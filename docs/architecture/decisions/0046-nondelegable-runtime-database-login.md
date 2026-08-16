@@ -89,14 +89,36 @@ reachable `admin_option` edge is a failure.
 The exact protected-relation set is versioned in code and contains only:
 
 - `public.django_migrations`;
-- `public.authorization_authorityprovenanceactivation`; and
-- `public.authorization_provenanceactivationlatch`.
+- `public.authorization_authorityprovenanceactivation`;
+- `public.authorization_provenanceactivationlatch`; and
+- `public.identity_platforminvitationretentionpolicycontrol`.
 
-Runtime must have table-level `SELECT` on all three and must have no effective
+Runtime must have table-level `SELECT` on all four and must have no effective
 table- or column-level `INSERT`/`UPDATE`/`REFERENCES` and no table-level
 `DELETE`. Every materialized view is likewise SELECT-only. Other current
 runtime relations retain `SELECT`/`INSERT`/`UPDATE`/`DELETE`; all sequences
 retain only `USAGE`/`SELECT`.
+
+Later additive page contracts extend the restricted-relation catalog without
+weakening this proof. Page 9 structure receipts are `SELECT`/`INSERT`, and its
+control is `SELECT`/`INSERT`/`UPDATE`. ADR 0047's additive invitation slice
+adds `SELECT`/`INSERT` transitions, command receipts, delivery attempts, late
+outcomes, reconciliation receipts, scheduler heartbeats, and retention
+receipts; a `SELECT`/`UPDATE` seeded account-inventory control; and
+`SELECT`/`INSERT`/`UPDATE` identity challenges, invitation aggregates,
+delivery aggregates, and retention holds. The retention-policy control is
+owner-activated and therefore joins the `SELECT`-only profile. All four
+restricted profiles deny `DELETE` and `REFERENCES`; privileges omitted by a
+profile are also denied at column level.
+
+Registration migration `0036` applies the same restricted profiles to
+post-submission profile values: immutable value revisions and command receipts
+are `SELECT`/`INSERT`, while the per-registration/stable-key sequence control
+is `SELECT`/`INSERT`/`UPDATE`. Database triggers remain the typed-value,
+provenance, sequence, digest, and complete-evidence boundary.
+
+The Page 10 ACL extension does not activate its future stopped-writer
+generation.
 
 Web and worker processes read migration history during readiness but never
 write it. Only the separately credentialed migration role records an applied

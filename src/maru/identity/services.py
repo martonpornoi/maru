@@ -157,10 +157,12 @@ def _dispatch_challenge_email(
         subject = "Verify your Maru email"
         route = "verify-email"
         explanation = "verify your email before registration can reserve a place"
-    else:
+    elif purpose == IdentityChallenge.Purpose.RECOVER_ACCOUNT:
         subject = "Recover your Maru account"
         route = "recover-account"
         explanation = "choose a new password"
+    else:
+        raise ValueError("This identity challenge requires its dedicated worker.")
     public_base_url = settings.MARU_PUBLIC_BASE_URL.rstrip("/")
     link = f"{public_base_url}/accounts/{route}/?token={raw_token}"
     send_mail(
@@ -189,6 +191,10 @@ def deliver_identity_challenge(challenge_id: UUID) -> str:
             .select_related("account")
             .get(id=challenge_id)
         )
+        if challenge.purpose == IdentityChallenge.Purpose.ACCOUNT_INVITATION:
+            raise ValueError(
+                "Platform account invitations require the dedicated identity worker."
+            )
         now = timezone.now()
         if challenge.delivery_status in (
             IdentityChallenge.DeliveryStatus.SUCCEEDED,
@@ -267,6 +273,7 @@ def deliver_pending_identity_challenges(*, limit: int = 100) -> tuple[int, int]:
             consumed_at__isnull=True,
             expires_at__gt=now,
         )
+        .exclude(purpose=IdentityChallenge.Purpose.ACCOUNT_INVITATION)
         .order_by("created_at", "id")
         .values_list("id", flat=True)[:limit]
     )

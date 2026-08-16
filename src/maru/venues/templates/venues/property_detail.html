@@ -1,0 +1,116 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <main id="content" class="maru-management-page">
+    <p><a href="{% url 'venue-workspace' organization.slug convention_series.slug edition.slug %}">Back to venues and spaces</a></p>
+    <header class="maru-page-header">
+      <div>
+        <p class="maru-eyebrow">Reusable {{ property.get_kind_display }} / {{ property.get_lifecycle_display }}</p>
+        <h1>{{ property.public_name }}</h1>
+        <p>{{ property.location_name }} / {{ property.country_code }} / profile version {{ property.aggregate_version }}</p>
+      </div>
+    </header>
+
+    <section class="module" aria-labelledby="property-profile-title">
+      <h2 id="property-profile-title">Property and provider facts</h2>
+      <dl>
+        <dt>Legal / provider</dt><dd>{{ property.legal_name }}{% if property.provider_name %} / {{ property.provider_name }}{% endif %}</dd>
+        <dt>Postal address</dt><dd>{{ property.postal_address|linebreaksbr }}</dd>
+        <dt>Public contact</dt><dd>{{ property.public_contact|default:"Not set" }}</dd>
+        <dt>Restricted provider contact</dt><dd>{{ property.contact_name|default:"Not set" }}{% if property.contact_email %} / {{ property.contact_email }}{% endif %}{% if property.contact_phone %} / {{ property.contact_phone }}{% endif %}</dd>
+      </dl>
+      {% if can_manage %}
+        <details>
+          <summary>Edit complete property profile</summary>
+          <form method="post" action="{% url 'venue-property-update' organization.slug convention_series.slug edition.slug property.id %}">
+            {% csrf_token %}{{ property_form.as_p }}
+            <button type="submit">Save profile</button>
+          </form>
+        </details>
+      {% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="physical-title">
+      <h2 id="physical-title">Sites, buildings, spaces, and configurations</h2>
+      {% if spaces %}
+        <table>
+          <thead><tr><th>Path</th><th>Type</th><th>Configurations</th><th>Access / barriers</th></tr></thead>
+          <tbody>
+            {% for space in spaces %}
+              <tr>
+                <th>{{ space.site.name }} / {{ space.building.name }} / {{ space.name }}</th>
+                <td>{{ space.get_kind_display }}</td>
+                <td>{% for configuration in space.configurations.all %}{{ configuration.name }} v{{ configuration.version }}: seated {{ configuration.seated_capacity }}, standing {{ configuration.standing_capacity }}, table {{ configuration.table_capacity }}, fire {{ configuration.fire_capacity }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</td>
+                <td>{{ space.accessibility_features|default:"No access facts" }}{% if space.known_barriers %}<br><strong>Known barriers:</strong> {{ space.known_barriers }}{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}<p>No physical hierarchy has been registered.</p>{% endif %}
+      {% if can_manage %}
+        <details><summary>Add a complete site / building / space / configuration path</summary>
+          <form method="post" action="{% url 'venue-catalog-path-create' organization.slug convention_series.slug edition.slug property.id %}">{% csrf_token %}{{ catalog_form.as_p }}<button type="submit">Create physical path</button></form>
+        </details>
+      {% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="combination-title">
+      <h2 id="combination-title">Mergeable room combinations</h2>
+      {% if combinations %}
+        <ul>{% for combination in combinations %}<li><strong>{{ combination.name }}</strong>: {% for member in combination.members.all %}{{ member.space.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</li>{% endfor %}</ul>
+      {% else %}<p>No room combination is registered.</p>{% endif %}
+      {% if can_manage and spaces|length > 1 %}
+        <details><summary>Create a physical-space combination</summary>
+          <form method="post" action="{% url 'venue-combination-create' organization.slug convention_series.slug edition.slug property.id %}">{% csrf_token %}{{ combination_form.as_p }}<button type="submit">Create combination</button></form>
+        </details>
+      {% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="media-title">
+      <h2 id="media-title">Photos and logos</h2>
+      <p>Source ownership, licence, usage, attribution, and review remain attached to every rendition.</p>
+      {% if media_rows %}
+        {% for row in media_rows %}
+          <article>
+            <h3>{{ row.record.get_kind_display }} / {{ row.record.get_review_status_display }} / version {{ row.record.aggregate_version }}</h3>
+            <p>{{ row.record.owner_name }} / {{ row.record.license_basis }} / {{ row.record.usage_scope }}</p>
+            {% if row.record.public_reference %}<p><a href="{{ row.record.public_reference }}">Approved public rendition</a></p>{% endif %}
+            {% if row.review_form %}<form method="post" action="{% url 'venue-media-approve' organization.slug convention_series.slug edition.slug property.id row.record.id %}">{% csrf_token %}{{ row.review_form.as_p }}<button type="submit">Approve independently</button></form>{% endif %}
+          </article>
+        {% endfor %}
+      {% else %}<p>No media is registered.</p>{% endif %}
+      {% if can_manage %}<details><summary>Submit photo or logo</summary><form method="post" action="{% url 'venue-media-add' organization.slug convention_series.slug edition.slug property.id %}">{% csrf_token %}{{ media_form.as_p }}<button type="submit">Submit media</button></form></details>{% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="layout-title">
+      <h2 id="layout-title">Versioned layouts</h2>
+      <p>Public, internal, and security layouts remain separate. Public approval requires an explicitly reviewed safe rendition.</p>
+      {% if layout_rows %}
+        {% for row in layout_rows %}
+          <article>
+            <h3>{{ row.record.space.name }} / {{ row.record.title }} v{{ row.record.version }}</h3>
+            <p>{{ row.record.get_visibility_display }} / {{ row.record.get_review_status_display }} / record version {{ row.record.aggregate_version }}</p>
+            {% if row.record.approved_reference %}<p><a href="{{ row.record.approved_reference }}">Approved rendition</a></p>{% endif %}
+            {% if row.review_form %}<form method="post" action="{% url 'venue-layout-approve' organization.slug convention_series.slug edition.slug property.id row.record.id %}">{% csrf_token %}{{ row.review_form.as_p }}<button type="submit">Approve independently</button></form>{% endif %}
+          </article>
+        {% endfor %}
+      {% else %}<p>No layout version is registered.</p>{% endif %}
+      {% if can_manage and spaces %}<details><summary>Submit layout version</summary><form method="post" action="{% url 'venue-layout-add' organization.slug convention_series.slug edition.slug property.id %}">{% csrf_token %}{{ layout_form.as_p }}<button type="submit">Submit layout</button></form></details>{% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="accommodation-title">
+      <h2 id="accommodation-title">Accommodation inventory</h2>
+      <p>This catalog stores room types and room-night capacity only; it contains no guest or attendee assignment.</p>
+      {% if room_types %}<ul>{% for room_type in room_types %}<li><strong>{{ room_type.public_name }}</strong>: {{ room_type.minimum_occupants }}-{{ room_type.maximum_occupants }} occupants{% if room_type.accessible_features %} / {{ room_type.accessible_features }}{% endif %}</li>{% endfor %}</ul>{% else %}<p>No accommodation room types are registered.</p>{% endif %}
+      {% if inventory_rows %}
+        {% for row in inventory_rows %}
+          <article><h3>{{ row.record.room_type.public_name }} / {{ row.record.night }}</h3><p>{{ row.record.room_capacity }} rooms / release {{ row.record.release_at }} / version {{ row.record.aggregate_version }}</p>{% if row.form %}<form method="post" action="{% url 'venue-inventory-set' organization.slug convention_series.slug edition.slug property.id %}">{% csrf_token %}{{ row.form.as_p }}<button type="submit">Replace inventory version</button></form>{% endif %}</article>
+        {% endfor %}
+      {% endif %}
+      {% if can_manage_accommodation %}
+        <details><summary>Add room type</summary><form method="post" action="{% url 'venue-room-type-create' organization.slug convention_series.slug edition.slug property.id %}">{% csrf_token %}{{ room_type_form.as_p }}<button type="submit">Create room type</button></form></details>
+        {% if room_types %}<details><summary>Add room-night inventory</summary><form method="post" action="{% url 'venue-inventory-set' organization.slug convention_series.slug edition.slug property.id %}">{% csrf_token %}{{ inventory_form.as_p }}<button type="submit">Set inventory</button></form></details>{% endif %}
+      {% endif %}
+    </section>
+  </main>
+{% endblock %}

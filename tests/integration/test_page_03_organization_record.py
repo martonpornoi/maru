@@ -69,8 +69,11 @@ def test_inventory_and_record_use_compact_navigation_and_record_link() -> None:
     assert 'data-page="organization-record"' in content
     assert 'href="#main-content">Skip to main content</a>' in content
     assert 'id="main-content"' in content
-    assert content.count('class="baseline-sidebar-row"') == 2
+    assert content.count('class="baseline-sidebar-row"') == 3
     assert content.count('aria-current="page"') == 1
+    assert 'href="/admin/platform/accounts/"' in content
+    assert "Accounts" in content
+    assert 'aria-label="Invite person account"' in content
     assert 'class="baseline-sidebar-context"' in content
     assert "Organization record" in content
     assert (

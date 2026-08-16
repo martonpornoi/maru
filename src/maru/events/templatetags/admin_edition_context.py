@@ -1,8 +1,12 @@
 """Template access to the bootstrap-administration edition selector."""
 
+from collections.abc import Mapping
+from typing import cast
+
 from django import template
 from django.http import HttpRequest
 
+from maru.core.navigation import project_shell_navigation
 from maru.events.admin_context import (
     admin_edition_options,
     admin_organization_navigation,
@@ -10,6 +14,18 @@ from maru.events.admin_context import (
 )
 
 register = template.Library()
+
+
+@register.simple_tag(takes_context=True)
+def maru_shell_navigation(context: template.Context) -> dict[str, object]:
+    request = context["request"]
+    page_context = cast(Mapping[str, object], context.flatten())
+    return project_shell_navigation(
+        request,
+        available_apps=context.get("available_apps") or (),
+        page_context=page_context,
+        personal_surface=bool(context.get("maru_personal_surface")),
+    )
 
 
 @register.simple_tag

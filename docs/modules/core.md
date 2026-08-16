@@ -1,14 +1,14 @@
 # Core module
 
-Status: Implemented backend foundation, unified `/admin/` shell, Page 8
-governance integration, and Page 9a.1 structure management; the definitive
-repository gate passes while browser/accessibility and owner gates remain
-Last updated: 2026-08-02
+Status: Implemented backend foundation, task-oriented responsive `/admin/`
+first slice, Page 8 governance integration, and Page 9a.1 structure management;
+broader journey, browser/accessibility, and owner gates remain
+Last updated: 2026-08-16
 
 ## Purpose and requirements
 
 `maru.core` owns genuinely domain-neutral runtime primitives supporting
-NFR-001, NFR-004, NFR-006, NFR-008, and NFR-009.
+UX-029, INT-001, NFR-001, NFR-002, NFR-004, NFR-006, NFR-008, and NFR-009.
 
 ## Owned behavior
 
@@ -19,11 +19,16 @@ NFR-001, NFR-004, NFR-006, NFR-008, and NFR-009.
 - allowlisted structured JSON logging
 - RFC 9457-style DRF problem responses
 - liveness, database readiness, and build identity endpoints
+- the canonical served OpenAPI schema and private Swagger/ReDoc rendering
+  adapters;
 - focused local sign-in and the unified `/admin/` host boundary;
+- the code-owned task navigation registry, search metadata, pin policy,
+  specialist disclosure, and task-first administration home;
+- the compact context presentation and accessible responsive drawer behavior;
 - responsive, progressively scoped Pages 1–9 adapters under the reserved
   `/admin/platform/` route space;
 - the shared administration host, safety mixins, platform navigation, and
-  record-oriented visual grammar selected by ADR 0039;
+  record-oriented visual grammar selected by ADRs 0039 and 0055;
 - canonical platform brand assets, accessible palette tokens, and application
   metadata
 
@@ -67,16 +72,35 @@ representation-manager, and exact-invitee policies. The shell mounts:
   separate Executive Board governance anchor, bounded workforce tree, and
   same-shell template and Department management child pages.
 
+ADR 0055 changes the presentation hierarchy without changing any route or
+authorization boundary. The default shell shows a small set of durable tasks,
+puts contextual creation commands in the search-only **Actions** group, and
+keeps authorized technical model pages searchable behind one collapsed
+**Specialist records** disclosure. Navigation search indexes only code-owned
+labels, descriptions, and stable generic keywords. The administration home
+leads with current work and **Continue setup** and provides one specialist
+gateway instead of repeating the complete model directory.
+
+At 1,100 CSS pixels and below, the sidebar becomes a closed-by-default overlay
+drawer with a labelled open control, visible close control, backdrop,
+`aria-expanded`/`aria-controls`, Escape handling, focus containment, background
+scroll lock, and focus return. Wider layouts retain the persistent sidebar.
+The convention-context control uses a compact shrinkable layout so it cannot
+force the management page wider than the viewport.
+
 Sign-out and edition context select/clear are POST actions. The shell creates
 no convention relationship for the platform administrator. Convention work
 and specialist records use their existing independent policy/model-permission
 boundaries; being visible in one menu does not broaden them. Public and
 personal HTML routes remain outside `/admin/` according to purpose.
 
-Focused route, authorization, shell/sidebar, Page 8, and Page 9 backend verification
-passes. Populated and fresh migrations, a local populated restore drill,
-desktop/390-pixel smoke, and the Page 8 sensitive-read/denial audit boundary
-also pass. The final consolidated local backend gate passes 792 tests in
+Focused route, authorization, shell/sidebar, Page 8, and Page 9 backend
+verification passes. The first management-experience slice adds focused source
+and integration coverage for its drawer, task navigation/home, User accounts,
+invitation status, and Board progress continuity. Populated and fresh
+migrations, a local populated restore drill, historical desktop/390-pixel
+smoke, and the Page 8 sensitive-read/denial audit boundary also pass. The final
+consolidated local backend gate passes 792 tests in
 329.21 seconds with 90.01 percent coverage and no warnings; a separate behavior
 run passes the same 792 tests in 291.86 seconds. Nine focused unified-routing
 tests pass, including scoped non-staff account-control routing. A live Board
@@ -84,8 +108,9 @@ logout reaches `/accounts/login/`, removes the logged-in banner, and produces no
 new console warning or error. A platform-administrator reload renders one
 searchable `#nav-filter`, Specialist records and Platform administration
 exactly once each, the correct `demo.admin` account, and no new console warning
-or error. Keyboard, automated accessibility, complete visual-state, and
-owner-tutorial evidence remain open.
+or error. Authenticated rendered evidence across the complete ADR 0055
+width/zoom matrix, keyboard and automated-accessibility checks, complete visual
+states, and owner tutorial remain open.
 
 Page 9 appears once beneath an authorized selected edition and is also
 discoverable to an ordinary account whose only qualifying edition-wide
@@ -114,22 +139,28 @@ a positive representation version, exact case-sensitive organization name,
 and reason. Organization, person, representation, role, actor, state, scope,
 lifecycle, timestamps, and evidence remain code-owned.
 
-Health, build, schema, and versioned APIs remain authoritative. HTML and
-embedded clients call the same module services; a mounted preserved screen does
-not replace those contracts.
+Health, build, the OpenAPI schema, and versioned APIs remain authoritative.
+`/api/v1/docs/` and `/api/v1/redoc/` are derived discovery/rendering adapters
+over that one schema; they do not replace it or add an API behavior contract.
+HTML and embedded clients call the same module services; a mounted preserved
+screen does not replace those contracts.
 
 ## Unified administration implementation
 
-ADR 0039 again selects the original Django administration index as the
-canonical `/admin/` home and reuses its stronger visual grammar.
+ADR 0039 selects the Django administration boundary and visual grammar for the
+canonical `/admin/` home. ADR 0055 replaces its exhaustive model-directory
+presentation with Maru's task-first home while retaining the same routes and
+security boundary.
 API-backed Convention work is embedded inside the same base template at
 `/admin/workspace/`; the embedded application does not render another global
 menu or workspace selector. Its inner pages use the same record-oriented
 heading, module, form, table, button, spacing, and responsive language as
 specialist record pages. Existing model URLs remain under `/admin/`. Shared admin mixins remove
-destructive bulk deletion and make command-owned records view-only. One
-collapsible sidebar links recurring work, contextual access sharing, and the
-permission-filtered specialist record directory.
+destructive bulk deletion and make command-owned records view-only. Shared
+navigation links recurring work and contextual access sharing. Durable
+destinations may be pinned after fresh authorization. Creation commands are
+non-pinnable contextual actions, and authorized technical records remain
+available through search and the collapsed specialist disclosure.
 Django's `nav_sidebar.js` expects one `#nav-filter` even when no model directory
 is available. The custom sidebar preserves that DOM contract and hides the
 filter for scoped accounts with no Specialist records instead of removing it.
@@ -150,9 +181,11 @@ The header also hosts the ADR 0008 convention-workspace selector. Event-owned
 modules declare their scope explicitly; the shared shell does not infer tenant
 ownership or treat the selected edition as authorization.
 
-The administration home shows Django's alphabetical application/model list
-only to accounts with independent staff/model permissions. Active scoped non-
-staff accounts still enter the Maru shell and see only permitted Maru work.
+The administration home shows current setup and recent work rather than
+Django's alphabetical application/model list. Accounts with independent staff/
+model permissions retain those authorized destinations through the specialist
+gateway and navigation search. Active scoped non-staff accounts still enter the
+Maru shell and see only permitted Maru work.
 ADR 0027 removes the former global Quick Start because it consumed every
 administration page's top chrome. Dependency guidance remains contextually in
 Convention work's **Setup guide**; record existence still does not prove
@@ -179,6 +212,9 @@ redirect.
 - `/health/live`
 - `/health/ready`
 - `/api/v1/meta/build`
+- `/api/v1/schema`
+- `/api/v1/docs/`
+- `/api/v1/redoc/`
 
 ## Security and data
 
@@ -201,12 +237,20 @@ malformed cutover state, or when the required exact boundary is unavailable.
 Independent provider health will be added to an authenticated operator
 projection, not the public response.
 
+The schema and both derived references require a current active platform
+administrator, fail closed on database lookup failure, use private `no-store`
+responses, and are excluded from registration-client CORS. Swagger submit
+methods are disabled. The locked sidecar assets must be included by
+`collectstatic`; the ReDoc override makes no external font or CDN request.
+
 ## Tests
 
 Unit tests cover strict environment parsing, validators, request correlation,
-safe log output, problem response shape, and health/build behavior. Integration
-tests cover Pages 1–7 authorization, progressive/current navigation, strict
-input, safe failure behavior, and platform non-participation.
+safe log output, problem response shape, health/build behavior, sidecar asset
+discovery, and CORS/baseline exclusion. Integration tests cover Pages 1–7
+authorization, progressive/current navigation, strict input, safe failure
+behavior, platform non-participation, and the schema/Swagger/ReDoc route,
+rendering, stale-authority, read-only, and response-hardening contracts.
 
 Current integration tests cover route collisions, anonymous/inactive/platform/
 scoped-nonstaff/staff boundaries, sidebar visibility, Convention work,
@@ -226,15 +270,23 @@ destination. Both HTML and API require the minimized structure-read audit to
 persist before disclosure. Page 9a.1 adds 118 targeted adapter and invariant
 cases; the definitive repository invocation passes 1,693 tests at 90.50
 percent total branch-inclusive coverage.
-Keyboard/automated accessibility, complete
-visual states, and owner evidence remain required.
+Focused management-experience tests additionally cover drawer markup and
+behavior contracts, collapsed/searchable specialist access, search-only
+actions, natural task keywords, the task-first home, User accounts
+presentation, invitation next steps, and Board progress. Authenticated rendered
+checks at 320, 390, 768, 958, 1,024, 1,280, and 1,920 CSS pixels plus 200
+percent zoom, keyboard/automated accessibility, complete visual states, and
+owner evidence remain required.
 
 ## Limitations
 
 Complete computed effective access, invitation notification discovery,
 metrics/tracing export, error capture, rate limiting, and a public status
-service remain. Page 8's root-representation explanation is only the first
-policy-derived slice; Page 9 adds a current principal-specific structure
+service remain. The task-oriented shell/home and User accounts-to-Board flow
+are the first converted slice; Registration, Workforce, Venues, Logistics, and
+other specialist journeys are not yet certified against the same complete
+state and browser matrix. Page 8's root-representation explanation is only the
+first policy-derived slice; Page 9 adds a current principal-specific structure
 view/manage summary but not named relationship disclosure or the complete
 department/resource/field explanation. Page 9a.1's version fence, commands,
 and strict adapters are mounted; Page 9b Position management and the computed

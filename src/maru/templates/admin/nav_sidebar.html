@@ -1,120 +1,113 @@
 {% load i18n admin_edition_context %}
-{% maru_admin_shell_access request as maru_shell_access %}
-{% if not baseline_hide_admin_scoped_navigation %}
-  {% maru_admin_organization_navigation request as maru_scoped_organizations %}
-  {% admin_edition_context request as maru_edition_context %}
-{% endif %}
+{% maru_shell_navigation as maru_navigation %}
 <button
   class="sticky toggle-nav-sidebar"
   id="toggle-nav-sidebar"
   aria-label="{% translate 'Toggle navigation' %}"
-></button>
-<nav class="sticky" id="nav-sidebar" aria-label="Administration">
-  {% if maru_shell_access.workspace_available %}
-  <details class="maru-admin-nav-section" open>
-    <summary>Convention work</summary>
-    <ul>
-      <li><a href="{% url 'management-console' %}">Today</a></li>
-      <li><a href="{% url 'management-console' %}?view=people">People</a></li>
-      <li>
-        <a href="{% url 'management-console' %}?view=my-registration">
-          My registration
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'management-console' %}?view=commerce">
-          Registration
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'management-console' %}?view=reports">
-          Reports &amp; badges
-        </a>
-      </li>
-      <li><a href="{% url 'management-console' %}?view=setup">Setup guide</a></li>
-      <li>
-        <a href="{% url 'management-console' %}?view=security">
-          Security history
-        </a>
-      </li>
-    </ul>
-  </details>
-  {% endif %}
-  {% if not baseline_hide_admin_scoped_navigation and not edition and maru_edition_context.selected and maru_edition_context.selected_can_view_structure %}
-    <details class="maru-admin-nav-section" open>
-      <summary>Selected edition</summary>
-      <div class="maru-platform-navigation">
-        <section
-          class="baseline-sidebar-context"
-          aria-labelledby="maru-selected-edition-context"
-        >
-          <p
-            class="baseline-sidebar-context-name"
-            id="maru-selected-edition-context"
-          >
-            {{ maru_edition_context.selected.name }}
-          </p>
-          <a
-            class="baseline-sidebar-link baseline-sidebar-link--standalone"
-            href="{% url 'organization-structure' maru_edition_context.selected.organization.slug maru_edition_context.selected.series.slug maru_edition_context.selected.slug %}"
-          >
-            Organization structure
-          </a>
-        </section>
-      </div>
-    </details>
-  {% endif %}
-  {% if request.user.is_authenticated %}
-    <details class="maru-admin-nav-section" open>
-      <summary>My account</summary>
-      <ul>
-        <li>
-          <a
-            href="{% url 'my-representation-invitations' %}"
-            {% if request.resolver_match.url_name == "my-representation-invitations" %}aria-current="page"{% endif %}
-          >My governance invitations</a>
-        </li>
-      </ul>
-    </details>
-  {% endif %}
-  {% if not baseline_hide_admin_scoped_navigation and not request.user.is_platform_administrator and maru_scoped_organizations %}
-    {% if not organization %}
-      <details class="maru-admin-nav-section" open>
-        <summary>Organization management</summary>
-        <div class="maru-platform-navigation">
-          {% include "core/_scoped_organization_navigation.html" %}
-        </div>
-      </details>
-    {% endif %}
-  {% endif %}
-  {% if not baseline_hide_admin_scoped_navigation %}
-    {% if request.user.is_platform_administrator or baseline_page_id and organization %}
-      <details class="maru-admin-nav-section" open>
-        <summary>
-          {% if request.user.is_platform_administrator %}Platform administration{% else %}Organization management{% endif %}
-        </summary>
-        <div class="maru-platform-navigation">
-          {% include "core/_platform_admin_navigation_items.html" %}
-        </div>
-      </details>
-    {% endif %}
-  {% endif %}
-  {% if maru_shell_access.specialist_records_available and available_apps %}
-    <details
-      class="maru-admin-nav-section maru-admin-record-nav"
-      {% if request.resolver_match.url_name != "management-console" %}open{% endif %}
+  aria-controls="nav-sidebar"
+  aria-expanded="false"
+  type="button"
+>
+  <span class="maru-navigation-toggle-icon" aria-hidden="true"></span>
+  <span class="maru-navigation-toggle-label">Menu</span>
+</button>
+<div
+  class="maru-navigation-backdrop"
+  data-navigation-backdrop
+  aria-hidden="true"
+  hidden
+></div>
+<nav
+  class="sticky"
+  id="nav-sidebar"
+  aria-label="{% if maru_personal_surface %}My Maru{% else %}Administration{% endif %}"
+>
+  <div class="maru-navigation-drawer-header">
+    <strong>Navigation</strong>
+    <button type="button" data-navigation-close>Close</button>
+  </div>
+  <div class="maru-navigation-search">
+    <label for="nav-filter">Find a page</label>
+    <input
+      type="search"
+      id="nav-filter"
+      placeholder="Search menu..."
+      aria-describedby="maru-navigation-search-status"
+      autocomplete="off"
     >
-      <summary>Specialist records</summary>
-      <input
-        type="search"
-        id="nav-filter"
-        placeholder="{% translate 'Filter record types…' %}"
-        aria-label="{% translate 'Filter record types' %}"
+    <p id="maru-navigation-search-status" class="visually-hidden" aria-live="polite"></p>
+  </div>
+  <p class="maru-navigation-empty" data-navigation-empty hidden>
+    No available page matches that search.
+  </p>
+  {% for group in maru_navigation.groups %}
+    {% if group.collapsed %}
+      <details
+        class="maru-navigation-group maru-navigation-group--collapsible"
+        data-navigation-group="{{ group.label|slugify }}"
+        data-navigation-search-only="{% if group.search_only %}true{% else %}false{% endif %}"
+        data-navigation-current="{% if group.current %}true{% else %}false{% endif %}"
+        data-navigation-collapsible
+        {% if group.current %}open{% endif %}
       >
-      {% include "admin/app_list.html" with app_list=available_apps show_changelinks=False %}
-    </details>
-  {% else %}
-    {# Django's nav_sidebar.js requires this element whenever #nav-sidebar exists. #}
-    <input type="hidden" id="nav-filter" value="">
-  {% endif %}
+        <summary>
+          <span>{{ group.label }}</span>
+          <span
+            class="maru-navigation-group-count"
+            aria-label="{{ group.items|length }} available pages"
+          >{{ group.items|length }}</span>
+        </summary>
+    {% else %}
+      <section
+        class="maru-navigation-group"
+        data-navigation-group="{{ group.label|slugify }}"
+        data-navigation-search-only="{% if group.search_only %}true{% else %}false{% endif %}"
+        data-navigation-current="{% if group.current %}true{% else %}false{% endif %}"
+      >
+        <h2>{{ group.label }}</h2>
+    {% endif %}
+      <ul>
+        {% for item in group.items %}
+          <li
+            class="maru-navigation-item"
+            data-navigation-item
+            data-navigation-search="{{ item.search_text|lower }}"
+            {% if item.kind %}data-navigation-kind="{{ item.kind }}"{% endif %}
+          >
+            <div class="maru-navigation-row">
+              <a
+                href="{{ item.url }}"
+                {% if item.current %}aria-current="page"{% endif %}
+              >
+                <span>{{ item.label }}</span>
+                {% if item.description %}
+                  <small class="maru-navigation-description">{{ item.description }}</small>
+                {% endif %}
+                {% if item.context_label %}
+                  <small class="maru-navigation-context">{{ item.context_label }}</small>
+                {% endif %}
+              </a>
+              {% if item.pinnable %}
+                <form method="post" action="{% url 'update-navigation-pin' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="destination_code" value="{{ item.code }}">
+                  <input type="hidden" name="action" value="{% if item.pinned %}unpin{% else %}pin{% endif %}">
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button
+                    type="submit"
+                    aria-label="{% if item.pinned %}Unpin{% else %}Pin{% endif %} {{ item.label }}"
+                    title="{% if item.pinned %}Unpin{% else %}Pin{% endif %} {{ item.label }}"
+                  >{% if item.pinned %}&#9733;{% else %}&#9734;{% endif %}</button>
+                </form>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% if group.collapsed %}
+      </details>
+    {% else %}
+      </section>
+    {% endif %}
+  {% endfor %}
 </nav>

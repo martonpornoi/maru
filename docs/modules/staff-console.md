@@ -1,10 +1,9 @@
 # Embedded Convention work
 
-Status: API-backed workflow mounted in the unified shell; backend/frontend and
-responsive smoke evidence pass; legacy structure destination removed in favor
-of canonical server-rendered Page 9a.1 with strict mutations; final release
-evidence remains
-Last updated: 2026-08-02
+Status: API-backed workflow mounted in the unified shell and accepted in the
+canonical current tree; responsive read-only smoke evidence passes while
+mutation-role, accessibility, deployment, and production evidence remain gated
+Last updated: 2026-08-11
 
 ## Purpose and requirements
 
@@ -24,10 +23,11 @@ platform records use `/admin/platform/`, and existing model routes remain below
 points.
 
 The current backend verifies its route, authorization, and sidebar boundaries;
-the current frontend passes type checking, 19 Vitest tests, production build,
+the current frontend passes type checking, 20 Vitest tests, production build,
 and desktop/390-pixel smoke without console errors or horizontal overflow.
-Keyboard, automated accessibility, complete failure-state, final consolidated
-suite/coverage, and owner evidence remain release gates.
+The final consolidated suite and coverage gate now pass. Keyboard, automated
+accessibility, complete failure-state, mutation-role, recovery/deployment, and
+owner evidence remain release gates.
 
 The shell uses Maru's canonical navy, gold, and ivory platform identity and
 owned square mark. The source bundle repeats the documented palette so the
@@ -190,18 +190,27 @@ horizontal overflow, and the browser reported no runtime errors.
 Current route-collision, shell-permission, and frontend evidence now passes:
 active scoped non-staff accounts can use Convention work, inactive or unscoped
 accounts cannot, and specialist records still require Django staff/model
-permission. Type checking, 19 Vitest tests, and the production build pass. A
+permission. Type checking, 20 Vitest tests, and the production build pass. A
 709-test backend run had one stale administration-home expectation; that exact
 test passed after **Manage access** was restored. Desktop and 390-pixel smoke
 now also pass without console errors or horizontal overflow. The complete
-consolidated suite/coverage rerun after all later integrity work, keyboard and
-automated accessibility, complete visual states, and owner evidence remain
-required.
+consolidated suite/coverage rerun after all later integrity work now passes;
+keyboard and automated accessibility, complete visual states, mutation-role,
+recovery/deployment, and owner evidence remain required.
 
 After removing the duplicate structure destination, TypeScript type checking,
-19 Vitest tests, and the production Vite build pass. OpenAPI regeneration
+20 Vitest tests, and the production Vite build pass. OpenAPI regeneration
 retains the workforce structure types for API consumers without reintroducing
 the React page.
+
+The final canonical current-tree repository gate passed all 4,067 tests in
+15,558.23 seconds (4:19:18) at 90.78 percent coverage. A later authenticated
+read-only rehearsal covered the Logistics workspace and Stage Tech receiving
+projection at 1920- and 390-pixel widths. Each rendered exactly one `main`
+landmark and one H1, had no horizontal overflow, and exposed no mutation
+controls to the rehearsed role. This is read-only responsive evidence, not
+mutation-role, keyboard, automated-accessibility, recovery, deployment, or
+production acceptance.
 
 ## Limitations
 

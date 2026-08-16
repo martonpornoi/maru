@@ -1,10 +1,23 @@
 """Small, strict environment configuration helpers."""
 
+import base64
+import binascii
+import ipaddress
+import re
 from collections.abc import Mapping
 from typing import Final
 from urllib.parse import parse_qsl, unquote, urlsplit
 
 from django.core.exceptions import ImproperlyConfigured
+
+from maru.identity.invitation_crypto import (
+    InvitationCryptoConfigurationError,
+    InvitationEncryptionKey,
+)
+from maru.identity.invitation_token_keys import (
+    InvitationTokenKeyConfigurationError,
+    InvitationTokenKeyring,
+)
 
 TRUE_VALUES: Final = frozenset({"1", "true", "yes", "on"})
 FALSE_VALUES: Final = frozenset({"0", "false", "no", "off"})
@@ -12,6 +25,10 @@ MINIMUM_PRODUCTION_SECRET_LENGTH: Final = 50
 MINIMUM_OFFLINE_SECRET_LENGTH: Final = 32
 POSTGRES_CONNECTION_OPTIONS: Final = "-c search_path=public,pg_temp"
 POSTGRES_IDENTIFIER_MAX_BYTES: Final = 63
+MAX_INVITATION_PUBLIC_KEY_B64_CHARACTERS: Final = 48_000
+HTTPS_DEFAULT_PORT: Final = 443
+DNS_HOSTNAME_MAX_CHARACTERS: Final = 253
+_DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\Z")
 
 
 def required(environment: Mapping[str, str], name: str) -> str:
@@ -85,7 +102,116 @@ def postgres_database(url: str) -> dict[str, object]:
     }
 
 
-def validate_production(  # noqa: PLR0912
+def invitation_public_key_configuration_is_valid(
+    encryption_key_id: object,
+    public_key_b64: object,
+) -> bool:
+    """Validate public-only invitation key configuration without releasing values."""
+
+    if (
+        not isinstance(encryption_key_id, str)
+        or not isinstance(public_key_b64, str)
+        or not 1 <= len(public_key_b64) <= MAX_INVITATION_PUBLIC_KEY_B64_CHARACTERS
+        or any(character.isspace() for character in public_key_b64)
+    ):
+        return False
+    try:
+        encoded = public_key_b64.encode("ascii")
+        public_key_pem = base64.b64decode(encoded, validate=True)
+        if base64.b64encode(public_key_pem) != encoded:
+            return False
+        InvitationEncryptionKey.from_pem(
+            encryption_key_id=encryption_key_id,
+            public_key_pem=public_key_pem,
+        )
+    except (
+        UnicodeEncodeError,
+        binascii.Error,
+        ValueError,
+        InvitationCryptoConfigurationError,
+    ):
+        return False
+    return True
+
+
+def normalized_https_origin(value: object) -> str | None:  # noqa: PLR0911
+    """Return one canonical HTTPS origin, or ``None`` for any URL-like value.
+
+    Invitation links are a bearer-secret boundary.  Requiring the configured
+    public base URL to already equal its canonical origin form prevents a
+    user-info component, path, query, fragment, default-port alias, Unicode
+    hostname alias, or case variant from changing where that secret is sent.
+    """
+
+    if (
+        not isinstance(value, str)
+        or not value
+        or value != value.strip()
+        or not value.isprintable()
+    ):
+        return None
+    try:
+        parsed = urlsplit(value)
+        port = parsed.port
+    except ValueError:
+        return None
+    if (
+        parsed.scheme != "https"
+        or not parsed.netloc
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path
+        or parsed.query
+        or parsed.fragment
+        or port == HTTPS_DEFAULT_PORT
+    ):
+        return None
+    hostname = parsed.hostname
+    if hostname is None or hostname.endswith("."):
+        return None
+    try:
+        address = ipaddress.ip_address(hostname)
+    except ValueError:
+        try:
+            ascii_hostname = hostname.encode("idna").decode("ascii").casefold()
+        except UnicodeError:
+            return None
+        labels = ascii_hostname.split(".")
+        if (
+            len(ascii_hostname) > DNS_HOSTNAME_MAX_CHARACTERS
+            or not labels
+            or any(_DNS_LABEL.fullmatch(label) is None for label in labels)
+        ):
+            return None
+        canonical_host = ascii_hostname
+    else:
+        canonical_host = (
+            f"[{address.compressed}]"
+            if isinstance(address, ipaddress.IPv6Address)
+            else address.compressed
+        )
+    canonical_netloc = canonical_host if port is None else f"{canonical_host}:{port}"
+    canonical_origin = f"https://{canonical_netloc}"
+    return canonical_origin if value == canonical_origin else None
+
+
+def invitation_token_key_configuration_is_valid(
+    active_key_id: object,
+    keyring_json: object,
+) -> bool:
+    """Validate the bounded versioned HMAC keyring without releasing values."""
+
+    try:
+        InvitationTokenKeyring.from_json(
+            active_key_id=active_key_id,
+            keyring_json=keyring_json,
+        )
+    except InvitationTokenKeyConfigurationError:
+        return False
+    return True
+
+
+def validate_production(  # noqa: PLR0912, PLR0915
     *,
     secret_key: str,
     allowed_hosts: list[str],
@@ -105,6 +231,10 @@ def validate_production(  # noqa: PLR0912
     media_scanner: str,
     media_scanner_host: str,
     offline_manifest_secret: str,
+    invitation_encryption_key_id: str,
+    invitation_public_key_b64: str,
+    invitation_digest_active_key_id: str,
+    invitation_digest_keys_json: str,
     allow_provisional_registration: bool,
     expose_identity_test_tokens: bool,
     expose_credential_test_tokens: bool,
@@ -153,8 +283,11 @@ def validate_production(  # noqa: PLR0912
             "MARU_RUNTIME_DATABASE_ROLE must name one explicit printable "
             "PostgreSQL role of at most 63 UTF-8 bytes"
         )
-    if urlsplit(public_base_url).scheme != "https":
-        errors.append("MARU_PUBLIC_BASE_URL must use HTTPS in production")
+    if normalized_https_origin(public_base_url) is None:
+        errors.append(
+            "MARU_PUBLIC_BASE_URL must be one normalized HTTPS origin without "
+            "userinfo, path, query, or fragment"
+        )
     if "@" not in default_from_email or default_from_email.casefold().endswith(
         ".invalid"
     ):
@@ -201,6 +334,24 @@ def validate_production(  # noqa: PLR0912
     if len(offline_manifest_secret) < MINIMUM_OFFLINE_SECRET_LENGTH:
         errors.append(
             "MARU_OFFLINE_MANIFEST_SECRET must contain at least 32 characters"
+        )
+    if not invitation_public_key_configuration_is_valid(
+        invitation_encryption_key_id,
+        invitation_public_key_b64,
+    ):
+        errors.append(
+            "MARU_IDENTITY_INVITATION_ENCRYPTION_KEY_ID and "
+            "MARU_IDENTITY_INVITATION_PUBLIC_KEY_B64 must configure one "
+            "supported RSA public key"
+        )
+    if not invitation_token_key_configuration_is_valid(
+        invitation_digest_active_key_id,
+        invitation_digest_keys_json,
+    ):
+        errors.append(
+            "MARU_IDENTITY_INVITATION_DIGEST_ACTIVE_KEY_ID and "
+            "MARU_IDENTITY_INVITATION_DIGEST_KEYS_JSON must configure one "
+            "bounded versioned HMAC keyring"
         )
     if allow_provisional_registration:
         errors.append("provisional public registration cannot be enabled")

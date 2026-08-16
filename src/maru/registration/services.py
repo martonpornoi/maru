@@ -4,13 +4,14 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from functools import partial
+from typing import Any
 from uuid import UUID, uuid4
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
-from django.db.models import Max, Prefetch, Q
+from django.db.models import Max, Prefetch, Q, QuerySet
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
@@ -37,6 +38,12 @@ from maru.registration.availability import (
     OCCUPIED_REGISTRATION_STATES,
     assess_product_availability,
 )
+from maru.registration.commerce import (
+    complete_admission_tier_replacement,
+    effective_configuration_capacity,
+    effective_product_capacity,
+    pending_target_capacity_holds,
+)
 from maru.registration.media import (
     ProcessedImage,
     ReadableUpload,
@@ -48,6 +55,7 @@ from maru.registration.media import (
 )
 from maru.registration.models import (
     AdmissionProduct,
+    AdmissionTierReplacement,
     AttendeeFursuit,
     AttendeeRegistrationProfile,
     CheckInRecord,
@@ -57,8 +65,6 @@ from maru.registration.models import (
     MediaSafetyReceipt,
     MinorRegistrationPolicy,
     PaymentAttempt,
-    ProfileExtensionStatus,
-    ProfileExtensionWriter,
     QuestionFieldType,
     QuestionVisibility,
     Registration,
@@ -66,7 +72,6 @@ from maru.registration.models import (
     RegistrationCommandReceipt,
     RegistrationConfiguration,
     RegistrationProfileExtensionField,
-    RegistrationProfileExtensionValueRevision,
     RegistrationQuestion,
     RegistrationSection,
     RegistrationSubmission,
@@ -85,6 +90,11 @@ from maru.registration.profile_policy import (
     COLLECTION_NOTICE_VERSION,
     DIRECTORY_CONSENT_VERSION,
 )
+from maru.registration.question_conditions import (
+    MAX_SIGNED_32_BIT_INTEGER,
+    MIN_SIGNED_32_BIT_INTEGER,
+    condition_value_is_compatible,
+)
 
 MANAGE_CONFIGURATION = "registration.manage_configuration"
 REGISTER_SELF = "registration.register_self"
@@ -96,6 +106,12 @@ MANAGE_SELF_PROFILE = "registration.manage_self_profile"
 MODERATE_PUBLIC_PROFILE = "registration.moderate_public_profile"
 MAX_SHORT_ANSWER_LENGTH = 500
 MAX_LONG_ANSWER_LENGTH = 4_000
+MAX_MULTIPLE_CHOICE_VALUES = 64
+MAX_REGISTRATION_CAPACITY = 1_000_000
+MAX_REGISTRATION_DRAFTS_PER_EDITION = 32
+MAX_REGISTRATION_SECTIONS = 64
+MAX_REGISTRATION_QUESTIONS = 256
+MAX_REGISTRATION_PRODUCTS = 128
 MAX_REASONABLE_AGE = 120
 DEFAULT_ADULT_AGE = 18
 
@@ -158,6 +174,7 @@ class RegistrationLifecycleResult:
     inactive_cancelled: int = 0
     closed_waitlist_cancelled: int = 0
     promoted: int = 0
+    tier_replacements_expired: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -350,6 +367,35 @@ def _configuration_source_kind(configuration: RegistrationConfiguration) -> str:
     return "blank"
 
 
+def _query_limit_exceeded(queryset: QuerySet[Any], *, limit: int) -> bool:
+    return (
+        queryset.order_by("id").values_list("id", flat=True)[limit : limit + 1].exists()
+    )
+
+
+def _validate_configuration_collection_limits(
+    configuration: RegistrationConfiguration | RegistrationTemplate,
+) -> None:
+    collection_limits = (
+        (configuration.sections.all(), MAX_REGISTRATION_SECTIONS, "sections"),
+        (configuration.questions.all(), MAX_REGISTRATION_QUESTIONS, "questions"),
+        (configuration.products.all(), MAX_REGISTRATION_PRODUCTS, "products"),
+    )
+    for queryset, limit, collection_name in collection_limits:
+        if _query_limit_exceeded(queryset, limit=limit):
+            raise ValidationError(
+                {
+                    collection_name: ValidationError(
+                        (
+                            f"Registration setup supports at most {limit} "
+                            f"{collection_name}."
+                        ),
+                        code="registration_setup_limit_exceeded",
+                    )
+                },
+            )
+
+
 def create_configuration_draft(  # noqa: PLR0915
     *,
     organization_id: UUID,
@@ -411,6 +457,27 @@ def create_configuration_draft(  # noqa: PLR0915
             )["maximum"]
             or 0
         )
+        if _query_limit_exceeded(
+            RegistrationConfiguration.objects.filter(
+                edition=edition,
+                status=ConfigurationStatus.DRAFT,
+            ),
+            # Reject creation when the 32nd existing draft is present; the
+            # requested command would otherwise create a 33rd.
+            limit=MAX_REGISTRATION_DRAFTS_PER_EDITION - 1,
+        ):
+            raise ValidationError(
+                {
+                    "edition": ValidationError(
+                        (
+                            "Registration setup supports at most "
+                            f"{MAX_REGISTRATION_DRAFTS_PER_EDITION} drafts per "
+                            "edition."
+                        ),
+                        code="registration_setup_limit_exceeded",
+                    )
+                },
+            )
 
         question_source: Iterable[
             RegistrationTemplateQuestion | RegistrationQuestion
@@ -423,15 +490,12 @@ def create_configuration_draft(  # noqa: PLR0915
         source_kind = "blank"
 
         if source_template_id is not None:
-            source_template = (
-                RegistrationTemplate.objects.select_for_update()
-                .prefetch_related("sections", "questions", "products")
-                .get(
-                    id=source_template_id,
-                    organization_id=organization_id,
-                    status=TemplateStatus.PUBLISHED,
-                )
+            source_template = RegistrationTemplate.objects.select_for_update().get(
+                id=source_template_id,
+                organization_id=organization_id,
+                status=TemplateStatus.PUBLISHED,
             )
+            _validate_configuration_collection_limits(source_template)
             if (
                 source_template.series_id is not None
                 and source_template.series_id != edition.series_id
@@ -450,12 +514,7 @@ def create_configuration_draft(  # noqa: PLR0915
                 organization_id=organization_id,
             )
             source_configuration = (
-                RegistrationConfiguration.objects.prefetch_related(
-                    "sections",
-                    "questions",
-                    "products",
-                )
-                .filter(
+                RegistrationConfiguration.objects.filter(
                     organization_id=organization_id,
                     edition_id=source_edition_id,
                     status__in=(
@@ -471,6 +530,7 @@ def create_configuration_draft(  # noqa: PLR0915
                     "The source edition has no reusable registration version.",
                     code="source_configuration_unavailable",
                 )
+            _validate_configuration_collection_limits(source_configuration)
             question_source = source_configuration.questions.all()
             section_source = source_configuration.sections.all()
             product_source = source_configuration.products.all()
@@ -480,8 +540,16 @@ def create_configuration_draft(  # noqa: PLR0915
         source_values = source_template or source_configuration
         resolved_opens_at = opens_at or getattr(source_values, "opens_at", None)
         resolved_closes_at = closes_at or getattr(source_values, "closes_at", None)
-        resolved_capacity = capacity or getattr(source_values, "capacity", None)
-        resolved_currency = currency or getattr(source_values, "currency", None)
+        resolved_capacity = (
+            capacity
+            if capacity is not None
+            else getattr(source_values, "capacity", None)
+        )
+        resolved_currency = (
+            currency
+            if currency is not None
+            else getattr(source_values, "currency", None)
+        )
         resolved_minimum_age = (
             minimum_age
             if minimum_age is not None
@@ -512,6 +580,20 @@ def create_configuration_draft(  # noqa: PLR0915
                 "A blank registration draft needs opening, closing, capacity, "
                 "and currency values.",
                 code="configuration_defaults_required",
+            )
+        if (
+            isinstance(resolved_capacity, bool)
+            or not isinstance(resolved_capacity, int)
+            or not 1 <= resolved_capacity <= MAX_REGISTRATION_CAPACITY
+        ):
+            raise ValidationError(
+                {
+                    "capacity": (
+                        "Registration capacity must be between 1 and "
+                        f"{MAX_REGISTRATION_CAPACITY}."
+                    )
+                },
+                code="registration_capacity_out_of_range",
             )
 
         configuration = RegistrationConfiguration.objects.create(
@@ -615,6 +697,58 @@ def create_configuration_draft(  # noqa: PLR0915
         return configuration
 
 
+def _validate_configuration_question_graph(
+    questions: Iterable[RegistrationQuestion],
+) -> None:
+    """Prove every conditional edge is ordered, visible, and satisfiable."""
+
+    prior_questions: dict[str, RegistrationQuestion] = {}
+    for question in questions:
+        source_key = question.condition_question_key
+        if not source_key:
+            prior_questions[question.key] = question
+            continue
+        source = prior_questions.get(source_key)
+        if source is None or source.position >= question.position:
+            raise ValidationError(
+                {
+                    "questions": (
+                        f"Conditional question {question.key} must depend on an "
+                        "earlier question."
+                    )
+                },
+                code="registration_condition_source_not_prior",
+            )
+        if (
+            question.visibility == QuestionVisibility.ATTENDEE_AND_STAFF
+            and source.visibility == QuestionVisibility.REGISTRATION_STAFF
+        ):
+            raise ValidationError(
+                {
+                    "questions": (
+                        f"Attendee question {question.key} cannot depend on a "
+                        "staff-only question."
+                    )
+                },
+                code="registration_condition_visibility_incompatible",
+            )
+        if not condition_value_is_compatible(
+            field_type=source.field_type,
+            options=source.options,
+            value=question.condition_value,
+        ):
+            raise ValidationError(
+                {
+                    "questions": (
+                        f"Conditional value for {question.key} cannot be produced "
+                        f"by {source.key}."
+                    )
+                },
+                code="registration_condition_value_incompatible",
+            )
+        prior_questions[question.key] = question
+
+
 def activate_configuration(
     *,
     organization_id: UUID,
@@ -644,25 +778,18 @@ def activate_configuration(
             id=edition_id,
             organization_id=organization_id,
         )
-        configuration = (
-            RegistrationConfiguration.objects.select_for_update()
-            .prefetch_related("questions", "products")
-            .get(
-                id=configuration_id,
-                organization_id=organization_id,
-                edition_id=edition_id,
-            )
+        configuration = RegistrationConfiguration.objects.select_for_update().get(
+            id=configuration_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
         )
         if configuration.status != ConfigurationStatus.DRAFT:
             raise ValidationError(
                 "Only a draft registration version can be activated.",
                 code="configuration_not_draft",
             )
-        if not configuration.questions.exists():
-            raise ValidationError(
-                "Add at least one registration question before activation.",
-                code="registration_questions_required",
-            )
+        _validate_configuration_collection_limits(configuration)
+        _validate_configuration_question_graph(configuration.questions.all())
         products = list(configuration.products.all())
         if not products:
             raise ValidationError(
@@ -936,6 +1063,11 @@ def _normalize_answer(question: RegistrationQuestion, value: object) -> object:
                 {question.key: "Enter a whole number."},
                 code="invalid_registration_answer",
             )
+        if not MIN_SIGNED_32_BIT_INTEGER <= value <= MAX_SIGNED_32_BIT_INTEGER:
+            raise ValidationError(
+                {question.key: "Enter a signed 32-bit whole number."},
+                code="registration_integer_answer_out_of_range",
+            )
         return value
     if question.field_type == QuestionFieldType.SINGLE_CHOICE:
         if not isinstance(value, str) or value not in question.options:
@@ -948,6 +1080,7 @@ def _normalize_answer(question: RegistrationQuestion, value: object) -> object:
         if (
             not isinstance(value, list)
             or any(not isinstance(item, str) for item in value)
+            or len(value) > MAX_MULTIPLE_CHOICE_VALUES
             or len(set(value)) != len(value)
             or any(item not in question.options for item in value)
         ):
@@ -1029,10 +1162,21 @@ def validate_registration_answers(
     return normalized, schema
 
 
-def _normalize_profile_extension_value(
+def _normalize_profile_extension_value(  # noqa: PLR0912
     field: RegistrationProfileExtensionField,
     value: object,
 ) -> object:
+    if value is None:
+        if field.field_type in {
+            QuestionFieldType.BOOLEAN,
+            QuestionFieldType.INTEGER,
+            QuestionFieldType.SINGLE_CHOICE,
+        }:
+            return None
+        raise ValidationError(
+            {"value": "Use the field's typed empty value."},
+            code="invalid_profile_extension_clear_value",
+        )
     if field.field_type in {
         QuestionFieldType.SHORT_TEXT,
         QuestionFieldType.LONG_TEXT,
@@ -1067,6 +1211,11 @@ def _normalize_profile_extension_value(
                 {"value": "Enter a whole number."},
                 code="invalid_profile_extension_value",
             )
+        if not MIN_SIGNED_32_BIT_INTEGER <= value <= MAX_SIGNED_32_BIT_INTEGER:
+            raise ValidationError(
+                {"value": "Enter a signed 32-bit whole number."},
+                code="profile_extension_integer_out_of_range",
+            )
         return value
     if field.field_type == QuestionFieldType.SINGLE_CHOICE:
         if not isinstance(value, str) or value not in field.options:
@@ -1079,6 +1228,7 @@ def _normalize_profile_extension_value(
         if (
             not isinstance(value, list)
             or any(not isinstance(item, str) for item in value)
+            or len(value) > MAX_MULTIPLE_CHOICE_VALUES
             or len(set(value)) != len(value)
             or any(item not in field.options for item in value)
         ):
@@ -1091,152 +1241,6 @@ def _normalize_profile_extension_value(
         {"value": "This profile field type is unavailable."},
         code="unsupported_profile_extension_field",
     )
-
-
-def current_profile_extension_values(
-    *,
-    registration: Registration,
-) -> dict[str, RegistrationProfileExtensionValueRevision]:
-    """Project the newest append-only revision for each stable field key."""
-
-    current: dict[str, RegistrationProfileExtensionValueRevision] = {}
-    revisions = (
-        RegistrationProfileExtensionValueRevision.objects.filter(
-            registration=registration,
-            organization_id=registration.organization_id,
-            edition_id=registration.edition_id,
-        )
-        .select_related("field", "actor")
-        .order_by("field_key", "sequence", "id")
-    )
-    for revision in revisions:
-        current[revision.field_key] = revision
-    return current
-
-
-@transaction.atomic
-def write_registration_profile_extension_value(
-    *,
-    registration: Registration,
-    field: RegistrationProfileExtensionField,
-    actor: Account,
-    value: object,
-    correlation_id: UUID,
-    source_channel: str,
-    reason: str = "",
-) -> RegistrationProfileExtensionValueRevision:
-    """Append one authorized current-profile value without rewriting submission."""
-
-    locked_registration = (
-        Registration.objects.select_for_update()
-        .select_related("account", "edition")
-        .get(
-            id=registration.id,
-            organization_id=registration.organization_id,
-            edition_id=registration.edition_id,
-        )
-    )
-    scoped_field = RegistrationProfileExtensionField.objects.get(
-        id=field.id,
-        organization_id=locked_registration.organization_id,
-        edition_id=locked_registration.edition_id,
-        status=ProfileExtensionStatus.ACTIVE,
-    )
-    is_self = actor.id == locked_registration.account_id
-    if is_self:
-        if not scoped_field.attendee_visible or scoped_field.writer_policy not in {
-            ProfileExtensionWriter.ATTENDEE,
-            ProfileExtensionWriter.ATTENDEE_AND_STAFF,
-        }:
-            raise AuthorizationDenied(
-                "This profile field is staff-managed.",
-                reason_code="profile_extension_staff_managed",
-            )
-        obligations = _require_decision(
-            actor=actor,
-            capability_code=MANAGE_SELF_PROFILE,
-            target=resolve_owned_target(resource=locked_registration),
-            operation="registration.profile_extension.write",
-            target_type="registration.profile_extension",
-            target_id=scoped_field.id,
-            correlation_id=correlation_id,
-            source_channel=source_channel,
-        )
-        reason_code = "attendee_profile_extension"
-        normalized_reason = ""
-    else:
-        if scoped_field.writer_policy not in {
-            ProfileExtensionWriter.REGISTRATION_STAFF,
-            ProfileExtensionWriter.ATTENDEE_AND_STAFF,
-        }:
-            raise AuthorizationDenied(
-                "This profile field is attendee-managed.",
-                reason_code="profile_extension_attendee_managed",
-            )
-        normalized_reason = reason.strip()
-        if not normalized_reason:
-            raise ValidationError(
-                {"reason": "Staff changes require a reason."},
-                code="profile_extension_staff_reason_required",
-            )
-        obligations = _require_decision(
-            actor=actor,
-            capability_code=REGISTER_ON_BEHALF,
-            target=resolve_edition_target(
-                organization_id=locked_registration.organization_id,
-                edition_id=locked_registration.edition_id,
-            ),
-            operation="registration.profile_extension.write",
-            target_type="registration.profile_extension",
-            target_id=scoped_field.id,
-            correlation_id=correlation_id,
-            source_channel=source_channel,
-        )
-        reason_code = "staff_profile_extension"
-
-    normalized_value = _normalize_profile_extension_value(scoped_field, value)
-    if scoped_field.required and normalized_value in ("", []):
-        raise ValidationError(
-            {"value": "This profile field is required."},
-            code="required_profile_extension_value",
-        )
-    last_sequence = (
-        RegistrationProfileExtensionValueRevision.objects.filter(
-            registration=locked_registration,
-            field_key=scoped_field.key,
-        ).aggregate(maximum=Max("sequence"))["maximum"]
-        or 0
-    )
-    revision = RegistrationProfileExtensionValueRevision.objects.create(
-        registration=locked_registration,
-        organization_id=locked_registration.organization_id,
-        edition_id=locked_registration.edition_id,
-        field=scoped_field,
-        field_key=scoped_field.key,
-        sequence=last_sequence + 1,
-        value=normalized_value,
-        actor=actor,
-        source_channel=source_channel,
-        reason=normalized_reason,
-    )
-    append_audit(
-        _audit_record(
-            actor=actor,
-            capability_code=(MANAGE_SELF_PROFILE if is_self else REGISTER_ON_BEHALF),
-            operation="registration.profile_extension.write",
-            organization_id=locked_registration.organization_id,
-            edition_id=locked_registration.edition_id,
-            target_type="registration.profile_extension_value_revision",
-            target_id=revision.id,
-            correlation_id=correlation_id,
-            outcome=AuditEvent.Outcome.ALLOW,
-            reason_code=reason_code,
-            obligations=obligations,
-            changed_fields=(scoped_field.key,),
-            source_channel=source_channel,
-        )
-    )
-    return revision
 
 
 def _append_timeline(
@@ -1538,9 +1542,11 @@ def submit_registration(
             include_staff_questions=subject_account is not None,
         )
         registration_id = uuid4()
-        capacity_reached = (
-            product_count >= product.capacity or total_count >= configuration.capacity
-        )
+        capacity_reached = product_count + pending_target_capacity_holds(
+            product, at=submitted_at
+        ) >= effective_product_capacity(
+            product
+        ) or total_count >= effective_configuration_capacity(configuration)
         if requires_guardian_consent:
             state = Registration.State.GUARDIAN_PENDING
         elif capacity_reached:
@@ -2897,6 +2903,14 @@ def confirm_demo_payment(
                 account=actor,
             )
         )
+        replacement = (
+            AdmissionTierReplacement.objects.select_for_update()
+            .filter(
+                registration=registration,
+                status=AdmissionTierReplacement.Status.PAYMENT_PENDING,
+            )
+            .first()
+        )
         if existing is not None:
             if existing.registration_id != registration.id:
                 raise ValidationError(
@@ -2904,15 +2918,26 @@ def confirm_demo_payment(
                     code="payment_idempotency_conflict",
                 )
             return registration
-        if registration.state != Registration.State.PAYMENT_PENDING:
+        replacement_payment = (
+            replacement is not None
+            and registration.state
+            in {Registration.State.CONFIRMED, Registration.State.CHECKED_IN}
+            and registration.product_id == replacement.source_product_id
+        )
+        if (
+            registration.state != Registration.State.PAYMENT_PENDING
+            and not replacement_payment
+        ):
             raise ValidationError(
                 "This registration is not waiting for payment.",
                 code="registration_not_payment_pending",
             )
-        if (
-            registration.payment_due_at is not None
-            and paid_at >= registration.payment_due_at
-        ):
+        payment_due_at = (
+            replacement.payment_due_at
+            if replacement_payment and replacement is not None
+            else registration.payment_due_at
+        )
+        if payment_due_at is not None and paid_at >= payment_due_at:
             raise ValidationError(
                 "The payment reservation has expired. Check your registration "
                 "for a new offer or contact Registration.",
@@ -2925,12 +2950,31 @@ def confirm_demo_payment(
             provider="demo",
             provider_reference=f"demo-{idempotency_key}",
             idempotency_key=idempotency_key,
-            amount_minor=registration.price_minor_snapshot,
-            currency=registration.currency_snapshot,
+            amount_minor=(
+                replacement.amount_due_minor
+                if replacement_payment and replacement is not None
+                else registration.price_minor_snapshot
+            ),
+            currency=(
+                replacement.currency
+                if replacement_payment and replacement is not None
+                else registration.currency_snapshot
+            ),
             status=PaymentAttempt.Status.SUCCEEDED,
             occurred_at=paid_at,
-            safe_result_code="demo_payment_succeeded",
+            safe_result_code=(
+                "demo_tier_replacement_succeeded"
+                if replacement_payment
+                else "demo_payment_succeeded"
+            ),
         )
+        if replacement_payment and replacement is not None:
+            complete_admission_tier_replacement(
+                replacement_id=replacement.id,
+                correlation_id=correlation_id,
+                completed_at=paid_at,
+            )
+            return Registration.objects.get(id=registration.id)
         previous_state = registration.state
         registration.state = Registration.State.CONFIRMED
         registration.aggregate_version += 1
@@ -3245,9 +3289,10 @@ def _promote_waitlist_for_product(
         configuration=configuration,
         state__in=OCCUPIED_REGISTRATION_STATES,
     )
-    if (
-        occupied.count() >= configuration.capacity
-        or occupied.filter(product=product).count() >= product.capacity
+    if occupied.count() >= effective_configuration_capacity(configuration) or (
+        occupied.filter(product=product).count()
+        + pending_target_capacity_holds(product, at=offered_at)
+        >= effective_product_capacity(product)
     ):
         return None
     registration = (
@@ -3523,7 +3568,15 @@ def process_registration_lifecycle(
 ) -> RegistrationLifecycleResult:
     """Expire abandoned reservations, remove inactive accounts, and promote FIFO."""
 
+    from maru.registration.commerce import (  # noqa: PLC0415
+        expire_admission_tier_replacements,
+    )
+
     processed_at = now or timezone.now()
+    tier_replacements_expired = expire_admission_tier_replacements(
+        edition_id=edition_id,
+        now=processed_at,
+    )
     base = Registration.objects.filter(
         state__in=(
             Registration.State.WAITLISTED,
@@ -3591,6 +3644,7 @@ def process_registration_lifecycle(
         inactive_cancelled=counts["inactive_cancelled"],
         closed_waitlist_cancelled=counts["closed_waitlist_cancelled"],
         promoted=counts["promoted"],
+        tier_replacements_expired=tier_replacements_expired,
     )
 
 

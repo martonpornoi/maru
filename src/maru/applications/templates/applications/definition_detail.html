@@ -1,0 +1,126 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ definition.name }} &middot; Applications{% endblock %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'application-definition-workspace' edition.organization_id edition.id %}">Applications</a>
+    &rsaquo; {{ definition.name }} v{{ definition.version }}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <header>
+      <p class="maru-personal-kicker">{{ definition.get_status_display }} definition</p>
+      <h1>{{ definition.name }}</h1>
+      <p>{{ definition.description }}</p>
+    </header>
+    <section class="module">
+      <h2>Lifecycle and provenance</h2>
+      <dl>
+        <dt>Definition lineage</dt><dd>{{ definition.code }} v{{ definition.version }}</dd>
+        <dt>Expected aggregate version</dt><dd>{{ definition.aggregate_version }}</dd>
+        <dt>Typed target adapter</dt><dd>{{ definition.get_target_adapter_kind_display }}</dd>
+        <dt>Created</dt><dd>{{ definition.created_at }} by {{ definition.created_by.display_name|default:definition.created_by.email }}</dd>
+        <dt>Activated</dt><dd>{% if definition.activated_at %}{{ definition.activated_at }} by {{ definition.activated_by.display_name|default:definition.activated_by.email }}{% else %}Not activated{% endif %}</dd>
+        <dt>Retired</dt><dd>{% if definition.retired_at %}{{ definition.retired_at }} by {{ definition.retired_by.display_name|default:definition.retired_by.email }}{% else %}Not retired{% endif %}</dd>
+      </dl>
+      <p>
+        This edition-owned version never live-updates. Active and retired schema
+        rows are immutable; later changes use an explicit successor Draft.
+      </p>
+    </section>
+    <section class="module">
+      <h2>Ownership and review queue</h2>
+      <p><strong>Owning Departments:</strong>
+        {% for link in definition.owner_department_links.all %}{{ link.department.name }}{% if not forloop.last %}, {% endif %}{% empty %}None assigned{% endfor %}
+      </p>
+      <p><strong>Immutable reviewer role versions:</strong>
+        {% for link in definition.reviewer_roles.all %}{{ link.role_bundle.name }} v{{ link.role_bundle.version }}{% if not forloop.last %}, {% endif %}{% empty %}None assigned{% endfor %}
+      </p>
+      <p><strong>Exact named reviewers:</strong>
+        {% for link in definition.reviewer_people.all %}{{ link.account.display_name|default:link.account.email }}{% if not forloop.last %}, {% endif %}{% empty %}None assigned{% endfor %}
+      </p>
+    </section>
+    <section class="module">
+      <h2>Schema and field policy</h2>
+      {% for section in definition.sections.all %}
+        <article>
+          <h3>{{ section.title }} <small>{{ section.key }}</small></h3>
+          <p>{{ section.help_text }}</p>
+          <ul>
+            {% for question in section.questions.all %}
+              <li>
+                <strong>{{ question.label }}</strong>
+                &middot; {{ question.get_field_type_display }}
+                &middot; {{ question.get_classification_display }}
+                {% if question.required %}&middot; required{% endif %}
+                <br>Purpose: {{ question.purpose }}
+                <br>Audience:
+                {% if question.applicant_visible %} applicant{% endif %}
+                {% if question.staff_visible %} staff{% endif %}
+                {% if question.reviewer_visible %} assigned reviewer{% endif %}
+                {% if question.public_after_approval %} approved public rendition{% endif %}
+                {% if question.source_binding %}<br>Source: {{ question.get_source_binding_display }} &middot; applicant read-only{% endif %}
+              </li>
+            {% empty %}<li>No questions in this section.</li>{% endfor %}
+          </ul>
+        </article>
+      {% empty %}<p>No sections have been added.</p>{% endfor %}
+    </section>
+
+    {% if definition.status == "draft" %}
+      <section class="module">
+        <details open>
+          <summary><strong>Configure draft and assignments</strong></summary>
+          <form method="post" action="{% url 'application-definition-configure' edition.organization_id edition.id definition.id %}">
+            {% csrf_token %}{{ configuration_form.as_p }}
+            <button type="submit">Save complete draft configuration</button>
+          </form>
+        </details>
+      </section>
+      <section class="module">
+        <details>
+          <summary><strong>Add section</strong></summary>
+          <form method="post" action="{% url 'application-section-add' edition.organization_id edition.id definition.id %}">
+            {% csrf_token %}{{ section_form.as_p }}
+            <button type="submit">Add section</button>
+          </form>
+        </details>
+        <details>
+          <summary><strong>Add typed question</strong></summary>
+          <form method="post" action="{% url 'application-question-add' edition.organization_id edition.id definition.id %}">
+            {% csrf_token %}{{ question_form.as_p }}
+            <button type="submit">Add question</button>
+          </form>
+        </details>
+      </section>
+      <section class="module">
+        <h2>Activate reviewed definition</h2>
+        <form method="post" action="{% url 'application-definition-activate' edition.organization_id edition.id definition.id %}">
+          {% csrf_token %}{{ lifecycle_form.as_p }}
+          <button type="submit">Activate</button>
+        </form>
+      </section>
+    {% elif definition.status == "active" %}
+      <section class="module">
+        <h2>Retire this active version</h2>
+        <form method="post" action="{% url 'application-definition-retire' edition.organization_id edition.id definition.id %}">
+          {% csrf_token %}{{ lifecycle_form.as_p }}
+          <button type="submit">Retire</button>
+        </form>
+      </section>
+    {% endif %}
+
+    {% if definition.status != "draft" %}
+      <section class="module">
+        <h2>Create a successor</h2>
+        <p>The successor is a new independent Draft with copied schema and assignments.</p>
+        <form method="post" action="{% url 'application-definition-successor' edition.organization_id edition.id definition.id %}">
+          {% csrf_token %}{{ successor_form.as_p }}
+          <button type="submit">Create successor draft</button>
+        </form>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

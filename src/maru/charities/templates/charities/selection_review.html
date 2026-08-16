@@ -1,0 +1,101 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ review.summary.partner_name }} &middot; Charity review{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'charity-workspace' organization.slug convention_series.slug edition.slug %}">Charity partners</a> &rsaquo; Review</div>{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="baseline-page">
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Private, purpose-scoped review</p>
+      <h1>{{ review.summary.partner_name }}</h1>
+      <p>{{ review.summary.responsible_department_name }} &middot; {{ review.summary.status|capfirst }} &middot; {{ review.summary.publication_state|capfirst }} &middot; version {{ review.summary.aggregate_version }}</p>
+    </header>
+
+    <section class="baseline-panel" aria-labelledby="charity-consequence-title">
+      <h2 id="charity-consequence-title">Current consequence</h2>
+      {% if review.summary.status == "rejected" %}
+        <p>This partner is rejected for this edition and is absent from the public charity list. The recorded reason remains restricted to authorized reviewers.</p>
+      {% elif review.summary.publication_state == "published" %}
+        <p>The latest immutable minimized snapshot is public. Contacts, postal address, review reasons, comments, and actor evidence remain restricted.</p>
+      {% elif review.summary.status == "confirmed" %}
+        <p>The selection is confirmed but not public. A different authorized publisher must explicitly approve the minimized snapshot.</p>
+      {% elif review.summary.status == "submitted" %}
+        <p>The proposal awaits an independent confirmation or rejection decision and is not public.</p>
+      {% else %}
+        <p>The proposal is still a draft for this edition and is not public.</p>
+      {% endif %}
+    </section>
+
+    <section class="baseline-panel" aria-labelledby="charity-actions-title">
+      <h2 id="charity-actions-title">Available governed actions</h2>
+      {% if can_submit and review.summary.status == "proposed" %}
+        <form method="post" action="{% url 'charity-selection-submit-page' organization.slug convention_series.slug edition.slug review.summary.id %}" class="baseline-form" novalidate>
+          {% csrf_token %}
+          {% for hidden in decision_form.hidden_fields %}{{ hidden }}{% endfor %}
+          {% for field in decision_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+          <button type="submit">Submit for independent review</button>
+        </form>
+      {% endif %}
+      {% if can_review and review.summary.status == "submitted" %}
+        <div class="maru-admin-workspace-grid">
+          <form method="post" action="{% url 'charity-selection-confirm-page' organization.slug convention_series.slug edition.slug review.summary.id %}" class="baseline-form" novalidate>
+            {% csrf_token %}
+            {% for hidden in decision_form.hidden_fields %}{{ hidden }}{% endfor %}
+            {% for field in decision_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+            <button type="submit">Independently confirm</button>
+          </form>
+          <form method="post" action="{% url 'charity-selection-reject-page' organization.slug convention_series.slug edition.slug review.summary.id %}" class="baseline-form" novalidate>
+            {% csrf_token %}
+            {% for hidden in decision_form.hidden_fields %}{{ hidden }}{% endfor %}
+            {% for field in decision_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+            <button type="submit">Reject with restricted reason</button>
+          </form>
+        </div>
+      {% endif %}
+      {% if can_publish and review.summary.status == "confirmed" and review.summary.publication_state == "unpublished" %}
+        <form method="post" action="{% url 'charity-selection-publish-page' organization.slug convention_series.slug edition.slug review.summary.id %}" class="baseline-form" novalidate>
+          {% csrf_token %}
+          {% for hidden in publish_form.hidden_fields %}{{ hidden }}{% endfor %}
+          {% for field in publish_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+          <button type="submit">Independently publish minimized snapshot</button>
+        </form>
+      {% elif can_publish and review.summary.publication_state == "published" %}
+        <form method="post" action="{% url 'charity-selection-withdraw-page' organization.slug convention_series.slug edition.slug review.summary.id %}" class="baseline-form" novalidate>
+          {% csrf_token %}
+          {% for hidden in decision_form.hidden_fields %}{{ hidden }}{% endfor %}
+          {% for field in decision_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+          <button type="submit">Withdraw public snapshot</button>
+        </form>
+      {% endif %}
+      {% if can_comment %}
+        <form method="post" action="{% url 'charity-selection-comment-page' organization.slug convention_series.slug edition.slug review.summary.id %}" class="baseline-form" novalidate>
+          {% csrf_token %}
+          {% for hidden in comment_form.hidden_fields %}{{ hidden }}{% endfor %}
+          {% for field in comment_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+          <button type="submit">Append private comment</button>
+        </form>
+      {% endif %}
+      {% if not can_submit and not can_review and not can_publish and not can_comment %}<p>No mutation is authorized for your current exact scope.</p>{% endif %}
+    </section>
+
+    <section class="baseline-panel" aria-labelledby="charity-timeline-title">
+      <h2 id="charity-timeline-title">Restricted decision and comment timeline</h2>
+      <p>Nothing in this timeline is copied into the public charity projection.</p>
+      {% if review.timeline %}
+        <ol class="maru-activity-list">
+          {% for entry in review.timeline %}
+            <li>
+              <strong>{{ entry.kind|capfirst }}</strong>
+              <span>{{ entry.occurred_at }} &middot; {{ entry.actor_label }}</span>
+              {% if entry.from_status or entry.to_status %}<p>{{ entry.from_status|default:"—" }} &rarr; {{ entry.to_status|default:"—" }}</p>{% endif %}
+              {% if entry.from_publication_state or entry.to_publication_state %}<p>{{ entry.from_publication_state|default:"—" }} &rarr; {{ entry.to_publication_state|default:"—" }}</p>{% endif %}
+              {% if entry.reason %}<p><strong>Restricted reason:</strong> {{ entry.reason }}</p>{% endif %}
+              {% if entry.private_comment %}<p><strong>Private comment:</strong> {{ entry.private_comment }}</p>{% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}<p>No review evidence is available.</p>{% endif %}
+    </section>
+  </div>
+{% endblock %}

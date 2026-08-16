@@ -31,10 +31,6 @@
           {% endif %}
         </dd>
       </div>
-      <div>
-        <dt>Display order</dt>
-        <dd>{{ department.display_order }}</dd>
-      </div>
     </dl>
   </section>
 
@@ -59,15 +55,14 @@
           <h2 id="department-update-title">Name, description, and placement</h2>
           <p>
             Saving replaces all editable Department properties together. A
-            normalized no-op writes no new version or evidence.
+            normalized no-op writes no new version or evidence. Maru keeps a
+            unique current placement or puts a moved Department after its new
+            siblings automatically.
           </p>
         </div>
         {% include "core/_baseline_form_field.html" with field=update_form.name %}
         {% include "core/_baseline_form_field.html" with field=update_form.description %}
-        <div class="baseline-field-grid">
-          {% include "core/_baseline_form_field.html" with field=update_form.parent_department_id %}
-          {% include "core/_baseline_form_field.html" with field=update_form.display_order %}
-        </div>
+        {% include "core/_baseline_form_field.html" with field=update_form.parent_department_id %}
         {% include "core/_baseline_form_field.html" with field=update_form.reason %}
       </section>
       <div class="baseline-form-actions workforce-structure-primary-actions">

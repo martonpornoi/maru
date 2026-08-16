@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}My applications{% endblock %}
+{% block content_title %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-maru-home' %}">My Maru</a> &rsaquo; Applications</div>{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-personal-home">
+    <header>
+      <p class="maru-personal-kicker">Your conventions</p>
+      <h1>My applications</h1>
+      <p>Additional applications are separate from attendee registration.</p>
+    </header>
+    <section class="module">
+      {% if edition_rows %}
+        <ul>
+          {% for row in edition_rows %}
+            <li>
+              <a href="{% url 'my-applications' row.edition.organization_id row.edition.id %}"><strong>{{ row.edition.name }}</strong></a>
+              &middot; {{ row.edition.organization.name }}
+              &middot; {{ row.available_count }} available
+              &middot; {{ row.submission_count }} submitted or draft
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No application workflow is currently related to this account.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}
+{% block sidebar %}{% endblock %}

@@ -14,6 +14,8 @@ from django.db.utils import DatabaseError
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -23,6 +25,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from maru.activity.queries import record_activity
+from maru.applications.readiness import applications_database_integrity_is_ready
 from maru.authorization.database_role_safety import (
     RuntimeDatabaseRoleProbeError,
     probe_runtime_database_role_safety,
@@ -42,7 +45,10 @@ from maru.authorization.provenance_readiness import (
     authority_provenance_runtime_contract_is_ready,
 )
 from maru.authorization.services import AuthorizationDenied
+from maru.catalog.readiness import catalog_database_integrity_is_ready
+from maru.charities.readiness import charities_database_integrity_is_ready
 from maru.core.forms import StrictInputForm
+from maru.core.navigation import destination_code_is_supported
 from maru.events.admin_context import (
     ADMIN_EDITION_SESSION_KEY,
     admin_shell_access,
@@ -58,7 +64,15 @@ from maru.events.services import (
     create_event_edition,
     update_event_edition,
 )
+from maru.identity.invitation_readiness import (
+    platform_invitation_runtime_contract_is_ready,
+)
 from maru.identity.models import Account
+from maru.identity.navigation_preferences import (
+    pin_navigation_destination,
+    unpin_navigation_destination,
+)
+from maru.logistics.readiness import logistics_current_session_is_ready
 from maru.organizations.forms import (
     ConventionSeriesCreationForm,
     ConventionSeriesUpdateForm,
@@ -74,6 +88,7 @@ from maru.organizations.services import (
     update_convention_series,
     update_organization_profile,
 )
+from maru.venues.readiness import venues_database_integrity_is_ready
 
 logger = logging.getLogger(__name__)
 
@@ -298,6 +313,15 @@ def _baseline_page_response(
                     actor=actor,
                     organization_id=organization.id,
                     capability_code="workforce.manage_structure",
+                    edition_id=edition.id,
+                ),
+            )
+            template_context.setdefault(
+                "baseline_can_manage_registration",
+                _can(
+                    actor=actor,
+                    organization_id=organization.id,
+                    capability_code="registration.manage_configuration",
                     edition_id=edition.id,
                 ),
             )
@@ -1289,6 +1313,76 @@ def platform_home(request: HttpRequest) -> TemplateResponse:
 
 @login_required(login_url="staff-login")
 @ensure_csrf_cookie
+def my_maru_home(request: HttpRequest) -> TemplateResponse:
+    """Serve the focused personal surface inside Maru's shared visual shell."""
+
+    actor = _active_account(request)
+    context = admin.site.each_context(request)
+    context.update(
+        {
+            "title": "My Maru",
+            "has_permission": True,
+            "maru_personal_surface": True,
+            "maru_shell_access": admin_shell_access(request),
+            "has_management_access": bool(
+                has_active_admin_scope(request) or actor.is_staff
+            ),
+        }
+    )
+    return TemplateResponse(request, "core/my_maru.html", context)
+
+
+def _safe_navigation_return_path(request: HttpRequest) -> str:
+    candidate = request.POST.get("next", "")
+    if candidate.startswith(("/admin/", "/my/")) and url_has_allowed_host_and_scheme(
+        candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return reverse("my-maru-home")
+
+
+@login_required(login_url="staff-login")
+@require_POST
+def update_navigation_pin(request: HttpRequest) -> HttpResponse:
+    """Change only the caller's preference; destinations remain policy-owned."""
+
+    actor = _active_account(request)
+    if set(request.POST) - {
+        "csrfmiddlewaretoken",
+        "destination_code",
+        "action",
+        "next",
+    }:
+        raise Http404
+    destination_code = request.POST.get("destination_code", "").strip()
+    action = request.POST.get("action", "").strip()
+    if not destination_code_is_supported(destination_code) or action not in {
+        "pin",
+        "unpin",
+    }:
+        raise Http404
+    try:
+        if action == "pin":
+            pin_navigation_destination(
+                account=actor,
+                destination_code=destination_code,
+            )
+            messages.success(request, "Navigation shortcut pinned.")
+        else:
+            unpin_navigation_destination(
+                account=actor,
+                destination_code=destination_code,
+            )
+            messages.success(request, "Navigation shortcut unpinned.")
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+    return redirect(_safe_navigation_return_path(request))
+
+
+@login_required(login_url="staff-login")
+@ensure_csrf_cookie
 def administration_index(request: HttpRequest) -> HttpResponse:
     """Serve a policy-filtered home without granting Django staff status."""
 
@@ -1347,6 +1441,65 @@ def removed_administration_route(request: HttpRequest) -> HttpResponse:
 def liveness(request: Request) -> Response:
     del request
     return Response({"status": "ok"})
+
+
+def _append_invitation_runtime_readiness(dependencies: dict[str, str]) -> bool:
+    """Append one value-safe Page 10 dependency when production requires it."""
+
+    if not bool(getattr(settings, "IDENTITY_INVITATION_ENCRYPTION_REQUIRED", False)):
+        return True
+    try:
+        ready = platform_invitation_runtime_contract_is_ready()
+    except (DatabaseError, TypeError, ValueError):
+        ready = False
+    dependencies["identity_invitations"] = "ok" if ready else "unavailable"
+    return ready
+
+
+def _append_logistics_runtime_readiness(dependencies: dict[str, str]) -> bool:
+    """Append the fail-closed Logistics catalog and current-session gate."""
+
+    try:
+        ready = logistics_current_session_is_ready()
+    except (
+        DatabaseError,
+        RuntimeDatabaseRoleProbeError,
+        LookupError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+    ):
+        ready = False
+    dependencies["logistics"] = "ok" if ready else "unavailable"
+    return ready
+
+
+def _append_bounded_domain_integrity_readiness(
+    dependencies: dict[str, str],
+) -> bool:
+    """Append value-safe integrity gates for the four mounted bounded contexts."""
+
+    probes = (
+        ("applications_integrity", applications_database_integrity_is_ready),
+        ("charities_integrity", charities_database_integrity_is_ready),
+        ("catalog_integrity", catalog_database_integrity_is_ready),
+        ("venues_integrity", venues_database_integrity_is_ready),
+    )
+    results: list[bool] = []
+    for status_key, probe in probes:
+        try:
+            ready = probe()
+        except (
+            DatabaseError,
+            LookupError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ):
+            ready = False
+        dependencies[status_key] = "ok" if ready else "unavailable"
+        results.append(ready)
+    return all(results)
 
 
 @extend_schema(
@@ -1422,14 +1575,27 @@ def readiness(request: Request) -> Response:
         authority_provenance_ready = (
             exact_contract_ready and runtime_contract_ready and runtime_role_safe
         )
-    if authority_provenance_ready:
-        if require_exact_provenance:
-            dependencies["authority_provenance"] = "ok"
-        return Response({"status": "ok", "dependencies": dependencies})
-    dependencies["authority_provenance"] = "unavailable"
+    if not authority_provenance_ready:
+        dependencies["authority_provenance"] = "unavailable"
+        return Response(
+            {"status": "unavailable", "dependencies": dependencies},
+            status=503,
+        )
+    if require_exact_provenance:
+        dependencies["authority_provenance"] = "ok"
+
+    invitation_ready = _append_invitation_runtime_readiness(dependencies)
+    bounded_domains_ready = _append_bounded_domain_integrity_readiness(dependencies)
+    logistics_ready = _append_logistics_runtime_readiness(dependencies)
+    all_dependencies_ready = (
+        invitation_ready and bounded_domains_ready and logistics_ready
+    )
     return Response(
-        {"status": "unavailable", "dependencies": dependencies},
-        status=503,
+        {
+            "status": "ok" if all_dependencies_ready else "unavailable",
+            "dependencies": dependencies,
+        },
+        status=200 if all_dependencies_ready else 503,
     )
 
 

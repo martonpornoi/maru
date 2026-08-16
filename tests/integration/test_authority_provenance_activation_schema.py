@@ -28,6 +28,7 @@ from maru.authorization.commands import (
 )
 from maru.authorization.models import (
     AUTHORITY_PROVENANCE_ACTIVATION_LOCK_KEY,
+    AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
     AUTHORITY_PROVENANCE_CONTRACT_VERSION,
     AuthorityControl,
     AuthorityIssuance,
@@ -582,7 +583,7 @@ def _append_matching_activation_audit(
         break_glass=False,
         safe_metadata={
             "contract_version": AUTHORITY_PROVENANCE_CONTRACT_VERSION,
-            "policy_version": POLICY_VERSION,
+            "policy_version": AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
         },
         retention_class="security-extended",
     )
@@ -615,7 +616,7 @@ def _insert_raw_activation_with_audit(
             """,
             [
                 AUTHORITY_PROVENANCE_CONTRACT_VERSION,
-                POLICY_VERSION,
+                AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
                 marker_reason,
                 correlation_id,
                 supplied_timestamp,
@@ -685,7 +686,7 @@ def _insert_raw_marker_at_isolation(
         AuthorityProvenanceActivation.objects.create(
             singleton=True,
             contract_version=AUTHORITY_PROVENANCE_CONTRACT_VERSION,
-            policy_version=POLICY_VERSION,
+            policy_version=AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
             activated_by=actor,
             reason="Reject a cutover under a stale-snapshot isolation level.",
             correlation_id=uuid4(),
@@ -1434,7 +1435,7 @@ def test_raw_marker_without_exact_audit_rolls_marker_and_latch_back() -> None:
         AuthorityProvenanceActivation.objects.create(
             singleton=True,
             contract_version=AUTHORITY_PROVENANCE_CONTRACT_VERSION,
-            policy_version=POLICY_VERSION,
+            policy_version=AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
             activated_by=actor,
             reason="Reject a marker that has no security audit.",
             correlation_id=uuid4(),

@@ -302,6 +302,47 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"reason", "audit"}),
     ),
     Capability(
+        code="registration.view_profile_extensions",
+        description=(
+            "View purpose-limited post-submission profile-extension values for "
+            "registrations in one event edition."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        field_ceiling=frozenset(
+            {
+                "registration_id",
+                "field_id",
+                "field_key",
+                "field_version",
+                "label",
+                "help_text",
+                "field_type",
+                "options",
+                "purpose",
+                "classification",
+                "required",
+                "writer_policy",
+                "current_value",
+                "current_sequence",
+                "updated_at",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="registration.update_profile_extensions",
+        description=(
+            "Append reasoned staff-permitted profile-extension value revisions "
+            "for registrations in one event edition."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
         code="registration.view_service_summary",
         description=(
             "View the purpose-limited registration service queue and operational "
@@ -558,6 +599,428 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"audit_sensitive_read"}),
     ),
     Capability(
+        code="charities.view_partners",
+        description=(
+            "View organizer-owned charity partner profiles and governed media."
+        ),
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {
+                "id",
+                "slug",
+                "legal_name",
+                "imprint_name",
+                "public_name",
+                "short_description",
+                "description",
+                "location_name",
+                "postal_address",
+                "country_code",
+                "website_url",
+                "contact_email",
+                "contact_phone",
+                "lifecycle",
+                "aggregate_version",
+                "media_references",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="charities.manage_partners",
+        description=("Create, change, retire, and govern media for charity partners."),
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=False,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="charities.view_review_queue",
+        description="View minimized charity selection state for one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        requires_break_glass=True,
+        field_ceiling=frozenset(
+            {
+                "id",
+                "partner_id",
+                "partner_name",
+                "responsible_department_id",
+                "responsible_department_name",
+                "status",
+                "publication_state",
+                "aggregate_version",
+            }
+        ),
+    ),
+    Capability(
+        code="charities.propose_selection",
+        description="Propose and submit organizer charity partners for one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        requires_break_glass=True,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="charities.view_selection",
+        description=("View one purpose-scoped charity selection review timeline."),
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {
+                "summary",
+                "timeline",
+                "reason",
+                "private_comment",
+                "actor_id",
+                "occurred_at",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="charities.review_selection",
+        description="Confirm or reject one submitted edition charity selection.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="charities.comment_selection",
+        description="Append a private purpose-scoped comment to one selection.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="charities.publish_selection",
+        description=(
+            "Independently publish or withdraw one confirmed charity selection."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=False,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit", "approval"}),
+    ),
+    Capability(
+        code="venues.view_properties",
+        description="View organizer-owned venue, layout, and provider records.",
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {
+                "property",
+                "sites",
+                "buildings",
+                "spaces",
+                "configurations",
+                "combinations",
+                "layouts",
+                "media",
+                "provider_contact",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="venues.manage_properties",
+        description="Create and govern reusable venue facts, media, and layouts.",
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=False,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="venues.manage_accommodation",
+        description="Manage bounded room-type and nightly hotel inventory catalogs.",
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=False,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="venues.view_workspace",
+        description=(
+            "View selected venues, spaces, availability, and booking summaries."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        requires_break_glass=True,
+        field_ceiling=frozenset(
+            {
+                "venue_selections",
+                "space_selections",
+                "availability",
+                "booking_summaries",
+            }
+        ),
+    ),
+    Capability(
+        code="venues.select_for_edition",
+        description="Select reusable venues and spaces with edition-owned overrides.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        requires_break_glass=True,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="venues.view_space_schedule",
+        description="View one exact edition space's operational booking layers.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {
+                "space",
+                "availability",
+                "bookings",
+                "setup_interval",
+                "effective_interval",
+                "teardown_interval",
+                "internal_layout",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="venues.manage_space_schedule",
+        description="Create, move, and cancel bookings in one exact edition space.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="venues.publish_space_schedule",
+        description="Approve, publish, or withdraw one exact space schedule item.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=False,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit", "approval"}),
+    ),
+    Capability(
+        code="catalog.manage",
+        description=(
+            "Configure and activate an edition merchandise and donation catalog."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=False,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="catalog.manage_stock",
+        description="Append reasoned stock changes within configured hard ceilings.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="catalog.manage_payments",
+        description="Reconcile hosted catalog payment outcomes for one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=False,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="catalog.view_activity",
+        description=(
+            "View purpose-scoped catalog configuration, stock, and order activity."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        field_ceiling=frozenset(
+            {"action", "actor_label", "occurred_at", "target_count"}
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="catalog.order_self",
+        description="Place and pay one's own edition catalog orders.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="catalog.view_self",
+        description="View one's own catalog order history and fulfilment state.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        field_ceiling=frozenset(
+            {"reference", "status", "total", "lines", "payment", "fulfilment"}
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="logistics.offer_self",
+        description="Offer and withdraw one's own equipment for an eligible edition.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
+        code="logistics.manage_catalog",
+        description=(
+            "Register reusable Logistics parties, locations, assets, stock, keys, "
+            "agreements, kits, and labels."
+        ),
+        maximum_scope=ScopeLevel.ORGANIZATION,
+        delegable=False,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="logistics.view_restricted_contacts",
+        description=(
+            "Read one purpose- and retention-limited Logistics pickup, storage, "
+            "provider, or return contact."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=False,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit_sensitive_read"}),
+    ),
+    Capability(
+        code="logistics.view_workspace",
+        description=(
+            "View an edition's minimized Logistics inventory, custody, manifest, "
+            "return, and Stage Tech receiving workspace."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="logistics.manage_operations",
+        description=(
+            "Append receive, pack, move, custody, count, condition, damage, and "
+            "return operations in one edition."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="logistics.review_offers",
+        description="Accept or reject authenticated equipment offers for one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+    ),
+    Capability(
+        code="logistics.reconcile_offline",
+        description="Review and reconcile bounded offline Logistics scan batches.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=False,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="logistics.view_manifest",
+        description="View one exact edition Logistics manifest and receiving status.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="logistics.manage_manifest",
+        description="Add lines to and transition one exact Logistics manifest.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        delegable=True,
+        requires_break_glass=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="applications.manage_definitions",
+        description=(
+            "Create, version, configure, activate, and retire edition-owned "
+            "typed application definitions."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=False,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"reason", "audit"}),
+    ),
+    Capability(
+        code="applications.review",
+        description="Review assigned C1/C2 typed applications in one edition.",
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.review_sensitive",
+        description=(
+            "Review assigned C3/C4, adult, or case application material in one "
+            "edition under an explicit audience policy."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=False,
+        sensitivity_ceiling=Sensitivity.SECURITY_CRITICAL,
+        obligations=frozenset({"reason", "audit", "audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.view_self",
+        description="View one's own typed application drafts, answers, and decisions.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        field_ceiling=frozenset(
+            {"available", "submissions", "answers", "decisions", "typed_target"}
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
+        code="applications.apply_self",
+        description="Create and submit one's own eligible typed applications.",
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.RESTRICTED,
+        obligations=frozenset({"audit"}),
+    ),
+    Capability(
         code="workforce.view_structure",
         description=(
             "View edition departments, positions, reporting lines, minimized "
@@ -639,7 +1102,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-08-01.3"
+POLICY_VERSION = "2026-08-09.7"
 
 
 def capability(code: str) -> Capability | None:

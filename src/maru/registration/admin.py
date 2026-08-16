@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from contextlib import suppress
-from typing import Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, override
+from uuid import UUID, uuid4
 
 from django import forms
 from django.contrib import admin
-from django.db import models
+from django.db import DatabaseError, models
 from django.db.models import Q
 from django.http import HttpRequest
 from django.urls import reverse
@@ -16,6 +17,10 @@ from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString, mark_safe
 
+if TYPE_CHECKING:
+    from django.contrib.admin.options import _FieldOpts, _FieldsetSpec
+
+from maru.authorization.services import AuthorizationDenied
 from maru.core.admin import HttpsURLAdminMixin, NoDeleteAdminMixin, ReadOnlyAdminMixin
 from maru.events.admin_context import EditionContextAdmin
 from maru.events.models import EventEdition
@@ -43,6 +48,8 @@ from maru.registration.models import (
     RegistrationConfiguration,
     RegistrationLifecycleRun,
     RegistrationProfileExtensionField,
+    RegistrationProfileExtensionValueCommandReceipt,
+    RegistrationProfileExtensionValueControl,
     RegistrationProfileExtensionValueRevision,
     RegistrationQuestion,
     RegistrationSection,
@@ -55,6 +62,10 @@ from maru.registration.models import (
     SettlementAllocation,
     SettlementBatch,
     TemplateStatus,
+)
+from maru.registration.profile_extension_values import (
+    ProfileExtensionValueError,
+    read_profile_extension_values,
 )
 
 
@@ -136,6 +147,39 @@ def _linked_list(items: list[tuple[models.Model, str]]) -> SafeString:
             ((_admin_change_link(item, label),) for item, label in items),
         ),
     )
+
+
+def _request_correlation_id(request: HttpRequest) -> UUID:
+    candidate = getattr(request, "correlation_id", None)
+    if isinstance(candidate, str):
+        try:
+            return UUID(candidate)
+        except ValueError:
+            pass
+    return uuid4()
+
+
+def _can_open_profile_extension_values(
+    request: HttpRequest,
+    registration: Registration,
+) -> bool:
+    if (
+        not isinstance(request.user, Account)
+        or request.user.id == registration.account_id
+    ):
+        return False
+    try:
+        workspace = read_profile_extension_values(
+            actor=request.user,
+            organization_id=registration.organization_id,
+            edition_id=registration.edition_id,
+            registration_id=registration.id,
+            correlation_id=_request_correlation_id(request),
+            source_channel="web",
+        )
+    except (AuthorizationDenied, DatabaseError, ProfileExtensionValueError):
+        return False
+    return bool(workspace.fields)
 
 
 class TemplateSectionInline(
@@ -823,6 +867,51 @@ class RegistrationAdmin(
             },
         ),
     )
+
+    def get_fieldsets(
+        self,
+        request: HttpRequest,
+        obj: Registration | None = None,
+    ) -> _FieldsetSpec:
+        fieldsets = list(super().get_fieldsets(request, obj))
+        if obj is None or not _can_open_profile_extension_values(request, obj):
+            return tuple(fieldsets)
+        profile_fieldset: tuple[str, _FieldOpts] = (
+            "Current profile extensions",
+            {
+                "description": (
+                    "Open the governed, audience-filtered current-value workspace. "
+                    "It is separate from the immutable submitted answers below."
+                ),
+                "fields": ("profile_extension_values_workspace",),
+            },
+        )
+        attached_index = next(
+            (
+                index
+                for index, (title, _options) in enumerate(fieldsets)
+                if title == "Attached records"
+            ),
+            len(fieldsets),
+        )
+        fieldsets.insert(attached_index, profile_fieldset)
+        return tuple(fieldsets)
+
+    @admin.display(description="Current profile extensions")
+    def profile_extension_values_workspace(self, obj: Registration) -> SafeString:
+        url = reverse(
+            "staff-profile-extension-values",
+            kwargs={
+                "organization_slug": obj.organization.slug,
+                "series_slug": obj.edition.series.slug,
+                "edition_slug": obj.edition.slug,
+                "registration_id": obj.id,
+            },
+        )
+        return format_html(
+            '<a class="button" href="{}">Open current profile details</a>',
+            url,
+        )
 
     @admin.display(description="Person", ordering="account__display_name")
     def person(self, obj: Registration) -> str:
@@ -1616,6 +1705,36 @@ def _register_read_only_operational_model(
     )
 
 
+_register_read_only_operational_model(
+    RegistrationProfileExtensionValueControl,
+    list_display=(
+        "registration",
+        "field_key",
+        "current_sequence",
+        "updated_at",
+    ),
+    list_filter=("field_key", "updated_at"),
+    search_fields=("registration__reference", "field_key"),
+)
+_register_read_only_operational_model(
+    RegistrationProfileExtensionValueCommandReceipt,
+    list_display=(
+        "registration",
+        "field",
+        "writer_kind",
+        "result_sequence",
+        "actor",
+        "source_channel",
+        "created_at",
+    ),
+    list_filter=("writer_kind", "source_channel", "created_at"),
+    search_fields=(
+        "registration__reference",
+        "field__key",
+        "actor__display_name",
+        "actor__email",
+    ),
+)
 _register_read_only_operational_model(
     PaymentIntent,
     list_display=(

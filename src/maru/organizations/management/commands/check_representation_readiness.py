@@ -7,7 +7,7 @@ from typing import Any
 from uuid import UUID
 
 from django.core.management.base import BaseCommand, CommandError, CommandParser
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 
 from maru.audit.models import AuditEvent
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
@@ -226,6 +226,28 @@ def _active_appointment_is_exact(
     )
 
 
+def _active_appointments(
+    representation: OrganizationRepresentation,
+) -> QuerySet[RepresentationAppointment]:
+    """Load only fields present at the pre-hardening readiness boundary."""
+
+    return (
+        RepresentationAppointment.objects.filter(
+            representation=representation,
+            state=RepresentationAppointment.State.ACTIVE,
+        )
+        .select_related("account", "representation")
+        .only(
+            "activated_at",
+            "role_assignment",
+            "account__account_kind",
+            "account__is_active",
+            "account__email_verified_at",
+            "representation__organization",
+        )
+    )
+
+
 def _active_board_appointment_mismatches() -> set[UUID]:
     """Find active Board appointments missing their exact canonical evidence."""
 
@@ -241,10 +263,7 @@ def _active_board_appointment_mismatches() -> set[UUID]:
             representation,
             current_event,
         )
-        appointments = RepresentationAppointment.objects.filter(
-            representation=representation,
-            state=RepresentationAppointment.State.ACTIVE,
-        ).select_related("account", "representation")
+        appointments = _active_appointments(representation)
         if any(
             not _active_appointment_is_exact(
                 appointment=appointment,

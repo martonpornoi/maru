@@ -7,7 +7,14 @@ from django.http import HttpRequest, HttpResponse
 from django.utils.cache import patch_vary_headers
 
 ALLOWED_METHODS = "GET, POST, PUT, OPTIONS"
-ALLOWED_HEADERS = "Accept, Content-Type, X-CSRFToken, X-Request-ID"
+ALLOWED_HEADERS = "Accept, Content-Type, Idempotency-Key, X-CSRFToken, X-Request-ID"
+PRIVATE_API_DOCUMENTATION_PATHS = frozenset(
+    {
+        "/api/v1/schema",
+        "/api/v1/docs",
+        "/api/v1/redoc",
+    }
+)
 
 
 class RegistrationClientCorsMiddleware:
@@ -19,7 +26,10 @@ class RegistrationClientCorsMiddleware:
     def __call__(self, request: HttpRequest) -> HttpResponse:
         origin = request.headers.get("Origin", "")
         allowed = origin in set(settings.MARU_REGISTRATION_CLIENT_ORIGINS)
-        is_api = request.path.startswith("/api/v1/")
+        is_api = (
+            request.path.startswith("/api/v1/")
+            and request.path.rstrip("/") not in PRIVATE_API_DOCUMENTATION_PATHS
+        )
         if request.method == "OPTIONS" and is_api and allowed:
             response = HttpResponse(status=204)
         else:

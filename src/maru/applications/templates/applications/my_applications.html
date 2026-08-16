@@ -1,0 +1,55 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}My applications &middot; {{ edition.name }}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'my-maru-home' %}">My Maru</a> &rsaquo;
+    <a href="{% url 'my-application-index' %}">Applications</a> &rsaquo;
+    {{ edition.name }}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-personal-home">
+    <header>
+      <p class="maru-personal-kicker">{{ edition.name }}</p>
+      <h1>My applications</h1>
+      <p>Application drafts and decisions do not create a second registration.</p>
+    </header>
+    <section class="module">
+      <h2>Available now</h2>
+      {% if available_rows %}
+        <ul>
+          {% for row in available_rows %}
+            <li>
+              <strong>{{ row.definition.name }}</strong><br>
+              {{ row.definition.description }}<br>
+              Opens {{ row.definition.opens_at }} &middot; closes {{ row.definition.closes_at }}
+              &middot; up to {{ row.definition.max_submissions_per_person }} per person
+              <form method="post" action="{% url 'application-submission-start' edition.organization_id edition.id row.definition.id %}">
+                {% csrf_token %}{{ row.form.as_p }}
+                <button type="submit">Start application</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}<p>No additional application is currently available to you.</p>{% endif %}
+    </section>
+    <section class="module">
+      <h2>Your submissions</h2>
+      {% if submissions %}
+        <ul>
+          {% for submission in submissions %}
+            <li>
+              <a href="{% url 'my-application-detail' edition.organization_id edition.id submission.id %}"><strong>{{ submission.definition.name }}</strong></a>
+              &middot; {{ submission.get_state_display }}
+              &middot; expected version {{ submission.aggregate_version }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}<p>You have no application drafts for this edition.</p>{% endif %}
+    </section>
+  </div>
+{% endblock %}
+{% block sidebar %}{% endblock %}

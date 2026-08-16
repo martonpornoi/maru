@@ -55,6 +55,23 @@ def test_authority_management_capabilities_make_control_obligations_explicit() -
     assert {"reason", "audit"} <= revocation.obligations
 
 
+def test_profile_extension_staff_capabilities_are_separate_and_exact_edition() -> None:
+    view = require_capability("registration.view_profile_extensions")
+    update = require_capability("registration.update_profile_extensions")
+    register = require_capability("registration.register_on_behalf")
+
+    assert view.maximum_scope is ScopeLevel.EDITION
+    assert update.maximum_scope is ScopeLevel.EDITION
+    assert view.persistable
+    assert update.persistable
+    assert view.code != register.code
+    assert update.code != register.code
+    assert "audit_sensitive_read" in view.obligations
+    assert {"reason", "audit"} <= update.obligations
+    assert "current_value" in view.field_ceiling
+    assert not update.field_ceiling
+
+
 def test_unknown_capability_is_not_silently_created() -> None:
     assert capability("events.become_omnipotent") is None
     with pytest.raises(ValueError, match="Unknown capability"):

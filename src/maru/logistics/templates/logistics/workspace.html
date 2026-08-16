@@ -1,0 +1,174 @@
+{% extends "admin/base_site.html" %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-management-page">
+    <header class="maru-page-header">
+      <div>
+        <p class="maru-eyebrow">{{ organization.name }} / {{ convention_series.name }} / {{ edition.name }}</p>
+        <h1>Logistics</h1>
+        <p>Offers, tracked custody, manifests, returns, and reconciliation issues for this edition.</p>
+        <p><a href="{% url 'logistics-stage-receiving-page' organization.slug convention_series.slug edition.slug %}">Open Stage Tech receiving</a></p>
+      </div>
+    </header>
+
+    <section class="module" aria-labelledby="logistics-offers-title">
+      <h2 id="logistics-offers-title">Equipment offers</h2>
+      {% if workspace.offers %}
+        <table>
+          <thead><tr><th>Offer</th><th>Status</th><th>Items</th><th>Available</th><th>Version</th></tr></thead>
+          <tbody>
+            {% for offer in workspace.offers %}
+              <tr>
+                <th scope="row">{{ offer.title }}</th>
+                <td>{{ offer.status|capfirst }}</td>
+                <td>{{ offer.item_count }} item types / {{ offer.total_units }} units</td>
+                <td>{{ offer.available_from }}–{{ offer.available_until }}</td>
+                <td>{{ offer.aggregate_version }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}<p>No equipment offers have been submitted.</p>{% endif %}
+      <p class="help">Pickup addresses and provider contacts are purpose-restricted and are not shown in this queue.</p>
+      {% if offer_review_forms %}
+        <h3>Review pending offers</h3>
+        {% for offer, outcome, label, form in offer_review_forms %}
+          <form method="post" action="{% url 'logistics-staff-object-command' organization.slug convention_series.slug edition.slug 'offer-review' offer.id %}" class="maru-inline-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">{{ label }} “{{ offer.title }}”</button>
+          </form>
+        {% endfor %}
+      {% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="logistics-manifest-title">
+      <h2 id="logistics-manifest-title">Manifests</h2>
+      {% if workspace.manifests %}
+        <table>
+          <thead><tr><th>Manifest</th><th>Kind</th><th>Status</th><th>Boxes</th><th>Lines</th></tr></thead>
+          <tbody>
+            {% for manifest in workspace.manifests %}
+              <tr>
+                <th scope="row">
+                  <a href="{% url 'logistics-manifest-detail-page' organization.slug convention_series.slug edition.slug manifest.id %}">
+                    {{ manifest.manifest_number }} — {{ manifest.title }}
+                  </a>
+                </th>
+                <td>{{ manifest.kind|capfirst }}</td>
+                <td>{{ manifest.status|capfirst }}</td>
+                <td>{{ manifest.box_count }}</td>
+                <td>{{ manifest.line_count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}<p>No manifests are registered.</p>{% endif %}
+      {% if manifest_line_forms %}
+        <h3>Add a tracked item to a draft manifest</h3>
+        {% for manifest, form in manifest_line_forms %}
+          <details>
+            <summary>Add a line to {{ manifest.manifest_number }} — {{ manifest.title }}</summary>
+            <form method="post" action="{% url 'logistics-staff-object-command' organization.slug convention_series.slug edition.slug 'manifest-line-add' manifest.id %}">
+              {% csrf_token %}
+              {{ form.as_p }}
+              <button type="submit">Add line</button>
+            </form>
+          </details>
+        {% endfor %}
+      {% endif %}
+      {% if manifest_state_forms %}
+        <h3>Manifest actions</h3>
+        {% for manifest, action, label, form in manifest_state_forms %}
+          <form method="post" action="{% url 'logistics-staff-object-command' organization.slug convention_series.slug edition.slug 'manifest-state' manifest.id %}" class="maru-inline-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">{{ label }} “{{ manifest.title }}”</button>
+          </form>
+        {% endfor %}
+      {% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="logistics-state-title">
+      <h2 id="logistics-state-title">Current tracked state</h2>
+      {% if workspace.current_states %}
+        <table>
+          <thead><tr><th>Subject</th><th>Location</th><th>Condition</th><th>Quantity</th><th>Sequence</th></tr></thead>
+          <tbody>
+            {% for state in workspace.current_states %}
+              <tr>
+                <th scope="row">{{ state.subject_label }} <span class="help">({{ state.subject_kind }})</span></th>
+                <td>{{ state.current_node_name|default:"Unassigned" }}</td>
+                <td>{{ state.condition|default:"Not recorded" }}</td>
+                <td>{{ state.quantity|default_if_none:"—" }}</td>
+                <td>{{ state.last_event_sequence }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}<p>No receive or movement event has established current state.</p>{% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="logistics-return-title">
+      <h2 id="logistics-return-title">Due and overdue returns</h2>
+      {% if workspace.due_returns %}
+        <table>
+          <thead><tr><th>Agreement</th><th>Subject</th><th>Due</th><th>State</th></tr></thead>
+          <tbody>
+            {% for item in workspace.due_returns %}
+              <tr>
+                <th scope="row">{{ item.kind|capfirst }}</th>
+                <td>{{ item.subject_kind|capfirst }}</td>
+                <td>{{ item.return_due_at }}</td>
+                <td>{% if item.returned %}Returned{% elif item.overdue %}<strong>Overdue</strong>{% else %}Due{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}<p>No edition return agreements are registered.</p>{% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="logistics-discrepancy-title">
+      <h2 id="logistics-discrepancy-title">Open discrepancies</h2>
+      {% if workspace.discrepancies %}
+        <ul>
+          {% for issue in workspace.discrepancies %}
+            <li><strong>{{ issue.kind|capfirst }}</strong>: {{ issue.description }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}<p>No open discrepancies.</p>{% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="logistics-command-center-title">
+      <h2 id="logistics-command-center-title">Logistics command center</h2>
+      <p class="help">Choices show only records available in this organization and edition. Commands are reauthorized when submitted.</p>
+      {% for definition, form in staff_command_forms %}
+        <details>
+          <summary>{{ definition.title }}</summary>
+          <form method="post" action="{% url 'logistics-staff-command' organization.slug convention_series.slug edition.slug definition.action %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="default">{{ definition.title }}</button>
+          </form>
+        </details>
+      {% endfor %}
+    </section>
+
+    {% if restricted_contact_rows %}
+      <section class="module" aria-labelledby="restricted-contact-title">
+        <h2 id="restricted-contact-title">Restricted address or provider contact</h2>
+        <p class="help">Every read is reauthorized, purpose-coded, retention-checked, and audited. Contact values open on a short-lived private page.</p>
+        {% for row in restricted_contact_rows %}
+          <form method="post" action="{% url 'logistics-restricted-contact-request' organization.slug convention_series.slug edition.slug row.address_id %}">
+            {% csrf_token %}
+            <h3>{{ row.label }}</h3>
+            {{ row.form.as_p }}
+            <button type="submit">Open restricted contact</button>
+          </form>
+        {% endfor %}
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

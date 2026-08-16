@@ -1,0 +1,51 @@
+{% extends "admin/base_site.html" %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-management-page">
+    <header class="maru-page-header">
+      <div>
+        <p class="maru-eyebrow">{{ organization.name }} / {{ convention_series.name }} / {{ edition.name }}</p>
+        <h1>Stage Tech receiving</h1>
+        <p>Sealed and completed receiving manifests with box counts, contents, and direct receiving actions.</p>
+      </div>
+    </header>
+    {% if manifests %}
+      {% for entry in manifests %}
+        <section class="module">
+          <h2>
+            <a href="{% url 'logistics-manifest-detail-page' organization.slug convention_series.slug edition.slug entry.manifest.id %}">
+              {{ entry.manifest.manifest_number }} — {{ entry.manifest.title }}
+            </a>
+          </h2>
+          <p>{{ entry.manifest.box_count }} boxes / {{ entry.manifest.line_count }} manifest lines / {{ entry.manifest.status|capfirst }}</p>
+          <table>
+            <thead><tr><th>Item</th><th>State</th><th>Receiving action</th></tr></thead>
+            <tbody>
+              {% for row in entry.receipt_rows %}
+                <tr>
+                  <th scope="row">{{ row.line.quantity }} × {{ row.line.label_snapshot }}{% if row.line.packed_in_label %}, packed in {{ row.line.packed_in_label }}{% endif %}</th>
+                  <td>{{ row.line.current_state|capfirst }}</td>
+                  <td>
+                    {% if row.receipt_form %}
+                      <form method="post" action="{% url 'logistics-manifest-receipt' organization.slug convention_series.slug edition.slug entry.manifest.id row.line.id %}">
+                        {% csrf_token %}
+                        {{ row.receipt_form.as_p }}
+                        <button type="submit">Record receipt</button>
+                      </form>
+                    {% else %}
+                      <span>Already received or unavailable</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      {% endfor %}
+    {% else %}
+      <p>No sealed Stage Tech receiving manifests are available.</p>
+    {% endif %}
+  </div>
+{% endblock %}

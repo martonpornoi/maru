@@ -28,7 +28,6 @@ def _form_data(**overrides: str) -> dict[str, str]:
         "name": "Registration",
         "description": "Attendee intake and badge support.",
         "parent_department_id": "",
-        "display_order": "20",
         "expected_version": "0",
         "reason": "Establish the operational structure.",
         "retry_key": str(uuid4()),
@@ -61,7 +60,7 @@ def _allowed_decision(*, obligations: frozenset[str] = frozenset()) -> PolicyDec
 
 def test_creation_form_reports_a_required_missing_integer_without_coercion() -> None:
     data = _form_data()
-    del data["display_order"]
+    del data["expected_version"]
 
     form = DepartmentCreationForm(
         data,
@@ -70,7 +69,7 @@ def test_creation_form_reports_a_required_missing_integer_without_coercion() -> 
     )
 
     assert not form.is_valid()
-    assert form.errors.as_data()["display_order"][0].code == "required"
+    assert form.errors.as_data()["expected_version"][0].code == "required"
 
 
 def test_form_hides_a_domain_error_attached_to_the_wrong_field() -> None:

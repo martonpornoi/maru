@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.apps import apps
 
 from maru.authorization import provenance_readiness
 from maru.authorization.database_role_safety import (
@@ -9,22 +10,124 @@ from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
     RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
+    RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS,
     RuntimeDatabaseRoleProbeError,
     RuntimeDatabaseRoleSafety,
     probe_runtime_database_role_safety,
 )
 
+_BOUNDED_DOMAIN_APP_LABELS = ("applications", "charities", "catalog", "venues")
+_APPLICATION_DRAFT_CHILD_RELATIONS = {
+    "public.applications_applicationownerdepartment",
+    "public.applications_applicationreviewerrole",
+    "public.applications_applicationreviewerperson",
+    "public.applications_applicationsection",
+    "public.applications_applicationquestion",
+}
+
 
 def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
+    assert RUNTIME_DATABASE_SELECT_ONLY_RELATIONS == (
+        "public.django_migrations",
+        "public.authorization_authorityprovenanceactivation",
+        "public.authorization_provenanceactivationlatch",
+        "public.identity_platforminvitationretentionpolicycontrol",
+    )
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
         "public.workforce_editionstructurecommandreceipt",
+        "public.registration_registrationprofileextensionvaluerevision",
+        "public.registration_registrationprofileextensionvaluecommandreceipt",
+        "public.applications_applicationfilereceipt",
+        "public.applications_applicationanswerrevision",
+        "public.applications_applicationreviewdecision",
+        "public.applications_applicationtargetrecord",
+        "public.applications_applicationcommandreceipt",
+        "public.charities_charityselectiontimelineentry",
+        "public.charities_charitypublicationsnapshot",
+        "public.charities_charitycommandreceipt",
+        "public.catalog_catalogstockadjustment",
+        "public.catalog_catalogcommandreceipt",
+        "public.catalog_catalogpaymentevent",
+        "public.catalog_catalogordertimelineentry",
+        "public.catalog_catalogorderline",
+        "public.venues_venuespacecombinationmember",
+        "public.venues_editionspacemember",
+        "public.venues_editionspaceavailabilitywindow",
+        "public.venues_venuebookinghistory",
+        "public.venues_venuecommandreceipt",
+        "public.identity_platformaccountinvitationtransition",
+        "public.identity_platformaccountinvitationcommandreceipt",
+        "public.identity_platformidentitydeliveryreconciliationreceipt",
+        "public.identity_platforminvitationschedulerrun",
+        "public.identity_platforminvitationretentionreceipt",
+        "public.logistics_equipmentofferitem",
+        "public.logistics_equipmentofferhistory",
+        "public.logistics_equipmentofferacceptance",
+        "public.logistics_keyholderresponsibility",
+        "public.logistics_assetagreement",
+        "public.logistics_reusablekitline",
+        "public.logistics_logisticsmanifestline",
+        "public.logistics_logisticsevent",
+        "public.logistics_offlinescanoperation",
+        "public.logistics_offlineoperationreceipt",
+        "public.logistics_logisticscommandreceipt",
+        "public.logistics_logisticsparty",
+        "public.logistics_logisticsnode",
+        "public.logistics_asset",
+        "public.logistics_stocklot",
+        "public.logistics_reusablekit",
+        "public.logistics_logisticslabel",
+        "public.logistics_logisticsdiscrepancy",
+    )
+    assert RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS == (
+        "public.identity_platformaccountinventorycontrol",
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS == (
         "public.workforce_editionstructurecontrol",
+        "public.registration_registrationprofileextensionvaluecontrol",
+        "public.applications_applicationdefinition",
+        "public.applications_applicationsubmission",
+        "public.charities_charitypartner",
+        "public.charities_charitypartnermedia",
+        "public.charities_charityselection",
+        "public.catalog_editioncatalog",
+        "public.catalog_catalogproduct",
+        "public.catalog_catalogvariant",
+        "public.catalog_catalogorder",
+        "public.catalog_catalogpaymentintent",
+        "public.identity_identitychallenge",
+        "public.identity_platformaccountinvitation",
+        "public.identity_platformidentitydelivery",
+        "public.identity_platformidentitydeliveryattempt",
+        "public.identity_platformidentitydeliverylateoutcome",
+        "public.identity_platforminvitationretentionassessment",
+        "public.identity_platforminvitationretentionhold",
+        "public.venues_venueproperty",
+        "public.venues_venuepropertymedia",
+        "public.venues_venuesite",
+        "public.venues_venuebuilding",
+        "public.venues_venuespace",
+        "public.venues_venuespaceconfiguration",
+        "public.venues_venuespacecombination",
+        "public.venues_venuelayoutversion",
+        "public.venues_accommodationroomtype",
+        "public.venues_accommodationnightinventory",
+        "public.venues_editionvenueselection",
+        "public.venues_editionspaceselection",
+        "public.venues_venuebooking",
+        "public.venues_venuebookingoccupancy",
+        "public.logistics_restrictedlogisticsaddress",
+        "public.logistics_equipmentoffer",
+        "public.logistics_physicalkey",
+        "public.logistics_logisticsmanifest",
+        "public.logistics_logisticscurrentstate",
+        "public.logistics_logisticseditioncontrol",
+        "public.logistics_offlinescanbatch",
     )
     profiles = (
         set(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS),
         set(RUNTIME_DATABASE_SELECT_INSERT_RELATIONS),
+        set(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
         set(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
     )
     assert all(
@@ -33,6 +136,37 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         for right in profiles[index + 1 :]
     )
     assert "public.workforce_department" not in set().union(*profiles)
+
+
+def test_bounded_domain_relation_lifecycles_are_completely_classified() -> None:
+    bounded_relations = {
+        f"public.{model._meta.db_table}"
+        for app_label in _BOUNDED_DOMAIN_APP_LABELS
+        for model in apps.get_app_config(app_label).get_models()
+    }
+    append_only_relations = {
+        identity
+        for identity in RUNTIME_DATABASE_SELECT_INSERT_RELATIONS
+        if identity.split(".", 1)[1].startswith(_BOUNDED_DOMAIN_APP_LABELS)
+    }
+    retained_aggregate_relations = {
+        identity
+        for identity in RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS
+        if identity.split(".", 1)[1].startswith(_BOUNDED_DOMAIN_APP_LABELS)
+    }
+
+    assert len(append_only_relations) == 18
+    assert len(retained_aggregate_relations) == 24
+    assert not append_only_relations & retained_aggregate_relations
+    assert bounded_relations == (
+        append_only_relations
+        | retained_aggregate_relations
+        | _APPLICATION_DRAFT_CHILD_RELATIONS
+    )
+    assert (
+        not (append_only_relations | retained_aggregate_relations)
+        & _APPLICATION_DRAFT_CHILD_RELATIONS
+    )
 
 
 def test_v2_function_allowlist_preserves_frozen_v1_and_adds_latch_helper() -> None:
@@ -153,6 +287,7 @@ def test_probe_binds_the_role_and_required_function_identities(
         injected_name,
         list(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_RELATIONS),
+        list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2),
     ]
@@ -186,6 +321,7 @@ def test_probe_query_covers_identity_integrity_and_nondelegation_boundaries(
     for identity in (
         *RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
         *RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
+        *RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS,
         *RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
     ):
         assert identity not in query

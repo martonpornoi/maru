@@ -12,6 +12,7 @@ from maru.effects.models import DomainEvent, OutboxMessage
 from maru.registration.models import (
     ConfigurationStatus,
     QuestionFieldType,
+    QuestionVisibility,
     RegistrationConfiguration,
     RegistrationQuestion,
     RegistrationSection,
@@ -27,6 +28,7 @@ from maru.registration.services import (
 )
 from tests.factories import (
     AccountFactory,
+    AdmissionProductFactory,
     CapabilityGrantFactory,
     EventEditionFactory,
     RegistrationConfigurationFactory,
@@ -187,6 +189,234 @@ def test_published_template_and_active_configuration_are_database_immutable() ->
         )
 
 
+def test_configuration_with_zero_custom_questions_can_be_activated() -> None:
+    source_edition, actor, template = _published_template()
+    target = EventEditionFactory(
+        organization=source_edition.organization,
+        series=source_edition.series,
+    )
+    CapabilityGrantFactory(
+        organization=target.organization,
+        edition=target,
+        principal=actor,
+        capability_code="registration.manage_configuration",
+    )
+    draft = create_configuration_draft(
+        organization_id=target.organization_id,
+        edition_id=target.id,
+        actor=actor,
+        name="Typed-profile-only registration",
+        reason="Use the typed profile without convention-specific questions.",
+        correlation_id=uuid4(),
+        source_template_id=template.id,
+        opens_at=timezone.now() - timedelta(days=1),
+        closes_at=timezone.now() + timedelta(days=30),
+        capacity=200,
+        currency="EUR",
+    )
+    draft.questions.all().delete()
+
+    active = activate_configuration(
+        organization_id=target.organization_id,
+        edition_id=target.id,
+        configuration_id=draft.id,
+        actor=actor,
+        reason="Typed profile, admission product, dates, and policy reviewed.",
+        correlation_id=uuid4(),
+    )
+
+    assert active.status == ConfigurationStatus.ACTIVE
+    assert active.questions.count() == 0
+
+
+def test_explicit_zero_capacity_is_rejected_instead_of_inherited() -> None:
+    source = EventEditionFactory()
+    source_configuration = RegistrationConfigurationFactory(
+        edition=source,
+        capacity=400,
+    )
+    RegistrationConfiguration.objects.filter(pk=source_configuration.pk).update(
+        status=ConfigurationStatus.ACTIVE,
+        activated_at=timezone.now(),
+    )
+    target = EventEditionFactory(
+        organization=source.organization,
+        series=source.series,
+    )
+    actor = AccountFactory()
+    CapabilityGrantFactory(
+        organization=target.organization,
+        edition=target,
+        principal=actor,
+        capability_code="registration.manage_configuration",
+    )
+
+    with pytest.raises(ValidationError, match="between 1 and 1000000"):
+        create_configuration_draft(
+            organization_id=target.organization_id,
+            edition_id=target.id,
+            actor=actor,
+            name="Invalid inherited registration",
+            reason="Prove explicit zero is not treated as omission.",
+            correlation_id=uuid4(),
+            source_edition_id=source.id,
+            capacity=0,
+        )
+
+    assert not RegistrationConfiguration.objects.filter(edition=target).exists()
+
+
+@pytest.mark.parametrize(
+    (
+        "source_type",
+        "source_options",
+        "source_visibility",
+        "source_position",
+        "dependent_position",
+        "condition_value",
+        "message",
+    ),
+    [
+        (
+            QuestionFieldType.BOOLEAN,
+            [],
+            QuestionVisibility.ATTENDEE_AND_STAFF,
+            20,
+            10,
+            "true",
+            "earlier question",
+        ),
+        (
+            QuestionFieldType.BOOLEAN,
+            [],
+            QuestionVisibility.ATTENDEE_AND_STAFF,
+            10,
+            20,
+            "yes",
+            "cannot be produced",
+        ),
+        (
+            QuestionFieldType.SINGLE_CHOICE,
+            ["alpha", "beta"],
+            QuestionVisibility.ATTENDEE_AND_STAFF,
+            10,
+            20,
+            "gamma",
+            "cannot be produced",
+        ),
+        (
+            QuestionFieldType.MULTIPLE_CHOICE,
+            ["alpha", "beta"],
+            QuestionVisibility.ATTENDEE_AND_STAFF,
+            10,
+            20,
+            "alpha",
+            "cannot be produced",
+        ),
+        (
+            QuestionFieldType.BOOLEAN,
+            [],
+            QuestionVisibility.REGISTRATION_STAFF,
+            10,
+            20,
+            "true",
+            "staff-only question",
+        ),
+    ],
+)
+def test_activation_rejects_unreachable_conditional_question_graphs(
+    source_type: str,
+    source_options: list[str],
+    source_visibility: str,
+    source_position: int,
+    dependent_position: int,
+    condition_value: str,
+    message: str,
+) -> None:
+    configuration = RegistrationConfigurationFactory()
+    AdmissionProductFactory(configuration=configuration)
+    RegistrationQuestion.objects.create(
+        configuration=configuration,
+        key="condition-source",
+        label="Condition source",
+        field_type=source_type,
+        options=source_options,
+        position=source_position,
+        purpose="Drive a synthetic conditional field.",
+        visibility=source_visibility,
+    )
+    RegistrationQuestion.objects.create(
+        configuration=configuration,
+        key="conditional-target",
+        label="Conditional target",
+        field_type=QuestionFieldType.SHORT_TEXT,
+        required=True,
+        position=dependent_position,
+        purpose="Verify conditional graph safety.",
+        condition_question_key="condition-source",
+        condition_value=condition_value,
+    )
+    actor = AccountFactory()
+    CapabilityGrantFactory(
+        organization=configuration.organization,
+        edition=configuration.edition,
+        principal=actor,
+        capability_code="registration.manage_configuration",
+    )
+
+    with pytest.raises(ValidationError, match=message):
+        activate_configuration(
+            organization_id=configuration.organization_id,
+            edition_id=configuration.edition_id,
+            configuration_id=configuration.id,
+            actor=actor,
+            reason="Prove the conditional form is reachable before activation.",
+            correlation_id=uuid4(),
+        )
+
+
+def test_activation_rejects_an_overflow_instead_of_using_a_partial_form() -> None:
+    configuration = RegistrationConfigurationFactory()
+    AdmissionProductFactory(configuration=configuration)
+    RegistrationQuestion.objects.bulk_create(
+        [
+            RegistrationQuestion(
+                configuration=configuration,
+                key=f"bounded-question-{index}",
+                label=f"Bounded question {index}",
+                field_type=QuestionFieldType.SHORT_TEXT,
+                position=index + 1,
+                purpose="Prove the setup projection is complete.",
+            )
+            for index in range(257)
+        ]
+    )
+    actor = AccountFactory()
+    CapabilityGrantFactory(
+        organization=configuration.organization,
+        edition=configuration.edition,
+        principal=actor,
+        capability_code="registration.manage_configuration",
+    )
+
+    with pytest.raises(ValidationError) as captured:
+        activate_configuration(
+            organization_id=configuration.organization_id,
+            edition_id=configuration.edition_id,
+            configuration_id=configuration.id,
+            actor=actor,
+            reason="Reject a form whose complete contents cannot be represented.",
+            correlation_id=uuid4(),
+        )
+
+    assert (
+        captured.value.error_dict["questions"][0].code
+        == "registration_setup_limit_exceeded"
+    )
+    configuration.refresh_from_db()
+    assert configuration.status == ConfigurationStatus.DRAFT
+
+
 def test_registration_template_cannot_cross_tenant_or_series() -> None:
     _source_edition, actor, template = _published_template()
     other_tenant = EventEditionFactory()
@@ -230,6 +460,47 @@ def test_registration_template_cannot_cross_tenant_or_series() -> None:
     )
     assert response.status_code == 404
     assert response.json()["code"] == "registration_configuration_source_unavailable"
+
+
+def test_page10_configuration_inputs_reject_unknown_client_owned_fields() -> None:
+    edition = EventEditionFactory()
+    actor = AccountFactory()
+    CapabilityGrantFactory(
+        organization=edition.organization,
+        edition=edition,
+        principal=actor,
+        capability_code="registration.manage_configuration",
+    )
+    client = APIClient()
+    client.force_authenticate(actor)
+    base_path = (
+        f"/api/v1/organizations/{edition.organization_id}/"
+        f"editions/{edition.id}/registration"
+    )
+
+    response = client.post(
+        f"{base_path}/configuration/drafts",
+        {
+            "name": "Strict draft",
+            "reason": "Prove scope and evidence remain server-owned.",
+            "opens_at": (timezone.now() - timedelta(days=1)).isoformat(),
+            "closes_at": (timezone.now() + timedelta(days=30)).isoformat(),
+            "capacity": 200,
+            "currency": "EUR",
+            "organization_id": str(uuid4()),
+            "status": "active",
+            "created_by_id": str(uuid4()),
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert set(response.json()["errors"]) >= {
+        "organization_id",
+        "status",
+        "created_by_id",
+    }
+    assert not RegistrationConfiguration.objects.filter(edition=edition).exists()
 
 
 def test_configuration_workspace_hides_other_tenants_and_lists_provenance() -> None:
@@ -374,6 +645,7 @@ def test_active_configuration_cannot_be_edited_through_model() -> None:
         (QuestionFieldType.SHORT_TEXT, "not-a-list", "", ""),
         (QuestionFieldType.SINGLE_CHOICE, ["same", "same"], "", ""),
         (QuestionFieldType.SINGLE_CHOICE, ["only-one"], "", ""),
+        (QuestionFieldType.SINGLE_CHOICE, [f"option-{i}" for i in range(65)], "", ""),
         (QuestionFieldType.BOOLEAN, ["yes", "no"], "", ""),
         (QuestionFieldType.SHORT_TEXT, [], "another-question", ""),
         (QuestionFieldType.SHORT_TEXT, [], "question-under-test", "yes"),

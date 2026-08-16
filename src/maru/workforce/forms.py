@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable, Iterable
 from typing import Any, ClassVar, override
 from uuid import UUID, uuid4
 
 from django import forms
 
-from maru.core.forms import StrictInputForm
+from maru.core.forms import (
+    CanonicalUUIDField,
+    StrictBase10IntegerField,
+    StrictInputForm,
+)
 from maru.workforce.structure_inputs import (
-    CANONICAL_UUID_PATTERN,
     MAX_DEPARTMENT_DESCRIPTION_LENGTH,
     MAX_DEPARTMENT_NAME_LENGTH,
     MAX_STRUCTURE_REASON_LENGTH,
@@ -21,10 +23,6 @@ from maru.workforce.structure_inputs import (
     validate_exact_confirmation,
 )
 from maru.workforce.structure_templates import BUILTIN_STRUCTURE_TEMPLATES
-
-_CANONICAL_UUID = re.compile(CANONICAL_UUID_PATTERN)
-_STRICT_BASE10_INTEGER = re.compile(r"(?:0|[1-9][0-9]*)\Z")
-_MAX_STRICT_BASE10_DIGITS = 19
 
 DepartmentParentChoices = tuple[tuple[str, str], ...]
 
@@ -42,87 +40,6 @@ def _field_local_result(field_name: str, operation: Callable[[], str]) -> str:
                 code="structure_field_invalid",
             ) from error
         raise forms.ValidationError(field_errors) from error
-
-
-class StrictBase10IntegerField(forms.Field):
-    """Accept one canonical, non-negative base-10 integer string."""
-
-    default_error_messages: ClassVar[dict[str, Any]] = {
-        "invalid": "Enter a whole number using base-10 digits only.",
-    }
-
-    def __init__(
-        self,
-        *args: Any,
-        min_value: int = 0,
-        max_value: int | None = None,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(*args, **kwargs)
-        self.min_value = min_value
-        self.max_value = max_value
-
-    def to_python(self, value: object) -> int | None:
-        if value in self.empty_values:
-            return None
-        if (
-            not isinstance(value, str)
-            or len(value) > _MAX_STRICT_BASE10_DIGITS
-            or _STRICT_BASE10_INTEGER.fullmatch(value) is None
-        ):
-            raise forms.ValidationError(
-                self.error_messages["invalid"],
-                code="invalid",
-            )
-        try:
-            parsed = int(value, 10)
-        except ValueError as error:
-            raise forms.ValidationError(
-                self.error_messages["invalid"],
-                code="invalid",
-            ) from error
-        if parsed < self.min_value or (
-            self.max_value is not None and parsed > self.max_value
-        ):
-            if self.max_value is None:
-                message = f"Enter a whole number of {self.min_value} or greater."
-            else:
-                message = (
-                    f"Enter a whole number from {self.min_value} through "
-                    f"{self.max_value}."
-                )
-            raise forms.ValidationError(message, code="out_of_range")
-        return parsed
-
-
-class CanonicalUUIDField(forms.Field):
-    """Reject UUID aliases such as braces, compact form, or upper-case hex."""
-
-    default_error_messages: ClassVar[dict[str, Any]] = {
-        "invalid": "Enter a canonical lower-case UUID.",
-    }
-
-    def to_python(self, value: object) -> UUID | None:
-        if value in self.empty_values:
-            return None
-        if not isinstance(value, str) or _CANONICAL_UUID.fullmatch(value) is None:
-            raise forms.ValidationError(
-                self.error_messages["invalid"],
-                code="invalid",
-            )
-        try:
-            parsed = UUID(value)
-        except ValueError as error:
-            raise forms.ValidationError(
-                self.error_messages["invalid"],
-                code="invalid",
-            ) from error
-        if str(parsed) != value:
-            raise forms.ValidationError(
-                self.error_messages["invalid"],
-                code="invalid",
-            )
-        return parsed
 
 
 class DepartmentParentSelect(forms.Select):
@@ -301,16 +218,8 @@ class _DepartmentDetailsForm(_StructureReasonForm):
         choices=(("", "No parent — top-level Department"),),
         help_text=(
             "Choose an active Department in this edition. Nesting explains "
-            "operations and never grants access."
-        ),
-    )
-    display_order = StrictBase10IntegerField(
-        label="Display order",
-        min_value=0,
-        max_value=65_535,
-        help_text="Use a whole number from 0 through 65,535.",
-        widget=forms.NumberInput(
-            attrs={"min": "0", "max": "65535", "step": "1", "inputmode": "numeric"}
+            "operations and never grants access. Maru places new or moved "
+            "Departments after the existing Departments at that level."
         ),
     )
     expected_version = StrictBase10IntegerField(widget=forms.HiddenInput)
@@ -323,7 +232,6 @@ class _DepartmentDetailsForm(_StructureReasonForm):
         **kwargs: Any,
     ) -> None:
         initial = dict(kwargs.pop("initial", {}) or {})
-        initial.setdefault("display_order", 0)
         initial.setdefault("expected_version", expected_version)
         kwargs["initial"] = initial
         super().__init__(*args, **kwargs)

@@ -25,9 +25,57 @@ export type ProfileMediaReviewItem =
   components["schemas"]["ProfileMediaReviewItem"];
 export type AttendeeReport = components["schemas"]["AttendeeReport"];
 export type AttendeeReportRow = components["schemas"]["AttendeeReportRow"];
-export type AccessWorkspace = components["schemas"]["AccessWorkspace"];
-export type AccessGroup = components["schemas"]["AccessGroup"];
+export type EffectiveAccessAction = {
+  capability_code: string;
+  label: string;
+  allowed: boolean;
+  permitted_fields: string[];
+  obligations: string[];
+  reason_code: string;
+  source_category: string;
+  source_label: string;
+};
+export type EffectiveAccessSummary = {
+  scope_level: string;
+  scope_label: string;
+  can_manage_access: boolean;
+  actions: EffectiveAccessAction[];
+};
+export type AccessGroup = components["schemas"]["AccessGroup"] & {
+  role_version_id: string;
+  version: number;
+};
+export type AccessWorkspace = Omit<
+  components["schemas"]["AccessWorkspace"],
+  "groups"
+> & {
+  effective_access: EffectiveAccessSummary;
+  groups: AccessGroup[];
+};
 export type AccessAssignment = components["schemas"]["AccessAssignment"];
+export type AccessPreviewCapability = {
+  capability_code: string;
+  label: string;
+  description: string;
+  source_category: string;
+  source_label: string;
+  obligations: string[];
+  visible_fields: string[];
+  data_preview_available: boolean;
+  disclosure_limited: boolean;
+};
+export type AccessPreview = {
+  mode: "person" | "role";
+  subject_id: string;
+  subject_label: string;
+  scope_level: string;
+  scope_label: string;
+  evaluated_at: string;
+  capabilities: AccessPreviewCapability[];
+  disclosure_limited_count: number;
+  session_unchanged: true;
+  mutation_allowed: false;
+};
 export type EditionTransitionResult = {
   id: string;
   lifecycle: EditionContext["lifecycle"];
@@ -211,10 +259,24 @@ export type ReplaceAccessInput = {
   reason: string;
 };
 
+export type PreviewAccessInput =
+  | { mode: "person"; person_email: string }
+  | { mode: "role"; role_version_id: string };
+
 export function loadAccessWorkspace(
   edition: EditionContext,
 ): Promise<AccessWorkspace> {
   return requestJson<AccessWorkspace>(`${editionApiPath(edition)}/access`);
+}
+
+export function previewAccess(
+  edition: EditionContext,
+  input: PreviewAccessInput,
+): Promise<AccessPreview> {
+  return requestJson<AccessPreview>(`${editionApiPath(edition)}/access/preview`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 export function loadClosureReadiness(

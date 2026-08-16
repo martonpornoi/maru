@@ -5,7 +5,7 @@ adapter-expanded repository gate passes 1,693 tests in 1,653.43 seconds at
 90.50 percent total branch-inclusive coverage. Authenticated narrow-viewport,
 accessibility/state-matrix, deployment-recovery, and owner-rehearsal evidence
 remains pending because Chrome was unavailable to current desktop automation
-Last updated: 2026-08-02
+Last updated: 2026-08-16
 
 This tutorial follows the intended first coherent Maru journey: a
 non-participating platform administrator creates an organization, hands
@@ -85,6 +85,13 @@ uv run python src/manage.py createsuperuser
 
 A superuser is explicitly classified as `platform_administrator`. It may use
 the management spine without becoming part of a convention.
+
+Do not create or edit accounts through Django's generic **Accounts**
+specialist record. That surface is intentionally inspection-only and excludes
+credentials, privilege/lifecycle controls, and convention relationships. The
+management command above is the only generic first-platform-administrator
+bootstrap. Once it exists, use **Platform administration > Accounts > Invite**
+for ordinary people; invitation recipients choose their own password.
 
 The repository-prepared local baseline, when present, uses:
 
@@ -402,10 +409,14 @@ inspection-only behind the stopped-writer boundary.
 
 Next, select **Create Department** and create a synthetic leaf such as
 `Tutorial Desk`, placing it beneath an existing Department. Open its **Manage
-Department** record, change its description, parent, or display order, enter a
-reason, and save. Return to the overview and confirm the source summary now
-says **Reference copy changed**: this edition owns an independent copy and no
-edit changes the built-in source or another edition.
+Department** record, change its description or parent, enter a reason, and
+save. The browser does not ask for a numeric display order: creation and a
+parent change place the Department after its siblings automatically, while an
+ordinary edit keeps its current unique placement. Saving one old duplicate
+placement repairs that Department under the structure lock. Return to the
+overview and confirm the source summary now says **Reference copy changed**:
+this edition owns an independent copy and no edit changes the built-in source
+or another edition.
 
 Use the same record's **Retire Department** disclosure to retire that
 dependency-free tutorial leaf. Retirement is one-way in this slice and keeps
@@ -429,8 +440,14 @@ failure also withholds the organization/edition names and partial hierarchy.
 
 ## 14. Inspect the API contract
 
-The supported schema is available at
-<http://127.0.0.1:8000/api/v1/schema>. The M1 endpoints are:
+After signing in as the platform administrator, use the searchable Swagger
+reference at <http://127.0.0.1:8000/api/v1/docs/> or the reading-focused ReDoc
+view at <http://127.0.0.1:8000/api/v1/redoc/>. Tools and generated clients use
+the authoritative schema at <http://127.0.0.1:8000/api/v1/schema>. All three
+show the same OpenAPI contract. Swagger is read-only and does not bypass
+authentication, capability, tenant, CSRF, step-up, or idempotency rules.
+
+The M1 endpoints are:
 
 ```text
 GET  /api/v1/organizations/{organization_id}/series
@@ -474,6 +491,9 @@ and an identical replay returns the same result with `200`. Complete update,
 retire, and protected delete return `200`; DELETE requires a JSON body rather
 than query parameters. Template success contains only `aggregate_version`;
 Department success contains only `department_id` and `aggregate_version`.
+Unlike the browser workflow, the strict Department create and update API bodies
+continue to require a bounded integer `display_order` for integrations that
+deliberately plan sibling ordering.
 
 Mutation bodies are closed and JSON-native: unknown fields, string/boolean
 integer substitutes, noncanonical UUIDs, route scope in the body, and silent

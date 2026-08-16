@@ -63,6 +63,9 @@ from maru.registration.models import (
     RegistrationTimelineEntry,
     TemplateStatus,
 )
+from maru.registration.profile_extension_values import (
+    append_profile_extension_value,
+)
 from maru.registration.profile_policy import (
     COLLECTION_NOTICE_VERSION,
     DIRECTORY_CONSENT_VERSION,
@@ -1580,7 +1583,7 @@ class _DemoSeeder:
                     "position": 30,
                     "options": [],
                     "purpose": "Plan fursuit lounge service capacity.",
-                    "visibility": QuestionVisibility.REGISTRATION_STAFF,
+                    "visibility": QuestionVisibility.ATTENDEE_AND_STAFF,
                     "classification": QuestionClassification.PERSONAL,
                     "condition_question_key": "",
                     "condition_value": "",
@@ -2780,33 +2783,49 @@ class _DemoSeeder:
             created=field_created,
         )
 
-        revision_id = _stable_id(
-            "registration-profile-extension-value",
-            f"{registration.id}.arrival-detail.1",
-        )
-        revision = RegistrationProfileExtensionValueRevision.objects.filter(
-            id=revision_id
-        ).first()
-        revision_created = revision is None
-        if revision is None:
-            revision = RegistrationProfileExtensionValueRevision.objects.create(
-                id=revision_id,
+        revision = (
+            RegistrationProfileExtensionValueRevision.objects.filter(
                 registration=registration,
                 organization_id=edition.organization_id,
                 edition_id=edition.id,
-                field=field,
                 field_key=field.key,
-                sequence=1,
-                value="Synthetic arrival detail",
+            )
+            .order_by("-sequence", "-id")
+            .first()
+        )
+        revision_created = revision is None
+        if revision is None:
+            correlation_id = _stable_id(
+                "registration-profile-extension-value-correlation",
+                f"{registration.id}.{field.key}.1",
+            )
+            result = append_profile_extension_value(
                 actor=registration.account,
+                organization_id=edition.organization_id,
+                edition_id=edition.id,
+                registration_id=registration.id,
+                field_id=field.id,
+                value="Synthetic arrival detail",
+                expected_sequence=0,
+                retry_key=_stable_id(
+                    "registration-profile-extension-value-retry",
+                    f"{registration.id}.{field.key}.1",
+                ),
+                correlation_id=correlation_id,
+                request_id=correlation_id,
                 source_channel="demo_seed",
-                reason="",
+            )
+            revision = RegistrationProfileExtensionValueRevision.objects.get(
+                pk=result.revision_id
             )
         elif (
-            revision.registration_id != registration.id or revision.field_id != field.id
+            revision.registration_id != registration.id
+            or revision.field_id != field.id
+            or revision.sequence != 1
+            or revision.value != "Synthetic arrival detail"
         ):
             raise DemoDataConflictError(
-                f"Stable profile extension revision {revision_id} has unexpected scope."
+                "The demo profile-extension value has unexpected history."
             )
         self._own(
             "registration_profile_extension_value_revisions",
@@ -3046,6 +3065,8 @@ class _DemoSeeder:
             for capability_code in (
                 "registration.manage_configuration",
                 "registration.view_service_summary",
+                "registration.view_profile_extensions",
+                "registration.update_profile_extensions",
                 "registration.view_attendee_reporting",
                 "registration.moderate_public_profile",
                 "registration.check_in",
@@ -3068,6 +3089,8 @@ class _DemoSeeder:
                 )
             for capability_code in (
                 "registration.view_service_summary",
+                "registration.view_profile_extensions",
+                "registration.update_profile_extensions",
                 "registration.view_attendee_reporting",
                 "registration.moderate_public_profile",
                 "registration.check_in",

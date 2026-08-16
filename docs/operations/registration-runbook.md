@@ -569,6 +569,19 @@ workflow—never patch counts or disable gates in production.
 
 ## 14. Production go/no-go boundary
 
+### Profile-definition lifecycle recovery
+
+Setup command receipts and targets are append-only evidence. Never update,
+delete, truncate, or fabricate them to make a retry succeed. Retry with the
+original key and exact payload only after the dependency is healthy.
+
+Migration `0034_profile_extension_definition_lifecycle` reverses only before
+any profile-successor receipt or `supersedes` lineage exists. A populated
+downgrade fails closed and requires a reviewed fix-forward migration or
+recovery command. Do not disable its provenance/evidence guards. New template
+and prior-edition profile sources remain unsupported until exact source-field
+identity, generation, and digest can be persisted.
+
 Repository checks alone do not authorize real personal data. Go only when:
 
 - a selected hosted provider and SMTP/ClamAV/object-store deployment pass

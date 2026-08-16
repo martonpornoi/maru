@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import asdict
 from typing import Any, cast
 from uuid import UUID
 
@@ -19,6 +20,13 @@ from rest_framework.views import APIView
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
+from maru.authorization.access import (
+    MANAGE_ACCESS_CAPABILITY,
+    AccessIntent,
+    compute_effective_access,
+    preview_exact_person_access,
+    preview_role_bundle_access,
+)
 from maru.authorization.catalog import POLICY_VERSION, capability
 from maru.authorization.commands import (
     REPRESENTATION_MANAGED_ROLE_CODES,
@@ -38,12 +46,13 @@ from maru.authorization.serializers import (
     AccessAssignmentCreateSerializer,
     AccessAssignmentReplaceSerializer,
     AccessAssignmentRevokeSerializer,
+    AccessPreviewRequestSerializer,
+    AccessPreviewSerializer,
     AccessWorkspaceSerializer,
 )
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 
-MANAGE_ACCESS_CAPABILITY = "authorization.manage_roles"
 ACCESS_GROUP_LABELS = {
     "board-member": "Board",
     "registration-lead": "Registration",
@@ -195,8 +204,10 @@ def _group_payload(role: RoleBundle) -> dict[str, object]:
         else "Provides convention access defined by this role."
     )
     return {
+        "role_version_id": role.id,
         "code": role.code,
         "name": _group_name(role),
+        "version": role.version,
         "description": description,
         "capability_count": len(capabilities),
         "capabilities": capabilities,
@@ -277,6 +288,10 @@ def _workspace_payload(
     edition: EventEdition,
     account: Account,
 ) -> dict[str, object]:
+    target = _edition_target(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+    )
     assignments = list(
         _current_assignments(
             organization_id=edition.organization_id,
@@ -289,11 +304,25 @@ def _workspace_payload(
         "can_revoke_assignments": decide(
             principal=account,
             capability_code="authorization.revoke",
-            resource=resolve_edition_target(
-                organization_id=edition.organization_id,
-                edition_id=edition.id,
-            ),
+            resource=target,
         ).allowed,
+        "effective_access": asdict(
+            compute_effective_access(
+                principal=account,
+                target=target,
+                scope_label=edition.name,
+                intents=(
+                    AccessIntent(
+                        capability_code=MANAGE_ACCESS_CAPABILITY,
+                        label="Review, assign, and change scoped access",
+                    ),
+                    AccessIntent(
+                        capability_code="authorization.revoke",
+                        label="Remove scoped access immediately",
+                    ),
+                ),
+            )
+        ),
         "groups": [
             _group_payload(role) for role in _latest_roles(edition.organization_id)
         ],
@@ -316,6 +345,19 @@ def _exact_active_account(email: str, *, field: str) -> Account:
     return account
 
 
+def _exact_active_person(email: str) -> Account:
+    account = Account.objects.filter(
+        email__iexact=email.strip(),
+        is_active=True,
+        account_kind=Account.Kind.PERSON,
+    ).first()
+    if account is None:
+        raise ValidationError(
+            {"person_email": "No active person matches that exact email address."}
+        )
+    return account
+
+
 def _exact_role(*, organization_id: UUID, code: str) -> RoleBundle:
     role = (
         RoleBundle.objects.filter(
@@ -329,6 +371,102 @@ def _exact_role(*, organization_id: UUID, code: str) -> RoleBundle:
     if role is None:
         raise ValidationError({"group_code": "Choose an available access group."})
     return role
+
+
+def _exact_role_version(*, organization_id: UUID, role_version_id: UUID) -> RoleBundle:
+    role = (
+        RoleBundle.objects.filter(
+            pk=role_version_id,
+            organization_id=organization_id,
+        )
+        .exclude(code__in=NON_SHAREABLE_ROLE_CODES)
+        .first()
+    )
+    if role is None:
+        raise ValidationError(
+            {"role_version_id": "Choose an available immutable role version."}
+        )
+    return role
+
+
+def _audit_access_preview(
+    *,
+    account: Account,
+    organization_id: UUID,
+    edition_id: UUID,
+    correlation_id: UUID,
+    outcome: str,
+    reason_code: str,
+    mode: str,
+    target_id: UUID | None = None,
+    capability_count: int | None = None,
+    disclosure_limited_count: int | None = None,
+) -> None:
+    safe_metadata: dict[str, object] = {
+        "policy_version": POLICY_VERSION,
+        "contract_version": "access-preview.v1",
+        "access_purpose": f"access-preview:{mode}:session-unchanged",
+    }
+    if capability_count is not None:
+        safe_metadata["target_count"] = capability_count
+    _ = disclosure_limited_count
+    append_audit(
+        AuditRecord(
+            principal_kind="account",
+            principal_id=account.id,
+            principal_context_id=None,
+            organization_id=organization_id,
+            event_edition_id=edition_id,
+            capability_code=MANAGE_ACCESS_CAPABILITY,
+            operation="authorization.access_preview.view",
+            target_type=(
+                "identity.account"
+                if mode == "person"
+                else "authorization.role_bundle"
+                if mode == "role"
+                else "authorization.access_preview"
+            ),
+            target_id=target_id,
+            outcome=outcome,
+            reason_code=reason_code,
+            correlation_id=correlation_id,
+            request_id=correlation_id,
+            source_channel="management-console",
+            obligations=("audit_sensitive_read",),
+            safe_metadata=safe_metadata,
+            retention_class="security-extended",
+        )
+    )
+
+
+def _authorize_preview(
+    *,
+    account: Account,
+    organization_id: UUID,
+    edition_id: UUID,
+    correlation_id: UUID,
+) -> ResolvedAuthorizationTarget:
+    target = resolve_edition_target(
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
+    decision = decide(
+        principal=account,
+        capability_code=MANAGE_ACCESS_CAPABILITY,
+        resource=target,
+    )
+    if not decision.allowed or target is None:
+        _audit_access_preview(
+            account=account,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            correlation_id=correlation_id,
+            outcome=AuditEvent.Outcome.DENY,
+            reason_code=decision.reason_code,
+            mode="unknown",
+        )
+        raise PermissionDenied("Access preview is unavailable for this workspace.")
+    return target
 
 
 def _command_validation(error: DjangoValidationError) -> ValidationError:
@@ -436,6 +574,108 @@ class EditionAccessWorkspaceView(APIView):
             raise _command_validation(error) from error
         payload = _workspace_payload(edition=edition, account=account)
         return Response(AccessWorkspaceSerializer(payload).data)
+
+
+class EditionAccessPreviewView(APIView):
+    """Audited, explanatory preview without impersonation or domain mutation."""
+
+    @extend_schema(
+        operation_id="authorization_preview_effective_access",
+        request=AccessPreviewRequestSerializer,
+        responses=AccessPreviewSerializer,
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> Response:
+        account = _account(request)
+        correlation_id = _correlation_id(request)
+        target = _authorize_preview(
+            account=account,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            correlation_id=correlation_id,
+        )
+        edition = _edition(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        serializer = AccessPreviewRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            _audit_access_preview(
+                account=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                correlation_id=correlation_id,
+                outcome=AuditEvent.Outcome.DENY,
+                reason_code="invalid_preview_request",
+                mode="unknown",
+            )
+            raise ValidationError(serializer.errors)
+        values = cast(dict[str, Any], serializer.validated_data)
+        mode = str(values["mode"])
+        try:
+            if mode == "person":
+                person = _exact_active_person(str(values["person_email"]))
+                result = preview_exact_person_access(
+                    viewer=account,
+                    person=person,
+                    target=target,
+                )
+            else:
+                role = _exact_role_version(
+                    organization_id=organization_id,
+                    role_version_id=cast(UUID, values["role_version_id"]),
+                )
+                result = preview_role_bundle_access(
+                    viewer=account,
+                    role_bundle=role,
+                    target=target,
+                )
+        except ValidationError:
+            _audit_access_preview(
+                account=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                correlation_id=correlation_id,
+                outcome=AuditEvent.Outcome.DENY,
+                reason_code="preview_subject_unavailable",
+                mode=mode,
+            )
+            raise
+        except DjangoPermissionDenied as error:
+            _audit_access_preview(
+                account=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                correlation_id=correlation_id,
+                outcome=AuditEvent.Outcome.DENY,
+                reason_code="preview_authority_unavailable",
+                mode=mode,
+            )
+            raise PermissionDenied(str(error)) from error
+
+        _audit_access_preview(
+            account=account,
+            organization_id=organization_id,
+            edition_id=edition_id,
+            correlation_id=correlation_id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code="computed_effective_access",
+            mode=result.mode,
+            target_id=result.subject_id,
+            capability_count=len(result.capabilities),
+            disclosure_limited_count=result.disclosure_limited_count,
+        )
+        payload = {
+            **asdict(result),
+            "scope_label": edition.name,
+            "session_unchanged": True,
+            "mutation_allowed": False,
+        }
+        return Response(AccessPreviewSerializer(payload).data)
 
 
 class EditionAccessAssignmentView(APIView):

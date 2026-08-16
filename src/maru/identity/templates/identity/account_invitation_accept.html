@@ -1,0 +1,88 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#071B3A">
+    <meta name="referrer" content="same-origin">
+    <title>Accept account invitation · Maru</title>
+    <link rel="icon" href="{% static 'core/brand/favicon.ico' %}" sizes="any">
+    <link rel="stylesheet" href="{% static 'core/baseline.css' %}">
+    <link rel="stylesheet" href="{% static 'identity/account_invitations.css' %}">
+    <script defer src="{% static 'identity/account_invitation_fragment.js' %}"></script>
+  </head>
+  <body class="identity-public-body">
+    <a class="baseline-skip-link" href="#main-content">Skip to main content</a>
+    <main id="main-content" class="baseline-card identity-acceptance-card" tabindex="-1">
+      <img class="baseline-logo" src="{% static 'core/brand/maru_rectangle_full_logo.png' %}" alt="Maru">
+      <header class="identity-public-heading">
+        <p class="baseline-kicker">Account security</p>
+        <h1>Accept your invitation</h1>
+        <p class="baseline-intro">
+          Paste the single-use invitation code and choose your own password.
+          Acceptance activates only your Maru login; it grants no convention access.
+        </p>
+      </header>
+
+      {% if acceptance_request_invalid %}
+        <div class="baseline-state baseline-state--error identity-state-panel" role="alert">
+          <h2>Use the clean acceptance page</h2>
+          <p>
+            Invitation codes are accepted only from the protected form or the
+            URL fragment used by Maru's email. Query-string values were ignored.
+          </p>
+          <p><a href="{% url 'accept-platform-account-invitation' %}">Open a clean acceptance form</a></p>
+        </div>
+      {% else %}
+        {% if form.non_field_errors %}<div class="baseline-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        <form method="post" action="{% url 'accept-platform-account-invitation' %}" class="baseline-form" novalidate>
+          {% csrf_token %}
+          {{ form.retry_key }}
+          {% if form.retry_key.errors %}
+            <div class="baseline-errors" role="alert">
+              <p>This form control is invalid. Reload this clean page and try again.</p>
+            </div>
+          {% endif %}
+          <section class="baseline-panel baseline-form-panel" aria-labelledby="acceptance-fields-title">
+            <div class="baseline-section-heading">
+              <p class="baseline-kicker">Recipient-owned credentials</p>
+              <h2 id="acceptance-fields-title">Invitation code and password</h2>
+              <p>
+                For your safety, Maru never redisplays the code or either
+                password after a validation error.
+              </p>
+            </div>
+            <div class="baseline-field{% if form.raw_token.errors %} baseline-field--error{% endif %}">
+              <label for="{{ form.raw_token.id_for_label }}">
+                {{ form.raw_token.label }} <span class="baseline-required">Required</span>
+              </label>
+              {{ form.raw_token }}
+              {% if form.raw_token.errors %}<div class="baseline-field-errors" role="alert">{{ form.raw_token.errors }}</div>{% endif %}
+              <p class="baseline-help" id="{{ form.raw_token.id_for_label }}_helptext">{{ form.raw_token.help_text }}</p>
+            </div>
+            <div class="baseline-field-grid">
+              {% include "core/_baseline_form_field.html" with field=form.new_password %}
+              {% include "core/_baseline_form_field.html" with field=form.confirm_password %}
+            </div>
+          </section>
+          <div class="baseline-form-actions baseline-form-actions--sticky">
+            <button type="submit">Activate account</button>
+            <a class="baseline-secondary-link" href="{% url 'staff-login' %}">Return to sign in</a>
+          </div>
+        </form>
+      {% endif %}
+
+      <aside class="baseline-boundary" aria-labelledby="acceptance-boundary-title">
+        <p class="baseline-kicker">What this does</p>
+        <h2 id="acceptance-boundary-title">A login, not a convention role</h2>
+        <p>
+          After acceptance you may sign in. Organization membership,
+          registration, applications, staffing, products, and permissions are
+          established separately by their own owners and policies.
+        </p>
+      </aside>
+    </main>
+  </body>
+</html>

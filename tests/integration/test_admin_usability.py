@@ -161,19 +161,14 @@ def test_admin_branding_and_domain_language_are_clear() -> None:
     assert content.index("/static/admin/css/responsive.css") < content.index(
         "/static/core/admin-responsive.css"
     )
-    assert "Manage access" in content
-    assert f"{reverse('management-console')}?view=setup&amp;access=1" in content
+    assert "Continue convention setup" in content
+    assert f"{reverse('management-console')}?view=setup" in content
     assert "Quick start" not in content
     assert 'class="maru-admin-quick-start"' not in content
-    assert "All administration areas" in content
-    assert "Foundation" in content
-    assert "People &amp; access" in content
-    assert "Registration &amp; finance" in content
-    assert "Attendee operations" in content
-    assert "Governance &amp; privacy" in content
-    assert "Use this administration home" in content
-    assert "For example:" in content
-    assert "Participation capacities" in content
+    assert "Need a technical record?" in content
+    assert "Open specialist records" in content
+    assert "Recent work" in content
+    assert "All administration areas" not in content
     assert "First convention setup" not in content
     assert "/admin/auth/group/" not in content
 
@@ -191,7 +186,9 @@ def test_global_quick_start_is_absent_from_other_admin_views() -> None:
     assert "All administration areas" not in content
 
 
-def test_admin_home_preserves_the_alphabetical_directory() -> None:
+def test_admin_home_keeps_one_specialist_gateway_without_duplicating_directory() -> (
+    None
+):
     client, _ = _admin_client()
 
     response = client.get(reverse("admin:index"))
@@ -199,7 +196,9 @@ def test_admin_home_preserves_the_alphabetical_directory() -> None:
     assert response.status_code == 200
     content = response.content.decode()
     assert "Quick start" not in content
-    assert "All administration areas" in content
+    assert "All administration areas" not in content
+    assert content.count("Open specialist records") == 1
+    assert "Need a technical record?" in content
     assert f"{reverse('management-console')}?view=setup" in content
     assert reverse("management-console") in content
 
@@ -214,7 +213,9 @@ def test_admin_home_preserves_the_alphabetical_directory() -> None:
         )
 
 
-def test_descriptive_directory_covers_every_registered_menu_item() -> None:
+def test_specialist_gateway_replaces_directory_and_help_covers_registered_items() -> (
+    None
+):
     client, _ = _admin_client()
 
     response = client.get(reverse("admin:index"))
@@ -230,11 +231,10 @@ def test_descriptive_directory_covers_every_registered_menu_item() -> None:
     assert all("For example:" in MODEL_PAGE_HELP[key] for key in registered_models)
 
     content = response.content.decode()
-    assert "maru-admin-app--foundation" in content
-    assert "maru-admin-app--people-access" in content
-    assert "maru-admin-app--registration-finance" in content
-    assert "maru-admin-app--attendee-operations" in content
-    assert "maru-admin-app--governance" in content
+    assert "Need a technical record?" in content
+    assert "data-navigation-specialist-gateway" in content
+    assert 'data-navigation-group="specialist-records"' in content
+    assert "maru-admin-app--foundation" not in content
 
 
 def test_removed_first_convention_setup_route_is_not_available() -> None:
@@ -256,7 +256,7 @@ def test_admin_app_change_and_login_pages_explain_their_purpose() -> None:
     login_response = client.get(reverse("admin:login"))
 
     assert "Use this area for registration setup" in app_response.content.decode()
-    assert "Use this page to find bootstrap platform accounts" in (
+    assert "Use this read-only specialist page to inspect minimized identity" in (
         change_response.content.decode()
     )
     assert "Use this page to enter bootstrap administration" in (

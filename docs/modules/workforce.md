@@ -3,9 +3,9 @@
 Status: Position, hierarchy, opportunity, agreement, authority onboarding,
 ADR 0041 containment, and Page 9a.1's version-fenced read, aggregate, commands,
 stopped-writer database core, and strict HTML/API Department mutation adapters
-implemented; the focused combined gate passes while full/browser/deployment
-acceptance remains open
-Last updated: 2026-08-02
+are accepted in the canonical current tree; responsive, recovery, deployment,
+and production acceptance remain gated
+Last updated: 2026-08-11
 
 ## Purpose and requirements
 
@@ -175,12 +175,21 @@ relationship. Neither visual nor Department ancestry implies authority.
 The implemented management slice owns one
 workforce-owned edition structure aggregate with monotonic optimistic
 versioning and shared application services for built-in-template application
-plus Department create, complete update/reparent/reorder, retire, and protected
-delete. Workforce `0006` adds the aggregate and append-only command receipts;
+plus Department create, complete update/reparent/order, retire, and protected
+delete. Browser creation and reparenting append within the selected sibling
+level under the aggregate lock, a normal edit preserves its unique placement,
+and saving an old duplicate placement moves the edited Department into the
+nearest following free position. The browser neither renders nor accepts the
+numeric rank; the strict API retains bounded explicit ordering for deliberate
+integration clients. Workforce `0006` adds the aggregate and append-only
+command receipts;
 the stopped-writer `0007` migration reconciles legacy trees and installs the
-complete writer/evidence boundary. The overview, three child GET page shapes,
-five POST actions, strict GET plus five API mutations, and exact navigation now
-mount those shared services without reopening specialist Department writes.
+complete writer/evidence boundary. Additive Workforce `0008` follows every
+current cross-module Department-FK creator and extends the closed deletion
+contract to Applications, Charities, Logistics, Registration, and Venues. The
+overview, three child GET page shapes, five POST actions, strict GET plus five
+API mutations, and exact navigation now mount those shared services without
+reopening specialist Department writes.
 
 ### Built-in reference and independent copy
 
@@ -474,8 +483,12 @@ names. Its preflight and database triggers enforce exact scope, bounded acyclic
 hierarchy, one aggregate version step per evidenced command, immutable source
 and retry receipts, non-cascading retirement/deletion rules, and fix-forward
 downgrade behavior. Production readiness fingerprints all 14 Page 9 trigger
-functions and all 28 exact attachments; the runtime login cannot invoke those
-helpers directly, disable them, or bypass their stopped-writer protocol.
+functions and all 28 exact attachments, requires both Workforce migration
+recorder rows, and verifies the exact 13-reference Department FK inventory;
+the runtime login cannot invoke those helpers directly, disable them, or
+bypass their stopped-writer protocol. Reversing `0008` restores the exact
+`0007` helper, which safely refuses deletion while any successor reference is
+still installed.
 
 ## Page 9 verification
 
@@ -489,7 +502,7 @@ disclosure and audit-failure `503`, stable query-count ceilings, and the
 explicit no-partial-tree overflow. The standalone populated
 query-count regression also passes. Adjacent navigation/shell/admin/
 representation coverage passes 65 tests. OpenAPI validation, generated-client
-regeneration, TypeScript type checking, 19 Vitest tests, Vite production build,
+regeneration, TypeScript type checking, 20 Vitest tests, Vite production build,
 focused Ruff, strict mypy for the changed source boundary, Django system check,
 and whitespace checks pass. The definitive full repository gate also passes
 1,239 tests at 90.35 percent branch coverage. Reliable responsive-browser
@@ -506,6 +519,21 @@ adapter-expanded repository invocation passes 1,693 tests in 1,653.43 seconds
 at 90.50 percent total branch-inclusive coverage. Authenticated responsive,
 keyboard, and automated-accessibility evidence is still pending. This remains
 local repository evidence, not a production cutover or recovery certification.
+
+The later Department-FK successor correction passes 9 focused PostgreSQL
+cases for forward/reverse behavior, readiness, exact installed references,
+successful protected deletion, raw tombstone deletion, and unknown-reference
+failure. Six representative Registration historical-migration cases also pass
+with graph-consistent Workforce targets. Focused Ruff, strict mypy,
+byte-compilation, migration drift, and the migration-target unit matrix are
+green.
+
+The final canonical current-tree repository gate passed all 4,067 tests in
+15,558.23 seconds (4:19:18) at 90.78 percent coverage. This is the current
+repository acceptance result; the earlier focused and historical full-run
+figures above remain milestone evidence rather than competing current totals.
+It does not certify responsive Page 9 mutation-role behavior, representative
+recovery, deployment, authority cutover, or production operation.
 
 ## Current limitations
 

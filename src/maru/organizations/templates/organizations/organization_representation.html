@@ -34,14 +34,61 @@
     </div>
   {% else %}
   <header class="baseline-page-heading">
-    <p class="baseline-kicker">Organization representation</p>
-    <h1>Executive Board</h1>
+    <p class="baseline-kicker">Governance setup</p>
+    <h1>{% if representation and representation.state == "active" %}Executive Board{% else %}Set up the Executive Board{% endif %}</h1>
     <p class="baseline-intro">
       Establish the accountable people who may operate {{ organization.name }}.
       Platform administrators oversee this handoff but never become board members
       or convention participants.
     </p>
   </header>
+
+  <section class="baseline-panel" aria-labelledby="board-setup-progress-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Setup progress</p>
+        <h2 id="board-setup-progress-title">Board setup</h2>
+      </div>
+      <span class="baseline-count">
+        {% if representation and representation.state == "active" %}Complete{% elif representation %}Step 2 of 3{% else %}Step 1 of 3{% endif %}
+      </span>
+    </div>
+    <ol class="baseline-activity-list">
+      <li{% if not representation %} aria-current="step"{% endif %}>
+        <div>
+          <strong>1. Create the Executive Board</strong>
+          <span>{% if representation %}Complete{% else %}Current step{% endif %}</span>
+        </div>
+        <p>Create the accountable representation without assigning a person or granting authority.</p>
+      </li>
+      <li{% if representation and representation.state != "active" %} aria-current="step"{% endif %}>
+        <div>
+          <strong>2. Invite at least two controllers</strong>
+          <span>{% if representation and representation.state == "active" %}Complete{% elif representation %}In progress{% else %}Next{% endif %}</span>
+        </div>
+        <p>
+          Invite existing active, verified user accounts. Each person must
+          accept their own Board invitation before activation.
+        </p>
+        {% if request.user.is_platform_administrator %}
+          <div class="baseline-form-actions">
+            <a class="baseline-secondary-link" href="{% url 'platform-account-inventory' %}">Review user accounts</a>
+            <a class="baseline-secondary-link" href="{% url 'platform-account-invite' %}">Invite a user account</a>
+          </div>
+        {% endif %}
+      </li>
+      <li>
+        <div>
+          <strong>3. Activate governance</strong>
+          <span>{% if representation and representation.state == "active" %}Complete{% elif representation %}Final step{% else %}Later{% endif %}</span>
+        </div>
+        <p>
+          After every invitation is answered and at least two people have
+          accepted, activate the Board with independent cross-approval.
+        </p>
+      </li>
+    </ol>
+  </section>
 
   <section class="baseline-access-summary" aria-labelledby="effective-access-title">
     <div>
@@ -76,8 +123,8 @@
     <section class="baseline-panel" aria-labelledby="provision-title">
       <div class="baseline-panel-heading">
         <div>
-          <p class="baseline-kicker">Step 1</p>
-          <h2 id="provision-title">Create the representation root</h2>
+          <p class="baseline-kicker">Step 1 of 3</p>
+          <h2 id="provision-title">Create the Executive Board</h2>
         </div>
       </div>
       {% if can_provision_representation %}
@@ -131,9 +178,9 @@
     {% if can_invite_representation %}
       <section class="baseline-panel" aria-labelledby="invite-controller-title">
         <div class="baseline-panel-heading">
-          <div>
-            <p class="baseline-kicker">Step 2</p>
-            <h2 id="invite-controller-title">Invite an exact account</h2>
+        <div>
+          <p class="baseline-kicker">Step 2 of 3</p>
+          <h2 id="invite-controller-title">Invite a Board controller</h2>
           </div>
         </div>
         <form
@@ -148,6 +195,10 @@
           {% endif %}
           {% include "core/_baseline_form_field.html" with field=invite_form.account_email %}
           {% include "core/_baseline_form_field.html" with field=invite_form.reason %}
+          <p class="baseline-help">
+            Use the exact email of an existing active, verified user account.
+            The person answers this Board invitation from their own account.
+          </p>
           <div class="baseline-form-actions">
             <button type="submit">Invite controller</button>
           </div>
@@ -244,7 +295,7 @@
       <section class="baseline-panel baseline-danger-zone" aria-labelledby="activate-board-title">
         <div class="baseline-panel-heading">
           <div>
-            <p class="baseline-kicker">Step 3 · Root authority</p>
+            <p class="baseline-kicker">Step 3 of 3 · Root authority</p>
             <h2 id="activate-board-title">Activate governance</h2>
           </div>
         </div>

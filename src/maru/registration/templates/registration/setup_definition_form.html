@@ -1,0 +1,20 @@
+{% extends "registration/setup_action_base.html" %}
+
+{% block registration_action_title %}{{ definition_heading }}{% endblock %}
+{% block registration_action_breadcrumb %}{{ definition_heading }}{% endblock %}
+{% block registration_action_heading %}{{ definition_heading }}{% endblock %}
+{% block registration_action_intro %}{{ definition_intro }}{% endblock %}
+{% block registration_reload_link %}<a href="{{ definition_back_location }}">Reload the current builder</a>{% endblock %}
+
+{% block registration_action_content %}
+  {% if form.non_field_errors %}<div class="baseline-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+  <form method="post" action="{{ definition_action_location }}" class="baseline-form registration-setup-form" novalidate>
+    {% csrf_token %}
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% if hidden.errors %}<div class="baseline-errors" role="alert">{{ hidden.errors }}</div>{% endif %}{% endfor %}
+    <section class="baseline-panel baseline-form-panel" aria-labelledby="registration-definition-fields-title">
+      <div class="baseline-section-heading"><p class="baseline-kicker">Closed typed input</p><h2 id="registration-definition-fields-title">Definition and command evidence</h2><p>Only the fields displayed here are accepted. Actor, scope, resulting version, reviewer, time, audit, and outbox evidence remain server-owned.</p></div>
+      {% for field in form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+    </section>
+    <div class="baseline-form-actions registration-primary-actions"><button type="submit"{% if reload_required or not registration_mutations_allowed %} disabled aria-disabled="true"{% endif %}>{{ definition_submit_label }}</button><a class="baseline-secondary-link" href="{{ definition_back_location }}">Cancel</a></div>
+  </form>
+{% endblock %}

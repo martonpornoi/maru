@@ -3,9 +3,11 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from maru.core.serializers import StrictInputSerializer
 from maru.registration.finance import SUPPORTED_FINANCIAL_OPERATION_KINDS
 from maru.registration.models import (
     AdmissionProduct,
+    AdmissionTierReplacement,
     Entitlement,
     FinancialLedgerEntry,
     FinancialOperation,
@@ -71,21 +73,44 @@ class ProfileExtensionFieldSerializer(serializers.Serializer[dict[str, object]])
     options = serializers.ListField(child=serializers.CharField())
     purpose = serializers.CharField()
     classification = serializers.CharField()
+    audience_policy = serializers.CharField()
+    audience_department_id = serializers.UUIDField(allow_null=True)
     required = serializers.BooleanField()  # type: ignore[assignment]
     writer_policy = serializers.CharField()
     can_write = serializers.BooleanField()
     current_value = serializers.JSONField(allow_null=True)
+    current_sequence = serializers.IntegerField(min_value=0)
     updated_at = serializers.DateTimeField(allow_null=True)
 
 
 class ProfileExtensionWorkspaceSerializer(serializers.Serializer[dict[str, object]]):
     registration_id = serializers.UUIDField()
+    snapshot_digest = serializers.RegexField(r"^[0-9a-f]{64}$")
     fields = ProfileExtensionFieldSerializer(many=True)  # type: ignore[assignment]
 
 
-class WriteProfileExtensionValueSerializer(serializers.Serializer[dict[str, object]]):
+class ProfileExtensionValueCommandResultSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    """Immutable resource created by one canonical value command."""
+
+    registration_id = serializers.UUIDField()
     field_id = serializers.UUIDField()
+    field_key = serializers.CharField()
+    field_version = serializers.IntegerField(min_value=1)
+    revision_id = serializers.UUIDField()
+    receipt_id = serializers.UUIDField()
+    result_sequence = serializers.IntegerField(min_value=1)
     value = serializers.JSONField()
+    writer_kind = serializers.ChoiceField(choices=("owner", "staff"))
+    source_channel = serializers.RegexField(r"^[a-z][a-z0-9_-]{0,31}$")
+    changed_at = serializers.DateTimeField()
+
+
+class WriteProfileExtensionValueSerializer(StrictInputSerializer):
+    field_id = serializers.UUIDField()
+    value = serializers.JSONField(allow_null=True)
+    expected_sequence = serializers.IntegerField(min_value=0, max_value=2_147_483_647)
     reason = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -318,14 +343,42 @@ class RegistrationConfigurationWorkspaceSerializer(
     bootstrap_editor_path = serializers.CharField()
 
 
+class AdmissionTierReplacementSerializer(
+    serializers.ModelSerializer[AdmissionTierReplacement]
+):
+    class Meta:
+        model = AdmissionTierReplacement
+        fields = (
+            "id",
+            "registration_id",
+            "source_product_id",
+            "target_product_id",
+            "source_product_name_snapshot",
+            "target_product_name_snapshot",
+            "amount_due_minor",
+            "currency",
+            "status",
+            "aggregate_version",
+            "expected_registration_version",
+            "resulting_registration_version",
+            "reserved_at",
+            "payment_due_at",
+            "completed_at",
+            "expired_at",
+            "cancelled_at",
+        )
+        read_only_fields = fields
+
+
 class MyRegistrationWorkspaceSerializer(serializers.Serializer[dict[str, object]]):
     configuration = RegistrationConfigurationSerializer(allow_null=True)
     registration = SelfRegistrationSerializer(allow_null=True)
+    tier_replacement = AdmissionTierReplacementSerializer(allow_null=True)
     demo_payment_enabled = serializers.BooleanField()
     server_time = serializers.DateTimeField()
 
 
-class CreateConfigurationDraftSerializer(serializers.Serializer[dict[str, object]]):
+class CreateConfigurationDraftSerializer(StrictInputSerializer):
     name = serializers.CharField(max_length=160)
     reason = serializers.CharField(max_length=500)
     source_template_id = serializers.UUIDField(required=False)
@@ -336,7 +389,7 @@ class CreateConfigurationDraftSerializer(serializers.Serializer[dict[str, object
     currency = serializers.CharField(required=False, min_length=3, max_length=3)
     minimum_age = serializers.IntegerField(
         required=False,
-        min_value=18,
+        min_value=0,
         max_value=120,
     )
     default_payment_window_minutes = serializers.IntegerField(
@@ -363,12 +416,12 @@ class CreateConfigurationDraftSerializer(serializers.Serializer[dict[str, object
         return attrs
 
 
-class ActivateConfigurationSerializer(serializers.Serializer[dict[str, object]]):
+class ActivateConfigurationSerializer(StrictInputSerializer):
     configuration_id = serializers.UUIDField()
     reason = serializers.CharField(max_length=500)
 
 
-class PublishTemplateSerializer(serializers.Serializer[dict[str, object]]):
+class PublishTemplateSerializer(StrictInputSerializer):
     configuration_id = serializers.UUIDField()
     code = serializers.SlugField(max_length=80)
     name = serializers.CharField(max_length=160)
@@ -536,6 +589,7 @@ class PaymentIntentSerializer(serializers.ModelSerializer[PaymentIntent]):
         fields = (
             "id",
             "registration_id",
+            "tier_replacement_id",
             "provider_name",
             "amount_minor",
             "currency",
@@ -547,6 +601,75 @@ class PaymentIntentSerializer(serializers.ModelSerializer[PaymentIntent]):
             "updated_at",
         )
         read_only_fields = fields
+
+
+class ReserveAdmissionTierReplacementSerializer(StrictInputSerializer):
+    target_product_id = serializers.UUIDField()
+    expected_registration_version = serializers.IntegerField(min_value=1)
+
+
+class RegistrationCapacityAdjustmentCommandSerializer(StrictInputSerializer):
+    product_id = serializers.UUIDField(required=False, allow_null=True)
+    new_capacity = serializers.IntegerField(min_value=1, max_value=1_000_000)
+    expected_control_version = serializers.IntegerField(min_value=1)
+    reason = serializers.CharField(min_length=1, max_length=500)
+
+
+class RegistrationCapacityAdjustmentResultSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    id = serializers.UUIDField()
+    scope = serializers.ChoiceField(choices=("overall", "product"))
+    product_id = serializers.UUIDField(allow_null=True)
+    previous_capacity = serializers.IntegerField()
+    new_capacity = serializers.IntegerField()
+    hard_ceiling = serializers.IntegerField()
+    control_version = serializers.IntegerField()
+    occurred_at = serializers.DateTimeField()
+
+
+class WaitlistBatchOfferCommandSerializer(StrictInputSerializer):
+    product_id = serializers.UUIDField()
+    batch_size = serializers.IntegerField(min_value=1, max_value=100)
+    expected_control_version = serializers.IntegerField(min_value=1)
+    reason = serializers.CharField(min_length=1, max_length=500)
+
+
+class WaitlistBatchOfferResultSerializer(serializers.Serializer[dict[str, object]]):
+    id = serializers.UUIDField()
+    product_id = serializers.UUIDField()
+    requested_size = serializers.IntegerField()
+    offered_count = serializers.IntegerField()
+    offered_registration_ids = serializers.ListField(child=serializers.UUIDField())
+    control_version = serializers.IntegerField()
+    occurred_at = serializers.DateTimeField()
+
+
+class RegistrationCommerceActivitySerializer(serializers.Serializer[dict[str, object]]):
+    event_name = serializers.CharField()
+    action = serializers.CharField()
+    actor_label = serializers.CharField()
+    occurred_at = serializers.DateTimeField()
+    target_count = serializers.IntegerField()
+
+
+class RegistrationCommerceCapacitySerializer(serializers.Serializer[dict[str, object]]):
+    product_id = serializers.UUIDField(allow_null=True)
+    product_name = serializers.CharField(allow_blank=True)
+    configured_capacity = serializers.IntegerField()
+    effective_capacity = serializers.IntegerField()
+    hard_ceiling = serializers.IntegerField()
+    occupied = serializers.IntegerField()
+    pending_target_holds = serializers.IntegerField()
+    waitlisted = serializers.IntegerField()
+
+
+class RegistrationCommerceWorkspaceSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    control_version = serializers.IntegerField()
+    capacities = RegistrationCommerceCapacitySerializer(many=True)
+    activity = RegistrationCommerceActivitySerializer(many=True)
 
 
 class PaymentExceptionSerializer(serializers.ModelSerializer[PaymentException]):

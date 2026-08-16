@@ -63,6 +63,7 @@ class Command(BaseCommand):
             inactive_cancelled=result.inactive_cancelled,
             closed_waitlist_cancelled=result.closed_waitlist_cancelled,
             promoted=result.promoted,
+            tier_replacements_expired=result.tier_replacements_expired,
             restrictions_applied=restrictions_applied,
         )
         self.stdout.write(
@@ -71,7 +72,8 @@ class Command(BaseCommand):
                 f"{result.expired} expired, "
                 f"{result.inactive_cancelled} inactive-account registrations "
                 f"cancelled, {result.closed_waitlist_cancelled} closed waitlist "
-                f"entries cancelled, {result.promoted} waitlist places offered."
+                f"entries cancelled, {result.promoted} waitlist places offered, "
+                f"{result.tier_replacements_expired} tier replacement holds expired."
                 f" {restrictions_applied} scheduled restrictions applied."
             )
         )

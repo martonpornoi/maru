@@ -1,0 +1,180 @@
+"""Unmounted charity routes; the project URL configuration owns mounting."""
+
+from django.urls import path
+
+from .api import (
+    CharityMediaCollectionView,
+    CharityMediaCommandView,
+    CharityPartnerCollectionView,
+    CharityPartnerDetailView,
+    CharitySelectionCollectionView,
+    CharitySelectionCommandView,
+    CharitySelectionDetailView,
+    PublicCharityListView,
+)
+from .views import (
+    add_charity_media_page,
+    charity_selection_command_page,
+    charity_selection_review_page,
+    charity_workspace,
+    create_charity_partner_page,
+    propose_charity_selection_page,
+    review_charity_media_page,
+    update_charity_partner_page,
+)
+
+urlpatterns = [
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/",
+        charity_workspace,
+        name="charity-workspace",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "<uuid:selection_id>/",
+        charity_selection_review_page,
+        name="charity-selection-review-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "partners/create/",
+        create_charity_partner_page,
+        name="charity-partner-create-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "partners/<uuid:partner_id>/update/",
+        update_charity_partner_page,
+        name="charity-partner-update-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "partners/<uuid:partner_id>/media/add/",
+        add_charity_media_page,
+        name="charity-media-add-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "partners/<uuid:partner_id>/media/<uuid:media_id>/approve/",
+        review_charity_media_page,
+        {"action": "approve"},
+        name="charity-media-approve-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "partners/<uuid:partner_id>/media/<uuid:media_id>/withdraw/",
+        review_charity_media_page,
+        {"action": "withdraw"},
+        name="charity-media-withdraw-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "selections/propose/",
+        propose_charity_selection_page,
+        name="charity-selection-propose-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "<uuid:selection_id>/submit/",
+        charity_selection_command_page,
+        {"action": "submit"},
+        name="charity-selection-submit-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "<uuid:selection_id>/confirm/",
+        charity_selection_command_page,
+        {"action": "confirm"},
+        name="charity-selection-confirm-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "<uuid:selection_id>/reject/",
+        charity_selection_command_page,
+        {"action": "reject"},
+        name="charity-selection-reject-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "<uuid:selection_id>/comment/",
+        charity_selection_command_page,
+        {"action": "comment"},
+        name="charity-selection-comment-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "<uuid:selection_id>/publish/",
+        charity_selection_command_page,
+        {"action": "publish"},
+        name="charity-selection-publish-page",
+    ),
+    path(
+        "admin/platform/organizations/<slug:organization_slug>/series/"
+        "<slug:series_slug>/editions/<slug:edition_slug>/charities/"
+        "<uuid:selection_id>/withdraw-publication/",
+        charity_selection_command_page,
+        {"action": "withdraw"},
+        name="charity-selection-withdraw-page",
+    ),
+    path(
+        "api/v1/public/organizations/<uuid:organization_id>/"
+        "editions/<uuid:edition_id>/charities",
+        PublicCharityListView.as_view(),
+        name="api-public-charity-list",
+    ),
+    path(
+        "api/v1/organizations/<uuid:organization_id>/charity-partners",
+        CharityPartnerCollectionView.as_view(),
+        name="api-charity-partner-list",
+    ),
+    path(
+        "api/v1/organizations/<uuid:organization_id>/charity-partners/"
+        "<uuid:partner_id>",
+        CharityPartnerDetailView.as_view(),
+        name="api-charity-partner-detail",
+    ),
+    path(
+        "api/v1/organizations/<uuid:organization_id>/charity-partners/"
+        "<uuid:partner_id>/media",
+        CharityMediaCollectionView.as_view(),
+        name="api-charity-media-list",
+    ),
+    path(
+        "api/v1/organizations/<uuid:organization_id>/charity-partners/"
+        "<uuid:partner_id>/media/<uuid:media_id>/commands/<str:action>",
+        CharityMediaCommandView.as_view(),
+        name="api-charity-media-command",
+    ),
+    path(
+        "api/v1/organizations/<uuid:organization_id>/editions/"
+        "<uuid:edition_id>/charity-selections",
+        CharitySelectionCollectionView.as_view(),
+        name="api-charity-selection-list",
+    ),
+    path(
+        "api/v1/organizations/<uuid:organization_id>/editions/"
+        "<uuid:edition_id>/charity-selections/<uuid:selection_id>",
+        CharitySelectionDetailView.as_view(),
+        name="api-charity-selection-detail",
+    ),
+    path(
+        "api/v1/organizations/<uuid:organization_id>/editions/"
+        "<uuid:edition_id>/charity-selections/<uuid:selection_id>/"
+        "commands/<str:action>",
+        CharitySelectionCommandView.as_view(),
+        name="api-charity-selection-command",
+    ),
+]

@@ -1,0 +1,125 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Catalog commerce · {{ edition.name }}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Administration</a> › Catalog commerce</div>{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="baseline-page">
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">{{ organization.name }} / {{ convention_series.name }}</p>
+      <h1>Catalog commerce</h1>
+      {% if catalog %}
+        <p>{{ edition.name }} · {{ catalog.get_status_display }} · command version {{ catalog.aggregate_version }}</p>
+      {% else %}
+        <p>{{ edition.name }} · no catalog has been configured</p>
+      {% endif %}
+      <p>Admission tickets remain governed by Registration. This catalog contains only merchandise, donations, and limited supporter products.</p>
+    </header>
+
+    {% if catalog_create_form %}
+      <section class="baseline-panel">
+        <h2>Create the edition catalog</h2>
+        <p>Choose the single currency before adding products. The command is reasoned, idempotent, audited, and remains draft until activation.</p>
+        <form method="post" action="{% url 'catalog-create-page' organization.slug convention_series.slug edition.slug %}" class="baseline-form" novalidate>
+          {% csrf_token %}{{ catalog_create_form.idempotency_key }}
+          {% include "core/_baseline_form_field.html" with field=catalog_create_form.currency %}
+          {% include "core/_baseline_form_field.html" with field=catalog_create_form.reason %}
+          <button type="submit">Create draft catalog</button>
+        </form>
+      </section>
+    {% endif %}
+
+    {% if product_form %}
+      <section class="baseline-panel">
+        <h2>Add a draft product policy</h2>
+        <p>Charity choices are restricted to confirmed selections in this exact edition. Sale times use {{ edition.time_zone }} local time. Donations have no fulfilment or stock; supporter products require finite stock.</p>
+        <form method="post" action="{% url 'catalog-product-add-page' organization.slug convention_series.slug edition.slug %}" class="baseline-form" novalidate>
+          {% csrf_token %}{{ product_form.expected_version }}{{ product_form.idempotency_key }}
+          {% include "core/_baseline_form_field.html" with field=product_form.code %}
+          {% include "core/_baseline_form_field.html" with field=product_form.kind %}
+          {% include "core/_baseline_form_field.html" with field=product_form.name %}
+          {% include "core/_baseline_form_field.html" with field=product_form.description %}
+          {% include "core/_baseline_form_field.html" with field=product_form.beneficiary %}
+          {% include "core/_baseline_form_field.html" with field=product_form.charity_selection_id %}
+          {% include "core/_baseline_form_field.html" with field=product_form.sale_opens_at %}
+          {% include "core/_baseline_form_field.html" with field=product_form.sale_closes_at %}
+          {% include "core/_baseline_form_field.html" with field=product_form.preorder_allowed %}
+          {% include "core/_baseline_form_field.html" with field=product_form.fulfilment_mode %}
+          {% include "core/_baseline_form_field.html" with field=product_form.per_order_limit %}
+          {% include "core/_baseline_form_field.html" with field=product_form.reason %}
+          <button type="submit">Add draft product</button>
+        </form>
+      </section>
+    {% endif %}
+
+    {% if catalog %}
+      <section class="baseline-panel">
+        <h2>Configured products and variants</h2>
+        {% for item in product_cards %}
+          <article class="baseline-record">
+            <h3>{{ item.product.name }}</h3>
+            <p>{{ item.product.get_kind_display }} · {{ item.product.get_status_display }} · {{ item.product.get_beneficiary_display }}</p>
+            {% if item.product.charity_selection %}<p>Confirmed beneficiary: {{ item.product.charity_selection.partner.public_name }}</p>{% endif %}
+            <p>{{ item.product.get_fulfilment_mode_display }} · per-order limit {{ item.product.per_order_limit }}{% if item.product.preorder_allowed %} · preorder allowed{% endif %}</p>
+            {% if item.product.sale_opens_at or item.product.sale_closes_at %}<p>Sale window: {{ item.product.sale_opens_at|default:"immediately" }} to {{ item.product.sale_closes_at|default:"no scheduled close" }}</p>{% endif %}
+            <ul>
+              {% for variant in item.product.variants.all %}
+                <li>{{ variant.name }} · {{ variant.price_minor }} {{ variant.currency }} minor units{% if variant.initial_stock != None %} · initial {{ variant.initial_stock }} · hard ceiling {{ variant.stock_ceiling }}{% else %} · no stock limit{% endif %}</li>
+              {% empty %}<li>No price or stock variants yet.</li>{% endfor %}
+            </ul>
+            {% if item.variant_form %}
+              <h4>Add a price and stock variant</h4>
+              <form method="post" action="{% url 'catalog-variant-add-page' organization.slug convention_series.slug edition.slug item.product.id %}" class="baseline-form" novalidate>
+                {% csrf_token %}{{ item.variant_form.expected_version }}{{ item.variant_form.idempotency_key }}
+                {% include "core/_baseline_form_field.html" with field=item.variant_form.sku %}
+                {% include "core/_baseline_form_field.html" with field=item.variant_form.name %}
+                {% include "core/_baseline_form_field.html" with field=item.variant_form.price_minor %}
+                {% include "core/_baseline_form_field.html" with field=item.variant_form.initial_stock %}
+                {% include "core/_baseline_form_field.html" with field=item.variant_form.stock_ceiling %}
+                {% include "core/_baseline_form_field.html" with field=item.variant_form.reason %}
+                <button type="submit">Add draft variant</button>
+              </form>
+            {% endif %}
+          </article>
+        {% empty %}<p>No product policy has been configured.</p>{% endfor %}
+      </section>
+    {% endif %}
+
+    {% if activation_form %}
+      <section class="baseline-panel">
+        <h2>Activate attendee ordering</h2>
+        <p>Activation requires at least one product and active variant. Active definitions are immutable; stock changes remain separate governed adjustments.</p>
+        <form method="post" action="{% url 'catalog-activate-page' organization.slug convention_series.slug edition.slug %}" class="baseline-form" novalidate>
+          {% csrf_token %}{{ activation_form.expected_version }}{{ activation_form.idempotency_key }}
+          {% include "core/_baseline_form_field.html" with field=activation_form.reason %}
+          <button type="submit">Activate catalog</button>
+        </form>
+      </section>
+    {% endif %}
+
+    {% if can_manage_stock and catalog %}
+      <section class="baseline-panel">
+        <h2>Governed stock</h2>
+        <p>Every change is append-only, reasoned, versioned, audited, and bounded by the configured hard ceiling.</p>
+        {% for item in variants %}
+          <form method="post" action="{% url 'catalog-stock-adjust-page' organization.slug convention_series.slug edition.slug item.variant.id %}" class="baseline-form" novalidate>
+            {% csrf_token %}{{ item.form.variant_id }}{{ item.form.expected_version }}{{ item.form.idempotency_key }}
+            <h3>{{ item.product.name }} / {{ item.variant.name }}</h3>
+            <p>{{ item.available_stock }} available · {{ item.effective_stock }} governed · {{ item.variant.stock_ceiling }} ceiling</p>
+            {% include "core/_baseline_form_field.html" with field=item.form.new_stock %}
+            {% include "core/_baseline_form_field.html" with field=item.form.reason %}
+            <button type="submit">Record stock adjustment</button>
+          </form>
+        {% empty %}<p>No finite-stock variants exist.</p>{% endfor %}
+      </section>
+    {% endif %}
+
+    {% if can_view_activity and catalog %}
+      <section class="baseline-panel">
+        <h2>Purpose-scoped activity</h2>
+        <ol>{% for item in activity %}<li><strong>{{ item.action }}</strong> · {{ item.actor_label }} · <time>{{ item.occurred_at }}</time></li>{% empty %}<li>No catalog activity yet.</li>{% endfor %}</ol>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

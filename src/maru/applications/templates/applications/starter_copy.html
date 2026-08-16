@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Copy {{ starter.name }} &middot; {{ edition.name }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'application-definition-workspace' edition.organization_id edition.id %}">Applications</a>
+    &rsaquo; Copy {{ starter.name }}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <header>
+      <p class="maru-personal-kicker">Code-owned starter</p>
+      <h1>Copy {{ starter.name }}</h1>
+      <p>{{ starter.description }}</p>
+    </header>
+    <section class="module">
+      <h2>Copy-on-write provenance</h2>
+      <dl>
+        <dt>Stable catalog code</dt><dd>{{ starter.code }}</dd>
+        <dt>Owning module</dt><dd>{{ starter.owner_module }}</dd>
+        <dt>Typed target adapter</dt><dd>{{ starter.target_adapter_kind }}</dd>
+        <dt>Classification</dt><dd>{{ starter.classification }}</dd>
+        <dt>Audience policy</dt><dd>{{ starter.audience_policy_code|default:"Must be configured" }}</dd>
+        <dt>Retention policy</dt><dd>{{ starter.retention_policy_code|default:"Must be configured" }}</dd>
+      </dl>
+      <p>
+        The copied rows belong only to {{ edition.name }}, remain Draft, and do
+        not live-update when Maru's starter catalog changes.
+      </p>
+    </section>
+    <section class="module">
+      <h2>Initial availability window</h2>
+      <form method="post" action="{% url 'application-starter-copy' edition.organization_id edition.id starter.code %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create independent draft</button>
+      </form>
+    </section>
+  </div>
+{% endblock %}

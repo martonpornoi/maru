@@ -16,7 +16,7 @@ from maru.demo.constants import DEMO_ACCOUNT_PASSWORD
 from maru.demo.operational_examples import seed_workforce_examples
 from maru.events.models import EventEdition
 from maru.events.services import transition_edition
-from maru.identity.models import Account
+from maru.identity.models import Account, PlatformInvitationSchedulerRun
 from maru.organizations.models import (
     ConventionSeries,
     Organization,
@@ -61,13 +61,13 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert result["totals"]["event_editions"] == 6
     assert result["totals"]["role_bundles"] == 30
     assert result["totals"]["role_assignments"] == 162
-    assert result["totals"]["capability_grants"] == 58
+    assert result["totals"]["capability_grants"] == 66
     assert result["totals"]["participations"] >= 150
     assert result["totals"]["participation_capacities"] >= 400
     assert result["totals"]["lifecycle_transitions"] == 12
-    assert result["totals"]["audit_events"] == 32
-    assert result["totals"]["domain_events"] == 28
-    assert result["totals"]["outbox_messages"] == 28
+    assert result["totals"]["audit_events"] == 34
+    assert result["totals"]["domain_events"] == 30
+    assert result["totals"]["outbox_messages"] == 30
     assert result["totals"]["registration_templates"] == 2
     assert result["totals"]["registration_configurations"] == 8
     assert result["totals"]["registration_template_sections"] == 6
@@ -278,9 +278,10 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     )
     account_content = account_page.content.decode()
     assert account_page.status_code == 200
-    assert "Organizer-managed relationships" in account_content
-    assert "Infinity holder" in account_content
-    assert sponsor.reference in account_content
+    assert sponsor.account.email in account_content
+    assert "Organizer-managed relationships" not in account_content
+    assert "Infinity holder" not in account_content
+    assert sponsor.reference not in account_content
 
     registration_lead = Account.objects.get(
         email="danube.registration-lead@demo.maru.invalid"
@@ -293,12 +294,18 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         >= 2
     )
 
+    operational_evidence_models = {PlatformInvitationSchedulerRun}
     empty_admin_models = [
         model._meta.label
         for model in admin.site._registry
-        if model._meta.app_label != "auth" and not model._default_manager.exists()
+        if model._meta.app_label != "auth"
+        and model not in operational_evidence_models
+        and not model._default_manager.exists()
     ]
     assert empty_admin_models == []
+    # A synthetic scheduler heartbeat would make readiness report a worker that
+    # has never run. The fixture therefore leaves liveness evidence empty.
+    assert not PlatformInvitationSchedulerRun.objects.exists()
 
     totals_before = result["totals"]
     transition_edition(

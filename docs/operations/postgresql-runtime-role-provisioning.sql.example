@@ -135,6 +135,371 @@ GRANT SELECT, INSERT, UPDATE ON TABLE
     public.workforce_editionstructurecontrol
     TO maru_runtime;
 
+-- Page 10 profile-value revisions and command receipts are append-only runtime
+-- evidence. Their per-registration/stable-key control may be created and
+-- advanced but never deleted or referenced by the application login. Keep
+-- these exceptions after blanket/default grants; migration 0036's triggers
+-- enforce typed values, exact sequences, provenance, digest, and final
+-- evidence completeness.
+REVOKE UPDATE, DELETE, REFERENCES ON TABLE
+    public.registration_registrationprofileextensionvaluerevision,
+    public.registration_registrationprofileextensionvaluecommandreceipt
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.registration_registrationprofileextensionvaluerevision,
+    public.registration_registrationprofileextensionvaluecommandreceipt
+    FROM PUBLIC;
+GRANT SELECT, INSERT ON TABLE
+    public.registration_registrationprofileextensionvaluerevision,
+    public.registration_registrationprofileextensionvaluecommandreceipt
+    TO maru_runtime;
+
+REVOKE DELETE, REFERENCES ON TABLE
+    public.registration_registrationprofileextensionvaluecontrol
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.registration_registrationprofileextensionvaluecontrol
+    FROM PUBLIC;
+GRANT SELECT, INSERT, UPDATE ON TABLE
+    public.registration_registrationprofileextensionvaluecontrol
+    TO maru_runtime;
+
+-- Page 10 migrations identity 0011 through 0018 are additive: these ACLs narrow
+-- their current runtime data plane but do not activate the future
+-- stopped-writer generation. Transitions, command receipts, reconciliation
+-- receipts, retention receipts, and successful scheduler heartbeats are
+-- append-only. Every scheduler INSERT is independently database-timed and
+-- cursor-coherent under the v9 readiness contract.
+REVOKE UPDATE, DELETE, REFERENCES ON TABLE
+    public.identity_platformaccountinvitationtransition,
+    public.identity_platformaccountinvitationcommandreceipt,
+    public.identity_platformidentitydeliveryreconciliationreceipt,
+    public.identity_platforminvitationretentionreceipt,
+    public.identity_platforminvitationschedulerrun
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.identity_platformaccountinvitationtransition,
+    public.identity_platformaccountinvitationcommandreceipt,
+    public.identity_platformidentitydeliveryreconciliationreceipt,
+    public.identity_platforminvitationretentionreceipt,
+    public.identity_platforminvitationschedulerrun
+    FROM PUBLIC;
+GRANT SELECT, INSERT ON TABLE
+    public.identity_platformaccountinvitationtransition,
+    public.identity_platformaccountinvitationcommandreceipt,
+    public.identity_platformidentitydeliveryreconciliationreceipt,
+    public.identity_platforminvitationretentionreceipt,
+    public.identity_platforminvitationschedulerrun
+    TO maru_runtime;
+
+-- The singleton account-inventory control is seeded by migration. Runtime may
+-- advance it but cannot create, delete, reference, or recreate the singleton.
+REVOKE INSERT, DELETE, REFERENCES ON TABLE
+    public.identity_platformaccountinventorycontrol
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.identity_platformaccountinventorycontrol
+    FROM PUBLIC;
+GRANT SELECT, UPDATE ON TABLE
+    public.identity_platformaccountinventorycontrol
+    TO maru_runtime;
+
+-- The reviewed retention-policy control is activated only by the separately
+-- credentialed migration owner. Runtime cleanup may read but never change it.
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.identity_platforminvitationretentionpolicycontrol
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.identity_platforminvitationretentionpolicycontrol
+    FROM PUBLIC;
+GRANT SELECT ON TABLE
+    public.identity_platforminvitationretentionpolicycontrol
+    TO maru_runtime;
+
+-- A hold has one audited active-to-released update. It is never deleted or
+-- truncated; the trigger requires exact platform-actor and audit evidence.
+REVOKE DELETE, REFERENCES ON TABLE
+    public.identity_platforminvitationretentionhold
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.identity_platforminvitationretentionhold
+    FROM PUBLIC;
+GRANT SELECT, INSERT, UPDATE ON TABLE
+    public.identity_platforminvitationretentionhold
+    TO maru_runtime;
+
+-- Invitation challenges and invitation/delivery aggregates are created and
+-- advanced through their commands. Retention v9 updates parent/attempt/late
+-- provider references exactly once and advances one minimized assessment per
+-- invitation only until `disposed`; parent delivery and disposed assessment
+-- evidence are terminal after that transition. Database triggers reject every
+-- other update. Cleanup is runtime-writable
+-- only after the owner-activated policy control matches the deployment setting
+-- exactly.
+REVOKE DELETE, REFERENCES ON TABLE
+    public.identity_identitychallenge,
+    public.identity_platformaccountinvitation,
+    public.identity_platformidentitydelivery,
+    public.identity_platformidentitydeliveryattempt,
+    public.identity_platformidentitydeliverylateoutcome,
+    public.identity_platforminvitationretentionassessment
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.identity_identitychallenge,
+    public.identity_platformaccountinvitation,
+    public.identity_platformidentitydelivery,
+    public.identity_platformidentitydeliveryattempt,
+    public.identity_platformidentitydeliverylateoutcome,
+    public.identity_platforminvitationretentionassessment
+    FROM PUBLIC;
+GRANT SELECT, INSERT, UPDATE ON TABLE
+    public.identity_identitychallenge,
+    public.identity_platformaccountinvitation,
+    public.identity_platformidentitydelivery,
+    public.identity_platformidentitydeliveryattempt,
+    public.identity_platformidentitydeliverylateoutcome,
+    public.identity_platforminvitationretentionassessment
+    TO maru_runtime;
+
+-- Bounded Applications, Charity, Catalog, and Venue evidence relations are
+-- create-only at runtime. Their database guards reject updates/deletes and
+-- their command services never require REFERENCES. Retained aggregates may
+-- be created and advanced through their guarded lifecycle but never deleted;
+-- Venue occupancy advances monotonically from active to inactive.
+REVOKE UPDATE, DELETE, REFERENCES ON TABLE
+    public.applications_applicationfilereceipt,
+    public.applications_applicationanswerrevision,
+    public.applications_applicationreviewdecision,
+    public.applications_applicationtargetrecord,
+    public.applications_applicationcommandreceipt,
+    public.charities_charityselectiontimelineentry,
+    public.charities_charitypublicationsnapshot,
+    public.charities_charitycommandreceipt,
+    public.catalog_catalogstockadjustment,
+    public.catalog_catalogcommandreceipt,
+    public.catalog_catalogpaymentevent,
+    public.catalog_catalogordertimelineentry,
+    public.catalog_catalogorderline,
+    public.venues_venuespacecombinationmember,
+    public.venues_editionspacemember,
+    public.venues_editionspaceavailabilitywindow,
+    public.venues_venuebookinghistory,
+    public.venues_venuecommandreceipt
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.applications_applicationfilereceipt,
+    public.applications_applicationanswerrevision,
+    public.applications_applicationreviewdecision,
+    public.applications_applicationtargetrecord,
+    public.applications_applicationcommandreceipt,
+    public.charities_charityselectiontimelineentry,
+    public.charities_charitypublicationsnapshot,
+    public.charities_charitycommandreceipt,
+    public.catalog_catalogstockadjustment,
+    public.catalog_catalogcommandreceipt,
+    public.catalog_catalogpaymentevent,
+    public.catalog_catalogordertimelineentry,
+    public.catalog_catalogorderline,
+    public.venues_venuespacecombinationmember,
+    public.venues_editionspacemember,
+    public.venues_editionspaceavailabilitywindow,
+    public.venues_venuebookinghistory,
+    public.venues_venuecommandreceipt
+    FROM PUBLIC;
+GRANT SELECT, INSERT ON TABLE
+    public.applications_applicationfilereceipt,
+    public.applications_applicationanswerrevision,
+    public.applications_applicationreviewdecision,
+    public.applications_applicationtargetrecord,
+    public.applications_applicationcommandreceipt,
+    public.charities_charityselectiontimelineentry,
+    public.charities_charitypublicationsnapshot,
+    public.charities_charitycommandreceipt,
+    public.catalog_catalogstockadjustment,
+    public.catalog_catalogcommandreceipt,
+    public.catalog_catalogpaymentevent,
+    public.catalog_catalogordertimelineentry,
+    public.catalog_catalogorderline,
+    public.venues_venuespacecombinationmember,
+    public.venues_editionspacemember,
+    public.venues_editionspaceavailabilitywindow,
+    public.venues_venuebookinghistory,
+    public.venues_venuecommandreceipt
+    TO maru_runtime;
+
+REVOKE DELETE, REFERENCES ON TABLE
+    public.applications_applicationdefinition,
+    public.applications_applicationsubmission,
+    public.charities_charitypartner,
+    public.charities_charitypartnermedia,
+    public.charities_charityselection,
+    public.catalog_editioncatalog,
+    public.catalog_catalogproduct,
+    public.catalog_catalogvariant,
+    public.catalog_catalogorder,
+    public.catalog_catalogpaymentintent,
+    public.venues_venueproperty,
+    public.venues_venuepropertymedia,
+    public.venues_venuesite,
+    public.venues_venuebuilding,
+    public.venues_venuespace,
+    public.venues_venuespaceconfiguration,
+    public.venues_venuespacecombination,
+    public.venues_venuelayoutversion,
+    public.venues_accommodationroomtype,
+    public.venues_accommodationnightinventory,
+    public.venues_editionvenueselection,
+    public.venues_editionspaceselection,
+    public.venues_venuebooking,
+    public.venues_venuebookingoccupancy
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.applications_applicationdefinition,
+    public.applications_applicationsubmission,
+    public.charities_charitypartner,
+    public.charities_charitypartnermedia,
+    public.charities_charityselection,
+    public.catalog_editioncatalog,
+    public.catalog_catalogproduct,
+    public.catalog_catalogvariant,
+    public.catalog_catalogorder,
+    public.catalog_catalogpaymentintent,
+    public.venues_venueproperty,
+    public.venues_venuepropertymedia,
+    public.venues_venuesite,
+    public.venues_venuebuilding,
+    public.venues_venuespace,
+    public.venues_venuespaceconfiguration,
+    public.venues_venuespacecombination,
+    public.venues_venuelayoutversion,
+    public.venues_accommodationroomtype,
+    public.venues_accommodationnightinventory,
+    public.venues_editionvenueselection,
+    public.venues_editionspaceselection,
+    public.venues_venuebooking,
+    public.venues_venuebookingoccupancy
+    FROM PUBLIC;
+GRANT SELECT, INSERT, UPDATE ON TABLE
+    public.applications_applicationdefinition,
+    public.applications_applicationsubmission,
+    public.charities_charitypartner,
+    public.charities_charitypartnermedia,
+    public.charities_charityselection,
+    public.catalog_editioncatalog,
+    public.catalog_catalogproduct,
+    public.catalog_catalogvariant,
+    public.catalog_catalogorder,
+    public.catalog_catalogpaymentintent,
+    public.venues_venueproperty,
+    public.venues_venuepropertymedia,
+    public.venues_venuesite,
+    public.venues_venuebuilding,
+    public.venues_venuespace,
+    public.venues_venuespaceconfiguration,
+    public.venues_venuespacecombination,
+    public.venues_venuelayoutversion,
+    public.venues_accommodationroomtype,
+    public.venues_accommodationnightinventory,
+    public.venues_editionvenueselection,
+    public.venues_editionspaceselection,
+    public.venues_venuebooking,
+    public.venues_venuebookingoccupancy
+    TO maru_runtime;
+
+-- ADR-0054 Logistics facts are narrowed after the blanket grants. Append-only
+-- evidence and create-only catalog facts may be selected and inserted only;
+-- the seven command aggregates below may also execute their guarded UPDATEs.
+-- No Logistics relation grants DELETE, REFERENCES, TRUNCATE, TRIGGER, or
+-- MAINTAIN to the runtime login.
+REVOKE UPDATE, DELETE, REFERENCES ON TABLE
+    public.logistics_equipmentofferitem,
+    public.logistics_equipmentofferhistory,
+    public.logistics_equipmentofferacceptance,
+    public.logistics_keyholderresponsibility,
+    public.logistics_assetagreement,
+    public.logistics_reusablekitline,
+    public.logistics_logisticsmanifestline,
+    public.logistics_logisticsevent,
+    public.logistics_offlinescanoperation,
+    public.logistics_offlineoperationreceipt,
+    public.logistics_logisticscommandreceipt,
+    public.logistics_logisticsparty,
+    public.logistics_logisticsnode,
+    public.logistics_asset,
+    public.logistics_stocklot,
+    public.logistics_reusablekit,
+    public.logistics_logisticslabel,
+    public.logistics_logisticsdiscrepancy
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.logistics_equipmentofferitem,
+    public.logistics_equipmentofferhistory,
+    public.logistics_equipmentofferacceptance,
+    public.logistics_keyholderresponsibility,
+    public.logistics_assetagreement,
+    public.logistics_reusablekitline,
+    public.logistics_logisticsmanifestline,
+    public.logistics_logisticsevent,
+    public.logistics_offlinescanoperation,
+    public.logistics_offlineoperationreceipt,
+    public.logistics_logisticscommandreceipt,
+    public.logistics_logisticsparty,
+    public.logistics_logisticsnode,
+    public.logistics_asset,
+    public.logistics_stocklot,
+    public.logistics_reusablekit,
+    public.logistics_logisticslabel,
+    public.logistics_logisticsdiscrepancy
+    FROM PUBLIC;
+GRANT SELECT, INSERT ON TABLE
+    public.logistics_equipmentofferitem,
+    public.logistics_equipmentofferhistory,
+    public.logistics_equipmentofferacceptance,
+    public.logistics_keyholderresponsibility,
+    public.logistics_assetagreement,
+    public.logistics_reusablekitline,
+    public.logistics_logisticsmanifestline,
+    public.logistics_logisticsevent,
+    public.logistics_offlinescanoperation,
+    public.logistics_offlineoperationreceipt,
+    public.logistics_logisticscommandreceipt,
+    public.logistics_logisticsparty,
+    public.logistics_logisticsnode,
+    public.logistics_asset,
+    public.logistics_stocklot,
+    public.logistics_reusablekit,
+    public.logistics_logisticslabel,
+    public.logistics_logisticsdiscrepancy
+    TO maru_runtime;
+
+REVOKE DELETE, REFERENCES ON TABLE
+    public.logistics_restrictedlogisticsaddress,
+    public.logistics_equipmentoffer,
+    public.logistics_physicalkey,
+    public.logistics_logisticsmanifest,
+    public.logistics_logisticscurrentstate,
+    public.logistics_logisticseditioncontrol,
+    public.logistics_offlinescanbatch
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.logistics_restrictedlogisticsaddress,
+    public.logistics_equipmentoffer,
+    public.logistics_physicalkey,
+    public.logistics_logisticsmanifest,
+    public.logistics_logisticscurrentstate,
+    public.logistics_logisticseditioncontrol,
+    public.logistics_offlinescanbatch
+    FROM PUBLIC;
+GRANT SELECT, INSERT, UPDATE ON TABLE
+    public.logistics_restrictedlogisticsaddress,
+    public.logistics_equipmentoffer,
+    public.logistics_physicalkey,
+    public.logistics_logisticsmanifest,
+    public.logistics_logisticscurrentstate,
+    public.logistics_logisticseditioncontrol,
+    public.logistics_offlinescanbatch
+    TO maru_runtime;
+
 -- setval() is authorized by UPDATE and changes a sequence outside ordinary
 -- MVCC rollback.  Runtime needs USAGE/SELECT only.
 REVOKE UPDATE ON ALL SEQUENCES IN SCHEMA public FROM maru_runtime;
@@ -242,5 +607,11 @@ REVOKE TRIGGER, TRUNCATE, MAINTAIN
 -- options, any runtime DML on migration metadata or the two cutover-state
 -- relations, REFERENCES on the SELECT-only control trio, DELETE/REFERENCES on
 -- the structure control, or UPDATE/DELETE/REFERENCES on structure receipts.
+-- Page 10 additionally requires UPDATE-only account-inventory control access,
+-- append-only invitation, delivery-attempt, late-outcome, and reconciliation
+-- evidence plus retention receipts, SELECT-only retention-policy control,
+-- one-way hold updates, and no DELETE/REFERENCES on its mutable challenge,
+-- invitation, or delivery aggregates. These ACLs are not evidence that Page 10's separate
+-- stopped-writer cutover has occurred.
 
 COMMIT;

@@ -4,6 +4,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
+from uuid import UUID
 
 from django.core.exceptions import ValidationError
 
@@ -150,6 +151,15 @@ def _validate_registration_configuration_changed(payload: dict[str, object]) -> 
     )
 
 
+def _validate_registration_configuration_draft_changed(
+    payload: dict[str, object],
+) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "configuration_version"}),
+    )
+
+
 def _validate_registration_template_published(payload: dict[str, object]) -> None:
     _require_exact_string_fields(
         payload,
@@ -164,6 +174,27 @@ def _validate_registration_state_changed(payload: dict[str, object]) -> None:
     )
 
 
+def _validate_registration_tier_replacement(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"registration_id", "target_product_id", "status"}),
+    )
+
+
+def _validate_registration_capacity_adjusted(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"scope", "target_id", "previous_capacity", "new_capacity"}),
+    )
+
+
+def _validate_registration_waitlist_batch(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"product_id", "requested_size", "offered_count"}),
+    )
+
+
 def _validate_registration_profile_changed(payload: dict[str, object]) -> None:
     _require_exact_string_fields(
         payload,
@@ -171,11 +202,334 @@ def _validate_registration_profile_changed(payload: dict[str, object]) -> None:
     )
 
 
+def _validate_registration_profile_extension_value_appended(
+    payload: dict[str, object],
+) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset(
+            {
+                "field_id",
+                "field_version",
+                "registration_id",
+                "sequence",
+                "writer_kind",
+            }
+        ),
+    )
+    try:
+        UUID(str(payload["field_id"]))
+        UUID(str(payload["registration_id"]))
+    except (TypeError, ValueError) as error:
+        raise ValidationError(
+            "Profile-extension event identifiers must be UUIDs.",
+            code="invalid_domain_event_payload",
+        ) from error
+    for field_name in ("field_version", "sequence"):
+        value = payload[field_name]
+        if not isinstance(value, str) or not (
+            value.isascii() and value.isdecimal() and int(value) >= 1
+        ):
+            raise ValidationError(
+                "Profile-extension event versions must be positive.",
+                code="invalid_domain_event_payload",
+            )
+    if payload["writer_kind"] not in {"owner", "staff"}:
+        raise ValidationError(
+            "Profile-extension event writer kind is not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
 def _validate_registration_media_reviewed(payload: dict[str, object]) -> None:
     _require_exact_string_fields(
         payload,
         fields=frozenset({"decision", "media_kind", "reference"}),
     )
+
+
+def _validate_application_definition_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "definition_code", "definition_version"}),
+    )
+    if (
+        not str(payload["definition_version"]).isdecimal()
+        or int(str(payload["definition_version"])) < 1
+    ):
+        raise ValidationError(
+            "Application definition versions must be positive.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_application_submission_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "state", "target_adapter_kind"}),
+    )
+    if payload["state"] not in {
+        "draft",
+        "submitted",
+        "under_review",
+        "changes_requested",
+        "accepted",
+        "rejected",
+        "withdrawn",
+    } or payload["target_adapter_kind"] not in {
+        "merch_submission",
+        "dj_set",
+        "fursuit_dance_competition",
+        "maid_cafe",
+        "adult_fursuit_striptease",
+        "volunteer",
+        "feedback",
+        "idea",
+        "damage_report",
+        "helper",
+    }:
+        raise ValidationError(
+            "Application event values are not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_charity_partner_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "lifecycle"}),
+    )
+    if payload["action"] not in {"created", "updated"} or payload["lifecycle"] not in {
+        "draft",
+        "active",
+        "retired",
+    }:
+        raise ValidationError(
+            "Charity partner event values are not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_charity_media_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "kind", "review_status"}),
+    )
+    if (
+        payload["action"] not in {"added", "approve", "withdraw"}
+        or payload["kind"] not in {"logo", "photo"}
+        or payload["review_status"] not in {"pending", "approved", "withdrawn"}
+    ):
+        raise ValidationError(
+            "Charity media event values are not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_charity_selection_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "status", "publication_state"}),
+    )
+    if (
+        payload["action"]
+        not in {
+            "proposed",
+            "submitted",
+            "confirmed",
+            "rejected",
+            "commented",
+            "published",
+            "unpublished",
+        }
+        or payload["status"] not in {"proposed", "submitted", "confirmed", "rejected"}
+        or payload["publication_state"] not in {"unpublished", "published"}
+        or (
+            payload["publication_state"] == "published"
+            and payload["status"] != "confirmed"
+        )
+    ):
+        raise ValidationError(
+            "Charity selection event values are not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_venue_record_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "record_type", "record_id"}),
+    )
+    try:
+        UUID(str(payload["record_id"]))
+    except (TypeError, ValueError) as error:
+        raise ValidationError(
+            "Venue event record must be a UUID.",
+            code="invalid_domain_event_payload",
+        ) from error
+    if payload["record_type"] not in {
+        "venues.property",
+        "venues.space",
+        "venues.space_combination",
+        "venues.property_media",
+        "venues.layout",
+        "venues.accommodation_room_type",
+        "venues.accommodation_night_inventory",
+        "venues.edition_selection",
+        "venues.edition_space",
+        "venues.booking",
+    } or payload["action"] not in {
+        "created",
+        "updated",
+        "catalog_path_created",
+        "submitted",
+        "approved",
+        "set",
+        "selected",
+        "availability_replaced",
+        "rescheduled",
+        "published",
+        "withdrawn",
+        "cancelled",
+    }:
+        raise ValidationError(
+            "Venue event values are not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
+_LOGISTICS_RECORD_TYPES = frozenset(
+    {
+        "logistics.party",
+        "logistics.restricted_address",
+        "logistics.node",
+        "logistics.asset",
+        "logistics.stock_lot",
+        "logistics.physical_key",
+        "logistics.label",
+        "logistics.agreement",
+        "logistics.kit",
+        "logistics.manifest",
+        "logistics.offline_batch",
+        "logistics.equipment_offer",
+        "logistics.event",
+    }
+)
+_LOGISTICS_RECORD_ACTIONS = frozenset(
+    {
+        "created",
+        "registered",
+        "recorded",
+        "responsibility_assigned",
+        "line_added",
+        "seal",
+        "complete",
+        "cancel_draft",
+        "cancel_sealed",
+        "applied",
+        "review",
+        "submitted",
+        "withdrawn",
+        "accepted",
+        "rejected",
+        "receive",
+        "pack",
+        "unpack",
+        "move",
+        "load",
+        "unload",
+        "handover",
+        "count",
+        "condition",
+        "damage",
+        "return",
+        "disposed",
+    }
+)
+
+
+def _validate_logistics_record_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "record_type", "record_id"}),
+    )
+    try:
+        UUID(str(payload["record_id"]))
+    except (TypeError, ValueError) as error:
+        raise ValidationError(
+            "Logistics event record must be a UUID.",
+            code="invalid_domain_event_payload",
+        ) from error
+    if (
+        payload["record_type"] not in _LOGISTICS_RECORD_TYPES
+        or payload["action"] not in _LOGISTICS_RECORD_ACTIONS
+    ):
+        raise ValidationError(
+            "Logistics event values are not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_catalog_definition_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "target_kind", "state"}),
+    )
+    if (
+        payload["action"]
+        not in {"created", "product_added", "variant_added", "activated"}
+        or payload["target_kind"] not in {"catalog", "product", "variant"}
+        or payload["state"] not in {"draft", "active"}
+    ):
+        raise ValidationError(
+            "Catalog definition event values are not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_catalog_stock_adjusted(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"variant_id", "previous_stock", "new_stock"}),
+    )
+    try:
+        UUID(str(payload["variant_id"]))
+    except (TypeError, ValueError) as error:
+        raise ValidationError(
+            "Catalog stock event variant must be a UUID.",
+            code="invalid_domain_event_payload",
+        ) from error
+    if any(
+        not str(payload[field]).isascii() or not str(payload[field]).isdecimal()
+        for field in ("previous_stock", "new_stock")
+    ):
+        raise ValidationError(
+            "Catalog stock event values must be non-negative integers.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_catalog_order_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"action", "status", "reference"}),
+    )
+    if payload["action"] not in {
+        "placed",
+        "payment_created",
+        "payment_succeeded",
+        "payment_failed",
+    } or payload["status"] not in {
+        "payment_pending",
+        "paid",
+        "cancelled",
+        "expired",
+        "refunded",
+    }:
+        raise ValidationError(
+            "Catalog order event values are not registered.",
+            code="invalid_domain_event_payload",
+        )
 
 
 def _validate_account_restriction_applied(payload: dict[str, object]) -> None:
@@ -399,6 +753,12 @@ EVENT_DEFINITIONS = (
         validator=_validate_registration_configuration_changed,
     ),
     EventDefinition(
+        name="registration.configuration.draft_changed.v1",
+        schema_version=1,
+        description="An edition-owned registration draft definition changed.",
+        validator=_validate_registration_configuration_draft_changed,
+    ),
+    EventDefinition(
         name="registration.configuration.activated.v1",
         schema_version=1,
         description="A reviewed registration configuration version became active.",
@@ -423,10 +783,81 @@ EVENT_DEFINITIONS = (
         validator=_validate_registration_profile_changed,
     ),
     EventDefinition(
+        name="registration.profile_extension.value_appended.v1",
+        schema_version=1,
+        description=(
+            "An authorized actor appended one current-profile extension value "
+            "revision without changing the registration submission."
+        ),
+        validator=_validate_registration_profile_extension_value_appended,
+    ),
+    EventDefinition(
         name="registration.profile.media_reviewed.v1",
         schema_version=1,
         description="An organizer reviewed an attendee profile or fursuit image.",
         validator=_validate_registration_media_reviewed,
+    ),
+    EventDefinition(
+        name="charities.partner.changed.v1",
+        schema_version=1,
+        description="An organizer-owned charity partner profile changed.",
+        validator=_validate_charity_partner_changed,
+    ),
+    EventDefinition(
+        name="charities.media.changed.v1",
+        schema_version=1,
+        description="A governed charity media reference changed review state.",
+        validator=_validate_charity_media_changed,
+    ),
+    EventDefinition(
+        name="charities.selection.changed.v1",
+        schema_version=1,
+        description="An edition charity selection changed review or publication state.",
+        validator=_validate_charity_selection_changed,
+    ),
+    EventDefinition(
+        name="venues.record.changed.v1",
+        schema_version=1,
+        description="A governed venue catalog or edition schedule record changed.",
+        validator=_validate_venue_record_changed,
+    ),
+    EventDefinition(
+        name="logistics.record.changed.v1",
+        schema_version=1,
+        description="A governed logistics catalog, offer, or custody record changed.",
+        validator=_validate_logistics_record_changed,
+    ),
+    EventDefinition(
+        name="catalog.definition.changed.v1",
+        schema_version=1,
+        description="An edition catalog definition or activation changed.",
+        validator=_validate_catalog_definition_changed,
+    ),
+    EventDefinition(
+        name="catalog.stock.adjusted.v1",
+        schema_version=1,
+        description="An operator appended stock within a configured hard ceiling.",
+        validator=_validate_catalog_stock_adjusted,
+    ),
+    EventDefinition(
+        name="catalog.order.changed.v1",
+        schema_version=1,
+        description="An attendee catalog order or exact-total payment advanced.",
+        validator=_validate_catalog_order_changed,
+    ),
+    EventDefinition(
+        name="applications.definition.changed.v1",
+        schema_version=1,
+        description="An edition-owned typed application definition changed.",
+        validator=_validate_application_definition_changed,
+    ),
+    EventDefinition(
+        name="applications.submission.changed.v1",
+        schema_version=1,
+        description=(
+            "An applicant or accountable reviewer advanced a typed application."
+        ),
+        validator=_validate_application_submission_changed,
     ),
     EventDefinition(
         name="registration.payment.reconciled.v1",
@@ -457,6 +888,36 @@ EVENT_DEFINITIONS = (
         schema_version=1,
         description="A waitlisted attendee received an available place.",
         validator=_validate_registration_state_changed,
+    ),
+    EventDefinition(
+        name="registration.admission_tier_replacement.reserved.v1",
+        schema_version=1,
+        description="A paid attendee reserved capacity in a higher admission tier.",
+        validator=_validate_registration_tier_replacement,
+    ),
+    EventDefinition(
+        name="registration.admission_tier_replacement.completed.v1",
+        schema_version=1,
+        description="Verified price-difference payment replaced an admission tier.",
+        validator=_validate_registration_tier_replacement,
+    ),
+    EventDefinition(
+        name="registration.admission_tier_replacement.expired.v1",
+        schema_version=1,
+        description="An unpaid higher-tier capacity hold expired safely.",
+        validator=_validate_registration_tier_replacement,
+    ),
+    EventDefinition(
+        name="registration.capacity.adjusted.v1",
+        schema_version=1,
+        description="An authorized operator appended an effective capacity change.",
+        validator=_validate_registration_capacity_adjusted,
+    ),
+    EventDefinition(
+        name="registration.waitlist.batch_offered.v1",
+        schema_version=1,
+        description="An authorized operator offered the next strict FIFO batch.",
+        validator=_validate_registration_waitlist_batch,
     ),
     EventDefinition(
         name="registration.cancelled.v1",

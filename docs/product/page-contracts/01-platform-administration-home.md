@@ -1,11 +1,12 @@
 # Page 1 contract: Platform administration home
 
-- Status: Implemented and locally responsive-smoke verified in the unified
-  shell; accessibility/state-matrix/owner evidence pending
+- Status: Implemented in the task-oriented responsive shell and focused-test
+  verified; complete browser/accessibility/state-matrix/owner evidence pending
 - Branch: `codex/page-01-platform-home`
 - Route: `/admin/platform/organizations/`
-- Requirements: IDN-011, UX-005 through UX-008, UX-012 through UX-014
-- Decisions: ADR 0031, ADR 0039
+- Requirements: IDN-011, UX-005 through UX-008, UX-012 through UX-014,
+  UX-019, UX-027, UX-029
+- Decisions: ADR 0031, ADR 0039, ADR 0049, ADR 0055
 
 ## Purpose and primary user
 
@@ -20,15 +21,22 @@ not a member or participant of any listed convention.
 
 `/admin/` remains the canonical authenticated shell home. Page 1 lives in the
 reserved `/admin/platform/` route space so it cannot collide with Django
-application-label routes. ADR 0034 refines the focused **Platform
-administration** side navigation shared with Pages 2 and 3.
-One row contains the primary **Organizations** inventory link and a compact
-adjacent **+ Add** action; it is not a convention selector, setup strip, second
-shell, or link to preserved pages. Sign out remains in the existing header.
+application-label routes. Under ADRs 0049 and 0055, Page 1 participates in one
+permission-filtered registry shared by the authenticated shell. The default
+home and **Platform administration** group prioritize the durable
+**Organizations** destination and current setup work instead of presenting
+every creation command and technical model as an equal choice.
 
-The organization-creation route belongs to Page 2. **+ Add** exposes it as a
-stable administration action. Each inventory organization name links to its
-purpose-built Page 3 record; the inventory itself remains read-only.
+The organization-creation route belongs to Page 2. **Add organization** is a
+contextual action beside the inventory and is discoverable through the
+search-only **Actions** group; it is not pinnable or a permanent equal-weight
+sidebar row. Authorized technical records remain searchable behind the
+collapsed **Specialist records** disclosure and the home-page specialist
+gateway. Every render resolves and authorizes each item again. This registry is
+not a convention selector, setup strip, second shell, or link to preserved
+pages. Sign out remains in the existing header. Each inventory organization
+name links to its purpose-built Page 3 record; the inventory itself remains
+read-only.
 
 ## Information and actions
 
@@ -56,8 +64,8 @@ assignment. Restricted records remain governed by SAF-004.
 
 ## Page states
 
-- **Empty:** zero organizations, a direct explanation, and the persistent
-  Page 2 **+ Add** navigation item.
+- **Empty:** zero organizations, a direct explanation, and the contextual
+  Page 2 **Add organization** primary action.
 - **Populated:** stable alphabetical rows with lifecycle and related counts.
 - **Loading:** the page is server-rendered atomically; partial stale rows or a
   decorative indefinite loading state are not rendered.
@@ -73,11 +81,14 @@ headers, a live error alert, visible keyboard focus, semantic text independent
 of color, and the existing labelled POST-only Sign out action. At narrow width,
 table rows become labelled record blocks without horizontal overflow.
 
-Local desktop and 390-pixel smoke covers the unified shell without horizontal
-overflow or console warnings. Automated empty/populated-state coverage proves
-that counts and record labels remain usable before Page 2 creates records.
-Complete keyboard/automated-accessibility, all failure states, and owner-led
-rehearsal remain release evidence.
+At 1,100 CSS pixels and below the shell uses the Maru-owned closed-by-default
+drawer; wider layouts retain the persistent sidebar. The compact context
+control and inventory must not force page-level horizontal scrolling. Local
+desktop and 390-pixel smoke is historical evidence, while focused source and
+integration coverage now exercises the responsive shell and task navigation.
+Authenticated rendered checks at 320, 390, 768, 958, 1,024, 1,280, and 1,920
+pixels plus 200 percent zoom, complete keyboard/automated-accessibility checks,
+all failure states, and owner-led rehearsal remain release evidence.
 
 ## Acceptance checks
 
@@ -87,9 +98,14 @@ rehearsal remain release evidence.
 - model-level rejection when a platform administrator is selected as a
   convention subject;
 - empty, populated, and database-failure behavior;
-- desktop and narrow browser inspection with no overflow or runtime errors;
-- one-row shared navigation with correct current-action state and linked
-  organization names;
+- the complete responsive width/zoom matrix with no page-level overflow or
+  runtime errors;
+- one searchable, permission-filtered registry with one durable
+  **Organizations** destination, a contextual/search-only non-pinnable
+  **Add organization** action, one correct current destination, stable
+  reauthorized pin keys, and linked organization names;
+- one collapsed/searchable **Specialist records** gateway rather than a full
+  model directory on the home page;
 - focused and complete automated quality gates; and
 - updated current state, module documentation, and append-only checkpoint.
 

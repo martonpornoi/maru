@@ -109,10 +109,12 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0008_runtime_latch_lock_helper"),
     ("authorization", "0009_runtime_executable_function_contract"),
     ("authorization", "0010_retired_department_authority_guards"),
+    ("authorization", "0011_registration_profile_extension_capabilities"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("workforce", "0005_runtime_executable_function_hardening"),
     ("workforce", "0006_edition_structure_schema"),
     ("workforce", "0007_structure_write_integrity"),
+    ("workforce", "0008_department_fk_contract_successor"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -934,7 +936,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "49970385f303dbce1c2f3134a06dfdae94db6a306582d7a8bb225e6ad6bb2eca"
     ),
     "maru_authorization_capability_min_scope(text)": (
-        "cc86377db456e86632c9728999710d02d6cab27c338c3a4752cdc3044b3ecd08"
+        "d3b1413dbc598953038ba3acfa8c6339eb0a0b75f143b3d5cabf9e8c00fd581e"
     ),
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)": (
         "093a2f3a81a16d7a09bc782c23711aa4b108274ee7a9baf8fa955e52d82cc481"
@@ -1056,7 +1058,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1699be8a8d6178919ba7f14e354c9df2341dcc0da9d5bd4dae2e56aab7e69a34"
     ),
     "maru_validate_scoped_resource_binding()": (
-        "373dce06449225b69a38446de4931e47d441675b01b04e8a120ac941788cf77d"
+        "897719f79a1638425810dc7b47a7c872b831b9fea670c834ece7b1aea20f4223"
     ),
     "maru_assert_department_structure_evidence()": (
         "7887c7c42b9770b592af5743b74f2ac47891e1d021aed3c9de45db3c5fe0a3bf"
@@ -1089,7 +1091,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "a8c475fcea8a338e07b91ad0ba1bb9d64cebc31b5fb53c89b49d14a477bb1e8a"
     ),
     "maru_workforce_department_fk_contract_is_current()": (
-        "378a3cf2cb86f8d91967be6355fa9dadde4244fd68e4a867f6548b1bfa516d3b"
+        "83e5707405156ec49bd70059a1cdcdf78c7d6472a198ea0151bc63efd84fa935"
     ),
     "maru_workforce_page9_scope_mutex()": (
         "75e5f8a98fd059d1e5d2de0db420e77beec79f3c6eb12b051388ab66c85790c6"

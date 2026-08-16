@@ -1,0 +1,131 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Charity partners &middot; {{ edition.name }}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Administration</a> &rsaquo; Charity partners</div>{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="baseline-page">
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">{{ organization.name }} / {{ convention_series.name }}</p>
+      <h1>Charity partners</h1>
+      <p>{{ edition.name }} keeps reusable partner facts separate from this edition's review and public snapshot.</p>
+    </header>
+
+    <section class="baseline-panel" aria-labelledby="charity-selection-title">
+      <h2 id="charity-selection-title">Edition selections</h2>
+      <p>Rejected reasons and private comments stay restricted. Confirmation alone never publishes a partner.</p>
+      {% if can_propose %}
+        <details>
+          <summary>Propose a partner for this edition</summary>
+          <form method="post" action="{% url 'charity-selection-propose-page' organization.slug convention_series.slug edition.slug %}" class="baseline-form" novalidate>
+            {% csrf_token %}
+            {% for hidden in selection_propose_form.hidden_fields %}{{ hidden }}{% endfor %}
+            {% for field in selection_propose_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+            <button type="submit">Record proposal</button>
+          </form>
+        </details>
+      {% endif %}
+      {% if selections %}
+        <table>
+          <thead><tr><th scope="col">Partner</th><th scope="col">Department</th><th scope="col">Review</th><th scope="col">Publication</th><th scope="col">Version</th></tr></thead>
+          <tbody>
+            {% for selection in selections %}
+              <tr>
+                <th scope="row"><a href="{% url 'charity-selection-review-page' organization.slug convention_series.slug edition.slug selection.id %}">{{ selection.partner_name }}</a></th>
+                <td>{{ selection.responsible_department_name }}</td>
+                <td>{{ selection.status|capfirst }}</td>
+                <td>{{ selection.publication_state|capfirst }}</td>
+                <td>{{ selection.aggregate_version }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No charity partners have been proposed for this edition.</p>
+      {% endif %}
+    </section>
+
+    <section class="baseline-panel" aria-labelledby="charity-directory-title">
+      <h2 id="charity-directory-title">Organizer beneficiary directory</h2>
+      <p>Contact, source, and licensing fields below are restricted organizer records and are not copied to the public edition snapshot.</p>
+      {% if can_manage_partners %}
+        <details>
+          <summary>Create a reusable charity partner</summary>
+          <form method="post" action="{% url 'charity-partner-create-page' organization.slug convention_series.slug edition.slug %}" class="baseline-form" novalidate>
+            {% csrf_token %}
+            {% for hidden in partner_create_form.hidden_fields %}{{ hidden }}{% endfor %}
+            {% for field in partner_create_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+            <button type="submit">Create draft partner</button>
+          </form>
+        </details>
+      {% endif %}
+
+      {% for row in partner_rows %}
+        <article class="baseline-panel" aria-labelledby="charity-partner-{{ row.partner.id }}">
+          <header class="baseline-panel-heading">
+            <div>
+              <p class="baseline-kicker">{{ row.partner.lifecycle|capfirst }} &middot; version {{ row.partner.aggregate_version }}</p>
+              <h3 id="charity-partner-{{ row.partner.id }}">{{ row.partner.public_name }}</h3>
+            </div>
+          </header>
+          <dl>
+            <dt>Legal / imprint</dt><dd>{{ row.partner.legal_name }}{% if row.partner.imprint_name %} / {{ row.partner.imprint_name }}{% endif %}</dd>
+            <dt>Location</dt><dd>{{ row.partner.location_name|default:"Not recorded" }}{% if row.partner.country_code %} &middot; {{ row.partner.country_code }}{% endif %}</dd>
+            <dt>Restricted contact</dt><dd>{{ row.partner.contact_email|default:"No email" }}{% if row.partner.contact_phone %} / {{ row.partner.contact_phone }}{% endif %}</dd>
+            <dt>Public consequence</dt><dd>{% if row.partner.lifecycle == "active" %}Eligible for a confirmed edition publication.{% elif row.partner.lifecycle == "retired" %}Excluded from every current public projection.{% else %}Draft; cannot be published yet.{% endif %}</dd>
+          </dl>
+          {% if can_manage_partners %}
+            <details>
+              <summary>Update partner profile and lifecycle</summary>
+              <form method="post" action="{% url 'charity-partner-update-page' organization.slug convention_series.slug edition.slug row.partner.id %}" class="baseline-form" novalidate>
+                {% csrf_token %}
+                {% for hidden in row.update_form.hidden_fields %}{{ hidden }}{% endfor %}
+                {% for field in row.update_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+                <button type="submit">Record complete update</button>
+              </form>
+            </details>
+          {% endif %}
+
+          <h4>Governed media</h4>
+          {% for media_row in row.media_rows %}
+            <div class="baseline-inset">
+              <p><strong>{{ media_row.media.kind|capfirst }}</strong> &middot; {{ media_row.media.review_status|capfirst }} &middot; version {{ media_row.media.aggregate_version }}</p>
+              <p>Owner: {{ media_row.media.owner_name }} &middot; scope: {{ media_row.media.usage_scope }}</p>
+              {% if media_row.media.expires_at %}<p>Expires: {{ media_row.media.expires_at }}</p>{% endif %}
+              {% if media_row.media.review_status == "approved" %}<p>Approved public rendition: {{ media_row.media.public_reference }}</p>{% endif %}
+              {% if can_manage_partners and media_row.media.review_status == "pending" %}
+                <form method="post" action="{% url 'charity-media-approve-page' organization.slug convention_series.slug edition.slug row.partner.id media_row.media.id %}" class="baseline-form" novalidate>
+                  {% csrf_token %}
+                  {% for hidden in media_row.review_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  {% for field in media_row.review_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+                  <button type="submit">Independently approve media</button>
+                </form>
+              {% elif can_manage_partners and media_row.media.review_status == "approved" %}
+                <form method="post" action="{% url 'charity-media-withdraw-page' organization.slug convention_series.slug edition.slug row.partner.id media_row.media.id %}" class="baseline-form" novalidate>
+                  {% csrf_token %}
+                  {% for hidden in media_row.review_form.hidden_fields %}{{ hidden }}{% endfor %}
+                  {% for field in media_row.review_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+                  <button type="submit">Withdraw media</button>
+                </form>
+              {% endif %}
+            </div>
+          {% empty %}<p>No governed media is registered for this partner.</p>{% endfor %}
+          {% if can_manage_partners %}
+            <details>
+              <summary>Add a media source for independent review</summary>
+              <form method="post" action="{% url 'charity-media-add-page' organization.slug convention_series.slug edition.slug row.partner.id %}" class="baseline-form" novalidate>
+                {% csrf_token %}
+                {% for hidden in row.media_form.hidden_fields %}{{ hidden }}{% endfor %}
+                {% for field in row.media_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+                <button type="submit">Add media source</button>
+              </form>
+            </details>
+          {% endif %}
+        </article>
+      {% empty %}
+        <p>No reusable charity partner profiles are registered.</p>
+      {% endfor %}
+    </section>
+  </div>
+{% endblock %}

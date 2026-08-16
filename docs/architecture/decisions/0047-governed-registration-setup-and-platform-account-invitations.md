@@ -102,6 +102,10 @@ The ciphertext is destroyed after confirmed delivery, revocation,
 supersession, or expiry and is never retained as long-term delivery evidence.
 Key access, rotation, and loss recovery belong to the identity delivery
 runbook and readiness check.
+Challenge lookup and token-bound abuse buckets use a separate bounded,
+versioned HMAC keyring with one active key and rotation fallbacks. They never
+derive from Django's `SECRET_KEY`; production readiness fails closed when the
+dedicated digest keyring is absent or malformed.
 
 The tenant `DomainEvent` and `OutboxMessage` tables are not populated with a
 fabricated organization for this platform-global action. Generalizing those
@@ -141,6 +145,15 @@ therefore valid when its other activation checks pass. The existing service
 gate that requires at least one question must be retired; activation still
 validates every question that does exist.
 
+Implementation staging note (2026-08-03): registration migration `0037` and
+the reusable-template publication command add exact catalog publication
+evidence without claiming stopped-writer cutover. Template and prior-edition
+source selectors prove their complete immutable evidence graphs. Successful
+prior-edition import records eligibility at import time; later mutable edition
+dates or labels do not rewrite the historical authorization ceremony. A
+same-organization cross-series copy evaluates source policy evidence in the
+source edition's actual series scope.
+
 Post-submission profile extensions remain a separate edition-owned catalog
 under ADR 0029. Definitions support C1/C2 information only, become immutable
 when active, and use superseding versions for later change. Values are
@@ -152,6 +165,14 @@ permission. Staff writes require a reason and the field's staff writer policy.
 Authoritative entitlement, payment, restriction, role, capacity, and
 participation facts, including special-ticket status, never become extension
 answers.
+
+Implementation staging note (2026-08-03): the corrective profile-definition
+lifecycle candidate deliberately rejects new template/prior-edition source
+pointers because the present profile-field schema cannot yet persist the exact
+source definition identity, generation, and digest required above. This is a
+fail-closed implementation limitation, not a relaxation of this ADR. The blank
+source path remains available until an additive exact-provenance generation is
+designed and reviewed.
 
 Typed C3 registration-profile domains such as legal identity, address, date of
 birth, guardian/consent, emergency contact, and safety-restricted information
@@ -246,6 +267,100 @@ Until a stage's readiness evidence passes, documentation and UI must identify
 the affected writer as transitional. No stage claims provenance that predates
 its controls, and no direct ORM fallback is allowed after the stopped-writer
 generation is active.
+
+Identity migration `0011_platform_account_invitations` implements only stage
+1's additive invitation slice. Its reviewed catalog readiness fingerprints its
+15 functions, exact 23 trigger attachments and timing, migration recorder row,
+restricted relation profile, and supporting non-search indexes. Migration
+`0012_invitation_delivery_reconciliation` additively installs late-outcome and
+operator-reconciliation evidence. Readiness confirms its recorder row and two
+relations, while reporting its later functions and triggers outside the
+reviewed 0011 integrity scope. Migration
+`0013_invitation_token_digest_keys` pins each newly issued challenge to the
+dedicated versioned HMAC key that produced its digest. It takes a write-blocking
+challenge-table lock and refuses to upgrade while any active pre-lineage
+invitation exists, so an already emailed bearer token is never silently
+stranded. Terminal historical challenges remain honest blank-key evidence;
+they cannot be reactivated or assigned a fabricated key. Live-row readiness
+proves that configured rotation fallbacks cover every active challenge.
+None of these migrations defines a stopped-writer
+generation or activation marker. The value-minimized readiness report may
+therefore say the additive schema is ready while production status remains
+blocked. A separate migration must retire the remaining writers, install a
+generation/downgrade fence, and prove the delivery-worker heartbeat before
+production activation.
+
+Identity migration `0017_invitation_retention_workflow` additively installs
+the approved abandoned-invitation disposition boundary. It records immutable
+account provisioning origin, owner-activated policy control, audited holds,
+append-only disposition receipts, retention scheduler heartbeats, a due index,
+and receipt-bound challenge tombstoning. A SECURITY DEFINER helper inspects the
+live PostgreSQL foreign-key catalog and rejects disposition when any relation
+outside the exact invitation/challenge/security allowlist points to the
+reserved account; explicit checks constrain those allowed rows. Audit
+migration `0008` gives each retention apply/place/release target one exact
+audit row. Readiness generation `page10-invitations-additive-v7` fingerprints
+40 functions, 58 trigger attachments, and 13 supporting indexes, including
+the changed legacy guards; it still does not claim stopped-writer cutover.
+
+The migration backfills origin only where one version-one creation transition
+and command receipt prove exact lineage and refuses an ambiguous history. Its
+reverse fence refuses to discard any live invitation, hold, or retention
+receipt. An empty test/recovery database can reverse, but a populated
+deployment requires a reviewed forward recovery because reversal removes the
+retention controls and provisioning-origin column.
+
+Corrective identity migration `0018_invitation_retention_v8` implements the
+adversarially required permanent boundary without claiming production
+activation. It makes invitation-to-account cardinality unconditional, records
+one current versioned safe assessment, persists a wraparound cursor under a
+retention-specific advisory lock, processes arbitrary legitimate challenge and
+delivery history in bounded chunks, and replaces provider references across
+delivery, attempt, and late-outcome rows. Receipt-aware PostgreSQL guards make
+the resulting account, challenge, membership, delivery, receipt, and
+assessment evidence one-way. Policy, hold, receipt, assessment, heartbeat, and
+cursor evidence is database-timed, duplicate policy members are rejected, and
+the exact source allowlist is `operator|scheduler`. The v9 contract revision
+removes caller-selected activation/disposal times, verifies scheduler INSERT
+time and cursor coherence, and makes a committed disposed assessment plus its
+complete parent delivery evidence terminally immutable. The v10 correction
+binds a backfilled disposed assessment to its immutable historical receipt
+digest rather than the mutable current policy control; new non-disposed
+assessments remain bound to the current control.
+
+The migration upgrades populated v7 receipts in place with random-keyed
+provider tombstones and matching disposed assessments, including when a
+legitimate old provider value already resembles the reserved tombstone
+namespace. Active holds remain part of fair traversal and receive a current
+`active_hold` assessment and heartbeat count, while the readiness backlog
+continues to exclude held work. Its reverse is allowed
+only before any receipt, assessment, or `retention-v2` cursor evidence exists;
+otherwise recovery is fix-forward or whole-system restore. Readiness generation
+`page10-invitations-additive-v10` fingerprints 50 functions, 75 exact trigger
+attachments including predicates, and 16 indexes. This is an author-verified
+corrective candidate pending independent acceptance, not stopped-writer or deployment
+cutover evidence.
+
+ADR 0046's runtime-login catalog is extended for the additive Page 10 tables:
+transitions, command/reconciliation/retention receipts, and scheduler runs are
+SELECT/INSERT only; the policy control is SELECT-only; the seeded inventory
+control is SELECT/UPDATE only; and invitation challenges, invitations,
+deliveries, delivery attempts/late outcomes, retention holds, and current
+assessments are SELECT/INSERT/UPDATE only. The latter provider/assessment
+updates remain constrained by the v10 terminal guards. Runtime receives no DELETE or
+REFERENCES privilege on these relations. These ACLs narrow the data plane but
+are not cutover evidence.
+
+Profile-value revisions and command receipts are likewise SELECT/INSERT only,
+and their sequence control is SELECT/INSERT/UPDATE only. Migration `0036`
+guards every permitted write with exact typed-value, source, sequence, digest,
+and complete command-evidence rules.
+
+The account inventory's `(date_joined, id)` traversal index is part of the
+additive contract. Case-insensitive prefix search remains an explicit
+production load gate: no functional index is claimed until the actual Django
+`istartswith` SQL and PostgreSQL query plan are measured at the declared
+ceiling.
 
 ### Synthetic educational journey
 

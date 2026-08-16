@@ -8,8 +8,8 @@
 - API: none declared in this slice
 - Requirements: IDN-002, IDN-004, IDN-005, IDN-007, IDN-009, IDN-011,
   IDN-012, UX-012, UX-013, UX-017, UX-019, UX-020, UX-024, AUD-001,
-  AUD-005, NFR-001 through NFR-004, NFR-008, and NFR-009
-- Decisions: ADRs 0003, 0031, and 0038 through 0043
+  UX-029, AUD-005, NFR-001 through NFR-004, NFR-008, and NFR-009
+- Decisions: ADRs 0003, 0031, 0038 through 0043, and 0055
 
 ## Purpose and primary users
 
@@ -46,6 +46,21 @@ convention-series row. The page uses the same Maru logo, shell, title, purpose,
 access summary, modules, form language, tables, focus behavior, and narrow
 stacking as Pages 1 through 7. It never renders a second global menu, workspace
 selector, or Quick Start strip.
+
+The first task-oriented people-to-governance journey reaches this page from
+**User accounts**. An authorized platform operator may first find an existing
+person or use the contextual **Invite account** action. The invitation outcome
+states that the result is an identity only, then directs the operator to choose
+an organization and open its exact **Representation & access** route. The
+handoff does not create a membership or Board appointment and does not bypass
+this page's exact-account eligibility and disclosure rules.
+
+The page presents its existing commands as one visible three-step progress
+sequence: **1. Create the Executive Board**, **2. Invite at least two
+controllers**, and **3. Activate governance**. The current persisted state says
+which step is complete, current, waiting, or unavailable and gives the next
+authorized action. A shortcut back to **User accounts** may help prepare
+another identity, but it never implies that the account has been appointed.
 
 The organization slug is trusted route scope. Selected-edition session state
 is irrelevant and never grants authority. A manager reaches the page from the
@@ -238,9 +253,11 @@ repeat a non-idempotent governance action merely to force delivery.
 - **Unprovisioned:** purpose and Step 1 shown to platform administrators;
   other authorized viewers receive a truthful waiting explanation.
 - **Provisioning:** state/version, bounded visible appointments, invitation,
-  exact invitee response, and activation readiness shown according to policy.
+  exact invitee response, activation readiness, and the three-step progress
+  state shown according to policy.
 - **Active:** durable representation and assignment outcome shown read-only;
-  initial provision/response/activation controls are absent.
+  all three setup steps show complete and initial provision/response/activation
+  controls are absent.
 - **Validation:** field-local messages and safe input retained; no partial
   relationship or evidence.
 - **Stale/conflict:** 409-equivalent explanation with reload guidance; winning
@@ -298,6 +315,10 @@ procedure is in
 
 - Page 8 link appears once at selected-organization scope with correct current
   navigation and no second shell;
+- User accounts, invitation outcome, and Representation & access form a
+  truthful identity-to-governance handoff with no relationship side effect;
+- the three-step Board progress sequence and next action reflect persisted
+  state and current authorization;
 - anonymous redirect plus inactive, ordinary, Django staff, platform,
   basic-view, representation-manager, own-invite, wrong-subject, and
   cross-tenant matrices;
@@ -322,8 +343,8 @@ procedure is in
 - no department, participation, registration, application, series, edition,
   shift, venue, document, or workforce side effects; and
 - keyboard order, focus/error association, screen-reader table/form labels,
-  desktop and 390-pixel layouts, every state above, and owner tutorial
-  rehearsal.
+  the 320/390/768/958/1,024/1,280/1,920-pixel and 200-percent-zoom matrix,
+  every state above, and owner tutorial rehearsal.
 
 ## Current verification evidence
 
@@ -340,6 +361,12 @@ active relationships, multi-organization authority revocation, quorum-loss
 suspension, session/account deactivation, historical approval provenance, and
 concurrent relationship/identity serialization. This is an audited service
 boundary; a routine lifecycle editor and quorum-recovery UI are not implied.
+
+Focused HTML integration coverage verifies the User accounts handoff links and
+the state-aware three-step Board presentation without changing the underlying
+commands or authorization matrix. The shared responsive drawer and navigation
+have source-contract coverage. Authenticated rendered inspection across the
+complete ADR 0055 width/zoom matrix is still open.
 
 The last pre-hardening isolated backend run passed 710 tests at 90.03 percent
 coverage. On the current hardening tree, 58 combined representation/migration/

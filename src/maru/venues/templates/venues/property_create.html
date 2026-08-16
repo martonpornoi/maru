@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <main id="content" class="maru-management-page">
+    <p><a href="{% url 'venue-workspace' organization.slug convention_series.slug edition.slug %}">Back to venues and spaces</a></p>
+    <header class="maru-page-header">
+      <div>
+        <p class="maru-eyebrow">Reusable organizer property catalog</p>
+        <h1>Register venue property</h1>
+        <p>This creates a draft hotel, venue, or mixed-property record. It does not select it for {{ edition.name }}.</p>
+      </div>
+    </header>
+    <section class="module">
+      <form method="post" action="{% url 'venue-property-create' organization.slug convention_series.slug edition.slug %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create draft property</button>
+      </form>
+    </section>
+  </main>
+{% endblock %}

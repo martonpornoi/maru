@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
+from maru.authorization.bindings import resource_binding_target_exists
 from maru.authorization.catalog import POLICY_VERSION, require_capability
 from maru.authorization.issuance import create_delegated_grant_issuance
 from maru.authorization.models import (
@@ -34,7 +35,7 @@ from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
-from maru.workforce.models import Department, Position
+from maru.workforce.models import Department
 
 
 class AuthorizationDenied(PermissionDenied):
@@ -238,16 +239,9 @@ def _lock_target(  # noqa: PLR0912
             )
             .first()
         )
-        if (
-            binding is None
-            or not Position.objects.select_for_update()
-            .filter(
-                pk=binding.resource_id,
-                organization_id=target.organization_id,
-                edition_id=edition_id,
-                department_id=department_id,
-            )
-            .exists()
+        if binding is None or not resource_binding_target_exists(
+            binding,
+            for_update=True,
         ):
             raise AuthorizationDenied(
                 "The authority scope is unavailable.",

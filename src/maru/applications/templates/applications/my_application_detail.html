@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ submission.definition.name }} &middot; My applications{% endblock %}
+{% block content_title %}{% endblock %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'my-application-index' %}">My applications</a> &rsaquo;
+    <a href="{% url 'my-applications' edition.organization_id edition.id %}">{{ edition.name }}</a> &rsaquo;
+    {{ submission.definition.name }}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-personal-home">
+    <header>
+      <p class="maru-personal-kicker">{{ submission.get_state_display }}</p>
+      <h1>{{ submission.definition.name }}</h1>
+      <p>{{ submission.definition.description }}</p>
+      <p>
+        Definition v{{ submission.definition.version }}
+        &middot; expected submission version {{ submission.aggregate_version }}
+        &middot; edit until {{ submission.definition.applicant_edit_until }}
+      </p>
+    </header>
+    {% for row in answer_rows %}
+      <section class="module">
+        <h2>{{ row.question.label }}</h2>
+        <p>{{ row.question.help_text }}</p>
+        <p><strong>Purpose:</strong> {{ row.question.purpose }}</p>
+        <p>
+          <strong>Field policy:</strong> {{ row.question.get_classification_display }};
+          visible to you{% if row.question.reviewer_visible %} and assigned reviewers{% endif %}.
+        </p>
+        {% if row.question.source_binding %}
+          <p>
+            <strong>Automatically sourced:</strong> {{ row.question.get_source_binding_display }}
+            &middot; <span>{{ row.sourced_value|default:"Unavailable" }}</span>
+          </p>
+        {% elif row.current_value != None %}
+          <p><strong>Current answer:</strong> {{ row.current_value }}</p>
+        {% endif %}
+        {% if editable and row.form %}
+          <form method="post" action="{% url 'application-answer-append' edition.organization_id edition.id submission.id %}">
+            {% csrf_token %}{{ row.form.as_p }}
+            <button type="submit">Save answer revision</button>
+          </form>
+        {% endif %}
+      </section>
+    {% endfor %}
+    {% if editable %}
+      <section class="module">
+        <h2>Submit for review</h2>
+        <form method="post" action="{% url 'application-submit' edition.organization_id edition.id submission.id %}">
+          {% csrf_token %}{{ submit_form.as_p }}
+          <button type="submit">Submit application</button>
+        </form>
+      </section>
+    {% endif %}
+    {% if decision_history %}
+      <section class="module">
+        <h2>Decision history</h2>
+        <ol>{% for item in decision_history %}<li>{{ item.decision }} &middot; {{ item.decided_at }} &middot; {{ item.reason }}</li>{% endfor %}</ol>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}
+{% block sidebar %}{% endblock %}

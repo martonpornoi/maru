@@ -46,7 +46,15 @@ _ORGANIZATION_NAVIGATION_CAPABILITIES = frozenset(
 
 _EDITION_WORKSPACE_NAVIGATION_CAPABILITIES = frozenset(
     {
+        "applications.manage_definitions",
+        "applications.review",
+        "catalog.view_activity",
+        "charities.view_review_queue",
         "events.view_basic",
+        "logistics.view_workspace",
+        "registration.manage_configuration",
+        "registration.manage_exceptions",
+        "venues.view_workspace",
         "workforce.view_structure",
     }
 )
@@ -360,10 +368,23 @@ def admin_edition_options(request: HttpRequest) -> dict[str, object]:
             )
         )
     )
+    selected_can_manage_registration = bool(
+        selected
+        and account
+        and (
+            account.is_platform_administrator
+            or selected.id
+            in authorized_admin_edition_ids(
+                request,
+                capability_codes=frozenset({"registration.manage_configuration"}),
+            )
+        )
+    )
     return {
         "available": True,
         "selected": selected,
         "selected_can_view_structure": selected_can_view_structure,
+        "selected_can_manage_registration": selected_can_manage_registration,
         "editions": _authorized_admin_editions(request).order_by(
             "-starts_on",
             "organization__name",

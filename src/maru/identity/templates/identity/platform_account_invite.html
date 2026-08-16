@@ -1,0 +1,98 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'identity/account_invitations.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}Invite user account · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  Platform administration &rsaquo;
+  <a href="{% url 'platform-account-inventory' %}">User accounts</a>
+  &rsaquo; Invite
+{% endblock %}
+
+{% block baseline_content %}
+  <a class="baseline-back-link" href="{% url 'platform-account-inventory' %}">← User accounts</a>
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">People</p>
+    <h1>Invite a user account</h1>
+    <p class="baseline-intro">
+      Send one person a secure invitation to create their Maru sign-in. They
+      prove control of the email address and choose their own password.
+    </p>
+  </header>
+
+  {% include "core/_baseline_access_summary.html" with access_operation="invite an inactive person account" %}
+
+  {% if invitation_request_invalid %}
+    <div class="baseline-state baseline-state--error identity-state-panel" role="alert">
+      <h2>Remove unsupported URL options</h2>
+      <p>
+        This creation page uses its clean route. Maru ignored every query value
+        and did not reserve an account.
+      </p>
+    </div>
+  {% else %}
+    {% if action_error %}<div class="baseline-errors" role="alert"><p>{{ action_error }}</p></div>{% endif %}
+    {% if form.non_field_errors %}<div class="baseline-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+
+    <form method="post" action="{% url 'platform-account-invite' %}" class="baseline-form" novalidate>
+      {% csrf_token %}
+      {{ form.expected_version }}
+      {{ form.retry_key }}
+      {% if form.expected_version.errors or form.retry_key.errors %}
+        <div class="baseline-errors" role="alert">
+          {{ form.expected_version.errors }}
+          {{ form.retry_key.errors }}
+        </div>
+      {% endif %}
+
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="invited-account-title">
+        <div class="baseline-section-heading">
+          <p class="baseline-kicker">Recipient-owned setup</p>
+          <h2 id="invited-account-title">Account identity</h2>
+          <p>
+            Email is required. Every other person label can stay blank and be
+            completed through a later governed profile workflow. The recipient
+            must accept this account invitation before they can be invited to
+            the Executive Board.
+          </p>
+        </div>
+        {% include "core/_baseline_form_field.html" with field=form.email %}
+        <div class="baseline-field-grid">
+          {% include "core/_baseline_form_field.html" with field=form.login_handle %}
+          {% include "core/_baseline_form_field.html" with field=form.display_name %}
+        </div>
+        {% include "core/_baseline_form_field.html" with field=form.preferred_language %}
+        {% include "core/_baseline_form_field.html" with field=form.reason %}
+      </section>
+
+      <aside class="baseline-boundary" aria-labelledby="invitation-result-title">
+        <p class="baseline-kicker">Result after creation</p>
+        <h2 id="invitation-result-title">Inactive person account</h2>
+        <p>
+          Maru stores an unusable password and a one-way challenge digest. The
+          raw code exists only inside the encrypted durable delivery envelope
+          until delivery, revocation, supersession, expiry, or acceptance.
+        </p>
+      </aside>
+
+      <div class="baseline-form-actions baseline-form-actions--sticky">
+        <button type="submit">Queue invitation</button>
+        <a class="baseline-secondary-link" href="{% url 'platform-account-inventory' %}">Back to user accounts</a>
+      </div>
+    </form>
+  {% endif %}
+
+  <aside class="baseline-boundary" aria-labelledby="invitation-boundary-title">
+    <p class="baseline-kicker">Access boundary</p>
+    <h2 id="invitation-boundary-title">Identity only</h2>
+    <p>
+      This command cannot make the administrator or recipient a convention
+      member, participant, registrant, controller, staff member, volunteer, or
+      public attendee. It also cannot assign or reveal a production password.
+    </p>
+  </aside>
+{% endblock %}

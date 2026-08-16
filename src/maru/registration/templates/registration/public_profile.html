@@ -43,6 +43,7 @@
       {% if local_demo_payment_available %}
         <form method="post" action="{% url 'public-registration-demo-payment' registration.edition_id %}">
           {% csrf_token %}
+          {{ demo_payment_form.idempotency_key }}
           <button class="button" type="submit">Simulate payment (local only)</button>
         </form>
         <p class="muted">
@@ -50,6 +51,14 @@
           It is never enabled in production.
         </p>
       {% endif %}
+      {% for option in hosted_payment_options %}
+        <form method="post" action="{% url 'public-registration-hosted-payment' registration.edition_id %}">
+          {% csrf_token %}
+          {{ option.form.provider_account_id }}
+          {{ option.form.idempotency_key }}
+          <button class="button" type="submit">Pay with {{ option.provider.display_name }}</button>
+        </form>
+      {% endfor %}
       <a class="button secondary" href="{% url 'workforce-opportunities' registration.edition_id %}">
         Volunteer opportunities
       </a>
@@ -76,6 +85,48 @@
       </div>
     </section>
   </div>
+
+  <section class="profile-card">
+    <p class="section-kicker">Admission upgrade</p>
+    <h2>Move to a higher admission tier</h2>
+    <p class="muted">
+      Your current paid ticket remains active while an upgrade waits for
+      payment. You pay only the current configured price difference, and Maru
+      keeps exactly one active admission entitlement.
+    </p>
+    {% if tier_replacement %}
+      <div class="restricted-note">
+        <strong>{{ tier_replacement.target_product_name_snapshot }}</strong>
+        is reserved until {{ tier_replacement.payment_due_at }}.
+        Amount due: {{ tier_replacement.amount_due_minor }}
+        {{ tier_replacement.currency }} minor units.
+      </div>
+    {% elif tier_replacement_options %}
+      <div class="directory-grid compact-grid">
+        {% for option in tier_replacement_options %}
+          <article class="directory-card">
+            <div>
+              <h3>{{ option.product.name }}</h3>
+              <p>{{ option.product.description|default:"Higher admission tier" }}</p>
+              <strong>
+                Pay {{ option.amount_due_minor }}
+                {{ registration.currency_snapshot }} minor units
+              </strong>
+              <form method="post" action="{% url 'public-registration-tier-replacement' registration.edition_id %}">
+                {% csrf_token %}
+                {{ option.form.target_product_id }}
+                {{ option.form.expected_registration_version }}
+                {{ option.form.idempotency_key }}
+                <button class="button" type="submit">Reserve this upgrade</button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No higher admission tier is currently available.</p>
+    {% endif %}
+  </section>
 
   {% if profile %}
     <section class="profile-card">
@@ -137,6 +188,33 @@
     <section class="empty-state">
       <h2>No edition profile was collected</h2>
       <p>This older registration predates the public profile flow.</p>
+    </section>
+  {% endif %}
+
+  {% if profile_extensions %}
+    <section class="profile-card">
+      <p class="section-kicker">Edition profile extensions</p>
+      <h2>Current profile details</h2>
+      <p class="muted">
+        These current values are separate from your immutable registration
+        submission. Their reader audience and writer policy are controlled
+        independently by the edition.
+      </p>
+      {% if profile_extensions_editable %}
+        <p>
+          <a class="button" href="{% url 'my-profile-extension-values' registration.edition_id %}">
+            Edit current profile details
+          </a>
+        </p>
+      {% endif %}
+      <dl class="details-grid">
+        {% for field in profile_extensions %}
+          <div>
+            <dt>{{ field.label }}</dt>
+            <dd>{{ field.current_value|default:"Not supplied" }}</dd>
+          </div>
+        {% endfor %}
+      </dl>
     </section>
   {% endif %}
 

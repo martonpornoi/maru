@@ -1,10 +1,11 @@
 """Top-level URL configuration."""
 
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path
+from django.urls import include, path
 from django.urls.resolvers import URLPattern, URLResolver
-from drf_spectacular.views import SpectacularAPIView
+from django.views.decorators.cache import never_cache
 
 from maru.accreditation.api import (
     MyCredentialListView,
@@ -17,13 +18,20 @@ from maru.accreditation.api import (
 from maru.audit.api import AuditEventListView
 from maru.authorization.api import (
     EditionAccessAssignmentView,
+    EditionAccessPreviewView,
     EditionAccessWorkspaceView,
 )
+from maru.authorization.page_access_views import page_access_workspace
 from maru.communications.api import (
     MyNotificationListView,
     MyNotificationPreferenceView,
     MyNotificationReadView,
     StaffDeliveryFailureListView,
+)
+from maru.core.api_documentation import (
+    PlatformApiRedocView,
+    PlatformApiSchemaView,
+    PlatformApiSwaggerView,
 )
 from maru.core.views import (
     administration_index,
@@ -40,9 +48,11 @@ from maru.core.views import (
     baseline_select_event_edition,
     build_info,
     liveness,
+    my_maru_home,
     platform_home,
     readiness,
     removed_administration_route,
+    update_navigation_pin,
 )
 from maru.events.admin_context import change_admin_edition_context
 from maru.events.api import (
@@ -73,6 +83,25 @@ from maru.identity.api import (
     StaffRestrictionRevokeView,
 )
 from maru.identity.forms import EmailOrHandleAuthenticationForm
+from maru.identity.invitation_api import (
+    PlatformAccountInventoryView,
+    PlatformAccountInvitationCreateView,
+    PlatformAccountInvitationDetailView,
+    PlatformAccountInvitationReissueView,
+    PlatformAccountInvitationRevokeView,
+    PublicAccountInvitationAcceptanceView,
+)
+from maru.identity.invitation_views import (
+    accept_platform_account_invitation_view,
+    platform_account_inventory,
+    platform_account_invitation_detail,
+    platform_account_invite,
+    reissue_platform_account_invitation_view,
+    resolve_platform_identity_delivery_as_delivered_view,
+    resolve_platform_identity_delivery_for_retry_view,
+    revoke_platform_account_invitation_view,
+)
+from maru.identity.step_up_views import account_step_up
 from maru.identity.views import recover_account, verify_email
 from maru.organizations.api import (
     ConventionSeriesDetailView,
@@ -103,6 +132,7 @@ from maru.privacyops.api import (
 )
 from maru.registration.api import (
     HeadlessRegistrationSubmissionView,
+    MyAdmissionTierReplacementView,
     MyAttendeeProfileView,
     MyFursuitPhotoUploadView,
     MyProfilePhotoUploadView,
@@ -117,11 +147,14 @@ from maru.registration.api import (
     PublicGuardianConsentView,
     PublicRegistrationDefinitionView,
     PublicRegistrationEditionListView,
+    RegistrationCapacityAdjustmentView,
+    RegistrationCommerceWorkspaceView,
     RegistrationConfigurationActivateView,
     RegistrationConfigurationDraftView,
     RegistrationConfigurationWorkspaceView,
     RegistrationReconciliationView,
     RegistrationTemplatePublishView,
+    RegistrationWaitlistBatchOfferView,
     SelfProfileSuggestionView,
     StaffActionListView,
     StaffAttendeeReportView,
@@ -152,6 +185,43 @@ from maru.registration.public_views import (
     public_registration_profile,
     staff_assisted_registration,
 )
+from maru.registration.setup_definition_api import (
+    RegistrationConfigurationCommandView,
+    RegistrationProfileExtensionFieldCollectionView,
+    RegistrationProfileExtensionFieldCommandView,
+    RegistrationSetupStartView,
+)
+from maru.registration.setup_definition_views import (
+    create_registration_setup_product,
+    create_registration_setup_question,
+    move_registration_setup_product,
+    move_registration_setup_profile_field,
+    move_registration_setup_question,
+    registration_setup_minor_policy_dispatch,
+    registration_setup_product_create,
+    registration_setup_profile_field_create,
+    registration_setup_profile_field_detail,
+    registration_setup_profile_fields_dispatch,
+    registration_setup_question_create,
+    remove_registration_setup_minor_policy,
+    remove_registration_setup_product,
+    remove_registration_setup_question,
+    retire_registration_setup_profile_field,
+    update_registration_setup_product,
+    update_registration_setup_profile_field,
+    update_registration_setup_question,
+)
+from maru.registration.setup_views import (
+    create_registration_setup_section,
+    move_registration_setup_section,
+    registration_setup_configuration,
+    registration_setup_section_create,
+    registration_setup_start,
+    registration_setup_workspace,
+    remove_registration_setup_section,
+    start_registration_setup_view,
+    update_registration_setup_section,
+)
 from maru.workforce.api import (
     MyOnboardingDocumentListView,
     MyOnboardingDocumentUploadView,
@@ -181,7 +251,20 @@ from maru.workforce.views import (
 )
 
 urlpatterns: list[URLPattern | URLResolver] = [
+    path("", include("maru.charities.urls")),
+    path("", include("maru.applications.urls")),
+    path("", include("maru.registration.commerce_urls")),
+    path("", include("maru.registration.profile_extension_urls")),
+    path("", include("maru.catalog.urls")),
+    path("", include("maru.venues.urls")),
+    path("", include("maru.logistics.urls")),
     path("", platform_home, name="platform-home"),
+    path("my/", my_maru_home, name="my-maru-home"),
+    path(
+        "my/navigation/pins/",
+        update_navigation_pin,
+        name="update-navigation-pin",
+    ),
     path(
         "register/",
         public_registration_index,
@@ -267,6 +350,11 @@ urlpatterns: list[URLPattern | URLResolver] = [
         name="staff-login",
     ),
     path(
+        "accounts/invitations/accept/",
+        accept_platform_account_invitation_view,
+        name="accept-platform-account-invitation",
+    ),
+    path(
         "accounts/logout/",
         LogoutView.as_view(),
         name="staff-logout",
@@ -279,9 +367,55 @@ urlpatterns: list[URLPattern | URLResolver] = [
         name="admin-edition-context",
     ),
     path(
+        "admin/account/step-up/",
+        account_step_up,
+        name="account-step-up",
+    ),
+    path(
         "admin/platform/organizations/",
         baseline_administration_home,
         name="baseline-admin-home",
+    ),
+    path(
+        "admin/platform/accounts/",
+        platform_account_inventory,
+        name="platform-account-inventory",
+    ),
+    path(
+        "admin/platform/accounts/invite/",
+        platform_account_invite,
+        name="platform-account-invite",
+    ),
+    path(
+        "admin/platform/accounts/invitations/<uuid:invitation_id>/",
+        platform_account_invitation_detail,
+        name="platform-account-invitation-detail",
+    ),
+    path(
+        ("admin/platform/accounts/invitations/<uuid:invitation_id>/reissue/"),
+        reissue_platform_account_invitation_view,
+        name="platform-account-invitation-reissue",
+    ),
+    path(
+        ("admin/platform/accounts/invitations/<uuid:invitation_id>/revoke/"),
+        revoke_platform_account_invitation_view,
+        name="platform-account-invitation-revoke",
+    ),
+    path(
+        (
+            "admin/platform/accounts/invitations/<uuid:invitation_id>/"
+            "deliveries/<uuid:delivery_id>/resolve-delivered/"
+        ),
+        resolve_platform_identity_delivery_as_delivered_view,
+        name="platform-identity-delivery-resolve-delivered",
+    ),
+    path(
+        (
+            "admin/platform/accounts/invitations/<uuid:invitation_id>/"
+            "deliveries/<uuid:delivery_id>/resolve-retry/"
+        ),
+        resolve_platform_identity_delivery_for_retry_view,
+        name="platform-identity-delivery-resolve-retry",
     ),
     path(
         "admin/invitations/",
@@ -368,6 +502,257 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         baseline_event_edition_record,
         name="baseline-event-edition-record",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+        ),
+        registration_setup_workspace,
+        name="registration-setup",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/new/"
+        ),
+        registration_setup_start,
+        name="registration-setup-start",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/"
+        ),
+        start_registration_setup_view,
+        name="start-registration-setup",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/sections/new/"
+        ),
+        registration_setup_section_create,
+        name="registration-setup-section-create",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/sections/"
+        ),
+        create_registration_setup_section,
+        name="create-registration-setup-section",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/sections/"
+            "<uuid:section_id>/update/"
+        ),
+        update_registration_setup_section,
+        name="update-registration-setup-section",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/sections/"
+            "<uuid:section_id>/move/"
+        ),
+        move_registration_setup_section,
+        name="move-registration-setup-section",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/sections/"
+            "<uuid:section_id>/remove/"
+        ),
+        remove_registration_setup_section,
+        name="remove-registration-setup-section",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/questions/new/"
+        ),
+        registration_setup_question_create,
+        name="registration-setup-question-create",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/questions/"
+        ),
+        create_registration_setup_question,
+        name="create-registration-setup-question",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/questions/"
+            "<uuid:question_id>/update/"
+        ),
+        update_registration_setup_question,
+        name="update-registration-setup-question",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/questions/"
+            "<uuid:question_id>/move/"
+        ),
+        move_registration_setup_question,
+        name="move-registration-setup-question",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/questions/"
+            "<uuid:question_id>/remove/"
+        ),
+        remove_registration_setup_question,
+        name="remove-registration-setup-question",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/products/new/"
+        ),
+        registration_setup_product_create,
+        name="registration-setup-product-create",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/products/"
+        ),
+        create_registration_setup_product,
+        name="create-registration-setup-product",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/products/"
+            "<uuid:product_id>/update/"
+        ),
+        update_registration_setup_product,
+        name="update-registration-setup-product",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/products/"
+            "<uuid:product_id>/move/"
+        ),
+        move_registration_setup_product,
+        name="move-registration-setup-product",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/products/"
+            "<uuid:product_id>/remove/"
+        ),
+        remove_registration_setup_product,
+        name="remove-registration-setup-product",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/minor-policy/"
+        ),
+        registration_setup_minor_policy_dispatch,
+        name="registration-setup-minor-policy",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/minor-policy/remove/"
+        ),
+        remove_registration_setup_minor_policy,
+        name="remove-registration-setup-minor-policy",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "profile-fields/"
+        ),
+        registration_setup_profile_fields_dispatch,
+        name="registration-setup-profile-fields",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "profile-fields/new/"
+        ),
+        registration_setup_profile_field_create,
+        name="registration-setup-profile-field-create",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "profile-fields/<uuid:field_id>/"
+        ),
+        registration_setup_profile_field_detail,
+        name="registration-setup-profile-field-detail",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "profile-fields/<uuid:field_id>/update/"
+        ),
+        update_registration_setup_profile_field,
+        name="update-registration-setup-profile-field",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "profile-fields/<uuid:field_id>/move/"
+        ),
+        move_registration_setup_profile_field,
+        name="move-registration-setup-profile-field",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "profile-fields/<uuid:field_id>/retire/"
+        ),
+        retire_registration_setup_profile_field,
+        name="retire-registration-setup-profile-field",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/registration/"
+            "configurations/<uuid:configuration_id>/"
+        ),
+        registration_setup_configuration,
+        name="registration-setup-configuration",
     ),
     path(
         (
@@ -470,6 +855,11 @@ urlpatterns: list[URLPattern | URLResolver] = [
         administration_workspace,
         name="management-console",
     ),
+    path(
+        "admin/access/<str:scope_token>/",
+        page_access_workspace,
+        name="page-access-workspace",
+    ),
     path("admin/records/", removed_administration_route),
     # The unified shell admits active scoped non-staff accounts. Route its
     # account controls before AdminSite's staff-only wrapper so logout and
@@ -490,7 +880,25 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("health/live", liveness, name="health-live"),
     path("health/ready", readiness, name="health-ready"),
     path("api/v1/meta/build", build_info, name="api-build-info"),
-    path("api/v1/schema", SpectacularAPIView.as_view(), name="api-schema"),
+    path("api/v1/schema", PlatformApiSchemaView.as_view(), name="api-schema"),
+    path(
+        "api/v1/docs/",
+        never_cache(
+            login_required(login_url="staff-login")(
+                PlatformApiSwaggerView.as_view(url_name="api-schema")
+            )
+        ),
+        name="api-docs",
+    ),
+    path(
+        "api/v1/redoc/",
+        never_cache(
+            login_required(login_url="staff-login")(
+                PlatformApiRedocView.as_view(url_name="api-schema")
+            )
+        ),
+        name="api-redoc",
+    ),
     path("api/v1/public/csrf", CsrfTokenView.as_view(), name="api-public-csrf"),
     path(
         "api/v1/public/editions/<uuid:edition_id>/volunteer-opportunities",
@@ -582,6 +990,36 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         MyOnboardingDocumentUploadView.as_view(),
         name="api-my-onboarding-document-upload",
+    ),
+    path(
+        "api/v1/platform/accounts",
+        PlatformAccountInventoryView.as_view(),
+        name="api-platform-account-inventory",
+    ),
+    path(
+        "api/v1/platform/account-invitations",
+        PlatformAccountInvitationCreateView.as_view(),
+        name="api-platform-account-invitation-create",
+    ),
+    path(
+        "api/v1/platform/account-invitations/<uuid:invitation_id>",
+        PlatformAccountInvitationDetailView.as_view(),
+        name="api-platform-account-invitation-detail",
+    ),
+    path(
+        ("api/v1/platform/account-invitations/<uuid:invitation_id>/reissue"),
+        PlatformAccountInvitationReissueView.as_view(),
+        name="api-platform-account-invitation-reissue",
+    ),
+    path(
+        ("api/v1/platform/account-invitations/<uuid:invitation_id>/revoke"),
+        PlatformAccountInvitationRevokeView.as_view(),
+        name="api-platform-account-invitation-revoke",
+    ),
+    path(
+        "api/v1/public/account-invitations/accept",
+        PublicAccountInvitationAcceptanceView.as_view(),
+        name="api-public-account-invitation-accept",
     ),
     path(
         "api/v1/public/accounts",
@@ -845,6 +1283,14 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path(
         (
             "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/access/preview"
+        ),
+        EditionAccessPreviewView.as_view(),
+        name="api-edition-access-preview",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
             "editions/<uuid:edition_id>/access/assignments/"
             "<uuid:assignment_id>"
         ),
@@ -904,6 +1350,14 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path(
         (
             "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registration/setup"
+        ),
+        RegistrationSetupStartView.as_view(),
+        name="api-registration-setup-start",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
             "editions/<uuid:edition_id>/registration/configuration"
         ),
         RegistrationConfigurationWorkspaceView.as_view(),
@@ -928,6 +1382,32 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path(
         (
             "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registration/configuration/"
+            "<uuid:configuration_id>/commands"
+        ),
+        RegistrationConfigurationCommandView.as_view(),
+        name="api-registration-configuration-command",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registration/profile-extension-fields"
+        ),
+        RegistrationProfileExtensionFieldCollectionView.as_view(),
+        name="api-registration-profile-extension-field-list",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registration/profile-extension-fields/"
+            "<uuid:field_id>/commands"
+        ),
+        RegistrationProfileExtensionFieldCommandView.as_view(),
+        name="api-registration-profile-extension-field-command",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
             "editions/<uuid:edition_id>/registration/templates"
         ),
         RegistrationTemplatePublishView.as_view(),
@@ -940,6 +1420,15 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         MyRegistrationView.as_view(),
         name="api-my-registration",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registration/me/"
+            "<uuid:registration_id>/tier-replacements"
+        ),
+        MyAdmissionTierReplacementView.as_view(),
+        name="api-my-registration-tier-replacement",
     ),
     path(
         (
@@ -1108,6 +1597,30 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path(
         (
             "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registration/commerce"
+        ),
+        RegistrationCommerceWorkspaceView.as_view(),
+        name="api-registration-commerce-workspace",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registration/commerce/capacity-adjustments"
+        ),
+        RegistrationCapacityAdjustmentView.as_view(),
+        name="api-registration-capacity-adjustment",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/registration/commerce/waitlist-batches"
+        ),
+        RegistrationWaitlistBatchOfferView.as_view(),
+        name="api-registration-waitlist-batch",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
             "editions/<uuid:edition_id>/registration/settlements"
         ),
         StaffSettlementListCreateView.as_view(),
@@ -1166,12 +1679,25 @@ urlpatterns: list[URLPattern | URLResolver] = [
 ]
 
 # ADR 0030 keeps the tested API and operational endpoints available while the
-# default browser experience is rebuilt one page at a time. The preserved HTML
-# routes above remain testable recovery evidence but are not mounted by
+# default browser experience is rebuilt one page at a time. Mount the shared
+# Access workspace and shipped platform-account workflow alongside health;
+# other preserved HTML routes above remain recovery evidence outside
 # ``maru.baseline_urls``.
+_BASELINE_PLATFORM_ROUTE_PREFIXES = (
+    "accounts/invitations/",
+    "admin/account/step-up/",
+    "admin/access/",
+    "admin/platform/accounts/",
+    "health/",
+)
 PLATFORM_URLPATTERNS = [
-    pattern for pattern in urlpatterns if str(pattern.pattern).startswith("health/")
+    pattern
+    for pattern in urlpatterns
+    if str(pattern.pattern).startswith(_BASELINE_PLATFORM_ROUTE_PREFIXES)
 ]
 API_URLPATTERNS = [
-    pattern for pattern in urlpatterns if str(pattern.pattern).startswith("api/")
+    pattern
+    for pattern in urlpatterns
+    if str(pattern.pattern).startswith("api/")
+    and getattr(pattern, "name", None) not in {"api-docs", "api-redoc"}
 ]
