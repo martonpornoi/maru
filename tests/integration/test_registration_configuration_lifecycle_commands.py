@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError, close_old_connections, transaction
+from django.db import DatabaseError, close_old_connections, connections, transaction
 from django.db.models import F
 from django.utils import timezone
 
@@ -1546,7 +1546,7 @@ def test_concurrent_same_retry_activation_commits_one_transition() -> None:
                 )
             )
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda _index: run(), range(2)))
@@ -1590,7 +1590,7 @@ def test_concurrent_different_retry_activation_commits_one_transition() -> None:
                 return "conflict", type(error)
             return "activated", result
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(run, (uuid4(), uuid4())))

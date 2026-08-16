@@ -3,7 +3,13 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
-from django.db import DatabaseError, close_old_connections, connection, transaction
+from django.db import (
+    DatabaseError,
+    close_old_connections,
+    connection,
+    connections,
+    transaction,
+)
 
 from maru.effects.models import DomainEvent
 from maru.identity.models import Account
@@ -249,7 +255,7 @@ def test_same_retry_publication_concurrency_commits_one_graph() -> None:
                 **{**values, "correlation_id": uuid4()}  # type: ignore[arg-type]
             )
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(run, (1, 2)))

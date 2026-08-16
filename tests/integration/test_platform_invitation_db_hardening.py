@@ -10,7 +10,13 @@ from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import DatabaseError, close_old_connections, connection, transaction
+from django.db import (
+    DatabaseError,
+    close_old_connections,
+    connection,
+    connections,
+    transaction,
+)
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
@@ -406,7 +412,7 @@ def test_concurrent_distinct_retry_keys_create_one_command_receipt() -> None:
         else:
             return "committed"
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures = [executor.submit(insert_receipt, uuid4()) for _ in range(2)]
@@ -1156,7 +1162,7 @@ def test_concurrent_distinct_retry_keys_create_one_reconciliation_receipt() -> N
         else:
             return "committed"
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures = [executor.submit(insert_receipt, uuid4()) for _ in range(2)]
@@ -1462,7 +1468,7 @@ def test_concurrent_origin_claim_allows_only_exact_reserved_account() -> None:
         else:
             return True
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         exact = pool.submit(claim, invitation.account_id)

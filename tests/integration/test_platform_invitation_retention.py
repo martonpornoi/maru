@@ -17,7 +17,13 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.db import DatabaseError, close_old_connections, connection, transaction
+from django.db import (
+    DatabaseError,
+    close_old_connections,
+    connection,
+    connections,
+    transaction,
+)
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 
@@ -655,7 +661,7 @@ def _retention_worker() -> tuple[int, int]:
         result = run_platform_invitation_retention(limit=1)
         return result.disposed_count, result.blocked_count
     finally:
-        close_old_connections()
+        connections.close_all()
 
 
 def test_concurrent_workers_create_one_receipt(

@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError, close_old_connections
+from django.db import DatabaseError, close_old_connections, connections
 
 from maru.audit.models import AuditEvent
 from maru.authorization.models import CapabilityGrant, RoleAssignment
@@ -210,7 +210,7 @@ def test_concurrent_creation_replays_one_canonical_result() -> None:
                 idempotency_key=idempotency_key,
             )
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         results = [
@@ -238,7 +238,7 @@ def test_concurrent_same_name_allocates_distinct_stable_slugs() -> None:
             start.wait(timeout=5)
             return _create(actor=administrator, series=series)
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         results = [

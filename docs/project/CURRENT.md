@@ -240,7 +240,22 @@ as the repository-wide gate:
   three assertions now pin the current **Change workspace**, active-authority,
   and governance-invitation contracts and pass locally. The current commit's
   complete matrix, combined coverage, and stable `CI gate` are the corrective
-  remote acceptance authority.
+  remote acceptance authority. Corrective run
+  [31964200663](https://github.com/martonpornoi/maru/actions/runs/31964200663)
+  then passed all 19 jobs: 1,841 unit tests, 2,257 integration tests across all
+  157 files and twelve PostgreSQL shards, 20 Staff Console tests, 91-percent
+  branch-aware combined coverage, and the stable `CI gate`. Its only
+  non-failing diagnostic was a repeated test-database teardown warning from two
+  healthy thread-local Workforce mutex connections. A suite-wide audit found
+  22 threaded database boundaries across 13 files that relied on
+  `close_old_connections()` or a direct executor submission. They now close all
+  thread-local connections unconditionally in outer `finally` blocks. Static
+  inventory covers all 39 threaded database callables across 20 integration
+  files; none lacks unconditional cleanup. A fresh 22-case PostgreSQL batch
+  covering every changed worker path passes without a teardown warning; the
+  complete four-test Workforce file and direct invitation-delivery regression
+  also pass independently on freshly created test databases. The current
+  commit's `CI gate` remains authoritative for the cleanup follow-up.
 
 These results accept the repository gate and that bounded browser slice. They
 are not deployment, production-readiness, recovery, accessibility, or owner

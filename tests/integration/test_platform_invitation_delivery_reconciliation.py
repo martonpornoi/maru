@@ -13,7 +13,13 @@ from uuid import uuid4
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from django.db import DatabaseError, connection, transaction
+from django.db import (
+    DatabaseError,
+    close_old_connections,
+    connection,
+    connections,
+    transaction,
+)
 
 from maru.audit.models import AuditEvent
 from maru.identity.invitation_commands import (
@@ -351,13 +357,19 @@ def test_revocation_preserves_paused_provider_result_as_late_evidence(
         assert release_adapter.wait(timeout=15)
         return "synthetic-late-provider-confirmation"
 
+    def deliver_while_paused() -> str:
+        close_old_connections()
+        try:
+            return deliver_platform_identity_invitation(
+                delivery.id,
+                private_keyring=configured_invitation_crypto,
+                adapter=paused_adapter,
+            )
+        finally:
+            connections.close_all()
+
     with ThreadPoolExecutor(max_workers=1) as executor:
-        provider_call = executor.submit(
-            deliver_platform_identity_invitation,
-            delivery.id,
-            private_keyring=configured_invitation_crypto,
-            adapter=paused_adapter,
-        )
+        provider_call = executor.submit(deliver_while_paused)
         assert entered_adapter.wait(timeout=15)
         delivery.refresh_from_db()
         assert delivery.status == PlatformIdentityDelivery.Status.PROCESSING

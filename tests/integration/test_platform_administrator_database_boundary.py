@@ -6,7 +6,13 @@ from datetime import date
 from threading import Event
 
 import pytest
-from django.db import IntegrityError, close_old_connections, connection, transaction
+from django.db import (
+    IntegrityError,
+    close_old_connections,
+    connection,
+    connections,
+    transaction,
+)
 from django.utils import timezone
 
 from maru.events.models import EventEdition
@@ -611,7 +617,7 @@ def test_subject_write_serializes_with_account_reclassification(operation: str) 
                     raise TimeoutError("Timed out holding the identity subject lock.")
             return "subject_committed"
         finally:
-            close_old_connections()
+            connections.close_all()
 
     def reclassify() -> str:
         close_old_connections()
@@ -631,7 +637,7 @@ def test_subject_write_serializes_with_account_reclassification(operation: str) 
             else:
                 return "reclassified"
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         subject_future = executor.submit(write_subject)

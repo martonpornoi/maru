@@ -13,6 +13,7 @@ from django.db import (
     DatabaseError,
     close_old_connections,
     connection,
+    connections,
     transaction,
 )
 from django.db.migrations.executor import MigrationExecutor
@@ -2574,7 +2575,7 @@ def test_preopened_writer_waits_for_activation_then_is_rejected(  # noqa: PLR091
             return "committed", None
         finally:
             transaction_open.set()
-            close_old_connections()
+            connections.close_all()
 
     def raw_activation() -> tuple[str, str | None]:
         close_old_connections()
@@ -2599,7 +2600,7 @@ def test_preopened_writer_waits_for_activation_then_is_rejected(  # noqa: PLR091
             return "committed", None
         finally:
             activation_exclusive.set()
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         writer_future = executor.submit(stale_writer)
@@ -2668,7 +2669,7 @@ def test_dormant_writer_drains_before_raw_activation_and_blocks_cutover(  # noqa
             return "committed", None
         finally:
             writer_inserted.set()
-            close_old_connections()
+            connections.close_all()
 
     def raw_activation() -> tuple[str, str | None]:
         close_old_connections()
@@ -2688,7 +2689,7 @@ def test_dormant_writer_drains_before_raw_activation_and_blocks_cutover(  # noqa
             return "committed", None
         finally:
             activation_attempting.set()
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         writer_future = executor.submit(dormant_writer)

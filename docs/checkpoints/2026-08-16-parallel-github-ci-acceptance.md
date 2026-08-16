@@ -1,7 +1,7 @@
 # Parallel GitHub CI acceptance
 
 Date: 2026-08-16
-Status: Initial remote matrix diagnosed; current-commit CI gate is the corrective acceptance authority
+Status: Corrective matrix accepted; current-commit CI gate remains the acceptance authority
 
 ## Outcome
 
@@ -93,6 +93,27 @@ could not represent the repository's acceptance suite. The diagnostic run is
 The current commit's complete corrective GitHub matrix, combined branch-
 coverage verdict, and successful stable `CI gate` are authoritative. `CI gate`
 must not be promoted as the protected required check until that run is green.
+
+Corrective run
+[31964200663](https://github.com/martonpornoi/maru/actions/runs/31964200663)
+passed all 19 jobs in approximately 1 hour 23 minutes. The twelve PostgreSQL
+shards passed 2,257 integration tests across all 157 files, the unit job passed
+1,841 tests, the Staff Console passed 20 tests, combined branch-aware coverage
+reported 91 percent, and the stable `CI gate` passed.
+
+That run retained one non-failing cleanup warning: Django could not drop the
+shard-12 test database because two healthy connections opened by the two
+threaded Workforce mutex tests remained alive. `close_old_connections()` does
+not close healthy connections while `CONN_MAX_AGE` remains valid. A suite-wide
+audit found 22 affected worker boundaries across 13 files, including one direct
+executor submission. They now call `connections.close_all()` unconditionally
+in outer `finally` blocks. Static inventory covers all 39 threaded database
+callables across 20 integration files and finds no worker without unconditional
+cleanup. A fresh 22-case PostgreSQL batch covering every changed worker path
+passes without a teardown warning; the complete four-test Workforce file and
+direct invitation-delivery regression also pass independently on freshly
+created test databases. The current commit's full `CI gate` remains the
+acceptance authority for this cleanup follow-up.
 
 ## Remaining testing expansion
 
