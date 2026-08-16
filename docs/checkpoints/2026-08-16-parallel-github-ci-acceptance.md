@@ -1,7 +1,7 @@
 # Parallel GitHub CI acceptance
 
 Date: 2026-08-16
-Status: Implemented locally; first complete remote matrix pending
+Status: Initial remote matrix diagnosed; current-commit CI gate is the corrective acceptance authority
 
 ## Outcome
 
@@ -57,6 +57,23 @@ The workflow also adds pull-request cancellation for superseded commits,
 merge-queue/manual triggers, uv caching, immutable external-action SHAs, and a
 digest-pinned PostgreSQL image.
 
+## First remote matrix finding
+
+The first twelve-shard remote matrix completed without accepting the candidate.
+Ten PostgreSQL shards passed. Shards 2 and 10 each failed one rendered-copy
+assertion that still expected pre-ADR-0055 wording; audit then found one adjacent
+selector assertion that was passing only because a success message contained
+the retired phrase. The current interface correctly renders **Change
+workspace**, the active convention-management-authority explanation, and **My
+governance invitations**. No product behavior changed; all three assertions now
+pin the intended interface and pass locally.
+
+The longest successful shard completed in 1 hour 22 minutes 51 seconds, and the
+second longest in 1 hour 12 minutes 56 seconds. Both fit the new 90-minute
+per-shard boundary and demonstrate why the retired 45-minute monolithic job
+could not represent the repository's acceptance suite. The diagnostic run is
+[GitHub Actions run 31959870679](https://github.com/martonpornoi/maru/actions/runs/31959870679).
+
 ## Verification
 
 - The complete unit suite passes 1,841 of 1,841 tests in 56.68 seconds; the
@@ -73,8 +90,9 @@ digest-pinned PostgreSQL image.
 - Documentation validation passes over 242 Markdown files and 202 unique
   requirement identifiers.
 
-The first complete GitHub matrix is still required before `CI gate` is
-promoted as the protected required check.
+The current commit's complete corrective GitHub matrix, combined branch-
+coverage verdict, and successful stable `CI gate` are authoritative. `CI gate`
+must not be promoted as the protected required check until that run is green.
 
 ## Remaining testing expansion
 

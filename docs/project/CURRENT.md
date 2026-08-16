@@ -232,8 +232,15 @@ as the repository-wide gate:
   files, the 78-package lock is current, and documentation validation passes
   over 242 Markdown files and 202 requirement identifiers. YAML loading,
   deterministic 157-file/12-shard inventory validation, and both real
-  production-settings modes also pass. The first complete GitHub matrix run is
-  the remaining acceptance evidence for this operational change.
+  production-settings modes also pass. The initial remote matrix completed all
+  twelve PostgreSQL shards: ten passed, while two failed one stale rendered-copy
+  assertion each. The slowest successful shard completed in 1 hour 22 minutes
+  51 seconds, inside the new 90-minute boundary. Audit found one adjacent
+  false-positive selector assertion with the same pre-ADR-0055 wording. All
+  three assertions now pin the current **Change workspace**, active-authority,
+  and governance-invitation contracts and pass locally. The current commit's
+  complete matrix, combined coverage, and stable `CI gate` are the corrective
+  remote acceptance authority.
 
 These results accept the repository gate and that bounded browser slice. They
 are not deployment, production-readiness, recovery, accessibility, or owner
@@ -324,15 +331,16 @@ approval.
   evidence matrix.
 - GitHub browser/accessibility, multi-Python compatibility, CodeQL, dependency-
   review, secret-scanning policy, nightly concurrency repetition, and release
-  restore/attestation workflows remain later testing layers. The first complete
-  12-shard remote run must pass before the new `CI gate` is made the
-  protected required check.
+  restore/attestation workflows remain later testing layers. The initial
+  12-shard remote run diagnosed stale ADR-0055 UI assertions and is not
+  acceptance. The current commit's complete corrective matrix must pass before
+  the new `CI gate` is made the protected required check.
 
 ## Smallest sensible next actions
 
-1. Complete the first parallel GitHub acceptance run, make `CI gate` the
-   protected required check, then add the bounded pull-request
-   Playwright/keyboard/automated-accessibility matrix.
+1. Confirm the current commit's corrective GitHub matrix, combined coverage,
+   and `CI gate` pass; then make `CI gate` the protected required check and add
+   the bounded pull-request Playwright/keyboard/automated-accessibility matrix.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.

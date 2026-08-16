@@ -75,7 +75,8 @@ def test_active_account_without_scope_gets_a_personal_admin_landing() -> None:
     content = response.content.decode()
     assert "Your Maru account" in content
     assert "Convention work" not in content
-    assert "This account has no specialist record permissions" in content
+    assert "This account has no active convention-management authority" in content
+    assert "My governance invitations" in content
 
 
 def test_specialist_record_pages_keep_the_django_staff_boundary() -> None:
