@@ -5,6 +5,18 @@ intended to give attendees, volunteers, hosts, dealers, staff, and organizers
 one account and one coherent experience across many independently operated
 conventions.
 
+Maru is pre-production software preparing for public collaboration. It is not
+yet a supported hosted service or PyPI package and must not receive production
+personal data. The primary future release artifact is an immutable Django
+application image in GitHub Container Registry with source provenance, SBOM,
+documentation, OpenAPI, dependency locks, and checksums.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) to work on Maru,
+[SECURITY.md](SECURITY.md) for private vulnerability reporting, and
+[the release process](docs/operations/release-process.md) for CalVer and GitHub
+artifact semantics. Contributions are licensed under
+[Apache-2.0](LICENSE) and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 Each occurrence of a convention is a first-class event edition, for example
 `Awoostria 2026` or `Eurofurence 2026`. Historical editions remain available so
 people can see their past participation and organizers can retain an accurate,
@@ -181,6 +193,9 @@ rehearsal remains a release gate.
 - [Testing strategy](docs/quality/testing-strategy.md)
 - [Documentation standards](docs/quality/documentation-standards.md)
 - [Development setup](docs/development/setup.md)
+- [Repository governance](docs/development/repository-governance.md)
+- [GitHub release process](docs/operations/release-process.md)
+- [Public repository readiness](docs/operations/public-repository-readiness.md)
 - [Current project state](docs/project/CURRENT.md)
 - [Production consolidation and live capability ledger](docs/project/PRODUCTION_CONSOLIDATION.md)
 - [Roadmap](docs/project/ROADMAP.md)

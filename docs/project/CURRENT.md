@@ -8,8 +8,10 @@ verified. ADR 0057's NumPy docstring baseline and warning-fatal generated
 contributor reference are repository-verified. ADR 0058's professional public
 Python documentation contracts and semantic-quality gate are repository-
 verified. ADR 0059's strict PyDocLint contract and bounded Ruff exemptions are
-repository-verified. Its pull-request CI correction is locally verified and
-awaits the replacement GitHub run; the complete authenticated
+repository-verified. ADR 0060's collaboration/release foundation is locally
+verified and awaits the replacement GitHub run. GitHub ruleset enforcement is
+prepared but blocked by the repository's current private-plan capability; the
+complete authenticated
 reflow, keyboard, screen-reader, owner, deployment, stopped-writer/cutover,
 restore/PITR, and production-governance gates remain open.
 Branch: `codex/strict-python-documentation`
@@ -112,7 +114,7 @@ cross-domain-save design.
   GitHub validates docstrings, performs a fresh warning-fatal build, retains the
   HTML artifact, and requires the result through the stable `CI gate`.
 
-### Parallel GitHub acceptance
+### Change-aware GitHub acceptance and releases
 
 - The former single 45-minute GitHub job could not represent the recorded
   4:19:18 canonical suite and failed before tests because its duplicated
@@ -121,15 +123,27 @@ cross-domain-save design.
   configuration, supplies synthetic verification-only invitation material,
   excludes worker private keys, and checks both exact-provenance modes in
   isolated subprocesses. Local PowerShell and GitHub call the same verifier.
-- GitHub acceptance is split into static, contributor-documentation,
-  Django/generated-contract, frontend, unit, 12 isolated PostgreSQL
-  integration, combined-coverage, dependency-security, and stable `CI gate`
-  jobs. Integration files remain whole and serialized within each shard; only
-  isolated runners/databases run in parallel.
-- Unit and shard JUnit/coverage artifacts feed one branch-aware 90-percent
-  verdict. Matrix fail-fast is disabled, superseded pull-request runs are
-  cancelled, and reviewed external actions plus PostgreSQL 17.11 are pinned by
-  immutable digest.
+- ADR 0060 makes pull-request acceptance change-aware behind one stable
+  `PR gate`. Documentation-only changes start no PostgreSQL service; ordinary
+  Python changes run unit plus bounded affected integration tests; migrations,
+  models, settings, dependencies, security/authority boundaries, workflows,
+  and test harnesses fail closed to full acceptance. Protected or mass
+  deletion needs the maintainer-applied `destructive-change-reviewed` label.
+- Reusable full acceptance keeps every integration file whole and serialized,
+  but uses six isolated measured-duration shards rather than twelve source-size
+  shards. The timing map from accepted run `31964200663` covers all current
+  files and balances each shard near 3,536 weighted seconds. Unit and shard
+  JUnit/coverage artifacts feed one branch-aware 90-percent verdict through
+  stable `Full CI gate`; matrix fail-fast remains disabled.
+- Candidate and gold releases are manual, exact-current-`main`, full-certified,
+  collision-refusing CalVer workflows. GHCR receives the non-root Django/
+  Gunicorn image by immutable digest with OCI SBOM and provenance. GitHub
+  receives docs, OpenAPI, locks, manifest, license, and checksums. No release,
+  tag, package, or visibility change was made by this milestone.
+- Apache-2.0, contribution/conduct/security/support/governance policies,
+  CODEOWNERS, issue/PR templates, Dependabot grouping, public-readiness steps,
+  and reviewed ruleset payloads prepare the private repository for later public
+  collaboration without implying production support.
 
 ### Registration, profile, and admission commerce
 
@@ -321,6 +335,24 @@ as the repository-wide gate:
   files, the 249-Markdown/202-requirement validator, a fresh warning-fatal
   Sphinx/AutoAPI build, and all 1,847 unit tests pass locally. The replacement
   pull-request run remains the remote acceptance authority.
+- The ADR 0060 collaboration/release foundation passes actionlint 1.7.7 over
+  every workflow, Ruff formatting and ALL-rule lint over 642 files, strict
+  mypy over 356 source files, strict PyDocLint and semantic docstring
+  validation over 363 production/tooling files, and the 261-Markdown/202-
+  requirement documentation validator. A fresh warning-fatal Sphinx/AutoAPI
+  build succeeds; all 1,870 unit tests and all 20 Staff Console tests pass,
+  TypeScript typechecking and the production frontend bundle are clean, and
+  generated OpenAPI/TypeScript/static assets remain unchanged. Migration drift
+  is zero, production-settings verification passes, and OpenAPI generation has
+  zero errors while retaining the 18 known enum-name warnings and expected
+  local fail-closed `identity.W001` warning. Live Python and complete frontend
+  audits report no known vulnerabilities after the lockfile was constrained
+  to patched `js-yaml`, `brace-expansion`, and `nanoid` transitive releases.
+  The pinned production image builds, collects 192 static files, runs as UID
+  10001 with Gunicorn 23.0.0, and includes the sidecar API-documentation
+  assets. The six-shard timing inventory covers all 157 integration files with
+  approximately 3,536 weighted seconds per shard. The replacement pull-request
+  run remains the remote acceptance authority.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source
@@ -461,19 +493,27 @@ approval.
   records still need conversion and the full 320/390/768/958/1,024/1,280/1,920,
   200-percent-zoom, keyboard, automated-accessibility, screen-reader, and owner
   evidence matrix.
-- GitHub browser/accessibility, multi-Python compatibility, CodeQL, dependency-
-  review, secret-scanning policy, nightly concurrency repetition, and release
-  restore/attestation workflows remain later testing layers. The initial
-  12-shard remote run diagnosed stale ADR-0055 UI assertions and is not
-  acceptance. The current commit's complete corrective matrix must pass before
-  the new `CI gate` is made the protected required check.
+- GitHub browser/accessibility, multi-Python compatibility, scheduled CodeQL,
+  native dependency review, secret scanning/push protection, nightly
+  concurrency repetition, and release restore rehearsal remain later testing
+  layers. Release SBOM/provenance exists and public launch selects GitHub's
+  recommended CodeQL default setup, but the current private plan does not
+  permit ruleset enforcement or Code Security and public-only settings are
+  intentionally not assumed.
+- The OCI image is a distributable deployment input, not proof of configured
+  SMTP, payment, object storage/scanning, workers, telemetry, backups, load,
+  accessibility, partner governance, recovery, or production readiness. The
+  first release remains blocked until a dedicated release PR updates
+  `pyproject.toml` from `0.1.0a0` to its derived CalVer and completes those
+  chosen release-channel gates.
 
 ## Smallest sensible next actions
 
-1. Confirm the current commit's corrective GitHub matrix, generated
-   contributor-documentation artifact, combined coverage, and `CI gate` pass;
-   then make `CI gate` the protected required check and add the bounded pull-
-   request Playwright/keyboard/automated-accessibility matrix.
+1. Confirm the replacement GitHub `PR gate`, six measured shards, generated
+   documentation, combined coverage, and container build contract. Apply the
+   checked-in main/tag rulesets when GitHub enables them for the private plan or
+   during the separately reviewed public transition; then raise reviews to one
+   when a second maintainer exists.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
@@ -486,7 +526,7 @@ approval.
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `PRODUCTION_CONSOLIDATION.md`, the
-relevant requirement IDs, ADRs 0047 through 0059, and the owning module/runbook
+relevant requirement IDs, ADRs 0047 through 0060, and the owning module/runbook
 docs. Preserve every concurrent change in the dirty working tree. Serialize all
 PostgreSQL tests that share `test_maru_test`; never infer authority from a
 selected edition or route; authorize before parsing untrusted input; retain

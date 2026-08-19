@@ -42,3 +42,4 @@ Thumbs.db
 .uv-cache/
 .pip-audit-cache/
 .codex-*.log
+.codex-ci-timings/

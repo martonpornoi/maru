@@ -199,52 +199,40 @@ empty/error states, and narrow-viewport overflow.
 
 ## GitHub acceptance topology
 
-The required GitHub `CI` workflow runs on pull requests, merge-queue
-candidates, pushes to the protected default branch, and manual dispatch.
-Superseded pull-request runs are cancelled, while default-branch and merge-
-queue evidence is never cancelled by a later ref.
+The required pull-request workflow classifies the submitted diff before
+installing dependencies. Superseded runs are cancelled and one stable
+`PR gate` is the branch-protection target:
 
-The workflow separates concerns so a fast failure does not wait behind the
-complete PostgreSQL suite:
+- documentation-only changes run static and warning-fatal documentation checks
+  without PostgreSQL;
+- ordinary Python changes run static/contracts/documentation, unit tests, and a
+  bounded PostgreSQL selection consisting of directly changed tests, tests
+  named for or importing affected modules, and critical API/readiness smoke;
+- frontend and dependency work adds only the relevant generated-contract,
+  build, and advisory checks; and
+- migrations, models, settings, locks, security/authority boundaries,
+  workflows, test configuration, and CI harnesses fail closed to reusable full
+  acceptance.
 
-- **Static quality** checks the lock, Ruff formatting/lint, strict mypy,
-  maintained-document validation, and submitted-diff whitespace without
-  provisioning PostgreSQL or Node. Ruff selects every rule and permits only
-  the eight global exemption categories accepted by ADR 0059; tests and named
-  framework adapters carry narrower file-scoped boundaries.
-- **Contributor documentation** validates complete NumPy signature sections,
-  including private callables, star arguments, types, defaults, return/yield
-  types, assertions, and exact direct raises, with PyDocLint. It applies Maru's
-  semantic quality gate to boilerplate prose, direct exceptions, and public
-  dataclass attributes, builds the complete MyST/Napoleon/AutoAPI Sphinx site
-  with warnings fatal, and retains the generated HTML artifact for 14 days.
-- **Django and generated contracts** checks local configuration, migration
-  drift, both production exact-provenance modes, OpenAPI, and the generated
-  TypeScript client.
-- **Staff Console** installs the frozen pnpm lock, type-checks, runs Vitest,
-  builds production assets, and rejects generated-static drift.
-- **Unit tests** run as one suite and publish JUnit plus a partial coverage data
-  file. PostgreSQL remains available because one unit-level media contract uses
-  a real transactional database boundary.
-- **PostgreSQL integration** distributes every direct
-  `tests/integration/test_*.py` file across 12 isolated jobs. Files stay whole
-  and each shard remains serialized internally; only independent GitHub
-  runners and databases execute in parallel.
-- **Combined coverage** downloads the unit and all integration coverage parts,
-  combines them once, and applies the repository's branch-aware 90-percent
-  threshold to the complete test inventory.
-- **Dependency security** runs the locked Python and production pnpm advisory
-  audits independently of behavior tests.
-- **CI gate** depends on every required result and provides one stable branch-
-  protection check name.
+The classifier cannot be bypassed from a pull request. Deleting 25 or more
+paths or any protected source/governance path requires a maintainer-applied
+`destructive-change-reviewed` label. A targeted selection that unexpectedly
+contains no tests fails instead of silently passing.
 
-The repository-owned shard selector uses deterministic source-file-size
-weights until repeated GitHub durations justify a checked-in timing map. It
-validates that the discovered inventory is non-empty and assigns every file
-exactly once. Matrix fail-fast is disabled so one failure cannot hide the
-remaining shard outcomes. There are no blanket retries. JUnit and hidden
-partial coverage data are retained for 14 days, and external actions plus the
-PostgreSQL image are pinned to reviewed immutable digests.
+Reusable full acceptance runs static analysis, strict NumPy documentation,
+Django/OpenAPI/client contracts, Staff Console acceptance, dependency audits,
+the unit suite, and every integration file. It distributes integration files
+across six isolated PostgreSQL jobs; files remain whole and serialized within a
+job. The checked-in timing map sums file-level JUnit durations from an accepted
+run and gives new files a conservative median fallback. The selector validates
+non-empty unique assignment and uses deterministic path/index tie-breaks.
+
+Unit and integration jobs publish hidden coverage parts and JUnit diagnostics
+for seven days. One job combines them and enforces branch-aware 90-percent
+coverage. Matrix fail-fast is disabled, blanket retries are forbidden, and
+external actions plus PostgreSQL and container bases are pinned to reviewed
+immutable digests. `Full CI gate` certifies high-risk pull requests, merge-queue
+candidates when that GitHub feature is available, manual runs, and releases.
 
 The ephemeral Actions databases prove migrations, constraints, authorization,
 and transactional behavior; they are not production restore/PITR or runtime-
@@ -260,10 +248,13 @@ The next expansion should add:
 - nightly Python 3.12/3.13/3.14 unit and contract compatibility, migration-
   from-zero, concurrency repetition, randomized-order seed capture, and the
   broader responsive/visual-state matrix;
-- CodeQL for Python and TypeScript, native dependency review, and repository
-  secret-scanning/push-protection policy; and
-- a release workflow for clean-build provenance, SBOM/attestation, synthetic
-  previous-version restoration, and production-shaped recovery rehearsal.
+- CodeQL pull-request/scheduled policy after the public plan supports it,
+  TypeScript analysis, native dependency review, and secret scanning with push
+  protection; and
+- synthetic previous-version restoration, production-shaped recovery rehearsal,
+  and container runtime smoke in the release environment. The existing release
+  workflow already supplies full source certification, an immutable OCI image,
+  SBOM/provenance attestations, and signed-by-checksum evidence assets.
 
 Automated accessibility is supplementary evidence. Representative keyboard,
 screen-reader, owner, restore/PITR, and production-governance acceptance remain

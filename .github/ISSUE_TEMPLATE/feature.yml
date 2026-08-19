@@ -1,0 +1,29 @@
+name: Feature proposal
+description: Propose a scoped product or contributor improvement.
+title: "[Proposal]: "
+labels: ["proposal", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or job
+      description: Who needs what outcome, and why is the current behavior insufficient?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance boundary
+      description: Describe observable success and what should remain out of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Security, privacy, and operations
+      description: Note tenant, permission, data, recovery, and deployment implications.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include existing workflows or workarounds where relevant.

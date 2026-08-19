@@ -64,6 +64,7 @@ the system.
 | [0057](0057-numpy-docstrings-and-generated-contributor-reference.md) | Partially superseded | Enforce NumPy-style Python contracts and build a warning-fatal Sphinx contributor reference in CI; ADR 0058 strengthens semantic depth |
 | [0058](0058-professional-python-documentation-contracts.md) | Partially superseded | Require complete public NumPy contracts and reject generated boilerplate; ADR 0059 strengthens signature synchronization and exact raises |
 | [0059](0059-strict-pydoclint-and-bounded-ruff-exemptions.md) | Accepted | Enable the strictest useful PyDocLint contract and replace broad Ruff exemptions with eight bounded global categories |
+| [0060](0060-protected-collaboration-and-release-evidence.md) | Accepted | Protected GitHub flow, change-aware acceptance, CalVer, and evidence-bearing OCI releases |
 
 New ADRs use the next four-digit number and contain:
 

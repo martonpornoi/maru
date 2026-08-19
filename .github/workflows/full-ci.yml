@@ -1,0 +1,16 @@
+name: Full acceptance
+
+on:
+  workflow_dispatch:
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full:
+    uses: ./.github/workflows/_full-ci.yml

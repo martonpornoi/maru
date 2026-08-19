@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a reproducible Maru defect without sensitive data.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Do not report vulnerabilities or include personal data. Follow SECURITY.md
+        for private security reporting.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Observed behavior
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Give the smallest safe, synthetic-data reproduction.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or release
+      placeholder: 40-character commit or vYYYY.MM.PR
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python, PostgreSQL, browser, and deployment shape where relevant.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I removed secrets, tokens, database dumps, and personal data.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true

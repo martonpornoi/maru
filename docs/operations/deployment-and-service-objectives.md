@@ -310,7 +310,10 @@ provider, scanner, storage, or offline devices.
 
 ## Release artifact
 
-A release contains:
+A repository release uses the CalVer and exact-source procedure in
+[`release-process.md`](release-process.md). GitHub Container Registry holds the
+primary application/worker image; a GitHub Release binds that digest to the
+source and evidence. A release contains:
 
 - immutable application and worker image references;
 - source commit and build provenance;
@@ -325,6 +328,14 @@ A release contains:
 
 Build once, then promote the identical artifact. Environment configuration does
 not rebuild application code.
+
+The checked-in workflow publishes candidate ``vYYYY.MM.PR-rc.N`` and gold
+``vYYYY.MM.PR`` identities only from an exact merged release pull request on
+current `main`. It refuses existing Git, GitHub Release, or OCI names and never
+overwrites a prior artifact. The release PR updates the Python project version
+to the matching PEP 440 ``YYYY.M.PR`` form. Passing this repository workflow is
+not production approval; all provider, infrastructure, load, accessibility,
+restore/PITR, partner-policy, owner, and go/no-go gates below remain necessary.
 
 The immutable application artifact must run `collectstatic` and include the
 locked `drf-spectacular-sidecar` Swagger/ReDoc assets. Release smoke verifies
