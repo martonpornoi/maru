@@ -55,7 +55,7 @@ def ensure_charity_selection_binding(
     ValidationError
         If the submitted state or input violates a domain invariant.
     """
-    if selection._state.adding or selection.pk is None:
+    if selection._state.adding or selection.pk is None:  # noqa: SLF001
         raise ValidationError(
             "Save the charity selection before creating its resource binding.",
             code="charity_selection_unavailable",

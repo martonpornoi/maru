@@ -252,7 +252,7 @@ class StaffSubjectRightsRequestTransitionView(APIView):
         account = _account(request)
         try:
             if settings.REQUIRE_PRIVILEGED_STEP_UP:
-                require_recent_step_up(account=account, request=request._request)
+                require_recent_step_up(account=account, request=request._request)  # noqa: SLF001
             item = transition_subject_rights_request(
                 actor=account,
                 organization_id=organization_id,
@@ -466,7 +466,7 @@ class StaffRegistrationProfileMinimizeView(APIView):
         account = _account(request)
         try:
             if settings.REQUIRE_PRIVILEGED_STEP_UP:
-                require_recent_step_up(account=account, request=request._request)
+                require_recent_step_up(account=account, request=request._request)  # noqa: SLF001
             receipt = minimize_registration_profile(
                 actor=account,
                 organization_id=organization_id,

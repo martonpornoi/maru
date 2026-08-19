@@ -593,7 +593,7 @@ def _renumber_sections(
         section.position = expected_position
         section.last_changed_in_setup_version = resulting_version
         section.updated_at = changed_at
-        if not section._state.adding:
+        if not section._state.adding:  # noqa: SLF001
             changed.append(section)
     return tuple(changed)
 

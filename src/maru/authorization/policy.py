@@ -364,9 +364,9 @@ def resolve_owned_target(  # noqa: PLR0911
     """
     if resource.pk is None:
         return None
-    if resource._meta.label_lower == "workforce.volunteerapplication":
+    if resource._meta.label_lower == "workforce.volunteerapplication":  # noqa: SLF001
         row = _safe_first(
-            type(resource)
+            type(resource)  # noqa: SLF001
             ._base_manager.filter(pk=resource.pk)
             .values(
                 "account_id",
@@ -391,14 +391,14 @@ def resolve_owned_target(  # noqa: PLR0911
             edition_id=base.edition_id,
             owner_account_id=row["account_id"],
         )
-    concrete_attnames = {field.attname for field in resource._meta.concrete_fields}
+    concrete_attnames = {field.attname for field in resource._meta.concrete_fields}  # noqa: SLF001
     if not {"organization_id", "account_id"} <= concrete_attnames:
         return None
     value_fields = ["organization_id", "account_id"]
     if "edition_id" in concrete_attnames:
         value_fields.append("edition_id")
     row = _safe_first(
-        type(resource)._base_manager.filter(pk=resource.pk).values(*value_fields)
+        type(resource)._base_manager.filter(pk=resource.pk).values(*value_fields)  # noqa: SLF001
     )
     if (
         row is None

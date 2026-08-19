@@ -770,18 +770,18 @@ def _has_other_account_relationship(account: Account) -> bool:
     """
     if account.groups.exists() or account.user_permissions.exists():
         return True
-    for relation in Account._meta.related_objects:
+    for relation in Account._meta.related_objects:  # noqa: SLF001
         related_model = relation.related_model
         if not isinstance(related_model, type):
             return True
         relation_identity = (
-            related_model._meta.label,
+            related_model._meta.label,  # noqa: SLF001
             relation.field.name,
         )
         if relation_identity in _ALLOWED_ACCOUNT_RELATIONS:
             continue
         lookup = {relation.field.name: account.id}
-        if related_model._base_manager.filter(**lookup).exists():
+        if related_model._base_manager.filter(**lookup).exists():  # noqa: SLF001
             return True
     return False
 

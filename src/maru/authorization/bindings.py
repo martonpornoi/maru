@@ -72,7 +72,7 @@ def ensure_workforce_position_binding(
     ValidationError
         If the submitted state or input violates a domain invariant.
     """
-    if position._state.adding or position.pk is None:
+    if position._state.adding or position.pk is None:  # noqa: SLF001
         raise ValidationError(
             "Save the workforce position before creating its resource binding.",
             code="workforce_position_unavailable",

@@ -296,18 +296,30 @@ class _LineageContext:
     historical_validity: dict[tuple[object, ...], bool] = field(default_factory=dict)
     validity: dict[tuple[object, ...], bool] = field(default_factory=dict)
 
-    def _locked(self, queryset: QuerySet[_ModelT]) -> QuerySet[_ModelT]:
+    def locked(self, queryset: QuerySet[_ModelT]) -> QuerySet[_ModelT]:
+        """Apply row locking when required by the read context.
+
+        Parameters
+        ----------
+        queryset : QuerySet[_ModelT]
+            The query to execute under the context's locking policy.
+
+        Returns
+        -------
+        QuerySet[_ModelT]
+            The original query or its row-locking equivalent.
+        """
         return queryset.select_for_update() if self.lock else queryset
 
     def issuance(self, ordinal: int) -> AuthorityIssuance | None:
         if ordinal not in self.issuances:
-            queryset = self._locked(AuthorityIssuance.objects.all())
+            queryset = self.locked(AuthorityIssuance.objects.all())
             self.issuances[ordinal] = queryset.filter(ordinal=ordinal).first()
         return self.issuances[ordinal]
 
     def issuance_controls(self, ordinal: int) -> tuple[AuthorityControl, ...]:
         if ordinal not in self.controls:
-            queryset = self._locked(AuthorityControl.objects.all())
+            queryset = self.locked(AuthorityControl.objects.all())
             self.controls[ordinal] = tuple(
                 queryset.filter(issuance_id=ordinal).order_by("role", "id")
             )
@@ -315,19 +327,19 @@ class _LineageContext:
 
     def account(self, account_id: UUID) -> Account | None:
         if account_id not in self.accounts:
-            queryset = self._locked(Account.objects.all())
+            queryset = self.locked(Account.objects.all())
             self.accounts[account_id] = queryset.filter(pk=account_id).first()
         return self.accounts[account_id]
 
     def grant(self, grant_id: UUID) -> CapabilityGrant | None:
         if grant_id not in self.grants:
-            queryset = self._locked(CapabilityGrant.objects.select_related("principal"))
+            queryset = self.locked(CapabilityGrant.objects.select_related("principal"))
             self.grants[grant_id] = queryset.filter(pk=grant_id).first()
         return self.grants[grant_id]
 
     def assignment(self, assignment_id: UUID) -> RoleAssignment | None:
         if assignment_id not in self.assignments:
-            queryset = self._locked(
+            queryset = self.locked(
                 RoleAssignment.objects.select_related("principal", "role_bundle")
             )
             self.assignments[assignment_id] = queryset.filter(pk=assignment_id).first()
@@ -335,19 +347,19 @@ class _LineageContext:
 
     def bundle(self, bundle_id: UUID) -> RoleBundle | None:
         if bundle_id not in self.bundles:
-            queryset = self._locked(RoleBundle.objects.all())
+            queryset = self.locked(RoleBundle.objects.all())
             self.bundles[bundle_id] = queryset.filter(pk=bundle_id).first()
         return self.bundles[bundle_id]
 
     def issuance_for_grant(self, grant_id: UUID) -> AuthorityIssuance | None:
-        queryset = self._locked(AuthorityIssuance.objects.all())
+        queryset = self.locked(AuthorityIssuance.objects.all())
         issuance = queryset.filter(capability_grant_id=grant_id).first()
         if issuance is not None:
             self.issuances[issuance.ordinal] = issuance
         return issuance
 
     def issuance_for_bundle(self, bundle_id: UUID) -> AuthorityIssuance | None:
-        queryset = self._locked(AuthorityIssuance.objects.all())
+        queryset = self.locked(AuthorityIssuance.objects.all())
         issuance = queryset.filter(role_bundle_id=bundle_id).first()
         if issuance is not None:
             self.issuances[issuance.ordinal] = issuance
@@ -794,13 +806,13 @@ def _load_special_controls_historical(
         or platform_actor.account_kind != Account.Kind.PLATFORM_ADMINISTRATOR
     ):
         return None
-    representation_query = context._locked(OrganizationRepresentation.objects.all())
+    representation_query = context.locked(OrganizationRepresentation.objects.all())
     representation = representation_query.filter(
         pk=actor.representation_id,
         organization_id=organization_id,
         activated_by_id=actor.principal_id,
     ).first()
-    appointment_query = context._locked(
+    appointment_query = context.locked(
         RepresentationAppointment.objects.select_related("representation")
     )
     appointment = appointment_query.filter(
@@ -1020,7 +1032,7 @@ def _load_board_assignment_is_current(
     if historical is None:
         return False
     representation, approver_appointment = historical
-    current_appointment_query = context._locked(
+    current_appointment_query = context.locked(
         RepresentationAppointment.objects.select_related("representation")
     )
     current_appointment = current_appointment_query.filter(
@@ -1031,8 +1043,8 @@ def _load_board_assignment_is_current(
         state=RepresentationAppointment.State.ACTIVE,
         ended_at__isnull=True,
     ).first()
-    organization_query = context._locked(Organization.objects.all())
-    membership_query = context._locked(OrganizationMembership.objects.all())
+    organization_query = context.locked(Organization.objects.all())
+    membership_query = context.locked(OrganizationMembership.objects.all())
     _code, _name, _version, _capabilities, membership_label = (
         _executive_board_definition()
     )
@@ -1100,7 +1112,7 @@ def _board_assignment_was_current_at(
     if historical is None:
         return False
     representation, approver_appointment = historical
-    appointment_query = context._locked(RepresentationAppointment.objects.all())
+    appointment_query = context.locked(RepresentationAppointment.objects.all())
     appointment = (
         appointment_query.filter(
             role_assignment_id=assignment.id,
@@ -1116,7 +1128,7 @@ def _board_assignment_was_current_at(
         .filter(Q(ended_at__isnull=True) | Q(ended_at__gt=evaluated_at))
         .first()
     )
-    membership_query = context._locked(OrganizationMembership.objects.all())
+    membership_query = context.locked(OrganizationMembership.objects.all())
     membership_exists = (
         membership_query.filter(
             organization_id=assignment.organization_id,
@@ -1517,7 +1529,7 @@ def role_bundle_provenance_is_historical(
     if not timezone.is_aware(effective_evaluation) or bundle.pk is None:
         return False
     context = _LineageContext(lock=lock)
-    bundle_query = context._locked(RoleBundle.objects.all())
+    bundle_query = context.locked(RoleBundle.objects.all())
     persisted_bundle = bundle_query.filter(pk=bundle.pk).first()
     if persisted_bundle is None:
         return False

@@ -660,7 +660,7 @@ def logistics_relation_names() -> tuple[str, ...]:
         If a required runtime invariant or dependency is unavailable.
     """
     relations = tuple(
-        cast("models.Model", apps.get_model("logistics", model_name))._meta.db_table
+        cast("models.Model", apps.get_model("logistics", model_name))._meta.db_table  # noqa: SLF001
         for model_name in _migration.LOGISTICS_MODEL_NAMES
     )
     if len(relations) != len(set(relations)):
@@ -685,12 +685,12 @@ def declared_schema_object_contracts() -> Mapping[str, SchemaObjectContract]:
     contracts: dict[str, SchemaObjectContract] = {}
     for model_name in _migration.LOGISTICS_MODEL_NAMES:
         model = apps.get_model("logistics", model_name)
-        for constraint in model._meta.constraints:
+        for constraint in model._meta.constraints:  # noqa: SLF001
             catalog_kind = _constraint_catalog_kind(constraint)
             deferrable = getattr(constraint, "deferrable", None)
             contract = SchemaObjectContract(
                 name=constraint.name,
-                table=model._meta.db_table,
+                table=model._meta.db_table,  # noqa: SLF001
                 catalog_kind=catalog_kind,
                 constraint_type=_constraint_type(constraint),
                 deferrable=deferrable is not None,
@@ -726,10 +726,10 @@ def declared_implicit_unique_contracts() -> tuple[ImplicitUniqueContract, ...]:
         model = apps.get_model("logistics", model_name)
         contracts.extend(
             ImplicitUniqueContract(
-                table=model._meta.db_table,
+                table=model._meta.db_table,  # noqa: SLF001
                 columns=(field.column,),
             )
-            for field in model._meta.local_fields
+            for field in model._meta.local_fields  # noqa: SLF001
             if field.unique and not field.primary_key
         )
     return tuple(sorted(contracts, key=lambda item: (item.table, item.columns)))

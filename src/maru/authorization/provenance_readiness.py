@@ -1352,11 +1352,11 @@ def _inspect_cutover_catalog() -> _CatalogState:
             [
                 (
                     f"{_SUPPORTED_DATABASE_SCHEMA}."
-                    f"{AuthorityProvenanceActivation._meta.db_table}"
+                    f"{AuthorityProvenanceActivation._meta.db_table}"  # noqa: SLF001
                 ),
                 (
                     f"{_SUPPORTED_DATABASE_SCHEMA}."
-                    f"{AuthorityProvenanceActivationLatch._meta.db_table}"
+                    f"{AuthorityProvenanceActivationLatch._meta.db_table}"  # noqa: SLF001
                 ),
             ],
         )

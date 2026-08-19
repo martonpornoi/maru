@@ -979,7 +979,7 @@ def _require_step_up(request: Request, account: Account) -> None:
     if not settings.REQUIRE_PRIVILEGED_STEP_UP:
         return
     try:
-        require_recent_step_up(account=account, request=request._request)
+        require_recent_step_up(account=account, request=request._request)  # noqa: SLF001
     except DjangoValidationError as error:
         raise ApiValidationError(
             {

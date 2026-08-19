@@ -72,7 +72,7 @@ from maru.registration.profile_extension_values import (
 
 
 def _admin_change_link(obj: models.Model, label: str) -> SafeString:
-    model_meta = obj._meta
+    model_meta = obj._meta  # noqa: SLF001
     url = reverse(
         f"admin:{model_meta.app_label}_{model_meta.model_name}_change",
         args=(obj.pk,),
@@ -619,7 +619,9 @@ class RegistrationTemplateAdmin(
         _ = request
         if obj is not None and obj.status != TemplateStatus.DRAFT:
             return tuple(
-                field.name for field in obj._meta.fields if field.name != "status"
+                field.name
+                for field in obj._meta.fields  # noqa: SLF001
+                if field.name != "status"
             )
         return self.readonly_fields
 
@@ -1111,7 +1113,7 @@ class RegistrationConfigurationAdmin(
         """
         _ = request
         if obj is not None and obj.status != ConfigurationStatus.DRAFT:
-            return tuple(field.name for field in obj._meta.fields)
+            return tuple(field.name for field in obj._meta.fields)  # noqa: SLF001
         return self.readonly_fields
 
     @override
@@ -2301,7 +2303,7 @@ class RegistrationProfileExtensionFieldAdmin(
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
-        if obj._state.adding:
+        if obj._state.adding:  # noqa: SLF001
             obj.created_by = account
         if obj.status == "active" and obj.review_status == "approved":
             obj.approved_by = obj.approved_by or account

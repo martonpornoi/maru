@@ -279,7 +279,7 @@ def _preauthorize_review_submission(
 
 
 def _correlation(request: Request) -> UUID:
-    return UUID(request._request.correlation_id)  # type: ignore[attr-defined]
+    return UUID(request._request.correlation_id)  # type: ignore[attr-defined]  # noqa: SLF001
 
 
 def _retry_key(request: Request) -> UUID:

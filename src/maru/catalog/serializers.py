@@ -30,7 +30,7 @@ class _CatalogClosedInputSchema(OpenApiSerializerExtension):
         auto_schema: "AutoSchema",
         direction: "Direction",
     ) -> dict[str, Any]:
-        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]
+        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]  # noqa: SLF001
             self.target,
             direction,
             bypass_extensions=True,

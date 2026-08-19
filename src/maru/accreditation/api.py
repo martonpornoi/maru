@@ -47,7 +47,7 @@ def _account(request: Request) -> Account:
 
 
 def _correlation_id(request: Request) -> UUID:
-    return UUID(request._request.correlation_id)  # type: ignore[attr-defined]
+    return UUID(request._request.correlation_id)  # type: ignore[attr-defined]  # noqa: SLF001
 
 
 class MyCredentialListView(APIView):

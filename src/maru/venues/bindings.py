@@ -55,7 +55,7 @@ def ensure_edition_space_binding(
     ValidationError
         If the submitted state or input violates a domain invariant.
     """
-    if space_selection._state.adding or space_selection.pk is None:
+    if space_selection._state.adding or space_selection.pk is None:  # noqa: SLF001
         raise ValidationError(
             "Save the edition space before creating its resource binding.",
             code="venue_space_unavailable",

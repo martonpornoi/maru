@@ -822,7 +822,7 @@ def append_profile_extension_value(  # noqa: PLR0915
     stored_value = (
         Value(
             None,
-            output_field=RegistrationProfileExtensionValueRevision._meta.get_field(
+            output_field=RegistrationProfileExtensionValueRevision._meta.get_field(  # noqa: SLF001
                 "value"
             ),
         )

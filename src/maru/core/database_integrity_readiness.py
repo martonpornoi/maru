@@ -520,9 +520,9 @@ def bounded_context_relation_names(app_label: str) -> tuple[str, ...]:
     """
     relations = tuple(
         sorted(
-            model._meta.db_table
+            model._meta.db_table  # noqa: SLF001
             for model in apps.get_app_config(app_label).get_models()
-            if model._meta.managed and not model._meta.proxy
+            if model._meta.managed and not model._meta.proxy  # noqa: SLF001
         )
     )
     if not relations or len(relations) != len(set(relations)):

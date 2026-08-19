@@ -8,10 +8,11 @@ verified. ADR 0057's NumPy docstring baseline and warning-fatal generated
 contributor reference are repository-verified. ADR 0058's professional public
 Python documentation contracts and semantic-quality gate are repository-
 verified. ADR 0059's strict PyDocLint contract and bounded Ruff exemptions are
-repository-verified; the complete authenticated
+repository-verified. Its pull-request CI correction is locally verified and
+awaits the replacement GitHub run; the complete authenticated
 reflow, keyboard, screen-reader, owner, deployment, stopped-writer/cutover,
 restore/PITR, and production-governance gates remain open.
-Branch: `main`
+Branch: `codex/strict-python-documentation`
 
 ## Current outcome
 
@@ -91,6 +92,13 @@ cross-domain-save design.
   docs, redundant raises, private access, and type-only imports are no longer
   globally exempt; tests and named framework adapters carry only scoped
   exceptions.
+- The pull-request CI correction preserves that boundary: test-only private
+  access is scoped by the test-tree rule, 59 intentional Django, DRF, and
+  schema-generator accesses in 26 production files carry exact line-level
+  `SLF001` evidence, and avoidable project-owned private accesses were replaced
+  with documented APIs. `src/manage.py` is executable for Linux lint parity,
+  while the direct `sqlparse>=0.6,<0.7` security floor prevents resolution to
+  the vulnerable 0.5.5 release.
 - A repository semantic gate rejects recognizable placeholder summaries and
   descriptions, missing direct `Raises` entries, and missing dataclass
   `Attributes`. Notes, Examples, Warnings, and See Also remain judgment-based:
@@ -303,6 +311,16 @@ as the repository-wide gate:
   and `1d82884c2d4fc5a0fd7c831dd4b37fb4932ef11df215811bf8549299aced436c`,
   respectively. The 18 existing enum-name diagnostics and expected local
   fail-closed `identity.W001` warning remain.
+- The ADR 0059 pull-request CI correction reproduces and closes all three fast-
+  job failures locally: Git records `src/manage.py` as mode `100755`; the lock
+  resolves `sqlparse` 0.6.0 and both Python and Staff Console production audits
+  report no known vulnerabilities; and the bounded-global-ignore unit contract
+  passes with `SLF001` removed from the global Ruff set. Lock verification,
+  Ruff formatting/ALL-rule lint over 636 files, strict mypy over 356 source
+  files, strict PyDocLint plus semantic validation over 360 production/tooling
+  files, the 249-Markdown/202-requirement validator, a fresh warning-fatal
+  Sphinx/AutoAPI build, and all 1,847 unit tests pass locally. The replacement
+  pull-request run remains the remote acceptance authority.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source

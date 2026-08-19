@@ -34,7 +34,7 @@ class CorrelationIdMiddleware(MiddlewareMixin):
         """
         request_id = _safe_request_id(request.META.get(self.header_name))
         request.correlation_id = request_id  # type: ignore[attr-defined]
-        request._maru_correlation_token = correlation_id.set(request_id)  # type: ignore[attr-defined]
+        request.maru_correlation_token = correlation_id.set(request_id)  # type: ignore[attr-defined]
 
     def process_response(
         self,
@@ -57,7 +57,7 @@ class CorrelationIdMiddleware(MiddlewareMixin):
         """
         request_id = getattr(request, "correlation_id", str(uuid4()))
         response[self.response_header] = request_id
-        token = getattr(request, "_maru_correlation_token", None)
+        token = getattr(request, "maru_correlation_token", None)
         if token is not None:
             correlation_id.reset(token)
         return response

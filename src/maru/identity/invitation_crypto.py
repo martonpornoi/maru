@@ -399,7 +399,24 @@ class InvitationPrivateKeyring:
         }
         return cls(loaded)
 
-    def _resolve(self, encryption_key_id: str) -> rsa.RSAPrivateKey:
+    def resolve(self, encryption_key_id: str) -> rsa.RSAPrivateKey:
+        """Resolve a private key by its bounded key identifier.
+
+        Parameters
+        ----------
+        encryption_key_id : str
+            The identifier embedded in the encrypted invitation envelope.
+
+        Returns
+        -------
+        rsa.RSAPrivateKey
+            The matching private key.
+
+        Raises
+        ------
+        InvitationDecryptionKeyUnavailableError
+            If the keyring does not contain the requested identifier.
+        """
         try:
             return self._private_keys[encryption_key_id]
         except KeyError:
@@ -655,7 +672,7 @@ def decrypt_invitation_payload(
     ):
         raise InvitationPayloadDecryptionError
 
-    private_key = private_keyring._resolve(envelope.encryption_key_id)
+    private_key = private_keyring.resolve(envelope.encryption_key_id)
     try:
         wrapped_data_key = _base64url_decode(
             envelope.wrapped_data_key,

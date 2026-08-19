@@ -252,7 +252,7 @@ def _active_platform_administrator(
         )
     if require_step_up and settings.REQUIRE_PRIVILEGED_STEP_UP:
         try:
-            require_recent_step_up(account=actor, request=request._request)
+            require_recent_step_up(account=actor, request=request._request)  # noqa: SLF001
         except DjangoValidationError as error:
             raise PermissionDenied(
                 _PROTECTED_UNAVAILABLE_DETAIL,
@@ -1074,7 +1074,7 @@ class PublicAccountInvitationAcceptanceView(APIView):
                 new_password=cast("str", payload["new_password1"]),
                 retry_key=retry_key,
                 correlation_id=correlation_id,
-                request_fingerprint=request_fingerprint(request._request),
+                request_fingerprint=request_fingerprint(request._request),  # noqa: SLF001
                 request_id=correlation_id,
                 source_channel="api",
             )

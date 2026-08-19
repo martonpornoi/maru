@@ -1061,7 +1061,7 @@ class EditionReadinessGateReviewView(APIView):
         values = serializer.validated_data
         try:
             if settings.REQUIRE_PRIVILEGED_STEP_UP:
-                require_recent_step_up(account=account, request=request._request)
+                require_recent_step_up(account=account, request=request._request)  # noqa: SLF001
             gate = review_readiness_gate(
                 actor=account,
                 organization_id=organization_id,
@@ -1137,7 +1137,7 @@ class EditionClosureManifestCreateView(APIView):
         )
         try:
             if settings.REQUIRE_PRIVILEGED_STEP_UP:
-                require_recent_step_up(account=account, request=request._request)
+                require_recent_step_up(account=account, request=request._request)  # noqa: SLF001
             manifest = generate_closure_manifest(
                 edition=edition,
                 actor=account,

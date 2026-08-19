@@ -953,7 +953,7 @@ def _renumber_questions(
         question.position = position
         question.last_changed_in_setup_version = resulting_version
         question.updated_at = changed_at
-        if not question._state.adding:
+        if not question._state.adding:  # noqa: SLF001
             changed.append(question)
     return tuple(changed)
 
@@ -2257,7 +2257,7 @@ def _renumber_products(
         product.position = position
         product.last_changed_in_setup_version = resulting_version
         product.updated_at = changed_at
-        if not product._state.adding:
+        if not product._state.adding:  # noqa: SLF001
             changed.append(product)
     return tuple(changed)
 
@@ -4013,7 +4013,7 @@ def _renumber_profile_fields(
             field.approved_at = None
         field.last_changed_in_setup_version = resulting_version
         field.updated_at = changed_at
-        if not field._state.adding:
+        if not field._state.adding:  # noqa: SLF001
             changed.append(field)
     return tuple(changed)
 

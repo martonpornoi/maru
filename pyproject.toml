@@ -18,6 +18,7 @@ dependencies = [
   "Pillow>=12.1,<13",
   "psycopg[binary,pool]>=3.3.4,<3.4",
   "pycountry>=24.6,<25",
+  "sqlparse>=0.6,<0.7",
 ]
 
 [dependency-groups]
@@ -97,14 +98,13 @@ ignore = [
   "EM101",   # Exception must not use a string literal, assign to variable first
   "EM102",   # Exception must not use an f-string literal, assign to variable first
   "PLR0913", # Too many arguments in function definition (6 > 5)
-  "SLF001",  # Private member accessed: `_map_serializer`
   "TRY003",  # Avoid specifying long messages outside the exception class
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/conf.py" = ["A001", "INP001"]
 "tests/*.py" = ["ANN", "D", "S105", "S106"]
-"tests/**/*.py" = ["ANN", "D", "S101", "S106", "ARG001", "FBT001", "PLR2004"]
+"tests/**/*.py" = ["ANN", "D", "S101", "S106", "ARG001", "FBT001", "PLR2004", "SLF001"]
 "scripts/*.py" = ["INP001", "T201"]
 "src/manage.py" = ["PLC0415", "T201"]
 "src/**/models.py" = ["RUF012"]

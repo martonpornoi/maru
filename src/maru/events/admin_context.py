@@ -719,7 +719,7 @@ class EditionContextAdmin(
         }
         for field_name, value in edition_defaults.items():
             try:
-                self.model._meta.get_field(field_name)
+                self.model._meta.get_field(field_name)  # noqa: SLF001
             except FieldDoesNotExist:
                 continue
             initial.setdefault(field_name, str(value))
@@ -761,7 +761,7 @@ class EditionContextAdmin(
                 )
             elif lookup := self.edition_context_foreign_key_lookups.get(db_field.name):
                 kwargs["queryset"] = (
-                    db_field.remote_field.model._default_manager.filter(
+                    db_field.remote_field.model._default_manager.filter(  # noqa: SLF001
                         **{lookup: edition.id}
                     )
                 )

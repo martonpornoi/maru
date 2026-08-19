@@ -54,7 +54,7 @@ def ensure_logistics_manifest_binding(
     ValidationError
         If the submitted state or input violates a domain invariant.
     """
-    if manifest._state.adding or manifest.pk is None:
+    if manifest._state.adding or manifest.pk is None:  # noqa: SLF001
         raise ValidationError(
             "Save the Logistics manifest before creating its resource binding.",
             code="logistics_manifest_unavailable",

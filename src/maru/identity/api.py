@@ -78,7 +78,7 @@ class CsrfTokenView(APIView):
         Response
             The HTTP response for the requested operation.
         """
-        return Response({"csrf_token": get_token(request._request)})
+        return Response({"csrf_token": get_token(request._request)})  # noqa: SLF001
 
 
 @method_decorator(csrf_protect, name="dispatch")
@@ -113,7 +113,7 @@ class PublicSessionView(APIView):
         serializer = SessionSignInSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         fingerprint = request_fingerprint(
-            request._request,
+            request._request,  # noqa: SLF001
             contact=serializer.validated_data["email"],
         )
         try:
@@ -123,7 +123,7 @@ class PublicSessionView(APIView):
                 {"detail": "Sign-in is temporarily unavailable.", "code": error.code}
             ) from error
         account = authenticate(
-            request=request._request,
+            request=request._request,  # noqa: SLF001
             email=serializer.validated_data["email"],
             password=serializer.validated_data["password"],
         )
@@ -132,8 +132,8 @@ class PublicSessionView(APIView):
                 {"detail": "The email or password is incorrect."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        login(request._request, account)
-        inventory_session(account=account, request=request._request)
+        login(request._request, account)  # noqa: SLF001
+        inventory_session(account=account, request=request._request)  # noqa: SLF001
         return Response(
             {
                 "account_id": str(account.id),
@@ -174,7 +174,7 @@ class PublicAccountBootstrapView(APIView):
         serializer = AccountBootstrapSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         fingerprint = request_fingerprint(
-            request._request,
+            request._request,  # noqa: SLF001
             contact=serializer.validated_data["email"],
         )
         try:
@@ -279,7 +279,7 @@ class PublicRecoveryRequestView(APIView):
         serializer = RecoveryRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         fingerprint = request_fingerprint(
-            request._request,
+            request._request,  # noqa: SLF001
             contact=serializer.validated_data["email"],
         )
         try:
@@ -407,7 +407,7 @@ class MySessionListView(APIView):
         """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
-        current = inventory_session(account=request.user, request=request._request)
+        current = inventory_session(account=request.user, request=request._request)  # noqa: SLF001
         items = request.user.account_sessions.order_by("-last_seen_at", "-id")[:100]
         data = AccountSessionSerializer(items, many=True).data
         current_id = str(current.id) if current else None
@@ -488,7 +488,7 @@ class MyStepUpView(APIView):
         try:
             item = complete_step_up(
                 account=request.user,
-                request=request._request,
+                request=request._request,  # noqa: SLF001
                 password=serializer.validated_data["password"],
             )
         except DjangoValidationError as error:
@@ -692,7 +692,7 @@ class StaffRestrictionListCreateView(APIView):
         values = serializer.validated_data
         try:
             if settings.REQUIRE_PRIVILEGED_STEP_UP:
-                require_recent_step_up(account=request.user, request=request._request)
+                require_recent_step_up(account=request.user, request=request._request)  # noqa: SLF001
             target = Account.objects.get(id=values["account_id"])
             item = issue_account_restriction(
                 actor=request.user,
@@ -772,7 +772,7 @@ class StaffRestrictionRevokeView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             if settings.REQUIRE_PRIVILEGED_STEP_UP:
-                require_recent_step_up(account=request.user, request=request._request)
+                require_recent_step_up(account=request.user, request=request._request)  # noqa: SLF001
             item = revoke_account_restriction(
                 actor=request.user,
                 organization_id=organization_id,
@@ -845,7 +845,7 @@ class StaffRestrictionAppealDecisionView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             if settings.REQUIRE_PRIVILEGED_STEP_UP:
-                require_recent_step_up(account=request.user, request=request._request)
+                require_recent_step_up(account=request.user, request=request._request)  # noqa: SLF001
             item = decide_restriction_appeal(
                 actor=request.user,
                 organization_id=organization_id,
