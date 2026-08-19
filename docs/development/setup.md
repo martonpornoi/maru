@@ -72,7 +72,7 @@ prose quality; and the warning-clean HTML site with:
 ```powershell
 uv run pydoclint src scripts
 uv run python scripts/validate_python_docstrings.py src scripts
-uv run sphinx-build -W --keep-going --fresh-env -b html docs docs/_build/html
+uv run sphinx-build -W --keep-going --fresh-env -j auto -b html docs docs/_build/html
 ```
 
 Open `docs/_build/html/index.html` locally after the build. GitHub Actions runs

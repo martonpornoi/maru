@@ -6,7 +6,7 @@ uv run mypy src
 uv run python scripts/validate_docs.py
 uv run pydoclint src scripts
 uv run python scripts/validate_python_docstrings.py src scripts
-uv run sphinx-build -W --keep-going --fresh-env -b html docs docs/_build/html
+uv run sphinx-build -W --keep-going --fresh-env -j auto -b html docs docs/_build/html
 uv run python src/manage.py makemigrations --check --dry-run
 uv run python src/manage.py check
 uv run python scripts/verify_production_settings.py

@@ -56,12 +56,15 @@ def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
     assert workflow.count("image: postgres:17.11-alpine@sha256:") == 2
 
 
-def test_full_workflow_uses_six_measured_shards_and_combined_coverage() -> None:
+def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> None:
     workflow = _workflow(FULL_WORKFLOW)
 
     assert "workflow_call:" in workflow
-    assert "shard: [1, 2, 3, 4, 5, 6]" in workflow
-    assert "--shard-count 6" in workflow
+    for job in ("static", "documentation", "contracts", "security"):
+        assert re.search(rf"^  {job}:$", workflow, re.MULTILINE)
+    assert workflow.count("needs: security") == 2
+    assert "shard: [1, 2, 3, 4, 5, 6, 7, 8]" in workflow
+    assert "--shard-count 8" in workflow
     assert "scripts/run_ci_test_shard.py" in workflow
     assert "coverage combine .ci-artifacts/coverage-parts" in workflow
     assert "coverage report --fail-under=90" in workflow
@@ -76,7 +79,10 @@ def test_documentation_contract_matches_local_and_full_acceptance() -> None:
     for command in (
         "uv run pydoclint src scripts",
         "uv run python scripts/validate_python_docstrings.py src scripts",
-        "uv run sphinx-build -W --keep-going --fresh-env -b html docs docs/_build/html",
+        (
+            "uv run sphinx-build -W --keep-going --fresh-env -j auto -b html "
+            "docs docs/_build/html"
+        ),
     ):
         assert command in workflow
         assert command in local_check

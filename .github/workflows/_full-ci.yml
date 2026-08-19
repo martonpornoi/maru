@@ -7,10 +7,10 @@ permissions:
   contents: read
 
 jobs:
-  quality:
-    name: Full static, docs, contracts, frontend, and security
+  static:
+    name: Full Python static analysis
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -19,10 +19,68 @@ jobs:
       - name: Restore uv cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: .uv-cache
-          key: uv-${{ runner.os }}-py312-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-py312-
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: ${{ runner.os }}-uv-
+      - name: Install locked dependencies
+        run: |
+          python -m pip install uv==0.11.29
+          uv sync --all-groups --locked
+      - name: Static analysis
+        run: |
+          uv lock --check
+          uv run ruff format --check .
+          uv run ruff check .
+          uv run mypy src
+          uv run python scripts/validate_docs.py
+
+  documentation:
+    name: Full contributor documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Restore uv cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: ${{ runner.os }}-uv-
+      - name: Install locked dependencies
+        run: |
+          python -m pip install uv==0.11.29
+          uv sync --all-groups --locked
+      - name: Build warning-fatal contributor documentation
+        run: |
+          uv run pydoclint src scripts
+          uv run python scripts/validate_python_docstrings.py src scripts
+          uv run sphinx-build -W --keep-going --fresh-env -j auto -b html docs docs/_build/html
+      - name: Upload contributor documentation
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: contributor-documentation
+          path: docs/_build/html
+          if-no-files-found: error
+          retention-days: 7
+
+  contracts:
+    name: Full Django, contracts, and frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Restore uv cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: ${{ runner.os }}-uv-
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
           version: "11.9.0"
@@ -36,16 +94,6 @@ jobs:
           python -m pip install uv==0.11.29
           uv sync --all-groups --locked
           pnpm --dir frontends/staff-console install --frozen-lockfile
-      - name: Static analysis and documentation
-        run: |
-          uv lock --check
-          uv run ruff format --check .
-          uv run ruff check .
-          uv run mypy src
-          uv run python scripts/validate_docs.py
-          uv run pydoclint src scripts
-          uv run python scripts/validate_python_docstrings.py src scripts
-          uv run sphinx-build -W --keep-going --fresh-env -b html docs docs/_build/html
       - name: Django and generated contracts
         run: |
           uv run python src/manage.py check --settings=maru.settings.local
@@ -62,20 +110,43 @@ jobs:
           pnpm run test
           pnpm run build
           git diff --exit-code -- ../../src/maru/core/static/staff-console
+
+  security:
+    name: Full dependency security
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Restore uv cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: ${{ runner.os }}-uv-
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: "11.9.0"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: frontends/staff-console/pnpm-lock.yaml
+      - name: Install locked dependencies
+        run: |
+          python -m pip install uv==0.11.29
+          uv sync --all-groups --locked
+          pnpm --dir frontends/staff-console install --frozen-lockfile
       - name: Dependency vulnerability audit
         run: |
           uv run pip-audit
           pnpm --dir frontends/staff-console audit --audit-level high
-      - name: Upload contributor documentation
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: contributor-documentation
-          path: docs/_build/html
-          if-no-files-found: error
-          retention-days: 7
 
   unit:
     name: Full unit coverage
+    needs: security
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -125,13 +196,14 @@ jobs:
           retention-days: 7
 
   integration:
-    name: Full PostgreSQL integration (${{ matrix.shard }}/6)
+    name: Full PostgreSQL integration (${{ matrix.shard }}/8)
+    needs: security
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     services:
       postgres:
         image: postgres:17.11-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
@@ -165,7 +237,7 @@ jobs:
           mkdir -p coverage-parts reports
           COVERAGE_FILE=coverage-parts/.coverage.integration-${{ matrix.shard }} \
             uv run python scripts/run_ci_test_shard.py \
-            --shard-index ${{ matrix.shard }} --shard-count 6 -- \
+            --shard-index ${{ matrix.shard }} --shard-count 8 -- \
             -q --cov=maru --cov-report= --cov-fail-under=0 \
             --junitxml=reports/integration-${{ matrix.shard }}.xml \
             --durations=25
@@ -222,7 +294,8 @@ jobs:
 
   full-ci-gate:
     name: Full CI gate
-    needs: [quality, unit, integration, coverage]
+    needs:
+      [static, documentation, contracts, security, unit, integration, coverage]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -230,7 +303,10 @@ jobs:
       - name: Require every full acceptance job
         if: >-
           ${{
-            needs.quality.result != 'success' ||
+            needs.static.result != 'success' ||
+            needs.documentation.result != 'success' ||
+            needs.contracts.result != 'success' ||
+            needs.security.result != 'success' ||
             needs.unit.result != 'success' ||
             needs.integration.result != 'success' ||
             needs.coverage.result != 'success'

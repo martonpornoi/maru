@@ -154,7 +154,7 @@ Run the documentation gates with:
 ```powershell
 uv run pydoclint src scripts
 uv run python scripts/validate_python_docstrings.py src scripts
-uv run sphinx-build -W --keep-going --fresh-env -b html docs docs/_build/html
+uv run sphinx-build -W --keep-going --fresh-env -j auto -b html docs docs/_build/html
 ```
 
 The semantic validator reports stable `PDQ` codes for boilerplate summaries,

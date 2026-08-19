@@ -221,18 +221,24 @@ contains no tests fails instead of silently passing.
 
 Reusable full acceptance runs static analysis, strict NumPy documentation,
 Django/OpenAPI/client contracts, Staff Console acceptance, dependency audits,
-the unit suite, and every integration file. It distributes integration files
-across six isolated PostgreSQL jobs; files remain whole and serialized within a
-job. The checked-in timing map sums file-level JUnit durations from an accepted
-run and gives new files a conservative median fallback. The selector validates
-non-empty unique assignment and uses deterministic path/index tie-breaks.
+the unit suite, and every integration file. Static analysis, documentation,
+contracts/frontend, and security run concurrently so one late category does
+not delay the others or obscure its failure. It distributes integration files
+across eight isolated PostgreSQL jobs; files remain whole and serialized within
+a job. The checked-in timing map sums file-level JUnit durations from an
+accepted run and gives new files a conservative median fallback. The selector
+validates non-empty unique assignment and uses deterministic path/index
+tie-breaks. Dependency security must pass before unit or integration PostgreSQL
+services start, so an advisory does not spend database runner-minutes.
 
 Unit and integration jobs publish hidden coverage parts and JUnit diagnostics
 for seven days. One job combines them and enforces branch-aware 90-percent
-coverage. Matrix fail-fast is disabled, blanket retries are forbidden, and
-external actions plus PostgreSQL and container bases are pinned to reviewed
-immutable digests. `Full CI gate` certifies high-risk pull requests, merge-queue
-candidates when that GitHub feature is available, manual runs, and releases.
+coverage. The eight measured shards balance near 2,650 weighted seconds, with
+the indivisible longest file near 2,660 seconds. Matrix fail-fast is disabled,
+blanket retries are forbidden, and external actions plus PostgreSQL and
+container bases are pinned to reviewed immutable digests. `Full CI gate`
+certifies high-risk pull requests, merge-queue candidates when that GitHub
+feature is available, manual runs, and releases.
 
 The ephemeral Actions databases prove migrations, constraints, authorization,
 and transactional behavior; they are not production restore/PITR or runtime-

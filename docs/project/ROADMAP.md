@@ -117,11 +117,12 @@ restore/PITR, and owner/governance gates remain.
 ADR 0060 replaces unconditional twelve-shard pull-request acceptance with a
 change-aware stable `PR gate`: documentation changes use no PostgreSQL,
 ordinary module work uses bounded affected tests, and high-risk boundaries fail
-closed to reusable full acceptance. Full certification uses six measured
-whole-file integration shards plus unit PostgreSQL, combined coverage, and a
-stable `Full CI gate`. A manual exact-source release workflow now publishes a
-CalVer-tagged immutable GHCR image with SBOM/provenance and GitHub evidence
-assets. Pull-request browser smoke, nightly compatibility/concurrency/visual
+closed to reusable full acceptance. Full certification uses eight measured
+whole-file integration shards plus unit PostgreSQL, combined coverage, four
+parallel non-database gates, and a stable `Full CI gate`. A manual exact-source
+release workflow now publishes a CalVer-tagged immutable GHCR image with SBOM/
+provenance and GitHub evidence assets. Pull-request browser smoke, nightly
+compatibility/concurrency/visual
 matrices, public-plan CodeQL/dependency/secret policy, synthetic deployment,
 and release recovery rehearsal remain next testing-infrastructure outcomes;
 ephemeral Actions databases do not satisfy production restore/PITR.
