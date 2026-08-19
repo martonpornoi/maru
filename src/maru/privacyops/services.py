@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
@@ -33,6 +33,9 @@ from maru.registration.models import (
     MediaReviewStatus,
 )
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 CORRECTABLE_PROFILE_FIELDS = frozenset(
     {
         "real_name",
@@ -58,8 +61,20 @@ def build_subject_export(
     account: Account,
     organization_id: UUID | None,
 ) -> dict[str, object]:
-    """Return a purpose-grouped self projection without provider secrets."""
+    """Return a purpose-grouped self projection without provider secrets.
 
+    Parameters
+    ----------
+    account : Account
+        The platform account whose state or access is being evaluated.
+    organization_id : UUID | None
+        The organization identifier that owns the requested resource.
+
+    Returns
+    -------
+    dict[str, object]
+        A mapping containing the resolved build subject export data.
+    """
     from maru.accreditation.models import Credential  # noqa: PLC0415
     from maru.communications.models import NotificationMessage  # noqa: PLC0415
     from maru.registration.models import Registration  # noqa: PLC0415
@@ -198,6 +213,29 @@ def create_subject_rights_request(
     kind: str,
     summary: str,
 ) -> SubjectRightsRequest:
+    """Create subject rights request.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    organization_id : UUID | None
+        The identifier of the organization that owns the operation.
+    kind : str
+        The closed kind code.
+    summary : str
+        The human-readable summary.
+
+    Returns
+    -------
+    SubjectRightsRequest
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     normalized = summary.strip()
     if kind not in SubjectRightsRequest.Kind.values:
         raise ValidationError(
@@ -227,8 +265,35 @@ def transition_subject_rights_request(
     outcome_summary: str,
     correlation_id: UUID,
 ) -> SubjectRightsRequest:
-    """Advance one organization-scoped subject-rights case through safe states."""
+    """Advance one organization-scoped subject-rights case through safe states.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    request_id : UUID
+        The correlation identifier attached to the incoming request.
+    action : str
+        The stable action code describing the requested transition.
+    outcome_summary : str
+        The outcome summary applied within the audited domain transition.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+
+    Returns
+    -------
+    SubjectRightsRequest
+        The resolved SubjectRightsRequest for transition subject rights request.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     decision = decide(
         principal=actor,
         capability_code="privacy.manage_requests",
@@ -324,6 +389,31 @@ def propose_profile_correction(
     changed_fields: object,
     reason: str,
 ) -> PostEditionCorrection:
+    """Propose profile correction.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    profile_id : UUID
+        The identifier of the profile.
+    changed_fields : object
+        The canonical field names changed by the operation.
+    reason : str
+        The operator-supplied reason for the operation.
+
+    Returns
+    -------
+    PostEditionCorrection
+        The newly persisted PostEditionCorrection with its durable command evidence.
+
+    Raises
+    ------
+    AttendeeRegistrationProfile.DoesNotExist
+        If the operation encounters a does not exist condition.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     profile = (
         AttendeeRegistrationProfile.objects.select_related("edition")
         .filter(id=profile_id, account=account)
@@ -382,6 +472,35 @@ def decide_profile_correction(
     approve: bool,
     reason: str,
 ) -> PostEditionCorrection:
+    """Decide profile correction.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    correction_id : UUID
+        The identifier of the correction.
+    approve : bool
+        The approve applied within the audited domain transition.
+    reason : str
+        The operator-supplied reason for the operation.
+
+    Returns
+    -------
+    PostEditionCorrection
+        The PostEditionCorrection established after decide profile correction completes.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     decision = decide(
         principal=actor,
         capability_code="privacy.manage_requests",
@@ -438,8 +557,37 @@ def minimize_registration_profile(
     correlation_id: UUID,
     today: date | None = None,
 ) -> DisposalReceipt:
-    """Apply an approved retention policy without destroying financial history."""
+    """Apply an approved retention policy without destroying financial history.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    profile_id : UUID
+        The profile identifier within the requested scope.
+    policy_id : UUID
+        The policy identifier within the requested scope.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    today : date | None, default=None
+        The today applied within the audited domain transition.
+
+    Returns
+    -------
+    DisposalReceipt
+        The resolved DisposalReceipt for minimize registration profile.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     decision = decide(
         principal=actor,
         capability_code="privacy.manage_requests",

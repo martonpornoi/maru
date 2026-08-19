@@ -103,8 +103,18 @@ REGISTER_ON_BEHALF = "registration.register_on_behalf"
 
 
 def guardian_consent(request: HttpRequest) -> HttpResponse:
-    """Human-facing completion page for a guardian's single-use link."""
+    """Human-facing completion page for a guardian's single-use link.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     form = GuardianConsentForm(
         request.POST or None,
         initial={"token": request.GET.get("token", "")},
@@ -113,8 +123,8 @@ def guardian_consent(request: HttpRequest) -> HttpResponse:
     if request.method == "POST" and form.is_valid():
         try:
             registration = accept_guardian_consent(
-                raw_token=cast(str, form.cleaned_data["token"]),
-                guardian_name=cast(str, form.cleaned_data["guardian_name"]),
+                raw_token=cast("str", form.cleaned_data["token"]),
+                guardian_name=cast("str", form.cleaned_data["guardian_name"]),
             )
         except ValidationError as error:
             form.add_error(None, error.messages[0])
@@ -154,8 +164,18 @@ def _account(request: HttpRequest) -> Account | None:
 
 
 def public_registration_index(request: HttpRequest) -> TemplateResponse:
-    """Show open editions and returning-attendee registration history."""
+    """Show open editions and returning-attendee registration history.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    TemplateResponse
+        The HTTP response for the requested operation.
+    """
     account = _account(request)
     open_configurations = list(_open_configurations())
     registrations: list[Registration] = []
@@ -196,8 +216,25 @@ def staff_assisted_registration(
     request: HttpRequest,
     edition_id: UUID,
 ) -> HttpResponse:
-    """Reasoned staff client for the ordinary registration command."""
+    """Reasoned staff client for the ordinary registration command.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     actor = _account(request)
     if actor is None:
         raise Http404
@@ -253,7 +290,7 @@ def staff_assisted_registration(
             result = submit_public_registration(
                 organization_id=configuration.organization_id,
                 edition_id=configuration.edition_id,
-                product_id=cast(AdmissionProduct, form.cleaned_data["product"]).id,
+                product_id=cast("AdmissionProduct", form.cleaned_data["product"]).id,
                 answers=form.registration_answers(),
                 profile_input=_profile_input(form, fursuit_formset),
                 correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
@@ -261,21 +298,21 @@ def staff_assisted_registration(
                 email=(
                     ""
                     if subject is not None
-                    else cast(str, form.cleaned_data["account_email"])
+                    else cast("str", form.cleaned_data["account_email"])
                 ),
                 display_name=(
                     ""
                     if subject is not None
-                    else cast(str, form.cleaned_data["new_account_display_name"])
+                    else cast("str", form.cleaned_data["new_account_display_name"])
                 ),
                 password=(
                     ""
                     if subject is not None
-                    else cast(str, form.cleaned_data["new_account_password1"])
+                    else cast("str", form.cleaned_data["new_account_password1"])
                 ),
                 source_channel="staff_web",
                 staff_actor=actor,
-                staff_reason=cast(str, form.cleaned_data["staff_reason"]),
+                staff_reason=cast("str", form.cleaned_data["staff_reason"]),
                 bypass_sale_windows=True,
             )
         except (IntegrityError, ObjectDoesNotExist, ValidationError) as error:
@@ -340,7 +377,7 @@ def _dynamic_groups(
                 "fields": [],
             }
             order.append(key)
-        fields = cast(list[object], groups[key]["fields"])
+        fields = cast("list[object]", groups[key]["fields"])
         fields.append(form[form.question_field_name(question)])
     return [groups[key] for key in order]
 
@@ -361,47 +398,47 @@ def _profile_input(
         upload = fursuit_form.cleaned_data.get("photo")
         fursuits.append(
             AttendeeFursuitInput(
-                fursuit_id=cast(UUID | None, fursuit_form.cleaned_data["fursuit_id"]),
+                fursuit_id=cast("UUID | None", fursuit_form.cleaned_data["fursuit_id"]),
                 reuse_from_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     fursuit_form.cleaned_data["reuse_from_id"],
                 ),
-                name=cast(str, fursuit_form.cleaned_data["name"]),
-                species=cast(str, fursuit_form.cleaned_data["species"]),
+                name=cast("str", fursuit_form.cleaned_data["name"]),
+                species=cast("str", fursuit_form.cleaned_data["species"]),
                 photo=upload if isinstance(upload, UploadedFile) else None,
                 keep_photo=not bool(fursuit_form.cleaned_data["remove_photo"]),
             )
         )
     return AttendeeProfileInput(
-        real_name=cast(str, form.cleaned_data["real_name"]),
+        real_name=cast("str", form.cleaned_data["real_name"]),
         date_of_birth=form.cleaned_data["date_of_birth"],
-        address_line_1=cast(str, form.cleaned_data["address_line_1"]),
-        address_line_2=cast(str, form.cleaned_data["address_line_2"]),
-        locality=cast(str, form.cleaned_data["locality"]),
-        postal_code=cast(str, form.cleaned_data["postal_code"]),
-        region=cast(str, form.cleaned_data["region"]),
-        country_code=cast(str, form.cleaned_data["country_code"]),
+        address_line_1=cast("str", form.cleaned_data["address_line_1"]),
+        address_line_2=cast("str", form.cleaned_data["address_line_2"]),
+        locality=cast("str", form.cleaned_data["locality"]),
+        postal_code=cast("str", form.cleaned_data["postal_code"]),
+        region=cast("str", form.cleaned_data["region"]),
+        country_code=cast("str", form.cleaned_data["country_code"]),
         emergency_contact_name=cast(
-            str,
+            "str",
             form.cleaned_data["emergency_contact_name"],
         ),
         emergency_contact_phone=cast(
-            str,
+            "str",
             form.cleaned_data["emergency_contact_phone"],
         ),
-        phone_number=cast(str, form.cleaned_data["phone_number"]),
-        telegram_handle=cast(str, form.cleaned_data["telegram_handle"]),
-        pronoun_code=cast(str, form.cleaned_data["pronoun_code"]),
-        other_pronouns=cast(str, form.cleaned_data["other_pronouns"]),
-        bio=cast(str, form.cleaned_data["bio"]),
+        phone_number=cast("str", form.cleaned_data["phone_number"]),
+        telegram_handle=cast("str", form.cleaned_data["telegram_handle"]),
+        pronoun_code=cast("str", form.cleaned_data["pronoun_code"]),
+        other_pronouns=cast("str", form.cleaned_data["other_pronouns"]),
+        bio=cast("str", form.cleaned_data["bio"]),
         spoken_language_codes=tuple(
-            cast(list[str], form.cleaned_data["spoken_language_codes"])
+            cast("list[str]", form.cleaned_data["spoken_language_codes"])
         ),
         profile_photo=(
             profile_upload if isinstance(profile_upload, UploadedFile) else None
         ),
         reuse_profile_photo_id=cast(
-            UUID | None,
+            "UUID | None",
             form.cleaned_data["reuse_profile_photo_id"],
         ),
         keep_profile_photo=not bool(form.cleaned_data["remove_profile_photo"]),
@@ -409,17 +446,17 @@ def _profile_input(
         fursuits=tuple(fursuits),
         directory_visible=bool(form.cleaned_data["directory_visible"]),
         directory_country_code=cast(
-            str,
+            "str",
             form.cleaned_data["directory_country_code"],
         ),
-        guardian_name=cast(str, form.cleaned_data["guardian_name"]),
-        guardian_email=cast(str, form.cleaned_data["guardian_email"]),
+        guardian_name=cast("str", form.cleaned_data["guardian_name"]),
+        guardian_email=cast("str", form.cleaned_data["guardian_email"]),
         guardian_relationship=cast(
-            str,
+            "str",
             form.cleaned_data["guardian_relationship"],
         ),
         guardian_notice_version=cast(
-            str,
+            "str",
             form.cleaned_data["guardian_notice_version"],
         ),
     )
@@ -494,8 +531,25 @@ def public_registration_form(
     request: HttpRequest,
     edition_id: UUID,
 ) -> HttpResponse:
-    """Create an account if needed and submit one edition registration."""
+    """Create an account if needed and submit one edition registration.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     configuration = _open_configurations().filter(edition_id=edition_id).first()
     if configuration is None:
         raise Http404("Registration is not available.")
@@ -507,12 +561,12 @@ def public_registration_form(
             account_form = PublicAccountBootstrapForm(request.POST or None)
             if request.method == "POST" and account_form.is_valid():
                 bootstrap_account(
-                    email=cast(str, account_form.cleaned_data["email"]),
-                    display_name=cast(str, account_form.cleaned_data["display_name"]),
-                    password=cast(str, account_form.cleaned_data["password1"]),
+                    email=cast("str", account_form.cleaned_data["email"]),
+                    display_name=cast("str", account_form.cleaned_data["display_name"]),
+                    password=cast("str", account_form.cleaned_data["password1"]),
                     fingerprint=request_fingerprint(
                         request,
-                        contact=cast(str, account_form.cleaned_data["email"]),
+                        contact=cast("str", account_form.cleaned_data["email"]),
                     ),
                     source_channel="reference_client",
                 )
@@ -601,7 +655,7 @@ def public_registration_form(
     form_valid = form.is_valid() if request.method == "POST" else False
     fursuits_valid = fursuit_formset.is_valid() if request.method == "POST" else False
     if request.method == "POST" and form_valid and fursuits_valid:
-        product = cast(AdmissionProduct, form.cleaned_data["product"])
+        product = cast("AdmissionProduct", form.cleaned_data["product"])
         try:
             result = submit_public_registration(
                 organization_id=configuration.organization_id,
@@ -611,9 +665,9 @@ def public_registration_form(
                 profile_input=_profile_input(form, fursuit_formset),
                 correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
                 account=account,
-                email=cast(str, form.cleaned_data.get("email", "")),
-                display_name=cast(str, form.cleaned_data.get("display_name", "")),
-                password=cast(str, form.cleaned_data.get("password1", "")),
+                email=cast("str", form.cleaned_data.get("email", "")),
+                display_name=cast("str", form.cleaned_data.get("display_name", "")),
+                password=cast("str", form.cleaned_data.get("password1", "")),
             )
         except (IntegrityError, ObjectDoesNotExist, ValidationError) as error:
             message = (
@@ -687,7 +741,7 @@ def _submitted_groups(registration: Registration) -> list[dict[str, object]]:
                 display_value = "Yes" if answer else "No"
             else:
                 display_value = str(answer)
-            cast(list[dict[str, object]], groups[key]["answers"]).append(
+            cast("list[dict[str, object]]", groups[key]["answers"]).append(
                 {
                     "label": str(item.get("label", item.get("key", "Question"))),
                     "value": display_value,
@@ -701,8 +755,25 @@ def confirm_local_demo_payment(
     request: HttpRequest,
     edition_id: UUID,
 ) -> HttpResponse:
-    """Offer the local-only payment simulator through the reference frontend."""
+    """Offer the local-only payment simulator through the reference frontend.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     if request.method != "POST" or not settings.DEMO_PAYMENT_ADAPTER_ENABLED:
         raise Http404
     account = _account(request)
@@ -715,7 +786,7 @@ def confirm_local_demo_payment(
     )
     form = DemoPaymentForm(request.POST)
     if form.is_valid():
-        idempotency_key = cast(UUID, form.cleaned_data["idempotency_key"])
+        idempotency_key = cast("UUID", form.cleaned_data["idempotency_key"])
     elif set(request.POST) <= {"csrfmiddlewaretoken"}:
         # Backward-compatible local test control; rendered forms always submit
         # the retained key so browser retries remain deterministic.
@@ -742,8 +813,25 @@ def reserve_local_tier_replacement(
     request: HttpRequest,
     edition_id: UUID,
 ) -> HttpResponse:
-    """Reserve one higher admission tier from the attendee's profile page."""
+    """Reserve one higher admission tier from the attendee's profile page.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     if request.method != "POST":
         raise Http404
     account = _account(request)
@@ -763,13 +851,13 @@ def reserve_local_tier_replacement(
             organization_id=registration.organization_id,
             edition_id=registration.edition_id,
             registration_id=registration.id,
-            target_product_id=cast(UUID, form.cleaned_data["target_product_id"]),
+            target_product_id=cast("UUID", form.cleaned_data["target_product_id"]),
             actor=account,
             expected_registration_version=cast(
-                int,
+                "int",
                 form.cleaned_data["expected_registration_version"],
             ),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             source_channel="reference_web",
         )
@@ -792,8 +880,25 @@ def create_local_hosted_payment(
     request: HttpRequest,
     edition_id: UUID,
 ) -> HttpResponse:
-    """Start hosted checkout for ordinary admission or a pending upgrade."""
+    """Start hosted checkout for ordinary admission or a pending upgrade.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     if request.method != "POST":
         raise Http404
     account = _account(request)
@@ -812,10 +917,10 @@ def create_local_hosted_payment(
         intent = create_payment_intent(
             registration=registration,
             provider_account_id=cast(
-                UUID,
+                "UUID",
                 form.cleaned_data["provider_account_id"],
             ),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             return_url=request.build_absolute_uri(
                 reverse("public-registration-profile", args=(edition_id,))
             ),
@@ -884,6 +989,25 @@ def public_registration_profile(
     request: HttpRequest,
     edition_id: UUID,
 ) -> TemplateResponse:
+    """Render public registration profile.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    TemplateResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     account = _account(request)
     if account is None:
         raise Http404
@@ -1043,6 +1167,25 @@ def edit_attendee_profile(
     request: HttpRequest,
     edition_id: UUID,
 ) -> HttpResponse:
+    """Render edit attendee profile.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     account = _account(request)
     if account is None:
         raise Http404
@@ -1135,6 +1278,20 @@ def public_attendee_directory(
     request: HttpRequest,
     edition_id: UUID,
 ) -> TemplateResponse:
+    """Render public attendee directory.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    TemplateResponse
+        The HTTP response for this request.
+    """
     edition = get_object_or_404(
         EventEdition.objects.select_related("organization", "series").exclude(
             lifecycle__in=(
@@ -1271,6 +1428,25 @@ def protected_profile_photo(
     request: HttpRequest,
     profile_id: UUID,
 ) -> FileResponse:
+    """Render protected profile photo.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    profile_id : UUID
+        The identifier of the profile.
+
+    Returns
+    -------
+    FileResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     account = _account(request)
     profile = (
         AttendeeRegistrationProfile.objects.filter(id=profile_id)
@@ -1311,6 +1487,25 @@ def protected_fursuit_photo(
     request: HttpRequest,
     fursuit_id: UUID,
 ) -> FileResponse:
+    """Render protected fursuit photo.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    fursuit_id : UUID
+        The identifier of the fursuit.
+
+    Returns
+    -------
+    FileResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     account = _account(request)
     fursuit = (
         AttendeeFursuit.objects.filter(id=fursuit_id)

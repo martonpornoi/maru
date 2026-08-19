@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import connection
@@ -12,6 +11,9 @@ from django.db.models import Count
 
 from maru.authorization.catalog import Capability, ScopeLevel, capability
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 BLOCKER_KEYS = (
     "binding_scope_mismatch",
@@ -573,9 +575,18 @@ def _build_report() -> dict[str, object]:
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Inspect ADR 0041 scope-v2 data and emit a privacy-minimized JSON report."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--no-fail",
             action="store_true",
@@ -583,6 +594,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *_args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *_args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         report = _build_report()
         self.stdout.write(json.dumps(report, indent=2, sort_keys=True))
         if report["status"] == "blocked" and not options["no_fail"]:

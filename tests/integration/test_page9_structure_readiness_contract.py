@@ -395,7 +395,7 @@ def test_each_page9_disabled_trigger_blocks_readiness(
     trigger_name: str,
     contract: tuple[object, ...],
 ) -> None:
-    table = cast(str, contract[0])
+    table = cast("str", contract[0])
     with connection.cursor() as cursor:
         cursor.execute(
             sql.SQL("ALTER TABLE public.{} DISABLE TRIGGER {}").format(

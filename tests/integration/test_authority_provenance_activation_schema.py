@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from threading import Event
 from time import monotonic, sleep
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
@@ -41,9 +42,11 @@ from maru.authorization.models import (
 )
 from maru.authorization.policy import resolve_organization_target
 from maru.identity.models import Account
-from maru.organizations.models import Organization
 from tests.factories import AccountFactory, CapabilityGrantFactory, OrganizationFactory
 from tests.support.authority import activate_synthetic_board
+
+if TYPE_CHECKING:
+    from maru.organizations.models import Organization
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

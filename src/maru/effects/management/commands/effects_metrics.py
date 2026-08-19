@@ -9,13 +9,31 @@ from maru.effects.operations import outbox_health_snapshot, render_prometheus
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Render safe outbox metrics for one tenant and workload pool."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument("--organization", required=True, type=UUID)
         parser.add_argument("--pool", default="default")
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+        """
         del args
         snapshot = outbox_health_snapshot(
             organization_id=options["organization"],

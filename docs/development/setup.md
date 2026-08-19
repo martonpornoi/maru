@@ -1,7 +1,7 @@
 # Development setup
 
 Status: Production-consolidation M1.1/M2.1 locally migrated and smoke-verified
-Last updated: 2026-08-16
+Last updated: 2026-08-19
 
 ## Prerequisites
 
@@ -61,6 +61,25 @@ The checked-in `openapi.yaml` and generated TypeScript definitions remain the
 build artifacts consumed by clients. Production builds must run
 `collectstatic` and serve the bundled documentation assets from the same
 immutable release.
+
+## Contributor documentation
+
+Python production and tooling callables use NumPy-style docstrings and are
+rendered together with the maintained Markdown guides. Validate argument,
+type, default, return/yield, assertion, and exact-raise agreement; semantic
+prose quality; and the warning-clean HTML site with:
+
+```powershell
+uv run pydoclint src scripts
+uv run python scripts/validate_python_docstrings.py src scripts
+uv run sphinx-build -W --keep-going --fresh-env -b html docs docs/_build/html
+```
+
+Open `docs/_build/html/index.html` locally after the build. GitHub Actions runs
+the same commands and retains the generated site as the
+`contributor-documentation` artifact. See
+[`documentation-standards.md`](../quality/documentation-standards.md) for the
+section and exclusion policy.
 
 ## Bootstrap login
 
@@ -304,6 +323,8 @@ Fast focused commands:
 uv run ruff format --check .
 uv run ruff check .
 uv run mypy src
+uv run pydoclint src scripts
+uv run python scripts/validate_python_docstrings.py src scripts
 uv run pytest
 ```
 

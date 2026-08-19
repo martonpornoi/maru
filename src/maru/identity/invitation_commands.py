@@ -67,49 +67,89 @@ _SHA256_PATTERN: Final = re.compile(r"[0-9a-f]{64}", flags=re.ASCII)
 
 
 class InvitationCommandError(RuntimeError):
+    """Signal invitation command."""
+
     reason_code = "account_invitation_command_failed"
 
-    def __init__(self, message: str = "The account invitation could not be changed."):
+    def __init__(
+        self, message: str = "The account invitation could not be changed."
+    ) -> None:
+        """Initialize the InvitationCommandError instance.
+
+        Parameters
+        ----------
+        message : str, default='The account invitation could not be changed.'
+            The disclosure-safe message associated with the outcome.
+        """
         super().__init__(message)
 
 
 class InvitationAuthorizationDeniedError(InvitationCommandError):
+    """Signal invitation authorization denied."""
+
     reason_code = "platform_administration_required"
 
 
 class InvitationIdentityConflictError(InvitationCommandError):
+    """Signal invitation identity conflict."""
+
     reason_code = "account_invitation_identity_unavailable"
 
 
 class InvitationUnavailableError(InvitationCommandError):
+    """Signal invitation unavailable."""
+
     reason_code = "account_invitation_unavailable"
 
 
 class InvitationVersionConflictError(InvitationCommandError):
+    """Signal invitation version conflict."""
+
     reason_code = "account_invitation_version_conflict"
 
 
 class InvitationRetryConflictError(InvitationCommandError):
+    """Signal invitation retry conflict."""
+
     reason_code = "account_invitation_retry_conflict"
 
 
 class InvitationStateConflictError(InvitationCommandError):
+    """Signal invitation state conflict."""
+
     reason_code = "account_invitation_state_conflict"
 
 
 class InvitationChallengeInvalidError(InvitationCommandError):
+    """Signal invitation challenge invalid."""
+
     reason_code = "account_invitation_challenge_invalid"
 
     def __init__(self) -> None:
+        """Initialize the InvitationChallengeInvalidError instance."""
         super().__init__("The invitation code is invalid or has expired.")
 
 
 class InvitationDependencyUnavailableError(InvitationCommandError):
+    """Signal invitation dependency unavailable."""
+
     reason_code = "account_invitation_dependency_unavailable"
 
 
 @dataclass(frozen=True, slots=True)
 class AccountInvitationCommandResult:
+    """Describe account invitation command result.
+
+    Attributes
+    ----------
+    invitation
+        The invitation retained in this immutable projection.
+    receipt
+        The immutable command receipt proving the accepted transition.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     invitation: PlatformAccountInvitation
     receipt: PlatformAccountInvitationCommandReceipt
     replayed: bool
@@ -117,6 +157,20 @@ class AccountInvitationCommandResult:
 
 @dataclass(frozen=True, slots=True)
 class AcceptedAccountInvitationResult:
+    """Describe accepted account invitation result.
+
+    Attributes
+    ----------
+    account
+        The platform account whose state or access is being evaluated.
+    invitation
+        The invitation retained in this immutable projection.
+    receipt
+        The immutable command receipt proving the accepted transition.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     account: Account
     invitation: PlatformAccountInvitation
     receipt: PlatformAccountInvitationCommandReceipt
@@ -485,8 +539,45 @@ def create_platform_account_invitation(
     request_id: UUID | None = None,
     source_channel: object = "service",
 ) -> AccountInvitationCommandResult:
-    """Reserve only one inactive person identity and queue its owned invitation."""
+    """Reserve only one inactive person identity and queue its owned invitation.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    email : object
+        The normalized email address used for delivery or identity matching.
+    login_handle : object | None
+        The login handle applied within the audited domain transition.
+    display_name : object | None
+        The human-readable display name shown to authorized readers.
+    preferred_language : object | None
+        The supported language code used for preferred.
+    reason : object
+        The operator-supplied rationale recorded with the change.
+    expected_version : object
+        The aggregate version required for optimistic concurrency control.
+    retry_key : object
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : object
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : object, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    AccountInvitationCommandResult
+        The newly created AccountInvitationCommandResult.
+
+    Raises
+    ------
+    InvitationIdentityConflictError
+        If the operation encounters a invitation identity conflict condition.
+    InvitationVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     _require_platform_actor(actor)
     normalized_email = normalize_invitation_email(email)
     normalized_handle = normalize_invitation_login_handle(login_handle)
@@ -630,6 +721,39 @@ def reissue_platform_account_invitation(
     request_id: UUID | None = None,
     source_channel: object = "service",
 ) -> AccountInvitationCommandResult:
+    """Return reissue platform account invitation.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    invitation_id : UUID
+        The identifier of the invitation.
+    expected_version : object
+        The aggregate version required for optimistic concurrency.
+    reason : object
+        The operator-supplied reason for the operation.
+    retry_key : object
+        The stable key used to retry the operation safely.
+    correlation_id : object
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : object, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    AccountInvitationCommandResult
+        The account invitation command result.
+
+    Raises
+    ------
+    InvitationStateConflictError
+        If the target lifecycle state does not permit the transition.
+    InvitationVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     _require_platform_actor(actor)
     version = validate_invitation_expected_version(expected_version)
     normalized_reason = normalize_invitation_reason(reason)
@@ -771,6 +895,39 @@ def revoke_platform_account_invitation(
     request_id: UUID | None = None,
     source_channel: object = "service",
 ) -> AccountInvitationCommandResult:
+    """Revoke platform account invitation.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    invitation_id : UUID
+        The identifier of the invitation.
+    expected_version : object
+        The aggregate version required for optimistic concurrency.
+    reason : object
+        The operator-supplied reason for the operation.
+    retry_key : object
+        The stable key used to retry the operation safely.
+    correlation_id : object
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : object, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    AccountInvitationCommandResult
+        The account invitation command result.
+
+    Raises
+    ------
+    InvitationStateConflictError
+        If the target lifecycle state does not permit the transition.
+    InvitationVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     _require_platform_actor(actor)
     version = validate_invitation_expected_version(expected_version)
     normalized_reason = normalize_invitation_reason(reason)
@@ -946,6 +1103,41 @@ def accept_platform_account_invitation(
     request_id: UUID | None = None,
     source_channel: object = "service",
 ) -> AcceptedAccountInvitationResult:
+    """Accept platform account invitation.
+
+    Parameters
+    ----------
+    raw_token : str
+        The untrusted token supplied by the caller.
+    new_password : str
+        The new password applied within the audited domain transition.
+    retry_key : object
+        The stable key used to retry the operation safely.
+    correlation_id : object
+        The correlation identifier for audit tracing.
+    request_fingerprint : str
+        The request fingerprint applied within the audited domain transition.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : object, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    AcceptedAccountInvitationResult
+        The accepted account invitation result.
+
+    Raises
+    ------
+    InvitationChallengeInvalidError
+        If the operation encounters a invitation challenge invalid condition.
+    InvitationDependencyUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    InvitationRetryConflictError
+        If a retry key is reused with different command intent.
+    InvitationStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     key, correlation, channel = _validate_acceptance_controls(
         raw_token=raw_token,
         new_password=new_password,
@@ -1124,6 +1316,27 @@ def expire_platform_account_invitations(
     limit: int = 100,
     source_channel: object = "scheduler",
 ) -> int:
+    """Expire platform account invitations.
+
+    Parameters
+    ----------
+    correlation_id : object
+        The correlation identifier for audit tracing.
+    limit : int, default=100
+        The maximum number of records to process.
+    source_channel : object, default='scheduler'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    int
+        The effective numeric value for expire platform account invitations.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     correlation = validate_correlation_id(correlation_id)
     channel = validate_source_channel(source_channel)
     if type(limit) is not int or not 1 <= limit <= MAX_EXPIRY_BATCH:

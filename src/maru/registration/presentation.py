@@ -8,13 +8,30 @@ from maru.registration.models import Entitlement, Registration
 
 @dataclass(frozen=True, slots=True)
 class AttendanceLabel:
-    """One accessible attendee-directory label and its semantic color token."""
+    """One accessible attendee-directory label and its semantic color token.
+
+    Attributes
+    ----------
+    code
+        The stable domain code to resolve or validate.
+    label
+        The human-readable label shown to authorized readers.
+    tone
+        The tone retained in this immutable projection.
+    """
 
     code: str
     label: str
     tone: str
 
     def as_dict(self) -> dict[str, str]:
+        """Serialize this specification as a dictionary.
+
+        Returns
+        -------
+        dict[str, str]
+            A mapping containing the resolved as dict data.
+        """
         return asdict(self)
 
 
@@ -24,8 +41,18 @@ def _contains_any(value: str, candidates: tuple[str, ...]) -> bool:
 
 
 def attendance_labels(registration: Registration) -> tuple[AttendanceLabel, ...]:
-    """Derive public-safe labels without exposing product, price, or payment."""
+    """Derive public-safe labels without exposing product, price, or payment.
 
+    Parameters
+    ----------
+    registration : Registration
+        The attendee registration governed by the operation.
+
+    Returns
+    -------
+    tuple[AttendanceLabel, ...]
+        The matching attendance labels records in deterministic order.
+    """
     active_entitlements = [
         entitlement
         for entitlement in registration.entitlements.all()

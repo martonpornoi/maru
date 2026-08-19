@@ -23,24 +23,52 @@ from .queries import RESTRICTED_ACCESS_PURPOSES
 
 @extend_schema_field(CANONICAL_UUID_SCHEMA)
 class CanonicalUUIDField(serializers.UUIDField):
+    """Describe canonical uuidfield."""
+
     default_error_messages: ClassVar[dict[str, Any]] = {
         "invalid": "Enter a canonical lower-case hyphenated UUID."
     }
 
     def to_internal_value(self, data: object) -> UUID:
-        value = super().to_internal_value(cast(Any, data))
+        """Parse and validate API input.
+
+        Parameters
+        ----------
+        data : object
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        UUID
+            The canonical value accepted by the serializer.
+        """
+        value = super().to_internal_value(cast("Any", data))
         if not isinstance(data, str) or str(value) != data:
             self.fail("invalid")
         return value
 
 
 class StrictIntegerField(serializers.IntegerField):
+    """Describe strict integer field."""
+
     default_error_messages: ClassVar[dict[str, Any]] = {
         **serializers.IntegerField.default_error_messages,
         "invalid_type": "Enter a JSON integer.",
     }
 
     def to_internal_value(self, data: object) -> int:
+        """Parse and validate API input.
+
+        Parameters
+        ----------
+        data : object
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        int
+            The canonical value accepted by the serializer.
+        """
         if type(data) is not int:
             self.fail("invalid_type")
         return super().to_internal_value(data)
@@ -58,12 +86,26 @@ class StrictDateTimeField(serializers.DateTimeField):
     }
 
     def to_internal_value(self, value: object) -> Any:
+        """Parse and validate API input.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        Any
+            The canonical value accepted by the serializer.
+        """
         if not isinstance(value, str) or _EXPLICIT_OFFSET.search(value) is None:
             self.fail("explicit_offset")
         return super().to_internal_value(value)
 
 
 class LogisticsCommandResultSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate logistics command result data."""
+
     object_id = serializers.UUIDField()
     receipt_id = serializers.UUIDField()
     resulting_version = serializers.IntegerField(min_value=1)
@@ -71,6 +113,8 @@ class LogisticsCommandResultSerializer(serializers.Serializer[dict[str, object]]
 
 
 class LogisticsOfferItemProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics offer item projection data."""
+
     id = serializers.UUIDField()
     kind = serializers.CharField()
     name = serializers.CharField()
@@ -85,6 +129,8 @@ class LogisticsOfferItemProjectionSerializer(serializers.Serializer[dict[str, An
 
 
 class LogisticsSelfOfferProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics self offer projection data."""
+
     id = serializers.UUIDField()
     title = serializers.CharField()
     description = serializers.CharField()
@@ -103,6 +149,8 @@ class LogisticsSelfOfferProjectionSerializer(serializers.Serializer[dict[str, An
 
 
 class LogisticsOfferQueueProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics offer queue projection data."""
+
     id = serializers.UUIDField()
     offered_by_id = serializers.UUIDField()
     title = serializers.CharField()
@@ -117,6 +165,8 @@ class LogisticsOfferQueueProjectionSerializer(serializers.Serializer[dict[str, A
 
 
 class LogisticsManifestLineProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics manifest line projection data."""
+
     id = serializers.UUIDField()
     subject_kind = serializers.CharField()
     subject_id = serializers.UUIDField()
@@ -130,6 +180,8 @@ class LogisticsManifestLineProjectionSerializer(serializers.Serializer[dict[str,
 
 
 class LogisticsManifestProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics manifest projection data."""
+
     id = serializers.UUIDField()
     manifest_number = serializers.CharField()
     kind = serializers.CharField()
@@ -151,6 +203,8 @@ class LogisticsManifestProjectionSerializer(serializers.Serializer[dict[str, Any
 
 
 class LogisticsCurrentStateProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics current state projection data."""
+
     subject_kind = serializers.CharField()
     subject_id = serializers.UUIDField()
     subject_label = serializers.CharField()
@@ -165,6 +219,8 @@ class LogisticsCurrentStateProjectionSerializer(serializers.Serializer[dict[str,
 
 
 class LogisticsReturnProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics return projection data."""
+
     agreement_id = serializers.UUIDField()
     kind = serializers.CharField()
     subject_kind = serializers.CharField()
@@ -177,6 +233,8 @@ class LogisticsReturnProjectionSerializer(serializers.Serializer[dict[str, Any]]
 
 
 class LogisticsDiscrepancyProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics discrepancy projection data."""
+
     id = serializers.UUIDField()
     kind = serializers.CharField()
     subject_kind = serializers.CharField()
@@ -190,6 +248,8 @@ class LogisticsDiscrepancyProjectionSerializer(serializers.Serializer[dict[str, 
 
 
 class LogisticsActivityProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics activity projection data."""
+
     id = serializers.UUIDField()
     sequence = serializers.IntegerField(min_value=1)
     event_type = serializers.CharField()
@@ -209,6 +269,8 @@ class LogisticsActivityProjectionSerializer(serializers.Serializer[dict[str, Any
 class RestrictedLogisticsContactProjectionSerializer(
     serializers.Serializer[dict[str, Any]]
 ):
+    """Serialize and validate restricted logistics contact projection data."""
+
     address_id = serializers.UUIDField()
     purpose = serializers.CharField()
     label = serializers.CharField()  # type: ignore[assignment]
@@ -223,16 +285,22 @@ class RestrictedLogisticsContactProjectionSerializer(
 
 
 class NamedLogisticsChoiceSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate named logistics choice data."""
+
     value = serializers.UUIDField()
     label = serializers.CharField()  # type: ignore[assignment]
 
 
 class NamedLogisticsCodeChoiceSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate named logistics code choice data."""
+
     value = serializers.CharField()
     label = serializers.CharField()  # type: ignore[assignment]
 
 
 class LogisticsFormChoicesSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics form choices data."""
+
     departments = NamedLogisticsChoiceSerializer(many=True)
     parties = NamedLogisticsChoiceSerializer(many=True)
     addresses = NamedLogisticsChoiceSerializer(many=True)
@@ -251,6 +319,8 @@ class LogisticsFormChoicesSerializer(serializers.Serializer[dict[str, Any]]):
 
 
 class LogisticsWorkspaceProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate logistics workspace projection data."""
+
     offers = LogisticsOfferQueueProjectionSerializer(many=True)
     manifests = LogisticsManifestProjectionSerializer(many=True)
     current_states = LogisticsCurrentStateProjectionSerializer(many=True)
@@ -260,6 +330,8 @@ class LogisticsWorkspaceProjectionSerializer(serializers.Serializer[dict[str, An
 
 
 class OfferItemInputSerializer(StrictInputSerializer):
+    """Serialize and validate offer item input data."""
+
     kind = serializers.ChoiceField(choices=EquipmentOfferItem.Kind.choices)
     name = serializers.CharField(max_length=200)
     description = serializers.CharField(
@@ -293,6 +365,8 @@ class OfferItemInputSerializer(StrictInputSerializer):
 
 
 class SelfOfferSubmitSerializer(StrictInputSerializer):
+    """Serialize and validate self offer submit data."""
+
     title = serializers.CharField(max_length=200)
     description = serializers.CharField(
         max_length=5_000,
@@ -324,11 +398,15 @@ class SelfOfferSubmitSerializer(StrictInputSerializer):
 
 
 class VersionedReasonSerializer(StrictInputSerializer):
+    """Serialize and validate versioned reason data."""
+
     expected_version = StrictIntegerField(min_value=1)
     reason = serializers.CharField(max_length=MAX_LOGISTICS_REASON_LENGTH)
 
 
 class OfferReviewSerializer(VersionedReasonSerializer):
+    """Serialize and validate offer review data."""
+
     outcome = serializers.ChoiceField(
         choices=(
             EquipmentOffer.Status.ACCEPTED,
@@ -338,6 +416,23 @@ class OfferReviewSerializer(VersionedReasonSerializer):
     responsible_department_id = CanonicalUUIDField(required=False, allow_null=True)
 
     def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         outcome = attrs.get("outcome")
         department_supplied = "responsible_department_id" in self.initial_data
         department_id = attrs.get("responsible_department_id")
@@ -363,23 +458,33 @@ class OfferReviewSerializer(VersionedReasonSerializer):
 
 
 class OfferAcceptSerializer(VersionedReasonSerializer):
+    """Serialize and validate offer accept data."""
+
     outcome = serializers.ChoiceField(choices=(EquipmentOffer.Status.ACCEPTED,))
     responsible_department_id = CanonicalUUIDField()
 
 
 class OfferRejectSerializer(VersionedReasonSerializer):
+    """Serialize and validate offer reject data."""
+
     outcome = serializers.ChoiceField(choices=(EquipmentOffer.Status.REJECTED,))
 
 
 class SubjectLocatorSerializer(StrictInputSerializer):
+    """Serialize and validate subject locator data."""
+
     kind = serializers.ChoiceField(choices=LogisticsEvent.SubjectKind.choices)
     object_id = CanonicalUUIDField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ref_name = "LogisticsMovementSubjectLocator"
 
 
 class MovementSerializer(StrictInputSerializer):
+    """Serialize and validate movement data."""
+
     event_type = serializers.ChoiceField(choices=LogisticsEvent.EventType.choices)
     subject = SubjectLocatorSerializer()
     occurred_at = StrictDateTimeField()
@@ -412,12 +517,16 @@ class MovementSerializer(StrictInputSerializer):
 
 
 class MovementCommandSerializer(StrictInputSerializer):
+    """Serialize and validate movement command data."""
+
     movement = MovementSerializer()
     expected_sequence = StrictIntegerField(min_value=0)
     reason = serializers.CharField(max_length=MAX_LOGISTICS_REASON_LENGTH)
 
 
 class ManifestLineInputSerializer(StrictInputSerializer):
+    """Serialize and validate manifest line input data."""
+
     subject = SubjectLocatorSerializer()
     quantity = StrictIntegerField(min_value=1, max_value=1_000_000_000)
     packed_in_node_id = CanonicalUUIDField(required=False, allow_null=True)
@@ -425,6 +534,8 @@ class ManifestLineInputSerializer(StrictInputSerializer):
 
 
 class ManifestCreateSerializer(StrictInputSerializer):
+    """Serialize and validate manifest create data."""
+
     responsible_department_id = CanonicalUUIDField()
     manifest_number = serializers.CharField(max_length=96)
     kind = serializers.ChoiceField(choices=LogisticsManifest.Kind.choices)
@@ -444,12 +555,16 @@ class ManifestCreateSerializer(StrictInputSerializer):
 
 
 class ManifestStateSerializer(VersionedReasonSerializer):
+    """Serialize and validate manifest state data."""
+
     action = serializers.ChoiceField(
         choices=("seal", "complete", "cancel_draft", "cancel_sealed")
     )
 
 
 class OfflineOperationSerializer(StrictInputSerializer):
+    """Serialize and validate offline operation data."""
+
     sequence = StrictIntegerField(min_value=1, max_value=MAX_OFFLINE_OPERATIONS)
     idempotency_key = CanonicalUUIDField()
     expected_subject_sequence = StrictIntegerField(min_value=0)
@@ -479,10 +594,14 @@ class OfflineOperationSerializer(StrictInputSerializer):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ref_name = "LogisticsOfflineOperation"
 
 
 class OfflineBatchSerializer(StrictInputSerializer):
+    """Serialize and validate offline batch data."""
+
     device_code = serializers.CharField(max_length=96)
     snapshot_version = StrictIntegerField(min_value=0)
     policy_version = serializers.CharField(max_length=64)
@@ -498,6 +617,8 @@ class OfflineBatchSerializer(StrictInputSerializer):
 
 
 class RestrictedContactReadSerializer(StrictInputSerializer):
+    """Serialize and validate restricted contact read data."""
+
     purpose = serializers.ChoiceField(
         choices=("pickup", "storage", "return", "delivery", "provider")
     )

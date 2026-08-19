@@ -53,6 +53,8 @@ _PROFILE_VALUE_SOURCE_VALIDATOR = RegexValidator(
 
 
 class RegistrationSetupOrigin(models.TextChoices):
+    """Enumerate supported registration setup origin values."""
+
     LEGACY_EXISTING = "legacy_existing", "Legacy existing"
     BLANK = "blank", "Blank"
     PLATFORM_STARTER = "platform_starter", "Platform starter"
@@ -62,11 +64,15 @@ class RegistrationSetupOrigin(models.TextChoices):
 
 
 class RegistrationProvenanceStatus(models.TextChoices):
+    """Enumerate supported registration provenance status values."""
+
     COMPLETE = "complete", "Complete"
     LEGACY_UNKNOWN = "legacy_unknown", "Legacy unknown"
 
 
 class RegistrationCommandChangeKind(models.TextChoices):
+    """Enumerate supported registration command change kind values."""
+
     CREATED = "created", "Created"
     UPDATED = "updated", "Updated"
     MOVED = "moved", "Moved"
@@ -92,6 +98,8 @@ class CatalogVersionStampedModel(models.Model):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
 
@@ -110,22 +118,30 @@ class SetupVersionStampedModel(models.Model):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
 
 class TemplateStatus(models.TextChoices):
+    """Enumerate supported template status values."""
+
     DRAFT = "draft", "Draft"
     PUBLISHED = "published", "Published"
     RETIRED = "retired", "Retired"
 
 
 class ConfigurationStatus(models.TextChoices):
+    """Enumerate supported configuration status values."""
+
     DRAFT = "draft", "Draft"
     ACTIVE = "active", "Active"
     RETIRED = "retired", "Retired"
 
 
 class QuestionFieldType(models.TextChoices):
+    """Enumerate supported question field type values."""
+
     SHORT_TEXT = "short_text", "Short text"
     LONG_TEXT = "long_text", "Long text"
     BOOLEAN = "boolean", "Yes or no"
@@ -135,11 +151,15 @@ class QuestionFieldType(models.TextChoices):
 
 
 class QuestionClassification(models.TextChoices):
+    """Enumerate supported question classification values."""
+
     INTERNAL = "C1", "Internal"
     PERSONAL = "C2", "Personal"
 
 
 class QuestionVisibility(models.TextChoices):
+    """Enumerate supported question visibility values."""
+
     ATTENDEE_AND_STAFF = "attendee_and_staff", "Attendee and registration staff"
     REGISTRATION_STAFF = "registration_staff", "Registration staff only"
 
@@ -187,6 +207,8 @@ def _validate_question_options(
 
 
 class RegistrationTemplate(UUIDTimeStampedModel):
+    """Store registration template records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -234,6 +256,8 @@ class RegistrationTemplate(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "code", "-version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -271,6 +295,13 @@ class RegistrationTemplate(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.series_id
@@ -292,6 +323,20 @@ class RegistrationTemplate(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         self.code = self.code.lower()
         if not self._state.adding:
             current = type(self).objects.filter(pk=self.pk).first()
@@ -309,6 +354,25 @@ class RegistrationTemplate(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration templates use versioning and retirement.",
@@ -316,10 +380,19 @@ class RegistrationTemplate(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationTemplate label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.name} v{self.version} — {self.organization.name}"
 
 
 class AbstractQuestion(UUIDTimeStampedModel):
+    """Store abstract question records."""
+
     key = models.SlugField(max_length=80, validators=[validate_lowercase_slug])
     label = models.CharField(max_length=200)
     help_text = models.TextField(blank=True)
@@ -342,9 +415,18 @@ class AbstractQuestion(UUIDTimeStampedModel):
     condition_value = models.CharField(max_length=120, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         _validate_question_options(
             field_type=self.field_type,
@@ -362,6 +444,15 @@ class AbstractQuestion(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.key = self.key.lower()
         self.condition_question_key = self.condition_question_key.lower()
         self.full_clean()
@@ -369,6 +460,8 @@ class AbstractQuestion(UUIDTimeStampedModel):
 
 
 class RegistrationTemplateSection(UUIDTimeStampedModel, CatalogVersionStampedModel):
+    """Store registration template section records."""
+
     template = models.ForeignKey(
         RegistrationTemplate,
         on_delete=models.PROTECT,
@@ -380,6 +473,8 @@ class RegistrationTemplateSection(UUIDTimeStampedModel, CatalogVersionStampedMod
     position = models.PositiveIntegerField(default=0)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position", "id")
         constraints = [
             models.UniqueConstraint(
@@ -389,9 +484,30 @@ class RegistrationTemplateSection(UUIDTimeStampedModel, CatalogVersionStampedMod
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationTemplateSection label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.template.name}: {self.title}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.template.status != TemplateStatus.DRAFT:
             raise ValidationError(
                 "Only draft templates may change sections.",
@@ -402,6 +518,25 @@ class RegistrationTemplateSection(UUIDTimeStampedModel, CatalogVersionStampedMod
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.template.status != TemplateStatus.DRAFT:
             raise ValidationError(
                 "Published template sections are immutable.",
@@ -411,6 +546,8 @@ class RegistrationTemplateSection(UUIDTimeStampedModel, CatalogVersionStampedMod
 
 
 class RegistrationTemplateQuestion(AbstractQuestion, CatalogVersionStampedModel):
+    """Store registration template question records."""
+
     section = models.ForeignKey(
         RegistrationTemplateSection,
         on_delete=models.PROTECT,
@@ -425,6 +562,8 @@ class RegistrationTemplateQuestion(AbstractQuestion, CatalogVersionStampedModel)
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position", "id")
         constraints = [
             models.UniqueConstraint(
@@ -434,9 +573,30 @@ class RegistrationTemplateQuestion(AbstractQuestion, CatalogVersionStampedModel)
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationTemplateQuestion label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.template.name}: {self.label}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.template.status != TemplateStatus.DRAFT:
             raise ValidationError(
                 "Only draft templates may change questions.",
@@ -445,6 +605,13 @@ class RegistrationTemplateQuestion(AbstractQuestion, CatalogVersionStampedModel)
         super().save(*args, **kwargs)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.section_id
@@ -456,6 +623,25 @@ class RegistrationTemplateQuestion(AbstractQuestion, CatalogVersionStampedModel)
             )
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.template.status != TemplateStatus.DRAFT:
             raise ValidationError(
                 "Published template questions are immutable.",
@@ -465,6 +651,8 @@ class RegistrationTemplateQuestion(AbstractQuestion, CatalogVersionStampedModel)
 
 
 class AbstractProduct(UUIDTimeStampedModel):
+    """Store abstract product records."""
+
     code = models.SlugField(max_length=80, validators=[validate_lowercase_slug])
     name = models.CharField(max_length=160)
     description = models.TextField(blank=True)
@@ -524,9 +712,18 @@ class AbstractProduct(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if not 1 <= self.capacity <= MAX_REGISTRATION_CAPACITY:
             raise ValidationError(
@@ -623,6 +820,15 @@ class AbstractProduct(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.code = self.code.lower()
         self.entitlement_code = self.entitlement_code.lower()
         if isinstance(self.required_capacity_codes, list):
@@ -634,6 +840,8 @@ class AbstractProduct(UUIDTimeStampedModel):
 
 
 class RegistrationTemplateProduct(AbstractProduct, CatalogVersionStampedModel):
+    """Store registration template product records."""
+
     template = models.ForeignKey(
         RegistrationTemplate,
         on_delete=models.PROTECT,
@@ -641,6 +849,8 @@ class RegistrationTemplateProduct(AbstractProduct, CatalogVersionStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position", "id")
         constraints = [
             models.UniqueConstraint(
@@ -650,9 +860,30 @@ class RegistrationTemplateProduct(AbstractProduct, CatalogVersionStampedModel):
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationTemplateProduct label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.template.name}: {self.name}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.template.status != TemplateStatus.DRAFT:
             raise ValidationError(
                 "Only draft templates may change products.",
@@ -661,6 +892,25 @@ class RegistrationTemplateProduct(AbstractProduct, CatalogVersionStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.template.status != TemplateStatus.DRAFT:
             raise ValidationError(
                 "Published template products are immutable.",
@@ -686,6 +936,8 @@ class RegistrationTemplateCatalogControl(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id",)
         constraints = [
             models.CheckConstraint(
@@ -695,10 +947,26 @@ class RegistrationTemplateCatalogControl(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationTemplateCatalogControl label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"Registration template catalog v{self.aggregate_version}"
 
 
@@ -706,6 +974,8 @@ class RegistrationTemplateCatalogCommandReceipt(UUIDTimeStampedModel):
     """Immutable, minimized evidence for one successful template command."""
 
     class Action(models.TextChoices):
+        """Enumerate supported action values."""
+
         TEMPLATE_CREATED = "template_created", "Template created"
         TEMPLATE_UPDATED = "template_updated", "Template updated"
         TEMPLATE_PUBLISHED = "template_published", "Template published"
@@ -751,6 +1021,8 @@ class RegistrationTemplateCatalogCommandReceipt(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "resulting_version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -779,6 +1051,13 @@ class RegistrationTemplateCatalogCommandReceipt(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.catalog_id and self.catalog.organization_id != self.organization_id:
             raise ValidationError(
@@ -792,6 +1071,20 @@ class RegistrationTemplateCatalogCommandReceipt(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Registration template command receipts are immutable.",
@@ -801,6 +1094,25 @@ class RegistrationTemplateCatalogCommandReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration template command receipts require retention workflow.",
@@ -812,6 +1124,8 @@ class RegistrationTemplateCatalogCommandTarget(UUIDTimeStampedModel):
     """Stable, label-free target evidence attached to a template receipt."""
 
     class TargetKind(models.TextChoices):
+        """Enumerate supported target kind values."""
+
         TEMPLATE = "template", "Template"
         SECTION = "section", "Section"
         QUESTION = "question", "Question"
@@ -836,6 +1150,8 @@ class RegistrationTemplateCatalogCommandTarget(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("receipt_id", "target_kind", "target_id", "id")
         constraints = [
             models.UniqueConstraint(
@@ -852,6 +1168,20 @@ class RegistrationTemplateCatalogCommandTarget(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Registration template command targets are immutable.",
@@ -861,6 +1191,25 @@ class RegistrationTemplateCatalogCommandTarget(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration template command targets require retention workflow.",
@@ -869,6 +1218,8 @@ class RegistrationTemplateCatalogCommandTarget(UUIDTimeStampedModel):
 
 
 class RegistrationConfiguration(UUIDTimeStampedModel):
+    """Store registration configuration records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -1004,6 +1355,8 @@ class RegistrationConfiguration(UUIDTimeStampedModel):
     activated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "-version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1116,6 +1469,13 @@ class RegistrationConfiguration(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:  # noqa: PLR0912
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if not 1 <= self.capacity <= MAX_REGISTRATION_CAPACITY:
             raise ValidationError(
@@ -1251,6 +1611,20 @@ class RegistrationConfiguration(UUIDTimeStampedModel):
         validate_currency_codes([self.currency])
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         self.currency = self.currency.upper()
         if not self._state.adding:
             immutable_fields = (
@@ -1300,6 +1674,25 @@ class RegistrationConfiguration(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration configurations use versioning and retirement.",
@@ -1307,6 +1700,13 @@ class RegistrationConfiguration(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationConfiguration label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.edition.name}: {self.name} v{self.version}"
 
 
@@ -1333,6 +1733,8 @@ class RegistrationSetupControl(UUIDTimeStampedModel):
     aggregate_version = models.PositiveBigIntegerField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "edition_id")
         constraints = [
             models.CheckConstraint(
@@ -1355,6 +1757,13 @@ class RegistrationSetupControl(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError(
@@ -1371,6 +1780,20 @@ class RegistrationSetupControl(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             immutable_fields = (
                 "organization_id",
@@ -1392,6 +1815,13 @@ class RegistrationSetupControl(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationSetupControl label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"Registration setup v{self.aggregate_version} - {self.edition}"
 
 
@@ -1399,6 +1829,8 @@ class RegistrationSetupCommandReceipt(UUIDTimeStampedModel):
     """Immutable, minimized evidence for one successful setup command."""
 
     class Action(models.TextChoices):
+        """Enumerate supported action values."""
+
         SETUP_STARTED = "setup_started", "Setup started"
         SUCCESSOR_STARTED = "successor_started", "Successor started"
         CONFIGURATION_REVIEWED = "configuration_reviewed", "Configuration reviewed"
@@ -1469,6 +1901,8 @@ class RegistrationSetupCommandReceipt(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "resulting_version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1501,6 +1935,13 @@ class RegistrationSetupCommandReceipt(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.setup_id and (
             self.setup.organization_id != self.organization_id
@@ -1517,6 +1958,20 @@ class RegistrationSetupCommandReceipt(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Registration setup command receipts are immutable.",
@@ -1526,6 +1981,25 @@ class RegistrationSetupCommandReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration setup command receipts require retention workflow.",
@@ -1537,6 +2011,8 @@ class RegistrationSetupCommandTarget(UUIDTimeStampedModel):
     """Stable, label-free target evidence attached to a setup receipt."""
 
     class TargetKind(models.TextChoices):
+        """Enumerate supported target kind values."""
+
         CONFIGURATION = "configuration", "Configuration"
         SECTION = "section", "Section"
         QUESTION = "question", "Question"
@@ -1563,6 +2039,8 @@ class RegistrationSetupCommandTarget(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("receipt_id", "target_kind", "target_id", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1579,6 +2057,20 @@ class RegistrationSetupCommandTarget(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Registration setup command targets are immutable.",
@@ -1588,6 +2080,25 @@ class RegistrationSetupCommandTarget(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration setup command targets require retention workflow.",
@@ -1596,6 +2107,8 @@ class RegistrationSetupCommandTarget(UUIDTimeStampedModel):
 
 
 class RegistrationSection(UUIDTimeStampedModel, SetupVersionStampedModel):
+    """Store registration section records."""
+
     configuration = models.ForeignKey(
         RegistrationConfiguration,
         on_delete=models.PROTECT,
@@ -1607,6 +2120,8 @@ class RegistrationSection(UUIDTimeStampedModel, SetupVersionStampedModel):
     position = models.PositiveIntegerField(default=0)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1616,9 +2131,30 @@ class RegistrationSection(UUIDTimeStampedModel, SetupVersionStampedModel):
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationSection label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.configuration.edition.name}: {self.title}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.configuration.status != ConfigurationStatus.DRAFT:
             raise ValidationError(
                 "Only draft registration versions may change sections.",
@@ -1629,6 +2165,25 @@ class RegistrationSection(UUIDTimeStampedModel, SetupVersionStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.configuration.status != ConfigurationStatus.DRAFT:
             raise ValidationError(
                 "Active registration sections are immutable.",
@@ -1638,6 +2193,8 @@ class RegistrationSection(UUIDTimeStampedModel, SetupVersionStampedModel):
 
 
 class RegistrationQuestion(AbstractQuestion, SetupVersionStampedModel):
+    """Store registration question records."""
+
     section = models.ForeignKey(
         RegistrationSection,
         on_delete=models.PROTECT,
@@ -1652,6 +2209,8 @@ class RegistrationQuestion(AbstractQuestion, SetupVersionStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1661,9 +2220,30 @@ class RegistrationQuestion(AbstractQuestion, SetupVersionStampedModel):
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationQuestion label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.configuration.edition.name}: {self.label}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.configuration.status != ConfigurationStatus.DRAFT:
             raise ValidationError(
                 "Only draft registration versions may change questions.",
@@ -1672,6 +2252,13 @@ class RegistrationQuestion(AbstractQuestion, SetupVersionStampedModel):
         super().save(*args, **kwargs)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.section_id
@@ -1683,6 +2270,25 @@ class RegistrationQuestion(AbstractQuestion, SetupVersionStampedModel):
             )
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.configuration.status != ConfigurationStatus.DRAFT:
             raise ValidationError(
                 "Active registration questions are immutable.",
@@ -1692,7 +2298,11 @@ class RegistrationQuestion(AbstractQuestion, SetupVersionStampedModel):
 
 
 class AdmissionProduct(AbstractProduct, SetupVersionStampedModel):
+    """Store admission product records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         AVAILABLE = "available", "Available"
         HIDDEN = "hidden", "Hidden"
 
@@ -1708,6 +2318,8 @@ class AdmissionProduct(AbstractProduct, SetupVersionStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1721,9 +2333,30 @@ class AdmissionProduct(AbstractProduct, SetupVersionStampedModel):
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable AdmissionProduct label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.configuration.edition.name}: {self.name}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.configuration.status != ConfigurationStatus.DRAFT:
             raise ValidationError(
                 "Only draft registration versions may change products.",
@@ -1732,6 +2365,25 @@ class AdmissionProduct(AbstractProduct, SetupVersionStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if self.configuration.status != ConfigurationStatus.DRAFT:
             raise ValidationError(
                 "Active registration products are immutable.",
@@ -1741,7 +2393,11 @@ class AdmissionProduct(AbstractProduct, SetupVersionStampedModel):
 
 
 class Registration(UUIDTimeStampedModel):
+    """Store registration records."""
+
     class State(models.TextChoices):
+        """Enumerate supported state values."""
+
         GUARDIAN_PENDING = "guardian_pending", "Guardian consent pending"
         WAITLISTED = "waitlisted", "Waitlisted"
         PAYMENT_PENDING = "payment_pending", "Payment pending"
@@ -1751,11 +2407,15 @@ class Registration(UUIDTimeStampedModel):
         CANCELLED = "cancelled", "Cancelled"
 
     class ConfirmationBasis(models.TextChoices):
+        """Enumerate supported confirmation basis values."""
+
         FREE = "free", "No payment required"
         PROVIDER = "provider", "Payment provider"
         WAIVER = "waiver", "Authorized waiver"
 
     class SubmissionSource(models.TextChoices):
+        """Enumerate supported submission source values."""
+
         SELF = "self", "Attendee self-service"
         STAFF_ASSISTED = "staff_assisted", "Staff-assisted registration"
 
@@ -1823,6 +2483,8 @@ class Registration(UUIDTimeStampedModel):
     staff_submission_reason = models.CharField(max_length=500, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-submitted_at", "reference", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1854,6 +2516,13 @@ class Registration(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.account_id:
             validate_convention_subject(self.account)
@@ -1896,10 +2565,38 @@ class Registration(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registrations require a reasoned cancellation workflow.",
@@ -1907,6 +2604,13 @@ class Registration(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable Registration label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return (
             f"{self.edition.name}: {self.account} — "
             f"{self.reference} ({self.get_state_display()})"
@@ -1937,12 +2641,28 @@ class MinorRegistrationPolicy(UUIDTimeStampedModel, SetupVersionStampedModel):
     reviewed_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name_plural = "minor registration policies"
 
     def __str__(self) -> str:
+        """Return the human-readable MinorRegistrationPolicy label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"Minor policy - {self.configuration}"
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.configuration_id and (
             self.configuration.status != ConfigurationStatus.DRAFT
@@ -1974,6 +2694,8 @@ class GuardianConsent(UUIDTimeStampedModel):
     """Single-use guardian authorization for one minor registration."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PENDING = "pending", "Pending"
         ACCEPTED = "accepted", "Accepted"
         DECLINED = "declined", "Declined"
@@ -2007,6 +2729,8 @@ class GuardianConsent(UUIDTimeStampedModel):
     guardian_name_at_decision = models.CharField(max_length=200, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("requested_at", "id")
         indexes = [
             models.Index(
@@ -2016,6 +2740,13 @@ class GuardianConsent(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -2029,6 +2760,8 @@ class GuardianConsent(UUIDTimeStampedModel):
 
 
 class MediaReviewStatus(models.TextChoices):
+    """Enumerate supported media review status values."""
+
     NONE = "none", "No image"
     PENDING = "pending", "Pending review"
     APPROVED = "approved", "Approved"
@@ -2039,6 +2772,8 @@ class MediaSafetyReceipt(UUIDTimeStampedModel):
     """Immutable malware/decoder receipt for one stored media revision."""
 
     class MediaKind(models.TextChoices):
+        """Enumerate supported media kind values."""
+
         PROFILE_PHOTO = "profile_photo", "Profile photo"
         FURSUIT_PHOTO = "fursuit_photo", "Fursuit photo"
 
@@ -2059,6 +2794,8 @@ class MediaSafetyReceipt(UUIDTimeStampedModel):
     scanned_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-scanned_at", "-id")
         indexes = [
             models.Index(
@@ -2074,6 +2811,20 @@ class MediaSafetyReceipt(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Media safety receipts are immutable.",
@@ -2083,6 +2834,25 @@ class MediaSafetyReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Media safety receipts require the media retention workflow.",
@@ -2094,6 +2864,20 @@ def registration_profile_photo_path(
     profile: "AttendeeRegistrationProfile",
     filename: str,
 ) -> str:
+    """Return registration profile photo path.
+
+    Parameters
+    ----------
+    profile : AttendeeRegistrationProfile
+        The governed profile data.
+    filename : str
+        The original file name.
+
+    Returns
+    -------
+    str
+        The normalized text for registration profile photo path.
+    """
     extension = filename.rsplit(".", maxsplit=1)[-1].lower()
     return (
         f"private/registration-profiles/{profile.edition_id}/"
@@ -2105,6 +2889,20 @@ def registration_fursuit_photo_path(
     fursuit: "AttendeeFursuit",
     filename: str,
 ) -> str:
+    """Return registration fursuit photo path.
+
+    Parameters
+    ----------
+    fursuit : AttendeeFursuit
+        The fursuit used to enforce the persisted model invariant.
+    filename : str
+        The original file name.
+
+    Returns
+    -------
+    str
+        The normalized text for registration fursuit photo path.
+    """
     extension = filename.rsplit(".", maxsplit=1)[-1].lower()
     return (
         f"private/registration-profiles/{fursuit.edition_id}/"
@@ -2192,6 +2990,8 @@ class AttendeeRegistrationProfile(UUIDTimeStampedModel):
     collection_notice_version = models.CharField(max_length=40)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "account_id", "id")
         constraints = [
             models.UniqueConstraint(
@@ -2211,6 +3011,13 @@ class AttendeeRegistrationProfile(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -2301,6 +3108,15 @@ class AttendeeRegistrationProfile(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.country_code = self.country_code.upper()
         self.directory_country_code = self.directory_country_code.upper()
         self.telegram_handle = self.telegram_handle.strip().lstrip("@")
@@ -2314,6 +3130,25 @@ class AttendeeRegistrationProfile(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration profiles require the retention workflow.",
@@ -2321,6 +3156,13 @@ class AttendeeRegistrationProfile(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable AttendeeRegistrationProfile label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.registration.reference}: registration profile"
 
 
@@ -2379,6 +3221,8 @@ class AttendeeFursuit(UUIDTimeStampedModel):
     photo_reused_from_id = models.UUIDField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "profile_id", "position", "id")
         indexes = [
             models.Index(
@@ -2395,6 +3239,13 @@ class AttendeeFursuit(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.profile_id and (
             self.profile.registration_id != self.registration_id
@@ -2432,12 +3283,40 @@ class AttendeeFursuit(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.name = self.name.strip()
         self.species = self.species.strip()
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Fursuits are deactivated through the profile workflow.",
@@ -2445,10 +3324,19 @@ class AttendeeFursuit(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable AttendeeFursuit label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.profile.registration.reference}: {self.name}"
 
 
 class RegistrationSubmission(UUIDTimeStampedModel):
+    """Store registration submission records."""
+
     registration = models.OneToOneField(
         Registration,
         on_delete=models.PROTECT,
@@ -2462,9 +3350,25 @@ class RegistrationSubmission(UUIDTimeStampedModel):
     submitted_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("submitted_at", "id")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Registration submissions are immutable.",
@@ -2474,6 +3378,25 @@ class RegistrationSubmission(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration submissions require the retention workflow.",
@@ -2482,6 +3405,8 @@ class RegistrationSubmission(UUIDTimeStampedModel):
 
 
 class ProfileExtensionWriter(models.TextChoices):
+    """Enumerate supported profile extension writer values."""
+
     ATTENDEE = "attendee", "Attendee"
     REGISTRATION_STAFF = "registration_staff", "Registration staff"
     ATTENDEE_AND_STAFF = "attendee_and_staff", "Attendee and registration staff"
@@ -2498,18 +3423,24 @@ class ProfileExtensionAudience(models.TextChoices):
 
 
 class ProfileExtensionReviewStatus(models.TextChoices):
+    """Enumerate supported profile extension review status values."""
+
     PENDING = "pending", "Pending review"
     APPROVED = "approved", "Approved"
     REJECTED = "rejected", "Rejected"
 
 
 class ProfileExtensionStatus(models.TextChoices):
+    """Enumerate supported profile extension status values."""
+
     DRAFT = "draft", "Draft"
     ACTIVE = "active", "Active"
     RETIRED = "retired", "Retired"
 
 
 class ProfileExtensionValueWriterKind(models.TextChoices):
+    """Enumerate supported profile extension value writer kind values."""
+
     OWNER = "owner", "Registration owner"
     STAFF = "staff", "Authorized registration staff"
 
@@ -2605,6 +3536,8 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel, SetupVersionStampe
     approved_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "position", "key", "-version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -2662,7 +3595,14 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel, SetupVersionStampe
             )
         ]
 
-    def clean(self) -> None:  # noqa: PLR0912
+    def clean(self) -> None:  # noqa: PLR0912, PLR0915
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         _validate_question_options(field_type=self.field_type, options=self.options)
         if self.edition_id and self.edition.organization_id != self.organization_id:
@@ -2864,6 +3804,20 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel, SetupVersionStampe
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         self.key = self.key.lower()
         # Preserve the pre-audience model-construction contract while callers
         # migrate to the explicit policy vocabulary. A newly constructed
@@ -2905,6 +3859,25 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel, SetupVersionStampe
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Profile extension fields use versioning and retirement.",
@@ -2912,6 +3885,13 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel, SetupVersionStampe
         )
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationProfileExtensionField label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.label} v{self.version} — {self.edition.name}"
 
 
@@ -2945,6 +3925,8 @@ class RegistrationProfileExtensionValueRevision(UUIDTimeStampedModel):
     reason = models.CharField(max_length=500, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("registration_id", "field_key", "sequence", "id")
         constraints = [
             models.UniqueConstraint(
@@ -2954,6 +3936,13 @@ class RegistrationProfileExtensionValueRevision(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -2968,6 +3957,20 @@ class RegistrationProfileExtensionValueRevision(UUIDTimeStampedModel):
             raise ValidationError("The value revision must match its field scope.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Profile extension value revisions are append-only.",
@@ -2986,6 +3989,25 @@ class RegistrationProfileExtensionValueRevision(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Profile extension value revisions require the retention workflow.",
@@ -2993,6 +4015,13 @@ class RegistrationProfileExtensionValueRevision(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationProfileExtensionValueRevision label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.registration.reference}: {self.field_key} r{self.sequence}"
 
 
@@ -3017,6 +4046,8 @@ class RegistrationProfileExtensionValueControl(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("registration_id", "field_key", "id")
         constraints = [
             models.UniqueConstraint(
@@ -3039,6 +4070,13 @@ class RegistrationProfileExtensionValueControl(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -3064,6 +4102,20 @@ class RegistrationProfileExtensionValueControl(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         self.field_key = self.field_key.lower()
         if not self._state.adding:
             current = (
@@ -3078,6 +4130,25 @@ class RegistrationProfileExtensionValueControl(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Profile-value controls require the retention workflow.",
@@ -3134,6 +4205,8 @@ class RegistrationProfileExtensionValueCommandReceipt(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("registration_id", "result_sequence", "id")
         constraints = [
             models.UniqueConstraint(
@@ -3161,6 +4234,13 @@ class RegistrationProfileExtensionValueCommandReceipt(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -3200,6 +4280,20 @@ class RegistrationProfileExtensionValueCommandReceipt(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Profile-value command receipts are immutable.",
@@ -3209,6 +4303,25 @@ class RegistrationProfileExtensionValueCommandReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Profile-value command receipts require the retention workflow.",
@@ -3237,6 +4350,8 @@ class RegistrationCommandReceipt(UUIDTimeStampedModel):
     result_reference = models.CharField(max_length=24)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -3246,6 +4361,20 @@ class RegistrationCommandReceipt(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Registration command receipts are immutable.",
@@ -3255,6 +4384,25 @@ class RegistrationCommandReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration command receipts require the retention workflow.",
@@ -3275,6 +4423,8 @@ class RegistrationCommerceControl(UUIDTimeStampedModel):
     aggregate_version = models.PositiveBigIntegerField(default=1)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "edition_id", "id")
         constraints = [
             models.CheckConstraint(
@@ -3284,6 +4434,13 @@ class RegistrationCommerceControl(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.configuration_id and (
             self.configuration.organization_id != self.organization_id
@@ -3295,10 +4452,38 @@ class RegistrationCommerceControl(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration commerce controls require the recovery workflow.",
@@ -3310,6 +4495,8 @@ class RegistrationCommerceCommandReceipt(UUIDTimeStampedModel):
     """Immutable replay evidence for one governed commerce command."""
 
     class Operation(models.TextChoices):
+        """Enumerate supported operation values."""
+
         TIER_REPLACEMENT_RESERVED = (
             "tier_replacement_reserved",
             "Admission tier replacement reserved",
@@ -3353,6 +4540,8 @@ class RegistrationCommerceCommandReceipt(UUIDTimeStampedModel):
     result_count = models.PositiveIntegerField(default=1)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -3370,6 +4559,20 @@ class RegistrationCommerceCommandReceipt(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Registration commerce command receipts are immutable.",
@@ -3379,6 +4582,25 @@ class RegistrationCommerceCommandReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration commerce command receipts require retention workflow.",
@@ -3390,6 +4612,8 @@ class RegistrationCapacityAdjustment(UUIDTimeStampedModel):
     """Append-only effective-capacity change below an immutable hard ceiling."""
 
     class Scope(models.TextChoices):
+        """Enumerate supported scope values."""
+
         OVERALL = "overall", "Overall registration"
         PRODUCT = "product", "Admission product"
 
@@ -3426,6 +4650,8 @@ class RegistrationCapacityAdjustment(UUIDTimeStampedModel):
     occurred_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("control_version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -3456,6 +4682,13 @@ class RegistrationCapacityAdjustment(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.configuration_id and (
             self.configuration.organization_id != self.organization_id
@@ -3471,7 +4704,7 @@ class RegistrationCapacityAdjustment(UUIDTimeStampedModel):
                 code="registration_capacity_adjustment_control_mismatch",
             )
         if self.product_id:
-            product = cast(AdmissionProduct, self.product)
+            product = cast("AdmissionProduct", self.product)
             if product.configuration_id != self.configuration_id:
                 raise ValidationError(
                     "The capacity adjustment product does not match.",
@@ -3479,6 +4712,20 @@ class RegistrationCapacityAdjustment(UUIDTimeStampedModel):
                 )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Registration capacity adjustments are append-only.",
@@ -3488,6 +4735,25 @@ class RegistrationCapacityAdjustment(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration capacity adjustments are append-only.",
@@ -3499,6 +4765,8 @@ class AdmissionTierReplacement(UUIDTimeStampedModel):
     """A target-capacity hold for replacing one already-paid admission tier."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PAYMENT_PENDING = "payment_pending", "Payment pending"
         COMPLETED = "completed", "Completed"
         EXPIRED = "expired", "Expired"
@@ -3553,6 +4821,8 @@ class AdmissionTierReplacement(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-reserved_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -3589,6 +4859,13 @@ class AdmissionTierReplacement(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -3624,10 +4901,38 @@ class AdmissionTierReplacement(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Admission tier replacements require the retention workflow.",
@@ -3667,6 +4972,8 @@ class WaitlistBatchOffer(UUIDTimeStampedModel):
     occurred_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-occurred_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -3686,6 +4993,13 @@ class WaitlistBatchOffer(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.configuration_id and (
             self.configuration.organization_id != self.organization_id
@@ -3699,6 +5013,20 @@ class WaitlistBatchOffer(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Waitlist batch evidence is immutable.",
@@ -3708,6 +5036,25 @@ class WaitlistBatchOffer(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Waitlist batch evidence is immutable.",
@@ -3732,6 +5079,8 @@ class PaymentProviderAccount(UUIDTimeStampedModel):
     enabled = models.BooleanField(default=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "code", "id")
         constraints = [
             models.UniqueConstraint(
@@ -3741,6 +5090,13 @@ class PaymentProviderAccount(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.enabled:
             parsed = urlsplit(self.api_base_url)
@@ -3766,6 +5122,15 @@ class PaymentProviderAccount(UUIDTimeStampedModel):
                 )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -3774,6 +5139,8 @@ class PaymentIntent(UUIDTimeStampedModel):
     """Local source of truth for one hosted/tokenized checkout request."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         CREATING = "creating", "Creating"
         CHECKOUT_READY = "checkout_ready", "Checkout ready"
         SUCCEEDED = "succeeded", "Succeeded"
@@ -3817,6 +5184,8 @@ class PaymentIntent(UUIDTimeStampedModel):
     safe_result_code = models.CharField(max_length=80, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-created_at", "-id")
         constraints = [
             models.UniqueConstraint(
@@ -3837,6 +5206,13 @@ class PaymentIntent(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -3849,7 +5225,7 @@ class PaymentIntent(UUIDTimeStampedModel):
             )
         if self.tier_replacement_id:
             tier_replacement = cast(
-                AdmissionTierReplacement,
+                "AdmissionTierReplacement",
                 self.tier_replacement,
             )
             if (
@@ -3869,6 +5245,8 @@ class PaymentWebhookReceipt(UUIDTimeStampedModel):
     """Authenticated provider event receipt without retaining raw payload data."""
 
     class Outcome(models.TextChoices):
+        """Enumerate supported outcome values."""
+
         APPLIED = "applied", "Applied"
         DUPLICATE = "duplicate", "Duplicate"
         REJECTED = "rejected", "Rejected"
@@ -3895,6 +5273,8 @@ class PaymentWebhookReceipt(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-received_at", "-id")
         constraints = [
             models.UniqueConstraint(
@@ -3910,6 +5290,20 @@ class PaymentWebhookReceipt(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Payment webhook receipts are immutable.",
@@ -3919,6 +5313,25 @@ class PaymentWebhookReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Payment webhook receipts require the finance retention workflow.",
@@ -3930,6 +5343,8 @@ class PaymentException(UUIDTimeStampedModel):
     """Owned review queue for uncertain, mismatched, or late provider outcomes."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         PROVIDER_UNAVAILABLE = "provider_unavailable", "Provider unavailable"
         UNKNOWN_INTENT = "unknown_intent", "Unknown payment intent"
         AMOUNT_MISMATCH = "amount_mismatch", "Amount mismatch"
@@ -3939,6 +5354,8 @@ class PaymentException(UUIDTimeStampedModel):
         DISPUTE_REVIEW = "dispute_review", "Dispute or chargeback review"
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         OPEN = "open", "Open"
         RESOLVED = "resolved", "Resolved"
 
@@ -3965,6 +5382,8 @@ class PaymentException(UUIDTimeStampedModel):
     resolution_reason = models.CharField(max_length=500, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-opened_at", "-id")
         indexes = [
             models.Index(
@@ -3974,6 +5393,25 @@ class PaymentException(UUIDTimeStampedModel):
         ]
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Payment exceptions require reasoned resolution.",
@@ -3982,7 +5420,11 @@ class PaymentException(UUIDTimeStampedModel):
 
 
 class PaymentAttempt(UUIDTimeStampedModel):
+    """Store payment attempt records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PENDING = "pending", "Pending"
         SUCCEEDED = "succeeded", "Succeeded"
         FAILED = "failed", "Failed"
@@ -4004,6 +5446,8 @@ class PaymentAttempt(UUIDTimeStampedModel):
     safe_result_code = models.CharField(max_length=80)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("occurred_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -4017,6 +5461,20 @@ class PaymentAttempt(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Payment attempts are append-only.",
@@ -4026,6 +5484,25 @@ class PaymentAttempt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Payment history is append-only.",
@@ -4037,6 +5514,8 @@ class FinancialOperation(UUIDTimeStampedModel):
     """Dual-controlled registration financial or ownership change request."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         CANCEL = "cancel", "Cancel registration"
         REFUND = "refund", "Refund"
         TRANSFER = "transfer", "Transfer admission"
@@ -4044,6 +5523,8 @@ class FinancialOperation(UUIDTimeStampedModel):
         PRICE_ADJUSTMENT = "price_adjustment", "Price adjustment"
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PROPOSED = "proposed", "Proposed"
         APPROVED = "approved", "Approved"
         PROVIDER_PENDING = "provider_pending", "Provider pending"
@@ -4088,6 +5569,8 @@ class FinancialOperation(UUIDTimeStampedModel):
     safe_result_code = models.CharField(max_length=80, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-requested_at", "-id")
         indexes = [
             models.Index(
@@ -4097,6 +5580,13 @@ class FinancialOperation(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -4114,10 +5604,38 @@ class FinancialOperation(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Financial operations require a reasoned terminal state.",
@@ -4129,6 +5647,8 @@ class FinancialLedgerEntry(UUIDTimeStampedModel):
     """Append-only operational ledger; not a statutory general ledger."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         PAYMENT = "payment", "Provider payment"
         REFUND = "refund", "Refund"
         PROVIDER_FEE = "provider_fee", "Provider fee"
@@ -4139,6 +5659,8 @@ class FinancialLedgerEntry(UUIDTimeStampedModel):
         SETTLEMENT = "settlement", "Settlement"
 
     class Direction(models.TextChoices):
+        """Enumerate supported direction values."""
+
         INFLOW = "inflow", "Inflow"
         OUTFLOW = "outflow", "Outflow"
         NONCASH = "noncash", "Non-cash"
@@ -4176,6 +5698,8 @@ class FinancialLedgerEntry(UUIDTimeStampedModel):
     safe_description = models.CharField(max_length=320)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name_plural = "financial ledger entries"
         ordering = ("occurred_at", "id")
         indexes = [
@@ -4193,6 +5717,20 @@ class FinancialLedgerEntry(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Financial ledger entries are append-only.",
@@ -4202,6 +5740,13 @@ class FinancialLedgerEntry(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id:
             registration = self.registration
@@ -4233,6 +5778,25 @@ class FinancialLedgerEntry(UUIDTimeStampedModel):
                 )
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Financial ledger entries require the finance retention workflow.",
@@ -4244,6 +5808,8 @@ class SettlementBatch(UUIDTimeStampedModel):
     """Provider settlement summary reconciled to operational ledger entries."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         OPEN = "open", "Open"
         RECONCILED = "reconciled", "Reconciled"
         EXCEPTION = "exception", "Exception"
@@ -4269,6 +5835,8 @@ class SettlementBatch(UUIDTimeStampedModel):
     safe_result_code = models.CharField(max_length=80)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name_plural = "settlement batches"
         ordering = ("-settled_at", "-id")
         constraints = [
@@ -4279,6 +5847,13 @@ class SettlementBatch(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.provider_account_id
@@ -4290,6 +5865,20 @@ class SettlementBatch(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Reconciled settlement batches are immutable.",
@@ -4299,6 +5888,25 @@ class SettlementBatch(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Settlement batches require finance retention.",
@@ -4322,9 +5930,25 @@ class SettlementAllocation(UUIDTimeStampedModel):
     amount_minor = models.PositiveBigIntegerField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("settlement_id", "ledger_entry_id")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Settlement allocations are append-only.",
@@ -4349,6 +5973,25 @@ class SettlementAllocation(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Settlement allocations are append-only.",
@@ -4360,6 +6003,8 @@ class ReceiptRecord(UUIDTimeStampedModel):
     """Immutable receipt/credit-note snapshot for attendee self-service."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         RECEIPT = "receipt", "Receipt"
         CREDIT_NOTE = "credit_note", "Credit note"
 
@@ -4383,6 +6028,8 @@ class ReceiptRecord(UUIDTimeStampedModel):
     description_snapshot = models.CharField(max_length=320)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("issued_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -4392,6 +6039,20 @@ class ReceiptRecord(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Receipt records are immutable.",
@@ -4401,6 +6062,13 @@ class ReceiptRecord(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -4421,6 +6089,25 @@ class ReceiptRecord(UUIDTimeStampedModel):
             )
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Receipts require the finance retention workflow.",
@@ -4432,6 +6119,8 @@ class RegistrationAdjustment(UUIDTimeStampedModel):
     """Append-only evidence for controlled registration exceptions and automation."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         PAYMENT_DEADLINE_CHANGED = (
             "payment_deadline_changed",
             "Payment deadline changed",
@@ -4461,6 +6150,8 @@ class RegistrationAdjustment(UUIDTimeStampedModel):
     occurred_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("occurred_at", "id")
         indexes = [
             models.Index(
@@ -4470,6 +6161,20 @@ class RegistrationAdjustment(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Registration adjustments are append-only.",
@@ -4479,6 +6184,25 @@ class RegistrationAdjustment(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Registration adjustments are append-only.",
@@ -4487,7 +6211,11 @@ class RegistrationAdjustment(UUIDTimeStampedModel):
 
 
 class Entitlement(UUIDTimeStampedModel):
+    """Store entitlement records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         ACTIVE = "active", "Active"
         REVOKED = "revoked", "Revoked"
 
@@ -4508,6 +6236,8 @@ class Entitlement(UUIDTimeStampedModel):
     granted_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("granted_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -4517,10 +6247,19 @@ class Entitlement(UUIDTimeStampedModel):
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable Entitlement label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.registration.reference}: {self.label_snapshot}"
 
 
 class CheckInRecord(UUIDTimeStampedModel):
+    """Store check in record records."""
+
     registration = models.OneToOneField(
         Registration,
         on_delete=models.PROTECT,
@@ -4534,11 +6273,27 @@ class CheckInRecord(UUIDTimeStampedModel):
     reason = models.TextField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name = "check-in record"
         verbose_name_plural = "check-in records"
         ordering = ("checked_in_at", "id")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Check-in records are append-only.",
@@ -4548,6 +6303,25 @@ class CheckInRecord(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Check-in records require reconciliation.",
@@ -4556,7 +6330,11 @@ class CheckInRecord(UUIDTimeStampedModel):
 
 
 class RegistrationTimelineEntry(UUIDTimeStampedModel):
+    """Store registration timeline entry records."""
+
     class Audience(models.TextChoices):
+        """Enumerate supported audience values."""
+
         ATTENDEE_AND_STAFF = "attendee_and_staff", "Attendee and staff"
         STAFF_ONLY = "staff_only", "Registration staff only"
 
@@ -4578,6 +6356,8 @@ class RegistrationTimelineEntry(UUIDTimeStampedModel):
     correlation_id = models.UUIDField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name_plural = "registration timeline entries"
         ordering = ("sequence", "id")
         constraints = [
@@ -4588,6 +6368,20 @@ class RegistrationTimelineEntry(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Operational timeline entries are append-only.",
@@ -4597,6 +6391,25 @@ class RegistrationTimelineEntry(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Operational timeline entries are append-only.",
@@ -4604,6 +6417,13 @@ class RegistrationTimelineEntry(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable RegistrationTimelineEntry label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.registration.reference}: {self.title}"
 
 
@@ -4620,6 +6440,8 @@ class RegistrationLifecycleRun(UUIDTimeStampedModel):
     restrictions_applied = models.PositiveIntegerField(default=0)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-ran_at", "-id")
         indexes = [
             models.Index(
@@ -4629,6 +6451,20 @@ class RegistrationLifecycleRun(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Lifecycle run evidence is append-only.",
@@ -4638,6 +6474,25 @@ class RegistrationLifecycleRun(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Lifecycle run evidence follows its retention policy.",

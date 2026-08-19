@@ -19,9 +19,18 @@ MAX_LEASE_SECONDS = 900
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Run the supervised, tenant-fair effect worker."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument("--pool", default="default")
         parser.add_argument("--lease-seconds", type=int, default=60)
         parser.add_argument("--execution-timeout-seconds", type=int, default=30)
@@ -31,6 +40,20 @@ class Command(BaseCommand):
         parser.add_argument("--stop-when-idle", action="store_true")
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args
         lease_seconds: int = options["lease_seconds"]
         execution_timeout_seconds: int = options["execution_timeout_seconds"]

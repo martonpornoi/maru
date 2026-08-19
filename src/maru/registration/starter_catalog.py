@@ -48,6 +48,30 @@ class StarterProduct:
 
 @dataclass(frozen=True, slots=True)
 class PlatformRegistrationStarter:
+    """Describe platform registration starter.
+
+    Attributes
+    ----------
+    source_id
+        The source identifier within the requested scope.
+    code
+        The stable domain code to resolve or validate.
+    version
+        The version number associated with the supplied record or contract.
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    content_digest
+        The canonical digest used to verify content.
+    sections
+        The sections retained in this immutable projection.
+    questions
+        The questions retained in this immutable projection.
+    products
+        The products retained in this immutable projection.
+    """
+
     source_id: UUID
     code: str
     version: int
@@ -141,24 +165,54 @@ if len({(item.version, item.content_digest) for item in _STARTERS}) != len(_STAR
 
 
 def platform_registration_starters() -> tuple[PlatformRegistrationStarter, ...]:
-    """Return every retained catalog version in stable display order."""
+    """Return every retained catalog version in stable display order.
 
+    Returns
+    -------
+    tuple[PlatformRegistrationStarter, ...]
+        The matching platform registration starters records in deterministic
+        order.
+    """
     return tuple(sorted(_STARTERS, key=lambda item: (item.code, -item.version)))
 
 
 def platform_registration_starter(
     source_id: UUID,
 ) -> PlatformRegistrationStarter | None:
-    """Resolve one exact immutable version without label-based lookup."""
+    """Resolve one exact immutable version without label-based lookup.
 
+    Parameters
+    ----------
+    source_id : UUID
+        The source identifier within the requested scope.
+
+    Returns
+    -------
+    PlatformRegistrationStarter | None
+        The PlatformRegistrationStarter | None produced by platform registration
+        starter.
+    """
     return next((item for item in _STARTERS if item.source_id == source_id), None)
 
 
 def platform_registration_starter_by_provenance(
     *, version: int, content_digest: str
 ) -> PlatformRegistrationStarter | None:
-    """Resolve persisted provenance even after newer catalog versions exist."""
+    """Resolve persisted provenance even after newer catalog versions exist.
 
+    Parameters
+    ----------
+    version : int
+        The version number associated with the supplied record or contract.
+    content_digest : str
+        The canonical digest used to verify content.
+
+    Returns
+    -------
+    PlatformRegistrationStarter | None
+        The PlatformRegistrationStarter | None produced by platform registration
+        starter by provenance.
+    """
     return next(
         (
             item

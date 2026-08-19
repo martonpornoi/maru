@@ -13,11 +13,8 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter, defaultdict
-from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, cast
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, cast
 
 from django.conf import settings
 from django.db import DatabaseError, connection
@@ -61,6 +58,11 @@ from maru.organizations.models import (
     OrganizationRepresentation,
     RepresentationAppointment,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+    from datetime import datetime
+    from uuid import UUID
 
 BLOCKER_KEYS = (
     "effective_or_future_root_grant_missing_issuance",
@@ -1252,11 +1254,21 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
 
 
 def _function_definition_fingerprint(definition: tuple[object, ...]) -> str:
-    """Hash behavior-bearing pg_proc fields without exposing function bodies."""
+    """Hash behavior-bearing pg_proc fields without exposing function bodies.
 
+    Parameters
+    ----------
+    definition : tuple[object, ...]
+        The versioned definition governing the requested behavior.
+
+    Returns
+    -------
+    str
+        The normalized text for function definition fingerprint.
+    """
     configuration = definition[9]
     if configuration is not None:
-        configuration = list(cast(Iterable[object], configuration))
+        configuration = list(cast("Iterable[object]", configuration))
     payload = {
         "source": definition[0],
         "language": definition[1],
@@ -1287,17 +1299,28 @@ def _supported_database_schema_is_active() -> bool:
     therefore cannot prove that an unqualified ORM read will resolve to
     ``public``.  Permit only ``pg_catalog`` ahead of ``public`` in the
     effective order and fail closed unless the exact safe prefix is present.
-    """
 
+    Returns
+    -------
+    bool
+        `True` when Check the effective schema order before any authority graph
+        is loaded; otherwise `False`.
+    """
     with connection.cursor() as cursor:
         cursor.execute("SELECT pg_catalog.current_schemas(TRUE)")
-        effective_schemas = tuple(cast(Iterable[str], cursor.fetchone()[0]))
+        effective_schemas = tuple(cast("Iterable[str]", cursor.fetchone()[0]))
     return effective_schemas[:2] == ("pg_catalog", _SUPPORTED_DATABASE_SCHEMA)
 
 
 def _configured_runtime_database_role_is_safe() -> bool:
-    """Prove the future service role without requiring this owner session to use it."""
+    """Prove the future service role without requiring this owner session to use it.
 
+    Returns
+    -------
+    bool
+        `True` when Prove the future service role without requiring this owner
+        session to use it; otherwise `False`.
+    """
     role_name = settings.RUNTIME_DATABASE_ROLE
     if not isinstance(role_name, str) or not role_name:
         return False
@@ -1310,14 +1333,19 @@ def _configured_runtime_database_role_is_safe() -> bool:
 
 
 def _inspect_cutover_catalog() -> _CatalogState:
-    """Read the exact installed cutover contract without process-local caching."""
+    """Read the exact installed cutover contract without process-local caching.
 
+    Returns
+    -------
+    _CatalogState
+        The resolved _CatalogState for inspect cutover catalog.
+    """
     trigger_names = [contract.name for contract in _TRIGGER_CONTRACTS]
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT pg_catalog.current_setting('server_version_num')::integer / 10000"
         )
-        server_major = cast(int, cursor.fetchone()[0])
+        server_major = cast("int", cursor.fetchone()[0])
         server_version_supported = server_major == _SUPPORTED_POSTGRESQL_SERVER_MAJOR
         cursor.execute(
             "SELECT to_regclass(%s), to_regclass(%s)",
@@ -1597,9 +1625,9 @@ def _inspect_cutover_state() -> _CutoverState:
     activation_audit_valid = False
     if marker_contract_valid:
         marker_row = marker_rows[0]
-        activated_by_id = cast(UUID, marker_row["activated_by_id"])
-        correlation_id = cast(UUID, marker_row["correlation_id"])
-        activated_at = cast(datetime, marker_row["activated_at"])
+        activated_by_id = cast("UUID", marker_row["activated_by_id"])
+        correlation_id = cast("UUID", marker_row["correlation_id"])
+        activated_at = cast("datetime", marker_row["activated_at"])
         activation_audit_valid = (
             AuditEvent.objects.filter(
                 schema_version=1,
@@ -1654,8 +1682,14 @@ def _inspect_cutover_state() -> _CutoverState:
 
 
 def authority_provenance_runtime_contract_is_ready() -> bool:
-    """Prove the exact durable runtime contract without loading authority data."""
+    """Prove the exact durable runtime contract without loading authority data.
 
+    Returns
+    -------
+    bool
+        `True` when Prove the exact durable runtime contract without loading
+        authority data; otherwise `False`.
+    """
     try:
         if not _supported_database_schema_is_active():
             return False
@@ -1749,6 +1783,13 @@ class _AuthorityGraph:
     """One request-local, identifier-bearing graph whose output is counts only."""
 
     def __init__(self, *, at: datetime) -> None:
+        """Initialize the _AuthorityGraph instance.
+
+        Parameters
+        ----------
+        at : datetime
+            The timezone-aware instant at which to evaluate the decision.
+        """
         self.at = at
         self.grants = _rows_by(
             CapabilityGrant.objects.values(
@@ -1907,7 +1948,7 @@ class _AuthorityGraph:
 
         def deterministic_index(field: str) -> dict[object, object]:
             return {
-                target_id: min(ordinals, key=lambda value: cast(int, value))
+                target_id: min(ordinals, key=lambda value: cast("int", value))
                 for target_id, ordinals in issuance_groups[field].items()
             }
 
@@ -2220,7 +2261,7 @@ class _AuthorityGraph:
                     graph_edges[ordinal].add(parent_issuance)
                     parent = self.grants.get(parent_id)
                     if (
-                        cast(int, parent_issuance) >= cast(int, ordinal)
+                        cast("int", parent_issuance) >= cast("int", ordinal)
                         or parent is None
                         or parent["principal_id"] != target["granted_by_id"]
                         or parent["capability_code"] != target["capability_code"]
@@ -2238,7 +2279,7 @@ class _AuthorityGraph:
                         )
                     ):
                         affected["malformed_lineage"].add(ordinal)
-                    if cast(int, parent_issuance) >= cast(int, ordinal):
+                    if cast("int", parent_issuance) >= cast("int", ordinal):
                         affected["control_source_not_earlier"].add(ordinal)
                 continue
 
@@ -2412,7 +2453,7 @@ class _AuthorityGraph:
                 return False
         return all(
             authority_issuance_is_current(
-                issuance_ordinal=cast(int, ordinal),
+                issuance_ordinal=cast("int", ordinal),
                 principal_id=target["principal_id"],
                 capability_code=capability_code,
                 target=resolved,
@@ -2452,8 +2493,19 @@ def build_authority_provenance_readiness_report(
     *,
     at: datetime | None = None,
 ) -> dict[str, object]:
-    """Return deterministic aggregate-only ADR 0044 readiness evidence."""
+    """Return deterministic aggregate-only ADR 0044 readiness evidence.
 
+    Parameters
+    ----------
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    dict[str, object]
+        A mapping containing the resolved build authority provenance readiness
+        report data.
+    """
     if not _supported_database_schema_is_active():
         return {
             "status": "blocked",

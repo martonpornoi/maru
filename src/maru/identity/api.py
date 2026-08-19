@@ -60,15 +60,31 @@ from maru.identity.services import (
 
 
 class CsrfTokenView(APIView):
+    """Expose csrf token through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(operation_id="identity_get_csrf_token", responses=dict)
     def get(self, request: Request) -> Response:
+        """Get the CSRF token.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         return Response({"csrf_token": get_token(request._request)})
 
 
 @method_decorator(csrf_protect, name="dispatch")
 class PublicSessionView(APIView):
+    """Expose public session through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -77,6 +93,23 @@ class PublicSessionView(APIView):
         responses=dict,
     )
     def post(self, request: Request) -> Response:
+        """Create a public session.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = SessionSignInSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         fingerprint = request_fingerprint(
@@ -111,6 +144,8 @@ class PublicSessionView(APIView):
 
 
 class PublicAccountBootstrapView(APIView):
+    """Expose public account bootstrap through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -119,6 +154,23 @@ class PublicAccountBootstrapView(APIView):
         responses=dict,
     )
     def post(self, request: Request) -> Response:
+        """Bootstrap the account.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = AccountBootstrapSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         fingerprint = request_fingerprint(
@@ -149,6 +201,8 @@ class PublicAccountBootstrapView(APIView):
 
 
 class PublicVerifyEmailView(APIView):
+    """Expose public verify email through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -157,6 +211,23 @@ class PublicVerifyEmailView(APIView):
         responses=dict,
     )
     def post(self, request: Request) -> Response:
+        """Verify the email.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -178,6 +249,8 @@ class PublicVerifyEmailView(APIView):
 
 
 class PublicRecoveryRequestView(APIView):
+    """Expose public recovery request through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -186,6 +259,23 @@ class PublicRecoveryRequestView(APIView):
         responses=dict,
     )
     def post(self, request: Request) -> Response:
+        """Request account recovery.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = RecoveryRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         fingerprint = request_fingerprint(
@@ -214,6 +304,8 @@ class PublicRecoveryRequestView(APIView):
 
 
 class PublicRecoveryCompleteView(APIView):
+    """Expose public recovery complete through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -222,6 +314,23 @@ class PublicRecoveryCompleteView(APIView):
         responses=dict,
     )
     def post(self, request: Request) -> Response:
+        """Complete account recovery.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = RecoveryCompleteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -241,11 +350,30 @@ class PublicRecoveryCompleteView(APIView):
 
 
 class MySecurityHistoryView(APIView):
+    """Expose my security history through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_list_my_security_history",
         responses=AccountSecurityEventSerializer(many=True),
     )
     def get(self, request: Request) -> Response:
+        """List my security history.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         events = request.user.security_events.order_by("-occurred_at", "-id")[:100]
@@ -253,11 +381,30 @@ class MySecurityHistoryView(APIView):
 
 
 class MySessionListView(APIView):
+    """Expose my session list through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_list_my_sessions",
         responses=AccountSessionSerializer(many=True),
     )
     def get(self, request: Request) -> Response:
+        """List my sessions.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         current = inventory_session(account=request.user, request=request._request)
@@ -270,12 +417,33 @@ class MySessionListView(APIView):
 
 
 class MySessionRevokeView(APIView):
+    """Expose my session revoke through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_revoke_my_session",
         request=None,
         responses=dict,
     )
     def post(self, request: Request, session_id: UUID) -> Response:
+        """Revoke my session.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        session_id : UUID
+            The session identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         try:
@@ -286,12 +454,33 @@ class MySessionRevokeView(APIView):
 
 
 class MyStepUpView(APIView):
+    """Expose my step up through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_complete_step_up",
         request=StepUpSerializer,
         responses=dict,
     )
     def post(self, request: Request) -> Response:
+        """Complete step-up authentication.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         serializer = StepUpSerializer(data=request.data)
@@ -315,11 +504,30 @@ class MyStepUpView(APIView):
 
 
 class MyRestrictionListView(APIView):
+    """Expose my restriction list through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_list_my_restrictions",
         responses=AccountRestrictionSerializer(many=True),
     )
     def get(self, request: Request) -> Response:
+        """List my restrictions.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         items = (
@@ -331,12 +539,37 @@ class MyRestrictionListView(APIView):
 
 
 class MyRestrictionAppealView(APIView):
+    """Expose my restriction appeal through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_appeal_my_restriction",
         request=RestrictionAppealCreateSerializer,
         responses=RestrictionAppealSerializer,
     )
     def post(self, request: Request, restriction_id: UUID) -> Response:
+        """Appeal my restriction.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        restriction_id : UUID
+            The restriction identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         serializer = RestrictionAppealCreateSerializer(data=request.data)
@@ -360,6 +593,8 @@ class MyRestrictionAppealView(APIView):
 
 
 class StaffRestrictionListCreateView(APIView):
+    """Expose staff restriction list create through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_list_scoped_restrictions",
         responses=AccountRestrictionSerializer(many=True),
@@ -370,6 +605,29 @@ class StaffRestrictionListCreateView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the scoped restrictions.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         try:
@@ -400,6 +658,33 @@ class StaffRestrictionListCreateView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Issue the scoped restriction.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         serializer = StaffRestrictionCreateSerializer(data=request.data)
@@ -438,6 +723,8 @@ class StaffRestrictionListCreateView(APIView):
 
 
 class StaffRestrictionRevokeView(APIView):
+    """Expose staff restriction revoke through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_revoke_scoped_restriction",
         request=StaffRestrictionRevokeSerializer,
@@ -450,6 +737,35 @@ class StaffRestrictionRevokeView(APIView):
         edition_id: UUID,
         restriction_id: UUID,
     ) -> Response:
+        """Revoke the scoped restriction.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        restriction_id : UUID
+            The restriction identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         serializer = StaffRestrictionRevokeSerializer(data=request.data)
@@ -480,6 +796,8 @@ class StaffRestrictionRevokeView(APIView):
 
 
 class StaffRestrictionAppealDecisionView(APIView):
+    """Expose staff restriction appeal decision through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_decide_restriction_appeal",
         request=StaffRestrictionAppealDecisionSerializer,
@@ -492,6 +810,35 @@ class StaffRestrictionAppealDecisionView(APIView):
         edition_id: UUID,
         appeal_id: UUID,
     ) -> Response:
+        """Decide the restriction appeal.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        appeal_id : UUID
+            The appeal identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         if not isinstance(request.user, Account):
             raise TypeError("Authenticated principal is not a platform account")
         serializer = StaffRestrictionAppealDecisionSerializer(data=request.data)

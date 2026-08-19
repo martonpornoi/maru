@@ -18,6 +18,18 @@ _BINDING_PREFIX = "https://maru.invalid/authorization/logistics.manifest/"
 
 
 def logistics_manifest_binding_id(manifest_id: UUID) -> UUID:
+    """Return logistics manifest binding id.
+
+    Parameters
+    ----------
+    manifest_id : UUID
+        The identifier of the manifest.
+
+    Returns
+    -------
+    UUID
+        The UUID established after logistics manifest binding id completes.
+    """
     return uuid5(NAMESPACE_URL, f"{_BINDING_PREFIX}{manifest_id}")
 
 
@@ -25,6 +37,23 @@ def logistics_manifest_binding_id(manifest_id: UUID) -> UUID:
 def ensure_logistics_manifest_binding(
     *, manifest: LogisticsManifest
 ) -> ScopedResourceBinding:
+    """Ensure logistics manifest binding.
+
+    Parameters
+    ----------
+    manifest : LogisticsManifest
+        The manifest evaluated while ensure logistics manifest binding.
+
+    Returns
+    -------
+    ScopedResourceBinding
+        The persisted binding for the edition-owned manifest.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if manifest._state.adding or manifest.pk is None:
         raise ValidationError(
             "Save the Logistics manifest before creating its resource binding.",

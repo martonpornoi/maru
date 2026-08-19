@@ -8,6 +8,23 @@ from maru.participation.models import Participation
 
 
 def snapshot_participations_for_archive(*, edition_id: UUID) -> int:
+    """Snapshot participations for archive.
+
+    Parameters
+    ----------
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    int
+        The number of records affected by the completed operation.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     participations = Participation.objects.filter(edition_id=edition_id)
     first = participations.select_related("edition__series").first()
     if first is None:

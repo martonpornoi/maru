@@ -6,13 +6,15 @@ import hashlib
 import json
 import re
 import unicodedata
-from collections.abc import Mapping
-from typing import Never
+from typing import TYPE_CHECKING, Never
 
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 
 from .models import MAX_LOGISTICS_REASON_LENGTH
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 MAX_SOURCE_CHANNEL_LENGTH = 32
 MAX_LOGISTICS_CODE_LENGTH = 96
@@ -32,6 +34,26 @@ def normalized_text(
     required: bool = False,
     collapse: bool = False,
 ) -> str:
+    """Return normalized text.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+    field : str
+        The model or form field whose contract is being evaluated.
+    maximum : int
+        The inclusive upper bound.
+    required : bool, default=False
+        Whether the input is required.
+    collapse : bool, default=False
+        Whether nested results should be collapsed for presentation.
+
+    Returns
+    -------
+    str
+        The normalized text for normalized text.
+    """
     if not isinstance(value, str):
         _field_error(field, "Enter text for this field.", "logistics_text_invalid")
     if any(unicodedata.category(character) == "Cc" for character in value):
@@ -55,6 +77,18 @@ def normalized_text(
 
 
 def normalized_reason(value: str) -> str:
+    """Return normalized reason.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+
+    Returns
+    -------
+    str
+        The normalized text for normalized reason.
+    """
     return normalized_text(
         value,
         field="reason",
@@ -65,6 +99,20 @@ def normalized_reason(value: str) -> str:
 
 
 def normalized_code(value: str, *, field: str = "code") -> str:
+    """Return normalized code.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+    field : str, default='code'
+        The model or form field whose contract is being evaluated.
+
+    Returns
+    -------
+    str
+        The normalized text for normalized code.
+    """
     raw = normalized_text(
         value,
         field=field,
@@ -79,6 +127,18 @@ def normalized_code(value: str, *, field: str = "code") -> str:
 
 
 def normalized_label_code(value: str) -> str:
+    """Return normalized label code.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+
+    Returns
+    -------
+    str
+        The normalized text for normalized label code.
+    """
     normalized = normalized_text(
         value,
         field="label_code",
@@ -96,6 +156,18 @@ def normalized_label_code(value: str) -> str:
 
 
 def normalized_source_channel(value: str) -> str:
+    """Return normalized source channel.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+
+    Returns
+    -------
+    str
+        The normalized text for normalized source channel.
+    """
     if (
         not isinstance(value, str)
         or len(value) > MAX_SOURCE_CHANNEL_LENGTH
@@ -110,6 +182,18 @@ def normalized_source_channel(value: str) -> str:
 
 
 def canonical_digest(payload: Mapping[str, object]) -> str:
+    """Return canonical digest.
+
+    Parameters
+    ----------
+    payload : Mapping[str, object]
+        The validated payload to process.
+
+    Returns
+    -------
+    str
+        The normalized text for canonical digest.
+    """
     encoded = json.dumps(
         dict(payload),
         ensure_ascii=False,

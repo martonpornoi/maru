@@ -9,7 +9,11 @@ from maru.core.models import UUIDTimeStampedModel
 
 
 class Credential(UUIDTimeStampedModel):
+    """Store credential records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         ISSUED = "issued", "Issued"
         REPLACED = "replaced", "Replaced"
         REVOKED = "revoked", "Revoked"
@@ -38,6 +42,8 @@ class Credential(UUIDTimeStampedModel):
     revocation_reason = models.CharField(max_length=500, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("registration_id", "issue_sequence", "id")
         constraints = [
             models.UniqueConstraint(
@@ -62,6 +68,13 @@ class Credential(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.registration_id and (
             self.registration.organization_id != self.organization_id
@@ -74,10 +87,38 @@ class Credential(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Credentials are revoked or replaced, never deleted.",
@@ -86,7 +127,11 @@ class Credential(UUIDTimeStampedModel):
 
 
 class CredentialEvent(UUIDTimeStampedModel):
+    """Store credential event records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         ISSUED = "issued", "Issued"
         REPRINTED = "reprinted", "Reprinted"
         REVOKED = "revoked", "Revoked"
@@ -107,9 +152,25 @@ class CredentialEvent(UUIDTimeStampedModel):
     reason_code = models.CharField(max_length=80)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("occurred_at", "id")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Credential events are append-only.",
@@ -119,6 +180,25 @@ class CredentialEvent(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Credential events are append-only.",
@@ -127,6 +207,8 @@ class CredentialEvent(UUIDTimeStampedModel):
 
 
 class RelayDevice(UUIDTimeStampedModel):
+    """Store relay device records."""
+
     organization_id = models.UUIDField()
     edition_id = models.UUIDField()
     code = models.SlugField(max_length=80)
@@ -137,6 +219,8 @@ class RelayDevice(UUIDTimeStampedModel):
     revoked_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=("edition_id", "code"),
@@ -146,6 +230,8 @@ class RelayDevice(UUIDTimeStampedModel):
 
 
 class OfflineCredentialManifest(UUIDTimeStampedModel):
+    """Store offline credential manifest records."""
+
     organization_id = models.UUIDField()
     edition_id = models.UUIDField()
     sequence = models.PositiveBigIntegerField()
@@ -159,6 +245,8 @@ class OfflineCredentialManifest(UUIDTimeStampedModel):
     signature = models.CharField(max_length=64)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "sequence", "id")
         constraints = [
             models.UniqueConstraint(
@@ -168,6 +256,20 @@ class OfflineCredentialManifest(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Offline manifests are immutable.",
@@ -177,6 +279,25 @@ class OfflineCredentialManifest(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Offline manifests require the accreditation retention workflow.",
@@ -185,7 +306,11 @@ class OfflineCredentialManifest(UUIDTimeStampedModel):
 
 
 class OfflineCheckInOperation(UUIDTimeStampedModel):
+    """Store offline check in operation records."""
+
     class Outcome(models.TextChoices):
+        """Enumerate supported outcome values."""
+
         APPLIED = "applied", "Applied"
         DUPLICATE = "duplicate", "Duplicate"
         CONFLICT = "conflict", "Conflict"
@@ -215,6 +340,8 @@ class OfflineCheckInOperation(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name = "offline check-in operation"
         verbose_name_plural = "offline check-in operations"
         ordering = ("device_id", "device_sequence", "id")
@@ -236,6 +363,20 @@ class OfflineCheckInOperation(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Offline check-in evidence is append-only.",
@@ -245,6 +386,25 @@ class OfflineCheckInOperation(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Offline check-in evidence is append-only.",

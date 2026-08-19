@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from django import forms
@@ -40,6 +39,9 @@ from maru.identity.invitation_queries import (
     normalize_account_inventory_search,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 _INVITATION_TOKEN_PATTERN = re.compile(
     rf"[A-Za-z0-9_-]{{{INVITATION_TOKEN_LENGTH}}}\Z",
     flags=re.ASCII,
@@ -50,8 +52,25 @@ def _field_local_result(
     field_name: str,
     operation: Callable[[], str | None],
 ) -> str | None:
-    """Translate a pure dict-shaped domain error to one browser field."""
+    """Translate a pure dict-shaped domain error to one browser field.
 
+    Parameters
+    ----------
+    field_name : str
+        The canonical field name whose policy or value is requested.
+    operation : Callable[[], str | None]
+        The callback invoked to operation.
+
+    Returns
+    -------
+    str | None
+        The normalized text for field local result.
+
+    Raises
+    ------
+    forms.ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     try:
         return operation()
     except ValidationError as error:
@@ -135,17 +154,48 @@ class PlatformAccountInventoryFilterForm(StrictInputForm):
     )
 
     def clean_search(self) -> str | None:
+        """Validate and normalize the search field.
+
+        Returns
+        -------
+        str | None
+            The validated and normalized search.
+        """
         return normalize_account_inventory_search(
             self.cleaned_data.get("search"),
         )
 
     def clean_search_mode(self) -> str:
+        """Validate and normalize the search mode field.
+
+        Returns
+        -------
+        str
+            The validated and normalized search mode.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = str(self.cleaned_data["search_mode"])
         if value not in ACCOUNT_INVENTORY_SEARCH_MODES:
             raise forms.ValidationError("Choose a supported match mode.")
         return value
 
     def clean_kind(self) -> str | None:
+        """Validate and normalize the kind field.
+
+        Returns
+        -------
+        str | None
+            The validated and normalized kind.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = str(self.cleaned_data.get("kind", ""))
         if not value:
             return None
@@ -154,6 +204,18 @@ class PlatformAccountInventoryFilterForm(StrictInputForm):
         return value
 
     def clean_state(self) -> str | None:
+        """Validate and normalize the state field.
+
+        Returns
+        -------
+        str | None
+            The validated and normalized state.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = str(self.cleaned_data.get("state", ""))
         if not value:
             return None
@@ -245,6 +307,17 @@ class PlatformAccountInvitationForm(StrictInputForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the PlatformAccountInvitationForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", "id_account_invite_%s")
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("preferred_language", "en")
@@ -254,6 +327,18 @@ class PlatformAccountInvitationForm(StrictInputForm):
         super().__init__(*args, **kwargs)
 
     def clean_email(self) -> str:
+        """Validate and normalize the email field.
+
+        Returns
+        -------
+        str
+            The validated and normalized email.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = _field_local_result(
             "email",
             lambda: normalize_invitation_email(self.cleaned_data["email"]),
@@ -263,6 +348,13 @@ class PlatformAccountInvitationForm(StrictInputForm):
         return value
 
     def clean_login_handle(self) -> str:
+        """Validate and normalize the login handle field.
+
+        Returns
+        -------
+        str
+            The validated and normalized login handle.
+        """
         value = _field_local_result(
             "login_handle",
             lambda: normalize_invitation_login_handle(
@@ -272,6 +364,13 @@ class PlatformAccountInvitationForm(StrictInputForm):
         return value or ""
 
     def clean_display_name(self) -> str:
+        """Validate and normalize the display name field.
+
+        Returns
+        -------
+        str
+            The validated and normalized display name.
+        """
         value = _field_local_result(
             "display_name",
             lambda: normalize_invitation_display_name(
@@ -281,6 +380,18 @@ class PlatformAccountInvitationForm(StrictInputForm):
         return value or ""
 
     def clean_preferred_language(self) -> str:
+        """Validate and normalize the preferred language field.
+
+        Returns
+        -------
+        str
+            The validated and normalized preferred language.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = _field_local_result(
             "preferred_language",
             lambda: normalize_invitation_preferred_language(
@@ -292,6 +403,18 @@ class PlatformAccountInvitationForm(StrictInputForm):
         return value
 
     def clean_reason(self) -> str:
+        """Validate and normalize the reason field.
+
+        Returns
+        -------
+        str
+            The validated and normalized reason.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = _field_local_result(
             "reason",
             lambda: normalize_invitation_reason(self.cleaned_data["reason"]),
@@ -330,6 +453,21 @@ class PlatformAccountInvitationActionForm(StrictInputForm):
         auto_id: str = "id_invitation_action_%s",
         **kwargs: Any,
     ) -> None:
+        """Initialize the PlatformAccountInvitationActionForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        auto_id : str, default='id_invitation_action_%s'
+            The auto identifier within the requested scope.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", auto_id)
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("expected_version", expected_version)
@@ -338,6 +476,18 @@ class PlatformAccountInvitationActionForm(StrictInputForm):
         super().__init__(*args, **kwargs)
 
     def clean_reason(self) -> str:
+        """Validate and normalize the reason field.
+
+        Returns
+        -------
+        str
+            The validated and normalized reason.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = _field_local_result(
             "reason",
             lambda: normalize_invitation_reason(self.cleaned_data["reason"]),
@@ -376,6 +526,21 @@ class PlatformIdentityDeliveryRetryForm(StrictInputForm):
         auto_id: str = "id_delivery_retry_%s",
         **kwargs: Any,
     ) -> None:
+        """Initialize the PlatformIdentityDeliveryRetryForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        auto_id : str, default='id_delivery_retry_%s'
+            The auto identifier within the requested scope.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", auto_id)
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("expected_version", expected_version)
@@ -384,6 +549,18 @@ class PlatformIdentityDeliveryRetryForm(StrictInputForm):
         super().__init__(*args, **kwargs)
 
     def clean_reason(self) -> str:
+        """Validate and normalize the reason field.
+
+        Returns
+        -------
+        str
+            The validated and normalized reason.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = _field_local_result(
             "reason",
             lambda: normalize_invitation_reason(self.cleaned_data["reason"]),
@@ -419,6 +596,19 @@ class PlatformIdentityDeliveryDeliveredForm(PlatformIdentityDeliveryRetryForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the PlatformIdentityDeliveryDeliveredForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", "id_delivery_delivered_%s")
         super().__init__(
             *args,
@@ -428,6 +618,18 @@ class PlatformIdentityDeliveryDeliveredForm(PlatformIdentityDeliveryRetryForm):
         )
 
     def clean_provider_reference(self) -> str:
+        """Validate and normalize the provider reference field.
+
+        Returns
+        -------
+        str
+            The validated and normalized provider reference.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = str(self.cleaned_data["provider_reference"])
         if not value or not value.isprintable():
             raise forms.ValidationError("Enter a valid provider reference.")
@@ -487,6 +689,17 @@ class AccountInvitationAcceptanceForm(StrictInputForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the AccountInvitationAcceptanceForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", "id_invitation_accept_%s")
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("retry_key", retry_key or uuid4())
@@ -494,6 +707,18 @@ class AccountInvitationAcceptanceForm(StrictInputForm):
         super().__init__(*args, **kwargs)
 
     def clean_raw_token(self) -> str:
+        """Validate and normalize the raw token field.
+
+        Returns
+        -------
+        str
+            The validated and normalized raw token.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = str(self.cleaned_data["raw_token"])
         if _INVITATION_TOKEN_PATTERN.fullmatch(value) is None:
             raise forms.ValidationError(
@@ -506,6 +731,18 @@ class AccountInvitationAcceptanceForm(StrictInputForm):
         # This public C4 form deliberately bypasses StrictInputForm's helpful
         # field-name listing: an attacker could otherwise submit the bearer
         # code or password *as an unknown key* and make the error reflect it.
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            A mapping containing the resolved clean data.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         cleaned = forms.Form.clean(self)
         getlist = getattr(self.data, "getlist", None)
         if getlist is not None and any(

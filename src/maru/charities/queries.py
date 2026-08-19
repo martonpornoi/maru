@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from django.db import transaction
@@ -18,7 +18,6 @@ from maru.authorization.policy import (
     resolve_edition_target,
     resolve_organization_target,
 )
-from maru.identity.models import Account
 
 from .authorization import resolve_charity_selection_target
 from .inputs import normalized_reason, normalized_source_channel
@@ -37,9 +36,26 @@ from .services import (
     CharityResourceUnavailableError,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from maru.identity.models import Account
+
 
 @dataclass(frozen=True, slots=True)
 class PublicCharityMedia:
+    """Describe public charity media.
+
+    Attributes
+    ----------
+    kind
+        The closed discriminator selecting the requested behavior.
+    reference
+        The reference retained in this immutable projection.
+    attribution
+        The attribution retained in this immutable projection.
+    """
+
     kind: str
     reference: str
     attribution: str
@@ -47,6 +63,28 @@ class PublicCharityMedia:
 
 @dataclass(frozen=True, slots=True)
 class PublicCharity:
+    """Describe public charity.
+
+    Attributes
+    ----------
+    selection_id
+        The selection identifier within the requested scope.
+    public_name
+        The human-readable public name shown to authorized readers.
+    imprint_name
+        The human-readable imprint name shown to authorized readers.
+    short_description
+        The bounded short description retained for authorized readers.
+    location_name
+        The human-readable location name shown to authorized readers.
+    country_code
+        The stable country code from the relevant closed catalog.
+    website_url
+        The validated absolute HTTPS website url.
+    media
+        The media retained in this immutable projection.
+    """
+
     selection_id: UUID
     public_name: str
     imprint_name: str
@@ -59,6 +97,34 @@ class PublicCharity:
 
 @dataclass(frozen=True, slots=True)
 class CharityPartnerMediaSummary:
+    """Describe charity partner media summary.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    kind
+        The closed discriminator selecting the requested behavior.
+    source_reference
+        The provider or source source reference retained for reconciliation.
+    public_reference
+        The provider or source public reference retained for reconciliation.
+    owner_name
+        The human-readable owner name shown to authorized readers.
+    license_basis
+        The license basis retained in this immutable projection.
+    usage_scope
+        The usage scope retained in this immutable projection.
+    attribution
+        The attribution retained in this immutable projection.
+    expires_at
+        The timezone-aware timestamp for expires.
+    review_status
+        The closed review status discriminator defined by the domain catalog.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    """
+
     id: UUID
     kind: str
     source_reference: str
@@ -74,6 +140,44 @@ class CharityPartnerMediaSummary:
 
 @dataclass(frozen=True, slots=True)
 class CharityPartnerSummary:
+    """Describe charity partner summary.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    slug
+        The stable URL slug identifying the slug.
+    legal_name
+        The human-readable legal name shown to authorized readers.
+    imprint_name
+        The human-readable imprint name shown to authorized readers.
+    public_name
+        The human-readable public name shown to authorized readers.
+    short_description
+        The bounded short description retained for authorized readers.
+    description
+        The human-readable description shown to authorized readers.
+    location_name
+        The human-readable location name shown to authorized readers.
+    postal_address
+        The postal address retained in this immutable projection.
+    country_code
+        The stable country code from the relevant closed catalog.
+    website_url
+        The validated absolute HTTPS website url.
+    contact_email
+        The normalized contact email used for delivery or identity matching.
+    contact_phone
+        The normalized international contact phone, when provided.
+    lifecycle
+        The lifecycle retained in this immutable projection.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    media
+        The media retained in this immutable projection.
+    """
+
     id: UUID
     slug: str
     legal_name: str
@@ -94,6 +198,28 @@ class CharityPartnerSummary:
 
 @dataclass(frozen=True, slots=True)
 class CharitySelectionSummary:
+    """Describe charity selection summary.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    partner_id
+        The partner identifier within the requested scope.
+    partner_name
+        The human-readable partner name shown to authorized readers.
+    responsible_department_id
+        The responsible department identifier within the requested scope.
+    responsible_department_name
+        The human-readable responsible department name shown to authorized readers.
+    status
+        The closed status value to evaluate or expose.
+    publication_state
+        The closed publication state discriminator defined by the domain catalog.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    """
+
     id: UUID
     partner_id: UUID
     partner_name: str
@@ -106,6 +232,34 @@ class CharitySelectionSummary:
 
 @dataclass(frozen=True, slots=True)
 class CharityTimelineProjection:
+    """Describe charity timeline projection.
+
+    Attributes
+    ----------
+    sequence
+        The sequence retained in this immutable projection.
+    kind
+        The closed discriminator selecting the requested behavior.
+    actor_id
+        The immutable identifier of the account authorizing the operation.
+    actor_label
+        The human-readable actor label shown to authorized readers.
+    occurred_at
+        The timezone-aware timestamp for occurred.
+    from_status
+        The closed from status discriminator defined by the domain catalog.
+    to_status
+        The closed to status discriminator defined by the domain catalog.
+    from_publication_state
+        The closed from publication state discriminator defined by the domain catalog.
+    to_publication_state
+        The closed to publication state discriminator defined by the domain catalog.
+    reason
+        The operator-supplied rationale recorded with the change.
+    private_comment
+        The private comment retained in this immutable projection.
+    """
+
     sequence: int
     kind: str
     actor_id: UUID
@@ -121,13 +275,23 @@ class CharityTimelineProjection:
 
 @dataclass(frozen=True, slots=True)
 class CharitySelectionReview:
+    """Describe charity selection review.
+
+    Attributes
+    ----------
+    summary
+        The summary retained in this immutable projection.
+    timeline
+        The timeline retained in this immutable projection.
+    """
+
     summary: CharitySelectionSummary
     timeline: tuple[CharityTimelineProjection, ...]
 
 
 def _active_account(actor: Account) -> None:
     if actor.pk is None or not actor.is_active:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
 
 
 def public_charities_for_edition(
@@ -136,8 +300,23 @@ def public_charities_for_edition(
     edition_id: UUID,
     at: datetime | None = None,
 ) -> tuple[PublicCharity, ...]:
-    """Return only current confirmed + explicitly published immutable snapshots."""
+    """Return only current confirmed + explicitly published immutable snapshots.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    tuple[PublicCharity, ...]
+        The matching public charities for edition records in deterministic
+        order.
+    """
     evaluated_at = at or timezone.now()
     selections = tuple(
         CharitySelection.objects.filter(
@@ -227,6 +406,33 @@ def list_charity_partners(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> tuple[CharityPartnerSummary, ...]:
+    """List charity partners.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    reason : str, default='charity_partner_management'
+        The operator-supplied reason for the operation.
+    correlation_id : UUID | None, default=None
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    tuple[CharityPartnerSummary, ...]
+        The ordered charity partners collection.
+
+    Raises
+    ------
+    CharityAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    """
     _active_account(actor)
     target = resolve_organization_target(organization_id=organization_id)
     decision = decide(
@@ -235,7 +441,7 @@ def list_charity_partners(
         resource=target,
     )
     if not decision.allowed:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
     projection = tuple(
         CharityPartnerSummary(
             id=partner.id,
@@ -307,6 +513,27 @@ def list_charity_partners(
 def list_charity_selection_queue(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[CharitySelectionSummary, ...]:
+    """List charity selection queue.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    tuple[CharitySelectionSummary, ...]
+        The ordered charity selection queue collection.
+
+    Raises
+    ------
+    CharityAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    """
     _active_account(actor)
     target = resolve_edition_target(
         organization_id=organization_id,
@@ -318,7 +545,7 @@ def list_charity_selection_queue(
         resource=target,
     )
     if not decision.allowed:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
     return tuple(
         CharitySelectionSummary(
             id=selection.id,
@@ -351,8 +578,39 @@ def load_charity_selection_review(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharitySelectionReview:
-    """Read purpose-scoped private review evidence and audit that sensitive read."""
+    """Read purpose-scoped private review evidence and audit that sensitive read.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    selection_id : UUID
+        The selection identifier within the requested scope.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID | None, default=None
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    CharitySelectionReview
+        The resolved CharitySelectionReview for the requested scope.
+
+    Raises
+    ------
+    CharityAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    CharityResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     _active_account(actor)
     target = resolve_charity_selection_target(
         organization_id=organization_id,
@@ -365,7 +623,7 @@ def load_charity_selection_review(
         resource=target,
     )
     if not decision.allowed:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
     selection = (
         CharitySelection.objects.filter(
             id=selection_id,
@@ -376,7 +634,7 @@ def load_charity_selection_review(
         .first()
     )
     if selection is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     timeline = tuple(
         CharityTimelineProjection(
             sequence=entry.sequence,

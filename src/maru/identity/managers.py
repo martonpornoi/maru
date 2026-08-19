@@ -9,10 +9,24 @@ if TYPE_CHECKING:
 
 
 class AccountManager(BaseUserManager["Account"]):
+    """Describe account manager."""
+
     use_in_migrations = True
 
     @staticmethod
     def normalize_login_email(email: str) -> str:
+        """Normalize login email.
+
+        Parameters
+        ----------
+        email : str
+            The normalized email address used for delivery or identity matching.
+
+        Returns
+        -------
+        str
+            The normalized text for normalize login email.
+        """
         normalized = BaseUserManager.normalize_email(email).strip()
         return normalized.casefold()
 
@@ -22,6 +36,27 @@ class AccountManager(BaseUserManager["Account"]):
         password: str | None = None,
         **extra_fields: Any,
     ) -> "Account":
+        """Create user.
+
+        Parameters
+        ----------
+        email : str
+            The normalized email address used for delivery or identity matching.
+        password : str | None, default=None
+            The plaintext secret to verify without logging or retaining it.
+        **extra_fields : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        Account
+            The newly created Account.
+
+        Raises
+        ------
+        ValueError
+            If the supplied value cannot satisfy the documented contract.
+        """
         if not email:
             raise ValueError("An email address is required")
         account = self.model(
@@ -39,6 +74,27 @@ class AccountManager(BaseUserManager["Account"]):
         password: str | None = None,
         **extra_fields: Any,
     ) -> "Account":
+        """Create superuser.
+
+        Parameters
+        ----------
+        email : str
+            The normalized email address used for delivery or identity matching.
+        password : str | None, default=None
+            The plaintext secret to verify without logging or retaining it.
+        **extra_fields : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        Account
+            The newly created Account.
+
+        Raises
+        ------
+        ValueError
+            If the supplied value cannot satisfy the documented contract.
+        """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)

@@ -5,6 +5,8 @@ from enum import StrEnum
 
 
 class ScopeLevel(StrEnum):
+    """Enumerate supported scope level values."""
+
     ORGANIZATION = "organization"
     EDITION = "edition"
     DEPARTMENT = "department"
@@ -12,6 +14,8 @@ class ScopeLevel(StrEnum):
 
 
 class Sensitivity(StrEnum):
+    """Enumerate supported sensitivity values."""
+
     PUBLIC = "C0"
     INTERNAL = "C1"
     PERSONAL = "C2"
@@ -21,6 +25,32 @@ class Sensitivity(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Capability:
+    """Describe capability.
+
+    Attributes
+    ----------
+    code
+        The stable domain code to resolve or validate.
+    description
+        The human-readable description shown to authorized readers.
+    maximum_scope
+        The maximum scope retained in this immutable projection.
+    persistable
+        The persistable retained in this immutable projection.
+    field_ceiling
+        The field ceiling retained in this immutable projection.
+    sensitivity_ceiling
+        The non-negative hard limit or requested amount for sensitivity ceiling.
+    delegable
+        The delegable retained in this immutable projection.
+    allow_self
+        Whether to allow self.
+    requires_break_glass
+        The requires break glass retained in this immutable projection.
+    obligations
+        The obligations retained in this immutable projection.
+    """
+
     code: str
     description: str
     maximum_scope: ScopeLevel
@@ -1106,10 +1136,39 @@ POLICY_VERSION = "2026-08-09.7"
 
 
 def capability(code: str) -> Capability | None:
+    """Return capability.
+
+    Parameters
+    ----------
+    code : str
+        The stable machine-readable code.
+
+    Returns
+    -------
+    Capability | None
+        The matching Capability, or `None` when no authorized record exists.
+    """
     return CAPABILITIES.get(code)
 
 
 def require_capability(code: str) -> Capability:
+    """Require capability.
+
+    Parameters
+    ----------
+    code : str
+        The stable machine-readable code.
+
+    Returns
+    -------
+    Capability
+        The Capability established after require capability completes.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     definition = capability(code)
     if definition is None:
         raise ValueError(f"Unknown capability: {code}")

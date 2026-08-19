@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -15,7 +15,6 @@ from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
 from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.organizations.models import Organization, OrganizationMembership
 from maru.participation.models import Participation, ParticipationCapacity
 from maru.workforce.edition_write_scope import (
@@ -30,9 +29,32 @@ from maru.workforce.models import (
 )
 from maru.workforce.structure_commands import create_department
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from maru.identity.models import Account
+
 
 @dataclass(frozen=True, slots=True)
 class StarterPosition:
+    """Describe starter position.
+
+    Attributes
+    ----------
+    code
+        The stable domain code to resolve or validate.
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    headcount
+        The headcount retained in this immutable projection.
+    capacity_codes
+        The capacity codes retained in this immutable projection.
+    capability_codes
+        The capability codes retained in this immutable projection.
+    """
+
     code: str
     name: str
     description: str
@@ -244,8 +266,35 @@ def bootstrap_organization_workforce(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> dict[str, int]:
-    """Establish the first human controller and starter catalog exactly once."""
+    """Establish the first human controller and starter catalog exactly once.
 
+    Parameters
+    ----------
+    organization : Organization
+        The organization that owns the requested resource.
+    edition : EventEdition
+        The event edition that scopes the operation.
+    controller : Account
+        The controller evaluated while bootstrap organization workforce.
+    chair : Account
+        The chair evaluated while bootstrap organization workforce.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    dict[str, int]
+        A mapping containing the resolved bootstrap organization workforce data.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     normalized_reason = reason.strip()
     if not normalized_reason:
         raise ValidationError("A bootstrap reason is required.")

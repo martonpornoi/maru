@@ -32,6 +32,25 @@ _DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\Z")
 
 
 def required(environment: Mapping[str, str], name: str) -> str:
+    """Return required.
+
+    Parameters
+    ----------
+    environment : Mapping[str, str]
+        The isolated process environment.
+    name : str
+        The human-readable name.
+
+    Returns
+    -------
+    str
+        The normalized text for required.
+
+    Raises
+    ------
+    ImproperlyConfigured
+        If the operation encounters a improperly configured condition.
+    """
     value = environment.get(name, "").strip()
     if not value:
         raise ImproperlyConfigured(f"{name} is required")
@@ -39,6 +58,20 @@ def required(environment: Mapping[str, str], name: str) -> str:
 
 
 def csv_value(environment: Mapping[str, str], name: str) -> list[str]:
+    """Return csv value.
+
+    Parameters
+    ----------
+    environment : Mapping[str, str]
+        The isolated process environment.
+    name : str
+        The human-readable name.
+
+    Returns
+    -------
+    list[str]
+        The resolved list[str] for the operation.
+    """
     raw_value = environment.get(name, "")
     return [item.strip() for item in raw_value.split(",") if item.strip()]
 
@@ -49,6 +82,27 @@ def boolean(
     *,
     default: bool,
 ) -> bool:
+    """Return whether boolean.
+
+    Parameters
+    ----------
+    environment : Mapping[str, str]
+        The isolated process environment.
+    name : str
+        The human-readable name.
+    default : bool
+        The fallback returned when no explicit value is available.
+
+    Returns
+    -------
+    bool
+        Whether the requested condition is satisfied.
+
+    Raises
+    ------
+    ImproperlyConfigured
+        If the operation encounters a improperly configured condition.
+    """
     raw_value = environment.get(name)
     if raw_value is None:
         return default
@@ -64,13 +118,43 @@ def boolean(
 
 
 def required_boolean(environment: Mapping[str, str], name: str) -> bool:
-    """Parse one explicitly declared boolean environment value."""
+    """Parse one explicitly declared boolean environment value.
 
+    Parameters
+    ----------
+    environment : Mapping[str, str]
+        The environment mapping to validate or transform.
+    name : str
+        The human-readable name to normalize or persist.
+
+    Returns
+    -------
+    bool
+        `True` when Parse one explicitly declared boolean environment value;
+        otherwise `False`.
+    """
     required(environment, name)
     return boolean(environment, name, default=False)
 
 
 def postgres_database(url: str) -> dict[str, object]:
+    """Return postgres database.
+
+    Parameters
+    ----------
+    url : str
+        The validated URL used for routing or external navigation.
+
+    Returns
+    -------
+    dict[str, object]
+        A disclosure-safe mapping for postgres database.
+
+    Raises
+    ------
+    ImproperlyConfigured
+        If the operation encounters a improperly configured condition.
+    """
     parsed = urlsplit(url)
     if parsed.scheme not in {"postgres", "postgresql"}:
         raise ImproperlyConfigured("MARU_DATABASE_URL must use PostgreSQL")
@@ -106,8 +190,21 @@ def invitation_public_key_configuration_is_valid(
     encryption_key_id: object,
     public_key_b64: object,
 ) -> bool:
-    """Validate public-only invitation key configuration without releasing values."""
+    """Validate public-only invitation key configuration without releasing values.
 
+    Parameters
+    ----------
+    encryption_key_id : object
+        The encryption key identifier within the requested scope.
+    public_key_b64 : object
+        The public key b64 evaluated while invitation public key configuration is valid.
+
+    Returns
+    -------
+    bool
+        `True` when Validate public-only invitation key configuration without
+        releasing values; otherwise `False`.
+    """
     if (
         not isinstance(encryption_key_id, str)
         or not isinstance(public_key_b64, str)
@@ -141,8 +238,17 @@ def normalized_https_origin(value: object) -> str | None:  # noqa: PLR0911
     public base URL to already equal its canonical origin form prevents a
     user-info component, path, query, fragment, default-port alias, Unicode
     hostname alias, or case variant from changing where that secret is sent.
-    """
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str | None
+        The normalized text for normalized https origin.
+    """
     if (
         not isinstance(value, str)
         or not value
@@ -199,8 +305,21 @@ def invitation_token_key_configuration_is_valid(
     active_key_id: object,
     keyring_json: object,
 ) -> bool:
-    """Validate the bounded versioned HMAC keyring without releasing values."""
+    """Validate the bounded versioned HMAC keyring without releasing values.
 
+    Parameters
+    ----------
+    active_key_id : object
+        The active key identifier within the requested scope.
+    keyring_json : object
+        The JSON-encoded keyring configuration to parse.
+
+    Returns
+    -------
+    bool
+        `True` when Validate the bounded versioned HMAC keyring without
+        releasing values; otherwise `False`.
+    """
     try:
         InvitationTokenKeyring.from_json(
             active_key_id=active_key_id,
@@ -241,6 +360,70 @@ def validate_production(  # noqa: PLR0912, PLR0915
     require_privileged_step_up: bool,
     enforce_closure_gates: bool,
 ) -> None:
+    """Validate production.
+
+    Parameters
+    ----------
+    secret_key : str
+        The stable secret key used to authenticate or deduplicate the operation.
+    allowed_hosts : list[str]
+        The allowed hosts evaluated while validate production.
+    debug : bool
+        The debug evaluated while validate production.
+    database : Mapping[str, object]
+        The database evaluated while validate production.
+    runtime_database_role : str
+        The runtime database role evaluated while validate production.
+    public_base_url : str
+        The validated absolute HTTPS public base url.
+    default_from_email : str
+        The normalized default from email used for delivery or identity matching.
+    email_backend : str
+        The email backend evaluated while validate production.
+    email_host : str
+        The email host evaluated while validate production.
+    email_use_tls : bool
+        The email use tls evaluated while validate production.
+    email_use_ssl : bool
+        The email use ssl evaluated while validate production.
+    payment_return_origins : list[str]
+        The payment return origins evaluated while validate production.
+    payment_provider_hosts : list[str]
+        The payment provider hosts evaluated while validate production.
+    registration_client_origins : list[str]
+        The registration client origins evaluated while validate production.
+    csrf_trusted_origins : list[str]
+        The csrf trusted origins evaluated while validate production.
+    media_scanner : str
+        The media scanner evaluated while validate production.
+    media_scanner_host : str
+        The media scanner host evaluated while validate production.
+    offline_manifest_secret : str
+        The offline manifest secret evaluated while validate production.
+    invitation_encryption_key_id : str
+        The identifier of the invitation encryption key.
+    invitation_public_key_b64 : str
+        The invitation public key b64 evaluated while validate production.
+    invitation_digest_active_key_id : str
+        The identifier of the invitation digest active key.
+    invitation_digest_keys_json : str
+        The JSON-encoded invitation digest keys configuration to parse.
+    allow_provisional_registration : bool
+        Whether to allow provisional registration.
+    expose_identity_test_tokens : bool
+        The expose identity test tokens evaluated while validate production.
+    expose_credential_test_tokens : bool
+        The expose credential test tokens evaluated while validate production.
+    require_privileged_step_up : bool
+        Whether to require privileged step up.
+    enforce_closure_gates : bool
+        The enforce closure gates evaluated while validate production.
+
+    Raises
+    ------
+    ImproperlyConfigured
+        If the operation encounters a improperly configured condition.
+    """
     errors: list[str] = []
     if len(secret_key) < MINIMUM_PRODUCTION_SECRET_LENGTH or secret_key.startswith(
         ("development", "change-me")

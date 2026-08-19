@@ -10,6 +10,23 @@ class StrictInputSerializer(serializers.Serializer[dict[str, object]]):
     """Reject undeclared JSON and query properties instead of ignoring them."""
 
     def to_internal_value(self, data: Any) -> dict[str, object]:
+        """Parse and validate API input.
+
+        Parameters
+        ----------
+        data : Any
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved to internal value data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if isinstance(data, Mapping):
             unknown_fields = sorted(
                 str(field_name)
@@ -24,7 +41,7 @@ class StrictInputSerializer(serializers.Serializer[dict[str, object]]):
                     },
                     code="unknown_field",
                 )
-        return cast(dict[str, object], super().to_internal_value(data))
+        return cast("dict[str, object]", super().to_internal_value(data))
 
 
 __all__ = ["StrictInputSerializer"]

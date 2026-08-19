@@ -10,12 +10,28 @@ from maru.identity.invitation_retention import (
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Activate the exact MARU_IDENTITY_INVITATION_RETENTION_POLICY_JSON "
         "policy. Run this with the controlled migration/cutover database role."
     )
 
     def handle(self, *args: object, **options: object) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : object
+            Positional arguments forwarded to the framework implementation.
+        **options : object
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args, options
         try:
             control = activate_configured_invitation_retention_policy()

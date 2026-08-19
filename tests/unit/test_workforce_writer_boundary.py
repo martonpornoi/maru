@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import AbstractContextManager
-from types import TracebackType
-from typing import Self
+from typing import TYPE_CHECKING, Self
 from uuid import UUID
 
 import pytest
 from django.db.transaction import TransactionManagementError
 
 from maru.workforce import writer_boundary
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import TracebackType
 
 
 class _RecordingCursor(AbstractContextManager["_RecordingCursor"]):

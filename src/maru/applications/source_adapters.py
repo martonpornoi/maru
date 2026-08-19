@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from django.db import models
@@ -18,6 +17,8 @@ from maru.applications.models import (
 from maru.identity.models import Account
 
 if TYPE_CHECKING:
+    from datetime import date, datetime
+
     from maru.registration.models import AttendeeRegistrationProfile
 
 
@@ -51,8 +52,23 @@ def applicant_is_eligible(
     account: Account,
     at: datetime | None = None,
 ) -> bool:
-    """Evaluate only registered, purpose-specific edition relationships."""
+    """Evaluate only registered, purpose-specific edition relationships.
 
+    Parameters
+    ----------
+    definition : ApplicationDefinition
+        The versioned definition governing the requested behavior.
+    account : Account
+        The platform account whose state or access is being evaluated.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    bool
+        `True` when Evaluate only registered, purpose-specific edition
+        relationships; otherwise `False`.
+    """
     if not account.is_active or account.account_kind != Account.Kind.PERSON:
         return False
     evaluation_time = at or timezone.now()
@@ -122,6 +138,25 @@ def source_bound_value(
     question: ApplicationQuestion,
     account: Account,
 ) -> object:
+    """Return a value bound to its immutable source definition.
+
+    Parameters
+    ----------
+    question : ApplicationQuestion
+        The versioned question defining type, bounds, and ownership.
+    account : Account
+        The account that owns or authorizes the requested state.
+
+    Returns
+    -------
+    object
+        The normalized value for source bound value.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     if question.source_binding == ApplicationSourceBinding.ACCOUNT_DISPLAY_NAME:
         return account.display_name
     if question.source_binding == ApplicationSourceBinding.REGISTRATION_TELEGRAM:

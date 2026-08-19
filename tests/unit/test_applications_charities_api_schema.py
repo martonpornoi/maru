@@ -122,7 +122,7 @@ def api_schema() -> dict[str, Any]:
         public=True,
     )
     return cast(
-        dict[str, Any],
+        "dict[str, Any]",
         generated,
     )
 
@@ -132,14 +132,14 @@ def _operation(
     path: str,
     method: str,
 ) -> dict[str, Any]:
-    return cast(dict[str, Any], schema["paths"][path][method])
+    return cast("dict[str, Any]", schema["paths"][path][method])
 
 
 def _success_response_schemas(operation: dict[str, Any]) -> Iterator[dict[str, Any]]:
     for status_code, response in operation["responses"].items():
         if str(status_code).startswith("2"):
             yield cast(
-                dict[str, Any],
+                "dict[str, Any]",
                 response["content"]["application/json"]["schema"],
             )
 
@@ -148,8 +148,8 @@ def _resolve_component(
     schema: dict[str, Any],
     reference: dict[str, Any],
 ) -> dict[str, Any]:
-    name = cast(str, reference["$ref"]).rsplit("/", maxsplit=1)[-1]
-    return cast(dict[str, Any], schema["components"]["schemas"][name])
+    name = cast("str", reference["$ref"]).rsplit("/", maxsplit=1)[-1]
+    return cast("dict[str, Any]", schema["components"]["schemas"][name])
 
 
 @pytest.mark.parametrize(
@@ -293,7 +293,7 @@ def test_charity_selection_command_documents_closed_request_variants(
     request_schema = operation["requestBody"]["content"]["application/json"]["schema"]
     command_schema = _resolve_component(api_schema, request_schema)
     variant_names = {
-        cast(str, item["$ref"]).rsplit("/", maxsplit=1)[-1]
+        cast("str", item["$ref"]).rsplit("/", maxsplit=1)[-1]
         for item in command_schema["oneOf"]
     }
     action_parameter = next(

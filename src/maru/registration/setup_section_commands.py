@@ -5,8 +5,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -56,6 +55,9 @@ from maru.registration.setup_content import (
     target_content_digest,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 MAX_SECTION_KEY_LENGTH = 80
 MAX_SECTION_TITLE_LENGTH = 160
 MAX_SECTION_DESCRIPTION_LENGTH = 500
@@ -72,19 +74,47 @@ _EDITABLE_EDITION_LIFECYCLES = frozenset(
 
 
 class RegistrationSetupConfigurationUnavailableError(RegistrationSetupCommandError):
+    """Signal registration setup configuration unavailable."""
+
     reason_code = "registration_setup_configuration_unavailable"
 
 
 class RegistrationSetupSectionUnavailableError(RegistrationSetupCommandError):
+    """Signal registration setup section unavailable."""
+
     reason_code = "registration_setup_section_unavailable"
 
 
 class RegistrationSetupSectionDependencyError(RegistrationSetupCommandError):
+    """Signal registration setup section dependency."""
+
     reason_code = "registration_setup_section_has_dependencies"
 
 
 @dataclass(frozen=True, slots=True)
 class RegistrationSectionCommandResult:
+    """Describe registration section command result.
+
+    Attributes
+    ----------
+    setup_id
+        The setup identifier within the requested scope.
+    configuration_id
+        The configuration identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    section_id
+        The section identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    action
+        The stable action code describing the requested transition.
+    configuration_content_digest
+        The canonical digest used to verify configuration content.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     setup_id: UUID
     configuration_id: UUID
     receipt_id: UUID
@@ -156,13 +186,13 @@ def _authorize_before_input_parsing(
             series__organization_id=organization_id,
         ).exists()
     ):
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     target = resolve_edition_target(
         organization_id=organization_id,
         edition_id=edition_id,
     )
     if target is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     decision = decide(
         principal=actor,
         capability_code="registration.manage_configuration",
@@ -170,7 +200,7 @@ def _authorize_before_input_parsing(
         at=at,
     )
     if not decision.allowed:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     return decision
 
 
@@ -295,7 +325,7 @@ def _bounded[ItemT: Model](
 ) -> tuple[ItemT, ...]:
     rows = tuple(queryset[: limit + 1])
     if len(rows) > limit:
-        raise RegistrationSetupLimitExceededError()
+        raise RegistrationSetupLimitExceededError
     return rows
 
 
@@ -311,14 +341,14 @@ def _lock_scope(
         Organization.objects.select_for_update().filter(pk=organization_id).first()
     )
     if organization is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     series = (
         ConventionSeries.objects.select_for_update()
         .filter(pk=series_id, organization_id=organization.id)
         .first()
     )
     if series is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     edition = (
         EventEdition.objects.select_for_update()
         .filter(
@@ -329,7 +359,7 @@ def _lock_scope(
         .first()
     )
     if edition is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     control = (
         RegistrationSetupControl.objects.select_for_update()
         .filter(
@@ -339,10 +369,10 @@ def _lock_scope(
         .first()
     )
     if control is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     persisted_actor = Account.objects.select_for_update().filter(pk=actor.pk).first()
     if persisted_actor is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     evaluated_at = timezone.now()
     decision = _authorize_before_input_parsing(
         actor=persisted_actor,
@@ -361,7 +391,7 @@ def _lock_scope(
         .first()
     )
     if configuration is None:
-        raise RegistrationSetupConfigurationUnavailableError()
+        raise RegistrationSetupConfigurationUnavailableError
     sections = _bounded(
         RegistrationSection.objects.select_for_update()
         .filter(configuration=configuration)
@@ -407,13 +437,13 @@ def _require_editable_draft(scope: _LockedSectionScope) -> None:
         or scope.edition.lifecycle not in _EDITABLE_EDITION_LIFECYCLES
         or scope.configuration.status != ConfigurationStatus.DRAFT
     ):
-        raise RegistrationSetupLifecycleConflictError()
+        raise RegistrationSetupLifecycleConflictError
 
 
 def _require_current_version(scope: _VersionedSetupScope, expected_version: int) -> int:
     current_version = int(scope.control.aggregate_version)
     if current_version != expected_version:
-        raise RegistrationSetupVersionConflictError()
+        raise RegistrationSetupVersionConflictError
     return current_version
 
 
@@ -449,7 +479,7 @@ def _require_current_digest(scope: _LockedSectionScope) -> None:
     if scope.configuration.content_digest and (
         scope.configuration.content_digest != current
     ):
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
 
 
 def _receipt_for_retry(
@@ -478,7 +508,7 @@ def _result_from_receipt(
     section_id: UUID | None,
 ) -> RegistrationSectionCommandResult:
     if receipt.action != action or receipt.request_digest != request_digest:
-        raise RegistrationSetupRetryConflictError()
+        raise RegistrationSetupRetryConflictError
     configuration_target = receipt.targets.filter(
         target_kind=RegistrationSetupCommandTarget.TargetKind.CONFIGURATION,
         target_id=scope.configuration.id,
@@ -495,7 +525,7 @@ def _result_from_receipt(
         ).first()
     )
     if configuration_target is None or section_target is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     return RegistrationSectionCommandResult(
         setup_id=receipt.setup_id,
         configuration_id=scope.configuration.id,
@@ -514,7 +544,7 @@ def _section_by_id(
 ) -> RegistrationSection:
     section = next((item for item in scope.sections if item.id == section_id), None)
     if section is None:
-        raise RegistrationSetupSectionUnavailableError()
+        raise RegistrationSetupSectionUnavailableError
     return section
 
 
@@ -543,7 +573,7 @@ def _ordered_after(
             None,
         )
         if anchor_index is None:
-            raise RegistrationSetupSectionUnavailableError()
+            raise RegistrationSetupSectionUnavailableError
         insertion_index = anchor_index + 1
     remaining.insert(insertion_index, section)
     return tuple(remaining)
@@ -720,14 +750,14 @@ def _delete_without_cascade(section: RegistrationSection) -> None:
         with transaction.atomic():
             deleted_count, _detail = section.delete()
     except (ProtectedError, RestrictedError) as error:
-        raise RegistrationSetupSectionDependencyError() from error
+        raise RegistrationSetupSectionDependencyError from error
     except IntegrityError as error:
         cause = error.__cause__
         if getattr(cause, "sqlstate", None) == "23503":
-            raise RegistrationSetupSectionDependencyError() from error
+            raise RegistrationSetupSectionDependencyError from error
         raise
     if deleted_count != 1:
-        raise RegistrationSetupSectionDependencyError()
+        raise RegistrationSetupSectionDependencyError
 
 
 def create_registration_section(
@@ -748,8 +778,54 @@ def create_registration_section(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationSectionCommandResult:
-    """Create one section and place it after one exact bounded sibling."""
+    """Create one section and place it after one exact bounded sibling.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    key : str
+        The lookup, signing, or idempotency key selected by the contract.
+    title : str
+        The human-readable title shown to authorized readers.
+    description : str
+        The human-readable description shown to authorized readers.
+    after_section_id : UUID | None
+        The after section identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationSectionCommandResult
+        The newly created RegistrationSectionCommandResult.
+
+    Raises
+    ------
+    RegistrationSetupLimitExceededError
+        If the operation encounters a registration setup limit exceeded
+        condition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -824,7 +900,7 @@ def create_registration_section(
         current_version = _require_current_version(scope, expected_version)
         _require_current_digest(scope)
         if len(scope.sections) >= MAX_SETUP_SECTIONS:
-            raise RegistrationSetupLimitExceededError()
+            raise RegistrationSetupLimitExceededError
         if any(section.key == normalized_key for section in scope.sections):
             raise _field_error(
                 "key",
@@ -921,8 +997,54 @@ def update_registration_section(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationSectionCommandResult:
-    """Completely replace one draft section's editable properties."""
+    """Completely replace one draft section's editable properties.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    section_id : UUID
+        The section identifier within the requested scope.
+    key : str
+        The lookup, signing, or idempotency key selected by the contract.
+    title : str
+        The human-readable title shown to authorized readers.
+    description : str
+        The human-readable description shown to authorized readers.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationSectionCommandResult
+        The updated RegistrationSectionCommandResult after the transition is
+        committed.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -1010,7 +1132,7 @@ def update_registration_section(
             if changed
         )
         if not changed_fields:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         resulting_version = current_version + 1
         section.key = normalized_key
         section.title = normalized_title
@@ -1078,8 +1200,48 @@ def move_registration_section(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationSectionCommandResult:
-    """Move one draft section after an exact sibling, or first when absent."""
+    """Move one draft section after an exact sibling, or first when absent.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    section_id : UUID
+        The section identifier within the requested scope.
+    after_section_id : UUID | None
+        The after section identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationSectionCommandResult
+        The RegistrationSectionCommandResult produced by move registration
+        section.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -1150,7 +1312,7 @@ def move_registration_section(
         if tuple(item.id for item in ordered) == tuple(
             item.id for item in scope.sections
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         resulting_version = current_version + 1
         changed = _renumber_sections(
             ordered,
@@ -1215,8 +1377,47 @@ def delete_registration_section(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationSectionCommandResult:
-    """Delete one unreferenced draft section and completely renumber siblings."""
+    """Delete one unreferenced draft section and completely renumber siblings.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    section_id : UUID
+        The section identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationSectionCommandResult
+        The RegistrationSectionCommandResult produced by delete registration
+        section.
+
+    Raises
+    ------
+    RegistrationSetupSectionDependencyError
+        If the operation encounters a registration setup section dependency
+        condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -1272,7 +1473,7 @@ def delete_registration_section(
         _require_current_digest(scope)
         section = _section_by_id(scope, section_id)
         if any(question.section_id == section.id for question in scope.questions):
-            raise RegistrationSetupSectionDependencyError()
+            raise RegistrationSetupSectionDependencyError
         resulting_version = current_version + 1
         deleted_digest = target_content_digest(
             kind="section",

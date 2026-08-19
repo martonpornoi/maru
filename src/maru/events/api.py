@@ -1,8 +1,7 @@
 """Policy-scoped staff API for event editions."""
 
 import logging
-from datetime import date
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 from uuid import UUID
 
 from django.conf import settings
@@ -80,6 +79,9 @@ from maru.identity.models import Account
 from maru.identity.services import require_recent_step_up
 from maru.organizations.models import ConventionSeries, Organization
 
+if TYPE_CHECKING:
+    from datetime import date
+
 logger = logging.getLogger(__name__)
 PROBLEM_CONTENT_TYPE = "application/problem+json"
 EDITION_BASIC_RESPONSE_FIELDS = frozenset(EditionBasicSerializer.Meta.fields)
@@ -99,7 +101,7 @@ def _raise_dependency_unavailable(message: str, error: Exception) -> Never:
 def _raise_idempotency_header_error(*, detail: str, code: str) -> Never:
     raise ApiValidationError(
         cast(
-            Any,
+            "Any",
             {
                 "detail": detail,
                 "code": code,
@@ -133,6 +135,8 @@ def _edition_idempotency_key(request: Request) -> UUID:
 
 
 class EditionConflict(APIException):
+    """Signal edition conflict."""
+
     status_code = status.HTTP_409_CONFLICT
     default_detail = "The edition operation conflicts with current state."
     default_code = "edition_conflict"
@@ -143,12 +147,21 @@ class EditionConflict(APIException):
         detail: dict[str, list[str]] | list[str],
         code: str,
     ) -> None:
+        """Initialize the EditionConflict instance.
+
+        Parameters
+        ----------
+        detail : dict[str, list[str]] | list[str]
+            The detail resolved from the authorized request.
+        code : str
+            The stable domain code to resolve or validate.
+        """
         structured_detail: dict[str, object] = {
             "detail": self.default_detail,
             "code": code,
             "errors": detail,
         }
-        super().__init__(detail=cast(Any, structured_detail), code=code)
+        super().__init__(detail=cast("Any", structured_detail), code=code)
 
 
 def _django_validation_code(error: DjangoValidationError) -> str:
@@ -187,6 +200,8 @@ def _require_api_projection(
 
 
 class EditionListView(GenericAPIView[EventEdition]):
+    """Expose edition list through the HTTP API."""
+
     serializer_class = EditionBasicSerializer
     pagination_class = StandardPageNumberPagination
 
@@ -207,6 +222,29 @@ class EditionListView(GenericAPIView[EventEdition]):
         },
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
+        """List the basic editions.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        RuntimeError
+            If a required runtime invariant or dependency is unavailable.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -297,6 +335,33 @@ class EditionListView(GenericAPIView[EventEdition]):
         },
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
+        """Create the edition.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        EditionConflict
+            If the operation encounters a edition conflict condition.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -334,14 +399,14 @@ class EditionListView(GenericAPIView[EventEdition]):
             result = create_event_edition(
                 actor=account,
                 organization_id=organization_id,
-                series_id=cast(UUID, values["series_id"]),
+                series_id=cast("UUID", values["series_id"]),
                 details=EventEditionDetails(
-                    name=cast(str, values["name"]),
-                    starts_on=cast(date, values["starts_on"]),
-                    ends_on=cast(date, values["ends_on"]),
-                    time_zone=cast(str, values["time_zone"]),
-                    language_codes=tuple(cast(list[str], values["language_codes"])),
-                    currency_codes=tuple(cast(list[str], values["currency_codes"])),
+                    name=cast("str", values["name"]),
+                    starts_on=cast("date", values["starts_on"]),
+                    ends_on=cast("date", values["ends_on"]),
+                    time_zone=cast("str", values["time_zone"]),
+                    language_codes=tuple(cast("list[str]", values["language_codes"])),
+                    currency_codes=tuple(cast("list[str]", values["currency_codes"])),
                 ),
                 idempotency_key=idempotency_key,
                 correlation_id=correlation_id,
@@ -385,6 +450,8 @@ class EditionListView(GenericAPIView[EventEdition]):
 
 
 class EditionAutocompleteView(APIView):
+    """Expose edition autocomplete through the HTTP API."""
+
     @extend_schema(
         operation_id="events_autocomplete_basic_editions",
         parameters=[EditionAutocompleteQuerySerializer],
@@ -402,6 +469,27 @@ class EditionAutocompleteView(APIView):
         },
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
+        """Autocomplete the basic editions.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -434,8 +522,8 @@ class EditionAutocompleteView(APIView):
             allowed_fields=frozenset(query.fields),
         )
         query.is_valid(raise_exception=True)
-        search = cast(str, query.validated_data["search"])
-        limit = cast(int, query.validated_data["limit"])
+        search = cast("str", query.validated_data["search"])
+        limit = cast("int", query.validated_data["limit"])
         try:
             editions = (
                 EventEdition.objects.filter(organization_id=organization_id)
@@ -452,6 +540,8 @@ class EditionAutocompleteView(APIView):
 
 
 class EditionBasicDetailView(APIView):
+    """Expose edition basic detail through the HTTP API."""
+
     @extend_schema(
         operation_id="events_retrieve_basic_edition",
         responses={
@@ -476,6 +566,29 @@ class EditionBasicDetailView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve the basic edition.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -552,6 +665,35 @@ class EditionBasicDetailView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Update the edition.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        EditionConflict
+            If the operation encounters a edition conflict condition.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -607,16 +749,16 @@ class EditionBasicDetailView(APIView):
                 series_id=edition.series_id,
                 edition_id=edition_id,
                 expected_aggregate_version=cast(
-                    int,
+                    "int",
                     values["expected_aggregate_version"],
                 ),
                 details=EventEditionDetails(
-                    name=cast(str, values["name"]),
-                    starts_on=cast(date, values["starts_on"]),
-                    ends_on=cast(date, values["ends_on"]),
-                    time_zone=cast(str, values["time_zone"]),
-                    language_codes=tuple(cast(list[str], values["language_codes"])),
-                    currency_codes=tuple(cast(list[str], values["currency_codes"])),
+                    name=cast("str", values["name"]),
+                    starts_on=cast("date", values["starts_on"]),
+                    ends_on=cast("date", values["ends_on"]),
+                    time_zone=cast("str", values["time_zone"]),
+                    language_codes=tuple(cast("list[str]", values["language_codes"])),
+                    currency_codes=tuple(cast("list[str]", values["currency_codes"])),
                 ),
                 correlation_id=correlation_id,
                 request_id=correlation_id,
@@ -657,6 +799,8 @@ class EditionBasicDetailView(APIView):
 
 
 class EditionTransitionView(APIView):
+    """Expose edition transition through the HTTP API."""
+
     @extend_schema(
         operation_id="events_transition_edition",
         request=EditionTransitionRequestSerializer,
@@ -668,6 +812,31 @@ class EditionTransitionView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Transition the edition.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -699,12 +868,37 @@ class EditionTransitionView(APIView):
 
 
 class EditionBulkTransitionView(APIView):
+    """Expose edition bulk transition through the HTTP API."""
+
     @extend_schema(
         operation_id="events_bulk_transition_editions",
         request=EditionBulkTransitionRequestSerializer,
         responses=EditionBulkTransitionResponseSerializer,
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
+        """Transition the editions.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -715,10 +909,10 @@ class EditionBulkTransitionView(APIView):
         try:
             editions = bulk_transition_editions(
                 organization_id=organization_id,
-                edition_ids=tuple(cast(list[UUID], values["edition_ids"])),
-                to_state=cast(str, values["to_state"]),
+                edition_ids=tuple(cast("list[UUID]", values["edition_ids"])),
+                to_state=cast("str", values["to_state"]),
                 actor=account,
-                reason=cast(str, values["reason"]),
+                reason=cast("str", values["reason"]),
                 correlation_id=correlation_id,
                 request_id=correlation_id,
                 source_channel="api",
@@ -744,6 +938,8 @@ class EditionBulkTransitionView(APIView):
 
 
 class EditionClosureReadinessView(APIView):
+    """Expose edition closure readiness through the HTTP API."""
+
     @extend_schema(operation_id="events_get_closure_readiness", responses=dict)
     def get(
         self,
@@ -751,6 +947,29 @@ class EditionClosureReadinessView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve the closure readiness.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -791,6 +1010,8 @@ class EditionClosureReadinessView(APIView):
 
 
 class EditionReadinessGateReviewView(APIView):
+    """Expose edition readiness gate review through the HTTP API."""
+
     @extend_schema(
         operation_id="events_review_closure_gate",
         request=EditionReadinessGateReviewSerializer,
@@ -803,6 +1024,35 @@ class EditionReadinessGateReviewView(APIView):
         edition_id: UUID,
         code: str,
     ) -> Response:
+        """Review the closure gate.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        code : str
+            The stable domain code to resolve or validate.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -837,6 +1087,8 @@ class EditionReadinessGateReviewView(APIView):
 
 
 class EditionClosureManifestCreateView(APIView):
+    """Expose edition closure manifest create through the HTTP API."""
+
     @extend_schema(
         operation_id="events_generate_closure_manifest",
         request=EditionClosureManifestCreateSerializer,
@@ -848,6 +1100,31 @@ class EditionClosureManifestCreateView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Generate the closure manifest.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")

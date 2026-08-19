@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
 
 from django.core.exceptions import (
@@ -19,7 +18,6 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import serializers, status
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -67,6 +65,11 @@ from maru.catalog.services import (
 )
 from maru.core.api_input import reject_unknown_fields
 from maru.identity.models import Account
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from rest_framework.request import Request
 
 IDEMPOTENCY_HEADER = "Idempotency-Key"
 CANONICAL_UUID_PATTERN = (
@@ -193,7 +196,7 @@ def _validated(
         allowed_fields=frozenset(serializer.fields),
     )
     serializer.is_valid(raise_exception=True)
-    return cast(dict[str, Any], serializer.validated_data)
+    return cast("dict[str, Any]", serializer.validated_data)
 
 
 def _execute[Result](command: Callable[[], Result]) -> Result:
@@ -300,6 +303,8 @@ class PrivateCatalogAPIView(APIView):
 
 
 class CatalogDetailApi(PrivateCatalogAPIView):
+    """Describe catalog detail API."""
+
     @extend_schema(
         operation_id="catalog_retrieve_edition_catalog",
         responses={200: CatalogDetailSerializer},
@@ -307,6 +312,24 @@ class CatalogDetailApi(PrivateCatalogAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Retrieve the edition catalog.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         products = _execute(
             lambda: available_products_for_actor(
                 organization_id=organization_id,
@@ -340,6 +363,24 @@ class CatalogDetailApi(PrivateCatalogAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Create the edition catalog.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_edition(
             request,
             organization_id=organization_id,
@@ -362,6 +403,8 @@ class CatalogDetailApi(PrivateCatalogAPIView):
 
 
 class CatalogProductCollectionApi(PrivateCatalogAPIView):
+    """Describe catalog product collection API."""
+
     @extend_schema(
         operation_id="catalog_add_product",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -374,6 +417,24 @@ class CatalogProductCollectionApi(PrivateCatalogAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Add the product.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_edition(
             request,
             organization_id=organization_id,
@@ -396,6 +457,8 @@ class CatalogProductCollectionApi(PrivateCatalogAPIView):
 
 
 class CatalogVariantCollectionApi(PrivateCatalogAPIView):
+    """Describe catalog variant collection API."""
+
     @extend_schema(
         operation_id="catalog_add_variant",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -412,6 +475,26 @@ class CatalogVariantCollectionApi(PrivateCatalogAPIView):
         edition_id: UUID,
         product_id: UUID,
     ) -> Response:
+        """Add the variant.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        product_id : UUID
+            The product identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_edition(
             request,
             organization_id=organization_id,
@@ -435,6 +518,8 @@ class CatalogVariantCollectionApi(PrivateCatalogAPIView):
 
 
 class CatalogActivateApi(PrivateCatalogAPIView):
+    """Describe catalog activate API."""
+
     @extend_schema(
         operation_id="catalog_activate_edition_catalog",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -444,6 +529,24 @@ class CatalogActivateApi(PrivateCatalogAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Activate the edition catalog.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_edition(
             request,
             organization_id=organization_id,
@@ -466,6 +569,8 @@ class CatalogActivateApi(PrivateCatalogAPIView):
 
 
 class CatalogStockAdjustApi(PrivateCatalogAPIView):
+    """Describe catalog stock adjust API."""
+
     @extend_schema(
         operation_id="catalog_adjust_variant_stock",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -479,6 +584,26 @@ class CatalogStockAdjustApi(PrivateCatalogAPIView):
         edition_id: UUID,
         variant_id: UUID,
     ) -> Response:
+        """Adjust the variant stock.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        variant_id : UUID
+            The variant identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_edition(
             request,
             organization_id=organization_id,
@@ -502,6 +627,8 @@ class CatalogStockAdjustApi(PrivateCatalogAPIView):
 
 
 class CatalogOrderCollectionApi(PrivateCatalogAPIView):
+    """Describe catalog order collection API."""
+
     @extend_schema(
         operation_id="catalog_list_own_orders",
         responses={200: CatalogOrderListSerializer},
@@ -509,6 +636,24 @@ class CatalogOrderCollectionApi(PrivateCatalogAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the current account's orders.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         orders = _execute(
             lambda: own_orders(
                 organization_id=organization_id,
@@ -531,6 +676,24 @@ class CatalogOrderCollectionApi(PrivateCatalogAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Place the order.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_self(
             request,
             organization_id=organization_id,
@@ -559,6 +722,8 @@ class CatalogOrderCollectionApi(PrivateCatalogAPIView):
 
 
 class CatalogPaymentCreateApi(PrivateCatalogAPIView):
+    """Describe catalog payment create API."""
+
     @extend_schema(
         operation_id="catalog_create_payment_intent",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -575,6 +740,26 @@ class CatalogPaymentCreateApi(PrivateCatalogAPIView):
         edition_id: UUID,
         order_id: UUID,
     ) -> Response:
+        """Create the payment intent.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        order_id : UUID
+            The order identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_order(
             request,
             organization_id=organization_id,
@@ -598,6 +783,8 @@ class CatalogPaymentCreateApi(PrivateCatalogAPIView):
 
 
 class CatalogPaymentReconcileApi(PrivateCatalogAPIView):
+    """Describe catalog payment reconcile API."""
+
     @extend_schema(
         operation_id="catalog_reconcile_payment_intent",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -611,6 +798,26 @@ class CatalogPaymentReconcileApi(PrivateCatalogAPIView):
         edition_id: UUID,
         intent_id: UUID,
     ) -> Response:
+        """Reconcile the payment intent.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        intent_id : UUID
+            The intent identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_payment(
             request,
             organization_id=organization_id,
@@ -634,6 +841,8 @@ class CatalogPaymentReconcileApi(PrivateCatalogAPIView):
 
 
 class CatalogActivityApi(PrivateCatalogAPIView):
+    """Describe catalog activity API."""
+
     @extend_schema(
         operation_id="catalog_list_activity",
         responses={200: CatalogActivityListSerializer},
@@ -641,6 +850,24 @@ class CatalogActivityApi(PrivateCatalogAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the activity.
+
+        Keep authenticated catalog data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         activity = _execute(
             lambda: catalog_activity(
                 organization_id=organization_id,

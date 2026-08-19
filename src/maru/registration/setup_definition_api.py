@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 from uuid import UUID, uuid4
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -21,7 +21,6 @@ from drf_spectacular.utils import (
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -86,6 +85,9 @@ from maru.registration.setup_section_commands import (
     update_registration_section,
 )
 
+if TYPE_CHECKING:
+    from rest_framework.request import Request
+
 logger = logging.getLogger(__name__)
 
 PROBLEM_CONTENT_TYPE = "application/problem+json"
@@ -135,10 +137,7 @@ _IDEMPOTENT_REPLAY_RESPONSE_PARAMETER = OpenApiParameter(
 _CONFIGURATION_COMMAND_REQUEST = PolymorphicProxySerializer(
     component_name="RegistrationConfigurationDefinitionCommand",
     serializers=cast(
-        dict[
-            str,
-            serializers.Serializer[Any] | type[serializers.Serializer[Any]],
-        ],
+        "dict[str, serializers.Serializer[Any] | type[serializers.Serializer[Any]]]",
         COMMAND_SERIALIZER_BY_OPERATION,
     ),
     resource_type_field_name="operation",
@@ -147,10 +146,7 @@ _CONFIGURATION_COMMAND_REQUEST = PolymorphicProxySerializer(
 _PROFILE_COMMAND_REQUEST = PolymorphicProxySerializer(
     component_name="RegistrationProfileFieldCommand",
     serializers=cast(
-        dict[
-            str,
-            serializers.Serializer[Any] | type[serializers.Serializer[Any]],
-        ],
+        "dict[str, serializers.Serializer[Any] | type[serializers.Serializer[Any]]]",
         PROFILE_COMMAND_SERIALIZER_BY_OPERATION,
     ),
     resource_type_field_name="operation",
@@ -163,9 +159,16 @@ class RegistrationSetupConflict(APIException):
     default_code = "registration_setup_conflict"
 
     def __init__(self, *, code: str) -> None:
+        """Initialize the RegistrationSetupConflict instance.
+
+        Parameters
+        ----------
+        code : str
+            The machine-readable reason for the setup conflict.
+        """
         super().__init__(
             detail=cast(
-                Any,
+                "Any",
                 {
                     "detail": self.default_detail,
                     "code": code,
@@ -213,8 +216,27 @@ def _configuration_manager(
     organization_id: UUID,
     edition_id: UUID,
 ) -> tuple[Account, UUID]:
-    """Resolve fresh exact-edition authority before parsing caller input."""
+    """Resolve fresh exact-edition authority before parsing caller input.
 
+    Parameters
+    ----------
+    request : Request
+        The incoming HTTP request and authenticated principal context.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    tuple[Account, UUID]
+        The matching configuration manager records in deterministic order.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     principal = request.user
     if not isinstance(principal, Account) or not principal.is_authenticated:
         raise PermissionDenied(
@@ -268,7 +290,7 @@ def _idempotency_key(request: Request) -> UUID:
     if raw_value is None or not raw_value.strip():
         raise ApiValidationError(
             cast(
-                Any,
+                "Any",
                 {
                     "detail": "The Idempotency-Key header is required.",
                     "code": "missing_idempotency_key",
@@ -292,7 +314,7 @@ def _idempotency_key(request: Request) -> UUID:
     if value is None or str(value) != candidate:
         raise ApiValidationError(
             cast(
-                Any,
+                "Any",
                 {
                     "detail": (
                         "The Idempotency-Key header must contain one canonical UUID."
@@ -319,7 +341,7 @@ def _closed_command_payload(
     if not isinstance(data, Mapping):
         raise ApiValidationError(
             cast(
-                Any,
+                "Any",
                 {
                     "detail": "The command body must be one JSON object.",
                     "code": "invalid_registration_setup_command",
@@ -337,7 +359,7 @@ def _closed_command_payload(
     if operation_name is None or serializer_class is None:
         raise ApiValidationError(
             cast(
-                Any,
+                "Any",
                 {
                     "detail": "Choose one documented registration setup operation.",
                     "code": "unknown_registration_setup_operation",
@@ -348,7 +370,7 @@ def _closed_command_payload(
         )
     serializer = serializer_class(data=data)
     serializer.is_valid(raise_exception=True)
-    return operation_name, cast(dict[str, Any], serializer.validated_data)
+    return operation_name, cast("dict[str, Any]", serializer.validated_data)
 
 
 def _django_validation(error: DjangoValidationError) -> Never:
@@ -370,7 +392,7 @@ def _django_validation(error: DjangoValidationError) -> Never:
         code = str(error.error_list[0].code or code)
     raise ApiValidationError(
         cast(
-            Any,
+            "Any",
             {
                 "detail": "The registration setup command is invalid.",
                 "code": code,
@@ -591,7 +613,7 @@ def _run_configuration_command(  # noqa: PLR0911, PLR0912
         )
     if operation == "minor_policy.remove":
         return remove_minor_registration_policy(**scoped)
-    raise RegistrationSetupStateConflictError()
+    raise RegistrationSetupStateConflictError
 
 
 def _run_profile_command(
@@ -642,7 +664,7 @@ def _run_profile_command(
             **common,
             field_id=field_id,
         )
-    raise RegistrationSetupStateConflictError()
+    raise RegistrationSetupStateConflictError
 
 
 def _mutation_response(
@@ -700,6 +722,8 @@ def _setup_source_payload(
 
 @method_decorator(never_cache, name="dispatch")
 class RegistrationSetupStartView(APIView):
+    """Expose registration setup start through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_get_setup_start_choices",
         responses={
@@ -721,6 +745,29 @@ class RegistrationSetupStartView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Get the setup start choices.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        RegistrationSetupConflict
+            If the operation encounters a registration setup conflict condition.
+        """
         actor, series_id = _configuration_manager(
             request,
             organization_id=organization_id,
@@ -803,6 +850,22 @@ class RegistrationSetupStartView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Start the governed setup.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor, series_id = _configuration_manager(
             request,
             organization_id=organization_id,
@@ -812,7 +875,7 @@ class RegistrationSetupStartView(APIView):
         retry_key = _idempotency_key(request)
         serializer = RegistrationSetupStartCommandSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        payload = cast(dict[str, Any], serializer.validated_data)
+        payload = cast("dict[str, Any]", serializer.validated_data)
         correlation_id = _request_id(request)
         try:
             result = start_registration_setup(
@@ -864,6 +927,8 @@ class RegistrationSetupStartView(APIView):
 
 @method_decorator(never_cache, name="dispatch")
 class RegistrationConfigurationCommandView(APIView):
+    """Expose registration configuration command through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_apply_configuration_definition_command",
         parameters=[_IDEMPOTENCY_PARAMETER, _IDEMPOTENT_REPLAY_RESPONSE_PARAMETER],
@@ -895,6 +960,24 @@ class RegistrationConfigurationCommandView(APIView):
         edition_id: UUID,
         configuration_id: UUID,
     ) -> Response:
+        """Apply the requested registration-configuration command.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        configuration_id : UUID
+            The configuration identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor, series_id = _configuration_manager(
             request,
             organization_id=organization_id,
@@ -938,6 +1021,8 @@ class RegistrationConfigurationCommandView(APIView):
 
 @method_decorator(never_cache, name="dispatch")
 class RegistrationProfileExtensionFieldCollectionView(APIView):
+    """Expose registration profile extension field collection through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_list_profile_extension_fields",
         responses={
@@ -962,6 +1047,29 @@ class RegistrationProfileExtensionFieldCollectionView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the profile extension fields.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        RegistrationSetupConflict
+            If the operation encounters a registration setup conflict condition.
+        """
         actor, series_id = _configuration_manager(
             request,
             organization_id=organization_id,
@@ -1055,6 +1163,22 @@ class RegistrationProfileExtensionFieldCollectionView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Create the profile extension field.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor, series_id = _configuration_manager(
             request,
             organization_id=organization_id,
@@ -1064,7 +1188,7 @@ class RegistrationProfileExtensionFieldCollectionView(APIView):
         retry_key = _idempotency_key(request)
         serializer = RegistrationProfileFieldCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        payload = cast(dict[str, Any], serializer.validated_data)
+        payload = cast("dict[str, Any]", serializer.validated_data)
         correlation_id = _request_id(request)
         try:
             result = create_registration_profile_extension_field(
@@ -1108,6 +1232,8 @@ class RegistrationProfileExtensionFieldCollectionView(APIView):
 
 @method_decorator(never_cache, name="dispatch")
 class RegistrationProfileExtensionFieldCommandView(APIView):
+    """Expose registration profile extension field command through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_apply_profile_extension_field_command",
         parameters=[_IDEMPOTENCY_PARAMETER, _IDEMPOTENT_REPLAY_RESPONSE_PARAMETER],
@@ -1138,6 +1264,24 @@ class RegistrationProfileExtensionFieldCommandView(APIView):
         edition_id: UUID,
         field_id: UUID,
     ) -> Response:
+        """Apply the requested profile-extension field command.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        field_id : UUID
+            The field identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor, series_id = _configuration_manager(
             request,
             organization_id=organization_id,

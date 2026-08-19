@@ -27,9 +27,18 @@ def _canonical_uuid(value: str) -> UUID:
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Redact one bounded batch of expired purpose-bound Logistics contacts."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument("--organization-id", required=True, type=_canonical_uuid)
         scope = parser.add_mutually_exclusive_group(required=True)
         scope.add_argument("--edition-id", type=_canonical_uuid)
@@ -51,11 +60,25 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: object, **options: object) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : object
+            Positional arguments forwarded to the framework implementation.
+        **options : object
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args
         organization_id = options.get("organization_id")
         edition_id = options.get("edition_id")
         limit = options.get("limit")
-        correlation_id = cast(UUID, options.get("correlation_id") or uuid4())
+        correlation_id = cast("UUID", options.get("correlation_id") or uuid4())
         if not isinstance(organization_id, UUID):
             raise CommandError("An organization UUID is required.")
         if edition_id is not None and not isinstance(edition_id, UUID):

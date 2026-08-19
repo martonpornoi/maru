@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any, ClassVar, cast, override
+from typing import TYPE_CHECKING, Any, ClassVar, cast, override
 from uuid import UUID
 
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import HttpRequest
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.safestring import SafeString
 
 from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.events.admin_context import EditionContextAdmin
@@ -41,14 +38,37 @@ from maru.workforce.services import (
     review_onboarding_document,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from django.http import HttpRequest
+    from django.utils.safestring import SafeString
+
 
 def _position_scope_reference(
     *,
     position: Position,
     change: bool,
 ) -> tuple[UUID, UUID, UUID, UUID]:
-    """Resolve an identifier-only candidate scope before taking outer locks."""
+    """Resolve an identifier-only candidate scope before taking outer locks.
 
+    Parameters
+    ----------
+    position : Position
+        The workforce position within the exact edition structure.
+    change : bool
+        The change evaluated while position scope reference.
+
+    Returns
+    -------
+    tuple[UUID, UUID, UUID, UUID]
+        The matching position scope reference records in deterministic order.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if change:
         row = (
             Position.objects.filter(id=position.id)
@@ -221,7 +241,11 @@ def _lock_assignment_admin_target(
 
 
 class PositionAdminForm(forms.ModelForm):  # type: ignore[type-arg]
+    """Collect and validate position admin input."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = Position
         fields = (
             "organization",
@@ -240,12 +264,28 @@ class PositionAdminForm(forms.ModelForm):  # type: ignore[type-arg]
         )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the PositionAdminForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.fields["role_bundle"].required = False
         self.fields["description"].required = False
         self.fields["capacity_codes"].required = False
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         template = cleaned.get("template")
         if isinstance(template, PositionTemplate):
@@ -263,6 +303,8 @@ class PositionAdminForm(forms.ModelForm):  # type: ignore[type-arg]
 
 
 class PositionAssignmentAdminForm(forms.ModelForm):  # type: ignore[type-arg]
+    """Collect and validate position assignment admin input."""
+
     activate_now = forms.BooleanField(
         required=False,
         label="Activate immediately after independent approval",
@@ -273,6 +315,8 @@ class PositionAssignmentAdminForm(forms.ModelForm):  # type: ignore[type-arg]
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = PositionAssignment
         fields = (
             "position",
@@ -284,6 +328,13 @@ class PositionAssignmentAdminForm(forms.ModelForm):  # type: ignore[type-arg]
         )
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         if cleaned.get("activate_now") and not cleaned.get("approved_by"):
             self.add_error(
@@ -294,12 +345,16 @@ class PositionAssignmentAdminForm(forms.ModelForm):  # type: ignore[type-arg]
 
 
 class PositionDocumentRequirementInline(admin.TabularInline):  # type: ignore[type-arg]
+    """Configure the position document requirement inline in Django administration."""
+
     model = PositionDocumentRequirement
     extra = 0
     autocomplete_fields = ("document_type",)
 
 
 class VolunteerOpportunityInline(admin.StackedInline):  # type: ignore[type-arg]
+    """Configure the volunteer opportunity inline in Django administration."""
+
     model = VolunteerOpportunity
     extra = 0
     max_num = 1
@@ -317,6 +372,18 @@ class VolunteerOpportunityInline(admin.StackedInline):  # type: ignore[type-arg]
 
     @admin.display(description="Current application state")
     def acceptance_state(self, obj: VolunteerOpportunity) -> str:
+        """Return the application's current acceptance state.
+
+        Parameters
+        ----------
+        obj : VolunteerOpportunity
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for acceptance state.
+        """
         occupancy = "Filled" if obj.is_filled else "Vacant"
         availability = (
             "accepting applications" if obj.accepts_applications else "not accepting"
@@ -360,6 +427,8 @@ class DepartmentAdmin(EditionContextAdmin):
 
 @admin.register(PositionTemplate)
 class PositionTemplateAdmin(EditionContextAdmin):
+    """Configure Django administration for position template."""
+
     edition_context_lookup = "organization_id"
     edition_context_value_attribute = "organization_id"
     list_display = (
@@ -378,6 +447,8 @@ class PositionTemplateAdmin(EditionContextAdmin):
 
 @admin.register(Position)
 class PositionAdmin(EditionContextAdmin):
+    """Configure Django administration for position."""
+
     form = PositionAdminForm
     edition_context_lookup = "edition_id"
     list_display = (
@@ -405,11 +476,35 @@ class PositionAdmin(EditionContextAdmin):
 
     @admin.display(description="Assigned")
     def active_count(self, obj: Position) -> str:
+        """Return the number of active related records.
+
+        Parameters
+        ----------
+        obj : Position
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for active count.
+        """
         count = obj.assignments.filter(status=PositionAssignment.Status.ACTIVE).count()
         return f"{count} / {obj.headcount}"
 
     @admin.display(description="Applications")
     def application_state(self, obj: Position) -> str:
+        """Return the application's current lifecycle state.
+
+        Parameters
+        ----------
+        obj : Position
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for application state.
+        """
         opportunity = obj.opportunity
         if opportunity.status == VolunteerOpportunity.Status.PUBLISHED:
             return (
@@ -438,6 +533,8 @@ class PositionAdmin(EditionContextAdmin):
 
 @admin.register(OnboardingDocumentType)
 class OnboardingDocumentTypeAdmin(EditionContextAdmin):
+    """Configure Django administration for onboarding document type."""
+
     edition_context_lookup = "edition_id"
     list_display = ("name", "edition", "version", "status", "max_bytes")
     list_filter = ("organization", "edition", "status")
@@ -461,6 +558,8 @@ class OnboardingDocumentTypeAdmin(EditionContextAdmin):
 
 @admin.register(OnboardingDocumentRequest)
 class OnboardingDocumentRequestAdmin(EditionContextAdmin):
+    """Configure Django administration for onboarding document request."""
+
     edition_context_lookup = "edition_id"
     list_display = (
         "account",
@@ -527,6 +626,18 @@ class OnboardingDocumentRequestAdmin(EditionContextAdmin):
 
     @admin.display(description="Protected submitted file")
     def document_download(self, obj: OnboardingDocumentRequest) -> SafeString | str:
+        """Return a protected onboarding-document download response.
+
+        Parameters
+        ----------
+        obj : OnboardingDocumentRequest
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString | str
+            Escaped HTML safe for rendering document download.
+        """
         if not obj.id or not obj.document:
             return "No document submitted"
         return format_html(
@@ -542,7 +653,7 @@ class OnboardingDocumentRequestAdmin(EditionContextAdmin):
         form: forms.ModelForm,  # type: ignore[type-arg]
         change: bool,
     ) -> None:
-        account = cast(Account, request.user)
+        account = cast("Account", request.user)
         if not change:
             obj.requested_by = account
             obj.requested_at = timezone.now()
@@ -576,6 +687,8 @@ class OnboardingDocumentRequestAdmin(EditionContextAdmin):
 
 @admin.register(PositionAssignment)
 class PositionAssignmentAdmin(EditionContextAdmin):
+    """Configure Django administration for position assignment."""
+
     form = PositionAssignmentAdminForm
     edition_context_lookup = "edition_id"
     list_display = (
@@ -617,7 +730,7 @@ class PositionAssignmentAdmin(EditionContextAdmin):
         form: forms.ModelForm,  # type: ignore[type-arg]
         change: bool,
     ) -> None:
-        actor = cast(Account, request.user)
+        actor = cast("Account", request.user)
         previous = _lock_assignment_admin_target(assignment=obj, change=change)
         if previous is not None and previous.status == PositionAssignment.Status.ACTIVE:
             obj.__dict__.update(previous.__dict__)
@@ -629,7 +742,7 @@ class PositionAssignmentAdmin(EditionContextAdmin):
             obj.status = PositionAssignment.Status.PROPOSED
             super().save_model(request, obj, form, change)
         if bool(form.cleaned_data.get("activate_now")):
-            approved_by = cast(Account, form.cleaned_data["approved_by"])
+            approved_by = cast("Account", form.cleaned_data["approved_by"])
             activated = activate_position_assignment(
                 position_id=obj.position_id,
                 account=obj.account,
@@ -648,6 +761,8 @@ class PositionAssignmentAdmin(EditionContextAdmin):
 
 @admin.register(VolunteerOpportunity)
 class VolunteerOpportunityAdmin(EditionContextAdmin):
+    """Configure Django administration for volunteer opportunity."""
+
     edition_context_lookup = "position__edition_id"
     list_display = (
         "position",
@@ -662,6 +777,8 @@ class VolunteerOpportunityAdmin(EditionContextAdmin):
 
 @admin.register(VolunteerApplication)
 class VolunteerApplicationAdmin(EditionContextAdmin):
+    """Configure Django administration for volunteer application."""
+
     edition_context_lookup = "opportunity__position__edition_id"
     list_display = (
         "account",

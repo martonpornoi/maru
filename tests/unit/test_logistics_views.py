@@ -237,7 +237,7 @@ def test_staff_action_preauthorization_binds_capabilities_and_route_objects() ->
     object_id = uuid4()
     calls: list[dict[str, object]] = []
 
-    def authorize(**kwargs):
+    def authorize(**kwargs) -> None:
         calls.append(kwargs)
 
     with patch(
@@ -302,10 +302,10 @@ def test_staff_action_preauthorization_binds_capabilities_and_route_objects() ->
 def test_catalog_preauthorization_falls_back_only_to_organization_scope() -> None:
     calls: list[dict[str, object]] = []
 
-    def authorize(**kwargs):
+    def authorize(**kwargs) -> None:
         calls.append(kwargs)
         if kwargs.get("edition_id") is not None:
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
 
     with patch(
         "maru.logistics.views.authorize_logistics_api_scope", side_effect=authorize
@@ -329,7 +329,7 @@ def test_workspace_authorizes_before_query_or_query_parameter_parsing() -> None:
     edition = _edition(scope)
     order: list[str] = []
 
-    def authorize(**_kwargs):
+    def authorize(**_kwargs) -> None:
         order.append("authorize")
 
     def query(**_kwargs):
@@ -415,7 +415,7 @@ def test_manifest_and_stage_pages_project_only_preauthorized_rows() -> None:
 
 
 class _SyntheticForm:
-    def __init__(self, cleaned_data: dict[str, object], *, valid: bool = True):
+    def __init__(self, cleaned_data: dict[str, object], *, valid: bool = True) -> None:
         self.cleaned_data = cleaned_data
         self._valid = valid
         self.errors: list[tuple[object, str]] = []

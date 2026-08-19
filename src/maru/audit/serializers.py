@@ -16,6 +16,8 @@ AUDIT_ACCESS_PURPOSES = (
 
 
 class AuditQuerySerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate audit query data."""
+
     purpose = serializers.ChoiceField(choices=AUDIT_ACCESS_PURPOSES)
     edition_id = serializers.UUIDField(required=False)
     correlation_id = serializers.UUIDField(required=False)
@@ -33,7 +35,11 @@ class AuditQuerySerializer(serializers.Serializer[dict[str, Any]]):
 
 
 class AuditEventSummarySerializer(serializers.ModelSerializer[AuditEvent]):
+    """Serialize and validate audit event summary data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = AuditEvent
         fields = (
             "id",

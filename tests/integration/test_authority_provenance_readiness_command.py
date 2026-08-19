@@ -8,7 +8,7 @@ from dataclasses import replace
 from datetime import timedelta
 from io import StringIO
 from itertools import pairwise
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import pytest
@@ -38,9 +38,11 @@ from maru.authorization.models import (
     RoleBundle,
 )
 from maru.authorization.provenance_readiness import BLOCKER_KEYS, REVIEW_KEYS
-from maru.identity.models import Account
 from tests.factories import AccountFactory, EventEditionFactory, OrganizationFactory
 from tests.support.authority import activate_synthetic_board
+
+if TYPE_CHECKING:
+    from maru.identity.models import Account
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

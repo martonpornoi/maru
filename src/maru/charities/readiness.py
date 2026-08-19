@@ -20,6 +20,13 @@ CHARITIES_INTEGRITY_CONTRACT: Final[DatabaseIntegrityContract] = (
 
 
 def charities_database_integrity_is_ready() -> bool:
+    """Verify charities database integrity is ready.
+
+    Returns
+    -------
+    bool
+        Whether the requested condition is satisfied.
+    """
     return database_integrity_contract_is_ready(CHARITIES_INTEGRITY_CONTRACT)
 
 

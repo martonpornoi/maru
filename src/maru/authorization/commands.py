@@ -71,6 +71,15 @@ class AuthorityCommandValidationError(ValidationError):
         *,
         reason_code: str,
     ) -> None:
+        """Initialize the AuthorityCommandValidationError instance.
+
+        Parameters
+        ----------
+        message : str | dict[str, str]
+            The message mapping to validate or transform.
+        reason_code : str
+            The stable reason code from the relevant closed catalog.
+        """
         self.reason_code = reason_code
         super().__init__(message, code=reason_code)
 
@@ -211,8 +220,26 @@ def _lock_controllers_in_stable_order(
     actor: Account,
     approver: Account,
 ) -> tuple[Account, Account]:
-    """Lock both controllers before either source graph is traversed."""
+    """Lock both controllers before either source graph is traversed.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    approver : Account
+        The independent authority source approving the transition.
+
+    Returns
+    -------
+    tuple[Account, Account]
+        The matching lock controllers in stable order records in deterministic
+        order.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     controller_ids = {actor.id, approver.id}
     locked = {
         account.id: account
@@ -291,8 +318,35 @@ def _select_dual_control_sources(
     requested_expires_at: datetime | None,
     horizon_mode: ControlHorizonMode,
 ) -> _SelectedDualControlSources:
-    """Select and pin exact sources inside the target-writing transaction."""
+    """Select and pin exact sources inside the target-writing transaction.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    approver : Account
+        The independent authority source approving the transition.
+    capability_code : str
+        The stable capability code required by the operation.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    requested_effective_from : datetime
+        The timezone-aware boundary for requested effective from.
+    requested_expires_at : datetime | None
+        The timezone-aware timestamp for requested expires.
+    horizon_mode : ControlHorizonMode
+        The closed horizon mode discriminator defined by the domain catalog.
+
+    Returns
+    -------
+    _SelectedDualControlSources
+        The resolved _SelectedDualControlSources for select dual control sources.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     locked_actor, locked_approver = _lock_controllers_in_stable_order(
         actor=actor,
         approver=approver,
@@ -534,8 +588,13 @@ def _lock_target(  # noqa: PLR0912
 def _require_current_history_container(
     target: ResolvedAuthorizationTarget,
 ) -> None:
-    """Limit retired-scope closure to a current organizer or edition boundary."""
+    """Limit retired-scope closure to a current organizer or edition boundary.
 
+    Parameters
+    ----------
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    """
     if target.department_id is not None or target.resource_binding_id is not None:
         _raise_authorization(
             "The authority record is unavailable.",
@@ -551,8 +610,26 @@ def _lock_retired_department_history_scope(
     department_id: UUID | None,
     resource_binding_id: UUID | None,
 ) -> ScopeLevel:
-    """Prove one stored retired scope is inside the locked current container."""
+    """Prove one stored retired scope is inside the locked current container.
 
+    Parameters
+    ----------
+    container : _LockedTarget
+        The container applied within the audited domain transition.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID | None
+        The event edition identifier that scopes the operation.
+    department_id : UUID | None
+        The department identifier within the requested scope.
+    resource_binding_id : UUID | None
+        The resource binding identifier within the requested scope.
+
+    Returns
+    -------
+    ScopeLevel
+        The resolved ScopeLevel for lock retired department history scope.
+    """
     container_target = container.target
     if (
         container_target.department_id is not None
@@ -660,7 +737,7 @@ def _audit_failure(
     )
 
 
-def grant_capability_direct(
+def grant_capability_direct(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     actor: Account,
     approver: Account,
@@ -674,8 +751,43 @@ def grant_capability_direct(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CapabilityGrant:
-    """Create a root grant only when two independently authorized people agree."""
+    """Create a root grant only when two independently authorized people agree.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    approver : Account
+        The independent authority source approving the transition.
+    recipient : Account
+        The recipient applied within the audited domain transition.
+    capability_code : str
+        The stable capability code required by the operation.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    effective_from : datetime
+        The timezone-aware boundary for effective from.
+    expires_at : datetime | None
+        The timezone-aware timestamp for expires.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    CapabilityGrant
+        The resolved CapabilityGrant for grant capability direct.
+
+    Raises
+    ------
+    AuthorityCommandValidationError
+        If the requested state violates a domain invariant.
+    """
     obligations = tuple(sorted(require_capability(GRANT_CAPABILITY).obligations))
     command = _CommandAudit(
         capability_code=GRANT_CAPABILITY,
@@ -843,7 +955,7 @@ def grant_capability_direct(
         raise
 
 
-def revoke_capability_grant(
+def revoke_capability_grant(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     actor: Account,
     target: ResolvedAuthorizationTarget,
@@ -854,8 +966,37 @@ def revoke_capability_grant(
     source_channel: str = "service",
     revoked_at: datetime | None = None,
 ) -> CapabilityGrant:
-    """Immediately revoke a root or delegated grant; revocation is single-control."""
+    """Immediately revoke a root or delegated grant; revocation is single-control.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    grant_id : UUID
+        The grant identifier within the requested scope.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+    revoked_at : datetime | None, default=None
+        The timezone-aware timestamp for revoked.
+
+    Returns
+    -------
+    CapabilityGrant
+        The updated CapabilityGrant after the transition is committed.
+
+    Raises
+    ------
+    AuthorityCommandValidationError
+        If the requested state violates a domain invariant.
+    """
     obligations = tuple(sorted(require_capability(REVOKE_CAPABILITY).obligations))
     command = _CommandAudit(
         capability_code=REVOKE_CAPABILITY,
@@ -966,7 +1107,7 @@ def revoke_capability_grant(
         raise
 
 
-def create_role_bundle_version(
+def create_role_bundle_version(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     actor: Account,
     approver: Account,
@@ -979,8 +1120,43 @@ def create_role_bundle_version(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RoleBundle:
-    """Create the next immutable version of one organizer-owned role bundle."""
+    """Create the next immutable version of one organizer-owned role bundle.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    approver : Account
+        The independent authority source approving the transition.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    code : str
+        The stable domain code to resolve or validate.
+    name : str
+        The human-readable name to normalize or persist.
+    capability_codes : tuple[str, ...]
+        The capability codes applied within the audited domain transition.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RoleBundle
+        The newly created RoleBundle.
+
+    Raises
+    ------
+    AuthorityCommandValidationError
+        If the requested state violates a domain invariant.
+    ValidationError
+        If the requested state violates a domain invariant.
+    """
     obligations = tuple(sorted(require_capability(ROLE_CAPABILITY).obligations))
     command = _CommandAudit(
         capability_code=ROLE_CAPABILITY,
@@ -1159,7 +1335,7 @@ def create_role_bundle_version(
         raise
 
 
-def assign_role(
+def assign_role(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     actor: Account,
     approver: Account,
@@ -1173,8 +1349,45 @@ def assign_role(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RoleAssignment:
-    """Assign one exact immutable role version under dual control."""
+    """Assign one exact immutable role version under dual control.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    approver : Account
+        The independent authority source approving the transition.
+    recipient : Account
+        The recipient applied within the audited domain transition.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    role_bundle_id : UUID
+        The role bundle identifier within the requested scope.
+    effective_from : datetime
+        The timezone-aware boundary for effective from.
+    expires_at : datetime | None
+        The timezone-aware timestamp for expires.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RoleAssignment
+        The resolved RoleAssignment for assign role.
+
+    Raises
+    ------
+    AuthorityCommandValidationError
+        If the requested state violates a domain invariant.
+    ValidationError
+        If the requested state violates a domain invariant.
+    """
     obligations = tuple(sorted(require_capability(ROLE_CAPABILITY).obligations))
     command = _CommandAudit(
         capability_code=ROLE_CAPABILITY,
@@ -1362,7 +1575,7 @@ def assign_role(
         raise
 
 
-def revoke_role_assignment(
+def revoke_role_assignment(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     actor: Account,
     target: ResolvedAuthorizationTarget,
@@ -1373,8 +1586,37 @@ def revoke_role_assignment(
     source_channel: str = "service",
     revoked_at: datetime | None = None,
 ) -> RoleAssignment:
-    """Immediately revoke a role assignment; revocation is single-control."""
+    """Immediately revoke a role assignment; revocation is single-control.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    assignment_id : UUID
+        The assignment identifier within the requested scope.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+    revoked_at : datetime | None, default=None
+        The timezone-aware timestamp for revoked.
+
+    Returns
+    -------
+    RoleAssignment
+        The updated RoleAssignment after the transition is committed.
+
+    Raises
+    ------
+    AuthorityCommandValidationError
+        If the requested state violates a domain invariant.
+    """
     obligations = tuple(sorted(require_capability(REVOKE_CAPABILITY).obligations))
     command = _CommandAudit(
         capability_code=REVOKE_CAPABILITY,
@@ -1489,7 +1731,7 @@ def revoke_role_assignment(
         raise
 
 
-def revoke_expired_retired_department_capability_grant(
+def revoke_expired_retired_department_capability_grant(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     actor: Account,
     containing_target: ResolvedAuthorizationTarget,
@@ -1506,8 +1748,34 @@ def revoke_expired_retired_department_capability_grant(
     container, then derives and verifies the exact historical scope from the
     persisted grant. It can only add revocation evidence to an already expired
     row; it cannot issue, extend, move, or reopen authority.
-    """
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    containing_target : ResolvedAuthorizationTarget
+        The containing target applied within the audited domain transition.
+    grant_id : UUID
+        The grant identifier within the requested scope.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    CapabilityGrant
+        The updated CapabilityGrant after the transition is committed.
+
+    Raises
+    ------
+    AuthorityCommandValidationError
+        If the requested state violates a domain invariant.
+    """
     obligations = tuple(sorted(require_capability(REVOKE_CAPABILITY).obligations))
     command = _CommandAudit(
         capability_code=REVOKE_CAPABILITY,
@@ -1633,7 +1901,7 @@ def revoke_expired_retired_department_capability_grant(
         raise
 
 
-def revoke_expired_retired_department_role_assignment(
+def revoke_expired_retired_department_role_assignment(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     actor: Account,
     containing_target: ResolvedAuthorizationTarget,
@@ -1643,8 +1911,35 @@ def revoke_expired_retired_department_role_assignment(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RoleAssignment:
-    """Close expired role history below a retired Department."""
+    """Close expired role history below a retired Department.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    containing_target : ResolvedAuthorizationTarget
+        The containing target applied within the audited domain transition.
+    assignment_id : UUID
+        The assignment identifier within the requested scope.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RoleAssignment
+        The updated RoleAssignment after the transition is committed.
+
+    Raises
+    ------
+    AuthorityCommandValidationError
+        If the requested state violates a domain invariant.
+    """
     obligations = tuple(sorted(require_capability(REVOKE_CAPABILITY).obligations))
     command = _CommandAudit(
         capability_code=REVOKE_CAPABILITY,

@@ -7,7 +7,7 @@ from copy import copy
 from datetime import timedelta
 from io import StringIO
 from types import SimpleNamespace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import pytest
@@ -19,7 +19,6 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
-from maru.identity.models import Account
 from maru.organizations.management.commands import (
     check_representation_readiness as readiness,
 )
@@ -44,6 +43,9 @@ from tests.factories import (
     RoleAssignmentFactory,
     RoleBundleFactory,
 )
+
+if TYPE_CHECKING:
+    from maru.identity.models import Account
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

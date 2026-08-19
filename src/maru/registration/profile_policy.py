@@ -16,6 +16,20 @@ ALLOWED_FURSUIT_PHOTO_CONTENT_TYPES = frozenset(
 
 @dataclass(frozen=True)
 class ProfileFieldPolicy:
+    """Authorize profile field policy operations.
+
+    Attributes
+    ----------
+    purpose
+        The documented purpose constraining collection and processing.
+    classification
+        The closed sensitivity classification governing disclosure.
+    visibility
+        The closed disclosure audience applied to the projection.
+    retention
+        The retention retained in this immutable projection.
+    """
+
     purpose: str
     classification: str
     visibility: str

@@ -18,6 +18,8 @@ class ConventionSeriesReadSerializer(serializers.ModelSerializer[ConventionSerie
     """Stable identity and complete editable profile for one series."""
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = ConventionSeries
         fields = (
             "id",
@@ -53,6 +55,18 @@ class HttpsAssumingURLField(serializers.URLField):
     """Match the HTML form's convenient, deterministic HTTPS assumption."""
 
     def to_internal_value(self, data: Any) -> str:
+        """Parse and validate API input.
+
+        Parameters
+        ----------
+        data : Any
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        str
+            The canonical value accepted by the serializer.
+        """
         if isinstance(data, str):
             value = data.strip()
             if value:
@@ -99,10 +113,24 @@ class ConventionSeriesUpdateSerializer(StrictInputSerializer):
     expected_profile_version = serializers.IntegerField(min_value=1)
 
     def validate_name(self, value: str) -> str:
+        """Validate name.
+
+        Parameters
+        ----------
+        value : str
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        str
+            The normalized text for validate name.
+        """
         return " ".join(value.split())
 
 
 class ConventionSeriesListQuerySerializer(StrictInputSerializer):
+    """Serialize and validate convention series list query data."""
+
     page = serializers.IntegerField(required=False, min_value=1)
     page_size = serializers.IntegerField(
         required=False,

@@ -1,0 +1,14 @@
+:root {
+  --color-brand-primary: #7656a3;
+  --color-brand-content: #64478f;
+}
+
+body {
+  --color-link: #64478f;
+  --color-link--hover: #4d3571;
+}
+
+.sidebar-brand-text {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}

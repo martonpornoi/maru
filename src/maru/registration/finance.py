@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -13,7 +12,6 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import append_audit
 from maru.authorization.policy import resolve_edition_target
-from maru.identity.models import Account
 from maru.registration.models import (
     FinancialLedgerEntry,
     FinancialOperation,
@@ -35,6 +33,12 @@ from maru.registration.services import (
     _require_reason,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
+
+    from maru.identity.models import Account
+
 SUPPORTED_FINANCIAL_OPERATION_KINDS = (
     FinancialOperation.Kind.CANCEL,
     FinancialOperation.Kind.REFUND,
@@ -54,8 +58,28 @@ def record_provider_payment(
     currency: str,
     occurred_at: datetime,
 ) -> FinancialLedgerEntry:
-    """Idempotently materialize provider success into the operational ledger."""
+    """Idempotently materialize provider success into the operational ledger.
 
+    Parameters
+    ----------
+    registration : Registration
+        The attendee registration governed by the operation.
+    provider : PaymentProviderAccount
+        The external-service adapter used without making it authoritative.
+    provider_reference : str
+        The provider or source provider reference retained for reconciliation.
+    amount_minor : int
+        The amount amount in minor currency units.
+    currency : str
+        The supported ISO 4217 currency code for monetary values.
+    occurred_at : datetime
+        The timezone-aware timestamp for occurred.
+
+    Returns
+    -------
+    FinancialLedgerEntry
+        The resolved FinancialLedgerEntry for record provider payment.
+    """
     existing = FinancialLedgerEntry.objects.filter(
         provider_account=provider,
         provider_reference=provider_reference,
@@ -94,6 +118,18 @@ def record_provider_payment(
 
 
 def available_refund_minor(registration: Registration) -> int:
+    """Return available refund minor.
+
+    Parameters
+    ----------
+    registration : Registration
+        The attendee registration governed by the requested transition.
+
+    Returns
+    -------
+    int
+        The available refund minor.
+    """
     values = registration.financial_ledger.values("direction").annotate(
         total=Sum("amount_minor")
     )
@@ -119,6 +155,43 @@ def propose_financial_operation(
     target_product_id: UUID | None = None,
     source_channel: str = "api",
 ) -> FinancialOperation:
+    """Propose financial operation.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    registration_id : UUID
+        The identifier of the registration.
+    actor : Account
+        The authenticated person performing the operation.
+    kind : str
+        The closed kind code.
+    amount_minor : int
+        The amount amount in minor currency units.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    target_account_id : UUID | None, default=None
+        The identifier of the target account.
+    target_product_id : UUID | None, default=None
+        The identifier of the target product.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    FinancialOperation
+        The newly persisted FinancialOperation with its durable command evidence.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_FINANCE,
@@ -212,6 +285,35 @@ def approve_financial_operation(
     correlation_id: UUID,
     source_channel: str = "api",
 ) -> FinancialOperation:
+    """Approve financial operation.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    operation_id : UUID
+        The identifier of the operation.
+    actor : Account
+        The authenticated person performing the operation.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    FinancialOperation
+        The FinancialOperation established after approve financial operation completes.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_FINANCE,
@@ -372,8 +474,29 @@ def record_provider_refund(
     provider_reference: str,
     occurred_at: datetime,
 ) -> FinancialLedgerEntry:
-    """Complete an approved refund after authenticated provider evidence."""
+    """Complete an approved refund after authenticated provider evidence.
 
+    Parameters
+    ----------
+    operation : FinancialOperation
+        The stable operation code recorded in audit evidence.
+    provider : PaymentProviderAccount
+        The external-service adapter used without making it authoritative.
+    provider_reference : str
+        The provider or source provider reference retained for reconciliation.
+    occurred_at : datetime
+        The timezone-aware timestamp for occurred.
+
+    Returns
+    -------
+    FinancialLedgerEntry
+        The resolved FinancialLedgerEntry for record provider refund.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     with transaction.atomic():
         operation = FinancialOperation.objects.select_for_update().get(id=operation.id)
         if operation.status == FinancialOperation.Status.COMPLETED:
@@ -449,8 +572,51 @@ def reconcile_provider_settlement(
     reason: str,
     correlation_id: UUID,
 ) -> SettlementBatch:
-    """Reconcile a provider payout to every included append-only movement."""
+    """Reconcile a provider payout to every included append-only movement.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    provider_account_id : UUID
+        The provider account identifier within the requested scope.
+    provider_reference : str
+        The provider or source provider reference retained for reconciliation.
+    currency : str
+        The supported ISO 4217 currency code for monetary values.
+    gross_minor : int
+        The gross amount in minor currency units.
+    fee_minor : int
+        The fee amount in minor currency units.
+    refund_minor : int
+        The refund amount in minor currency units.
+    dispute_minor : int
+        The dispute amount in minor currency units.
+    net_minor : int
+        The net amount in minor currency units.
+    settled_at : datetime
+        The timezone-aware timestamp for settled.
+    ledger_entry_ids : tuple[UUID, ...]
+        The selected ledger entry identifiers.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+
+    Returns
+    -------
+    SettlementBatch
+        The resolved SettlementBatch for reconcile provider settlement.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_FINANCE,

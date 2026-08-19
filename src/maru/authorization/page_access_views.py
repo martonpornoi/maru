@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.forms import Form
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -41,8 +41,12 @@ from maru.authorization.page_access_workspace import (
     load_page_access_workspace,
     require_page_access_authority,
 )
-from maru.authorization.policy import ResolvedAuthorizationTarget
 from maru.identity.models import Account
+
+if TYPE_CHECKING:
+    from django.forms import Form
+
+    from maru.authorization.policy import ResolvedAuthorizationTarget
 
 type AccessForm = (
     PageAccessAssignmentForm
@@ -188,8 +192,25 @@ def page_access_workspace(
     request: HttpRequest,
     scope_token: str,
 ) -> HttpResponse:
-    """Manage canonical scoped assignments or explain a read-only preview."""
+    """Manage canonical scoped assignments or explain a read-only preview.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    scope_token : str
+        The opaque scope token supplied by the caller.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks the authority required by the operation.
+    """
     if request.method == "GET" and request.GET:
         return HttpResponse("Unsupported query parameters.", status=400)
     actor = _actor(request)

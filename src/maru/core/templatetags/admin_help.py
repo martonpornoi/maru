@@ -582,7 +582,17 @@ APP_PAGE_HELP: dict[str, str] = {
 
 @dataclass(frozen=True, slots=True)
 class AdminFunctionGroup:
-    """Accessible label and palette key for related admin applications."""
+    """Accessible label and palette key for related admin applications.
+
+    Attributes
+    ----------
+    key
+        The lookup, signing, or idempotency key selected by the contract.
+    label
+        The human-readable label shown to authorized readers.
+    purpose
+        The documented purpose constraining collection and processing.
+    """
 
     key: str
     label: str
@@ -639,22 +649,47 @@ DEFAULT_FUNCTION_GROUP = AdminFunctionGroup(
 
 @register.simple_tag
 def admin_function_groups() -> tuple[AdminFunctionGroup, ...]:
-    """Return the ordered, text-labelled color legend for the admin directory."""
+    """Return the ordered, text-labelled color legend for the admin directory.
 
+    Returns
+    -------
+    tuple[AdminFunctionGroup, ...]
+        The matching admin function groups records in deterministic order.
+    """
     return ADMIN_FUNCTION_GROUPS
 
 
 @register.simple_tag
 def admin_app_group(app_label: object = "") -> AdminFunctionGroup:
-    """Return a functional group for an admin application."""
+    """Return a functional group for an admin application.
 
+    Parameters
+    ----------
+    app_label : object, default=''
+        The human-readable app label shown to authorized readers.
+
+    Returns
+    -------
+    AdminFunctionGroup
+        The resolved AdminFunctionGroup for admin app group.
+    """
     return FUNCTION_GROUP_BY_APP.get(str(app_label or ""), DEFAULT_FUNCTION_GROUP)
 
 
 @register.simple_tag
 def admin_app_help(app_label: object = "") -> str:
-    """Return the concise purpose and example for an admin application."""
+    """Return the concise purpose and example for an admin application.
 
+    Parameters
+    ----------
+    app_label : object, default=''
+        The human-readable app label shown to authorized readers.
+
+    Returns
+    -------
+    str
+        The normalized text for admin app help.
+    """
     return APP_PAGE_HELP.get(
         str(app_label or ""),
         "Use this area for related platform records. "
@@ -664,8 +699,20 @@ def admin_app_help(app_label: object = "") -> str:
 
 @register.simple_tag
 def admin_model_help(app_label: object = "", object_name: object = "") -> str:
-    """Return purpose and use-case guidance for an admin directory item."""
+    """Return purpose and use-case guidance for an admin directory item.
 
+    Parameters
+    ----------
+    app_label : object, default=''
+        The human-readable app label shown to authorized readers.
+    object_name : object, default=''
+        The human-readable object name shown to authorized readers.
+
+    Returns
+    -------
+    str
+        The normalized text for admin model help.
+    """
     key = (str(app_label or ""), str(object_name or "").lower())
     return MODEL_PAGE_HELP.get(
         key,
@@ -680,8 +727,22 @@ def admin_page_help(
     app_label: object = "",
     model_name: object = "",
 ) -> str:
-    """Return concise help for model, app, index, and account utility pages."""
+    """Return concise help for model, app, index, and account utility pages.
 
+    Parameters
+    ----------
+    path : object, default=''
+        The filesystem path to read, validate, or write.
+    app_label : object, default=''
+        The human-readable app label shown to authorized readers.
+    model_name : object, default=''
+        The human-readable model name shown to authorized readers.
+
+    Returns
+    -------
+    str
+        The normalized text for admin page help.
+    """
     normalized_app = str(app_label or "")
     normalized_model = str(model_name or "")
     normalized_path = str(path or "")

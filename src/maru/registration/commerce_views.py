@@ -165,6 +165,29 @@ def registration_commerce_workspace(
     series_slug: str,
     edition_slug: str,
 ) -> TemplateResponse:
+    """Return registration commerce workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    TemplateResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     edition = _edition(
         organization_slug=organization_slug,
         series_slug=series_slug,
@@ -207,6 +230,26 @@ def adjust_registration_capacity_page(
     edition_slug: str,
     product_id: UUID | None = None,
 ) -> HttpResponse:
+    """Adjust registration capacity page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    product_id : UUID | None, default=None
+        The identifier of the product.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     edition = _edition(
         organization_slug=organization_slug,
         series_slug=series_slug,
@@ -223,13 +266,13 @@ def adjust_registration_capacity_page(
             edition_id=edition.id,
             product_id=product.id if product is not None else None,
             actor=_actor(request),
-            new_capacity=cast(int, form.cleaned_data["new_capacity"]),
-            reason=cast(str, form.cleaned_data["reason"]),
+            new_capacity=cast("int", form.cleaned_data["new_capacity"]),
+            reason=cast("str", form.cleaned_data["reason"]),
             expected_control_version=cast(
-                int,
+                "int",
                 form.cleaned_data["expected_control_version"],
             ),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             source_channel="web",
         )
@@ -254,6 +297,31 @@ def offer_waitlist_batch_page(
     edition_slug: str,
     product_id: UUID,
 ) -> HttpResponse:
+    """Return offer waitlist batch page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    product_id : UUID
+        The identifier of the product.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     edition = _edition(
         organization_slug=organization_slug,
         series_slug=series_slug,
@@ -272,13 +340,13 @@ def offer_waitlist_batch_page(
             edition_id=edition.id,
             product_id=product.id,
             actor=_actor(request),
-            batch_size=cast(int, form.cleaned_data["batch_size"]),
-            reason=cast(str, form.cleaned_data["reason"]),
+            batch_size=cast("int", form.cleaned_data["batch_size"]),
+            reason=cast("str", form.cleaned_data["reason"]),
             expected_control_version=cast(
-                int,
+                "int",
                 form.cleaned_data["expected_control_version"],
             ),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             source_channel="web",
         )

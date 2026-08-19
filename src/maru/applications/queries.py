@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.db.models import Prefetch
 from django.utils import timezone
@@ -23,6 +23,9 @@ from maru.authorization.policy import (
 )
 from maru.events.models import EventEdition
 from maru.identity.models import Account
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 MAX_REVIEW_QUEUE = 500
 MAX_PERSONAL_EDITION_CANDIDATES = 500
@@ -99,8 +102,19 @@ def _authorized_self(
 def authorize_application_edition_api_scope(
     *, actor: Account, organization_id: UUID, edition_id: UUID, capability_code: str
 ) -> None:
-    """Authorize an exact edition route before an API adapter parses input."""
+    """Authorize an exact edition route before an API adapter parses input.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    capability_code : str
+        The stable capability code required by the operation.
+    """
     _authorized_edition(
         actor=actor,
         organization_id=organization_id,
@@ -112,8 +126,19 @@ def authorize_application_edition_api_scope(
 def authorize_application_self_api_scope(
     *, actor: Account, organization_id: UUID, edition_id: UUID, capability_code: str
 ) -> None:
-    """Authorize an exact self route before an API adapter parses input."""
+    """Authorize an exact self route before an API adapter parses input.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    capability_code : str
+        The stable capability code required by the operation.
+    """
     _authorized_self(
         actor=actor,
         organization_id=organization_id,
@@ -129,8 +154,24 @@ def authorize_application_self_submission_api_scope(
     edition_id: UUID,
     submission_id: UUID,
 ) -> None:
-    """Authorize exact applicant ownership without loading answer projections."""
+    """Authorize exact applicant ownership without loading answer projections.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    submission_id : UUID
+        The submission identifier within the requested scope.
+
+    Raises
+    ------
+    ApplicationAuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     _authorized_self(
         actor=actor,
         organization_id=organization_id,
@@ -153,8 +194,24 @@ def authorize_application_review_submission_api_scope(
     edition_id: UUID,
     submission_id: UUID,
 ) -> None:
-    """Authorize exact reviewer assignment without loading sensitive answers."""
+    """Authorize exact reviewer assignment without loading sensitive answers.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    submission_id : UUID
+        The submission identifier within the requested scope.
+
+    Raises
+    ------
+    ApplicationAuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     _authorized_edition(
         actor=actor,
         organization_id=organization_id,
@@ -189,6 +246,22 @@ def authorize_application_review_submission_api_scope(
 def definition_workspace(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[ApplicationDefinition, ...]:
+    """Return definition workspace visible to the caller.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    tuple[ApplicationDefinition, ...]
+        The authorized definition workspace records in deterministic order.
+    """
     _authorized_edition(
         actor=actor,
         organization_id=organization_id,
@@ -217,6 +290,29 @@ def definition_detail(
     edition_id: UUID,
     definition_id: UUID,
 ) -> ApplicationDefinition:
+    """Return definition detail visible to the caller.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+
+    Returns
+    -------
+    ApplicationDefinition
+        The authorized ApplicationDefinition visible within the requested scope.
+
+    Raises
+    ------
+    ApplicationAuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     _authorized_edition(
         actor=actor,
         organization_id=organization_id,
@@ -246,6 +342,22 @@ def definition_detail(
 def available_applications(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[ApplicationDefinition, ...]:
+    """Return available applications visible to the caller.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    tuple[ApplicationDefinition, ...]
+        The available applications.
+    """
     _authorized_self(
         actor=actor, organization_id=organization_id, edition_id=edition_id
     )
@@ -271,6 +383,22 @@ def available_applications(
 def my_submissions(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[ApplicationSubmission, ...]:
+    """Return my submissions visible to the caller.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    tuple[ApplicationSubmission, ...]
+        The authorized my submissions records in deterministic order.
+    """
     _authorized_self(
         actor=actor, organization_id=organization_id, edition_id=edition_id
     )
@@ -299,6 +427,29 @@ def my_submission_detail(
     edition_id: UUID,
     submission_id: UUID,
 ) -> ApplicationSubmission:
+    """Return my submission detail visible to the caller.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+
+    Returns
+    -------
+    ApplicationSubmission
+        The authorized my submission detail records in deterministic order.
+
+    Raises
+    ------
+    ApplicationAuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     _authorized_self(
         actor=actor,
         organization_id=organization_id,
@@ -328,8 +479,23 @@ def my_submission_detail(
 
 
 def my_application_editions(*, actor: Account) -> tuple[EventEdition, ...]:
-    """Discover personal application editions before an admin context exists."""
+    """Discover personal application editions before an admin context exists.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+
+    Returns
+    -------
+    tuple[EventEdition, ...]
+        The matching my application editions records in deterministic order.
+
+    Raises
+    ------
+    ApplicationAuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     if not Account.objects.filter(
         id=actor.id,
         is_active=True,
@@ -416,6 +582,22 @@ def my_application_editions(*, actor: Account) -> tuple[EventEdition, ...]:
 def review_queue(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[ApplicationSubmission, ...]:
+    """Return review queue visible to the caller.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    tuple[ApplicationSubmission, ...]
+        The authorized review queue records in deterministic order.
+    """
     _authorized_edition(
         actor=actor,
         organization_id=organization_id,
@@ -476,6 +658,29 @@ def review_submission_detail(
     edition_id: UUID,
     submission_id: UUID,
 ) -> ApplicationSubmission:
+    """Return review submission detail visible to the caller.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+
+    Returns
+    -------
+    ApplicationSubmission
+        The authorized ApplicationSubmission visible within the requested scope.
+
+    Raises
+    ------
+    ApplicationAuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     _authorized_edition(
         actor=actor,
         organization_id=organization_id,

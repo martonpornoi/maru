@@ -5,6 +5,7 @@ import inspect
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Never
 
 from django.apps import apps
 from django.db import migrations
@@ -268,7 +269,7 @@ def test_current_session_readiness_fails_closed_on_probe_error(
         lambda: SimpleNamespace(ready=True),
     )
 
-    def fail_probe(**_kwargs):
+    def fail_probe(**_kwargs) -> Never:
         raise readiness.RuntimeDatabaseRoleProbeError("invalid probe shape")
 
     monkeypatch.setattr(readiness, "probe_runtime_database_role_safety", fail_probe)
@@ -277,7 +278,7 @@ def test_current_session_readiness_fails_closed_on_probe_error(
 
 
 def test_readiness_report_minimizes_catalog_contract_errors(monkeypatch) -> None:
-    def fail_catalog():
+    def fail_catalog() -> Never:
         raise RuntimeError("private catalog detail")
 
     monkeypatch.setattr(readiness, "inspect_logistics_production_catalog", fail_catalog)

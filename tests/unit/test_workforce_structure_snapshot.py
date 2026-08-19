@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
@@ -12,6 +12,9 @@ from maru.workforce.structure_snapshot import (
     StructureSnapshotRead,
     load_version_fenced_snapshot,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 def test_absent_to_present_probe_reloads_the_whole_snapshot_once(

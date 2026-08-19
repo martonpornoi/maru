@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import asdict
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 from uuid import UUID, uuid4
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -18,7 +17,6 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
 from rest_framework.permissions import AllowAny
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -107,6 +105,11 @@ from .services import (
     withdraw_venue_booking_publication,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from rest_framework.request import Request
+
 IDEMPOTENCY_HEADER = "Idempotency-Key"
 MAX_IDEMPOTENCY_HEADER_LENGTH = 64
 CANONICAL_UUID_PATTERN = (
@@ -143,7 +146,7 @@ class _CompleteBookingPatchSchema(AutoSchema):
         try:
             self.method = "PUT"
             return cast(
-                tuple[dict[str, Any] | None, bool],
+                "tuple[dict[str, Any] | None, bool]",
                 super()._get_request_for_media_type(  # type: ignore[no-untyped-call]
                     serializer, direction
                 ),
@@ -153,13 +156,22 @@ class _CompleteBookingPatchSchema(AutoSchema):
 
 
 class VenueConflict(APIException):
+    """Signal venue conflict."""
+
     status_code = status.HTTP_409_CONFLICT
     default_detail = "The venue operation conflicts with current state."
     default_code = "venue_conflict"
 
     def __init__(self, *, code: str) -> None:
+        """Initialize the VenueConflict instance.
+
+        Parameters
+        ----------
+        code : str
+            The stable domain code to resolve or validate.
+        """
         super().__init__(
-            detail=cast(Any, {"detail": self.default_detail, "code": code}),
+            detail=cast("Any", {"detail": self.default_detail, "code": code}),
             code=code,
         )
 
@@ -279,7 +291,7 @@ def _validated[Payload: dict[str, object]](
     serializer = serializer_class(data=request.data)
     reject_unknown_fields(request.data, allowed_fields=frozenset(serializer.fields))
     serializer.is_valid(raise_exception=True)
-    return cast(Payload, serializer.validated_data)
+    return cast("Payload", serializer.validated_data)
 
 
 def _django_validation(error: DjangoValidationError) -> Never:
@@ -331,14 +343,16 @@ def _result_response(result: Any, *, created: bool = False) -> Response:
 
 def _booking_envelope(values: dict[str, object]) -> VenueBookingEnvelope:
     return VenueBookingEnvelope(
-        setup_starts_at=cast(Any, values["setup_starts_at"]),
-        effective_starts_at=cast(Any, values["effective_starts_at"]),
-        effective_ends_at=cast(Any, values["effective_ends_at"]),
-        teardown_ends_at=cast(Any, values["teardown_ends_at"]),
+        setup_starts_at=cast("Any", values["setup_starts_at"]),
+        effective_starts_at=cast("Any", values["effective_starts_at"]),
+        effective_ends_at=cast("Any", values["effective_ends_at"]),
+        teardown_ends_at=cast("Any", values["teardown_ends_at"]),
     )
 
 
 class PublicVenueScheduleView(APIView):
+    """Expose public venue schedule through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -348,13 +362,29 @@ class PublicVenueScheduleView(APIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List public schedule.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         reject_unknown_fields(request.query_params, allowed_fields=frozenset())
         projection = public_schedule_for_edition(
             organization_id=organization_id,
             edition_id=edition_id,
         )
         return Response(
-            PublicVenueScheduleItemSerializer(cast(Any, projection), many=True).data
+            PublicVenueScheduleItemSerializer(cast("Any", projection), many=True).data
         )
 
 
@@ -364,6 +394,8 @@ class PrivateVenueAPIView(APIView):
 
 
 class MyMaruVenueScheduleView(PrivateVenueAPIView):
+    """Expose my maru venue schedule through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_list_my_schedule",
         responses={200: PublicVenueScheduleItemSerializer(many=True)},
@@ -371,6 +403,24 @@ class MyMaruVenueScheduleView(PrivateVenueAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List my schedule.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _account(request)
         _execute(
             lambda: authorize_my_maru_schedule_scope(
@@ -388,16 +438,34 @@ class MyMaruVenueScheduleView(PrivateVenueAPIView):
             )
         )
         return Response(
-            PublicVenueScheduleItemSerializer(cast(Any, projection), many=True).data
+            PublicVenueScheduleItemSerializer(cast("Any", projection), many=True).data
         )
 
 
 class VenuePropertyCollectionView(PrivateVenueAPIView):
+    """Expose venue property collection through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_list_properties",
         responses={200: VenuePropertySummarySerializer(many=True)},
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
+        """List the properties.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -412,7 +480,7 @@ class VenuePropertyCollectionView(PrivateVenueAPIView):
             source_channel="api",
         )
         return Response(
-            VenuePropertySummarySerializer(cast(Any, projection), many=True).data
+            VenuePropertySummarySerializer(cast("Any", projection), many=True).data
         )
 
     @extend_schema(
@@ -425,6 +493,22 @@ class VenuePropertyCollectionView(PrivateVenueAPIView):
         },
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
+        """Create the property.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -453,6 +537,8 @@ class VenuePropertyCollectionView(PrivateVenueAPIView):
 
 
 class VenuePropertyDetailView(PrivateVenueAPIView):
+    """Expose venue property detail through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_update_property",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -462,6 +548,24 @@ class VenuePropertyDetailView(PrivateVenueAPIView):
     def patch(
         self, request: Request, organization_id: UUID, property_id: UUID
     ) -> Response:
+        """Update the property.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        property_id : UUID
+            The property identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -478,7 +582,7 @@ class VenuePropertyDetailView(PrivateVenueAPIView):
                 actor=actor,
                 organization_id=organization_id,
                 property_id=property_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 changes=changes,
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
@@ -490,6 +594,8 @@ class VenuePropertyDetailView(PrivateVenueAPIView):
 
 
 class VenueSpaceCatalogCollectionView(PrivateVenueAPIView):
+    """Expose venue space catalog collection through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_create_space_path",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -502,6 +608,24 @@ class VenueSpaceCatalogCollectionView(PrivateVenueAPIView):
     def post(
         self, request: Request, organization_id: UUID, property_id: UUID
     ) -> Response:
+        """Create the space path.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        property_id : UUID
+            The property identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -518,10 +642,10 @@ class VenueSpaceCatalogCollectionView(PrivateVenueAPIView):
             space_kind=str(values["space_kind"]),
             configuration_code=str(values["configuration_code"]),
             configuration_name=str(values["configuration_name"]),
-            seated_capacity=cast(int, values["seated_capacity"]),
-            standing_capacity=cast(int, values["standing_capacity"]),
-            table_capacity=cast(int, values["table_capacity"]),
-            fire_capacity=cast(int, values["fire_capacity"]),
+            seated_capacity=cast("int", values["seated_capacity"]),
+            standing_capacity=cast("int", values["standing_capacity"]),
+            table_capacity=cast("int", values["table_capacity"]),
+            fire_capacity=cast("int", values["fire_capacity"]),
             public_description=str(values.get("public_description", "")),
             accessibility_features=str(values.get("accessibility_features", "")),
             known_barriers=str(values.get("known_barriers", "")),
@@ -543,6 +667,8 @@ class VenueSpaceCatalogCollectionView(PrivateVenueAPIView):
 
 
 class VenueCombinationCollectionView(PrivateVenueAPIView):
+    """Expose venue combination collection through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_create_space_combination",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -555,6 +681,24 @@ class VenueCombinationCollectionView(PrivateVenueAPIView):
     def post(
         self, request: Request, organization_id: UUID, property_id: UUID
     ) -> Response:
+        """Create the space combination.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        property_id : UUID
+            The property identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -568,7 +712,7 @@ class VenueCombinationCollectionView(PrivateVenueAPIView):
                 property_id=property_id,
                 code=str(values["code"]),
                 name=str(values["name"]),
-                member_space_ids=cast(list[UUID], values["member_space_ids"]),
+                member_space_ids=cast("list[UUID]", values["member_space_ids"]),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),
@@ -579,6 +723,8 @@ class VenueCombinationCollectionView(PrivateVenueAPIView):
 
 
 class VenueMediaCollectionView(PrivateVenueAPIView):
+    """Expose venue media collection through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_add_property_media",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -591,6 +737,24 @@ class VenueMediaCollectionView(PrivateVenueAPIView):
     def post(
         self, request: Request, organization_id: UUID, property_id: UUID
     ) -> Response:
+        """Add the property media.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        property_id : UUID
+            The property identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -608,7 +772,7 @@ class VenueMediaCollectionView(PrivateVenueAPIView):
                 license_basis=str(values["license_basis"]),
                 usage_scope=str(values["usage_scope"]),
                 attribution=str(values.get("attribution", "")),
-                expires_at=cast(Any, values.get("expires_at")),
+                expires_at=cast("Any", values.get("expires_at")),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),
@@ -619,6 +783,8 @@ class VenueMediaCollectionView(PrivateVenueAPIView):
 
 
 class VenueMediaApproveView(PrivateVenueAPIView):
+    """Expose venue media approve through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_approve_property_media",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -632,6 +798,26 @@ class VenueMediaApproveView(PrivateVenueAPIView):
         property_id: UUID,
         media_id: UUID,
     ) -> Response:
+        """Approve the property media.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        property_id : UUID
+            The property identifier within the requested scope.
+        media_id : UUID
+            The media identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -644,7 +830,7 @@ class VenueMediaApproveView(PrivateVenueAPIView):
                 organization_id=organization_id,
                 property_id=property_id,
                 media_id=media_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 public_reference=str(values["public_reference"]),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
@@ -656,6 +842,8 @@ class VenueMediaApproveView(PrivateVenueAPIView):
 
 
 class VenueLayoutCollectionView(PrivateVenueAPIView):
+    """Expose venue layout collection through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_add_space_layout",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -666,6 +854,24 @@ class VenueLayoutCollectionView(PrivateVenueAPIView):
         },
     )
     def post(self, request: Request, organization_id: UUID, space_id: UUID) -> Response:
+        """Add the space layout.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        space_id : UUID
+            The space identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -678,7 +884,7 @@ class VenueLayoutCollectionView(PrivateVenueAPIView):
                 organization_id=organization_id,
                 space_id=space_id,
                 layout_code=str(values["layout_code"]),
-                version=cast(int, values["version"]),
+                version=cast("int", values["version"]),
                 title=str(values["title"]),
                 visibility=str(values["visibility"]),
                 source_reference=str(values["source_reference"]),
@@ -694,6 +900,8 @@ class VenueLayoutCollectionView(PrivateVenueAPIView):
 
 
 class VenueLayoutApproveView(PrivateVenueAPIView):
+    """Expose venue layout approve through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_approve_space_layout",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -703,6 +911,24 @@ class VenueLayoutApproveView(PrivateVenueAPIView):
     def post(
         self, request: Request, organization_id: UUID, layout_id: UUID
     ) -> Response:
+        """Approve the space layout.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        layout_id : UUID
+            The layout identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -714,7 +940,7 @@ class VenueLayoutApproveView(PrivateVenueAPIView):
                 actor=actor,
                 organization_id=organization_id,
                 layout_id=layout_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 approved_reference=str(values.get("approved_reference", "")),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
@@ -726,6 +952,8 @@ class VenueLayoutApproveView(PrivateVenueAPIView):
 
 
 class VenueRoomTypeCollectionView(PrivateVenueAPIView):
+    """Expose venue room type collection through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_create_accommodation_room_type",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -738,6 +966,24 @@ class VenueRoomTypeCollectionView(PrivateVenueAPIView):
     def post(
         self, request: Request, organization_id: UUID, property_id: UUID
     ) -> Response:
+        """Create the accommodation room type.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        property_id : UUID
+            The property identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -753,8 +999,8 @@ class VenueRoomTypeCollectionView(PrivateVenueAPIView):
                 public_name=str(values["public_name"]),
                 description=str(values.get("description", "")),
                 accessible_features=str(values.get("accessible_features", "")),
-                minimum_occupants=cast(int, values["minimum_occupants"]),
-                maximum_occupants=cast(int, values["maximum_occupants"]),
+                minimum_occupants=cast("int", values["minimum_occupants"]),
+                maximum_occupants=cast("int", values["maximum_occupants"]),
                 provider_reference=str(values.get("provider_reference", "")),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
@@ -766,6 +1012,8 @@ class VenueRoomTypeCollectionView(PrivateVenueAPIView):
 
 
 class VenueNightInventoryView(PrivateVenueAPIView):
+    """Expose venue night inventory through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_set_accommodation_night_inventory",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -775,6 +1023,24 @@ class VenueNightInventoryView(PrivateVenueAPIView):
     def put(
         self, request: Request, organization_id: UUID, room_type_id: UUID
     ) -> Response:
+        """Set the accommodation night inventory.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        room_type_id : UUID
+            The room type identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -786,11 +1052,11 @@ class VenueNightInventoryView(PrivateVenueAPIView):
                 actor=actor,
                 organization_id=organization_id,
                 room_type_id=room_type_id,
-                night=cast(Any, values["night"]),
-                room_capacity=cast(int, values["room_capacity"]),
-                release_at=cast(Any, values["release_at"]),
+                night=cast("Any", values["night"]),
+                room_capacity=cast("int", values["room_capacity"]),
+                release_at=cast("Any", values["release_at"]),
                 provider_reference=str(values.get("provider_reference", "")),
-                expected_version=cast(int | None, values.get("expected_version")),
+                expected_version=cast("int | None", values.get("expected_version")),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),
@@ -801,6 +1067,8 @@ class VenueNightInventoryView(PrivateVenueAPIView):
 
 
 class VenueWorkspaceCollectionView(PrivateVenueAPIView):
+    """Expose venue workspace collection through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_list_edition_workspace",
         responses={200: VenueWorkspaceSpaceSerializer(many=True)},
@@ -808,6 +1076,24 @@ class VenueWorkspaceCollectionView(PrivateVenueAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the edition workspace.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_edition(
             request,
             organization_id=organization_id,
@@ -821,7 +1107,7 @@ class VenueWorkspaceCollectionView(PrivateVenueAPIView):
             edition_id=edition_id,
         )
         return Response(
-            VenueWorkspaceSpaceSerializer(cast(Any, projection), many=True).data
+            VenueWorkspaceSpaceSerializer(cast("Any", projection), many=True).data
         )
 
     @extend_schema(
@@ -836,6 +1122,24 @@ class VenueWorkspaceCollectionView(PrivateVenueAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Select the property for edition.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_edition(
             request,
             organization_id=organization_id,
@@ -848,9 +1152,9 @@ class VenueWorkspaceCollectionView(PrivateVenueAPIView):
                 actor=actor,
                 organization_id=organization_id,
                 edition_id=edition_id,
-                property_id=cast(UUID, values["property_id"]),
+                property_id=cast("UUID", values["property_id"]),
                 responsible_department_id=cast(
-                    UUID, values["responsible_department_id"]
+                    "UUID", values["responsible_department_id"]
                 ),
                 local_name=str(values["local_name"]),
                 public_description_override=str(
@@ -868,6 +1172,8 @@ class VenueWorkspaceCollectionView(PrivateVenueAPIView):
 
 
 class VenueSpaceSelectionCollectionView(PrivateVenueAPIView):
+    """Expose venue space selection collection through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_select_space_for_edition",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -880,6 +1186,24 @@ class VenueSpaceSelectionCollectionView(PrivateVenueAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Select the space for edition.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_edition(
             request,
             organization_id=organization_id,
@@ -887,14 +1211,14 @@ class VenueSpaceSelectionCollectionView(PrivateVenueAPIView):
             capability_code=EDITION_SELECT_CAPABILITY,
         )
         values = _validated(request, VenueSpaceSelectionCreateSerializer)
-        raw_capacity = cast(dict[str, object] | None, values.get("capacity"))
+        raw_capacity = cast("dict[str, object] | None", values.get("capacity"))
         capacity = (
             VenueCapacityProfile(
                 configuration_name=str(raw_capacity["configuration_name"]),
-                seated_capacity=cast(int, raw_capacity["seated_capacity"]),
-                standing_capacity=cast(int, raw_capacity["standing_capacity"]),
-                table_capacity=cast(int, raw_capacity["table_capacity"]),
-                fire_capacity=cast(int, raw_capacity["fire_capacity"]),
+                seated_capacity=cast("int", raw_capacity["seated_capacity"]),
+                standing_capacity=cast("int", raw_capacity["standing_capacity"]),
+                table_capacity=cast("int", raw_capacity["table_capacity"]),
+                fire_capacity=cast("int", raw_capacity["fire_capacity"]),
             )
             if raw_capacity is not None
             else None
@@ -904,13 +1228,13 @@ class VenueSpaceSelectionCollectionView(PrivateVenueAPIView):
                 actor=actor,
                 organization_id=organization_id,
                 edition_id=edition_id,
-                venue_selection_id=cast(UUID, values["venue_selection_id"]),
-                source_space_id=cast(UUID | None, values.get("source_space_id")),
+                venue_selection_id=cast("UUID", values["venue_selection_id"]),
+                source_space_id=cast("UUID | None", values.get("source_space_id")),
                 source_combination_id=cast(
-                    UUID | None, values.get("source_combination_id")
+                    "UUID | None", values.get("source_combination_id")
                 ),
                 selected_configuration_id=cast(
-                    UUID | None, values.get("selected_configuration_id")
+                    "UUID | None", values.get("selected_configuration_id")
                 ),
                 local_name=str(values["local_name"]),
                 capacity=capacity,
@@ -926,6 +1250,8 @@ class VenueSpaceSelectionCollectionView(PrivateVenueAPIView):
 
 
 class VenueSpaceScheduleView(PrivateVenueAPIView):
+    """Expose venue space schedule through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_retrieve_space_schedule",
         responses={200: VenueSpaceScheduleSerializer},
@@ -937,6 +1263,26 @@ class VenueSpaceScheduleView(PrivateVenueAPIView):
         edition_id: UUID,
         space_selection_id: UUID,
     ) -> Response:
+        """Retrieve the space schedule.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        space_selection_id : UUID
+            The space selection identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_space(
             request,
             organization_id=organization_id,
@@ -954,10 +1300,12 @@ class VenueSpaceScheduleView(PrivateVenueAPIView):
             correlation_id=_correlation_id(request),
             source_channel="api",
         )
-        return Response(VenueSpaceScheduleSerializer(cast(Any, projection)).data)
+        return Response(VenueSpaceScheduleSerializer(cast("Any", projection)).data)
 
 
 class VenueSpaceAvailabilityView(PrivateVenueAPIView):
+    """Expose venue space availability through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_set_space_availability",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -971,6 +1319,26 @@ class VenueSpaceAvailabilityView(PrivateVenueAPIView):
         edition_id: UUID,
         space_selection_id: UUID,
     ) -> Response:
+        """Set the space availability.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        space_selection_id : UUID
+            The space selection identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_space(
             request,
             organization_id=organization_id,
@@ -981,11 +1349,11 @@ class VenueSpaceAvailabilityView(PrivateVenueAPIView):
         values = _validated(request, VenueAvailabilitySetSerializer)
         intervals = tuple(
             VenueAvailabilityInterval(
-                starts_at=cast(Any, row["starts_at"]),
-                ends_at=cast(Any, row["ends_at"]),
+                starts_at=cast("Any", row["starts_at"]),
+                ends_at=cast("Any", row["ends_at"]),
                 opening_restriction=str(row.get("opening_restriction", "")),
             )
-            for row in cast(list[dict[str, object]], values["intervals"])
+            for row in cast("list[dict[str, object]]", values["intervals"])
         )
         result = _execute(
             lambda: set_edition_space_availability(
@@ -993,7 +1361,7 @@ class VenueSpaceAvailabilityView(PrivateVenueAPIView):
                 organization_id=organization_id,
                 edition_id=edition_id,
                 space_selection_id=space_selection_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 intervals=intervals,
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
@@ -1005,6 +1373,8 @@ class VenueSpaceAvailabilityView(PrivateVenueAPIView):
 
 
 class VenueBookingCollectionView(PrivateVenueAPIView):
+    """Expose venue booking collection through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_create_booking",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -1021,6 +1391,26 @@ class VenueBookingCollectionView(PrivateVenueAPIView):
         edition_id: UUID,
         space_selection_id: UUID,
     ) -> Response:
+        """Create the booking.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        space_selection_id : UUID
+            The space selection identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_space(
             request,
             organization_id=organization_id,
@@ -1041,9 +1431,9 @@ class VenueBookingCollectionView(PrivateVenueAPIView):
                 public_title=str(values.get("public_title", "")),
                 public_description=str(values.get("public_description", "")),
                 capacity_mode=str(values["capacity_mode"]),
-                expected_attendance=cast(int, values["expected_attendance"]),
+                expected_attendance=cast("int", values["expected_attendance"]),
                 envelope=_booking_envelope(values),
-                public_layout_id=cast(UUID | None, values.get("public_layout_id")),
+                public_layout_id=cast("UUID | None", values.get("public_layout_id")),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),
@@ -1054,6 +1444,8 @@ class VenueBookingCollectionView(PrivateVenueAPIView):
 
 
 class VenueBookingDetailView(PrivateVenueAPIView):
+    """Expose venue booking detail through the HTTP API."""
+
     schema = _CompleteBookingPatchSchema()
 
     @extend_schema(
@@ -1070,6 +1462,28 @@ class VenueBookingDetailView(PrivateVenueAPIView):
         space_selection_id: UUID,
         booking_id: UUID,
     ) -> Response:
+        """Reschedule the booking.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        space_selection_id : UUID
+            The space selection identifier within the requested scope.
+        booking_id : UUID
+            The booking identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_space(
             request,
             organization_id=organization_id,
@@ -1085,16 +1499,16 @@ class VenueBookingDetailView(PrivateVenueAPIView):
                 edition_id=edition_id,
                 space_selection_id=space_selection_id,
                 booking_id=booking_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 kind=str(values["kind"]),
                 external_reference=str(values.get("external_reference", "")),
                 internal_title=str(values["internal_title"]),
                 public_title=str(values.get("public_title", "")),
                 public_description=str(values.get("public_description", "")),
                 capacity_mode=str(values["capacity_mode"]),
-                expected_attendance=cast(int, values["expected_attendance"]),
+                expected_attendance=cast("int", values["expected_attendance"]),
                 envelope=_booking_envelope(values),
-                public_layout_id=cast(UUID | None, values.get("public_layout_id")),
+                public_layout_id=cast("UUID | None", values.get("public_layout_id")),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),
@@ -1105,6 +1519,8 @@ class VenueBookingDetailView(PrivateVenueAPIView):
 
 
 class VenueBookingCommandView(PrivateVenueAPIView):
+    """Expose venue booking command through the HTTP API."""
+
     @extend_schema(
         operation_id="venues_apply_booking_command",
         parameters=[_IDEMPOTENCY_PARAMETER, _BOOKING_ACTION_PARAMETER],
@@ -1120,6 +1536,35 @@ class VenueBookingCommandView(PrivateVenueAPIView):
         booking_id: UUID,
         action: str,
     ) -> Response:
+        """Apply the booking command.
+
+        Authenticated venue response boundary, including safe error responses.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        space_selection_id : UUID
+            The space selection identifier within the requested scope.
+        booking_id : UUID
+            The booking identifier within the requested scope.
+        action : str
+            The stable action code describing the requested transition.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         capability = (
             SPACE_PUBLISH_CAPABILITY
             if action in {"publish", "withdraw"}
@@ -1149,7 +1594,7 @@ class VenueBookingCommandView(PrivateVenueAPIView):
                 edition_id=edition_id,
                 space_selection_id=space_selection_id,
                 booking_id=booking_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),

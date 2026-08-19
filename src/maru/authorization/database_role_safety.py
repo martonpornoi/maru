@@ -8,10 +8,12 @@ that will run web and worker processes before those processes are started.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from django.db import connections
-from django.db.backends.base.base import BaseDatabaseWrapper
+
+if TYPE_CHECKING:
+    from django.db.backends.base.base import BaseDatabaseWrapper
 
 # Every non-trigger Maru function reachable from a current trigger or direct
 # runtime policy call.  Trigger functions themselves are invoked by PostgreSQL;
@@ -845,7 +847,61 @@ class RuntimeDatabaseRoleProbeError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class RuntimeDatabaseRoleSafety:
-    """Identifier-free result for one configured PostgreSQL runtime role."""
+    """Identifier-free result for one configured PostgreSQL runtime role.
+
+    Attributes
+    ----------
+    role_exists
+        The role exists retained in this immutable projection.
+    can_login
+        The can login retained in this immutable projection.
+    attributes_safe
+        The attributes safe retained in this immutable projection.
+    memberships_safe
+        The memberships safe retained in this immutable projection.
+    database_ownership_safe
+        The database ownership safe retained in this immutable projection.
+    user_schema_ownership_safe
+        The user schema ownership safe retained in this immutable projection.
+    user_relation_ownership_safe
+        The user relation ownership safe retained in this immutable projection.
+    user_function_ownership_safe
+        The user function ownership safe retained in this immutable projection.
+    database_privileges_safe
+        The database privileges safe retained in this immutable projection.
+    user_schema_privileges_safe
+        The user schema privileges safe retained in this immutable projection.
+    table_privileges_safe
+        The table privileges safe retained in this immutable projection.
+    parameter_privileges_safe
+        The parameter privileges safe retained in this immutable projection.
+    role_settings_safe
+        The role settings safe retained in this immutable projection.
+    session_replication_role_is_origin
+        The session replication role is origin retained in this immutable projection.
+    database_connect_available
+        The database connect available retained in this immutable projection.
+    user_schema_usage_available
+        The user schema usage available retained in this immutable projection.
+    required_relation_privileges_available
+        Whether every required relation privilege is available.
+    sequence_privileges_safe
+        The sequence privileges safe retained in this immutable projection.
+    required_sequence_privileges_available
+        Whether every required sequence privilege is available.
+    grant_options_safe
+        The grant options safe retained in this immutable projection.
+    function_execute_boundary_safe
+        The function execute boundary safe retained in this immutable projection.
+    required_function_execute_available
+        The required function execute available retained in this immutable projection.
+    current_user_matches
+        The current user matches retained in this immutable projection.
+    session_user_matches
+        The session user matches retained in this immutable projection.
+    authenticated_user_matches
+        The authenticated user matches retained in this immutable projection.
+    """
 
     role_exists: bool
     can_login: bool
@@ -875,8 +931,14 @@ class RuntimeDatabaseRoleSafety:
 
     @property
     def target_role_is_safe(self) -> bool:
-        """Return whether the named role is suitable for runtime use."""
+        """Return whether the named role is suitable for runtime use.
 
+        Returns
+        -------
+        bool
+            `True` when the named role is suitable for runtime use; otherwise
+            `False`.
+        """
         return all(
             (
                 self.role_exists,
@@ -906,8 +968,14 @@ class RuntimeDatabaseRoleSafety:
 
     @property
     def current_session_is_safe(self) -> bool:
-        """Return whether this connection is the proved runtime role."""
+        """Return whether this connection is the proved runtime role.
 
+        Returns
+        -------
+        bool
+            `True` when this connection is the proved runtime role; otherwise
+            `False`.
+        """
         return self.target_role_is_safe and all(
             (
                 self.current_user_matches,
@@ -927,8 +995,25 @@ def probe_runtime_database_role_safety(
     The role name, restricted relation profiles, and required function
     identities are bound query values.  The result intentionally contains no
     role, owner, relation, setting, ACL, or credential name.
-    """
 
+    Parameters
+    ----------
+    role_name : str
+        The human-readable role name shown to authorized readers.
+    using : str, default='default'
+        The Django database alias on which to perform the operation.
+
+    Returns
+    -------
+    RuntimeDatabaseRoleSafety
+        The RuntimeDatabaseRoleSafety produced by probe runtime database role
+        safety.
+
+    Raises
+    ------
+    RuntimeDatabaseRoleProbeError
+        If the operation encounters a runtime database role probe condition.
+    """
     database: BaseDatabaseWrapper = connections[using]
     with database.cursor() as cursor:
         cursor.execute(
@@ -952,4 +1037,4 @@ def probe_runtime_database_role_safety(
         raise RuntimeDatabaseRoleProbeError(
             "PostgreSQL returned an invalid runtime-role safety result."
         )
-    return RuntimeDatabaseRoleSafety(*cast(tuple[bool, ...], tuple(row)))
+    return RuntimeDatabaseRoleSafety(*cast("tuple[bool, ...]", tuple(row)))

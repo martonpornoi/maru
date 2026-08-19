@@ -33,11 +33,41 @@ class StrictBase10IntegerField(forms.Field):
         max_value: int | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the StrictBase10IntegerField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        min_value : int, default=0
+            The min value used to configure and validate this form.
+        max_value : int | None, default=None
+            The max value used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.min_value = min_value
         self.max_value = max_value
 
     def to_python(self, value: object) -> int | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        int | None
+            The canonical Python representation, or `None` for empty input.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if value in self.empty_values:
             return None
         if (
@@ -78,6 +108,23 @@ class CanonicalUUIDField(forms.Field):
     }
 
     def to_python(self, value: object) -> UUID | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        UUID | None
+            The canonical Python representation, or `None` for empty input.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if value in self.empty_values:
             return None
         if not isinstance(value, str) or _CANONICAL_UUID.fullmatch(value) is None:
@@ -106,6 +153,18 @@ class StrictInputForm(forms.Form):
     transport_field_names = frozenset({"csrfmiddlewaretoken"})
 
     def clean(self) -> dict[str, Any] | None:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            A mapping containing the resolved clean data.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         cleaned = super().clean()
         getlist = getattr(self.data, "getlist", None)
         if getlist is not None:
@@ -150,5 +209,14 @@ class HttpsURLField(forms.URLField):
     """Use Django 6's secure URL default explicitly on every supported version."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the HttpsURLField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("assume_scheme", "https")
         super().__init__(*args, **kwargs)

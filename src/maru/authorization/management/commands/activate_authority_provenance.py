@@ -25,8 +25,18 @@ logger = logging.getLogger(__name__)
 
 
 def _failure_code(error: Exception) -> str:
-    """Map private failures to a bounded operator-safe diagnostic category."""
+    """Map private failures to a bounded operator-safe diagnostic category.
 
+    Parameters
+    ----------
+    error : Exception
+        The error evaluated while failure code.
+
+    Returns
+    -------
+    str
+        The normalized text for failure code.
+    """
     if isinstance(error, Account.DoesNotExist):
         code = "actor_unavailable"
     elif isinstance(error, ProcessesStoppedAcknowledgementRequiredError):
@@ -56,12 +66,21 @@ def _failure_code(error: Exception) -> str:
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Activate exact authority lineage once, during an acknowledged "
         "stopped-process maintenance window."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--actor",
             required=True,
@@ -82,6 +101,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *_args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *_args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         correlation_id = uuid4()
         try:
             actor = Account.objects.get(email__iexact=str(options["actor"]).strip())

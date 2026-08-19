@@ -8,8 +8,7 @@ impersonated principal.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.utils import timezone
@@ -26,6 +25,10 @@ from maru.authorization.policy import (
     decide,
 )
 from maru.identity.models import Account
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
 
 MANAGE_ACCESS_CAPABILITY = "authorization.manage_roles"
 
@@ -53,7 +56,17 @@ _SCOPE_DEPTH = {
 
 @dataclass(frozen=True, slots=True)
 class AccessIntent:
-    """One code-owned action presented in a contextual access summary."""
+    """One code-owned action presented in a contextual access summary.
+
+    Attributes
+    ----------
+    capability_code
+        The stable capability code required by the operation.
+    label
+        The human-readable label shown to authorized readers.
+    requested_fields
+        The canonical requested fields included in the projection or mutation.
+    """
 
     capability_code: str
     label: str
@@ -62,6 +75,28 @@ class AccessIntent:
 
 @dataclass(frozen=True, slots=True)
 class EffectiveAccessAction:
+    """Describe effective access action.
+
+    Attributes
+    ----------
+    capability_code
+        The stable capability code required by the operation.
+    label
+        The human-readable label shown to authorized readers.
+    allowed
+        The allowed retained in this immutable projection.
+    permitted_fields
+        The canonical permitted fields included in the projection or mutation.
+    obligations
+        The obligations retained in this immutable projection.
+    reason_code
+        The stable reason code from the relevant closed catalog.
+    source_category
+        The source category retained in this immutable projection.
+    source_label
+        The human-readable source label shown to authorized readers.
+    """
+
     capability_code: str
     label: str
     allowed: bool
@@ -74,6 +109,20 @@ class EffectiveAccessAction:
 
 @dataclass(frozen=True, slots=True)
 class EffectiveAccessSummary:
+    """Describe effective access summary.
+
+    Attributes
+    ----------
+    scope_level
+        The scope level retained in this immutable projection.
+    scope_label
+        The disclosure-safe label for the resolved authorization scope.
+    can_manage_access
+        The can manage access retained in this immutable projection.
+    actions
+        The actions retained in this immutable projection.
+    """
+
     scope_level: str
     scope_label: str
     can_manage_access: bool
@@ -82,6 +131,30 @@ class EffectiveAccessSummary:
 
 @dataclass(frozen=True, slots=True)
 class PreviewCapability:
+    """Describe preview capability.
+
+    Attributes
+    ----------
+    capability_code
+        The stable capability code required by the operation.
+    label
+        The human-readable label shown to authorized readers.
+    description
+        The human-readable description shown to authorized readers.
+    source_category
+        The source category retained in this immutable projection.
+    source_label
+        The human-readable source label shown to authorized readers.
+    obligations
+        The obligations retained in this immutable projection.
+    visible_fields
+        The canonical visible fields included in the projection or mutation.
+    data_preview_available
+        The data preview available retained in this immutable projection.
+    disclosure_limited
+        The disclosure limited retained in this immutable projection.
+    """
+
     capability_code: str
     label: str
     description: str
@@ -95,6 +168,26 @@ class PreviewCapability:
 
 @dataclass(frozen=True, slots=True)
 class AccessPreviewResult:
+    """Describe access preview result.
+
+    Attributes
+    ----------
+    mode
+        The mode retained in this immutable projection.
+    subject_id
+        The subject identifier within the requested scope.
+    subject_label
+        The human-readable subject label shown to authorized readers.
+    scope_level
+        The scope level retained in this immutable projection.
+    evaluated_at
+        The timezone-aware timestamp for evaluated.
+    capabilities
+        The capabilities retained in this immutable projection.
+    disclosure_limited_count
+        The bounded number of disclosure limited records.
+    """
+
     mode: str
     subject_id: UUID
     subject_label: str
@@ -124,8 +217,26 @@ def compute_effective_access(
     intents: tuple[AccessIntent, ...],
     at: datetime | None = None,
 ) -> EffectiveAccessSummary:
-    """Compute one bounded UX-020 summary from canonical policy decisions."""
+    """Return compute effective access.
 
+    Parameters
+    ----------
+    principal : Account
+        The authenticated principal whose authority is evaluated.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    scope_label : str
+        The disclosure-safe label for the resolved authorization scope.
+    intents : tuple[AccessIntent, ...]
+        The intents evaluated while compute effective access.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    EffectiveAccessSummary
+        The resolved EffectiveAccessSummary for compute effective access.
+    """
     evaluation_time = at or timezone.now()
     actions: list[EffectiveAccessAction] = []
     for intent in intents:
@@ -237,8 +348,29 @@ def preview_exact_person_access(
     target: ResolvedAuthorizationTarget,
     at: datetime | None = None,
 ) -> AccessPreviewResult:
-    """Evaluate a real active person without changing the authenticated session."""
+    """Evaluate a real active person without changing the authenticated session.
 
+    Parameters
+    ----------
+    viewer : Account
+        The viewer evaluated while preview exact person access.
+    person : Account
+        The person whose display-safe projection is requested.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    AccessPreviewResult
+        The resolved AccessPreviewResult for preview exact person access.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     evaluation_time = at or timezone.now()
     persisted_viewer = _require_preview_authority(
         viewer=viewer,
@@ -293,8 +425,29 @@ def preview_role_bundle_access(
     target: ResolvedAuthorizationTarget,
     at: datetime | None = None,
 ) -> AccessPreviewResult:
-    """Evaluate one immutable role version without issuing an assignment."""
+    """Evaluate one immutable role version without issuing an assignment.
 
+    Parameters
+    ----------
+    viewer : Account
+        The viewer evaluated while preview role bundle access.
+    role_bundle : RoleBundle
+        The role bundle evaluated while preview role bundle access.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    AccessPreviewResult
+        The resolved AccessPreviewResult for preview role bundle access.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     evaluation_time = at or timezone.now()
     persisted_viewer = _require_preview_authority(
         viewer=viewer,

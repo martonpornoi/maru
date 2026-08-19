@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Any, cast
 
 from drf_spectacular.extensions import OpenApiSerializerExtension
@@ -51,6 +50,8 @@ from maru.registration.setup_section_commands import (
 )
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from drf_spectacular.openapi import AutoSchema
     from drf_spectacular.utils import Direction
 
@@ -72,7 +73,7 @@ class _RegistrationDefinitionClosedRequestSchema(OpenApiSerializerExtension):
             bypass_extensions=True,
         )
         schema["additionalProperties"] = False
-        return cast(dict[str, Any], schema)
+        return cast("dict[str, Any]", schema)
 
 
 class _RegistrationSetupStartClosedRequestSchema(OpenApiSerializerExtension):
@@ -92,10 +93,12 @@ class _RegistrationSetupStartClosedRequestSchema(OpenApiSerializerExtension):
             bypass_extensions=True,
         )
         schema["additionalProperties"] = False
-        return cast(dict[str, Any], schema)
+        return cast("dict[str, Any]", schema)
 
 
 class RegistrationSetupStartCommandSerializer(StrictInputSerializer):
+    """Serialize and validate registration setup start command data."""
+
     source_kind = serializers.ChoiceField(choices=RegistrationSetupOrigin.values)
     source_id = serializers.UUIDField(required=False, allow_null=True, default=None)
     name = serializers.CharField(
@@ -158,6 +161,23 @@ class RegistrationSetupStartCommandSerializer(StrictInputSerializer):
     )
 
     def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         attrs = super().validate(attrs)
         source_kind = attrs["source_kind"]
         source_id = attrs.get("source_id")
@@ -191,14 +211,14 @@ class RegistrationSetupStartCommandSerializer(StrictInputSerializer):
                         ),
                     )
                 )
-        opens_at = cast(datetime | None, attrs.get("opens_at"))
-        closes_at = cast(datetime | None, attrs.get("closes_at"))
+        opens_at = cast("datetime | None", attrs.get("opens_at"))
+        closes_at = cast("datetime | None", attrs.get("closes_at"))
         if opens_at is not None and closes_at is not None and closes_at <= opens_at:
             raise serializers.ValidationError(
                 {"closes_at": "Closing time must be after opening time."}
             )
-        capacity = cast(int | None, attrs.get("capacity"))
-        ceiling = cast(int | None, attrs.get("capacity_ceiling"))
+        capacity = cast("int | None", attrs.get("capacity"))
+        ceiling = cast("int | None", attrs.get("capacity_ceiling"))
         if capacity is not None and ceiling is not None and ceiling < capacity:
             raise serializers.ValidationError(
                 {"capacity_ceiling": "The hard ceiling cannot be below capacity."}
@@ -235,6 +255,8 @@ class RegistrationSetupSourceOptionSerializer(
 class RegistrationSetupStartWorkspaceSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate registration setup start workspace data."""
+
     organization_id = serializers.UUIDField()
     series_id = serializers.UUIDField()
     edition_id = serializers.UUIDField()
@@ -248,6 +270,8 @@ class RegistrationSetupStartWorkspaceSerializer(
 class RegistrationSetupStartResultSerializer(
     serializers.Serializer[RegistrationSetupStartResult]
 ):
+    """Serialize and validate registration setup start result data."""
+
     setup_id = serializers.UUIDField()
     configuration_id = serializers.UUIDField()
     receipt_id = serializers.UUIDField()
@@ -551,6 +575,8 @@ class _ProfileFieldInput(_CommandInput):
 
 
 class RegistrationProfileFieldCreateSerializer(_ProfileFieldInput):
+    """Serialize and validate registration profile field create data."""
+
     source_template_id = serializers.UUIDField(required=False, allow_null=True)
     source_prior_edition_id = serializers.UUIDField(required=False, allow_null=True)
     after_field_id = serializers.UUIDField(required=False, allow_null=True)
@@ -572,6 +598,8 @@ class RegistrationProfileFieldRetireCommandSerializer(_CommandInput):
 class RegistrationDefinitionMutationSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate registration definition mutation data."""
+
     setup_id = serializers.UUIDField()
     receipt_id = serializers.UUIDField()
     target_id = serializers.UUIDField()
@@ -609,6 +637,8 @@ class RegistrationProfileExtensionFieldSerializer(
 class RegistrationProfileExtensionCatalogSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate registration profile extension catalog data."""
+
     organization_id = serializers.UUIDField()
     edition_id = serializers.UUIDField()
     aggregate_version = serializers.IntegerField(min_value=0)
@@ -618,6 +648,8 @@ class RegistrationProfileExtensionCatalogSerializer(
 
 
 class RegistrationSetupProblemSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate registration setup problem data."""
+
     type = serializers.URLField()
     title = serializers.CharField()
     status = serializers.IntegerField()
@@ -655,7 +687,7 @@ def _single_operation(
     serializer_class: type[StrictInputSerializer],
 ) -> str:
     operation_field = cast(
-        serializers.ChoiceField,
+        "serializers.ChoiceField",
         serializer_class().fields["operation"],
     )
     return str(next(iter(operation_field.choices)))

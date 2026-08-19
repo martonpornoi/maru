@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 from datetime import date
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 from django import forms
@@ -15,12 +14,18 @@ from maru.core.localization import grouped_language_choices, grouped_time_zone_c
 from maru.core.validators import validate_currency_codes, validate_language_codes
 from maru.events.models import MAX_EDITION_SPAN_DAYS, EventEdition
 from maru.events.services import EventEditionDetails
-from maru.organizations.models import ConventionSeries, Organization
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from maru.organizations.models import ConventionSeries, Organization
 
 _CURRENCY_SEPARATOR = re.compile(r"[\s,]+")
 
 
 class EventEditionDetailsForm(StrictInputForm):
+    """Collect and validate event edition details input."""
+
     name = forms.CharField(
         label="Edition name",
         max_length=160,
@@ -69,20 +74,48 @@ class EventEditionDetailsForm(StrictInputForm):
     )
 
     def clean_name(self) -> str:
+        """Validate and normalize the name field.
+
+        Returns
+        -------
+        str
+            The validated and normalized name.
+        """
         return " ".join(self.cleaned_data["name"].split())
 
     def clean_language_codes(self) -> list[str]:
+        """Validate and normalize the language codes field.
+
+        Returns
+        -------
+        list[str]
+            The matching clean language codes records in deterministic order.
+        """
         values = [str(code).lower() for code in self.cleaned_data["language_codes"]]
         validate_language_codes(values)
         return values
 
     def clean_currency_codes(self) -> list[str]:
+        """Validate and normalize the currency codes field.
+
+        Returns
+        -------
+        list[str]
+            The matching clean currency codes records in deterministic order.
+        """
         raw = str(self.cleaned_data["currency_codes"])
         values = [value.upper() for value in _CURRENCY_SEPARATOR.split(raw) if value]
         validate_currency_codes(values)
         return values
 
     def clean(self) -> dict[str, object] | None:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, object] | None
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean()
         if cleaned is None:
             return None
@@ -105,19 +138,37 @@ class EventEditionDetailsForm(StrictInputForm):
         return cleaned
 
     def edition_details(self) -> EventEditionDetails:
+        """Return edition details.
+
+        Returns
+        -------
+        EventEditionDetails
+            The resolved EventEditionDetails for edition details.
+
+        Raises
+        ------
+        ValueError
+            If the supplied value cannot satisfy the documented contract.
+        """
         if not self.is_valid():
             raise ValueError("Validate the edition form before reading details.")
         return EventEditionDetails(
-            name=cast(str, self.cleaned_data["name"]),
-            starts_on=cast(date, self.cleaned_data["starts_on"]),
-            ends_on=cast(date, self.cleaned_data["ends_on"]),
-            time_zone=cast(str, self.cleaned_data["time_zone"]),
-            language_codes=tuple(cast(list[str], self.cleaned_data["language_codes"])),
-            currency_codes=tuple(cast(list[str], self.cleaned_data["currency_codes"])),
+            name=cast("str", self.cleaned_data["name"]),
+            starts_on=cast("date", self.cleaned_data["starts_on"]),
+            ends_on=cast("date", self.cleaned_data["ends_on"]),
+            time_zone=cast("str", self.cleaned_data["time_zone"]),
+            language_codes=tuple(
+                cast("list[str]", self.cleaned_data["language_codes"])
+            ),
+            currency_codes=tuple(
+                cast("list[str]", self.cleaned_data["currency_codes"])
+            ),
         )
 
 
 class EventEditionCreationForm(EventEditionDetailsForm):
+    """Collect and validate event edition creation input."""
+
     idempotency_key = forms.UUIDField(widget=forms.HiddenInput)
 
     @classmethod
@@ -128,6 +179,22 @@ class EventEditionCreationForm(EventEditionDetailsForm):
         series: ConventionSeries,
         data: Mapping[str, Any] | None = None,
     ) -> EventEditionCreationForm:
+        """Return for series.
+
+        Parameters
+        ----------
+        organization : Organization
+            The organization that owns the requested resource.
+        series : ConventionSeries
+            The series used to configure and validate this form.
+        data : Mapping[str, Any] | None, default=None
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        EventEditionCreationForm
+            The resolved EventEditionCreationForm for for series.
+        """
         del series
         form = cls(
             data=data,
@@ -142,6 +209,8 @@ class EventEditionCreationForm(EventEditionDetailsForm):
 
 
 class EventEditionUpdateForm(EventEditionDetailsForm):
+    """Collect and validate event edition update input."""
+
     expected_aggregate_version = forms.IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -154,6 +223,20 @@ class EventEditionUpdateForm(EventEditionDetailsForm):
         *,
         data: Mapping[str, Any] | None = None,
     ) -> EventEditionUpdateForm:
+        """Return for edition.
+
+        Parameters
+        ----------
+        edition : EventEdition
+            The event edition that scopes the operation.
+        data : Mapping[str, Any] | None, default=None
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        EventEditionUpdateForm
+            The resolved EventEditionUpdateForm for for edition.
+        """
         return cls(
             data=data,
             initial={

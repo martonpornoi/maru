@@ -55,31 +55,63 @@ _EDITABLE_EDITION_LIFECYCLES = frozenset(
 
 
 class RegistrationTemplateLifecycleError(RuntimeError):
+    """Signal registration template lifecycle."""
+
     reason_code = "registration_template_lifecycle_failed"
 
 
 class RegistrationTemplateAuthorizationDeniedError(RegistrationTemplateLifecycleError):
+    """Signal registration template authorization denied."""
+
     reason_code = "registration_template_authorization_denied"
 
 
 class RegistrationTemplateVersionConflictError(RegistrationTemplateLifecycleError):
+    """Signal registration template version conflict."""
+
     reason_code = "registration_template_version_conflict"
 
 
 class RegistrationTemplateRetryConflictError(RegistrationTemplateLifecycleError):
+    """Signal registration template retry conflict."""
+
     reason_code = "registration_template_retry_conflict"
 
 
 class RegistrationTemplateStateConflictError(RegistrationTemplateLifecycleError):
+    """Signal registration template state conflict."""
+
     reason_code = "registration_template_state_conflict"
 
 
 class RegistrationTemplateValidationError(RegistrationTemplateLifecycleError):
+    """Signal registration template validation."""
+
     reason_code = "registration_template_validation_failed"
 
 
 @dataclass(frozen=True, slots=True)
 class RegistrationTemplatePublishResult:
+    """Describe registration template publish result.
+
+    Attributes
+    ----------
+    catalog_id
+        The catalog identifier within the requested scope.
+    template_id
+        The template identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    template_version
+        The expected template version used to reject stale updates.
+    content_digest
+        The canonical digest used to verify content.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     catalog_id: UUID
     template_id: UUID
     receipt_id: UUID
@@ -161,13 +193,13 @@ def _authorize(
     *, actor: Account, organization_id: UUID, series_id: UUID, edition_id: UUID
 ) -> PolicyDecision:
     if actor.pk is None:
-        raise RegistrationTemplateAuthorizationDeniedError()
+        raise RegistrationTemplateAuthorizationDeniedError
     target = resolve_edition_target(
         organization_id=organization_id,
         edition_id=edition_id,
     )
     if target is None:
-        raise RegistrationTemplateAuthorizationDeniedError()
+        raise RegistrationTemplateAuthorizationDeniedError
     decision = decide(
         principal=actor,
         capability_code="registration.manage_configuration",
@@ -182,7 +214,7 @@ def _authorize(
             series__organization_id=organization_id,
         ).exists()
     ):
-        raise RegistrationTemplateAuthorizationDeniedError()
+        raise RegistrationTemplateAuthorizationDeniedError
     return decision
 
 
@@ -224,7 +256,7 @@ def _lock_scope(
         or persisted_actor is None
         or template is None
     ):
-        raise RegistrationTemplateAuthorizationDeniedError()
+        raise RegistrationTemplateAuthorizationDeniedError
     decision = _authorize(
         actor=persisted_actor,
         organization_id=organization.id,
@@ -233,9 +265,9 @@ def _lock_scope(
     )
     if template.series_id is None:
         if not persisted_actor.is_platform_administrator:
-            raise RegistrationTemplateAuthorizationDeniedError()
+            raise RegistrationTemplateAuthorizationDeniedError
     elif template.series_id != series.id:
-        raise RegistrationTemplateAuthorizationDeniedError()
+        raise RegistrationTemplateAuthorizationDeniedError
     catalog = (
         RegistrationTemplateCatalogControl.objects.select_for_update()
         .filter(organization=organization)
@@ -257,7 +289,7 @@ def _bounded[ItemT: Model](
 ) -> tuple[ItemT, ...]:
     rows = tuple(queryset[: limit + 1])
     if len(rows) > limit:
-        raise RegistrationTemplateValidationError()
+        raise RegistrationTemplateValidationError
     return rows
 
 
@@ -291,7 +323,7 @@ def _locked_content(
     typed_questions = tuple(questions)
     typed_products = tuple(products)
     if not typed_products:
-        raise RegistrationTemplateValidationError()
+        raise RegistrationTemplateValidationError
     section_by_id = {section.id: section for section in typed_sections}
     prior_questions: dict[str, RegistrationTemplateQuestion] = {}
     try:
@@ -303,12 +335,12 @@ def _locked_content(
         for product in typed_products:
             product.full_clean()
     except ValidationError as error:
-        raise RegistrationTemplateValidationError() from error
+        raise RegistrationTemplateValidationError from error
     for question in typed_questions:
         if len(question.help_text) > MAX_TEMPLATE_QUESTION_HELP_LENGTH or (
             question.section_id is not None and question.section_id not in section_by_id
         ):
-            raise RegistrationTemplateValidationError()
+            raise RegistrationTemplateValidationError
         if question.condition_question_key:
             source = prior_questions.get(question.condition_question_key)
             if (
@@ -320,14 +352,14 @@ def _locked_content(
                     value=question.condition_value,
                 )
             ):
-                raise RegistrationTemplateValidationError()
+                raise RegistrationTemplateValidationError
         prior_questions[question.key] = question
     if any(
         len(product.description) > MAX_TEMPLATE_PRODUCT_DESCRIPTION_LENGTH
         or (product.sales_open_at is None) != (product.sales_close_at is None)
         for product in typed_products
     ):
-        raise RegistrationTemplateValidationError()
+        raise RegistrationTemplateValidationError
     digest = template_content_digest(
         template=template,
         sections=typed_sections,
@@ -365,8 +397,24 @@ def _request_digest(
 def require_published_template_evidence(
     template: RegistrationTemplate,
 ) -> RegistrationTemplateCatalogCommandReceipt:
-    """Prove one published template's exact catalog/audit/event/outbox graph."""
+    """Prove one published template's exact catalog/audit/event/outbox graph.
 
+    Parameters
+    ----------
+    template : RegistrationTemplate
+        The immutable starter or template used as the copy source.
+
+    Returns
+    -------
+    RegistrationTemplateCatalogCommandReceipt
+        The RegistrationTemplateCatalogCommandReceipt produced by require
+        published template evidence.
+
+    Raises
+    ------
+    RegistrationTemplateStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     if (
         template.status not in {TemplateStatus.PUBLISHED, TemplateStatus.RETIRED}
         or template.provenance_status != RegistrationProvenanceStatus.COMPLETE
@@ -377,14 +425,14 @@ def require_published_template_evidence(
         != template.last_changed_in_catalog_version
         or _SHA256_PATTERN.fullmatch(template.content_digest) is None
     ):
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     catalog = RegistrationTemplateCatalogControl.objects.filter(
         organization_id=template.organization_id,
         provenance_status=RegistrationProvenanceStatus.COMPLETE,
         aggregate_version__gte=template.last_changed_in_catalog_version,
     ).first()
     if catalog is None:
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     receipts = tuple(
         RegistrationTemplateCatalogCommandReceipt.objects.filter(
             catalog=catalog,
@@ -394,7 +442,7 @@ def require_published_template_evidence(
         )[:2]
     )
     if len(receipts) != 1:
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     receipt = receipts[0]
     targets = tuple(receipt.targets.order_by("target_kind", "target_id", "id")[:2])
     if (
@@ -408,7 +456,7 @@ def require_published_template_evidence(
         or targets[0].target_schema_version != template.version
         or targets[0].content_digest != template.content_digest
     ):
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     audits = tuple(
         AuditEvent.objects.filter(
             schema_version=1,
@@ -435,10 +483,10 @@ def require_published_template_evidence(
         )[:2]
     )
     if len(audits) != 1:
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     audit = audits[0]
     if audit.event_edition_id is None:
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     authority_edition = EventEdition.objects.filter(
         pk=audit.event_edition_id,
         organization_id=template.organization_id,
@@ -462,7 +510,7 @@ def require_published_template_evidence(
         != "registration-template-publication-v1"
         or audit.safe_metadata.get("target_count") != 1
     ):
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     events = tuple(
         DomainEvent.objects.filter(
             event_name="registration.template.published.v1",
@@ -485,7 +533,7 @@ def require_published_template_evidence(
         )[:2]
     )
     if len(events) != 1:
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     outbox = tuple(
         events[0].outbox_messages.filter(
             organization_id=template.organization_id,
@@ -494,7 +542,7 @@ def require_published_template_evidence(
         )[:2]
     )
     if len(outbox) != 1:
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     child_sets = (
         template.sections.all(),
         template.questions.all(),
@@ -507,7 +555,7 @@ def require_published_template_evidence(
         ).exists()
         for queryset in child_sets
     ):
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     return receipt
 
 
@@ -522,10 +570,10 @@ def _result_from_receipt(
         != RegistrationTemplateCatalogCommandReceipt.Action.TEMPLATE_PUBLISHED
         or receipt.request_digest != request_digest
     ):
-        raise RegistrationTemplateRetryConflictError()
+        raise RegistrationTemplateRetryConflictError
     proven = require_published_template_evidence(template)
     if proven.id != receipt.id:
-        raise RegistrationTemplateStateConflictError()
+        raise RegistrationTemplateStateConflictError
     return RegistrationTemplatePublishResult(
         catalog_id=receipt.catalog_id,
         template_id=template.id,
@@ -551,8 +599,46 @@ def publish_registration_template(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationTemplatePublishResult:
-    """Publish one bounded draft through the organization catalog aggregate."""
+    """Publish one bounded draft through the organization catalog aggregate.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    template_id : UUID
+        The template identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationTemplatePublishResult
+        The RegistrationTemplatePublishResult produced by publish registration
+        template.
+
+    Raises
+    ------
+    RegistrationTemplateStateConflictError
+        If the target lifecycle state does not permit the transition.
+    RegistrationTemplateVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     organization_id = _strict_uuid(organization_id, field="organization_id")
     series_id = _strict_uuid(series_id, field="series_id")
     edition_id = _strict_uuid(edition_id, field="edition_id")
@@ -600,13 +686,13 @@ def publish_registration_template(
             )
         current_version = int(scope.catalog.aggregate_version) if scope.catalog else 0
         if expected_version != current_version:
-            raise RegistrationTemplateVersionConflictError()
+            raise RegistrationTemplateVersionConflictError
         if (
             scope.organization.lifecycle not in _EDITABLE_ORGANIZATION_LIFECYCLES
             or scope.edition.lifecycle not in _EDITABLE_EDITION_LIFECYCLES
             or scope.template.status != TemplateStatus.DRAFT
         ):
-            raise RegistrationTemplateStateConflictError()
+            raise RegistrationTemplateStateConflictError
         sections, questions, products, digest = _locked_content(scope.template)
         resulting_version = current_version + 1
         if scope.catalog is None:

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db.models import Count, Q, QuerySet
@@ -24,6 +23,9 @@ from maru.organizations.representation import (
     EXECUTIVE_BOARD_ROLE_CODE,
     MINIMUM_EXECUTIVE_BOARD_CONTROLLERS,
 )
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 MAXIMUM_REPORTED_ORGANIZATIONS = 20
 
@@ -60,8 +62,18 @@ def _event_payload(event: DomainEvent | None) -> dict[str, object]:
 def _current_representation_event(
     representation: OrganizationRepresentation,
 ) -> DomainEvent | None:
-    """Return the exact current-version event only when an in-scope outbox exists."""
+    """Return the exact current-version event only when an in-scope outbox exists.
 
+    Parameters
+    ----------
+    representation : OrganizationRepresentation
+        The governed organization representation being evaluated.
+
+    Returns
+    -------
+    DomainEvent | None
+        The resolved DomainEvent | None for current representation event.
+    """
     return (
         DomainEvent.objects.filter(
             organization_id=representation.organization_id,
@@ -229,8 +241,18 @@ def _active_appointment_is_exact(
 def _active_appointments(
     representation: OrganizationRepresentation,
 ) -> QuerySet[RepresentationAppointment]:
-    """Load only fields present at the pre-hardening readiness boundary."""
+    """Load only fields present at the pre-hardening readiness boundary.
 
+    Parameters
+    ----------
+    representation : OrganizationRepresentation
+        The governed organization representation being evaluated.
+
+    Returns
+    -------
+    QuerySet[RepresentationAppointment]
+        The matching active appointments records in deterministic order.
+    """
     return (
         RepresentationAppointment.objects.filter(
             representation=representation,
@@ -249,8 +271,14 @@ def _active_appointments(
 
 
 def _active_board_appointment_mismatches() -> set[UUID]:
-    """Find active Board appointments missing their exact canonical evidence."""
+    """Find active Board appointments missing their exact canonical evidence.
 
+    Returns
+    -------
+    set[UUID]
+        The matching active board appointment mismatches records in
+        deterministic order.
+    """
     mismatches: set[UUID] = set()
     for representation in OrganizationRepresentation.objects.filter(
         state=OrganizationRepresentation.State.ACTIVE,
@@ -769,12 +797,21 @@ def _build_report() -> dict[str, Any]:
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Inspect organization representation data for migration blockers and emit "
         "a privacy-minimized JSON report."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--no-fail",
             action="store_true",
@@ -785,6 +822,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *_args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *_args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         report = _build_report()
         self.stdout.write(json.dumps(report, indent=2, sort_keys=True))
         if report["status"] == "blocked" and not options["no_fail"]:

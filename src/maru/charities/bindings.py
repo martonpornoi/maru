@@ -18,6 +18,18 @@ _BINDING_NAME_PREFIX = "https://maru.invalid/authorization/charity.selection/"
 
 
 def charity_selection_binding_id(selection_id: UUID) -> UUID:
+    """Return charity selection binding id.
+
+    Parameters
+    ----------
+    selection_id : UUID
+        The identifier of the selection.
+
+    Returns
+    -------
+    UUID
+        The UUID established after charity selection binding id completes.
+    """
     return uuid5(NAMESPACE_URL, f"{_BINDING_NAME_PREFIX}{selection_id}")
 
 
@@ -26,8 +38,23 @@ def ensure_charity_selection_binding(
     *,
     selection: CharitySelection,
 ) -> ScopedResourceBinding:
-    """Create or return the exact immutable selection authorization anchor."""
+    """Create or return the exact immutable selection authorization anchor.
 
+    Parameters
+    ----------
+    selection : CharitySelection
+        The selection evaluated while ensure charity selection binding.
+
+    Returns
+    -------
+    ScopedResourceBinding
+        The resolved ScopedResourceBinding for ensure charity selection binding.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if selection._state.adding or selection.pk is None:
         raise ValidationError(
             "Save the charity selection before creating its resource binding.",

@@ -16,6 +16,8 @@ from maru.effects.models import OutboxMessage
 
 
 class ChildOutcome(StrEnum):
+    """Enumerate supported child outcome values."""
+
     COMPLETED = "completed"
     FAILED = "failed"
     TIMED_OUT = "timed_out"
@@ -23,6 +25,16 @@ class ChildOutcome(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class ChildResult:
+    """Describe child result.
+
+    Attributes
+    ----------
+    outcome
+        The outcome retained in this immutable projection.
+    return_code
+        The stable return code from the relevant closed catalog.
+    """
+
     outcome: ChildOutcome
     return_code: int | None = None
 
@@ -31,9 +43,22 @@ class FairTenantScheduler:
     """Select one eligible tenant after the tenant served most recently."""
 
     def __init__(self) -> None:
+        """Initialize the FairTenantScheduler instance."""
         self._last_served: UUID | None = None
 
     def select(self, candidates: tuple[UUID, ...]) -> UUID | None:
+        """Select.
+
+        Parameters
+        ----------
+        candidates : tuple[UUID, ...]
+            The candidates evaluated while select.
+
+        Returns
+        -------
+        UUID | None
+            The resolved UUID | None for select.
+        """
         ordered = tuple(sorted(set(candidates), key=str))
         if not ordered:
             return None
@@ -51,6 +76,20 @@ def eligible_tenant_ids(
     workload_pool: str,
     now: datetime | None = None,
 ) -> tuple[UUID, ...]:
+    """Return eligible tenant ids.
+
+    Parameters
+    ----------
+    workload_pool : str
+        The named worker pool that owns the work.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    tuple[UUID, ...]
+        The authorized eligible tenant ids records in deterministic order.
+    """
     observed_at = now or timezone.now()
     ready = Q(
         status=OutboxMessage.Status.PENDING,
@@ -80,6 +119,26 @@ def run_effect_child(
     execution_timeout_seconds: int,
     hard_timeout_seconds: int,
 ) -> ChildResult:
+    """Run effect child.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    workload_pool : str
+        The named worker pool that owns the work.
+    lease_seconds : int
+        The bounded lease seconds duration used by the operation.
+    execution_timeout_seconds : int
+        The bounded execution timeout seconds duration used by the operation.
+    hard_timeout_seconds : int
+        The bounded hard timeout seconds duration used by the operation.
+
+    Returns
+    -------
+    ChildResult
+        The child result.
+    """
     manage_path = Path(settings.BASE_DIR) / "src" / "manage.py"
     command = [
         sys.executable,

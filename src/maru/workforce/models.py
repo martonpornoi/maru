@@ -32,6 +32,20 @@ def onboarding_document_path(
     request: OnboardingDocumentRequest,
     filename: str,
 ) -> str:
+    """Return onboarding document path.
+
+    Parameters
+    ----------
+    request : OnboardingDocumentRequest
+        The incoming HTTP request.
+    filename : str
+        The original file name.
+
+    Returns
+    -------
+    str
+        The normalized text for onboarding document path.
+    """
     extension = filename.rsplit(".", maxsplit=1)[-1].lower()
     return (
         f"private/workforce/{request.edition_id}/{request.account_id}/"
@@ -93,6 +107,8 @@ class Department(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "display_order", "name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -155,6 +171,13 @@ class Department(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError("The department must match its edition scope.")
@@ -187,11 +210,27 @@ class Department(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.code = self.code.lower()
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable Department label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.name} — {self.edition.name}"
 
 
@@ -199,6 +238,8 @@ class EditionStructureControl(UUIDTimeStampedModel):
     """One optimistic-concurrency aggregate for an edition's Department tree."""
 
     class Origin(models.TextChoices):
+        """Enumerate supported origin values."""
+
         LEGACY_EXISTING = "legacy_existing", "Legacy existing"
         MANUAL = "manual", "Manual"
         BUILTIN_TEMPLATE = "builtin_template", "Built-in template"
@@ -217,6 +258,8 @@ class EditionStructureControl(UUIDTimeStampedModel):
     aggregate_version = models.PositiveBigIntegerField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "edition_id")
         constraints = [
             models.CheckConstraint(
@@ -232,15 +275,38 @@ class EditionStructureControl(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError("The structure control must match its edition scope.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable EditionStructureControl label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"Structure v{self.aggregate_version} - {self.edition}"
 
 
@@ -248,6 +314,8 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
     """Immutable, minimized evidence for one successful structure command."""
 
     class Action(models.TextChoices):
+        """Enumerate supported action values."""
+
         TEMPLATE_APPLIED = "template_applied", "Template applied"
         DEPARTMENT_CREATED = "department_created", "Department created"
         DEPARTMENT_UPDATED = "department_updated", "Department updated"
@@ -309,6 +377,8 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
     deleted_name_snapshot = models.CharField(max_length=160, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "resulting_version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -355,6 +425,13 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.structure_id and (
             self.structure.organization_id != self.organization_id
@@ -433,6 +510,20 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
             raise ValidationError("A structure command must name its changed fields.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Structure command receipts are immutable.",
@@ -442,6 +533,25 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "Structure command receipts are immutable.",
@@ -453,6 +563,8 @@ class OnboardingDocumentType(UUIDTimeStampedModel):
     """Immutable version of an agreement or onboarding evidence request."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         DRAFT = "draft", "Draft"
         ACTIVE = "active", "Active"
         RETIRED = "retired", "Retired"
@@ -497,6 +609,8 @@ class OnboardingDocumentType(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "code", "-version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -511,11 +625,32 @@ class OnboardingDocumentType(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError("The document type must match its edition scope.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         self.code = self.code.lower()
         if not self._state.adding:
             current = type(self).objects.filter(id=self.id).values("status").first()
@@ -536,6 +671,13 @@ class OnboardingDocumentType(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable OnboardingDocumentType label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.name} v{self.version} — {self.edition.name}"
 
 
@@ -543,6 +685,8 @@ class PositionTemplate(UUIDTimeStampedModel):
     """Organization-owned reusable position meaning and authority mapping."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         DRAFT = "draft", "Draft"
         PUBLISHED = "published", "Published"
         RETIRED = "retired", "Retired"
@@ -578,6 +722,8 @@ class PositionTemplate(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "code", "-version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -587,6 +733,13 @@ class PositionTemplate(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.role_bundle_id
@@ -608,6 +761,20 @@ class PositionTemplate(UUIDTimeStampedModel):
             validate_capacity_code(str(code))
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         self.code = self.code.lower()
         self.default_capacity_codes = [
             str(code).lower() for code in self.default_capacity_codes
@@ -631,6 +798,13 @@ class PositionTemplate(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable PositionTemplate label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.name} v{self.version} — {self.organization.name}"
 
 
@@ -638,6 +812,8 @@ class Position(UUIDTimeStampedModel):
     """One edition position with explicit headcount and reporting line."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PLANNED = "planned", "Planned"
         OPEN = "open", "Open"
         FILLED = "filled", "Filled"
@@ -695,6 +871,8 @@ class Position(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "department__display_order", "title", "id")
         constraints = [
             models.UniqueConstraint(
@@ -704,6 +882,13 @@ class Position(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:  # noqa: PLR0912
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError("The position must match its edition scope.")
@@ -758,12 +943,40 @@ class Position(UUIDTimeStampedModel):
             validate_capacity_code(str(code))
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.code = self.code.lower()
         self.capacity_codes = [str(code).lower() for code in self.capacity_codes]
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Positions close with history instead of being deleted.",
@@ -771,6 +984,13 @@ class Position(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable Position label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.title} — {self.edition.name}"
 
 
@@ -789,6 +1009,8 @@ class PositionDocumentRequirement(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position_id", "document_type__name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -798,6 +1020,13 @@ class PositionDocumentRequirement(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.position_id
@@ -812,6 +1041,15 @@ class PositionDocumentRequirement(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -820,6 +1058,8 @@ class VolunteerOpportunity(UUIDTimeStampedModel):
     """The application publication paired with every position."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         DRAFT = "draft", "Draft"
         PUBLISHED = "published", "Published"
         CLOSED = "closed", "Closed"
@@ -842,20 +1082,43 @@ class VolunteerOpportunity(UUIDTimeStampedModel):
     visible_when_filled = models.BooleanField(default=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position__edition_id", "position__title", "id")
 
     @property
     def active_assignment_count(self) -> int:
+        """Return active assignment count.
+
+        Returns
+        -------
+        int
+            The computed number of active assignment records.
+        """
         return self.position.assignments.filter(
             status=PositionAssignment.Status.ACTIVE
         ).count()
 
     @property
     def is_filled(self) -> bool:
+        """Return whether filled.
+
+        Returns
+        -------
+        bool
+            `True` when filled; otherwise `False`.
+        """
         return self.active_assignment_count >= self.position.headcount
 
     @property
     def accepts_applications(self) -> bool:
+        """Return whether accepts applications.
+
+        Returns
+        -------
+        bool
+            `True` when Compute accepts applications; otherwise `False`.
+        """
         now = timezone.now()
         return (
             self.status == self.Status.PUBLISHED
@@ -865,6 +1128,13 @@ class VolunteerOpportunity(UUIDTimeStampedModel):
         )
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.applications_open_at
@@ -876,10 +1146,26 @@ class VolunteerOpportunity(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable VolunteerOpportunity label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"Applications: {self.position}"
 
 
@@ -887,6 +1173,8 @@ class VolunteerApplication(UUIDTimeStampedModel):
     """One attendee expression of interest; never an authority grant."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         SUBMITTED = "submitted", "Submitted"
         UNDER_REVIEW = "under_review", "Under review"
         ACCEPTED = "accepted", "Accepted"
@@ -921,6 +1209,8 @@ class VolunteerApplication(UUIDTimeStampedModel):
     review_reason = models.CharField(max_length=500, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-submitted_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -930,16 +1220,33 @@ class VolunteerApplication(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record."""
         super().clean()
         if self.account_id:
             validate_convention_subject(self.account)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         if self.account_id:
             validate_convention_subject(self.account)
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable VolunteerApplication label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.account} — {self.opportunity.position.title}"
 
 
@@ -947,6 +1254,8 @@ class OnboardingDocumentRequest(UUIDTimeStampedModel):
     """Private requested/uploaded/reviewed agreement evidence."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         REQUESTED = "requested", "Requested"
         SUBMITTED = "submitted", "Submitted for review"
         APPROVED = "approved", "Approved"
@@ -1007,6 +1316,8 @@ class OnboardingDocumentRequest(UUIDTimeStampedModel):
     review_reason = models.CharField(max_length=500, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "status", "due_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1022,6 +1333,13 @@ class OnboardingDocumentRequest(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.account_id:
             validate_convention_subject(self.account)
@@ -1036,10 +1354,38 @@ class OnboardingDocumentRequest(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Onboarding documents require the retention workflow.",
@@ -1047,6 +1393,13 @@ class OnboardingDocumentRequest(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable OnboardingDocumentRequest label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.document_type.name} — {self.account}"
 
 
@@ -1054,6 +1407,8 @@ class PositionAssignment(UUIDTimeStampedModel):
     """A proposed or active edition responsibility and its authority evidence."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PROPOSED = "proposed", "Proposed"
         ACTIVE = "active", "Active"
         ENDED = "ended", "Ended"
@@ -1115,6 +1470,8 @@ class PositionAssignment(UUIDTimeStampedModel):
     ended_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "position__title", "account_id", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1125,6 +1482,13 @@ class PositionAssignment(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.account_id:
             validate_convention_subject(self.account)
@@ -1149,10 +1513,38 @@ class PositionAssignment(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Assignments end with retained evidence instead of being deleted.",
@@ -1160,4 +1552,11 @@ class PositionAssignment(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable PositionAssignment label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.account} — {self.position.title}"

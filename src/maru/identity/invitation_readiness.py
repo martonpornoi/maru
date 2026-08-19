@@ -12,14 +12,12 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter
-from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from django.conf import settings
 from django.db import DatabaseError, connection, transaction
-from django.db.backends.utils import CursorWrapper
 
 from maru.identity.invitation_key_config import invitation_encryption_is_ready
 from maru.identity.invitation_retention import (
@@ -39,6 +37,11 @@ from maru.identity.models import (
     PlatformInvitationSchedulerRun,
 )
 from maru.settings.environment import normalized_https_origin
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from django.db.backends.utils import CursorWrapper
 
 PAGE10_INVITATION_ADDITIVE_SCHEMA_GENERATION: Final = "page10-invitations-additive-v10"
 # This is intentionally absent. Migration 0011 is additive and cannot provide
@@ -129,7 +132,55 @@ class _IndexContract:
 
 @dataclass(frozen=True, slots=True)
 class PlatformInvitationAdditiveCatalog:
-    """Data-free result of one bounded PostgreSQL catalog inspection."""
+    """Data-free result of one bounded PostgreSQL catalog inspection.
+
+    Attributes
+    ----------
+    server_version_supported
+        The server version supported retained in this immutable projection.
+    schema_order_safe
+        The schema order safe retained in this immutable projection.
+    migration_applied
+        The migration applied retained in this immutable projection.
+    relations_installed
+        The relations installed retained in this immutable projection.
+    reconciliation_migration_applied
+        The reconciliation migration applied retained in this immutable projection.
+    reconciliation_relations_installed
+        The reconciliation relations installed retained in this immutable projection.
+    digest_key_migration_applied
+        The digest key migration applied retained in this immutable projection.
+    digest_key_column_installed
+        The digest key column installed retained in this immutable projection.
+    hardened_integrity_migration_applied
+        The hardened integrity migration applied retained in this immutable projection.
+    audit_cardinality_migration_applied
+        The audit cardinality migration applied retained in this immutable projection.
+    scheduler_heartbeat_migration_applied
+        The scheduler heartbeat migration applied retained in this immutable projection.
+    scheduler_heartbeat_relation_installed
+        Whether the scheduler heartbeat relation is installed.
+    prefix_index_migration_applied
+        The prefix index migration applied retained in this immutable projection.
+    retention_audit_cardinality_migration_applied
+        Whether the retention-audit cardinality migration is applied.
+    retention_workflow_migration_applied
+        The retention workflow migration applied retained in this immutable projection.
+    retention_relations_installed
+        The retention relations installed retained in this immutable projection.
+    functions_fingerprinted
+        The functions fingerprinted retained in this immutable projection.
+    function_execute_boundary_closed
+        The function execute boundary closed retained in this immutable projection.
+    triggers_attached
+        The triggers attached retained in this immutable projection.
+    indexes_installed
+        The indexes installed retained in this immutable projection.
+    uncataloged_function_identities
+        The uncataloged function identities retained in this immutable projection.
+    uncataloged_trigger_names
+        The uncataloged trigger names retained in this immutable projection.
+    """
 
     server_version_supported: bool
     schema_order_safe: bool
@@ -156,6 +207,13 @@ class PlatformInvitationAdditiveCatalog:
 
     @property
     def additive_contract_ready(self) -> bool:
+        """Return whether additive contract ready.
+
+        Returns
+        -------
+        bool
+            `True` when Compute additive contract ready; otherwise `False`.
+        """
         return all(
             (
                 self.server_version_supported,
@@ -959,11 +1017,21 @@ _INDEX_CONTRACTS: Final[dict[str, _IndexContract]] = {
 
 
 def _function_definition_fingerprint(definition: tuple[object, ...]) -> str:
-    """Hash behavior-bearing function fields without releasing SQL bodies."""
+    """Hash behavior-bearing function fields without releasing SQL bodies.
 
+    Parameters
+    ----------
+    definition : tuple[object, ...]
+        The versioned definition governing the requested behavior.
+
+    Returns
+    -------
+    str
+        The normalized text for function definition fingerprint.
+    """
     configuration = definition[9]
     if configuration is not None:
-        configuration = list(cast(Iterable[object], configuration))
+        configuration = list(cast("Iterable[object]", configuration))
     payload = {
         "source": definition[0],
         "language": definition[1],
@@ -990,8 +1058,21 @@ def _migration_is_applied(
     cursor: CursorWrapper,
     migration: tuple[str, str],
 ) -> bool:
-    """Return exact recorder evidence for one migration without row data."""
+    """Return exact recorder evidence for one migration without row data.
 
+    Parameters
+    ----------
+    cursor : CursorWrapper
+        The cursor evaluated by the fail-closed readiness check.
+    migration : tuple[str, str]
+        The migration evaluated while migration is applied.
+
+    Returns
+    -------
+    bool
+        `True` when Return exact recorder evidence for one migration without row
+        data; otherwise `False`.
+    """
     cursor.execute(
         """
         SELECT count(*) = 1
@@ -1004,8 +1085,14 @@ def _migration_is_applied(
 
 
 def inspect_platform_invitation_additive_catalog() -> PlatformInvitationAdditiveCatalog:
-    """Inspect reviewed 0011 evidence and additive 0012 schema without row data."""
+    """Inspect reviewed 0011 evidence and additive 0012 schema without row data.
 
+    Returns
+    -------
+    PlatformInvitationAdditiveCatalog
+        The PlatformInvitationAdditiveCatalog produced by inspect platform
+        invitation additive catalog.
+    """
     expected_function_identities = tuple(_FUNCTION_DEFINITION_SHA256)
     expected_index_names = tuple(_INDEX_CONTRACTS)
     with connection.cursor() as cursor:
@@ -1013,10 +1100,10 @@ def inspect_platform_invitation_additive_catalog() -> PlatformInvitationAdditive
             "SELECT pg_catalog.current_setting('server_version_num')::integer / 10000"
         )
         server_version_supported = (
-            cast(int, cursor.fetchone()[0]) == _SUPPORTED_POSTGRESQL_SERVER_MAJOR
+            cast("int", cursor.fetchone()[0]) == _SUPPORTED_POSTGRESQL_SERVER_MAJOR
         )
         cursor.execute("SELECT pg_catalog.current_schemas(TRUE)")
-        effective_schemas = tuple(cast(Iterable[str], cursor.fetchone()[0]))
+        effective_schemas = tuple(cast("Iterable[str]", cursor.fetchone()[0]))
         schema_order_safe = effective_schemas[:2] == (
             "pg_catalog",
             _SUPPORTED_DATABASE_SCHEMA,
@@ -1406,8 +1493,14 @@ def _unavailable_catalog() -> PlatformInvitationAdditiveCatalog:
 
 
 def platform_invitation_additive_contract_is_ready() -> bool:
-    """Return a safe boolean for the additive schema, never cutover state."""
+    """Return a safe boolean for the additive schema, never cutover state.
 
+    Returns
+    -------
+    bool
+        `True` when Return a safe boolean for the additive schema, never cutover
+        state; otherwise `False`.
+    """
     try:
         return inspect_platform_invitation_additive_catalog().additive_contract_ready
     except (DatabaseError, IndexError, KeyError, TypeError, ValueError):
@@ -1415,8 +1508,14 @@ def platform_invitation_additive_contract_is_ready() -> bool:
 
 
 def platform_invitation_digest_key_coverage_is_ready() -> bool:
-    """Prove every live invitation digest remains reachable after rotation."""
+    """Prove every live invitation digest remains reachable after rotation.
 
+    Returns
+    -------
+    bool
+        `True` when Prove every live invitation digest remains reachable after
+        rotation; otherwise `False`.
+    """
     try:
         key_ids = list(invitation_token_keyring().key_ids)
         with connection.cursor() as cursor:
@@ -1445,8 +1544,14 @@ def platform_invitation_digest_key_coverage_is_ready() -> bool:
 
 
 def platform_invitation_runtime_contract_is_ready() -> bool:
-    """Use the exact same complete gate set exposed by the operator report."""
+    """Use the exact same complete gate set exposed by the operator report.
 
+    Returns
+    -------
+    bool
+        `True` when Use the exact same complete gate set exposed by the operator
+        report; otherwise `False`.
+    """
     try:
         catalog = inspect_platform_invitation_additive_catalog()
     except (DatabaseError, IndexError, KeyError, TypeError, ValueError):
@@ -1472,8 +1577,14 @@ def _configured_runtime_database_role_is_safe() -> bool:
 
 
 def platform_invitation_delivery_heartbeat_is_ready() -> bool:
-    """Require one fresh successful worker run and a bounded global backlog."""
+    """Require one fresh successful worker run and a bounded global backlog.
 
+    Returns
+    -------
+    bool
+        `True` when Require one fresh successful worker run and a bounded global
+        backlog; otherwise `False`.
+    """
     try:
         now = _database_now()
         heartbeat = (
@@ -1510,8 +1621,14 @@ def platform_invitation_delivery_heartbeat_is_ready() -> bool:
 
 
 def platform_invitation_expiry_heartbeat_is_ready() -> bool:
-    """Require one fresh successful expiry run and no overdue old backlog."""
+    """Require one fresh successful expiry run and no overdue old backlog.
 
+    Returns
+    -------
+    bool
+        `True` when Require one fresh successful expiry run and no overdue old
+        backlog; otherwise `False`.
+    """
     try:
         now = _database_now()
         heartbeat = (
@@ -1548,8 +1665,14 @@ def platform_invitation_expiry_heartbeat_is_ready() -> bool:
 
 
 def platform_invitation_retention_heartbeat_is_ready() -> bool:
-    """Require the approved policy, fresh worker proof, and bounded backlog."""
+    """Require the approved policy, fresh worker proof, and bounded backlog.
 
+    Returns
+    -------
+    bool
+        `True` when Require the approved policy, fresh worker proof, and bounded
+        backlog; otherwise `False`.
+    """
     try:
         policy = configured_invitation_retention_policy()
         if (
@@ -1611,8 +1734,14 @@ def platform_invitation_retention_heartbeat_is_ready() -> bool:
 
 
 def platform_account_prefix_query_plan_is_ready() -> bool:
-    """Prove the deployed Django predicate is backed by all three indexes."""
+    """Prove the deployed Django predicate is backed by all three indexes.
 
+    Returns
+    -------
+    bool
+        `True` when Prove the deployed Django predicate is backed by all three
+        indexes; otherwise `False`.
+    """
     sql = """
         EXPLAIN (FORMAT JSON, COSTS FALSE)
         SELECT id
@@ -1686,8 +1815,14 @@ def _platform_invitation_production_gates(
 
 
 def build_platform_invitation_readiness_report() -> dict[str, object]:
-    """Build a stable, data-free report for additive and production gates."""
+    """Build a stable, data-free report for additive and production gates.
 
+    Returns
+    -------
+    dict[str, object]
+        A mapping containing the resolved build platform invitation readiness
+        report data.
+    """
     try:
         catalog = inspect_platform_invitation_additive_catalog()
     except (DatabaseError, IndexError, KeyError, TypeError, ValueError):

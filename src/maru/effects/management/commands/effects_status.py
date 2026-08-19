@@ -19,9 +19,18 @@ def _age_seconds(value: datetime | None, *, now: datetime) -> int | None:
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Report safe outbox status for exactly one organization."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--organization",
             type=UUID,
@@ -39,6 +48,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         _ = args
         organization_id: UUID = options["organization"]
         pool: str | None = options["pool"]

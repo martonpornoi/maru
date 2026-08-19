@@ -25,14 +25,20 @@ dev = [
   "django-stubs[compatible-mypy]>=5.2,<5.3",
   "djangorestframework-stubs>=3.16,<3.18",
   "factory-boy>=3.3,<3.4",
+  "furo>=2025.9.25,<2026",
   "hypothesis>=6.136,<7",
   "mypy>=1.17,<2",
+  "myst-parser>=4.0.1,<5",
   "pip-audit>=2.9,<3",
+  "pydoclint>=0.9.1,<0.10",
   "pytest>=9.1,<9.2",
   "pytest-cov>=6.2,<8",
   "pytest-django>=4.12,<5",
   "pytest-xdist>=3.8,<4",
   "ruff>=0.15.22,<0.16",
+  "sphinx>=8.2,<9",
+  "sphinx-autoapi>=3.8,<4",
+  "sphinxcontrib-mermaid>=1.0,<2",
   "time-machine>=2.19,<3",
 ]
 
@@ -82,50 +88,23 @@ src = ["src", "tests"]
 extend-exclude = ["src/**/migrations/*.py"]
 
 [tool.ruff.lint]
-select = [
-  "A",
-  "ARG",
-  "ASYNC",
-  "B",
-  "BLE",
-  "C4",
-  "DJ",
-  "DTZ",
-  "E",
-  "F",
-  "FBT",
-  "I",
-  "ICN",
-  "INP",
-  "INT",
-  "ISC",
-  "LOG",
-  "N",
-  "PERF",
-  "PIE",
-  "PL",
-  "PT",
-  "PTH",
-  "RET",
-  "RUF",
-  "S",
-  "SIM",
-  "SLOT",
-  "T10",
-  "T20",
-  "TRY",
-  "UP",
-  "W",
-]
+select = ["ALL"]
+external = ["DOC"]
 ignore = [
-  "ISC001",
-  "PLR0913",
-  "TRY003",
+  "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed in `**kwargs`
+  "C901",    # `update_organization_structure_department` is too complex (11 > 10)
+  "COM812",  # [*] Trailing comma missing
+  "EM101",   # Exception must not use a string literal, assign to variable first
+  "EM102",   # Exception must not use an f-string literal, assign to variable first
+  "PLR0913", # Too many arguments in function definition (6 > 5)
+  "SLF001",  # Private member accessed: `_map_serializer`
+  "TRY003",  # Avoid specifying long messages outside the exception class
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*.py" = ["S105", "S106"]
-"tests/**/*.py" = ["S101", "S106", "ARG001", "FBT001", "PLR2004"]
+"docs/conf.py" = ["A001", "INP001"]
+"tests/*.py" = ["ANN", "D", "S105", "S106"]
+"tests/**/*.py" = ["ANN", "D", "S101", "S106", "ARG001", "FBT001", "PLR2004"]
 "scripts/*.py" = ["INP001", "T201"]
 "src/manage.py" = ["PLC0415", "T201"]
 "src/**/models.py" = ["RUF012"]
@@ -133,6 +112,41 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["maru"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.pydoclint]
+style = "numpy"
+exclude = '''\.git|\.venv|\.tools|build|dist|src[\\/]maru[\\/].*[\\/]migrations|tests'''
+arg-type-hints-in-signature = true
+arg-type-hints-in-docstring = true
+check-arg-order = true
+skip-checking-short-docstrings = false
+skip-checking-private-functions = false
+skip-checking-raises = false
+allow-init-docstring = true
+require-return-section-when-returning-nothing = false
+check-return-types = true
+require-yield-section-when-yielding-nothing = true
+check-yield-types = true
+ignore-underscore-args = false
+ignore-private-args = false
+check-style-mismatch = true
+check-class-attributes = false
+should-document-private-class-attributes = false
+treat-property-methods-as-class-attributes = false
+only-attrs-with-ClassVar-are-treated-as-class-attrs = false
+require-inline-class-var-docs = false
+should-document-star-arguments = true
+omit-stars-when-documenting-varargs = false
+should-declare-assert-error-if-assert-statement-exists = true
+check-arg-defaults = true
+show-filenames-in-every-violation-message = true
+native-mode-noqa-location = "definition"
 
 [tool.mypy]
 python_version = "3.12"

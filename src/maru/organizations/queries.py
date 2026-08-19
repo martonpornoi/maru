@@ -23,7 +23,17 @@ ExecutiveBoardState = Literal[
 
 @dataclass(frozen=True, slots=True)
 class ExecutiveBoardAnchor:
-    """The fixed, identity-free governance anchor used by structure views."""
+    """The fixed, identity-free governance anchor used by structure views.
+
+    Attributes
+    ----------
+    kind
+        The closed discriminator selecting the requested behavior.
+    label
+        The human-readable label shown to authorized readers.
+    state
+        The lifecycle state to evaluate or expose.
+    """
 
     kind: Literal["governance"]
     label: str
@@ -39,8 +49,17 @@ def executive_board_governance_anchor(
     This public module query deliberately exposes no appointment, controller,
     membership, reason, account, or authority information. Callers must
     authorize the exact organization/edition before invoking it.
-    """
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+
+    Returns
+    -------
+    ExecutiveBoardAnchor
+        The resolved ExecutiveBoardAnchor for executive board governance anchor.
+    """
     state = (
         OrganizationRepresentation.objects.filter(
             organization_id=organization_id,
@@ -56,7 +75,7 @@ def executive_board_governance_anchor(
     }:
         anchor_state: ExecutiveBoardState = "absent"
     else:
-        anchor_state = cast(ExecutiveBoardState, state)
+        anchor_state = cast("ExecutiveBoardState", state)
     return ExecutiveBoardAnchor(
         kind="governance",
         label=OrganizationRepresentation.EXECUTIVE_BOARD_NAME,
@@ -65,8 +84,14 @@ def executive_board_governance_anchor(
 
 
 def platform_organization_inventory() -> QuerySet[Organization]:
-    """Return the C1 organizer inventory for the platform administration page."""
+    """Return the C1 organizer inventory for the platform administration page.
 
+    Returns
+    -------
+    QuerySet[Organization]
+        The matching platform organization inventory records in deterministic
+        order.
+    """
     return Organization.objects.annotate(
         series_count=Count("convention_series", distinct=True),
         edition_count=Count("event_editions", distinct=True),
@@ -76,6 +101,18 @@ def platform_organization_inventory() -> QuerySet[Organization]:
 def memberships_for_account(
     account: Account,
 ) -> QuerySet[OrganizationMembership]:
+    """Return memberships for account visible to the caller.
+
+    Parameters
+    ----------
+    account : Account
+        The account used to constrain the tenant-scoped query.
+
+    Returns
+    -------
+    QuerySet[OrganizationMembership]
+        The authorized memberships for account records in deterministic order.
+    """
     return (
         OrganizationMembership.objects.filter(account=account)
         .select_related("organization")

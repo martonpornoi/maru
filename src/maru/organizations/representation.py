@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, connection, transaction
@@ -33,6 +31,11 @@ from maru.organizations.models import (
     OrganizationRepresentation,
     RepresentationAppointment,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from datetime import datetime
+    from uuid import UUID
 
 MANAGE_REPRESENTATION = "organizations.manage_representation"
 MINIMUM_EXECUTIVE_BOARD_CONTROLLERS = 2
@@ -65,6 +68,18 @@ EXECUTIVE_BOARD_CAPABILITIES = (
 
 @dataclass(frozen=True, slots=True)
 class RepresentationActivationResult:
+    """Describe representation activation result.
+
+    Attributes
+    ----------
+    representation
+        The governed organization representation being evaluated.
+    organization
+        The organization that owns the requested resource.
+    appointments
+        The appointments retained in this immutable projection.
+    """
+
     representation: OrganizationRepresentation
     organization: Organization
     appointments: tuple[RepresentationAppointment, ...]
@@ -72,6 +87,24 @@ class RepresentationActivationResult:
 
 @dataclass(frozen=True, slots=True)
 class EmergencyControllerRemovalResult:
+    """Describe emergency controller removal result.
+
+    Attributes
+    ----------
+    representation
+        The governed organization representation being evaluated.
+    organization
+        The organization that owns the requested resource.
+    removed_appointment
+        The removed appointment retained in this immutable projection.
+    ended_appointments
+        The ended appointments retained in this immutable projection.
+    affected_representations
+        The affected representations retained in this immutable projection.
+    quorum_preserved
+        The quorum preserved retained in this immutable projection.
+    """
+
     representation: OrganizationRepresentation
     organization: Organization
     removed_appointment: RepresentationAppointment
@@ -138,8 +171,12 @@ def _lock_representation_subject(account_id: UUID) -> None:
     account locks remain the source-of-truth guard; this lock prevents a new
     invitation from appearing while an emergency command inventories every
     open relationship for the globally deactivated account.
-    """
 
+    Parameters
+    ----------
+    account_id : UUID
+        The platform account identifier within the requested scope.
+    """
     subject_key = (
         account_id.int ^ REPRESENTATION_SUBJECT_LOCK_NAMESPACE
     ) & 0x7FFFFFFFFFFFFFFF
@@ -238,8 +275,31 @@ def provision_executive_board(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> OrganizationRepresentation:
-    """Provision the fixed representation root without enrolling the operator."""
+    """Provision the fixed representation root without enrolling the operator.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    OrganizationRepresentation
+        The resolved OrganizationRepresentation for provision executive board.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     _require_platform_administrator(actor)
     normalized_reason = _normalized_reason(reason)
     organization = Organization.objects.select_for_update().get(id=organization_id)
@@ -295,8 +355,36 @@ def invite_representation_controller(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> RepresentationAppointment:
-    """Invite an exact active person account to the Executive Board."""
+    """Invite an exact active person account to the Executive Board.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    representation_id : UUID
+        The representation identifier within the requested scope.
+    account_id : UUID
+        The platform account identifier within the requested scope.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RepresentationAppointment
+        The RepresentationAppointment produced by invite representation
+        controller.
+
+    Raises
+    ------
+    IntegrityError
+        If a concurrent write violates a durable database invariant.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     normalized_reason = _normalized_reason(reason)
     _lock_representation_subject(account_id)
     representation = (
@@ -489,8 +577,38 @@ def respond_to_representation_invitation(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> RepresentationAppointment:
-    """Accept or decline one invitation as its exact authenticated subject."""
+    """Accept or decline one invitation as its exact authenticated subject.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    appointment_id : UUID
+        The appointment identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    accept : bool
+        The accept evaluated while respond to representation invitation.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RepresentationAppointment
+        The RepresentationAppointment produced by respond to representation
+        invitation.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    RepresentationAppointment.DoesNotExist
+        If the operation encounters a does not exist condition.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     _lock_representation_subject(actor.id)
     representation_id = (
         RepresentationAppointment.objects.filter(id=appointment_id, account=actor)
@@ -676,8 +794,21 @@ def _record_initial_activation(
     activated_at: datetime,
     reason: str,
 ) -> None:
-    """Persist the code-owned activation facts before provenance controls."""
+    """Persist the code-owned activation facts before provenance controls.
 
+    Parameters
+    ----------
+    representation : OrganizationRepresentation
+        The governed organization representation being evaluated.
+    organization : Organization
+        The organization that owns the requested resource.
+    actor : Account
+        The authenticated account authorizing the operation.
+    activated_at : datetime
+        The timezone-aware timestamp for activated.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    """
     representation.state = OrganizationRepresentation.State.ACTIVE
     representation.activated_by = actor
     representation.activated_at = activated_at
@@ -707,8 +838,33 @@ def activate_executive_board(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> RepresentationActivationResult:
-    """Activate two-person representation and its canonical authority atomically."""
+    """Activate two-person representation and its canonical authority atomically.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    representation_id : UUID
+        The representation identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RepresentationActivationResult
+        The resolved RepresentationActivationResult for activate executive board.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     _require_platform_administrator(actor)
     normalized_reason = _normalized_reason(reason)
     # Representation activation writes organization-scoped RoleAssignments.
@@ -1368,8 +1524,31 @@ def emergency_remove_executive_board_controller(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> EmergencyControllerRemovalResult:
-    """Contain one account across every open Executive Board relationship."""
+    """Contain one account across every open Executive Board relationship.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    representation_id : UUID
+        The representation identifier within the requested scope.
+    appointment_id : UUID
+        The appointment identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    EmergencyControllerRemovalResult
+        The EmergencyControllerRemovalResult produced by emergency remove
+        executive board controller.
+    """
     _require_platform_administrator(actor)
     normalized_reason = _normalized_reason(reason)
     # Emergency containment closes RoleAssignments after locking a broad

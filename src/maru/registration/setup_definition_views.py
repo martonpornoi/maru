@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, cast
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, cast
 
-from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -24,7 +22,6 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
 from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.registration.models import ProfileExtensionStatus
 from maru.registration.setup_commands import (
@@ -68,11 +65,6 @@ from maru.registration.setup_forms import (
     RegistrationQuestionMoveForm,
     RegistrationQuestionUpdateForm,
 )
-from maru.registration.setup_queries import (
-    RegistrationSetupProductProjection,
-    RegistrationSetupProfileFieldProjection,
-    RegistrationSetupQuestionProjection,
-)
 from maru.registration.setup_views import (
     _active_account,
     _add_domain_validation_errors,
@@ -95,6 +87,18 @@ from maru.registration.setup_views import (
     _route_kwargs,
 )
 from maru.workforce.models import Department
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from django import forms
+
+    from maru.identity.models import Account
+    from maru.registration.setup_queries import (
+        RegistrationSetupProductProjection,
+        RegistrationSetupProfileFieldProjection,
+        RegistrationSetupQuestionProjection,
+    )
 
 HTTP_CONFLICT = 409
 
@@ -420,6 +424,26 @@ def registration_setup_question_create(
     edition_slug: str,
     configuration_id: UUID,
 ) -> HttpResponse:
+    """Return registration setup question create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.GET:
         return _registration_bad_request(request)
     try:
@@ -458,6 +482,26 @@ def registration_setup_product_create(
     edition_slug: str,
     configuration_id: UUID,
 ) -> HttpResponse:
+    """Return registration setup product create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.GET:
         return _registration_bad_request(request)
     try:
@@ -564,6 +608,26 @@ def registration_setup_minor_policy(
     edition_slug: str,
     configuration_id: UUID,
 ) -> HttpResponse:
+    """Return registration setup minor policy.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.GET:
         return _registration_bad_request(request)
     try:
@@ -590,6 +654,22 @@ def registration_setup_minor_policy_dispatch(
     *args: Any,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Return registration setup minor policy dispatch.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    *args : Any
+        Positional arguments forwarded to the framework implementation.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.method == "GET":
         return registration_setup_minor_policy(request, *args, **kwargs)
     if request.method == "POST":
@@ -712,6 +792,24 @@ def registration_setup_profile_fields(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Return registration setup profile fields.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.GET:
         return _registration_bad_request(request)
     try:
@@ -731,6 +829,22 @@ def registration_setup_profile_fields_dispatch(
     *args: Any,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Return registration setup profile fields dispatch.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    *args : Any
+        Positional arguments forwarded to the framework implementation.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.method == "GET":
         return registration_setup_profile_fields(request, *args, **kwargs)
     if request.method == "POST":
@@ -747,6 +861,24 @@ def registration_setup_profile_field_create(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Return registration setup profile field create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.GET:
         return _registration_bad_request(request)
     try:
@@ -784,6 +916,26 @@ def registration_setup_profile_field_detail(
     edition_slug: str,
     field_id: UUID,
 ) -> HttpResponse:
+    """Return registration setup profile field detail.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    field_id : UUID
+        The identifier of the field.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.GET:
         return _registration_bad_request(request)
     try:
@@ -956,9 +1108,9 @@ def _run_configuration_command(  # noqa: PLR0911
         "series_id": read.series.id,
         "edition_id": read.edition.id,
         "configuration_id": configuration_id,
-        "expected_version": cast(int, form.cleaned_data["expected_version"]),
-        "reason": cast(str, form.cleaned_data["reason"]),
-        "retry_key": cast(UUID, form.cleaned_data["retry_key"]),
+        "expected_version": cast("int", form.cleaned_data["expected_version"]),
+        "reason": cast("str", form.cleaned_data["reason"]),
+        "retry_key": cast("UUID", form.cleaned_data["retry_key"]),
         "correlation_id": correlation_id,
         "request_id": correlation_id,
         "source_channel": "web",
@@ -967,96 +1119,96 @@ def _run_configuration_command(  # noqa: PLR0911
         if action in {"create", "update"}:
             values: dict[str, Any] = {
                 **common,
-                "key": cast(str, form.cleaned_data["key"]),
-                "label": cast(str, form.cleaned_data["label"]),
-                "help_text": cast(str, form.cleaned_data["help_text"]),
-                "field_type": cast(str, form.cleaned_data["field_type"]),
-                "required": cast(bool, form.cleaned_data["required"]),
-                "options": cast(list[str], form.cleaned_data["options"]),
-                "purpose": cast(str, form.cleaned_data["purpose"]),
-                "visibility": cast(str, form.cleaned_data["visibility"]),
-                "classification": cast(str, form.cleaned_data["classification"]),
+                "key": cast("str", form.cleaned_data["key"]),
+                "label": cast("str", form.cleaned_data["label"]),
+                "help_text": cast("str", form.cleaned_data["help_text"]),
+                "field_type": cast("str", form.cleaned_data["field_type"]),
+                "required": cast("bool", form.cleaned_data["required"]),
+                "options": cast("list[str]", form.cleaned_data["options"]),
+                "purpose": cast("str", form.cleaned_data["purpose"]),
+                "visibility": cast("str", form.cleaned_data["visibility"]),
+                "classification": cast("str", form.cleaned_data["classification"]),
                 "condition_question_key": cast(
-                    str, form.cleaned_data["condition_question_key"]
+                    "str", form.cleaned_data["condition_question_key"]
                 ),
-                "condition_value": cast(str, form.cleaned_data["condition_value"]),
-                "section_id": cast(UUID | None, form.cleaned_data["section_id"]),
+                "condition_value": cast("str", form.cleaned_data["condition_value"]),
+                "section_id": cast("UUID | None", form.cleaned_data["section_id"]),
             }
             if action == "create":
                 return create_registration_question(
                     **values,
                     after_question_id=cast(
-                        UUID | None, form.cleaned_data["after_question_id"]
+                        "UUID | None", form.cleaned_data["after_question_id"]
                     ),
                 )
             return update_registration_question(
                 **values,
-                question_id=cast(UUID, target_id),
+                question_id=cast("UUID", target_id),
             )
         if action == "move":
             return move_registration_question(
                 **common,
-                question_id=cast(UUID, target_id),
+                question_id=cast("UUID", target_id),
                 after_question_id=cast(
-                    UUID | None, form.cleaned_data["after_question_id"]
+                    "UUID | None", form.cleaned_data["after_question_id"]
                 ),
             )
         if action == "remove":
             return delete_registration_question(
                 **common,
-                question_id=cast(UUID, target_id),
+                question_id=cast("UUID", target_id),
             )
     if kind == "product":
         if action in {"create", "update"}:
             values = {
                 **common,
-                "code": cast(str, form.cleaned_data["code"]),
-                "name": cast(str, form.cleaned_data["name"]),
-                "description": cast(str, form.cleaned_data["description"]),
-                "price_minor": cast(int, form.cleaned_data["price_minor"]),
-                "capacity": cast(int, form.cleaned_data["capacity"]),
+                "code": cast("str", form.cleaned_data["code"]),
+                "name": cast("str", form.cleaned_data["name"]),
+                "description": cast("str", form.cleaned_data["description"]),
+                "price_minor": cast("int", form.cleaned_data["price_minor"]),
+                "capacity": cast("int", form.cleaned_data["capacity"]),
                 "capacity_ceiling": cast(
-                    int | None,
+                    "int | None",
                     form.cleaned_data["capacity_ceiling"],
                 ),
-                "entitlement_code": cast(str, form.cleaned_data["entitlement_code"]),
-                "entitlement_name": cast(str, form.cleaned_data["entitlement_name"]),
+                "entitlement_code": cast("str", form.cleaned_data["entitlement_code"]),
+                "entitlement_name": cast("str", form.cleaned_data["entitlement_name"]),
                 "sales_open_at": form.cleaned_data["sales_open_at"],
                 "sales_close_at": form.cleaned_data["sales_close_at"],
                 "required_capacity_codes": cast(
-                    list[str], form.cleaned_data["required_capacity_codes"]
+                    "list[str]", form.cleaned_data["required_capacity_codes"]
                 ),
                 "eligibility_explanation": cast(
-                    str, form.cleaned_data["eligibility_explanation"]
+                    "str", form.cleaned_data["eligibility_explanation"]
                 ),
-                "waitlist_enabled": cast(bool, form.cleaned_data["waitlist_enabled"]),
+                "waitlist_enabled": cast("bool", form.cleaned_data["waitlist_enabled"]),
                 "payment_window_minutes": cast(
-                    int | None, form.cleaned_data["payment_window_minutes"]
+                    "int | None", form.cleaned_data["payment_window_minutes"]
                 ),
             }
             if action == "create":
                 return create_admission_product(
                     **values,
                     after_product_id=cast(
-                        UUID | None, form.cleaned_data["after_product_id"]
+                        "UUID | None", form.cleaned_data["after_product_id"]
                     ),
                 )
             return update_admission_product(
                 **values,
-                product_id=cast(UUID, target_id),
+                product_id=cast("UUID", target_id),
             )
         if action == "move":
             return move_admission_product(
                 **common,
-                product_id=cast(UUID, target_id),
+                product_id=cast("UUID", target_id),
                 after_product_id=cast(
-                    UUID | None, form.cleaned_data["after_product_id"]
+                    "UUID | None", form.cleaned_data["after_product_id"]
                 ),
             )
         if action == "remove":
             return delete_admission_product(
                 **common,
-                product_id=cast(UUID, target_id),
+                product_id=cast("UUID", target_id),
             )
     raise Http404
 
@@ -1181,6 +1333,20 @@ def create_registration_setup_question(
     request: HttpRequest,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Create registration setup question.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     return _configuration_definition_post(
         request,
         **kwargs,
@@ -1198,6 +1364,22 @@ def update_registration_setup_question(
     question_id: UUID,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Update registration setup question.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    question_id : UUID
+        The identifier of the question.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     return _configuration_definition_post(
         request,
         **kwargs,
@@ -1215,6 +1397,22 @@ def move_registration_setup_question(
     question_id: UUID,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Move registration setup question.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    question_id : UUID
+        The identifier of the question.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _configuration_definition_post(
         request,
         **kwargs,
@@ -1232,6 +1430,22 @@ def remove_registration_setup_question(
     question_id: UUID,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Remove registration setup question.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    question_id : UUID
+        The identifier of the question.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _configuration_definition_post(
         request,
         **kwargs,
@@ -1248,6 +1462,20 @@ def create_registration_setup_product(
     request: HttpRequest,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Create registration setup product.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     return _configuration_definition_post(
         request,
         **kwargs,
@@ -1265,6 +1493,22 @@ def update_registration_setup_product(
     product_id: UUID,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Update registration setup product.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    product_id : UUID
+        The identifier of the product.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     return _configuration_definition_post(
         request,
         **kwargs,
@@ -1282,6 +1526,22 @@ def move_registration_setup_product(
     product_id: UUID,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Move registration setup product.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    product_id : UUID
+        The identifier of the product.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _configuration_definition_post(
         request,
         **kwargs,
@@ -1299,6 +1559,22 @@ def remove_registration_setup_product(
     product_id: UUID,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Remove registration setup product.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    product_id : UUID
+        The identifier of the product.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _configuration_definition_post(
         request,
         **kwargs,
@@ -1318,6 +1594,31 @@ def set_registration_setup_minor_policy(  # noqa: PLR0911
     edition_slug: str,
     configuration_id: UUID,
 ) -> HttpResponse:
+    """Set registration setup minor policy.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, read = _preflight_post(
             request,
@@ -1348,16 +1649,16 @@ def set_registration_setup_minor_policy(  # noqa: PLR0911
             series_id=read.series.id,
             edition_id=read.edition.id,
             configuration_id=configuration_id,
-            enabled=cast(bool, form.cleaned_data["enabled"]),
-            minor_age_threshold=cast(int, form.cleaned_data["minor_age_threshold"]),
+            enabled=cast("bool", form.cleaned_data["enabled"]),
+            minor_age_threshold=cast("int", form.cleaned_data["minor_age_threshold"]),
             guardian_notice_version=cast(
-                str, form.cleaned_data["guardian_notice_version"]
+                "str", form.cleaned_data["guardian_notice_version"]
             ),
-            jurisdiction_code=cast(str, form.cleaned_data["jurisdiction_code"]),
-            review_reference=cast(str, form.cleaned_data["review_reference"]),
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            reason=cast(str, form.cleaned_data["reason"]),
-            retry_key=cast(UUID, form.cleaned_data["retry_key"]),
+            jurisdiction_code=cast("str", form.cleaned_data["jurisdiction_code"]),
+            review_reference=cast("str", form.cleaned_data["review_reference"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel="web",
@@ -1410,6 +1711,33 @@ def remove_registration_setup_minor_policy(  # noqa: PLR0911
     edition_slug: str,
     configuration_id: UUID,
 ) -> HttpResponse:
+    """Remove registration setup minor policy.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, read = _preflight_post(
             request,
@@ -1448,9 +1776,9 @@ def remove_registration_setup_minor_policy(  # noqa: PLR0911
             series_id=read.series.id,
             edition_id=read.edition.id,
             configuration_id=configuration_id,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            reason=cast(str, form.cleaned_data["reason"]),
-            retry_key=cast(UUID, form.cleaned_data["retry_key"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel="web",
@@ -1558,9 +1886,9 @@ def _run_profile_command(
         "organization_id": read.organization.id,
         "series_id": read.series.id,
         "edition_id": read.edition.id,
-        "expected_version": cast(int, form.cleaned_data["expected_version"]),
-        "reason": cast(str, form.cleaned_data["reason"]),
-        "retry_key": cast(UUID, form.cleaned_data["retry_key"]),
+        "expected_version": cast("int", form.cleaned_data["expected_version"]),
+        "reason": cast("str", form.cleaned_data["reason"]),
+        "retry_key": cast("UUID", form.cleaned_data["retry_key"]),
         "correlation_id": correlation_id,
         "request_id": correlation_id,
         "source_channel": "web",
@@ -1568,46 +1896,46 @@ def _run_profile_command(
     if action in {"create", "update"}:
         values: dict[str, Any] = {
             **common,
-            "key": cast(str, form.cleaned_data["key"]),
-            "label": cast(str, form.cleaned_data["label"]),
-            "help_text": cast(str, form.cleaned_data["help_text"]),
-            "field_type": cast(str, form.cleaned_data["field_type"]),
-            "options": cast(list[str], form.cleaned_data["options"]),
-            "purpose": cast(str, form.cleaned_data["purpose"]),
-            "classification": cast(str, form.cleaned_data["classification"]),
-            "audience_policy": cast(str, form.cleaned_data["audience_policy"]),
+            "key": cast("str", form.cleaned_data["key"]),
+            "label": cast("str", form.cleaned_data["label"]),
+            "help_text": cast("str", form.cleaned_data["help_text"]),
+            "field_type": cast("str", form.cleaned_data["field_type"]),
+            "options": cast("list[str]", form.cleaned_data["options"]),
+            "purpose": cast("str", form.cleaned_data["purpose"]),
+            "classification": cast("str", form.cleaned_data["classification"]),
+            "audience_policy": cast("str", form.cleaned_data["audience_policy"]),
             "audience_department_id": cast(
-                UUID | None,
+                "UUID | None",
                 form.cleaned_data["audience_department_id"],
             ),
-            "writer_policy": cast(str, form.cleaned_data["writer_policy"]),
-            "required": cast(bool, form.cleaned_data["required"]),
+            "writer_policy": cast("str", form.cleaned_data["writer_policy"]),
+            "required": cast("bool", form.cleaned_data["required"]),
         }
         if action == "create":
             return create_registration_profile_extension_field(
                 **values,
                 source_template_id=cast(
-                    UUID | None, form.cleaned_data["source_template_id"]
+                    "UUID | None", form.cleaned_data["source_template_id"]
                 ),
                 source_prior_edition_id=cast(
-                    UUID | None, form.cleaned_data["source_prior_edition_id"]
+                    "UUID | None", form.cleaned_data["source_prior_edition_id"]
                 ),
-                after_field_id=cast(UUID | None, form.cleaned_data["after_field_id"]),
+                after_field_id=cast("UUID | None", form.cleaned_data["after_field_id"]),
             )
         return update_registration_profile_extension_field(
             **values,
-            field_id=cast(UUID, field_id),
+            field_id=cast("UUID", field_id),
         )
     if action == "move":
         return move_registration_profile_extension_field(
             **common,
-            field_id=cast(UUID, field_id),
-            after_field_id=cast(UUID | None, form.cleaned_data["after_field_id"]),
+            field_id=cast("UUID", field_id),
+            after_field_id=cast("UUID | None", form.cleaned_data["after_field_id"]),
         )
     if action == "retire":
         return retire_registration_profile_extension_field(
             **common,
-            field_id=cast(UUID, field_id),
+            field_id=cast("UUID", field_id),
         )
     raise Http404
 
@@ -1722,6 +2050,20 @@ def create_registration_setup_profile_field(
     request: HttpRequest,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Create registration setup profile field.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     return _profile_definition_post(
         request,
         **kwargs,
@@ -1738,6 +2080,22 @@ def update_registration_setup_profile_field(
     field_id: UUID,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Update registration setup profile field.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    field_id : UUID
+        The identifier of the field.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     return _profile_definition_post(
         request,
         **kwargs,
@@ -1754,6 +2112,22 @@ def move_registration_setup_profile_field(
     field_id: UUID,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Move registration setup profile field.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    field_id : UUID
+        The identifier of the field.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _profile_definition_post(
         request,
         **kwargs,
@@ -1770,6 +2144,22 @@ def retire_registration_setup_profile_field(
     field_id: UUID,
     **kwargs: Any,
 ) -> HttpResponse:
+    """Retire registration setup profile field.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    field_id : UUID
+        The identifier of the field.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _profile_definition_post(
         request,
         **kwargs,

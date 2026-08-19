@@ -28,6 +28,24 @@ DEFAULT_RETRY_DELAY = timedelta(seconds=30)
 
 @dataclass(frozen=True, slots=True)
 class EffectContext:
+    """Describe effect context.
+
+    Attributes
+    ----------
+    event_id
+        The immutable identifier of the domain event to process.
+    idempotency_key
+        The stable key that makes an exact retry idempotent.
+    organization_id
+        The organization identifier that owns the requested resource.
+    correlation_id
+        The request correlation identifier used for audit tracing.
+    attempt_number
+        The attempt number retained in this immutable projection.
+    deadline
+        The deadline retained in this immutable projection.
+    """
+
     event_id: UUID
     idempotency_key: str
     organization_id: UUID
@@ -37,21 +55,60 @@ class EffectContext:
 
 
 class EffectHandler(Protocol):
-    def __call__(self, event: DomainEvent, context: EffectContext) -> None: ...
+    """Describe effect handler."""
+
+    def __call__(self, event: DomainEvent, context: EffectContext) -> None:
+        """Invoke the configured operation.
+
+        Parameters
+        ----------
+        event : DomainEvent
+            The immutable domain event to process.
+        context : EffectContext
+            The request context supplied by the calling framework.
+        """
+        ...
 
 
 @dataclass(frozen=True, slots=True)
 class HandlerRegistration:
+    """Describe handler registration.
+
+    Attributes
+    ----------
+    event_name
+        The human-readable event name shown to authorized readers.
+    destination
+        The registered destination that should receive the effect.
+    handler
+        The handler retained in this immutable projection.
+    """
+
     event_name: str
     destination: str
     handler: EffectHandler
 
 
 class HandlerRegistry:
+    """Describe handler registry."""
+
     def __init__(self) -> None:
+        """Initialize the HandlerRegistry instance."""
         self._handlers: dict[tuple[str, str], EffectHandler] = {}
 
     def register(self, registration: HandlerRegistration) -> None:
+        """Register.
+
+        Parameters
+        ----------
+        registration : HandlerRegistration
+            The attendee registration governed by the operation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if event_definition(registration.event_name) is None:
             raise ValidationError(
                 "Handlers require a registered domain event.",
@@ -66,16 +123,41 @@ class HandlerRegistry:
         self._handlers[key] = registration.handler
 
     def resolve(self, *, event_name: str, destination: str) -> EffectHandler | None:
+        """Resolve.
+
+        Parameters
+        ----------
+        event_name : str
+            The human-readable event name shown to authorized readers.
+        destination : str
+            The registered destination that should receive the effect.
+
+        Returns
+        -------
+        EffectHandler | None
+            The resolved EffectHandler | None for resolve.
+        """
         return self._handlers.get((event_name, destination))
 
 
 class TransientEffectError(RuntimeError):
+    """Signal transient effect."""
+
     def __init__(
         self,
         error_code: str,
         *,
         retry_after: timedelta = DEFAULT_RETRY_DELAY,
     ) -> None:
+        """Initialize the TransientEffectError instance.
+
+        Parameters
+        ----------
+        error_code : str
+            The stable error code from the relevant closed catalog.
+        retry_after : timedelta, default=DEFAULT_RETRY_DELAY
+            The timezone-aware boundary for retry after.
+        """
         super().__init__(error_code)
         validate_effect_error_code(error_code)
         self.error_code = error_code
@@ -83,18 +165,32 @@ class TransientEffectError(RuntimeError):
 
 
 class PermanentEffectError(RuntimeError):
+    """Signal permanent effect."""
+
     def __init__(self, error_code: str) -> None:
+        """Initialize the PermanentEffectError instance.
+
+        Parameters
+        ----------
+        error_code : str
+            The stable error code from the relevant closed catalog.
+        """
         super().__init__(error_code)
         validate_effect_error_code(error_code)
         self.error_code = error_code
 
 
 class EffectTimeoutError(TransientEffectError):
+    """Signal effect timeout."""
+
     def __init__(self) -> None:
+        """Initialize the EffectTimeoutError instance."""
         super().__init__("handler_timeout")
 
 
 class RunOutcome(StrEnum):
+    """Enumerate supported run outcome values."""
+
     SUCCEEDED = "succeeded"
     RETRY_SCHEDULED = "retry_scheduled"
     QUARANTINED = "quarantined"
@@ -103,6 +199,16 @@ class RunOutcome(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class RunResult:
+    """Describe run result.
+
+    Attributes
+    ----------
+    outcome
+        The outcome retained in this immutable projection.
+    error_code
+        The stable error code from the relevant closed catalog.
+    """
+
     outcome: RunOutcome
     error_code: str = ""
 
@@ -167,6 +273,29 @@ def run_claimed_effect(  # noqa: PLR0911 - terminal worker states stay explicit
     execution_timeout: timedelta,
     clock: Callable[[], datetime] = timezone.now,
 ) -> RunResult:
+    """Run claimed effect.
+
+    Parameters
+    ----------
+    claim : ClaimedEffect
+        The claimed work item to process.
+    handlers : HandlerRegistry
+        The closed handler registry used to dispatch claimed effects.
+    execution_timeout : timedelta
+        The execution timeout evaluated while run claimed effect.
+    clock : Callable[[], datetime], default=timezone.now
+        The injectable clock used to make time-dependent behavior deterministic.
+
+    Returns
+    -------
+    RunResult
+        The run result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if execution_timeout <= timedelta(0) or execution_timeout > MAX_LEASE_DURATION:
         raise ValidationError(
             "Execution timeout must be positive and no more than 15 minutes.",

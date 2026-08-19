@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Literal
-from uuid import UUID
+from typing import TYPE_CHECKING, Literal
 
 from django.db import DEFAULT_DB_ALIAS, connections, transaction
-from django.db.backends.base.base import BaseDatabaseWrapper
 
 from maru.workforce.models import EditionStructureControl
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+    from uuid import UUID
+
+    from django.db.backends.base.base import BaseDatabaseWrapper
 
 MAX_STRUCTURE_SNAPSHOT_ATTEMPTS = 2
 StructureSnapshotIsolation = Literal["REPEATABLE READ", "READ COMMITTED"]
@@ -23,7 +26,19 @@ class StructureSnapshotChangedError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class StructureSnapshotRead[SnapshotT]:
-    """A composed result and its exact in-snapshot aggregate fence."""
+    """A composed result and its exact in-snapshot aggregate fence.
+
+    Attributes
+    ----------
+    value
+        The untrusted input to normalize, validate, or compare.
+    organization_id
+        The organization identifier that owns the requested resource.
+    edition_id
+        The event edition identifier that scopes the operation.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    """
 
     value: SnapshotT
     organization_id: UUID
@@ -38,8 +53,18 @@ def _inside_django_testcase(connection: BaseDatabaseWrapper) -> bool:
     PostgreSQL no longer permits changing its isolation level. Production code
     never takes this compatibility path: an unexpected caller-owned atomic
     block fails instead of silently weakening the snapshot contract.
-    """
 
+    Parameters
+    ----------
+    connection : BaseDatabaseWrapper
+        The connection evaluated while inside django testcase.
+
+    Returns
+    -------
+    bool
+        `True` when Identify only Django's test-owned outer transaction;
+        otherwise `False`.
+    """
     return any(
         bool(getattr(block, "_from_testcase", False))
         for block in connection.atomic_blocks
@@ -75,8 +100,23 @@ def _read_only_transaction(
 
 @contextmanager
 def repeatable_read_only_snapshot(*, using: str = DEFAULT_DB_ALIAS) -> Iterator[None]:
-    """Open one short PostgreSQL repeatable-read, read-only transaction."""
+    """Open one short PostgreSQL repeatable-read, read-only transaction.
 
+    Parameters
+    ----------
+    using : str, default=DEFAULT_DB_ALIAS
+        The Django database alias on which to perform the operation.
+
+    Yields
+    ------
+    None
+        The resolved Iterator[None] for repeatable read only snapshot.
+
+    Returns
+    -------
+    Iterator[None]
+        An iterator that manages the repeatable-read snapshot.
+    """
     with _read_only_transaction(isolation_level="REPEATABLE READ", using=using):
         yield
 
@@ -87,8 +127,22 @@ def current_structure_version(
     edition_id: UUID,
     using: str = DEFAULT_DB_ALIAS,
 ) -> int:
-    """Read the aggregate's current version in a fresh read-committed view."""
+    """Read the aggregate's current version in a fresh read-committed view.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    using : str, default=DEFAULT_DB_ALIAS
+        The Django database alias on which to perform the operation.
+
+    Returns
+    -------
+    int
+        The resolved int for current structure version.
+    """
     with _read_only_transaction(isolation_level="READ COMMITTED", using=using):
         version = (
             EditionStructureControl.objects.using(using)
@@ -113,8 +167,24 @@ def load_version_fenced_snapshot[SnapshotT](
     and return the aggregate version observed in that same snapshot. Once the
     repeatable-read transaction has ended, a fresh read-committed probe detects
     both absent-to-present creation and every monotonic version movement.
-    """
 
+    Parameters
+    ----------
+    load : Callable[[], StructureSnapshotRead[SnapshotT]]
+        The callback invoked to load.
+    using : str, default=DEFAULT_DB_ALIAS
+        The Django database alias on which to perform the operation.
+
+    Returns
+    -------
+    SnapshotT
+        The resolved SnapshotT for the requested scope.
+
+    Raises
+    ------
+    StructureSnapshotChangedError
+        If the supplied aggregate version is stale.
+    """
     for _attempt in range(MAX_STRUCTURE_SNAPSHOT_ATTEMPTS):
         with repeatable_read_only_snapshot(using=using):
             snapshot = load()

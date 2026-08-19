@@ -27,6 +27,8 @@ PREVIEW_CONTENT_LENGTH = PREVIEW_LENGTH - 3
 class EventEditionAdminForm(
     forms.ModelForm,  # type: ignore[type-arg]
 ):
+    """Collect and validate event edition admin input."""
+
     language_codes = forms.MultipleChoiceField(
         label="Languages",
         choices=grouped_language_choices,
@@ -51,6 +53,8 @@ class EventEditionAdminForm(
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = EventEdition
         fields = (
             "organization",
@@ -83,6 +87,8 @@ class EventEditionAdmin(
     NoDeleteAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for event edition."""
+
     form = EventEditionAdminForm
     edition_context_lookup = "id"
     list_display = (
@@ -146,16 +152,42 @@ class EventEditionAdmin(
     )
 
     class Media:
+        """Enumerate supported media values."""
+
         js = ("core/filterable-select.js",)
 
     @admin.display(description="Lifecycle", ordering="lifecycle")
     def lifecycle_display(self, obj: EventEdition | None) -> str:
+        """Return lifecycle display.
+
+        Parameters
+        ----------
+        obj : EventEdition | None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for lifecycle display.
+        """
         if obj is None:
             return EventEdition.Lifecycle.DRAFT.label
         return obj.get_lifecycle_display()
 
     @admin.display(description="Dates", ordering="starts_on")
     def date_range(self, obj: EventEdition) -> str:
+        """Return date range.
+
+        Parameters
+        ----------
+        obj : EventEdition
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for date range.
+        """
         return f"{obj.starts_on:%Y-%m-%d} → {obj.ends_on:%Y-%m-%d}"
 
     def edition_context_q(
@@ -163,6 +195,20 @@ class EventEditionAdmin(
         request: HttpRequest,
         edition: EventEdition,
     ) -> Q:
+        """Return edition context q.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        edition : EventEdition
+            The event edition that scopes the operation.
+
+        Returns
+        -------
+        Q
+            A Django query predicate for edition context q.
+        """
         if (
             request.path == "/admin/autocomplete/"
             and request.GET.get("app_label") == "registration"
@@ -177,6 +223,20 @@ class EventEditionAdmin(
         request: HttpRequest,
         obj: EventEdition | None = None,
     ) -> bool:
+        """Return whether change permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : EventEdition | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when change permission; otherwise `False`.
+        """
         if obj is not None and obj.lifecycle == EventEdition.Lifecycle.ARCHIVED:
             return False
         return super().has_change_permission(request, obj)
@@ -187,6 +247,8 @@ class EditionLifecycleTransitionAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for edition lifecycle transition."""
+
     list_display = (
         "edition",
         "from_state",
@@ -240,8 +302,20 @@ class EditionLifecycleTransitionAdmin(
         self,
         request: HttpRequest,
     ) -> QuerySet[EditionLifecycleTransition]:
+        """Return the permission-scoped queryset.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        QuerySet[EditionLifecycleTransition]
+            The matching get queryset records in deterministic order.
+        """
         queryset = cast(
-            QuerySet[EditionLifecycleTransition],
+            "QuerySet[EditionLifecycleTransition]",
             super().get_queryset(request),
         )
         return queryset.select_related("edition").annotate(
@@ -250,10 +324,34 @@ class EditionLifecycleTransitionAdmin(
 
     @admin.display(description="Actor", ordering="_actor_display_name")
     def actor(self, obj: EditionLifecycleTransition) -> str:
+        """Return actor.
+
+        Parameters
+        ----------
+        obj : EditionLifecycleTransition
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for actor.
+        """
         return _actor_label(obj)
 
     @admin.display(description="Reason")
     def reason_preview(self, obj: EditionLifecycleTransition) -> str:
+        """Return reason preview.
+
+        Parameters
+        ----------
+        obj : EditionLifecycleTransition
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for reason preview.
+        """
         reason = obj.reason.strip()
         if len(reason) <= PREVIEW_LENGTH:
             return reason
@@ -265,6 +363,8 @@ class EditionReadinessGateAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for edition readiness gate."""
+
     list_display = (
         "edition",
         "code",
@@ -281,8 +381,20 @@ class EditionReadinessGateAdmin(
         self,
         request: HttpRequest,
     ) -> QuerySet[EditionReadinessGate]:
+        """Return the permission-scoped queryset.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        QuerySet[EditionReadinessGate]
+            The matching get queryset records in deterministic order.
+        """
         queryset = cast(
-            QuerySet[EditionReadinessGate],
+            "QuerySet[EditionReadinessGate]",
             super().get_queryset(request),
         )
         return queryset.annotate(
@@ -295,6 +407,18 @@ class EditionReadinessGateAdmin(
 
     @admin.display(description="Reviewed by", ordering="_reviewer_display_name")
     def reviewer(self, obj: EditionReadinessGate) -> str:
+        """Return reviewer.
+
+        Parameters
+        ----------
+        obj : EditionReadinessGate
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for reviewer.
+        """
         display_name = str(getattr(obj, "_reviewer_display_name", "")).strip()
         if display_name:
             return display_name
@@ -308,6 +432,8 @@ class EditionClosureManifestAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for edition closure manifest."""
+
     list_display = (
         "edition",
         "generated_at",
@@ -323,6 +449,8 @@ class ArchiveAmendmentAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for archive amendment."""
+
     list_display = (
         "edition",
         "actor",
@@ -377,8 +505,20 @@ class ArchiveAmendmentAdmin(
     )
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[ArchiveAmendment]:
+        """Return the permission-scoped queryset.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        QuerySet[ArchiveAmendment]
+            The matching get queryset records in deterministic order.
+        """
         queryset = cast(
-            QuerySet[ArchiveAmendment],
+            "QuerySet[ArchiveAmendment]",
             super().get_queryset(request),
         )
         return queryset.select_related("edition").annotate(
@@ -387,10 +527,34 @@ class ArchiveAmendmentAdmin(
 
     @admin.display(description="Actor", ordering="_actor_display_name")
     def actor(self, obj: ArchiveAmendment) -> str:
+        """Return actor.
+
+        Parameters
+        ----------
+        obj : ArchiveAmendment
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for actor.
+        """
         return _actor_label(obj)
 
     @admin.display(description="Summary")
     def summary_preview(self, obj: ArchiveAmendment) -> str:
+        """Return summary preview.
+
+        Parameters
+        ----------
+        obj : ArchiveAmendment
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for summary preview.
+        """
         summary = obj.summary.strip()
         if len(summary) <= PREVIEW_LENGTH:
             return summary
@@ -398,6 +562,18 @@ class ArchiveAmendmentAdmin(
 
     @admin.display(description="Reason")
     def reason_preview(self, obj: ArchiveAmendment) -> str:
+        """Return reason preview.
+
+        Parameters
+        ----------
+        obj : ArchiveAmendment
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for reason preview.
+        """
         reason = obj.reason.strip()
         if len(reason) <= PREVIEW_LENGTH:
             return reason

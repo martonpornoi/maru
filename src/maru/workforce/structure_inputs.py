@@ -11,11 +11,13 @@ import hashlib
 import json
 import re
 import unicodedata
-from collections.abc import Iterable, Mapping
-from typing import Never
+from typing import TYPE_CHECKING, Never
 
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
 
 MAX_DEPARTMENT_NAME_LENGTH = 160
 MAX_DEPARTMENT_DESCRIPTION_LENGTH = 1_000
@@ -48,8 +50,20 @@ def _raise_field_error(
 
 
 def _nfc_without_control_characters(value: str, *, field_name: str) -> str:
-    """Reject controls in the submitted value, then return its NFC form."""
+    """Reject controls in the submitted value, then return its NFC form.
 
+    Parameters
+    ----------
+    value : str
+        The untrusted input to normalize, validate, or compare.
+    field_name : str
+        The canonical field name whose policy or value is requested.
+
+    Returns
+    -------
+    str
+        The normalized text for nfc without control characters.
+    """
     if not isinstance(value, str):
         _raise_field_error(
             field_name=field_name,
@@ -68,8 +82,18 @@ def _nfc_without_control_characters(value: str, *, field_name: str) -> str:
 
 
 def normalize_department_name(value: str) -> str:
-    """Normalize one required Department name to the accepted closed form."""
+    """Normalize one required Department name to the accepted closed form.
 
+    Parameters
+    ----------
+    value : str
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for normalize department name.
+    """
     normalized = " ".join(
         _nfc_without_control_characters(value, field_name="name").split()
     )
@@ -92,8 +116,18 @@ def normalize_department_name(value: str) -> str:
 
 
 def normalize_department_description(value: str) -> str:
-    """Normalize optional description Unicode while preserving inner spacing."""
+    """Normalize optional description Unicode while preserving inner spacing.
 
+    Parameters
+    ----------
+    value : str
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for normalize department description.
+    """
     normalized = _nfc_without_control_characters(
         value,
         field_name="description",
@@ -111,8 +145,18 @@ def normalize_department_description(value: str) -> str:
 
 
 def normalize_structure_reason(value: str) -> str:
-    """Normalize one required, retained administrative rationale."""
+    """Normalize one required, retained administrative rationale.
 
+    Parameters
+    ----------
+    value : str
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for normalize structure reason.
+    """
     normalized = " ".join(
         _nfc_without_control_characters(value, field_name="reason").split()
     )
@@ -135,8 +179,20 @@ def normalize_structure_reason(value: str) -> str:
 
 
 def validate_exact_confirmation(value: str, *, expected: str) -> str:
-    """Require byte-for-byte-equivalent text without normalizing either side."""
+    """Require byte-for-byte-equivalent text without normalizing either side.
 
+    Parameters
+    ----------
+    value : str
+        The untrusted input to normalize, validate, or compare.
+    expected : str
+        The expected evaluated while validate exact confirmation.
+
+    Returns
+    -------
+    str
+        The normalized text for validate exact confirmation.
+    """
     if not isinstance(value, str) or value != expected:
         _raise_field_error(
             field_name="confirmation_name",
@@ -147,8 +203,18 @@ def validate_exact_confirmation(value: str, *, expected: str) -> str:
 
 
 def validate_department_display_order(value: int) -> int:
-    """Accept only a strict integer in the Page 9 display-order range."""
+    """Accept only a strict integer in the Page 9 display-order range.
 
+    Parameters
+    ----------
+    value : int
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    int
+        The resolved int for validate department display order.
+    """
     if type(value) is not int or not (
         MIN_DEPARTMENT_DISPLAY_ORDER <= value <= MAX_DEPARTMENT_DISPLAY_ORDER
     ):
@@ -165,8 +231,18 @@ def validate_department_display_order(value: int) -> int:
 
 
 def canonical_request_json(payload: Mapping[str, object]) -> bytes:
-    """Return deterministic UTF-8 JSON for an already-normalized command."""
+    """Return deterministic UTF-8 JSON for an already-normalized command.
 
+    Parameters
+    ----------
+    payload : Mapping[str, object]
+        The untrusted payload to validate before domain use.
+
+    Returns
+    -------
+    bytes
+        The canonical byte representation for canonical request json.
+    """
     return json.dumps(
         dict(payload),
         ensure_ascii=False,
@@ -177,14 +253,34 @@ def canonical_request_json(payload: Mapping[str, object]) -> bytes:
 
 
 def canonical_request_digest(payload: Mapping[str, object]) -> str:
-    """Return the lower-case SHA-256 digest of a normalized command payload."""
+    """Return the lower-case SHA-256 digest of a normalized command payload.
 
+    Parameters
+    ----------
+    payload : Mapping[str, object]
+        The untrusted payload to validate before domain use.
+
+    Returns
+    -------
+    str
+        The normalized text for canonical request digest.
+    """
     return hashlib.sha256(canonical_request_json(payload)).hexdigest()
 
 
 def department_code_candidates(name: str) -> tuple[str, ...]:
-    """Return the complete deterministic, bounded code-candidate sequence."""
+    """Return the complete deterministic, bounded code-candidate sequence.
 
+    Parameters
+    ----------
+    name : str
+        The human-readable name to normalize or persist.
+
+    Returns
+    -------
+    tuple[str, ...]
+        The matching department code candidates records in deterministic order.
+    """
     normalized_name = normalize_department_name(name)
     base = _HYPHEN_RUN.sub(
         "-",
@@ -205,8 +301,20 @@ def generate_department_code(
     *,
     existing_codes: Iterable[str] = (),
 ) -> str:
-    """Choose the first case-insensitively unused deterministic candidate."""
+    """Choose the first case-insensitively unused deterministic candidate.
 
+    Parameters
+    ----------
+    name : str
+        The human-readable name to normalize or persist.
+    existing_codes : Iterable[str], default=()
+        The closed set of existing codes accepted by the domain catalog.
+
+    Returns
+    -------
+    str
+        The normalized text for generate department code.
+    """
     occupied = frozenset(code.casefold() for code in existing_codes)
     for candidate in department_code_candidates(name):
         if candidate.casefold() not in occupied:

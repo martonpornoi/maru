@@ -15,17 +15,15 @@ import inspect
 import json
 import re
 from collections import Counter
-from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from importlib import import_module
-from typing import Final, Protocol, cast
+from typing import TYPE_CHECKING, Final, Protocol, cast
 
 from django.apps import apps
 from django.conf import settings
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.db import DatabaseError, connection, migrations, models
-from django.db.backends.utils import CursorWrapper
 from django.db.models import CheckConstraint, Deferrable, UniqueConstraint
 
 from maru.authorization.database_role_safety import (
@@ -34,6 +32,11 @@ from maru.authorization.database_role_safety import (
     RuntimeDatabaseRoleProbeError,
     probe_runtime_database_role_safety,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
+    from django.db.backends.utils import CursorWrapper
 
 _SUPPORTED_DATABASE_SCHEMA: Final = "public"
 _SUPPORTED_POSTGRESQL_SERVER_MAJOR: Final = 17
@@ -70,14 +73,30 @@ class _IntegrityMigration(Protocol):
 
 
 _migration = cast(
-    _IntegrityMigration,
+    "_IntegrityMigration",
     import_module(_INTEGRITY_MIGRATION_MODULE),
 )
 
 
 @dataclass(frozen=True, slots=True)
 class TriggerContract:
-    """Exact non-internal trigger attachment derived from migration SQL."""
+    """Exact non-internal trigger attachment derived from migration SQL.
+
+    Attributes
+    ----------
+    name
+        The human-readable name to normalize or persist.
+    table
+        The database table whose integrity contract is being inspected.
+    function
+        The function retained in this immutable projection.
+    trigger_type
+        The closed trigger type discriminator defined by the domain catalog.
+    deferrable
+        The deferrable retained in this immutable projection.
+    initially_deferred
+        The initially deferred retained in this immutable projection.
+    """
 
     name: str
     table: str
@@ -89,7 +108,35 @@ class TriggerContract:
 
 @dataclass(frozen=True, slots=True)
 class FunctionContract:
-    """Behavior-bearing ``pg_proc`` fields derived from migration SQL."""
+    """Behavior-bearing ``pg_proc`` fields derived from migration SQL.
+
+    Attributes
+    ----------
+    identity
+        The identity retained in this immutable projection.
+    source
+        The immutable source record or definition from which data is derived.
+    language
+        The language retained in this immutable projection.
+    volatility
+        The volatility retained in this immutable projection.
+    parallel
+        The parallel retained in this immutable projection.
+    security_definer
+        The security definer retained in this immutable projection.
+    leakproof
+        The leakproof retained in this immutable projection.
+    strict
+        The strict retained in this immutable projection.
+    returns_set
+        The returns set retained in this immutable projection.
+    kind
+        The closed discriminator selecting the requested behavior.
+    configuration
+        The configuration retained in this immutable projection.
+    result
+        The result retained in this immutable projection.
+    """
 
     identity: str
     source: str
@@ -106,6 +153,13 @@ class FunctionContract:
 
     @property
     def definition_sha256(self) -> str:
+        """Verify definition sha256.
+
+        Returns
+        -------
+        str
+            The normalized text for definition sha256.
+        """
         return _function_definition_fingerprint(
             (
                 self.source,
@@ -125,7 +179,27 @@ class FunctionContract:
 
 @dataclass(frozen=True, slots=True)
 class SchemaObjectContract:
-    """One named model constraint or unique index."""
+    """One named model constraint or unique index.
+
+    Attributes
+    ----------
+    name
+        The human-readable name to normalize or persist.
+    table
+        The database table whose integrity contract is being inspected.
+    catalog_kind
+        The closed catalog kind discriminator defined by the domain catalog.
+    constraint_type
+        The closed constraint type discriminator defined by the domain catalog.
+    deferrable
+        The deferrable retained in this immutable projection.
+    initially_deferred
+        The initially deferred retained in this immutable projection.
+    has_expressions
+        Whether to has expressions.
+    has_predicate
+        Whether to has predicate.
+    """
 
     name: str
     table: str
@@ -138,12 +212,27 @@ class SchemaObjectContract:
 
     @property
     def key(self) -> str:
+        """Verify key.
+
+        Returns
+        -------
+        str
+            The normalized text for key.
+        """
         return f"{self.catalog_kind}:{self.name}"
 
 
 @dataclass(frozen=True, slots=True)
 class ImplicitUniqueContract:
-    """One Django field-level uniqueness contract without a stable SQL name."""
+    """One Django field-level uniqueness contract without a stable SQL name.
+
+    Attributes
+    ----------
+    table
+        The database table whose integrity contract is being inspected.
+    columns
+        The columns retained in this immutable projection.
+    """
 
     table: str
     columns: tuple[str, ...]
@@ -151,7 +240,45 @@ class ImplicitUniqueContract:
 
 @dataclass(frozen=True, slots=True)
 class LogisticsProductionCatalog:
-    """Identifier-free result of one bounded PostgreSQL catalog inspection."""
+    """Identifier-free result of one bounded PostgreSQL catalog inspection.
+
+    Attributes
+    ----------
+    server_version_supported
+        The server version supported retained in this immutable projection.
+    schema_order_safe
+        The schema order safe retained in this immutable projection.
+    reviewed_migrations_applied
+        The reviewed migrations applied retained in this immutable projection.
+    relations_installed
+        The relations installed retained in this immutable projection.
+    relation_ownership_consistent
+        The relation ownership consistent retained in this immutable projection.
+    relation_privilege_profiles_declared
+        The relation privilege profiles declared retained in this immutable projection.
+    btree_gist_installed
+        The btree gist installed retained in this immutable projection.
+    schema_definition_fingerprints_finalized
+        Whether every schema-definition fingerprint is finalized.
+    schema_definitions_current
+        The schema definitions current retained in this immutable projection.
+    implicit_uniques_current
+        The implicit uniques current retained in this immutable projection.
+    trigger_contract_current
+        The trigger contract current retained in this immutable projection.
+    function_contract_current
+        The function contract current retained in this immutable projection.
+    function_execute_boundary_closed
+        The function execute boundary closed retained in this immutable projection.
+    function_ownership_current
+        The function ownership current retained in this immutable projection.
+    runtime_function_execute_boundary_closed
+        Whether runtime execution is denied outside the explicit allowlist.
+    configured_runtime_role_safe
+        The configured runtime role safe retained in this immutable projection.
+    migration_contract_symmetric
+        The migration contract symmetric retained in this immutable projection.
+    """
 
     server_version_supported: bool
     schema_order_safe: bool
@@ -173,6 +300,14 @@ class LogisticsProductionCatalog:
 
     @property
     def ready(self) -> bool:
+        """Initialize the Django application integrations.
+
+        Returns
+        -------
+        bool
+            `True` when Initialize the Django application integrations; otherwise
+            `False`.
+        """
         return all(
             (
                 self.server_version_supported,
@@ -444,11 +579,21 @@ MIGRATION_CONTRACT_SYMMETRIC: Final = (
 
 
 def _function_definition_fingerprint(definition: tuple[object, ...]) -> str:
-    """Hash behavior-bearing ``pg_proc`` fields without exposing source."""
+    """Hash behavior-bearing ``pg_proc`` fields without exposing source.
 
+    Parameters
+    ----------
+    definition : tuple[object, ...]
+        The versioned definition governing the requested behavior.
+
+    Returns
+    -------
+    str
+        The normalized text for function definition fingerprint.
+    """
     configuration = definition[9]
     normalized_configuration = (
-        tuple(str(value) for value in cast(Iterable[object], configuration))
+        tuple(str(value) for value in cast("Iterable[object]", configuration))
         if configuration is not None
         else ()
     )
@@ -502,8 +647,20 @@ def _constraint_type(constraint: models.BaseConstraint) -> str | None:
 
 @lru_cache(maxsize=1)
 def logistics_relation_names() -> tuple[str, ...]:
+    """Verify logistics relation names.
+
+    Returns
+    -------
+    tuple[str, ...]
+        The authorized logistics relation names records in deterministic order.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    """
     relations = tuple(
-        cast(models.Model, apps.get_model("logistics", model_name))._meta.db_table
+        cast("models.Model", apps.get_model("logistics", model_name))._meta.db_table
         for model_name in _migration.LOGISTICS_MODEL_NAMES
     )
     if len(relations) != len(set(relations)):
@@ -513,6 +670,18 @@ def logistics_relation_names() -> tuple[str, ...]:
 
 @lru_cache(maxsize=1)
 def declared_schema_object_contracts() -> Mapping[str, SchemaObjectContract]:
+    """Verify declared schema object contracts.
+
+    Returns
+    -------
+    Mapping[str, SchemaObjectContract]
+        A disclosure-safe mapping for declared schema object contracts.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    """
     contracts: dict[str, SchemaObjectContract] = {}
     for model_name in _migration.LOGISTICS_MODEL_NAMES:
         model = apps.get_model("logistics", model_name)
@@ -545,6 +714,13 @@ def declared_schema_object_contracts() -> Mapping[str, SchemaObjectContract]:
 
 @lru_cache(maxsize=1)
 def declared_implicit_unique_contracts() -> tuple[ImplicitUniqueContract, ...]:
+    """Verify declared implicit unique contracts.
+
+    Returns
+    -------
+    tuple[ImplicitUniqueContract, ...]
+        The declared implicit uniqueness contracts in deterministic order.
+    """
     contracts: list[ImplicitUniqueContract] = []
     for model_name in _migration.LOGISTICS_MODEL_NAMES:
         model = apps.get_model("logistics", model_name)
@@ -872,8 +1048,14 @@ SCHEMA_DEFINITION_SHA256: Final[Mapping[str, str]] = {
 
 
 def relation_privilege_profiles_are_declared() -> bool:
-    """Prove all Logistics relations have exactly one least-privilege profile."""
+    """Prove all Logistics relations have exactly one least-privilege profile.
 
+    Returns
+    -------
+    bool
+        `True` when Prove all Logistics relations have exactly one least-
+        privilege profile; otherwise `False`.
+    """
     expected = {f"public.{relation}" for relation in logistics_relation_names()}
     select_insert = {
         relation
@@ -1020,8 +1202,14 @@ def _schema_definition_rows(
 
 
 def collect_logistics_schema_definition_sha256() -> dict[str, str]:
-    """Return data-free installed definition digests for contract finalization."""
+    """Return data-free installed definition digests for contract finalization.
 
+    Returns
+    -------
+    dict[str, str]
+        A mapping containing the resolved collect logistics schema definition
+        sha256 data.
+    """
     contracts = declared_schema_object_contracts()
     with connection.cursor() as cursor:
         rows = _schema_definition_rows(cursor, contracts)
@@ -1041,7 +1229,7 @@ def _schema_definitions_are_current(
                 "c": (None, None, None, None, None, None, None),
                 "u": ("btree", True, True, True, True, False, False),
                 "x": ("gist", False, True, True, True, False, True),
-            }[cast(str, contract.constraint_type)]
+            }[cast("str", contract.constraint_type)]
             expected[key] = (
                 contract.table,
                 contract.constraint_type,
@@ -1151,8 +1339,14 @@ def _implicit_uniques_are_current(
 
 
 def inspect_logistics_production_catalog() -> LogisticsProductionCatalog:
-    """Inspect Logistics integrity without reading tenant or personal rows."""
+    """Inspect Logistics integrity without reading tenant or personal rows.
 
+    Returns
+    -------
+    LogisticsProductionCatalog
+        The LogisticsProductionCatalog produced by inspect logistics production
+        catalog.
+    """
     relations = logistics_relation_names()
     trigger_contracts = dict(TRIGGER_CONTRACTS)
     function_contracts = dict(FUNCTION_CONTRACTS)
@@ -1163,10 +1357,10 @@ def inspect_logistics_production_catalog() -> LogisticsProductionCatalog:
             "SELECT pg_catalog.current_setting('server_version_num')::integer / 10000"
         )
         server_version_supported = (
-            cast(int, cursor.fetchone()[0]) == _SUPPORTED_POSTGRESQL_SERVER_MAJOR
+            cast("int", cursor.fetchone()[0]) == _SUPPORTED_POSTGRESQL_SERVER_MAJOR
         )
         cursor.execute("SELECT pg_catalog.current_schemas(TRUE)")
-        schemas = tuple(cast(Iterable[str], cursor.fetchone()[0]))
+        schemas = tuple(cast("Iterable[str]", cursor.fetchone()[0]))
         schema_order_safe = schemas[:2] == (
             "pg_catalog",
             _SUPPORTED_DATABASE_SCHEMA,
@@ -1416,8 +1610,14 @@ def inspect_logistics_production_catalog() -> LogisticsProductionCatalog:
 
 
 def logistics_production_contract_is_ready() -> bool:
-    """Fail closed when the catalog cannot prove the complete contract."""
+    """Fail closed when the catalog cannot prove the complete contract.
 
+    Returns
+    -------
+    bool
+        `True` when Fail closed when the catalog cannot prove the complete
+        contract; otherwise `False`.
+    """
     try:
         return inspect_logistics_production_catalog().ready
     except (DatabaseError, LookupError, RuntimeError, TypeError, ValueError):
@@ -1425,8 +1625,14 @@ def logistics_production_contract_is_ready() -> bool:
 
 
 def logistics_current_session_is_ready() -> bool:
-    """Prove both the Logistics catalog and this exact runtime session."""
+    """Prove both the Logistics catalog and this exact runtime session.
 
+    Returns
+    -------
+    bool
+        `True` when Prove both the Logistics catalog and this exact runtime
+        session; otherwise `False`.
+    """
     runtime_role_name = getattr(settings, "RUNTIME_DATABASE_ROLE", "")
     if not runtime_role_name:
         return False
@@ -1448,8 +1654,13 @@ def logistics_current_session_is_ready() -> bool:
 
 
 def build_logistics_readiness_report() -> dict[str, object]:
-    """Return an identifier-free health payload for a later central mount."""
+    """Return an identifier-free health payload for a later central mount.
 
+    Returns
+    -------
+    dict[str, object]
+        A mapping containing the resolved build logistics readiness report data.
+    """
     try:
         catalog = inspect_logistics_production_catalog()
     except (DatabaseError, LookupError, RuntimeError, TypeError, ValueError):

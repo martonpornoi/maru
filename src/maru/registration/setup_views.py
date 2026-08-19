@@ -157,8 +157,23 @@ def _safe_dependency_log(request: HttpRequest, *, operation: str) -> None:
 
 
 def _active_account(request: HttpRequest) -> Account:
-    """Reload an active actor before resolving scope or parsing a protected body."""
+    """Reload an active actor before resolving scope or parsing a protected body.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    Account
+        The resolved Account for active account.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     if not isinstance(request.user, Account) or not request.user.is_authenticated:
         raise PermissionDenied
     actor = Account.objects.filter(pk=request.user.pk, is_active=True).first()
@@ -900,7 +915,7 @@ def _render_start(
     else:
         choices, kinds = _source_choices(read.workspace)
         form.source_kinds_by_id = kinds
-        source_field = cast(Any, form.fields["source_id"])
+        source_field = cast("Any", form.fields["source_id"])
         source_field.set_choices((("", "No source record — start blank"), *choices))
     context = _base_context(
         request,
@@ -1144,6 +1159,29 @@ def registration_setup_workspace(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Return registration setup workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_account(request)
     try:
         _authorize_registration_route(
@@ -1179,6 +1217,29 @@ def registration_setup_start(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Return registration setup start.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_account(request)
     try:
         _authorize_registration_route(
@@ -1229,6 +1290,29 @@ def start_registration_setup_view(  # noqa: PLR0911
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Start registration setup view.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, read = _preflight_post(
             request,
@@ -1265,30 +1349,30 @@ def start_registration_setup_view(  # noqa: PLR0911
             organization_id=read.organization.id,
             series_id=read.series.id,
             edition_id=read.edition.id,
-            source_kind=cast(str, form.cleaned_data["source_kind"]),
-            source_id=cast(UUID | None, form.cleaned_data["source_id"]),
-            name=cast(str, form.cleaned_data["name"]),
-            opens_at=cast(datetime | None, form.cleaned_data["opens_at"]),
-            closes_at=cast(datetime | None, form.cleaned_data["closes_at"]),
-            capacity=cast(int | None, form.cleaned_data["capacity"]),
+            source_kind=cast("str", form.cleaned_data["source_kind"]),
+            source_id=cast("UUID | None", form.cleaned_data["source_id"]),
+            name=cast("str", form.cleaned_data["name"]),
+            opens_at=cast("datetime | None", form.cleaned_data["opens_at"]),
+            closes_at=cast("datetime | None", form.cleaned_data["closes_at"]),
+            capacity=cast("int | None", form.cleaned_data["capacity"]),
             capacity_ceiling=cast(
-                int | None,
+                "int | None",
                 form.cleaned_data["capacity_ceiling"],
             ),
-            currency=cast(str | None, form.cleaned_data["currency"]),
-            minimum_age=cast(int | None, form.cleaned_data["minimum_age"]),
+            currency=cast("str | None", form.cleaned_data["currency"]),
+            minimum_age=cast("int | None", form.cleaned_data["minimum_age"]),
             default_payment_window_minutes=cast(
-                int | None,
+                "int | None",
                 form.cleaned_data["default_payment_window_minutes"],
             ),
-            waitlist_enabled=cast(bool | None, form.cleaned_data["waitlist_enabled"]),
+            waitlist_enabled=cast("bool | None", form.cleaned_data["waitlist_enabled"]),
             automatic_waitlist_promotion=cast(
-                bool | None,
+                "bool | None",
                 form.cleaned_data["automatic_waitlist_promotion"],
             ),
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            reason=cast(str, form.cleaned_data["reason"]),
-            retry_key=cast(UUID, form.cleaned_data["retry_key"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel="web",
@@ -1367,6 +1451,31 @@ def registration_setup_configuration(
     edition_slug: str,
     configuration_id: UUID,
 ) -> HttpResponse:
+    """Return registration setup configuration.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_account(request)
     try:
         _authorize_registration_route(
@@ -1403,6 +1512,31 @@ def registration_setup_section_create(
     edition_slug: str,
     configuration_id: UUID,
 ) -> HttpResponse:
+    """Return registration setup section create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_account(request)
     try:
         _authorize_registration_route(
@@ -1465,7 +1599,7 @@ def _section_failure_response(
                 series_slug=series_slug,
                 edition_slug=edition_slug,
                 configuration_id=configuration_id,
-                form=cast(RegistrationSectionCreateForm, form),
+                form=cast("RegistrationSectionCreateForm", form),
                 status=status,
                 action_error=action_error,
                 reload_required=reload_required,
@@ -1478,7 +1612,7 @@ def _section_failure_response(
             edition_slug=edition_slug,
             configuration_id=configuration_id,
             active_action=action,
-            active_section_id=cast(UUID, section_id),
+            active_section_id=cast("UUID", section_id),
             active_form=form,
             status=status,
             action_error=action_error,
@@ -1499,6 +1633,33 @@ def create_registration_setup_section(  # noqa: PLR0911
     edition_slug: str,
     configuration_id: UUID,
 ) -> HttpResponse:
+    """Create registration setup section.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, read = _preflight_post(
             request,
@@ -1540,13 +1701,13 @@ def create_registration_setup_section(  # noqa: PLR0911
             series_id=read.series.id,
             edition_id=read.edition.id,
             configuration_id=configuration_id,
-            key=cast(str, form.cleaned_data["key"]),
-            title=cast(str, form.cleaned_data["title"]),
-            description=cast(str, form.cleaned_data["description"]),
-            after_section_id=cast(UUID | None, form.cleaned_data["after_section_id"]),
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            reason=cast(str, form.cleaned_data["reason"]),
-            retry_key=cast(UUID, form.cleaned_data["retry_key"]),
+            key=cast("str", form.cleaned_data["key"]),
+            title=cast("str", form.cleaned_data["title"]),
+            description=cast("str", form.cleaned_data["description"]),
+            after_section_id=cast("UUID | None", form.cleaned_data["after_section_id"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel="web",
@@ -1639,6 +1800,35 @@ def update_registration_setup_section(  # noqa: PLR0911
     configuration_id: UUID,
     section_id: UUID,
 ) -> HttpResponse:
+    """Update registration setup section.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+    section_id : UUID
+        The identifier of the section.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, read, ordinal = _section_action_preflight(
             request,
@@ -1681,12 +1871,12 @@ def update_registration_setup_section(  # noqa: PLR0911
             edition_id=read.edition.id,
             configuration_id=configuration_id,
             section_id=section_id,
-            key=cast(str, form.cleaned_data["key"]),
-            title=cast(str, form.cleaned_data["title"]),
-            description=cast(str, form.cleaned_data["description"]),
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            reason=cast(str, form.cleaned_data["reason"]),
-            retry_key=cast(UUID, form.cleaned_data["retry_key"]),
+            key=cast("str", form.cleaned_data["key"]),
+            title=cast("str", form.cleaned_data["title"]),
+            description=cast("str", form.cleaned_data["description"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel="web",
@@ -1762,6 +1952,35 @@ def move_registration_setup_section(  # noqa: PLR0911
     configuration_id: UUID,
     section_id: UUID,
 ) -> HttpResponse:
+    """Move registration setup section.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+    section_id : UUID
+        The identifier of the section.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, read, ordinal = _section_action_preflight(
             request,
@@ -1808,10 +2027,10 @@ def move_registration_setup_section(  # noqa: PLR0911
             edition_id=read.edition.id,
             configuration_id=configuration_id,
             section_id=section_id,
-            after_section_id=cast(UUID | None, form.cleaned_data["after_section_id"]),
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            reason=cast(str, form.cleaned_data["reason"]),
-            retry_key=cast(UUID, form.cleaned_data["retry_key"]),
+            after_section_id=cast("UUID | None", form.cleaned_data["after_section_id"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel="web",
@@ -1887,6 +2106,35 @@ def remove_registration_setup_section(  # noqa: PLR0911
     configuration_id: UUID,
     section_id: UUID,
 ) -> HttpResponse:
+    """Remove registration setup section.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    configuration_id : UUID
+        The identifier of the configuration.
+    section_id : UUID
+        The identifier of the section.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, read, ordinal = _section_action_preflight(
             request,
@@ -1929,9 +2177,9 @@ def remove_registration_setup_section(  # noqa: PLR0911
             edition_id=read.edition.id,
             configuration_id=configuration_id,
             section_id=section_id,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            reason=cast(str, form.cleaned_data["reason"]),
-            retry_key=cast(UUID, form.cleaned_data["retry_key"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=correlation_id,
             request_id=correlation_id,
             source_channel="web",

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from importlib import import_module
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -15,8 +15,6 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.participation.models import Participation
 from maru.registration.configuration_lifecycle import (
     activate_registration_configuration,
@@ -43,13 +41,17 @@ from maru.registration.profile_extension_values import append_profile_extension_
 from maru.registration.profile_policy import DIRECTORY_CONSENT_VERSION
 from maru.registration.setup_commands import start_registration_setup
 from maru.registration.setup_definition_commands import create_admission_product
-from maru.workforce.models import Department
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
     EventEditionFactory,
 )
 from tests.workforce_helpers import create_department_for_test
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
+    from maru.workforce.models import Department
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 

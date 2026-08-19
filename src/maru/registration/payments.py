@@ -8,7 +8,7 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Final, Protocol
+from typing import TYPE_CHECKING, Final, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request as UrlRequest
@@ -23,7 +23,6 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import append_audit
 from maru.authorization.policy import resolve_edition_target
-from maru.identity.models import Account
 from maru.registration.commerce import complete_admission_tier_replacement
 from maru.registration.finance import record_provider_payment, record_provider_refund
 from maru.registration.models import (
@@ -47,14 +46,32 @@ from maru.registration.services import (
     _system_audit,
 )
 
+if TYPE_CHECKING:
+    from maru.identity.models import Account
+
 WEBHOOK_REPLAY_WINDOW: Final = timedelta(minutes=5)
 PAYMENT_EVENT_NAMESPACE: Final = UUID("29d5e26f-a49b-48b6-8db9-b5a077dfe1fc")
 PROVIDER_TIMEOUT_SECONDS: Final = 8
 
 
 def _validate_provider_url(value: str) -> str:
-    """Require HTTPS and an explicit deployment-owned provider host."""
+    """Require HTTPS and an explicit deployment-owned provider host.
 
+    Parameters
+    ----------
+    value : str
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for validate provider url.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     parsed = urlsplit(value)
     allowed_hosts = {
         str(host).casefold()
@@ -77,6 +94,18 @@ def _validate_provider_url(value: str) -> str:
 
 @dataclass(frozen=True, slots=True)
 class HostedCheckout:
+    """Describe hosted checkout.
+
+    Attributes
+    ----------
+    provider_reference
+        The provider or source provider reference retained for reconciliation.
+    checkout_url
+        The validated absolute HTTPS checkout url.
+    expires_at
+        The timezone-aware timestamp for expires.
+    """
+
     provider_reference: str
     checkout_url: str
     expires_at: datetime
@@ -84,6 +113,24 @@ class HostedCheckout:
 
 @dataclass(frozen=True, slots=True)
 class VerifiedPaymentEvent:
+    """Describe verified payment event.
+
+    Attributes
+    ----------
+    remote_event_id
+        The remote event identifier within the requested scope.
+    provider_reference
+        The provider or source provider reference retained for reconciliation.
+    event_type
+        The closed event type discriminator defined by the domain catalog.
+    amount_minor
+        The amount minor retained in this immutable projection.
+    currency
+        The supported ISO 4217 currency code for monetary values.
+    occurred_at
+        The timezone-aware timestamp for occurred.
+    """
+
     remote_event_id: str
     provider_reference: str
     event_type: str
@@ -93,13 +140,32 @@ class VerifiedPaymentEvent:
 
 
 class HostedPaymentAdapter(Protocol):
+    """Describe hosted payment adapter."""
+
     def create_checkout(
         self,
         *,
         provider: PaymentProviderAccount,
         intent: PaymentIntent,
         return_url: str,
-    ) -> HostedCheckout: ...
+    ) -> HostedCheckout:
+        """Create checkout.
+
+        Parameters
+        ----------
+        provider : PaymentProviderAccount
+            The external-service adapter used without making it authoritative.
+        intent : PaymentIntent
+            The intent evaluated while create checkout.
+        return_url : str
+            The validated absolute HTTPS return url.
+
+        Returns
+        -------
+        HostedCheckout
+            The newly created HostedCheckout.
+        """
+        ...
 
 
 class JsonHostedPaymentAdapter:
@@ -112,6 +178,27 @@ class JsonHostedPaymentAdapter:
         intent: PaymentIntent,
         return_url: str,
     ) -> HostedCheckout:
+        """Create checkout.
+
+        Parameters
+        ----------
+        provider : PaymentProviderAccount
+            The external-service adapter used without making it authoritative.
+        intent : PaymentIntent
+            The intent evaluated while create checkout.
+        return_url : str
+            The validated absolute HTTPS return url.
+
+        Returns
+        -------
+        HostedCheckout
+            The newly created HostedCheckout.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         credential = os.environ.get(provider.credential_env_var, "")
         if not credential:
             raise ValidationError(
@@ -187,6 +274,33 @@ def create_payment_intent(
     return_url: str,
     now: datetime | None = None,
 ) -> PaymentIntent:
+    """Create payment intent.
+
+    Parameters
+    ----------
+    registration : Registration
+        The attendee registration governed by the requested transition.
+    provider_account_id : UUID
+        The identifier of the provider account.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    return_url : str
+        The validated absolute HTTPS return url.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    PaymentIntent
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    error
+        If the operation encounters a error condition.
+    """
     created_at = now or timezone.now()
     with transaction.atomic():
         locked = Registration.objects.select_for_update().get(id=registration.id)
@@ -357,6 +471,31 @@ def parse_verified_payment_event(
     timestamp: str,
     now: datetime | None = None,
 ) -> tuple[VerifiedPaymentEvent, datetime, str]:
+    """Parse verified payment event.
+
+    Parameters
+    ----------
+    provider : PaymentProviderAccount
+        The external-service adapter used without making it authoritative.
+    body : bytes
+        The body evaluated while parse verified payment event.
+    signature : str
+        The detached signature to authenticate before accepting the payload.
+    timestamp : str
+        The timestamp evaluated while parse verified payment event.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    tuple[VerifiedPaymentEvent, datetime, str]
+        The parsed verified payment event.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     received_at = now or timezone.now()
     signed_at = _verify_signature(
         provider=provider,
@@ -416,6 +555,33 @@ def reconcile_verified_payment_event(  # noqa: PLR0912, PLR0915
     correlation_id: UUID,
     received_at: datetime | None = None,
 ) -> PaymentWebhookReceipt:
+    """Reconcile verified payment event.
+
+    Parameters
+    ----------
+    provider : PaymentProviderAccount
+        The external-service adapter used without making it authoritative.
+    event : VerifiedPaymentEvent
+        The immutable domain event to process.
+    signed_at : datetime
+        The timezone-aware timestamp for signed.
+    payload_digest : str
+        The canonical digest used to verify payload.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    received_at : datetime | None, default=None
+        The timezone-aware timestamp for received.
+
+    Returns
+    -------
+    PaymentWebhookReceipt
+        The payment webhook receipt.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     now = received_at or timezone.now()
     with transaction.atomic():
         existing = PaymentWebhookReceipt.objects.filter(
@@ -793,6 +959,33 @@ def resolve_payment_exception(
     reason: str,
     correlation_id: UUID,
 ) -> PaymentException:
+    """Resolve payment exception.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    exception_id : UUID
+        The identifier of the exception.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    PaymentException
+        The resolved payment exception.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require_decision(
         actor=actor,
         capability_code=MANAGE_FINANCE,

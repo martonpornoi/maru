@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from maru.authorization.policy import (
     ResolvedAuthorizationTarget,
@@ -12,10 +12,29 @@ from maru.authorization.policy import (
 from .bindings import logistics_manifest_binding_id
 from .models import LogisticsManifest
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 
 def resolve_logistics_manifest_target(
     *, organization_id: UUID, edition_id: UUID, manifest_id: UUID
 ) -> ResolvedAuthorizationTarget | None:
+    """Resolve logistics manifest target.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    manifest_id : UUID
+        The identifier of the manifest.
+
+    Returns
+    -------
+    ResolvedAuthorizationTarget | None
+        The resolved logistics manifest target.
+    """
     row = (
         LogisticsManifest.objects.filter(
             id=manifest_id,

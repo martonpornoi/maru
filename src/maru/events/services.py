@@ -72,6 +72,24 @@ EDITION_PROFILE_EDITABLE_LIFECYCLES = frozenset(
 
 @dataclass(frozen=True, slots=True)
 class EventEditionDetails:
+    """Describe event edition details.
+
+    Attributes
+    ----------
+    name
+        The human-readable name to normalize or persist.
+    time_zone
+        The IANA time-zone name used for localized presentation.
+    language_codes
+        The language codes retained in this immutable projection.
+    currency_codes
+        The currency codes retained in this immutable projection.
+    starts_on
+        The calendar date for starts.
+    ends_on
+        The calendar date for ends.
+    """
+
     name: str
     time_zone: str
     language_codes: tuple[str, ...]
@@ -82,12 +100,32 @@ class EventEditionDetails:
 
 @dataclass(frozen=True, slots=True)
 class EventEditionCreationResult:
+    """Describe event edition creation result.
+
+    Attributes
+    ----------
+    edition
+        The event edition that scopes the operation.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     edition: EventEdition
     replayed: bool
 
 
 @dataclass(frozen=True, slots=True)
 class EventEditionUpdateResult:
+    """Describe event edition update result.
+
+    Attributes
+    ----------
+    edition
+        The event edition that scopes the operation.
+    changed_fields
+        The canonical field names changed by the operation.
+    """
+
     edition: EventEdition
     changed_fields: tuple[str, ...]
 
@@ -250,8 +288,37 @@ def create_event_edition(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> EventEditionCreationResult:
-    """Create one Draft edition with idempotent audit and outbox evidence."""
+    """Create one Draft edition with idempotent audit and outbox evidence.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    details : EventEditionDetails
+        The structured, disclosure-safe details recorded with the outcome.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    EventEditionCreationResult
+        The newly created EventEditionCreationResult.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     reason_code, obligations = _require_edition_capability(
         actor=actor,
         capability_code="events.create",
@@ -378,8 +445,39 @@ def update_event_edition(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> EventEditionUpdateResult:
-    """Update editable edition profile fields with optimistic concurrency."""
+    """Update editable edition profile fields with optimistic concurrency.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    expected_aggregate_version : int
+        The expected expected aggregate version used to reject stale updates.
+    details : EventEditionDetails
+        The structured, disclosure-safe details recorded with the outcome.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    EventEditionUpdateResult
+        The updated EventEditionUpdateResult after the transition is committed.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     reason_code, obligations = _require_edition_capability(
         actor=actor,
         capability_code="events.change_profile",
@@ -609,7 +707,7 @@ def _require_valid_transition(edition: EventEdition, *, to_state: str) -> None:
         )
 
 
-def transition_edition(
+def transition_edition(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     organization_id: UUID,
     edition_id: UUID,
@@ -620,6 +718,41 @@ def transition_edition(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> EventEdition:
+    """Transition edition.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    to_state : str
+        The closed to state discriminator defined by the domain catalog.
+    actor : Account
+        The authenticated person performing the operation.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    EventEdition
+        The EventEdition established after transition edition completes.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    EventEdition.DoesNotExist
+        If the requested scoped record does not exist.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     decision = decide(
         principal=actor,
         capability_code="events.transition",
@@ -788,7 +921,7 @@ def transition_edition(
         raise
 
 
-def bulk_transition_editions(
+def bulk_transition_editions(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     organization_id: UUID,
     edition_ids: tuple[UUID, ...],
@@ -799,8 +932,43 @@ def bulk_transition_editions(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> tuple[EventEdition, ...]:
-    """Atomically transition an exact, locked, independently authorized set."""
+    """Atomically transition an exact, locked, independently authorized set.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_ids : tuple[UUID, ...]
+        The selected edition identifiers.
+    to_state : str
+        The closed to state discriminator defined by the domain catalog.
+    actor : Account
+        The authenticated account authorizing the operation.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    tuple[EventEdition, ...]
+        The matching bulk transition editions records in deterministic order.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the caller lacks the authority required by the operation.
+    BulkTargetDeniedError
+        If the requested operation violates this domain contract.
+    BulkTargetUnavailableError
+        If the requested operation violates this domain contract.
+    ValidationError
+        If the requested state violates a domain invariant.
+    """
     target_count = len(edition_ids)
     try:
         with transaction.atomic():

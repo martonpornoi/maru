@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import secrets
-from collections.abc import Iterator
 from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -34,8 +34,6 @@ from maru.authorization.policy import (
 from maru.authorization.provenance_readiness import (
     build_authority_provenance_readiness_report,
 )
-from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.organizations.services import (
     OrganizationCreationDetails,
@@ -49,6 +47,12 @@ from maru.workforce.models import (
 )
 from tests.factories import AccountFactory, EventEditionFactory, OrganizationFactory
 from tests.support.authority import activate_synthetic_board
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 

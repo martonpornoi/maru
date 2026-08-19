@@ -26,6 +26,13 @@ MOJIBAKE_MARKERS = ("â€”", "â”", "Ã", "�")
 
 
 def markdown_files() -> list[Path]:
+    """Return maintained Markdown files in stable path order.
+
+    Returns
+    -------
+    list[Path]
+        The maintained Markdown files in stable path order.
+    """
     return sorted(
         path
         for path in ROOT.rglob("*.md")
@@ -34,6 +41,13 @@ def markdown_files() -> list[Path]:
 
 
 def main() -> int:
+    """Run the command-line entry point.
+
+    Returns
+    -------
+    int
+        The process exit status.
+    """
     failures: list[str] = []
     files = markdown_files()
 

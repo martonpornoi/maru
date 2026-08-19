@@ -2,28 +2,30 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from contextlib import suppress
 from typing import TYPE_CHECKING, Any, ClassVar, override
 from uuid import UUID, uuid4
 
-from django import forms
 from django.contrib import admin
 from django.db import DatabaseError, models
 from django.db.models import Q
-from django.http import HttpRequest
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString, mark_safe
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from django import forms
     from django.contrib.admin.options import _FieldOpts, _FieldsetSpec
+    from django.http import HttpRequest
+
+    from maru.events.models import EventEdition
 
 from maru.authorization.services import AuthorizationDenied
 from maru.core.admin import HttpsURLAdminMixin, NoDeleteAdminMixin, ReadOnlyAdminMixin
 from maru.events.admin_context import EditionContextAdmin
-from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.registration.models import (
     AdmissionProduct,
@@ -185,6 +187,8 @@ def _can_open_profile_extension_values(
 class TemplateSectionInline(
     admin.StackedInline,  # type: ignore[type-arg]
 ):
+    """Configure the template section inline in Django administration."""
+
     model = RegistrationTemplateSection
     extra = 0
     fields = ("position", "key", "title", "description")
@@ -194,6 +198,20 @@ class TemplateSectionInline(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> bool:
+        """Return whether add permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when add permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == TemplateStatus.DRAFT
@@ -205,6 +223,20 @@ class TemplateSectionInline(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> tuple[str, ...]:
+        """Return readonly fields.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching get readonly fields records in deterministic order.
+        """
         del request
         return self.fields if obj and obj.status != TemplateStatus.DRAFT else ()
 
@@ -213,6 +245,20 @@ class TemplateSectionInline(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> bool:
+        """Return whether delete permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when delete permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == TemplateStatus.DRAFT
@@ -223,6 +269,8 @@ class TemplateSectionInline(
 class TemplateQuestionInline(
     admin.StackedInline,  # type: ignore[type-arg]
 ):
+    """Configure the template question inline in Django administration."""
+
     model = RegistrationTemplateQuestion
     extra = 0
     fields = (
@@ -247,6 +295,22 @@ class TemplateQuestionInline(
         request: HttpRequest,
         **kwargs: Any,
     ) -> forms.ModelChoiceField[Any] | None:
+        """Return formfield for foreignkey.
+
+        Parameters
+        ----------
+        db_field : models.ForeignKey[Any, Any]
+            The db field evaluated while formfield for foreignkey.
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        forms.ModelChoiceField[Any] | None
+            The scoped choice field, or ``None`` for an unrelated relation.
+        """
         if db_field.name == "section":
             resolver_match = request.resolver_match
             template_id = (
@@ -265,6 +329,20 @@ class TemplateQuestionInline(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> bool:
+        """Return whether add permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when add permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == TemplateStatus.DRAFT
@@ -276,6 +354,20 @@ class TemplateQuestionInline(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> tuple[str, ...]:
+        """Return readonly fields.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching get readonly fields records in deterministic order.
+        """
         del request
         return self.fields if obj and obj.status != TemplateStatus.DRAFT else ()
 
@@ -284,6 +376,20 @@ class TemplateQuestionInline(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> bool:
+        """Return whether delete permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when delete permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == TemplateStatus.DRAFT
@@ -294,6 +400,8 @@ class TemplateQuestionInline(
 class TemplateProductInline(
     admin.StackedInline,  # type: ignore[type-arg]
 ):
+    """Configure the template product inline in Django administration."""
+
     model = RegistrationTemplateProduct
     extra = 0
     fields = (
@@ -318,6 +426,20 @@ class TemplateProductInline(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> bool:
+        """Return whether add permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when add permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == TemplateStatus.DRAFT
@@ -329,6 +451,20 @@ class TemplateProductInline(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> tuple[str, ...]:
+        """Return readonly fields.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching get readonly fields records in deterministic order.
+        """
         del request
         return self.fields if obj and obj.status != TemplateStatus.DRAFT else ()
 
@@ -337,6 +473,20 @@ class TemplateProductInline(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> bool:
+        """Return whether delete permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when delete permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == TemplateStatus.DRAFT
@@ -349,6 +499,8 @@ class RegistrationTemplateAdmin(
     NoDeleteAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for registration template."""
+
     list_display = (
         "name",
         "version",
@@ -406,6 +558,20 @@ class RegistrationTemplateAdmin(
         request: HttpRequest,
         edition: EventEdition,
     ) -> Q:
+        """Return edition context q.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        edition : EventEdition
+            The event edition that scopes the operation.
+
+        Returns
+        -------
+        Q
+            A Django query predicate for edition context q.
+        """
         del request
         return Q(organization_id=edition.organization_id) & (
             Q(series__isnull=True) | Q(series_id=edition.series_id)
@@ -413,6 +579,18 @@ class RegistrationTemplateAdmin(
 
     @admin.display(description="Scope")
     def scope(self, obj: RegistrationTemplate) -> str:
+        """Return scope.
+
+        Parameters
+        ----------
+        obj : RegistrationTemplate
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for scope.
+        """
         return (
             obj.series.name
             if obj.series_id and obj.series is not None
@@ -424,10 +602,24 @@ class RegistrationTemplateAdmin(
         request: HttpRequest,
         obj: RegistrationTemplate | None = None,
     ) -> tuple[str, ...]:
+        """Return readonly fields.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationTemplate | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching get readonly fields records in deterministic order.
+        """
         _ = request
         if obj is not None and obj.status != TemplateStatus.DRAFT:
             return tuple(
-                field.name for field in obj._meta.fields if field.name not in {"status"}
+                field.name for field in obj._meta.fields if field.name != "status"
             )
         return self.readonly_fields
 
@@ -448,6 +640,8 @@ class RegistrationTemplateAdmin(
 class RegistrationQuestionInline(
     admin.StackedInline,  # type: ignore[type-arg]
 ):
+    """Configure the registration question inline in Django administration."""
+
     model = RegistrationQuestion
     extra = 0
     fields = (
@@ -472,6 +666,22 @@ class RegistrationQuestionInline(
         request: HttpRequest,
         **kwargs: Any,
     ) -> forms.ModelChoiceField[Any] | None:
+        """Return formfield for foreignkey.
+
+        Parameters
+        ----------
+        db_field : models.ForeignKey[Any, Any]
+            The db field evaluated while formfield for foreignkey.
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        forms.ModelChoiceField[Any] | None
+            The scoped choice field, or ``None`` for an unrelated relation.
+        """
         if db_field.name == "section":
             resolver_match = request.resolver_match
             configuration_id = (
@@ -490,6 +700,20 @@ class RegistrationQuestionInline(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> bool:
+        """Return whether add permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when add permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == ConfigurationStatus.DRAFT
@@ -501,6 +725,20 @@ class RegistrationQuestionInline(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> tuple[str, ...]:
+        """Return readonly fields.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching get readonly fields records in deterministic order.
+        """
         del request
         return self.fields if obj and obj.status != ConfigurationStatus.DRAFT else ()
 
@@ -509,6 +747,20 @@ class RegistrationQuestionInline(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> bool:
+        """Return whether delete permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when delete permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == ConfigurationStatus.DRAFT
@@ -519,6 +771,8 @@ class RegistrationQuestionInline(
 class AdmissionProductInline(
     admin.StackedInline,  # type: ignore[type-arg]
 ):
+    """Configure the admission product inline in Django administration."""
+
     model = AdmissionProduct
     extra = 0
     fields = (
@@ -544,6 +798,20 @@ class AdmissionProductInline(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> bool:
+        """Return whether add permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when add permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == ConfigurationStatus.DRAFT
@@ -555,6 +823,20 @@ class AdmissionProductInline(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> tuple[str, ...]:
+        """Return readonly fields.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching get readonly fields records in deterministic order.
+        """
         del request
         return self.fields if obj and obj.status != ConfigurationStatus.DRAFT else ()
 
@@ -563,6 +845,20 @@ class AdmissionProductInline(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> bool:
+        """Return whether delete permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when delete permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == ConfigurationStatus.DRAFT
@@ -573,6 +869,8 @@ class AdmissionProductInline(
 class RegistrationSectionInline(
     admin.StackedInline,  # type: ignore[type-arg]
 ):
+    """Configure the registration section inline in Django administration."""
+
     model = RegistrationSection
     extra = 0
     fields = ("position", "key", "title", "description")
@@ -582,6 +880,20 @@ class RegistrationSectionInline(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> bool:
+        """Return whether add permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when add permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == ConfigurationStatus.DRAFT
@@ -593,6 +905,20 @@ class RegistrationSectionInline(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> tuple[str, ...]:
+        """Return readonly fields.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching get readonly fields records in deterministic order.
+        """
         del request
         return self.fields if obj and obj.status != ConfigurationStatus.DRAFT else ()
 
@@ -601,6 +927,20 @@ class RegistrationSectionInline(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> bool:
+        """Return whether delete permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when delete permission; otherwise `False`.
+        """
         return bool(
             obj is not None
             and obj.status == ConfigurationStatus.DRAFT
@@ -613,6 +953,8 @@ class RegistrationConfigurationAdmin(
     NoDeleteAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for registration configuration."""
+
     list_display = (
         "edition",
         "name",
@@ -714,6 +1056,18 @@ class RegistrationConfigurationAdmin(
 
     @admin.display(description="Source")
     def source_label(self, obj: RegistrationConfiguration) -> str:
+        """Return source label.
+
+        Parameters
+        ----------
+        obj : RegistrationConfiguration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for source label.
+        """
         if obj.source_template_id and obj.source_template is not None:
             return f"Template: {obj.source_template.name}"
         if obj.source_edition_id and obj.source_edition is not None:
@@ -722,6 +1076,18 @@ class RegistrationConfigurationAdmin(
 
     @admin.display(description="Registration period", ordering="opens_at")
     def registration_period(self, obj: RegistrationConfiguration) -> str:
+        """Return registration period.
+
+        Parameters
+        ----------
+        obj : RegistrationConfiguration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for registration period.
+        """
         return f"{obj.opens_at:%Y-%m-%d} → {obj.closes_at:%Y-%m-%d}"
 
     def get_readonly_fields(
@@ -729,6 +1095,20 @@ class RegistrationConfigurationAdmin(
         request: HttpRequest,
         obj: RegistrationConfiguration | None = None,
     ) -> tuple[str, ...]:
+        """Return readonly fields.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : RegistrationConfiguration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching get readonly fields records in deterministic order.
+        """
         _ = request
         if obj is not None and obj.status != ConfigurationStatus.DRAFT:
             return tuple(field.name for field in obj._meta.fields)
@@ -753,6 +1133,8 @@ class RegistrationAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for registration."""
+
     list_display = (
         "reference",
         "person",
@@ -873,6 +1255,20 @@ class RegistrationAdmin(
         request: HttpRequest,
         obj: Registration | None = None,
     ) -> _FieldsetSpec:
+        """Return fieldsets.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : Registration | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        _FieldsetSpec
+            The resolved _FieldsetSpec for the requested scope.
+        """
         fieldsets = list(super().get_fieldsets(request, obj))
         if obj is None or not _can_open_profile_extension_values(request, obj):
             return tuple(fieldsets)
@@ -899,6 +1295,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Current profile extensions")
     def profile_extension_values_workspace(self, obj: Registration) -> SafeString:
+        """Return profile extension values workspace.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString
+            Escaped HTML safe for rendering profile extension values workspace.
+        """
         url = reverse(
             "staff-profile-extension-values",
             kwargs={
@@ -915,14 +1323,50 @@ class RegistrationAdmin(
 
     @admin.display(description="Person", ordering="account__display_name")
     def person(self, obj: Registration) -> str:
+        """Return a disclosure-safe label for the referenced person.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            A display-safe person label using the configured fallback.
+        """
         return str(obj.account)
 
     @admin.display(description="Ticket price", ordering="price_minor_snapshot")
     def price(self, obj: Registration) -> str:
+        """Return price.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for price.
+        """
         return f"{obj.price_minor_snapshot / 100:.2f} {obj.currency_snapshot}"
 
     @admin.display(description="User status", ordering="account__is_active")
     def account_state(self, obj: Registration) -> str:
+        """Return account state.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for account state.
+        """
         if not obj.account.is_active:
             return "Inactive"
         if obj.account.restrictions.filter(status="active").exists():
@@ -931,6 +1375,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Infinity", boolean=True)
     def is_infinity_holder(self, obj: Registration) -> bool:
+        """Return whether infinity holder.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when infinity holder; otherwise `False`.
+        """
         return obj.entitlements.filter(
             code="infinity-ticket",
             status=Entitlement.Status.ACTIVE,
@@ -938,6 +1394,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Paid")
     def paid_amount(self, obj: Registration) -> str:
+        """Return paid amount.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for paid amount.
+        """
         received = sum(
             entry.amount_minor
             for entry in obj.financial_ledger.all()
@@ -954,6 +1422,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Account and restriction status")
     def account_status(self, obj: Registration) -> SafeString:
+        """Return account status.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString
+            Escaped HTML safe for rendering account status.
+        """
         verification = (
             "email verified"
             if obj.account.email_verified_at is not None
@@ -981,6 +1461,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Organizer roles and convention capacities")
     def roles_and_capacities(self, obj: Registration) -> SafeString:
+        """Return roles and capacities.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString
+            Escaped HTML safe for rendering roles and capacities.
+        """
         assignments = obj.account.role_assignments.filter(
             organization=obj.organization,
         ).filter(Q(edition__isnull=True) | Q(edition=obj.edition))
@@ -1002,6 +1494,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Entitlements and special ticket status")
     def entitlements_summary(self, obj: Registration) -> SafeString:
+        """Return entitlements summary.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString
+            Escaped HTML safe for rendering entitlements summary.
+        """
         entitlements = list(obj.entitlements.all())
         if not entitlements:
             return mark_safe("<span>No entitlements granted.</span>")
@@ -1015,6 +1519,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Payment and finance summary")
     def payment_summary(self, obj: Registration) -> SafeString:
+        """Return payment summary.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString
+            Escaped HTML safe for rendering payment summary.
+        """
         received = sum(
             entry.amount_minor
             for entry in obj.financial_ledger.all()
@@ -1060,6 +1576,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Internal comments")
     def internal_comments(self, obj: Registration) -> SafeString:
+        """Return internal comments.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString
+            Escaped HTML safe for rendering internal comments.
+        """
         notes = obj.timeline.filter(
             audience=RegistrationTimelineEntry.Audience.STAFF_ONLY
         )
@@ -1076,6 +1604,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Answers")
     def submitted_answers(self, obj: Registration) -> SafeString:
+        """Return submitted answers.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString
+            Escaped HTML safe for rendering submitted answers.
+        """
         try:
             submission = obj.submission
         except RegistrationSubmission.DoesNotExist:
@@ -1084,6 +1624,18 @@ class RegistrationAdmin(
 
     @admin.display(description="Related records")
     def attached_records(self, obj: Registration) -> SafeString:
+        """Return attached records.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString
+            Escaped HTML safe for rendering attached records.
+        """
         items: list[tuple[models.Model, str]] = []
         items.extend(
             (assignment, f"Organizer role: {assignment.role_bundle.name}")
@@ -1197,6 +1749,8 @@ class RegistrationSubmissionAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for registration submission."""
+
     edition_context_lookup = "registration__edition_id"
     list_display = (
         "registration",
@@ -1245,10 +1799,34 @@ class RegistrationSubmissionAdmin(
 
     @admin.display(description="Answers")
     def answer_count(self, obj: RegistrationSubmission) -> int:
+        """Return answer count.
+
+        Parameters
+        ----------
+        obj : RegistrationSubmission
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        int
+            The computed number of answer records.
+        """
         return len(obj.answers)
 
     @admin.display(description="Submitted questions and answers")
     def submitted_answers(self, obj: RegistrationSubmission) -> SafeString:
+        """Return submitted answers.
+
+        Parameters
+        ----------
+        obj : RegistrationSubmission
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        SafeString
+            Escaped HTML safe for rendering submitted answers.
+        """
         return _submitted_answers_table(obj)
 
 
@@ -1257,6 +1835,8 @@ class AttendeeRegistrationProfileAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for attendee registration profile."""
+
     list_display = (
         "registration",
         "person",
@@ -1356,6 +1936,18 @@ class AttendeeRegistrationProfileAdmin(
 
     @admin.display(description="Person", ordering="account__display_name")
     def person(self, obj: AttendeeRegistrationProfile) -> str:
+        """Return a disclosure-safe label for the referenced person.
+
+        Parameters
+        ----------
+        obj : AttendeeRegistrationProfile
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            A display-safe person label using the configured fallback.
+        """
         return str(obj.account)
 
 
@@ -1364,6 +1956,8 @@ class AttendeeFursuitAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for attendee fursuit."""
+
     list_display = (
         "name",
         "person",
@@ -1388,6 +1982,18 @@ class AttendeeFursuitAdmin(
 
     @admin.display(description="Person", ordering="account__display_name")
     def person(self, obj: AttendeeFursuit) -> str:
+        """Return a disclosure-safe label for the referenced person.
+
+        Parameters
+        ----------
+        obj : AttendeeFursuit
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            A display-safe person label using the configured fallback.
+        """
         return str(obj.account)
 
 
@@ -1396,6 +2002,8 @@ class PaymentAttemptAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for payment attempt."""
+
     edition_context_lookup = "registration__edition_id"
     list_display = (
         "registration",
@@ -1419,6 +2027,18 @@ class PaymentAttemptAdmin(
 
     @admin.display(description="Amount", ordering="amount_minor")
     def amount(self, obj: PaymentAttempt) -> str:
+        """Return amount.
+
+        Parameters
+        ----------
+        obj : PaymentAttempt
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for amount.
+        """
         return f"{obj.amount_minor / 100:.2f} {obj.currency}"
 
 
@@ -1427,6 +2047,8 @@ class RegistrationAdjustmentAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for registration adjustment."""
+
     edition_context_lookup = "registration__edition_id"
     list_display = (
         "registration",
@@ -1451,6 +2073,8 @@ class EntitlementAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for entitlement."""
+
     edition_context_lookup = "registration__edition_id"
     list_display = (
         "registration",
@@ -1477,6 +2101,8 @@ class CheckInRecordAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for check in record."""
+
     edition_context_lookup = "registration__edition_id"
     list_display = ("registration", "person", "method", "checked_in_at")
     list_display_links = ("registration", "person")
@@ -1492,6 +2118,18 @@ class CheckInRecordAdmin(
 
     @admin.display(description="Person", ordering="registration__account__display_name")
     def person(self, obj: CheckInRecord) -> str:
+        """Return a disclosure-safe label for the referenced person.
+
+        Parameters
+        ----------
+        obj : CheckInRecord
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            A display-safe person label using the configured fallback.
+        """
         return str(obj.registration.account)
 
 
@@ -1500,6 +2138,8 @@ class RegistrationTimelineEntryAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for registration timeline entry."""
+
     edition_context_lookup = "registration__edition_id"
     list_display = (
         "registration",
@@ -1527,6 +2167,8 @@ class PaymentProviderAccountAdmin(
     HttpsURLAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for payment provider account."""
+
     list_display = ("code", "display_name", "organization", "adapter", "enabled")
     list_filter = ("organization", "adapter", "enabled")
     search_fields = ("code", "display_name", "api_base_url")
@@ -1538,6 +2180,8 @@ class MinorRegistrationPolicyAdmin(
     NoDeleteAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for minor registration policy."""
+
     edition_context_lookup = "configuration__edition_id"
     list_display = (
         "configuration",
@@ -1555,6 +2199,8 @@ class GuardianConsentAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for guardian consent."""
+
     list_display = (
         "registration",
         "status",
@@ -1573,6 +2219,8 @@ class RegistrationProfileExtensionFieldAdmin(
     NoDeleteAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for registration profile extension field."""
+
     list_display = (
         "label",
         "key",
@@ -1666,6 +2314,8 @@ class RegistrationProfileExtensionValueRevisionAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure administration for profile extension value revisions."""
+
     list_display = (
         "registration",
         "field_key",

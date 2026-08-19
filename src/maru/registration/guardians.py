@@ -45,6 +45,26 @@ def create_guardian_consent(
     guardian_email: str,
     relationship: str,
 ) -> tuple[GuardianConsent, str | None]:
+    """Create guardian consent.
+
+    Parameters
+    ----------
+    registration : Registration
+        The attendee registration governed by the requested transition.
+    policy : MinorRegistrationPolicy
+        The closed policy definition governing the requested decision.
+    guardian_name : str
+        The human-readable guardian name shown to authorized readers.
+    guardian_email : str
+        The normalized guardian email used for delivery or identity matching.
+    relationship : str
+        The relationship evaluated while create guardian consent.
+
+    Returns
+    -------
+    tuple[GuardianConsent, str | None]
+        The persisted record after validation and transaction commit.
+    """
     raw_token = secrets.token_urlsafe(32)
     requested_at = timezone.now()
     consent = GuardianConsent.objects.create(
@@ -86,6 +106,25 @@ def accept_guardian_consent(
     raw_token: str,
     guardian_name: str,
 ) -> Registration:
+    """Accept guardian consent.
+
+    Parameters
+    ----------
+    raw_token : str
+        The untrusted token supplied by the caller.
+    guardian_name : str
+        The human-readable guardian name shown to authorized readers.
+
+    Returns
+    -------
+    Registration
+        The updated Registration after the transition commits.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     accepted_at = timezone.now()
     with transaction.atomic():
         consent = (

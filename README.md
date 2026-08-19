@@ -145,6 +145,7 @@ rehearsal remains a release gate.
 
 ## Documentation map
 
+- [Generated contributor documentation source](docs/index.md)
 - [Product vision](docs/product/vision.md)
 - [Product requirements](docs/product/requirements.md)
 - [Capability map](docs/product/capability-map.md)

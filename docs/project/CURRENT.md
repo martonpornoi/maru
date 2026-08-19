@@ -1,13 +1,17 @@
 # Current project state
 
-Last updated: 2026-08-16
+Last updated: 2026-08-19
 Phase: Production consolidation and management-experience recovery. The
 canonical repository gate and scoped read-only Logistics browser journey remain
 accepted. ADR 0055's first task-oriented management slice is repository-
-verified; its complete authenticated reflow, keyboard, screen-reader, and owner
-matrix remains open alongside deployment, stopped-writer/cutover, restore/PITR,
-and production-governance gates.
-Branch: `codex/current-tree-consolidation`
+verified. ADR 0057's NumPy docstring baseline and warning-fatal generated
+contributor reference are repository-verified. ADR 0058's professional public
+Python documentation contracts and semantic-quality gate are repository-
+verified. ADR 0059's strict PyDocLint contract and bounded Ruff exemptions are
+repository-verified; the complete authenticated
+reflow, keyboard, screen-reader, owner, deployment, stopped-writer/cutover,
+restore/PITR, and production-governance gates remain open.
+Branch: `main`
 
 ## Current outcome
 
@@ -66,6 +70,40 @@ cross-domain-save design.
 - Pinned sidecar assets are served locally and ReDoc makes no external font or
   CDN request. The controlled `maru.baseline_urls` surface remains JSON-only.
 
+### Generated contributor documentation
+
+- ADR 0057 documents public production Python and repository tooling with
+  NumPy-style docstrings. ADR 0058 strengthens that baseline: every public
+  callable documents named parameters and meaningful return/yield values,
+  directly raised exceptions are explicit, and public dataclasses document
+  their fields. Ruff's complete rule catalog enforces the fast style baseline,
+  PyDocLint checks sections against signatures, and annotations remain the type
+  authority.
+- ADR 0059 enables PyDocLint's viable private-callable, star-argument, type,
+  default, return/yield-type, assertion, and exact direct-raise checks. The
+  constructor contract now lives beside `__init__`; the semantic gate remains
+  responsible for public dataclass fields because PyDocLint's general
+  class-attribute inference misclassifies Django declarative classes.
+- Ruff still selects every rule. Its global ignore set is halved from sixteen
+  entries to eight bounded categories: explicit dynamic `Any`, formatter
+  compatibility, separately reviewed complexity/argument-count refactors, and
+  local exception-message clarity. Missing annotations, magic/nested-class
+  docs, redundant raises, private access, and type-only imports are no longer
+  globally exempt; tests and named framework adapters carry only scoped
+  exceptions.
+- A repository semantic gate rejects recognizable placeholder summaries and
+  descriptions, missing direct `Raises` entries, and missing dataclass
+  `Attributes`. Notes, Examples, Warnings, and See Also remain judgment-based:
+  they are required when they clarify authorization, failure, transaction,
+  idempotency, canonicalization, or sensitive-value behavior, not as filler.
+- Sphinx combines every maintained Markdown document with a statically
+  analysed public AutoAPI reference. MyST, Napoleon, Mermaid, and Furo render a
+  warning-clean HTML contributor portal without importing Django or connecting
+  to PostgreSQL.
+- Tests and generated migrations retain explicit documentation exclusions.
+  GitHub validates docstrings, performs a fresh warning-fatal build, retains the
+  HTML artifact, and requires the result through the stable `CI gate`.
+
 ### Parallel GitHub acceptance
 
 - The former single 45-minute GitHub job could not represent the recorded
@@ -75,10 +113,11 @@ cross-domain-save design.
   configuration, supplies synthetic verification-only invitation material,
   excludes worker private keys, and checks both exact-provenance modes in
   isolated subprocesses. Local PowerShell and GitHub call the same verifier.
-- GitHub acceptance is split into static, Django/generated-contract, frontend,
-  unit, 12 isolated PostgreSQL integration, combined-coverage, dependency-
-  security, and stable `CI gate` jobs. Integration files remain whole and
-  serialized within each shard; only isolated runners/databases run in parallel.
+- GitHub acceptance is split into static, contributor-documentation,
+  Django/generated-contract, frontend, unit, 12 isolated PostgreSQL
+  integration, combined-coverage, dependency-security, and stable `CI gate`
+  jobs. Integration files remain whole and serialized within each shard; only
+  isolated runners/databases run in parallel.
 - Unit and shard JUnit/coverage artifacts feed one branch-aware 90-percent
   verdict. Matrix fail-fast is disabled, superseded pull-request runs are
   cancelled, and reviewed external actions plus PostgreSQL 17.11 are pinned by
@@ -226,6 +265,44 @@ as the repository-wide gate:
   assets. Fresh OpenAPI 3.1 validation reports zero errors and exactly matches
   checked-in `openapi.yaml` at SHA-256
   `bc65826a8ceb93ca5cbe5e977e9f71dac50430c8168feb5c673fa8f0dccbb6fb`.
+- The ADR 0057 contributor-documentation change passes Ruff formatting and the
+  complete ALL-rule lint baseline over 634 files, strict mypy over 356 source
+  files, PyDocLint over public production source and scripts, Python bytecode
+  compilation, and the 245-Markdown/202-requirement documentation validator.
+  A fresh warning-fatal Sphinx build completes over the maintained prose and
+  static AutoAPI reference. All 1,842 unit tests and the five CI workflow-
+  contract tests pass. Django reports no migration drift and only the expected
+  local fail-closed `identity.W001` warning; both isolated production-settings
+  modes pass. The source-derived endpoint descriptions intentionally refresh
+  OpenAPI and the generated TypeScript comments without changing schemas; a
+  repeated OpenAPI 3.1 generation has zero errors and exactly matches the
+  checked-in artifact at SHA-256
+  `79ae8f720e6ce942413e19cb1a973480554159364abecf8ba64ea01b0a035b1c`.
+- The ADR 0058 professional-documentation follow-up passes Ruff formatting and
+  the complete ALL-rule lint baseline over 636 files, strict mypy over 356
+  source files, PyDocLint with short-docstring checks enabled, and the semantic
+  validator over 360 production/tooling files. The 247-Markdown/202-requirement
+  documentation validator and a fresh warning-fatal Sphinx/AutoAPI build pass.
+  All 1,844 unit tests, including seven documentation/workflow contract tests,
+  pass; 106 focused tests for the curated parsing, normalization, and API-input
+  examples also pass. Regenerated OpenAPI 3.1 reports zero errors and the
+  generated Staff Console definitions typecheck; the resulting artifacts have
+  SHA-256 `197bb0b34b6454298e70d9067a7cad72f6680d6a92ae3879f644c0c85a38b050`
+  and `7c6efccd9d4c44a63b519d167f8220bdd760f077370149b08a9e9e5f02e67b24`,
+  respectively. Schema generation retains its 18 existing enum-name warnings
+  and the expected local fail-closed `identity.W001` warning.
+- The ADR 0059 strict-contract follow-up passes Ruff formatting and ALL-rule
+  lint over 636 files, PyDocLint's strict useful configuration and the semantic
+  validator over 360 production/tooling files, and strict mypy over 356 source
+  files. Documentation validation passes 249 Markdown files and 202 unique
+  requirement identifiers; a fresh warning-fatal Sphinx/AutoAPI build passes.
+  All 1,847 unit tests pass in 60.20 seconds, and repository-wide collection
+  succeeds for 4,104 tests. Regenerated OpenAPI reports zero errors, its Staff
+  Console definitions typecheck, and the artifacts have SHA-256
+  `cbd3cd981fd9b9ae60e8f11745bc759acc6a491af390574b2b62d2ed54e642d0`
+  and `1d82884c2d4fc5a0fd7c831dd4b37fb4932ef11df215811bf8549299aced436c`,
+  respectively. The 18 existing enum-name diagnostics and expected local
+  fail-closed `identity.W001` warning remain.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source
@@ -263,7 +340,7 @@ approval.
 
 ## Decisions and migration boundary
 
-- ADRs 0049 through 0056 are Accepted. ADR 0054 accepts the bounded architecture
+- ADRs 0049 through 0059 are Accepted. ADR 0054 accepts the bounded architecture
   and migrated integrity boundary; it does not declare the partial
   LOG-001/002/003/004/006/007 portfolio complete or approve production rollout.
 - ADR 0055 changes presentation and experience evidence only. It adds no model,
@@ -272,6 +349,18 @@ approval.
   the default URL configuration. It adds no model, migration, API operation,
   schema shape, generated-client, tenant, authority, runtime-role, recovery, or
   production-cutover boundary; the raw schema is now platform-admin-only.
+- ADR 0057 establishes contributor documentation tooling and source contracts
+  only. It adds no runtime route, model, migration, authority, API shape,
+  recovery, or production-cutover boundary and does not make the generated
+  Sphinx artifact a public production site.
+- ADR 0058 partially supersedes ADR 0057's permissive short-docstring and
+  section policy. It strengthens contributor contracts and generated
+  descriptions only; it adds no runtime behavior, model, migration, authority,
+  API schema shape, recovery, or production-cutover boundary.
+- ADR 0059 partially supersedes ADR 0058's staged lint configuration. It
+  synchronizes signature metadata, exact direct raises, and scoped lint
+  exemptions without changing runtime behavior, models, migrations, authority,
+  API schema shapes, recovery, or production-cutover boundaries.
 - Registration migrations `0035` through `0040` and the Applications,
   Charities, Venues, Catalog, and Authorization migrations preserve immutable
   source/evidence bindings, append-only history, downgrade fences, and exact
@@ -338,6 +427,16 @@ approval.
   A future strict Content Security Policy must nonce, hash, or externalize the
   documentation templates' inline initialization before forbidding inline
   script globally. The views are not a public developer portal.
+- The generated Sphinx site is retained as a CI artifact rather than deployed.
+  Its Mermaid diagrams use the contributor site's configured browser renderer;
+  a future hosted or offline distribution must define an asset/CSP policy and
+  verify the rendered diagrams in that target environment.
+- Documentation enforcement can prove structural completeness and reject known
+  placeholder patterns, but it cannot prove that every description captures
+  the right domain nuance. Review must still challenge misleading omission,
+  especially around authorization, side effects, idempotency, failure modes,
+  transactions, and sensitive values. Examples are illustrative and are not
+  automatically doctested unless a future contract explicitly opts them in.
 - The task-oriented experience is currently converted only for the shared
   shell, administration home, navigation, User accounts/invitations, and Page
   8. Registration, Workforce, Venues, Logistics mutation roles, and specialist
@@ -353,9 +452,10 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Confirm the current commit's corrective GitHub matrix, combined coverage,
-   and `CI gate` pass; then make `CI gate` the protected required check and add
-   the bounded pull-request Playwright/keyboard/automated-accessibility matrix.
+1. Confirm the current commit's corrective GitHub matrix, generated
+   contributor-documentation artifact, combined coverage, and `CI gate` pass;
+   then make `CI gate` the protected required check and add the bounded pull-
+   request Playwright/keyboard/automated-accessibility matrix.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
@@ -368,7 +468,7 @@ approval.
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `PRODUCTION_CONSOLIDATION.md`, the
-relevant requirement IDs, ADRs 0047 through 0055, and the owning module/runbook
+relevant requirement IDs, ADRs 0047 through 0059, and the owning module/runbook
 docs. Preserve every concurrent change in the dirty working tree. Serialize all
 PostgreSQL tests that share `test_maru_test`; never infer authority from a
 selected edition or route; authorize before parsing untrusted input; retain

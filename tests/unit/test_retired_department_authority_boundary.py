@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-import pytest
+from typing import TYPE_CHECKING
 
 from maru.authorization import retired_targets
+
+if TYPE_CHECKING:
+    import pytest
 
 
 def test_combined_writer_boundary_uses_canonical_structure_authority_order(

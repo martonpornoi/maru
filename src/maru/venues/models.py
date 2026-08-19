@@ -36,6 +36,8 @@ _PHONE_VALIDATOR = RegexValidator(
 
 class _ClosedVenueModel(UUIDTimeStampedModel):
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -53,6 +55,8 @@ class _ClosedVenueModel(UUIDTimeStampedModel):
 
 class _AppendOnlyVenueModel(_ClosedVenueModel):
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -68,11 +72,15 @@ class VenueProperty(_ClosedVenueModel):
     """Organizer-owned reusable hotel or venue, never a Maru tenant."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         HOTEL = "hotel", "Hotel"
         VENUE = "venue", "Venue"
         MIXED = "mixed", "Hotel and venue"
 
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         DRAFT = "draft", "Draft"
         ACTIVE = "active", "Active"
         RETIRED = "retired", "Retired"
@@ -119,6 +127,8 @@ class VenueProperty(_ClosedVenueModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "public_name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -133,20 +143,42 @@ class VenueProperty(_ClosedVenueModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.slug = self.slug.lower()
         self.country_code = self.country_code.upper()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable VenueProperty label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return self.public_name
 
 
 class VenuePropertyMedia(_ClosedVenueModel):
+    """Store venue property media records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         PHOTO = "photo", "Photo"
         LOGO = "logo", "Logo"
 
     class ReviewStatus(models.TextChoices):
+        """Enumerate supported review status values."""
+
         PENDING = "pending", "Pending"
         APPROVED = "approved", "Approved"
         WITHDRAWN = "withdrawn", "Withdrawn"
@@ -190,6 +222,8 @@ class VenuePropertyMedia(_ClosedVenueModel):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("property_id", "kind", "created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -199,6 +233,13 @@ class VenuePropertyMedia(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.property_id and self.property.organization_id != self.organization_id:
             raise ValidationError(
@@ -208,6 +249,8 @@ class VenuePropertyMedia(_ClosedVenueModel):
 
 
 class VenueSite(_ClosedVenueModel):
+    """Store venue site records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -227,6 +270,8 @@ class VenueSite(_ClosedVenueModel):
     aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("property_id", "name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -235,6 +280,13 @@ class VenueSite(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.property_id and self.property.organization_id != self.organization_id:
             raise ValidationError(
@@ -244,6 +296,8 @@ class VenueSite(_ClosedVenueModel):
 
 
 class VenueBuilding(_ClosedVenueModel):
+    """Store venue building records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -267,6 +321,8 @@ class VenueBuilding(_ClosedVenueModel):
     aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("site_id", "name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -275,6 +331,13 @@ class VenueBuilding(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.site_id and (
             self.site.organization_id != self.organization_id
@@ -287,7 +350,11 @@ class VenueBuilding(_ClosedVenueModel):
 
 
 class VenueSpace(_ClosedVenueModel):
+    """Store venue space records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         FUNCTION_ROOM = "function_room", "Function room"
         ZONE = "zone", "Zone"
         ENTRANCE = "entrance", "Entrance"
@@ -332,6 +399,8 @@ class VenueSpace(_ClosedVenueModel):
     aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("building_id", "name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -340,6 +409,13 @@ class VenueSpace(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.building_id and (
             self.building.organization_id != self.organization_id
@@ -353,7 +429,11 @@ class VenueSpace(_ClosedVenueModel):
 
 
 class VenueSpaceConfiguration(_ClosedVenueModel):
+    """Store venue space configuration records."""
+
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         DRAFT = "draft", "Draft"
         ACTIVE = "active", "Active"
         RETIRED = "retired", "Retired"
@@ -385,6 +465,8 @@ class VenueSpaceConfiguration(_ClosedVenueModel):
     aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("space_id", "code", "version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -398,6 +480,13 @@ class VenueSpaceConfiguration(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.space_id and self.space.organization_id != self.organization_id:
             raise ValidationError(
@@ -407,6 +496,8 @@ class VenueSpaceConfiguration(_ClosedVenueModel):
 
 
 class VenueSpaceCombination(_ClosedVenueModel):
+    """Store venue space combination records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -423,6 +514,8 @@ class VenueSpaceCombination(_ClosedVenueModel):
     aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("property_id", "name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -432,6 +525,8 @@ class VenueSpaceCombination(_ClosedVenueModel):
 
 
 class VenueSpaceCombinationMember(_AppendOnlyVenueModel):
+    """Store venue space combination member records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -449,6 +544,8 @@ class VenueSpaceCombinationMember(_AppendOnlyVenueModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("combination_id", "space_id", "id")
         constraints = [
             models.UniqueConstraint(
@@ -458,6 +555,13 @@ class VenueSpaceCombinationMember(_AppendOnlyVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.combination_id
@@ -475,12 +579,18 @@ class VenueSpaceCombinationMember(_AppendOnlyVenueModel):
 
 
 class VenueLayoutVersion(_ClosedVenueModel):
+    """Store venue layout version records."""
+
     class Visibility(models.TextChoices):
+        """Enumerate supported visibility values."""
+
         PUBLIC = "public", "Public"
         INTERNAL = "internal", "Internal"
         SECURITY = "security", "Security"
 
     class ReviewStatus(models.TextChoices):
+        """Enumerate supported review status values."""
+
         PENDING = "pending", "Pending"
         APPROVED = "approved", "Approved"
         WITHDRAWN = "withdrawn", "Withdrawn"
@@ -524,6 +634,8 @@ class VenueLayoutVersion(_ClosedVenueModel):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("space_id", "layout_code", "version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -533,6 +645,13 @@ class VenueLayoutVersion(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.space_id and self.space.organization_id != self.organization_id:
             raise ValidationError(
@@ -542,6 +661,8 @@ class VenueLayoutVersion(_ClosedVenueModel):
 
 
 class AccommodationRoomType(_ClosedVenueModel):
+    """Enumerate supported accommodation room type values."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -563,6 +684,8 @@ class AccommodationRoomType(_ClosedVenueModel):
     aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("property_id", "public_name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -575,6 +698,13 @@ class AccommodationRoomType(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.property_id and (
             self.property.organization_id != self.organization_id
@@ -587,6 +717,8 @@ class AccommodationRoomType(_ClosedVenueModel):
 
 
 class AccommodationNightInventory(_ClosedVenueModel):
+    """Store accommodation night inventory records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -604,6 +736,8 @@ class AccommodationNightInventory(_ClosedVenueModel):
     aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("room_type_id", "night", "id")
         constraints = [
             models.UniqueConstraint(
@@ -613,6 +747,13 @@ class AccommodationNightInventory(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.room_type_id and self.room_type.organization_id != self.organization_id:
             raise ValidationError(
@@ -622,7 +763,11 @@ class AccommodationNightInventory(_ClosedVenueModel):
 
 
 class EditionVenueSelection(_ClosedVenueModel):
+    """Store edition venue selection records."""
+
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         RETIRED = "retired", "Retired"
 
@@ -668,6 +813,8 @@ class EditionVenueSelection(_ClosedVenueModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "local_name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -677,6 +824,13 @@ class EditionVenueSelection(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError(
@@ -700,7 +854,11 @@ class EditionVenueSelection(_ClosedVenueModel):
 
 
 class EditionSpaceSelection(_ClosedVenueModel):
+    """Store edition space selection records."""
+
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         RETIRED = "retired", "Retired"
 
@@ -762,6 +920,8 @@ class EditionSpaceSelection(_ClosedVenueModel):
     aggregate_version = models.PositiveBigIntegerField(default=1, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "local_name", "id")
         constraints = [
             models.CheckConstraint(
@@ -788,6 +948,13 @@ class EditionSpaceSelection(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.venue_selection_id and (
             self.venue_selection.organization_id != self.organization_id
@@ -835,6 +1002,8 @@ class EditionSpaceSelection(_ClosedVenueModel):
 
 
 class EditionSpaceMember(_AppendOnlyVenueModel):
+    """Store edition space member records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -857,6 +1026,8 @@ class EditionSpaceMember(_AppendOnlyVenueModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("space_selection_id", "source_space_id", "id")
         constraints = [
             models.UniqueConstraint(
@@ -866,6 +1037,13 @@ class EditionSpaceMember(_AppendOnlyVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.space_selection_id
@@ -885,6 +1063,8 @@ class EditionSpaceMember(_AppendOnlyVenueModel):
 
 
 class EditionSpaceAvailabilityWindow(_AppendOnlyVenueModel):
+    """Store edition space availability window records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -906,6 +1086,8 @@ class EditionSpaceAvailabilityWindow(_AppendOnlyVenueModel):
     opening_restriction = models.CharField(max_length=500, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("space_selection_id", "availability_version", "starts_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -924,6 +1106,13 @@ class EditionSpaceAvailabilityWindow(_AppendOnlyVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.space_selection_id and (
             self.space_selection.organization_id != self.organization_id
@@ -936,7 +1125,11 @@ class EditionSpaceAvailabilityWindow(_AppendOnlyVenueModel):
 
 
 class VenueBooking(_ClosedVenueModel):
+    """Store venue booking records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         PROGRAMME = "programme", "Programme"
         PANEL = "panel", "Panel"
         EVENT = "event", "Event"
@@ -947,19 +1140,27 @@ class VenueBooking(_ClosedVenueModel):
         PRIVATE = "private", "Private"
 
     class CapacityMode(models.TextChoices):
+        """Enumerate supported capacity mode values."""
+
         SEATED = "seated", "Seated"
         STANDING = "standing", "Standing"
         TABLE = "table", "Table"
 
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         CANCELLED = "cancelled", "Cancelled"
 
     class ReviewState(models.TextChoices):
+        """Enumerate supported review state values."""
+
         DRAFT = "draft", "Draft"
         APPROVED = "approved", "Approved"
 
     class PublicationState(models.TextChoices):
+        """Enumerate supported publication state values."""
+
         UNPUBLISHED = "unpublished", "Unpublished"
         PUBLISHED = "published", "Published"
         WITHDRAWN = "withdrawn", "Withdrawn"
@@ -1046,6 +1247,8 @@ class VenueBooking(_ClosedVenueModel):
     published_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "effective_starts_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -1069,6 +1272,13 @@ class VenueBooking(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.space_selection_id and (
             self.space_selection.organization_id != self.organization_id
@@ -1093,7 +1303,11 @@ class VenueBooking(_ClosedVenueModel):
 
 
 class VenueBookingHistory(_AppendOnlyVenueModel):
+    """Store venue booking history records."""
+
     class Action(models.TextChoices):
+        """Enumerate supported action values."""
+
         CREATED = "created", "Created"
         RESCHEDULED = "rescheduled", "Rescheduled"
         APPROVED = "approved", "Approved"
@@ -1142,6 +1356,8 @@ class VenueBookingHistory(_AppendOnlyVenueModel):
     to_lifecycle = models.CharField(max_length=16, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("booking_id", "sequence", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1155,6 +1371,8 @@ class VenueBookingOccupancy(_ClosedVenueModel):
     """Derived physical-space reservations enforcing SCH-009 in PostgreSQL."""
 
     class ConflictGroup(models.TextChoices):
+        """Enumerate supported conflict group values."""
+
         SETUP_EFFECTIVE = "setup_effective", "Setup and effective"
         EFFECTIVE_TEARDOWN = "effective_teardown", "Effective and teardown"
 
@@ -1184,6 +1402,8 @@ class VenueBookingOccupancy(_ClosedVenueModel):
     active = models.BooleanField(default=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("source_space_id", "conflict_group", "occupied_range", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1207,6 +1427,13 @@ class VenueBookingOccupancy(_ClosedVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.booking_id and (
             self.booking.organization_id != self.organization_id
@@ -1219,7 +1446,11 @@ class VenueBookingOccupancy(_ClosedVenueModel):
 
 
 class VenueCommandReceipt(_AppendOnlyVenueModel):
+    """Store venue command receipt records."""
+
     class Operation(models.TextChoices):
+        """Enumerate supported operation values."""
+
         PROPERTY_CREATE = "property.create", "Create property"
         CATALOG_ADD = "catalog.add", "Add catalog record"
         MEDIA_ADD = "media.add", "Add media"
@@ -1263,6 +1494,8 @@ class VenueCommandReceipt(_AppendOnlyVenueModel):
     source_channel = models.CharField(max_length=32)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1276,6 +1509,13 @@ class VenueCommandReceipt(_AppendOnlyVenueModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         edition = self.edition if self.edition_id else None
         if edition is not None and edition.organization_id != self.organization_id:

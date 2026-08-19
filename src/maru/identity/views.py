@@ -12,6 +12,18 @@ from maru.identity.services import consume_identity_challenge
 
 
 def verify_email(request: HttpRequest) -> HttpResponse:
+    """Verify email.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     initial = {"token": request.GET.get("token", "")}
     form = EmailVerificationForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
@@ -34,6 +46,18 @@ def verify_email(request: HttpRequest) -> HttpResponse:
 
 
 def recover_account(request: HttpRequest) -> HttpResponse:
+    """Render recover account.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     initial = {"token": request.GET.get("token", "")}
     form = AccountRecoveryForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():

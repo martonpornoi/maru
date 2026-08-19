@@ -5,12 +5,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
-from decimal import Decimal
-from typing import cast
-from uuid import UUID
+from typing import TYPE_CHECKING, cast
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -53,37 +49,75 @@ from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from datetime import datetime
+    from decimal import Decimal
+    from uuid import UUID
+
 
 class ApplicationCommandError(RuntimeError):
+    """Signal application command."""
+
     reason_code = "application_command_conflict"
 
 
 class ApplicationAuthorizationDenied(ApplicationCommandError):
+    """Signal application authorization denied."""
+
     reason_code = "application_authorization_denied"
 
 
 class ApplicationUnavailable(ApplicationCommandError):
+    """Signal application unavailable."""
+
     reason_code = "application_unavailable"
 
 
 class ApplicationStateConflict(ApplicationCommandError):
+    """Signal application state conflict."""
+
     reason_code = "application_state_conflict"
 
 
 class ApplicationVersionConflict(ApplicationCommandError):
+    """Signal application version conflict."""
+
     reason_code = "application_version_conflict"
 
 
 class ApplicationIdempotencyConflict(ApplicationCommandError):
+    """Signal application idempotency conflict."""
+
     reason_code = "application_idempotency_conflict"
 
 
 class ApplicationEligibilityDenied(ApplicationCommandError):
+    """Signal application eligibility denied."""
+
     reason_code = "application_eligibility_denied"
 
 
 @dataclass(frozen=True, slots=True)
 class ApplicationCommandResult:
+    """Describe application command result.
+
+    Attributes
+    ----------
+    receipt_id
+        The receipt identifier within the requested scope.
+    definition_id
+        The definition identifier within the requested scope.
+    submission_id
+        The submission identifier within the requested scope.
+    target_id
+        The target identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     receipt_id: UUID
     definition_id: UUID | None
     submission_id: UUID | None
@@ -265,7 +299,7 @@ def _record_evidence(
             "target_adapter_kind": submission.definition.target_adapter_kind,
         }
     else:
-        current_definition = cast(ApplicationDefinition, definition)
+        current_definition = cast("ApplicationDefinition", definition)
         payload = {
             "action": action,
             "definition_code": current_definition.code,
@@ -330,6 +364,43 @@ def create_definition_from_starter(
     correlation_id: UUID,
     source_channel: str,
 ) -> ApplicationCommandResult:
+    """Create definition from starter.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    starter_code : str
+        The immutable starter-catalog code.
+    opens_at : datetime
+        The time at which the window opens.
+    closes_at : datetime
+        The time at which the window closes.
+    applicant_edit_until : datetime
+        The timezone-aware boundary for applicant edit until.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     actor, _ = _edition_target(
         actor=actor,
         organization_id=organization_id,
@@ -371,7 +442,7 @@ def create_definition_from_starter(
         edition_id=edition_id,
         code=starter.code,
         version=1,
-        target_adapter_kind=cast(str, starter.target_adapter_kind),
+        target_adapter_kind=cast("str", starter.target_adapter_kind),
         name=starter.name,
         description=starter.description,
         purpose=starter.purpose,
@@ -460,6 +531,75 @@ def configure_definition(
     correlation_id: UUID,
     source_channel: str,
 ) -> ApplicationCommandResult:
+    """Configure definition.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    name : str
+        The human-readable name.
+    description : str
+        The human-readable description.
+    purpose : str
+        The documented purpose of the operation.
+    classification : str
+        The closed data-classification code.
+    eligibility_kind : str
+        The closed eligibility kind discriminator defined by the domain catalog.
+    maximum_submissions : int
+        The maximum submissions applied within the audited domain transition.
+    opens_at : datetime
+        The time at which the window opens.
+    closes_at : datetime
+        The time at which the window closes.
+    applicant_edit_until : datetime
+        The timezone-aware boundary for applicant edit until.
+    minimum_age : int
+        The minimum age applied within the audited domain transition.
+    audience_policy_code : str
+        The stable audience policy code from the relevant closed catalog.
+    retention_policy_code : str
+        The stable retention policy code from the relevant closed catalog.
+    age_policy_code : str
+        The stable age policy code from the relevant closed catalog.
+    owner_department_ids : Sequence[UUID]
+        The selected owner department identifiers.
+    reviewer_role_bundle_ids : Sequence[UUID]
+        The selected reviewer role bundle identifiers.
+    reviewer_account_ids : Sequence[UUID]
+        The selected reviewer account identifiers.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The application command result.
+
+    Raises
+    ------
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    ApplicationUnavailable
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     actor, _ = _edition_target(
         actor=actor,
         organization_id=organization_id,
@@ -608,6 +748,45 @@ def add_section(
     correlation_id: UUID,
     source_channel: str,
 ) -> ApplicationCommandResult:
+    """Add section.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    key : str
+        The stable lookup key.
+    title : str
+        The human-readable title.
+    help_text : str
+        The explanatory text shown to the user.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The application command result.
+
+    Raises
+    ------
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    """
     actor, _ = _edition_target(
         actor=actor,
         organization_id=organization_id,
@@ -709,6 +888,87 @@ def add_question(
     correlation_id: UUID,
     source_channel: str,
 ) -> ApplicationCommandResult:
+    """Add question.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+    section_id : UUID
+        The identifier of the section.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    key : str
+        The stable lookup key.
+    field_type : str
+        The closed field-type code.
+    label : str
+        The human-readable label.
+    help_text : str
+        The explanatory text shown to the user.
+    required : bool
+        Whether the input is required.
+    options : list[dict[str, str]]
+        The permitted operation options.
+    minimum_length : int | None
+        The minimum length applied within the audited domain transition.
+    maximum_length : int | None
+        The maximum length applied within the audited domain transition.
+    minimum_value : Decimal | None
+        The minimum value applied within the audited domain transition.
+    maximum_value : Decimal | None
+        The maximum value applied within the audited domain transition.
+    maximum_choices : int | None
+        The authorized maximum choices presented for validated selection.
+    reference_kind : str
+        The closed reference kind discriminator defined by the domain catalog.
+    condition : dict[str, object]
+        The configured condition evaluated against the submitted answer.
+    purpose : str
+        The documented purpose of the operation.
+    classification : str
+        The closed data-classification code.
+    applicant_visible : bool
+        The applicant visible applied within the audited domain transition.
+    applicant_writable : bool
+        The applicant writable applied within the audited domain transition.
+    staff_visible : bool
+        The staff visible applied within the audited domain transition.
+    staff_writable : bool
+        The staff writable applied within the audited domain transition.
+    reviewer_visible : bool
+        The reviewer visible applied within the audited domain transition.
+    public_after_approval : bool
+        The public after approval applied within the audited domain transition.
+    api_projection : bool
+        The api projection applied within the audited domain transition.
+    retention_policy_code : str
+        The stable retention policy code from the relevant closed catalog.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The application command result.
+
+    Raises
+    ------
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    """
     actor, _ = _edition_target(
         actor=actor,
         organization_id=organization_id,
@@ -909,6 +1169,39 @@ def activate_definition(
     correlation_id: UUID,
     source_channel: str,
 ) -> ApplicationCommandResult:
+    """Activate definition.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The application command result.
+
+    Raises
+    ------
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    """
     actor, _ = _edition_target(
         actor=actor,
         organization_id=organization_id,
@@ -986,6 +1279,39 @@ def retire_definition(
     correlation_id: UUID,
     source_channel: str,
 ) -> ApplicationCommandResult:
+    """Retire definition.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The application command result.
+
+    Raises
+    ------
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    """
     actor, _ = _edition_target(
         actor=actor,
         organization_id=organization_id,
@@ -1051,6 +1377,37 @@ def create_successor_definition(
     correlation_id: UUID,
     source_channel: str,
 ) -> ApplicationCommandResult:
+    """Create successor definition.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    """
     actor, _ = _edition_target(
         actor=actor,
         organization_id=organization_id,
@@ -1186,6 +1543,41 @@ def start_submission(
     source_channel: str,
     now: datetime | None = None,
 ) -> ApplicationCommandResult:
+    """Start submission.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The application command result.
+
+    Raises
+    ------
+    ApplicationEligibilityDenied
+        If the subject does not satisfy the configured eligibility policy.
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    ApplicationUnavailable
+        If the scoped target does not exist or cannot be disclosed.
+    """
     actor, _ = _self_target(
         actor=actor,
         organization_id=organization_id,
@@ -1281,6 +1673,45 @@ def append_answer_revision(
     source_channel: str,
     now: datetime | None = None,
 ) -> ApplicationCommandResult:
+    """Append answer revision.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+    question_id : UUID
+        The identifier of the question.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    value : object
+        The untrusted value to normalize against the documented contract.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The application command result.
+
+    Raises
+    ------
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    ApplicationUnavailable
+        If the scoped target does not exist or cannot be disclosed.
+    """
     actor, _ = _self_target(
         actor=actor,
         organization_id=organization_id,
@@ -1386,6 +1817,43 @@ def submit_application(
     source_channel: str,
     now: datetime | None = None,
 ) -> ApplicationCommandResult:
+    """Submit application.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The application command result.
+
+    Raises
+    ------
+    ApplicationEligibilityDenied
+        If the subject does not satisfy the configured eligibility policy.
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     actor, _ = _self_target(
         actor=actor,
         organization_id=organization_id,
@@ -1556,6 +2024,47 @@ def record_review_decision(
     source_channel: str,
     now: datetime | None = None,
 ) -> ApplicationCommandResult:
+    """Record review decision.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    decision : str
+        The requested governed decision.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    ApplicationCommandResult
+        The application command result.
+
+    Raises
+    ------
+    ApplicationStateConflict
+        If the target lifecycle state does not permit the transition.
+    ApplicationUnavailable
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     actor, _ = _edition_target(
         actor=actor,
         organization_id=organization_id,
@@ -1629,7 +2138,7 @@ def record_review_decision(
             ApplicationState.REJECTED,
         ),
     }
-    transition = transitions.get(cast(ReviewDecisionKind, decision))
+    transition = transitions.get(cast("ReviewDecisionKind", decision))
     if transition is None or submission.state not in transition[0]:
         raise ApplicationStateConflict
     from_state = submission.state

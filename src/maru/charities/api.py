@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import asdict
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 from uuid import UUID, uuid4
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -21,7 +20,6 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
 from rest_framework.permissions import AllowAny
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -88,6 +86,11 @@ from .services import (
     withdraw_charity_selection_publication,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from rest_framework.request import Request
+
 IDEMPOTENCY_HEADER = "Idempotency-Key"
 MAX_IDEMPOTENCY_HEADER_LENGTH = 64
 CANONICAL_UUID_PATTERN = (
@@ -143,14 +146,23 @@ _CHARITY_SELECTION_COMMAND_REQUEST = PolymorphicProxySerializer(
 
 
 class CharityConflict(APIException):
+    """Signal charity conflict."""
+
     status_code = status.HTTP_409_CONFLICT
     default_detail = "The charity operation conflicts with current state."
     default_code = "charity_conflict"
 
     def __init__(self, *, code: str) -> None:
+        """Initialize the CharityConflict instance.
+
+        Parameters
+        ----------
+        code : str
+            The stable domain code to resolve or validate.
+        """
         super().__init__(
             detail=cast(
-                Any,
+                "Any",
                 {"detail": self.default_detail, "code": code},
             ),
             code=code,
@@ -284,7 +296,7 @@ def _validated[Payload: dict[str, object]](
         allowed_fields=frozenset(serializer.fields),
     )
     serializer.is_valid(raise_exception=True)
-    return cast(Payload, serializer.validated_data)
+    return cast("Payload", serializer.validated_data)
 
 
 def _django_validation(error: DjangoValidationError) -> Never:
@@ -334,6 +346,8 @@ def _result_response(result: Any, *, created: bool = False) -> Response:
 
 
 class PublicCharityListView(APIView):
+    """Expose public charity list through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -347,12 +361,30 @@ class PublicCharityListView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List public charities for the edition.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         reject_unknown_fields(request.query_params, allowed_fields=frozenset())
         projection = public_charities_for_edition(
             organization_id=organization_id,
             edition_id=edition_id,
         )
-        return Response(PublicCharitySerializer(cast(Any, projection), many=True).data)
+        return Response(
+            PublicCharitySerializer(cast("Any", projection), many=True).data
+        )
 
 
 @method_decorator(never_cache, name="dispatch")
@@ -361,11 +393,29 @@ class PrivateCharityAPIView(APIView):
 
 
 class CharityPartnerCollectionView(PrivateCharityAPIView):
+    """Expose charity partner collection through the HTTP API."""
+
     @extend_schema(
         operation_id="charities_list_partners",
         responses={200: CharityPartnerSummarySerializer(many=True)},
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
+        """List the partners.
+
+        Keep authenticated charity data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -380,7 +430,7 @@ class CharityPartnerCollectionView(PrivateCharityAPIView):
             source_channel="api",
         )
         return Response(
-            CharityPartnerSummarySerializer(cast(Any, projection), many=True).data
+            CharityPartnerSummarySerializer(cast("Any", projection), many=True).data
         )
 
     @extend_schema(
@@ -393,6 +443,22 @@ class CharityPartnerCollectionView(PrivateCharityAPIView):
         },
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
+        """Create the partner.
+
+        Keep authenticated charity data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -420,6 +486,8 @@ class CharityPartnerCollectionView(PrivateCharityAPIView):
 
 
 class CharityPartnerDetailView(PrivateCharityAPIView):
+    """Expose charity partner detail through the HTTP API."""
+
     @extend_schema(
         operation_id="charities_update_partner",
         parameters=[_CHARITY_IDEMPOTENCY_PARAMETER],
@@ -432,6 +500,24 @@ class CharityPartnerDetailView(PrivateCharityAPIView):
         organization_id: UUID,
         partner_id: UUID,
     ) -> Response:
+        """Update the partner.
+
+        Keep authenticated charity data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        partner_id : UUID
+            The partner identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -449,7 +535,7 @@ class CharityPartnerDetailView(PrivateCharityAPIView):
                 actor=actor,
                 organization_id=organization_id,
                 partner_id=partner_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 changes=changes,
                 reason=str(values["reason"]),
                 idempotency_key=idempotency_key,
@@ -461,6 +547,8 @@ class CharityPartnerDetailView(PrivateCharityAPIView):
 
 
 class CharityMediaCollectionView(PrivateCharityAPIView):
+    """Expose charity media collection through the HTTP API."""
+
     @extend_schema(
         operation_id="charities_add_media",
         parameters=[_CHARITY_IDEMPOTENCY_PARAMETER],
@@ -476,6 +564,24 @@ class CharityMediaCollectionView(PrivateCharityAPIView):
         organization_id: UUID,
         partner_id: UUID,
     ) -> Response:
+        """Add the media.
+
+        Keep authenticated charity data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        partner_id : UUID
+            The partner identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -494,7 +600,7 @@ class CharityMediaCollectionView(PrivateCharityAPIView):
                 license_basis=str(values["license_basis"]),
                 usage_scope=str(values["usage_scope"]),
                 attribution=str(values.get("attribution", "")),
-                expires_at=cast(Any, values.get("expires_at")),
+                expires_at=cast("Any", values.get("expires_at")),
                 reason=str(values["reason"]),
                 idempotency_key=idempotency_key,
                 correlation_id=_correlation_id(request),
@@ -505,6 +611,8 @@ class CharityMediaCollectionView(PrivateCharityAPIView):
 
 
 class CharityMediaCommandView(PrivateCharityAPIView):
+    """Expose charity media command through the HTTP API."""
+
     @extend_schema(
         operation_id="charities_command_media",
         parameters=[
@@ -522,6 +630,33 @@ class CharityMediaCommandView(PrivateCharityAPIView):
         media_id: UUID,
         action: str,
     ) -> Response:
+        """Approve or withdraw the partner media.
+
+        Keep authenticated charity data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        partner_id : UUID
+            The partner identifier within the requested scope.
+        media_id : UUID
+            The media identifier within the requested scope.
+        action : str
+            The stable action code describing the requested transition.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         actor = _authorize_organization(
             request,
             organization_id=organization_id,
@@ -538,7 +673,7 @@ class CharityMediaCommandView(PrivateCharityAPIView):
                     organization_id=organization_id,
                     partner_id=partner_id,
                     media_id=media_id,
-                    expected_version=cast(int, values["expected_version"]),
+                    expected_version=cast("int", values["expected_version"]),
                     public_reference=str(values["public_reference"]),
                     reason=str(values["reason"]),
                     idempotency_key=idempotency_key,
@@ -554,7 +689,7 @@ class CharityMediaCommandView(PrivateCharityAPIView):
                     organization_id=organization_id,
                     partner_id=partner_id,
                     media_id=media_id,
-                    expected_version=cast(int, values["expected_version"]),
+                    expected_version=cast("int", values["expected_version"]),
                     reason=str(values["reason"]),
                     idempotency_key=idempotency_key,
                     correlation_id=_correlation_id(request),
@@ -565,6 +700,8 @@ class CharityMediaCommandView(PrivateCharityAPIView):
 
 
 class CharitySelectionCollectionView(PrivateCharityAPIView):
+    """Expose charity selection collection through the HTTP API."""
+
     @extend_schema(
         operation_id="charities_list_selections",
         responses={200: CharitySelectionSummarySerializer(many=True)},
@@ -575,6 +712,24 @@ class CharitySelectionCollectionView(PrivateCharityAPIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the selections.
+
+        Keep authenticated charity data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_edition(
             request,
             organization_id=organization_id,
@@ -588,7 +743,7 @@ class CharitySelectionCollectionView(PrivateCharityAPIView):
             edition_id=edition_id,
         )
         return Response(
-            CharitySelectionSummarySerializer(cast(Any, projection), many=True).data
+            CharitySelectionSummarySerializer(cast("Any", projection), many=True).data
         )
 
     @extend_schema(
@@ -606,6 +761,24 @@ class CharitySelectionCollectionView(PrivateCharityAPIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Propose the selection.
+
+        Keep authenticated charity data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_edition(
             request,
             organization_id=organization_id,
@@ -619,9 +792,9 @@ class CharitySelectionCollectionView(PrivateCharityAPIView):
                 actor=actor,
                 organization_id=organization_id,
                 edition_id=edition_id,
-                partner_id=cast(UUID, values["partner_id"]),
+                partner_id=cast("UUID", values["partner_id"]),
                 responsible_department_id=cast(
-                    UUID, values["responsible_department_id"]
+                    "UUID", values["responsible_department_id"]
                 ),
                 reason=str(values["reason"]),
                 idempotency_key=idempotency_key,
@@ -633,6 +806,8 @@ class CharitySelectionCollectionView(PrivateCharityAPIView):
 
 
 class CharitySelectionDetailView(PrivateCharityAPIView):
+    """Expose charity selection detail through the HTTP API."""
+
     @extend_schema(
         operation_id="charities_retrieve_selection",
         responses={200: CharitySelectionReviewSerializer},
@@ -644,6 +819,26 @@ class CharitySelectionDetailView(PrivateCharityAPIView):
         edition_id: UUID,
         selection_id: UUID,
     ) -> Response:
+        """Retrieve the selection.
+
+        Keep authenticated charity data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        selection_id : UUID
+            The selection identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize_selection(
             request,
             organization_id=organization_id,
@@ -663,7 +858,7 @@ class CharitySelectionDetailView(PrivateCharityAPIView):
                 source_channel="api",
             )
         )
-        return Response(CharitySelectionReviewSerializer(cast(Any, projection)).data)
+        return Response(CharitySelectionReviewSerializer(cast("Any", projection)).data)
 
 
 _SELECTION_ACTION_CAPABILITIES = {
@@ -677,6 +872,8 @@ _SELECTION_ACTION_CAPABILITIES = {
 
 
 class CharitySelectionCommandView(PrivateCharityAPIView):
+    """Expose charity selection command through the HTTP API."""
+
     @extend_schema(
         operation_id="charities_command_selection",
         parameters=[
@@ -694,6 +891,33 @@ class CharitySelectionCommandView(PrivateCharityAPIView):
         selection_id: UUID,
         action: str,
     ) -> Response:
+        """Apply the requested charity selection command.
+
+        Keep authenticated charity data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        selection_id : UUID
+            The selection identifier within the requested scope.
+        action : str
+            The stable action code describing the requested transition.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         capability_code = _SELECTION_ACTION_CAPABILITIES.get(action)
         if action == "submit":
             actor = _authorize_edition(
@@ -722,7 +946,7 @@ class CharitySelectionCommandView(PrivateCharityAPIView):
                     organization_id=organization_id,
                     edition_id=edition_id,
                     selection_id=selection_id,
-                    expected_version=cast(int, values["expected_version"]),
+                    expected_version=cast("int", values["expected_version"]),
                     private_comment=str(values["private_comment"]),
                     idempotency_key=idempotency_key,
                     correlation_id=correlation_id,
@@ -737,8 +961,8 @@ class CharitySelectionCommandView(PrivateCharityAPIView):
                     organization_id=organization_id,
                     edition_id=edition_id,
                     selection_id=selection_id,
-                    expected_version=cast(int, values["expected_version"]),
-                    media_ids=cast(list[UUID], values.get("media_ids", [])),
+                    expected_version=cast("int", values["expected_version"]),
+                    media_ids=cast("list[UUID]", values.get("media_ids", [])),
                     reason=str(values["reason"]),
                     idempotency_key=idempotency_key,
                     correlation_id=correlation_id,
@@ -747,7 +971,7 @@ class CharitySelectionCommandView(PrivateCharityAPIView):
             )
         else:
             values = _validated(request, CharitySelectionDecisionSerializer)
-            expected_version = cast(int, values["expected_version"])
+            expected_version = cast("int", values["expected_version"])
             reason = str(values["reason"])
             if action == "submit":
                 result = _execute(

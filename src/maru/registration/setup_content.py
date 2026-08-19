@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping, Sequence
 from datetime import UTC, date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
 
 
 def _json_default(value: object) -> str:
@@ -20,8 +22,18 @@ def _json_default(value: object) -> str:
 
 
 def canonical_digest(payload: Mapping[str, object]) -> str:
-    """Return deterministic lower-case SHA-256 over canonical UTF-8 JSON."""
+    """Return deterministic lower-case SHA-256 over canonical UTF-8 JSON.
 
+    Parameters
+    ----------
+    payload : Mapping[str, object]
+        The untrusted payload to validate before domain use.
+
+    Returns
+    -------
+    str
+        The normalized text for canonical digest.
+    """
     encoded = json.dumps(
         dict(payload),
         default=_json_default,
@@ -34,6 +46,18 @@ def canonical_digest(payload: Mapping[str, object]) -> str:
 
 
 def section_payload(section: Any) -> dict[str, object]:
+    """Return section payload.
+
+    Parameters
+    ----------
+    section : Any
+        The section evaluated while section payload.
+
+    Returns
+    -------
+    dict[str, object]
+        A disclosure-safe mapping for section payload.
+    """
     return {
         "key": section.key,
         "title": section.title,
@@ -47,6 +71,20 @@ def question_payload(
     *,
     section_key: str | None,
 ) -> dict[str, object]:
+    """Return question payload.
+
+    Parameters
+    ----------
+    question : Any
+        The versioned question defining type, bounds, and ownership.
+    section_key : str | None
+        The stable section key used to authenticate or deduplicate the operation.
+
+    Returns
+    -------
+    dict[str, object]
+        A disclosure-safe mapping for question payload.
+    """
     return {
         "key": question.key,
         "label": question.label,
@@ -65,6 +103,20 @@ def question_payload(
 
 
 def product_payload(product: Any, *, include_status: bool) -> dict[str, object]:
+    """Return product payload.
+
+    Parameters
+    ----------
+    product : Any
+        The edition-owned product whose policy or capacity is evaluated.
+    include_status : bool
+        Whether to include status.
+
+    Returns
+    -------
+    dict[str, object]
+        A disclosure-safe mapping for product payload.
+    """
     payload: dict[str, object] = {
         "code": product.code,
         "name": product.name,
@@ -89,6 +141,18 @@ def product_payload(product: Any, *, include_status: bool) -> dict[str, object]:
 
 
 def minor_policy_payload(policy: Any | None) -> dict[str, object] | None:
+    """Return minor policy payload.
+
+    Parameters
+    ----------
+    policy : Any | None
+        The closed policy definition governing the requested decision.
+
+    Returns
+    -------
+    dict[str, object] | None
+        A disclosure-safe mapping for minor policy payload.
+    """
     if policy is None:
         return None
     return {
@@ -103,8 +167,18 @@ def minor_policy_payload(policy: Any | None) -> dict[str, object] | None:
 
 
 def configuration_source_binding_digest(configuration: Any) -> str:
-    """Bind one configuration to its immutable setup-start provenance tuple."""
+    """Bind one configuration to its immutable setup-start provenance tuple.
 
+    Parameters
+    ----------
+    configuration : Any
+        The versioned configuration governing validation and behavior.
+
+    Returns
+    -------
+    str
+        The normalized text for configuration source binding digest.
+    """
     return canonical_digest(
         {
             "contract": "maru.registration-configuration-source-binding.v1",
@@ -124,8 +198,18 @@ def configuration_source_binding_digest(configuration: Any) -> str:
 
 
 def profile_extension_payload(field: Any) -> dict[str, object]:
-    """Project definition metadata only; attendee values never enter setup evidence."""
+    """Project definition metadata only; attendee values never enter setup evidence.
 
+    Parameters
+    ----------
+    field : Any
+        The model or form field whose contract is being evaluated.
+
+    Returns
+    -------
+    dict[str, object]
+        A mapping containing the resolved profile extension payload data.
+    """
     return {
         "key": field.key,
         "version": field.version,
@@ -156,6 +240,24 @@ def template_content_digest(
     questions: Sequence[Any],
     products: Sequence[Any],
 ) -> str:
+    """Return template content digest.
+
+    Parameters
+    ----------
+    template : Any
+        The immutable starter or template used as the copy source.
+    sections : Sequence[Any]
+        The ordered sections included in the rendered or persisted definition.
+    questions : Sequence[Any]
+        The ordered questions to process.
+    products : Sequence[Any]
+        The products evaluated while template content digest.
+
+    Returns
+    -------
+    str
+        The normalized text for template content digest.
+    """
     section_keys = {section.id: section.key for section in sections}
     return canonical_digest(
         {
@@ -197,6 +299,46 @@ def configuration_content_digest(
     minor_policy: Any | None,
     capacity_ceiling: int | None = None,
 ) -> str:
+    """Return configuration content digest.
+
+    Parameters
+    ----------
+    name : str
+        The human-readable name.
+    schema_version : int
+        The expected schema version used to reject stale updates.
+    opens_at : datetime
+        The time at which the window opens.
+    closes_at : datetime
+        The time at which the window closes.
+    capacity : int
+        The capacity applied by the operation.
+    currency : str
+        The ISO currency code.
+    minimum_age : int
+        The minimum age evaluated while configuration content digest.
+    default_payment_window_minutes : int
+        The default payment window minutes evaluated while configuration content digest.
+    waitlist_enabled : bool
+        Whether wait-list enrollment is enabled.
+    automatic_waitlist_promotion : bool
+        The automatic waitlist promotion evaluated while configuration content digest.
+    sections : Sequence[Any]
+        The ordered sections included in the rendered or persisted definition.
+    questions : Sequence[Any]
+        The ordered questions to process.
+    products : Sequence[Any]
+        The products evaluated while configuration content digest.
+    minor_policy : Any | None
+        The closed minor policy governing validation or disclosure.
+    capacity_ceiling : int | None, default=None
+        The hard upper capacity bound.
+
+    Returns
+    -------
+    str
+        The normalized text for configuration content digest.
+    """
     section_keys = {section.id: section.key for section in sections}
     payload: dict[str, object] = {
         "contract": "maru.registration-configuration-content.v1",
@@ -229,6 +371,20 @@ def configuration_content_digest(
 
 
 def target_content_digest(*, kind: str, payload: Mapping[str, object]) -> str:
+    """Return target content digest.
+
+    Parameters
+    ----------
+    kind : str
+        The closed kind code.
+    payload : Mapping[str, object]
+        The validated payload to process.
+
+    Returns
+    -------
+    str
+        The normalized text for target content digest.
+    """
     return canonical_digest(
         {
             "contract": "maru.registration-setup-target.v1",

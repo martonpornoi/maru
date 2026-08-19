@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
@@ -11,7 +12,6 @@ from rest_framework.test import APIClient
 from maru.audit.models import AuditEvent
 from maru.authorization.models import RoleAssignment
 from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.organizations.models import (
     ConventionSeries,
     Organization,
@@ -30,6 +30,9 @@ from tests.factories import (
     OrganizationFactory,
     RepresentationAppointmentFactory,
 )
+
+if TYPE_CHECKING:
+    from maru.identity.models import Account
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 

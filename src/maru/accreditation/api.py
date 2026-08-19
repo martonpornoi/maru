@@ -51,6 +51,8 @@ def _correlation_id(request: Request) -> UUID:
 
 
 class MyCredentialListView(APIView):
+    """Expose my credential list through the HTTP API."""
+
     @extend_schema(
         operation_id="accreditation_list_my_credentials",
         responses=CredentialSerializer(many=True),
@@ -61,6 +63,22 @@ class MyCredentialListView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List my credentials.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         items = Credential.objects.filter(
             organization_id=organization_id,
             edition_id=edition_id,
@@ -70,6 +88,8 @@ class MyCredentialListView(APIView):
 
 
 class StaffCredentialIssueView(APIView):
+    """Expose staff credential issue through the HTTP API."""
+
     @extend_schema(
         operation_id="accreditation_issue_credential",
         request=CredentialCommandSerializer,
@@ -82,6 +102,33 @@ class StaffCredentialIssueView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Issue the credential.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = CredentialCommandSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -117,6 +164,8 @@ class StaffCredentialIssueView(APIView):
 
 
 class StaffCredentialRevokeView(APIView):
+    """Expose staff credential revoke through the HTTP API."""
+
     @extend_schema(
         operation_id="accreditation_revoke_credential",
         request=CredentialCommandSerializer,
@@ -129,6 +178,31 @@ class StaffCredentialRevokeView(APIView):
         edition_id: UUID,
         credential_id: UUID,
     ) -> Response:
+        """Revoke the credential.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        credential_id : UUID
+            The credential identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = CredentialCommandSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -151,6 +225,8 @@ class StaffCredentialRevokeView(APIView):
 
 
 class StaffOfflineManifestView(APIView):
+    """Expose staff offline manifest through the HTTP API."""
+
     @extend_schema(
         operation_id="accreditation_generate_offline_manifest",
         request=None,
@@ -162,6 +238,29 @@ class StaffOfflineManifestView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Generate the offline manifest.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         try:
             manifest = generate_offline_manifest(
                 actor=_account(request),
@@ -185,6 +284,8 @@ class StaffOfflineManifestView(APIView):
 
 
 class OfflineCheckInIngestView(APIView):
+    """Expose offline check in ingest through the HTTP API."""
+
     permission_classes = (AllowAny,)
     authentication_classes: tuple[()] = ()
 
@@ -200,6 +301,31 @@ class OfflineCheckInIngestView(APIView):
         edition_id: UUID,
         device_code: str,
     ) -> Response:
+        """Ingest the offline check-in batch.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        device_code : str
+            The public relay-device code within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         serializer = OfflineCheckInSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
@@ -228,6 +354,8 @@ class OfflineCheckInIngestView(APIView):
 
 
 class StaffOfflineConflictListView(APIView):
+    """Expose staff offline conflict list through the HTTP API."""
+
     @extend_schema(
         operation_id="accreditation_list_offline_conflicts",
         responses=OfflineOperationSerializer(many=True),
@@ -238,6 +366,27 @@ class StaffOfflineConflictListView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the offline conflicts.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         decision = decide(
             principal=_account(request),
             capability_code="accreditation.manage_offline",

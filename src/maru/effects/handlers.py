@@ -72,14 +72,33 @@ def acknowledge_internal_fact(
     event: DomainEvent,
     context: EffectContext,
 ) -> None:
-    """Acknowledge durable facts whose downstream projection is not yet installed."""
+    """Acknowledge durable facts whose downstream projection is not yet installed.
 
+    Parameters
+    ----------
+    event : DomainEvent
+        The immutable domain event to process.
+    context : EffectContext
+        The request context supplied by the calling framework.
+
+    Raises
+    ------
+    EffectTimeoutError
+        If the operation encounters a effect timeout condition.
+    """
     del event
     if timezone.now() >= context.deadline:
         raise EffectTimeoutError
 
 
 def built_in_handler_registry() -> HandlerRegistry:
+    """Return built in handler registry.
+
+    Returns
+    -------
+    HandlerRegistry
+        The HandlerRegistry established after built in handler registry completes.
+    """
     registry = HandlerRegistry()
     for event_name in sorted(ACKNOWLEDGED_INTERNAL_EVENTS):
         registry.register(
@@ -100,14 +119,14 @@ def built_in_handler_registry() -> HandlerRegistry:
             HandlerRegistration(
                 event_name=event_name,
                 destination="notifications",
-                handler=cast(EffectHandler, deliver_registration_notification),
+                handler=cast("EffectHandler", deliver_registration_notification),
             )
         )
     registry.register(
         HandlerRegistration(
             event_name="identity.account_restriction.applied.v1",
             destination="notifications",
-            handler=cast(EffectHandler, deliver_restriction_notification),
+            handler=cast("EffectHandler", deliver_restriction_notification),
         )
     )
     return registry

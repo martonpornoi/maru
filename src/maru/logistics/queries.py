@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from uuid import UUID, uuid4
 
 from django.db.models import Count, Q, QuerySet
@@ -56,6 +55,9 @@ from .services import (
     LogisticsResourceUnavailableError,
 )
 
+if TYPE_CHECKING:
+    from datetime import date, datetime
+
 MAX_WORKSPACE_ROWS = 2_000
 MAX_ACTIVITY_ROWS = 1_000
 MAX_PERSONAL_EDITION_CANDIDATES = 500
@@ -72,6 +74,34 @@ RESTRICTED_ACCESS_PURPOSES = frozenset(
 
 @dataclass(frozen=True, slots=True)
 class OfferItemProjection:
+    """Describe offer item projection.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    kind
+        The closed discriminator selecting the requested behavior.
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    manufacturer
+        The manufacturer retained in this immutable projection.
+    model_name
+        The human-readable model name shown to authorized readers.
+    serial_number
+        The serial number retained in this immutable projection.
+    condition
+        The configured condition evaluated against the submitted answer.
+    value_class
+        The value class retained in this immutable projection.
+    ownership_statement
+        The ownership statement retained in this immutable projection.
+    """
+
     id: UUID
     kind: str
     name: str
@@ -87,6 +117,42 @@ class OfferItemProjection:
 
 @dataclass(frozen=True, slots=True)
 class SelfOfferProjection:
+    """Describe self offer projection.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    title
+        The human-readable title shown to authorized readers.
+    description
+        The human-readable description shown to authorized readers.
+    available_from
+        The timezone-aware boundary for available from.
+    available_until
+        The timezone-aware boundary for available until.
+    requested_return_at
+        The timezone-aware timestamp for requested return.
+    status
+        The closed status value to evaluate or expose.
+    review_reason
+        The recorded rationale for review.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    pickup_label
+        The human-readable pickup label shown to authorized readers.
+    pickup_recipient_name
+        The human-readable pickup recipient name shown to authorized readers.
+    pickup_postal_address
+        The pickup postal address retained in this immutable projection.
+    pickup_access_instructions
+        The pickup access instructions retained in this immutable projection.
+    pickup_retention_until
+        The timezone-aware boundary for pickup retention until.
+    items
+        The items retained in this immutable projection.
+    """
+
     id: UUID
     title: str
     description: str
@@ -106,6 +172,32 @@ class SelfOfferProjection:
 
 @dataclass(frozen=True, slots=True)
 class PersonalOfferEditionProjection:
+    """Describe personal offer edition projection.
+
+    Attributes
+    ----------
+    organization_slug
+        The stable URL slug identifying the organization.
+    organization_name
+        The human-readable organization name shown to authorized readers.
+    series_slug
+        The stable URL slug identifying the series.
+    series_name
+        The human-readable series name shown to authorized readers.
+    edition_slug
+        The stable URL slug identifying the edition.
+    edition_name
+        The human-readable edition name shown to authorized readers.
+    edition_starts_on
+        The calendar date for edition starts.
+    offer_count
+        The bounded number of offer records.
+    pending_offer_count
+        The bounded number of pending offer records.
+    can_submit
+        The can submit retained in this immutable projection.
+    """
+
     organization_slug: str
     organization_name: str
     series_slug: str
@@ -120,6 +212,34 @@ class PersonalOfferEditionProjection:
 
 @dataclass(frozen=True, slots=True)
 class OfferQueueProjection:
+    """Describe offer queue projection.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    offered_by_id
+        The offered by identifier within the requested scope.
+    title
+        The human-readable title shown to authorized readers.
+    status
+        The closed status value to evaluate or expose.
+    item_count
+        The bounded number of item records.
+    total_units
+        The total units retained in this immutable projection.
+    available_from
+        The timezone-aware boundary for available from.
+    available_until
+        The timezone-aware boundary for available until.
+    requested_return_at
+        The timezone-aware timestamp for requested return.
+    responsible_department_id
+        The responsible department identifier within the requested scope.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    """
+
     id: UUID
     offered_by_id: UUID
     title: str
@@ -135,6 +255,32 @@ class OfferQueueProjection:
 
 @dataclass(frozen=True, slots=True)
 class ManifestLineProjection:
+    """Describe manifest line projection.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    subject_kind
+        The closed subject kind discriminator defined by the domain catalog.
+    subject_id
+        The subject identifier within the requested scope.
+    label_snapshot
+        The label snapshot retained in this immutable projection.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    packed_in_node_id
+        The packed in node identifier within the requested scope.
+    packed_in_label
+        The human-readable packed in label shown to authorized readers.
+    notes
+        The bounded operator notes retained with the domain record.
+    current_sequence
+        The expected current sequence used to reject stale updates.
+    current_state
+        The closed current state discriminator defined by the domain catalog.
+    """
+
     id: UUID
     subject_kind: str
     subject_id: UUID
@@ -149,6 +295,48 @@ class ManifestLineProjection:
 
 @dataclass(frozen=True, slots=True)
 class ManifestProjection:
+    """Describe manifest projection.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    manifest_number
+        The manifest number retained in this immutable projection.
+    kind
+        The closed discriminator selecting the requested behavior.
+    title
+        The human-readable title shown to authorized readers.
+    status
+        The closed status value to evaluate or expose.
+    responsible_department_id
+        The responsible department identifier within the requested scope.
+    source_node_id
+        The source node identifier within the requested scope.
+    source_name
+        The human-readable source name shown to authorized readers.
+    destination_node_id
+        The destination node identifier within the requested scope.
+    destination_name
+        The human-readable destination name shown to authorized readers.
+    vehicle_id
+        The vehicle identifier within the requested scope.
+    vehicle_name
+        The human-readable vehicle name shown to authorized readers.
+    loading_starts_at
+        The timezone-aware timestamp for loading starts.
+    loading_ends_at
+        The timezone-aware timestamp for loading ends.
+    box_count
+        The bounded number of box records.
+    line_count
+        The bounded number of line records.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    lines
+        The lines retained in this immutable projection.
+    """
+
     id: UUID
     manifest_number: str
     kind: str
@@ -171,6 +359,34 @@ class ManifestProjection:
 
 @dataclass(frozen=True, slots=True)
 class CurrentStateProjection:
+    """Describe current state projection.
+
+    Attributes
+    ----------
+    subject_kind
+        The closed subject kind discriminator defined by the domain catalog.
+    subject_id
+        The subject identifier within the requested scope.
+    subject_label
+        The human-readable subject label shown to authorized readers.
+    current_node_id
+        The current node identifier within the requested scope.
+    current_node_name
+        The human-readable current node name shown to authorized readers.
+    custodian_account_id
+        The custodian account identifier within the requested scope.
+    custodian_party_id
+        The custodian party identifier within the requested scope.
+    condition
+        The configured condition evaluated against the submitted answer.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    last_event_sequence
+        The expected last event sequence used to reject stale updates.
+    last_occurred_at
+        The timezone-aware timestamp for last occurred.
+    """
+
     subject_kind: str
     subject_id: UUID
     subject_label: str
@@ -186,6 +402,30 @@ class CurrentStateProjection:
 
 @dataclass(frozen=True, slots=True)
 class ReturnProjection:
+    """Describe return projection.
+
+    Attributes
+    ----------
+    agreement_id
+        The agreement identifier within the requested scope.
+    kind
+        The closed discriminator selecting the requested behavior.
+    subject_kind
+        The closed subject kind discriminator defined by the domain catalog.
+    subject_id
+        The subject identifier within the requested scope.
+    provider_kind
+        The closed provider kind discriminator defined by the domain catalog.
+    provider_id
+        The provider identifier within the requested scope.
+    return_due_at
+        The timezone-aware timestamp for return due.
+    returned
+        The returned retained in this immutable projection.
+    overdue
+        The overdue retained in this immutable projection.
+    """
+
     agreement_id: UUID
     kind: str
     subject_kind: str
@@ -199,6 +439,32 @@ class ReturnProjection:
 
 @dataclass(frozen=True, slots=True)
 class DiscrepancyProjection:
+    """Describe discrepancy projection.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    kind
+        The closed discriminator selecting the requested behavior.
+    subject_kind
+        The closed subject kind discriminator defined by the domain catalog.
+    subject_id
+        The subject identifier within the requested scope.
+    expected_quantity
+        The non-negative hard limit or requested amount for expected quantity.
+    observed_quantity
+        The non-negative hard limit or requested amount for observed quantity.
+    description
+        The human-readable description shown to authorized readers.
+    status
+        The closed status value to evaluate or expose.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    created_at
+        The timezone-aware timestamp for created.
+    """
+
     id: UUID
     kind: str
     subject_kind: str
@@ -213,6 +479,40 @@ class DiscrepancyProjection:
 
 @dataclass(frozen=True, slots=True)
 class ActivityProjection:
+    """Describe activity projection.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    sequence
+        The sequence retained in this immutable projection.
+    event_type
+        The closed event type discriminator defined by the domain catalog.
+    subject_kind
+        The closed subject kind discriminator defined by the domain catalog.
+    subject_id
+        The subject identifier within the requested scope.
+    source_node_id
+        The source node identifier within the requested scope.
+    destination_node_id
+        The destination node identifier within the requested scope.
+    from_custodian_account_id
+        The from custodian account identifier within the requested scope.
+    to_custodian_account_id
+        The to custodian account identifier within the requested scope.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    condition_before
+        The timezone-aware boundary for condition before.
+    condition_after
+        The timezone-aware boundary for condition after.
+    occurred_at
+        The timezone-aware timestamp for occurred.
+    actor_id
+        The immutable identifier of the account authorizing the operation.
+    """
+
     id: UUID
     sequence: int
     event_type: str
@@ -231,6 +531,34 @@ class ActivityProjection:
 
 @dataclass(frozen=True, slots=True)
 class RestrictedContactProjection:
+    """Describe restricted contact projection.
+
+    Attributes
+    ----------
+    address_id
+        The address identifier within the requested scope.
+    purpose
+        The documented purpose constraining collection and processing.
+    label
+        The human-readable label shown to authorized readers.
+    recipient_name
+        The human-readable recipient name shown to authorized readers.
+    contact_email
+        The normalized contact email used for delivery or identity matching.
+    contact_phone
+        The normalized international contact phone, when provided.
+    postal_address
+        The postal address retained in this immutable projection.
+    access_instructions
+        The access instructions retained in this immutable projection.
+    retention_until
+        The timezone-aware boundary for retention until.
+    subject_account_id
+        The subject account identifier within the requested scope.
+    party_id
+        The party identifier within the requested scope.
+    """
+
     address_id: UUID
     purpose: str
     label: str
@@ -246,18 +574,74 @@ class RestrictedContactProjection:
 
 @dataclass(frozen=True, slots=True)
 class NamedLogisticsChoice:
+    """Describe named logistics choice.
+
+    Attributes
+    ----------
+    value
+        The untrusted input to normalize, validate, or compare.
+    label
+        The human-readable label shown to authorized readers.
+    """
+
     value: UUID
     label: str
 
 
 @dataclass(frozen=True, slots=True)
 class NamedLogisticsCodeChoice:
+    """Describe named logistics code choice.
+
+    Attributes
+    ----------
+    value
+        The untrusted input to normalize, validate, or compare.
+    label
+        The human-readable label shown to authorized readers.
+    """
+
     value: str
     label: str
 
 
 @dataclass(frozen=True, slots=True)
 class LogisticsFormChoices:
+    """Enumerate supported logistics form choices values.
+
+    Attributes
+    ----------
+    departments
+        The departments retained in this immutable projection.
+    parties
+        The parties retained in this immutable projection.
+    addresses
+        The addresses retained in this immutable projection.
+    nodes
+        The nodes retained in this immutable projection.
+    packing_nodes
+        The packing nodes retained in this immutable projection.
+    vehicles
+        The vehicles retained in this immutable projection.
+    venue_rooms
+        The venue rooms retained in this immutable projection.
+    venue_space_selections
+        The venue space selections retained in this immutable projection.
+    assets
+        The assets retained in this immutable projection.
+    stock_lots
+        The stock lots retained in this immutable projection.
+    physical_keys
+        The physical keys retained in this immutable projection.
+    tracked_subjects
+        The tracked subjects retained in this immutable projection.
+    people
+        The people retained in this immutable projection.
+    manifests
+        The manifests retained in this immutable projection.
+    labels
+        The labels retained in this immutable projection.
+    """
+
     departments: tuple[NamedLogisticsChoice, ...]
     parties: tuple[NamedLogisticsChoice, ...]
     addresses: tuple[NamedLogisticsChoice, ...]
@@ -277,6 +661,24 @@ class LogisticsFormChoices:
 
 @dataclass(frozen=True, slots=True)
 class LogisticsWorkspaceProjection:
+    """Describe logistics workspace projection.
+
+    Attributes
+    ----------
+    offers
+        The offers retained in this immutable projection.
+    manifests
+        The manifests retained in this immutable projection.
+    current_states
+        The current states retained in this immutable projection.
+    due_returns
+        The due returns retained in this immutable projection.
+    discrepancies
+        The discrepancies retained in this immutable projection.
+    choices
+        The authorized choices available for validated selection.
+    """
+
     offers: tuple[OfferQueueProjection, ...]
     manifests: tuple[ManifestProjection, ...]
     current_states: tuple[CurrentStateProjection, ...]
@@ -287,11 +689,11 @@ class LogisticsWorkspaceProjection:
 
 def _active_account(actor: Account, *, person_only: bool = False) -> None:
     if actor.pk is None or not actor.is_active or actor.is_platform_administrator:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     if person_only and (
         actor.account_kind != Account.Kind.PERSON or actor.is_platform_administrator
     ):
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
 
 
 def _require_edition_decision(
@@ -303,7 +705,7 @@ def _require_edition_decision(
         edition_id=edition_id,
     )
     if target is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     decision = decide(
         principal=actor,
         capability_code=capability,
@@ -311,7 +713,7 @@ def _require_edition_decision(
         at=timezone.now(),
     )
     if not decision.allowed:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     return decision
 
 
@@ -325,7 +727,7 @@ def _require_self_decision(
         edition_id=edition_id,
     )
     if target is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     decision = decide(
         principal=actor,
         capability_code=SELF_OFFER_CAPABILITY,
@@ -333,7 +735,7 @@ def _require_self_decision(
         at=timezone.now(),
     )
     if not decision.allowed:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     return decision
 
 
@@ -387,8 +789,36 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
     address_id: UUID | None = None,
     require_self_offer_open: bool = False,
 ) -> None:
-    """Preauthorize a scalar route scope before parsing any request-controlled input."""
+    """Preauthorize a scalar route scope before parsing any request-controlled input.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    capability_code : str
+        The stable capability code required by the operation.
+    edition_id : UUID | None, default=None
+        The event edition identifier that scopes the operation.
+    manifest_id : UUID | None, default=None
+        The manifest identifier within the requested scope.
+    manifest_line_id : UUID | None, default=None
+        The manifest line identifier within the requested scope.
+    key_id : UUID | None, default=None
+        The key identifier within the requested scope.
+    offer_id : UUID | None, default=None
+        The offer identifier within the requested scope.
+    address_id : UUID | None, default=None
+        The address identifier within the requested scope.
+    require_self_offer_open : bool, default=False
+        Whether to require self offer open.
+
+    Raises
+    ------
+    LogisticsAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    """
     _active_account(actor)
     exact_resource_count = sum(
         value is not None for value in (manifest_id, key_id, offer_id, address_id)
@@ -396,7 +826,7 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
     if exact_resource_count > 1 or (
         manifest_line_id is not None and manifest_id is None
     ):
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     if require_self_offer_open and (
         capability_code != SELF_OFFER_CAPABILITY
         or edition_id is None
@@ -406,13 +836,13 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
             lifecycle__in=SELF_OFFER_EDITION_LIFECYCLES,
         ).exists()
     ):
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     if manifest_id is not None:
         if edition_id is None or capability_code not in {
             MANIFEST_MANAGE_CAPABILITY,
             MANIFEST_VIEW_CAPABILITY,
         }:
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
         target = resolve_logistics_manifest_target(
             organization_id=organization_id,
             edition_id=edition_id,
@@ -427,10 +857,10 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
                 manifest__edition_id=edition_id,
             ).exists()
         ):
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
     elif key_id is not None:
         if capability_code != CATALOG_MANAGE_CAPABILITY or edition_id is not None:
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
         if (
             not PhysicalKey.objects.filter(
                 id=key_id,
@@ -439,11 +869,11 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
             .only("id")
             .exists()
         ):
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
         target = resolve_organization_target(organization_id=organization_id)
     elif offer_id is not None:
         if edition_id is None:
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
         offer_scope = EquipmentOffer.objects.filter(
             id=offer_id,
             organization_id=organization_id,
@@ -452,7 +882,7 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
         if capability_code == SELF_OFFER_CAPABILITY:
             offer_scope = offer_scope.filter(offered_by=actor)
         if not offer_scope.only("id").exists():
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
         target = (
             resolve_self_target(
                 principal=actor,
@@ -467,7 +897,7 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
         )
     elif address_id is not None:
         if edition_id is None or capability_code != RESTRICTED_CONTACT_CAPABILITY:
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
         if not (
             RestrictedLogisticsAddress.objects.filter(
                 Q(edition_id=edition_id) | Q(edition__isnull=True),
@@ -481,14 +911,14 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
             .only("id")
             .exists()
         ):
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
         target = resolve_edition_target(
             organization_id=organization_id,
             edition_id=edition_id,
         )
     elif capability_code == SELF_OFFER_CAPABILITY:
         if edition_id is None:
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
         target = resolve_self_target(
             principal=actor,
             organization_id=organization_id,
@@ -502,7 +932,7 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
     else:
         target = resolve_organization_target(organization_id=organization_id)
     if target is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     decision = decide(
         principal=actor,
         capability_code=capability_code,
@@ -510,14 +940,28 @@ def authorize_logistics_api_scope(  # noqa: PLR0912
         at=timezone.now(),
     )
     if not decision.allowed:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
 
 
 def authorize_self_offer_history_api_scope(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> None:
-    """Allow self policy or an existing owned offer, without loading scope labels."""
+    """Allow self policy or an existing owned offer, without loading scope labels.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Raises
+    ------
+    LogisticsAuthorizationDeniedError
+        If the requested operation violates this domain contract.
+    """
     _active_account(actor, person_only=True)
     try:
         authorize_logistics_api_scope(
@@ -540,15 +984,20 @@ def authorize_self_offer_history_api_scope(
 
 
 def authorize_personal_logistics_index_scope(*, actor: Account) -> None:
-    """Prove an active person before personal-index query parameters are read."""
+    """Prove an active person before personal-index query parameters are read.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    """
     _active_account(actor, person_only=True)
 
 
 def _line_subject_id(line: LogisticsManifestLine) -> UUID:
     value = line.node_id or line.asset_id or line.stock_lot_id or line.physical_key_id
     if value is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     return value
 
 
@@ -565,9 +1014,9 @@ def _line_current_state(
     elif line.subject_kind == LogisticsEvent.SubjectKind.KEY:
         subject = line.physical_key
     else:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     if subject is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     state = getattr(subject, "current_state", None)
     if state is None:
         return 0, "unreceived"
@@ -578,12 +1027,12 @@ def _state_subject(state: LogisticsCurrentState) -> tuple[str, UUID, str]:
     if state.asset_id:
         asset = state.asset
         if asset is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         return LogisticsEvent.SubjectKind.ASSET, state.asset_id, asset.name
     if state.stock_lot_id:
         stock_lot = state.stock_lot
         if stock_lot is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         return (
             LogisticsEvent.SubjectKind.STOCK_LOT,
             state.stock_lot_id,
@@ -592,7 +1041,7 @@ def _state_subject(state: LogisticsCurrentState) -> tuple[str, UUID, str]:
     if state.physical_key_id:
         physical_key = state.physical_key
         if physical_key is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         return (
             LogisticsEvent.SubjectKind.KEY,
             state.physical_key_id,
@@ -601,15 +1050,35 @@ def _state_subject(state: LogisticsCurrentState) -> tuple[str, UUID, str]:
     if state.node_id:
         node = state.node
         if node is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         return LogisticsEvent.SubjectKind.NODE, state.node_id, node.name
-    raise LogisticsResourceUnavailableError()
+    raise LogisticsResourceUnavailableError
 
 
 def list_self_offers(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[SelfOfferProjection, ...]:
-    """Return one person's own offers, including only their own pickup address."""
+    """Return one person's own offers, including only their own pickup address.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    tuple[SelfOfferProjection, ...]
+        The matching list self offers records in deterministic order.
+
+    Raises
+    ------
+    LogisticsAuthorizationDeniedError
+        If the requested operation violates this domain contract.
+    """
     _active_account(actor, person_only=True)
     try:
         _require_self_decision(
@@ -693,6 +1162,22 @@ def list_self_offers(
 def can_submit_equipment_offer(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> bool:
+    """Return whether submit equipment offer.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    bool
+        Whether the requested condition is satisfied.
+    """
     if not EventEdition.objects.filter(
         id=edition_id,
         organization_id=organization_id,
@@ -713,7 +1198,18 @@ def can_submit_equipment_offer(
 def my_equipment_offer_editions(
     *, actor: Account
 ) -> tuple[PersonalOfferEditionProjection, ...]:
-    """Discover only authorized or self-owned offer scopes without admin context."""
+    """Discover only authorized or self-owned offer scopes without admin context.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+
+    Returns
+    -------
+    tuple[PersonalOfferEditionProjection, ...]
+        The matching my equipment offer editions records in deterministic order.
+    """
     _active_account(actor, person_only=True)
     own_counts = {
         (row["organization_id"], row["edition_id"]): (
@@ -884,7 +1380,7 @@ def _return_subject(agreement: AssetAgreement) -> tuple[str, UUID]:
         return LogisticsEvent.SubjectKind.KEY, agreement.physical_key_id
     if agreement.node_id:
         return LogisticsEvent.SubjectKind.NODE, agreement.node_id
-    raise LogisticsResourceUnavailableError()
+    raise LogisticsResourceUnavailableError
 
 
 def _subject_state_filter(subject_kind: str, subject_id: UUID) -> Q:
@@ -896,7 +1392,7 @@ def _subject_state_filter(subject_kind: str, subject_id: UUID) -> Q:
     }
     field = field_by_kind.get(subject_kind)
     if field is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     return Q(**{field: subject_id})
 
 
@@ -919,7 +1415,7 @@ def _return_projection(
     provider_kind = "account" if agreement.provider_account_id else "party"
     provider_id = agreement.provider_account_id or agreement.provider_id
     if provider_id is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     return ReturnProjection(
         agreement_id=agreement.id,
         kind=agreement.kind,
@@ -1118,7 +1614,22 @@ def _form_choices(
 def list_logistics_workspace(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> LogisticsWorkspaceProjection:
-    """Return operational metadata without pickup addresses or party contacts."""
+    """Return operational metadata without pickup addresses or party contacts.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    LogisticsWorkspaceProjection
+        The resolved LogisticsWorkspaceProjection for list logistics workspace.
+    """
     decision = _require_edition_decision(
         actor=actor,
         organization_id=organization_id,
@@ -1263,7 +1774,29 @@ def manifest_for_workspace(
     edition_id: UUID,
     manifest_id: UUID,
 ) -> ManifestProjection:
-    """Return one exact manifest only after typed-resource authorization."""
+    """Return one exact manifest only after typed-resource authorization.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    manifest_id : UUID
+        The manifest identifier within the requested scope.
+
+    Returns
+    -------
+    ManifestProjection
+        The resolved ManifestProjection for manifest for workspace.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     try:
         authorize_logistics_api_scope(
             actor=actor,
@@ -1289,13 +1822,29 @@ def manifest_for_workspace(
         .first()
     )
     if manifest is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     return _manifest_projection(manifest, include_lines=True)
 
 
 def stage_tech_receiving_manifests(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[ManifestProjection, ...]:
+    """Return stage tech receiving manifests visible to the caller.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    tuple[ManifestProjection, ...]
+        The manifest projection.
+    """
     _require_edition_decision(
         actor=actor,
         organization_id=organization_id,
@@ -1324,6 +1873,22 @@ def stage_tech_receiving_manifests(
 def list_logistics_activity(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[ActivityProjection, ...]:
+    """List logistics activity.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    tuple[ActivityProjection, ...]
+        The ordered logistics activity collection.
+    """
     decision = _require_edition_decision(
         actor=actor,
         organization_id=organization_id,
@@ -1338,7 +1903,7 @@ def list_logistics_activity(
             subject_kind=event.subject_kind,
             subject_id=(
                 cast(
-                    UUID,
+                    "UUID",
                     event.node_id
                     or event.asset_id
                     or event.stock_lot_id
@@ -1384,11 +1949,46 @@ def read_restricted_logistics_contact(
     request_id: UUID | None = None,
     source_channel: str = "web",
 ) -> RestrictedContactProjection:
-    """Read one active purpose-bound address and audit the sensitive access."""
+    """Read one active purpose-bound address and audit the sensitive access.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    address_id : UUID
+        The address identifier within the requested scope.
+    purpose : str
+        The documented purpose constraining collection and processing.
+    access_purpose : str
+        The access purpose used to constrain the tenant-scoped query.
+    access_request_id : UUID | None, default=None
+        The access request identifier within the requested scope.
+    correlation_id : UUID | None, default=None
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RestrictedContactProjection
+        The RestrictedContactProjection produced by read restricted logistics
+        contact.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     if purpose not in RestrictedLogisticsAddress.Purpose.values:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     if access_purpose not in RESTRICTED_ACCESS_PURPOSES:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     decision = _require_edition_decision(
         actor=actor,
         organization_id=organization_id,
@@ -1408,7 +2008,7 @@ def read_restricted_logistics_contact(
         .first()
     )
     if address is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     normalized_source = normalized_source_channel(source_channel)
     audit_correlation_id = correlation_id or uuid4()
     append_audit(
@@ -1464,12 +2064,44 @@ def prepare_restricted_contact_request(
     request_id: UUID | None = None,
     source_channel: str = "web",
 ) -> UUID:
-    """Authorize an opaque PRG request without reading contact fields."""
+    """Authorize an opaque PRG request without reading contact fields.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    address_id : UUID
+        The address identifier within the requested scope.
+    purpose : str
+        The documented purpose constraining collection and processing.
+    access_purpose : str
+        The access purpose used to constrain the tenant-scoped query.
+    correlation_id : UUID | None, default=None
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    UUID
+        The resolved UUID for prepare restricted contact request.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     if (
         purpose not in RestrictedLogisticsAddress.Purpose.values
         or access_purpose not in RESTRICTED_ACCESS_PURPOSES
     ):
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     decision = _require_edition_decision(
         actor=actor,
         organization_id=organization_id,
@@ -1490,7 +2122,7 @@ def prepare_restricted_contact_request(
         .exists()
     )
     if not address_exists:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     audit_correlation_id = correlation_id or uuid4()
     audit = append_audit(
         AuditRecord(

@@ -70,6 +70,20 @@ def problem_exception_handler(
     exception: Exception,
     context: dict[str, Any],
 ) -> Response | None:
+    """Translate a DRF exception into Maru's RFC 9457 problem response.
+
+    Parameters
+    ----------
+    exception : Exception
+        The exception translated into the canonical problem response.
+    context : dict[str, Any]
+        The resolved context for the operation.
+
+    Returns
+    -------
+    Response | None
+        The HTTP response for this request.
+    """
     response = exception_handler(exception, context)
     if response is None:
         return None

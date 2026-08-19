@@ -11,9 +11,13 @@ from maru.identity.models import (
 
 
 class AccountSecurityEventSerializer(serializers.ModelSerializer[AccountSecurityEvent]):
+    """Serialize and validate account security event data."""
+
     event_label = serializers.CharField(source="get_event_type_display")
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = AccountSecurityEvent
         fields = (
             "id",
@@ -28,6 +32,8 @@ class AccountSecurityEventSerializer(serializers.ModelSerializer[AccountSecurity
 
 
 class AccountBootstrapSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate account bootstrap data."""
+
     email = serializers.EmailField()
     display_name = serializers.CharField(max_length=120)
     password = serializers.CharField(
@@ -38,6 +44,8 @@ class AccountBootstrapSerializer(serializers.Serializer[dict[str, str]]):
 
 
 class SessionSignInSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate session sign in data."""
+
     email = serializers.EmailField()
     password = serializers.CharField(
         max_length=128,
@@ -47,14 +55,20 @@ class SessionSignInSerializer(serializers.Serializer[dict[str, str]]):
 
 
 class TokenSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate token data."""
+
     token = serializers.CharField(max_length=200, trim_whitespace=True)
 
 
 class RecoveryRequestSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate recovery request data."""
+
     email = serializers.EmailField()
 
 
 class RecoveryCompleteSerializer(TokenSerializer):
+    """Serialize and validate recovery complete data."""
+
     new_password = serializers.CharField(
         max_length=128,
         trim_whitespace=False,
@@ -63,6 +77,8 @@ class RecoveryCompleteSerializer(TokenSerializer):
 
 
 class StepUpSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate step up data."""
+
     password = serializers.CharField(
         max_length=128,
         trim_whitespace=False,
@@ -71,9 +87,13 @@ class StepUpSerializer(serializers.Serializer[dict[str, str]]):
 
 
 class AccountSessionSerializer(serializers.ModelSerializer[AccountSession]):
+    """Serialize and validate account session data."""
+
     active = serializers.BooleanField(source="is_active_session")
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = AccountSession
         fields = (
             "id",
@@ -90,10 +110,14 @@ class AccountSessionSerializer(serializers.ModelSerializer[AccountSession]):
 
 
 class AccountRestrictionSerializer(serializers.ModelSerializer[AccountRestriction]):
+    """Serialize and validate account restriction data."""
+
     edition_id = serializers.UUIDField(allow_null=True)
     appeal_status = serializers.SerializerMethodField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = AccountRestriction
         fields = (
             "id",
@@ -110,16 +134,34 @@ class AccountRestrictionSerializer(serializers.ModelSerializer[AccountRestrictio
         read_only_fields = fields
 
     def get_appeal_status(self, obj: AccountRestriction) -> str | None:
+        """Return appeal status.
+
+        Parameters
+        ----------
+        obj : AccountRestriction
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str | None
+            The resolved str | None for the requested scope.
+        """
         appeal = obj.appeals.order_by("-submitted_at", "-id").first()
         return appeal.status if appeal else None
 
 
 class RestrictionAppealCreateSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate restriction appeal create data."""
+
     statement = serializers.CharField(max_length=4000)
 
 
 class RestrictionAppealSerializer(serializers.ModelSerializer[RestrictionAppeal]):
+    """Serialize and validate restriction appeal data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = RestrictionAppeal
         fields = (
             "id",
@@ -134,6 +176,8 @@ class RestrictionAppealSerializer(serializers.ModelSerializer[RestrictionAppeal]
 
 
 class StaffRestrictionCreateSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate staff restriction create data."""
+
     account_id = serializers.UUIDField()
     kind = serializers.ChoiceField(choices=AccountRestriction.Kind.choices)
     reason_code = serializers.SlugField(max_length=80)
@@ -149,9 +193,13 @@ class StaffRestrictionCreateSerializer(serializers.Serializer[dict[str, object]]
 
 
 class StaffRestrictionRevokeSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate staff restriction revoke data."""
+
     reason = serializers.CharField(max_length=500)
 
 
 class StaffRestrictionAppealDecisionSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate staff restriction appeal decision data."""
+
     decision = serializers.ChoiceField(choices=("uphold", "revoke"))
     summary = serializers.CharField(max_length=500)

@@ -22,6 +22,8 @@ class _ActionForm(StrictInputForm):
 
 
 class PageAccessAssignmentForm(_ActionForm):
+    """Collect and validate page access assignment input."""
+
     expected_action = "assign"
 
     person_email = forms.EmailField(max_length=254, label="Existing person email")
@@ -35,6 +37,8 @@ class PageAccessAssignmentForm(_ActionForm):
 
 
 class PageAccessRevokeForm(_ActionForm):
+    """Collect and validate page access revoke input."""
+
     expected_action = "revoke"
 
     assignment_id = CanonicalUUIDField()
@@ -42,12 +46,16 @@ class PageAccessRevokeForm(_ActionForm):
 
 
 class PageAccessPersonPreviewForm(_ActionForm):
+    """Collect and validate page access person preview input."""
+
     expected_action = "preview_person"
 
     person_email = forms.EmailField(max_length=254, label="Exact person email")
 
 
 class PageAccessRolePreviewForm(_ActionForm):
+    """Collect and validate page access role preview input."""
+
     expected_action = "preview_role"
 
     role_version_id = CanonicalUUIDField(label="Immutable group version")
@@ -59,5 +67,17 @@ class UnsupportedPageAccessActionForm(_ActionForm):
     expected_action = "unsupported"
 
     def clean(self) -> dict[str, Any] | None:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            A mapping containing the resolved clean data.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         raise forms.ValidationError("Choose a supported access action.")

@@ -42,11 +42,41 @@ class StrictSignedBase10IntegerField(forms.Field):
         max_value: int = MAX_SIGNED_32_BIT_INTEGER,
         **kwargs: Any,
     ) -> None:
+        """Initialize the StrictSignedBase10IntegerField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        min_value : int, default=MIN_SIGNED_32_BIT_INTEGER
+            The min value evaluated while strict signed base10 integer field.
+        max_value : int, default=MAX_SIGNED_32_BIT_INTEGER
+            The max value evaluated while strict signed base10 integer field.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.min_value = min_value
         self.max_value = max_value
 
     def to_python(self, value: object) -> int | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        int | None
+            The canonical Python representation, or `None` for empty input.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if value in self.empty_values:
             return None
         if (
@@ -158,6 +188,17 @@ class ProfileExtensionValueForm(StrictInputForm):
         profile_field: ProfileExtensionValueFieldProjection,
         **kwargs: Any,
     ) -> None:
+        """Initialize the ProfileExtensionValueForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        profile_field : ProfileExtensionValueFieldProjection
+            The profile field evaluated while profile extension value form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.profile_field = profile_field
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("value", _value_initial(profile_field))
@@ -169,6 +210,18 @@ class ProfileExtensionValueForm(StrictInputForm):
         self.order_fields(("value", "expected_sequence", "retry_key"))
 
     def clean_value(self) -> object:
+        """Validate and normalize the value field.
+
+        Returns
+        -------
+        object
+            The validated and normalized value.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = self.cleaned_data["value"]
         if (
             self.profile_field.field_type == QuestionFieldType.MULTIPLE_CHOICE
@@ -195,6 +248,15 @@ class StaffProfileExtensionValueForm(ProfileExtensionValueForm):
     )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the StaffProfileExtensionValueForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.order_fields(("value", "reason", "expected_sequence", "retry_key"))
 

@@ -17,6 +17,7 @@ def test_ci_has_stable_parallel_acceptance_jobs() -> None:
 
     for job in (
         "static",
+        "documentation",
         "django-contracts",
         "frontend",
         "unit",
@@ -34,6 +35,24 @@ def test_ci_has_stable_parallel_acceptance_jobs() -> None:
     assert "name: CI gate" in workflow
     assert "fetch-depth: 0" in workflow
     assert 'git diff --check "$BASE_SHA" "$GITHUB_SHA"' in workflow
+
+
+def test_ci_validates_and_builds_contributor_documentation() -> None:
+    workflow = _workflow()
+    local_check = LOCAL_CHECK_PATH.read_text(encoding="utf-8")
+
+    for command in (
+        "uv run pydoclint src scripts",
+        "uv run python scripts/validate_python_docstrings.py src scripts",
+        "uv run sphinx-build -W --keep-going --fresh-env -b html docs docs/_build/html",
+    ):
+        assert command in workflow
+        assert command in local_check
+
+    assert "name: Contributor documentation" in workflow
+    assert "name: contributor-documentation" in workflow
+    assert "path: docs/_build/html" in workflow
+    assert "needs.documentation.result != 'success'" in workflow
 
 
 def test_ci_uses_canonical_production_settings_verifier() -> None:

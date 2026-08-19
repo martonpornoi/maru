@@ -23,6 +23,17 @@ class _IdempotentCommandForm(StrictInputForm):
         idempotency_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the _IdempotentCommandForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        idempotency_key : UUID | None, default=None
+            The key used to deduplicate repeated command submissions.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("idempotency_key", idempotency_key or uuid4())
         kwargs["initial"] = initial
@@ -30,6 +41,8 @@ class _IdempotentCommandForm(StrictInputForm):
 
 
 class TierReplacementReservationForm(_IdempotentCommandForm):
+    """Collect and validate tier replacement reservation input."""
+
     target_product_id = CanonicalUUIDField(widget=forms.HiddenInput)
     expected_registration_version = StrictBase10IntegerField(
         min_value=1,
@@ -38,14 +51,18 @@ class TierReplacementReservationForm(_IdempotentCommandForm):
 
 
 class HostedPaymentStartForm(_IdempotentCommandForm):
+    """Collect and validate hosted payment start input."""
+
     provider_account_id = CanonicalUUIDField(widget=forms.HiddenInput)
 
 
 class DemoPaymentForm(_IdempotentCommandForm):
-    pass
+    """Collect and validate demo payment input."""
 
 
 class CapacityAdjustmentForm(_IdempotentCommandForm):
+    """Collect and validate capacity adjustment input."""
+
     product_id = CanonicalUUIDField(required=False, widget=forms.HiddenInput)
     new_capacity = StrictBase10IntegerField(
         label="New effective capacity",
@@ -66,6 +83,8 @@ class CapacityAdjustmentForm(_IdempotentCommandForm):
 
 
 class WaitlistBatchOfferForm(_IdempotentCommandForm):
+    """Collect and validate waitlist batch offer input."""
+
     product_id = CanonicalUUIDField(widget=forms.HiddenInput)
     batch_size = StrictBase10IntegerField(
         label="Next eligible registrations",

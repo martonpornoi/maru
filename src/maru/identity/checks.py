@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
-from django.apps import AppConfig
 from django.conf import settings
 from django.core.checks import (
     CheckMessage,
@@ -18,6 +17,11 @@ from maru.identity.invitation_crypto import InvitationCryptoConfigurationError
 from maru.identity.invitation_key_config import active_invitation_encryption_key
 from maru.identity.invitation_token_keys import invitation_token_keys_are_ready
 from maru.settings.environment import normalized_https_origin
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from django.apps import AppConfig
 
 _CONFIGURATION_HINT = (
     "Set MARU_IDENTITY_INVITATION_ENCRYPTION_KEY_ID and "
@@ -48,8 +52,21 @@ def check_invitation_encryption_configuration(
     app_configs: Iterable[AppConfig] | None = None,
     **kwargs: object,
 ) -> list[CheckMessage]:
-    """Require a valid public key in production and warn elsewhere."""
+    """Require a valid public key in production and warn elsewhere.
 
+    Parameters
+    ----------
+    app_configs : Iterable[AppConfig] | None, default=None
+        The installed Django application configurations to inspect.
+    **kwargs : object
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    list[CheckMessage]
+        The matching check invitation encryption configuration records in
+        deterministic order.
+    """
     del app_configs, kwargs
     try:
         active_invitation_encryption_key()
@@ -77,8 +94,21 @@ def check_invitation_public_origin_configuration(
     app_configs: Iterable[AppConfig] | None = None,
     **kwargs: object,
 ) -> list[CheckMessage]:
-    """Require the bearer-link origin whenever invitation delivery is required."""
+    """Require the bearer-link origin whenever invitation delivery is required.
 
+    Parameters
+    ----------
+    app_configs : Iterable[AppConfig] | None, default=None
+        The installed Django application configurations to inspect.
+    **kwargs : object
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    list[CheckMessage]
+        The matching check invitation public origin configuration records in
+        deterministic order.
+    """
     del app_configs, kwargs
     if not bool(getattr(settings, "IDENTITY_INVITATION_ENCRYPTION_REQUIRED", False)):
         return []
@@ -98,8 +128,21 @@ def check_invitation_digest_key_configuration(
     app_configs: Iterable[AppConfig] | None = None,
     **kwargs: object,
 ) -> list[CheckMessage]:
-    """Require dedicated versioned token-digest keys in production."""
+    """Require dedicated versioned token-digest keys in production.
 
+    Parameters
+    ----------
+    app_configs : Iterable[AppConfig] | None, default=None
+        The installed Django application configurations to inspect.
+    **kwargs : object
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    list[CheckMessage]
+        The matching check invitation digest key configuration records in
+        deterministic order.
+    """
     del app_configs, kwargs
     if not bool(getattr(settings, "IDENTITY_INVITATION_ENCRYPTION_REQUIRED", False)):
         return []

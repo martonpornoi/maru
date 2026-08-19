@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from threading import Barrier
+from typing import Never
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -528,7 +529,7 @@ def test_product_commands_require_active_capacity_and_refuse_cascading_delete(
 
     product = configuration.products.get(pk=result.target_id)
 
-    def protected_delete(_product: AdmissionProduct, *args, **kwargs):
+    def protected_delete(_product: AdmissionProduct, *args, **kwargs) -> Never:
         del args, kwargs
         raise ProtectedError("synthetic protected reference", [_product])
 

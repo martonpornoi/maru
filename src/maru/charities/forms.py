@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
-from typing import Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db.models import QuerySet
 
 from maru.core.forms import (
     CanonicalUUIDField,
@@ -21,6 +20,9 @@ from maru.core.forms import (
 from maru.workforce.models import Department
 
 from .models import CharityPartner, CharityPartnerMedia
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
 
 _DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M"
 _LOCAL_DATE_TIME = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}\Z")
@@ -37,6 +39,17 @@ class CharityEditionLocalDateTimeField(forms.Field):
     }
 
     def __init__(self, *args: Any, zone_name: str = "UTC", **kwargs: Any) -> None:
+        """Initialize the CharityEditionLocalDateTimeField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        zone_name : str, default='UTC'
+            The human-readable zone name shown to authorized readers.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault(
             "widget",
             forms.DateTimeInput(
@@ -48,9 +61,33 @@ class CharityEditionLocalDateTimeField(forms.Field):
         self.zone = ZoneInfo(zone_name)
 
     def set_zone(self, zone_name: str) -> None:
+        """Set zone.
+
+        Parameters
+        ----------
+        zone_name : str
+            The human-readable zone name shown to authorized readers.
+        """
         self.zone = ZoneInfo(zone_name)
 
     def to_python(self, value: object) -> datetime | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        datetime | None
+            The canonical Python representation, or `None` for empty input.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if value in self.empty_values:
             return None
         if not isinstance(value, str) or _LOCAL_DATE_TIME.fullmatch(value) is None:
@@ -81,6 +118,18 @@ class CharityEditionLocalDateTimeField(forms.Field):
         return first
 
     def prepare_value(self, value: object) -> object:
+        """Prepare value.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        object
+            A widget-ready representation of the stored value.
+        """
         if isinstance(value, datetime):
             local = value.astimezone(self.zone) if value.tzinfo else value
             return local.strftime(_DATE_TIME_FORMAT)
@@ -88,6 +137,8 @@ class CharityEditionLocalDateTimeField(forms.Field):
 
 
 class IdempotentCharityForm(StrictInputForm):
+    """Collect and validate idempotent charity input."""
+
     idempotency_key = CanonicalUUIDField(widget=forms.HiddenInput)
 
     def __init__(
@@ -96,6 +147,17 @@ class IdempotentCharityForm(StrictInputForm):
         idempotency_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the IdempotentCharityForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        idempotency_key : UUID | None, default=None
+            The stable key that makes an exact retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("idempotency_key", idempotency_key or uuid4())
         kwargs["initial"] = initial
@@ -103,6 +165,8 @@ class IdempotentCharityForm(StrictInputForm):
 
 
 class ReasonedCharityForm(IdempotentCharityForm):
+    """Collect and validate reasoned charity input."""
+
     reason = forms.CharField(
         min_length=1,
         max_length=1_000,
@@ -111,6 +175,8 @@ class ReasonedCharityForm(IdempotentCharityForm):
 
 
 class VersionedReasonedCharityForm(ReasonedCharityForm):
+    """Collect and validate versioned reasoned charity input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -118,6 +184,8 @@ class VersionedReasonedCharityForm(ReasonedCharityForm):
 
 
 class CharityPartnerCreateForm(ReasonedCharityForm):
+    """Collect and validate charity partner create input."""
+
     slug = forms.SlugField(max_length=80)
     legal_name = forms.CharField(max_length=240)
     imprint_name = forms.CharField(max_length=240, required=False)
@@ -145,6 +213,8 @@ class CharityPartnerCreateForm(ReasonedCharityForm):
 
 
 class CharityPartnerUpdateForm(CharityPartnerCreateForm):
+    """Collect and validate charity partner update input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -153,6 +223,8 @@ class CharityPartnerUpdateForm(CharityPartnerCreateForm):
 
 
 class CharityMediaAddForm(ReasonedCharityForm):
+    """Collect and validate charity media add input."""
+
     kind = forms.ChoiceField(choices=CharityPartnerMedia.Kind.choices)
     source_reference = forms.CharField(max_length=1_000)
     owner_name = forms.CharField(max_length=240)
@@ -175,17 +247,32 @@ class CharityMediaAddForm(ReasonedCharityForm):
         edition_time_zone: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the CharityMediaAddForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        edition_time_zone : str
+            The IANA time-zone name used for localization and validation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
-        cast(CharityEditionLocalDateTimeField, self.fields["expires_at"]).set_zone(
+        cast("CharityEditionLocalDateTimeField", self.fields["expires_at"]).set_zone(
             edition_time_zone
         )
 
 
 class CharityMediaReviewForm(VersionedReasonedCharityForm):
+    """Collect and validate charity media review input."""
+
     public_reference = forms.CharField(max_length=1_000, required=False)
 
 
 class CharitySelectionProposeForm(ReasonedCharityForm):
+    """Collect and validate charity selection propose input."""
+
     partner_id = forms.ModelChoiceField(
         label="Charity partner",
         queryset=CharityPartner.objects.none(),
@@ -202,18 +289,33 @@ class CharitySelectionProposeForm(ReasonedCharityForm):
         departments: QuerySet[Department] | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the CharitySelectionProposeForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        partners : QuerySet[CharityPartner] | None, default=None
+            The partners used to configure and validate this form.
+        departments : QuerySet[Department] | None, default=None
+            The departments used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         if partners is not None:
-            cast(Any, self.fields["partner_id"]).queryset = partners
+            cast("Any", self.fields["partner_id"]).queryset = partners
         if departments is not None:
-            cast(Any, self.fields["responsible_department_id"]).queryset = departments
+            cast("Any", self.fields["responsible_department_id"]).queryset = departments
 
 
 class CharitySelectionDecisionForm(VersionedReasonedCharityForm):
-    pass
+    """Collect and validate charity selection decision input."""
 
 
 class CharitySelectionCommentForm(IdempotentCharityForm):
+    """Collect and validate charity selection comment input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -231,6 +333,8 @@ class _MediaChoiceField(forms.ModelMultipleChoiceField):  # type: ignore[type-ar
 
 
 class CharitySelectionPublishForm(VersionedReasonedCharityForm):
+    """Collect and validate charity selection publish input."""
+
     media_ids = _MediaChoiceField(
         label="Approved public media",
         queryset=CharityPartnerMedia.objects.none(),
@@ -244,6 +348,17 @@ class CharitySelectionPublishForm(VersionedReasonedCharityForm):
         media: QuerySet[CharityPartnerMedia] | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the CharitySelectionPublishForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        media : QuerySet[CharityPartnerMedia] | None, default=None
+            The media used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         if media is not None:
-            cast(Any, self.fields["media_ids"]).queryset = media
+            cast("Any", self.fields["media_ids"]).queryset = media

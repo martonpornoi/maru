@@ -65,7 +65,7 @@ def _append_replay_audit(
     )
 
 
-def replay_effect(
+def replay_effect(  # noqa: DOC503 - bare re-raise preserves original error
     *,
     actor: Account,
     organization_id: UUID,
@@ -76,8 +76,39 @@ def replay_effect(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> OutboxMessage:
-    """Replay one tenant-owned quarantined effect with authorization and audit."""
+    """Replay one tenant-owned quarantined effect with authorization and audit.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    message_id : UUID
+        The message identifier within the requested scope.
+    additional_attempts : int
+        The additional attempts applied within the audited domain transition.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    OutboxMessage
+        The resolved OutboxMessage for replay effect.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     decision = decide(
         principal=actor,
         capability_code=REPLAY_CAPABILITY,

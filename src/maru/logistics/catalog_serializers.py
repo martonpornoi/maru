@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, ClassVar, cast
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -23,6 +22,9 @@ from .models import (
 from .serializers import StrictDateTimeField
 from .services import MAX_KIT_LINES, MAX_TRACKED_QUANTITY, MIN_QR_IDENTIFIER_LENGTH
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 
 @extend_schema_field(CANONICAL_UUID_SCHEMA)
 class CanonicalUUIDField(serializers.UUIDField):
@@ -33,7 +35,7 @@ class CanonicalUUIDField(serializers.UUIDField):
     }
 
     def to_internal_value(self, data: object) -> UUID:
-        value = super().to_internal_value(cast(Any, data))
+        value = super().to_internal_value(cast("Any", data))
         if not isinstance(data, str) or str(value) != data:
             self.fail("invalid")
         return value
@@ -58,6 +60,8 @@ class SubjectLocatorSerializer(StrictInputSerializer):
     object_id = CanonicalUUIDField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ref_name = "LogisticsCatalogSubjectLocator"
 
 
@@ -95,11 +99,15 @@ class LogisticsPartyProfileSerializer(StrictInputSerializer):
 
 
 class LogisticsPartyCreateSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate logistics party create data."""
+
     code = serializers.SlugField(max_length=96)
     profile = LogisticsPartyProfileSerializer()
 
 
 class RestrictedAddressCreateSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate restricted address create data."""
+
     purpose = serializers.ChoiceField(
         choices=RestrictedLogisticsAddress.Purpose.choices
     )
@@ -125,6 +133,8 @@ class RestrictedAddressCreateSerializer(LogisticsCatalogCommandSerializer):
 
 
 class LogisticsNodeCreateSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate logistics node create data."""
+
     kind = serializers.ChoiceField(choices=LogisticsNode.Kind.choices)
     code = serializers.SlugField(max_length=96)
     name = serializers.CharField(max_length=200)
@@ -144,6 +154,8 @@ class LogisticsNodeCreateSerializer(LogisticsCatalogCommandSerializer):
 
 
 class SerializedAssetCreateSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate serialized asset create data."""
+
     catalog_code = serializers.SlugField(max_length=96)
     name = serializers.CharField(max_length=200)
     asset_type = serializers.CharField(max_length=120)
@@ -160,6 +172,8 @@ class SerializedAssetCreateSerializer(LogisticsCatalogCommandSerializer):
 
 
 class StockLotCreateSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate stock lot create data."""
+
     catalog_code = serializers.SlugField(max_length=96)
     name = serializers.CharField(max_length=200)
     stock_type = serializers.CharField(max_length=120)
@@ -173,6 +187,8 @@ class StockLotCreateSerializer(LogisticsCatalogCommandSerializer):
 
 
 class PhysicalKeyCreateSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate physical key create data."""
+
     code = serializers.SlugField(max_length=96)
     label = serializers.CharField(max_length=200)  # type: ignore[assignment]
     opens_node_id = CanonicalUUIDField()
@@ -180,6 +196,8 @@ class PhysicalKeyCreateSerializer(LogisticsCatalogCommandSerializer):
 
 
 class KeyholderAssignSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate keyholder assign data."""
+
     responsible_account_id = CanonicalUUIDField()
     starts_at = StrictDateTimeField()
     ends_at = StrictDateTimeField(required=False, allow_null=True)
@@ -187,6 +205,8 @@ class KeyholderAssignSerializer(LogisticsCatalogCommandSerializer):
 
 
 class LogisticsLabelCreateSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate logistics label create data."""
+
     subject = SubjectLocatorSerializer()
     label_code = serializers.CharField(max_length=96)
     qr_identifier = serializers.CharField(
@@ -197,6 +217,8 @@ class LogisticsLabelCreateSerializer(LogisticsCatalogCommandSerializer):
 
 
 class AssetAgreementCreateSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate asset agreement create data."""
+
     subject = SubjectLocatorSerializer()
     kind = serializers.ChoiceField(choices=AssetAgreement.Kind.choices)
     provider = ExternalActorSerializer()
@@ -220,6 +242,8 @@ class ReusableKitLineSerializer(StrictInputSerializer):
 
 
 class ReusableKitCreateSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate reusable kit create data."""
+
     code = serializers.SlugField(max_length=96)
     name = serializers.CharField(max_length=200)
     description = serializers.CharField(
@@ -240,11 +264,15 @@ class ManifestLineSerializer(StrictInputSerializer):
 
 
 class ManifestLineAddSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate manifest line add data."""
+
     expected_version = StrictIntegerField(min_value=1)
     line = ManifestLineSerializer()
 
 
 class ManifestReceiptSerializer(LogisticsCatalogCommandSerializer):
+    """Serialize and validate manifest receipt data."""
+
     expected_sequence = StrictIntegerField(min_value=0)
     occurred_at = StrictDateTimeField()
     condition_after = serializers.CharField(min_length=1, max_length=120)

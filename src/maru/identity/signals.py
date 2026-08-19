@@ -33,6 +33,19 @@ def project_successful_login(
     user: Any,
     **kwargs: object,
 ) -> None:
+    """Project successful login.
+
+    Parameters
+    ----------
+    sender : object
+        The delivery adapter responsible for the external send attempt.
+    request : HttpRequest | None
+        The incoming HTTP request.
+    user : Any
+        The person or account to evaluate.
+    **kwargs : object
+        Dispatch metadata supplied by Django's signal framework.
+    """
     del sender, kwargs
     if isinstance(user, Account):
         _append_session_event(
@@ -49,6 +62,19 @@ def project_logout(
     user: Any,
     **kwargs: object,
 ) -> None:
+    """Project logout.
+
+    Parameters
+    ----------
+    sender : object
+        The delivery adapter responsible for the external send attempt.
+    request : HttpRequest | None
+        The incoming HTTP request.
+    user : Any
+        The person or account to evaluate.
+    **kwargs : object
+        Dispatch metadata supplied by Django's signal framework.
+    """
     del sender, kwargs
     if isinstance(user, Account):
         _append_session_event(

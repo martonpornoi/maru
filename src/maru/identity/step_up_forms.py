@@ -6,6 +6,8 @@ from maru.core.forms import StrictInputForm
 
 
 class AccountStepUpForm(StrictInputForm):
+    """Collect and validate account step up input."""
+
     password = forms.CharField(
         label="Current password",
         max_length=128,

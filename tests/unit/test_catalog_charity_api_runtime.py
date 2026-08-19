@@ -4,7 +4,7 @@ from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from types import SimpleNamespace
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
@@ -17,7 +17,6 @@ from django.http import Http404, HttpResponse
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
 from rest_framework.test import APIRequestFactory, force_authenticate
-from rest_framework.views import APIView
 
 from maru.authorization.services import AuthorizationDenied
 from maru.catalog.api import (
@@ -114,6 +113,9 @@ from maru.charities.views import _execute_command
 from maru.core.problems import DependencyUnavailable
 from maru.identity.models import Account
 
+if TYPE_CHECKING:
+    from rest_framework.views import APIView
+
 
 def _actor() -> Account:
     return Account(
@@ -145,7 +147,7 @@ def _request(
 
 
 def _message_request() -> Any:
-    request = cast(Any, APIRequestFactory().get("/admin/platform/domain"))
+    request = cast("Any", APIRequestFactory().get("/admin/platform/domain"))
     request.session = {}
     request._messages = FallbackStorage(request)
     return request
@@ -647,7 +649,7 @@ def test_charity_partner_update_requires_a_business_change() -> None:
 @pytest.mark.parametrize(
     ("value", "kwargs"),
     [
-        (cast(str, 42), {"field": "name", "maximum": 20}),
+        (cast("str", 42), {"field": "name", "maximum": 20}),
         ("bad\u0000value", {"field": "name", "maximum": 20}),
         ("   ", {"field": "name", "maximum": 20, "required": True}),
         ("too long", {"field": "name", "maximum": 3}),
@@ -658,7 +660,7 @@ def test_charity_text_normalization_rejects_invalid_values(
     kwargs: dict[str, object],
 ) -> None:
     with pytest.raises(ValidationError):
-        normalized_text(value, **cast(Any, kwargs))
+        normalized_text(value, **cast("Any", kwargs))
 
 
 def test_charity_text_normalization_is_canonical_and_bounded() -> None:
@@ -759,14 +761,14 @@ def test_catalog_browser_command_boundary_maps_every_domain_outcome(
                     _message_request(),
                     command=command,
                     success_message="The command completed.",
-                    edition=cast(Any, edition),
+                    edition=cast("Any", edition),
                 )
             return
         response = _execute_staff_command(
             _message_request(),
             command=command,
             success_message="The command completed.",
-            edition=cast(Any, edition),
+            edition=cast("Any", edition),
         )
 
     assert response.status_code == expected_status
@@ -892,7 +894,7 @@ def test_charity_exact_authorization_helpers_use_the_resolved_target(
     allowed: bool,
 ) -> None:
     actor = _actor()
-    request = cast(Any, SimpleNamespace(user=actor))
+    request = cast("Any", SimpleNamespace(user=actor))
     decision = SimpleNamespace(allowed=allowed)
     organization_id = uuid4()
     edition_id = uuid4()
@@ -954,33 +956,35 @@ def test_charity_request_identifiers_are_exact_and_safe() -> None:
     key = uuid4()
     assert (
         charity_idempotency_key(
-            cast(Any, SimpleNamespace(headers={"Idempotency-Key": str(key)}))
+            cast("Any", SimpleNamespace(headers={"Idempotency-Key": str(key)}))
         )
         == key
     )
     for raw in (None, "", "not-a-uuid", str(key).upper(), "x" * 65):
         headers = {} if raw is None else {"Idempotency-Key": raw}
         with pytest.raises(ApiValidationError):
-            charity_idempotency_key(cast(Any, SimpleNamespace(headers=headers)))
+            charity_idempotency_key(cast("Any", SimpleNamespace(headers=headers)))
 
-    assert charity_correlation_id(cast(Any, SimpleNamespace(correlation_id=key))) == key
     assert (
-        charity_correlation_id(cast(Any, SimpleNamespace(correlation_id=str(key))))
+        charity_correlation_id(cast("Any", SimpleNamespace(correlation_id=key))) == key
+    )
+    assert (
+        charity_correlation_id(cast("Any", SimpleNamespace(correlation_id=str(key))))
         == key
     )
     assert isinstance(
-        charity_correlation_id(cast(Any, SimpleNamespace(correlation_id="invalid"))),
+        charity_correlation_id(cast("Any", SimpleNamespace(correlation_id="invalid"))),
         UUID,
     )
 
 
 def test_catalog_request_identity_and_identifiers_are_exact() -> None:
     actor = _actor()
-    assert catalog_actor(cast(Any, SimpleNamespace(user=actor))) is actor
+    assert catalog_actor(cast("Any", SimpleNamespace(user=actor))) is actor
     with patch("maru.catalog.api.authorize_catalog_payment_api_scope") as authorize:
         assert (
             preauthorize_catalog_payment(
-                cast(Any, SimpleNamespace(user=actor)),
+                cast("Any", SimpleNamespace(user=actor)),
                 organization_id=uuid4(),
                 edition_id=uuid4(),
                 intent_id=uuid4(),
@@ -989,37 +993,39 @@ def test_catalog_request_identity_and_identifiers_are_exact() -> None:
         )
     authorize.assert_called_once()
     with pytest.raises(PermissionDenied):
-        catalog_actor(cast(Any, SimpleNamespace(user=SimpleNamespace(is_active=True))))
+        catalog_actor(
+            cast("Any", SimpleNamespace(user=SimpleNamespace(is_active=True)))
+        )
     actor.is_active = False
     with pytest.raises(PermissionDenied):
-        catalog_actor(cast(Any, SimpleNamespace(user=actor)))
+        catalog_actor(cast("Any", SimpleNamespace(user=actor)))
 
     key = uuid4()
     assert (
         catalog_idempotency_key(
-            cast(Any, SimpleNamespace(headers={"Idempotency-Key": str(key)}))
+            cast("Any", SimpleNamespace(headers={"Idempotency-Key": str(key)}))
         )
         == key
     )
     for raw in ("", "not-a-uuid", str(key).upper()):
         with pytest.raises(ApiValidationError):
             catalog_idempotency_key(
-                cast(Any, SimpleNamespace(headers={"Idempotency-Key": raw}))
+                cast("Any", SimpleNamespace(headers={"Idempotency-Key": raw}))
             )
 
     assert (
-        catalog_correlation_id(cast(Any, SimpleNamespace(correlation_id=str(key))))
+        catalog_correlation_id(cast("Any", SimpleNamespace(correlation_id=str(key))))
         == key
     )
     assert isinstance(
-        catalog_correlation_id(cast(Any, SimpleNamespace(correlation_id="invalid"))),
+        catalog_correlation_id(cast("Any", SimpleNamespace(correlation_id="invalid"))),
         UUID,
     )
 
 
 def _hosted_payment_request(data: dict[str, object]) -> Any:
     request = cast(
-        Any,
+        "Any",
         APIRequestFactory().post("/my/catalog/payment", data=data),
     )
     request.user = _actor()
@@ -1109,7 +1115,7 @@ def test_charity_service_scalar_and_actor_invariants_fail_closed() -> None:
     identifier = uuid4()
     assert _require_uuid(identifier, field="selection_id") == identifier
     with pytest.raises(ValidationError):
-        _require_uuid(cast(UUID, "not-a-uuid"), field="selection_id")
+        _require_uuid(cast("UUID", "not-a-uuid"), field="selection_id")
 
     assert _require_expected_version(1) == 1
     for invalid in (0, -1, True):
@@ -1135,12 +1141,12 @@ def test_charity_service_policy_decision_is_enforced(allowed: bool) -> None:
         if allowed:
             assert (
                 cast(
-                    Any,
+                    "Any",
                     (
                         _require_decision(
                             actor=_actor(),
                             capability_code="charities.partner.manage",
-                            target=cast(Any, "target"),
+                            target=cast("Any", "target"),
                             at=datetime(2026, 8, 11, tzinfo=UTC),
                         )
                     ),
@@ -1152,7 +1158,7 @@ def test_charity_service_policy_decision_is_enforced(allowed: bool) -> None:
                 _require_decision(
                     actor=_actor(),
                     capability_code="charities.partner.manage",
-                    target=cast(Any, "target"),
+                    target=cast("Any", "target"),
                     at=datetime(2026, 8, 11, tzinfo=UTC),
                 )
 
@@ -1188,14 +1194,14 @@ def test_charity_partner_update_rejects_unsupported_and_invalid_changes() -> Non
         "expected_version": 1,
         "reason": "Validate the bounded update.",
     }
-    update = cast(Any, update_charity_partner).__wrapped__
+    update = cast("Any", update_charity_partner).__wrapped__
     for changes in ({}, {"unsupported": "value"}, {"lifecycle": "unknown"}):
         with pytest.raises(ValidationError):
             update(**common, changes=changes)
 
 
 def test_charity_media_and_publication_inputs_reject_invalid_shapes() -> None:
-    add_media = cast(Any, add_charity_partner_media).__wrapped__
+    add_media = cast("Any", add_charity_partner_media).__wrapped__
     common_media = {
         **_charity_command_ids(),
         "partner_id": uuid4(),
@@ -1215,7 +1221,7 @@ def test_charity_media_and_publication_inputs_reject_invalid_shapes() -> None:
             expires_at=datetime(2026, 8, 12, tzinfo=UTC).replace(tzinfo=None),
         )
 
-    publish = cast(Any, publish_charity_selection).__wrapped__
+    publish = cast("Any", publish_charity_selection).__wrapped__
     common_publish = {
         **_charity_command_ids(),
         "edition_id": uuid4(),
@@ -1227,7 +1233,7 @@ def test_charity_media_and_publication_inputs_reject_invalid_shapes() -> None:
     with pytest.raises(ValidationError):
         publish(**common_publish, media_ids=(duplicate, duplicate))
     with pytest.raises(ValidationError):
-        publish(**common_publish, media_ids=(cast(UUID, "invalid"),))
+        publish(**common_publish, media_ids=(cast("UUID", "invalid"),))
 
 
 def test_charity_private_dispatchers_reject_unknown_actions_before_storage() -> None:
@@ -1241,7 +1247,7 @@ def test_charity_private_dispatchers_reject_unknown_actions_before_storage() -> 
         "request_id": None,
     }
     with pytest.raises(ValueError, match="Unsupported media review action"):
-        cast(Any, _media_review_command)(**common, action="unsupported")
+        cast("Any", _media_review_command)(**common, action="unsupported")
 
     review_common = {
         **_charity_command_ids(),
@@ -1252,7 +1258,7 @@ def test_charity_private_dispatchers_reject_unknown_actions_before_storage() -> 
         "request_id": None,
     }
     with pytest.raises(ValueError, match="Unsupported charity review decision"):
-        cast(Any, _review_charity_selection)(
+        cast("Any", _review_charity_selection)(
             **review_common,
             decision_state="unsupported",
         )

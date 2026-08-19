@@ -24,6 +24,8 @@ class OrganizationAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for organization."""
+
     form = OrganizationAdminForm
     edition_context_lookup = "id"
     edition_context_value_attribute = "organization_id"
@@ -78,15 +80,41 @@ class OrganizationAdmin(
     )
 
     class Media:
+        """Enumerate supported media values."""
+
         js = ("core/filterable-select.js",)
 
     @admin.display(description="Default languages")
     def default_languages(self, obj: Organization) -> str:
+        """Return default languages.
+
+        Parameters
+        ----------
+        obj : Organization
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for default languages.
+        """
         return ", ".join(obj.default_language_codes)
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Organization]:
+        """Return the permission-scoped queryset.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        QuerySet[Organization]
+            The matching get queryset records in deterministic order.
+        """
         queryset = cast(
-            QuerySet[Organization],
+            "QuerySet[Organization]",
             super().get_queryset(request),
         )
         return queryset.annotate(
@@ -97,14 +125,50 @@ class OrganizationAdmin(
 
     @admin.display(ordering="_series_count", description="Series")
     def series_count(self, obj: Organization) -> int:
+        """Return series count.
+
+        Parameters
+        ----------
+        obj : Organization
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        int
+            The computed number of series records.
+        """
         return int(getattr(obj, "_series_count", 0))
 
     @admin.display(ordering="_edition_count", description="Editions")
     def edition_count(self, obj: Organization) -> int:
+        """Return edition count.
+
+        Parameters
+        ----------
+        obj : Organization
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        int
+            The computed number of edition records.
+        """
         return int(getattr(obj, "_edition_count", 0))
 
     @admin.display(ordering="_member_count", description="Members")
     def member_count(self, obj: Organization) -> int:
+        """Return member count.
+
+        Parameters
+        ----------
+        obj : Organization
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        int
+            The computed number of member records.
+        """
         return int(getattr(obj, "_member_count", 0))
 
 
@@ -113,6 +177,8 @@ class ConventionSeriesAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for convention series."""
+
     edition_context_lookup = "id"
     edition_context_value_attribute = "series_id"
     list_display = (
@@ -160,14 +226,38 @@ class ConventionSeriesAdmin(
     )
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[ConventionSeries]:
+        """Return the permission-scoped queryset.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        QuerySet[ConventionSeries]
+            The matching get queryset records in deterministic order.
+        """
         queryset = cast(
-            QuerySet[ConventionSeries],
+            "QuerySet[ConventionSeries]",
             super().get_queryset(request),
         )
         return queryset.annotate(_edition_count=Count("event_editions", distinct=True))
 
     @admin.display(ordering="_edition_count", description="Editions")
     def edition_count(self, obj: ConventionSeries) -> int:
+        """Return edition count.
+
+        Parameters
+        ----------
+        obj : ConventionSeries
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        int
+            The computed number of edition records.
+        """
         return int(getattr(obj, "_edition_count", 0))
 
 
@@ -176,6 +266,8 @@ class OrganizationMembershipAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for organization membership."""
+
     edition_context_lookup = "organization_id"
     edition_context_value_attribute = "organization_id"
     list_display = (
@@ -228,6 +320,8 @@ class OrganizationRepresentationAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for organization representation."""
+
     edition_context_lookup = "organization_id"
     edition_context_value_attribute = "organization_id"
     list_display = (
@@ -263,6 +357,8 @@ class RepresentationAppointmentAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for representation appointment."""
+
     edition_context_lookup = "representation__organization_id"
     edition_context_value_attribute = "organization_id"
     list_display = (

@@ -23,7 +23,11 @@ MAX_EDITION_SPAN_DAYS = 31
 
 
 class EventEdition(UUIDTimeStampedModel):
+    """Store event edition records."""
+
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         DRAFT = "draft", "Draft"
         PREPARING = "preparing", "Preparing"
         READY = "ready", "Ready"
@@ -64,6 +68,8 @@ class EventEdition(UUIDTimeStampedModel):
     ends_on = models.DateField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("starts_on", "name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -86,6 +92,13 @@ class EventEdition(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.series_id and self.organization_id:
             series_organization_id = self.series.organization_id
@@ -95,6 +108,20 @@ class EventEdition(UUIDTimeStampedModel):
                 )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             current_lifecycle = (
                 type(self)
@@ -113,6 +140,13 @@ class EventEdition(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable EventEdition label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return self.name
 
 
@@ -140,6 +174,8 @@ class EditionCreationReceipt(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -149,6 +185,13 @@ class EditionCreationReceipt(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id:
             if self.edition.organization_id != self.organization_id:
@@ -163,6 +206,20 @@ class EditionCreationReceipt(UUIDTimeStampedModel):
                 )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Edition creation receipts are immutable.",
@@ -172,6 +229,25 @@ class EditionCreationReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Edition creation receipts are retained with the edition.",
@@ -183,6 +259,8 @@ EDITION_LIFECYCLE_CHOICES = EventEdition.Lifecycle.choices
 
 
 class EditionLifecycleTransition(UUIDTimeStampedModel):
+    """Store edition lifecycle transition records."""
+
     edition = models.ForeignKey(
         EventEdition,
         on_delete=models.PROTECT,
@@ -194,9 +272,25 @@ class EditionLifecycleTransition(UUIDTimeStampedModel):
     reason = models.TextField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("created_at", "id")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Edition lifecycle transitions are append-only.",
@@ -206,6 +300,25 @@ class EditionLifecycleTransition(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Edition lifecycle transitions are append-only.",
@@ -213,6 +326,13 @@ class EditionLifecycleTransition(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable EditionLifecycleTransition label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         from_label = EventEdition.Lifecycle(self.from_state).label
         to_label = EventEdition.Lifecycle(self.to_state).label
         return f"{self.edition}: {from_label} → {to_label}"
@@ -231,9 +351,18 @@ class ArchiveAmendment(UUIDTimeStampedModel):
     summary = models.TextField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("created_at", "id")
 
     def __str__(self) -> str:
+        """Return the human-readable ArchiveAmendment label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         summary = self.summary.strip()
         if len(summary) > ARCHIVE_AMENDMENT_LABEL_LENGTH:
             summary = f"{summary[:ARCHIVE_AMENDMENT_CONTENT_LENGTH]}…"
@@ -244,6 +373,8 @@ class EditionReadinessGate(UUIDTimeStampedModel):
     """Accountable external/internal review evidence for pilot and closure."""
 
     class Code(models.TextChoices):
+        """Enumerate supported code values."""
+
         PRIVACY = "privacy", "Privacy"
         FINANCE = "finance", "Finance"
         OPERATIONS = "operations", "Operations"
@@ -251,6 +382,8 @@ class EditionReadinessGate(UUIDTimeStampedModel):
         JURISDICTION = "jurisdiction", "Jurisdiction and safeguarding"
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PENDING = "pending", "Pending"
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
@@ -273,6 +406,8 @@ class EditionReadinessGate(UUIDTimeStampedModel):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "code", "id")
         constraints = [
             models.UniqueConstraint(
@@ -282,6 +417,13 @@ class EditionReadinessGate(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError(
@@ -312,6 +454,20 @@ class EditionClosureManifest(UUIDTimeStampedModel):
     recovery_reference = models.CharField(max_length=240)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Edition closure manifests are immutable.",
@@ -321,6 +477,25 @@ class EditionClosureManifest(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Edition closure manifests are retained with the archive.",

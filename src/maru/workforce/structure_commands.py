@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -56,6 +56,9 @@ from maru.workforce.structure_templates import (
 )
 from maru.workforce.writer_boundary import lock_edition_structure_mutex
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 _EDITABLE_ORGANIZATION_LIFECYCLES = frozenset(
     {Organization.Lifecycle.DRAFT, Organization.Lifecycle.ACTIVE}
 )
@@ -72,8 +75,27 @@ def _automatic_sibling_display_order(
     parent_department_id: UUID | None,
     current_department: Department | None = None,
 ) -> int:
-    """Keep a unique current rank or append safely after the locked siblings."""
+    """Keep a unique current rank or append safely after the locked siblings.
 
+    Parameters
+    ----------
+    scope : _LockedScope
+        The exact tenant and resource scope of the operation.
+    parent_department_id : UUID | None
+        The parent department identifier within the requested scope.
+    current_department : Department | None, default=None
+        The current department applied within the audited domain transition.
+
+    Returns
+    -------
+    int
+        The resolved int for automatic sibling display order.
+
+    Raises
+    ------
+    StructureLimitConflictError
+        If the operation would exceed a configured hard limit.
+    """
     sibling_orders = {
         department.display_order
         for department in scope.departments
@@ -102,7 +124,7 @@ def _automatic_sibling_display_order(
         for candidate in range(current_department.display_order):
             if candidate not in sibling_orders:
                 return candidate
-        raise StructureLimitConflictError()
+        raise StructureLimitConflictError
 
     appended_order = max(sibling_orders, default=-1) + 1
     if appended_order <= MAX_DEPARTMENT_DISPLAY_ORDER:
@@ -114,7 +136,7 @@ def _automatic_sibling_display_order(
     for candidate in range(MAX_DEPARTMENT_DISPLAY_ORDER + 1):
         if candidate not in sibling_orders:
             return candidate
-    raise StructureLimitConflictError()
+    raise StructureLimitConflictError
 
 
 class StructureCommandError(RuntimeError):
@@ -122,44 +144,85 @@ class StructureCommandError(RuntimeError):
 
     reason_code = "structure_command_failed"
 
-    def __init__(self, message: str = "The structure command could not complete."):
+    def __init__(
+        self, message: str = "The structure command could not complete."
+    ) -> None:
+        """Initialize the StructureCommandError instance.
+
+        Parameters
+        ----------
+        message : str, default='The structure command could not complete.'
+            The disclosure-safe message associated with the outcome.
+        """
         super().__init__(message)
 
 
 class StructureAuthorizationDeniedError(StructureCommandError):
+    """Signal structure authorization denied."""
+
     reason_code = "structure_authorization_denied"
 
 
 class StructureDepartmentUnavailableError(StructureCommandError):
+    """Signal structure department unavailable."""
+
     reason_code = "structure_department_unavailable"
 
 
 class StructureVersionConflictError(StructureCommandError):
+    """Signal structure version conflict."""
+
     reason_code = "structure_version_conflict"
 
 
 class StructureRetryConflictError(StructureCommandError):
+    """Signal structure retry conflict."""
+
     reason_code = "structure_retry_conflict"
 
 
 class StructureLifecycleConflictError(StructureCommandError):
+    """Signal structure lifecycle conflict."""
+
     reason_code = "structure_lifecycle_conflict"
 
 
 class StructureStateConflictError(StructureCommandError):
+    """Signal structure state conflict."""
+
     reason_code = "structure_state_conflict"
 
 
 class StructureDependencyConflictError(StructureCommandError):
+    """Signal structure dependency conflict."""
+
     reason_code = "structure_department_has_dependencies"
 
 
 class StructureLimitConflictError(StructureCommandError):
+    """Signal structure limit conflict."""
+
     reason_code = "structure_limit_exceeded"
 
 
 @dataclass(frozen=True, slots=True)
 class BuiltinStructureTemplateResult:
+    """Describe builtin structure template result.
+
+    Attributes
+    ----------
+    structure_id
+        The structure identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    department_ids
+        The selected department identifiers.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     structure_id: UUID
     receipt_id: UUID
     resulting_version: int
@@ -169,6 +232,26 @@ class BuiltinStructureTemplateResult:
 
 @dataclass(frozen=True, slots=True)
 class DepartmentStructureResult:
+    """Describe department structure result.
+
+    Attributes
+    ----------
+    structure_id
+        The structure identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    department_id
+        The department identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    changed_fields
+        The canonical field names changed by the operation.
+    action
+        The stable action code describing the requested transition.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     structure_id: UUID
     receipt_id: UUID | None
     department_id: UUID
@@ -242,13 +325,13 @@ def _route_target(
         series__organization_id=organization_id,
     ).exists()
     if not route_exists:
-        raise StructureAuthorizationDeniedError()
+        raise StructureAuthorizationDeniedError
     target = resolve_edition_target(
         organization_id=organization_id,
         edition_id=edition_id,
     )
     if target is None:
-        raise StructureAuthorizationDeniedError()
+        raise StructureAuthorizationDeniedError
     return target
 
 
@@ -261,7 +344,7 @@ def _require_view_and_manage(
     at: datetime | None = None,
 ) -> PolicyDecision:
     if actor.pk is None:
-        raise StructureAuthorizationDeniedError()
+        raise StructureAuthorizationDeniedError
     target = _route_target(
         organization_id=organization_id,
         series_id=series_id,
@@ -280,7 +363,7 @@ def _require_view_and_manage(
         at=at,
     )
     if not view.allowed or not manage.allowed:
-        raise StructureAuthorizationDeniedError()
+        raise StructureAuthorizationDeniedError
     return manage
 
 
@@ -291,21 +374,44 @@ def _lock_scope(
     series_id: UUID,
     edition_id: UUID,
 ) -> _LockedScope:
-    """Apply ADR 0045's complete cross-module lock order."""
+    """Apply ADR 0045's complete cross-module lock order.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    _LockedScope
+        The resolved _LockedScope for lock scope.
+
+    Raises
+    ------
+    StructureAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    StructureLimitConflictError
+        If the operation would exceed a configured hard limit.
+    """
     lock_retired_department_authority_boundaries()
     organization = (
         Organization.objects.select_for_update().filter(id=organization_id).first()
     )
     if organization is None:
-        raise StructureAuthorizationDeniedError()
+        raise StructureAuthorizationDeniedError
     series = (
         ConventionSeries.objects.select_for_update()
         .filter(id=series_id, organization_id=organization.id)
         .first()
     )
     if series is None:
-        raise StructureAuthorizationDeniedError()
+        raise StructureAuthorizationDeniedError
     edition = (
         EventEdition.objects.select_for_update()
         .filter(
@@ -316,7 +422,7 @@ def _lock_scope(
         .first()
     )
     if edition is None:
-        raise StructureAuthorizationDeniedError()
+        raise StructureAuthorizationDeniedError
     lock_edition_structure_mutex(
         organization_id=organization.id,
         edition_id=edition.id,
@@ -332,10 +438,10 @@ def _lock_scope(
         .order_by("id")[: MAX_STRUCTURE_DEPARTMENTS + 1]
     )
     if len(departments) > MAX_STRUCTURE_DEPARTMENTS:
-        raise StructureLimitConflictError()
+        raise StructureLimitConflictError
     persisted_actor = Account.objects.select_for_update().filter(pk=actor.pk).first()
     if persisted_actor is None:
-        raise StructureAuthorizationDeniedError()
+        raise StructureAuthorizationDeniedError
     evaluated_at = timezone.now()
     manage_decision = _require_view_and_manage(
         actor=persisted_actor,
@@ -360,7 +466,7 @@ def _require_editable_lifecycle(scope: _LockedScope) -> None:
         scope.organization.lifecycle not in _EDITABLE_ORGANIZATION_LIFECYCLES
         or scope.edition.lifecycle not in _EDITABLE_EDITION_LIFECYCLES
     ):
-        raise StructureLifecycleConflictError()
+        raise StructureLifecycleConflictError
 
 
 def _current_version(scope: _LockedScope) -> int:
@@ -402,7 +508,7 @@ def _edition_has_structure_content(scope: _LockedScope) -> bool:
 def _require_expected_version(scope: _LockedScope, expected_version: int) -> int:
     current = _current_version(scope)
     if expected_version != current:
-        raise StructureVersionConflictError()
+        raise StructureVersionConflictError
     return current
 
 
@@ -428,7 +534,7 @@ def _validate_retry_receipt(
     request_digest: str,
 ) -> None:
     if receipt.action != action or receipt.request_digest != request_digest:
-        raise StructureRetryConflictError()
+        raise StructureRetryConflictError
 
 
 def _new_or_advanced_control(
@@ -553,7 +659,7 @@ def _department_by_id(
         None,
     )
     if department is None or (current and department.retired_at is not None):
-        raise StructureDepartmentUnavailableError()
+        raise StructureDepartmentUnavailableError
     return department
 
 
@@ -564,7 +670,7 @@ def _validate_resulting_hierarchy(
     changed_parent_id: UUID | None = None,
 ) -> None:
     if len(departments) > MAX_STRUCTURE_DEPARTMENTS:
-        raise StructureLimitConflictError()
+        raise StructureLimitConflictError
     parent_by_id = {department.id: department.parent_id for department in departments}
     if changed_department_id is not None:
         parent_by_id[changed_department_id] = changed_parent_id
@@ -590,7 +696,7 @@ def _validate_resulting_hierarchy(
             seen.add(cursor)
             depth += 1
             if depth > MAX_STRUCTURE_DEPTH:
-                raise StructureLimitConflictError()
+                raise StructureLimitConflictError
             cursor = parent_by_id[cursor]
 
 
@@ -623,8 +729,50 @@ def apply_builtin_structure_template(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> BuiltinStructureTemplateResult:
-    """Copy one immutable built-in Department template into an empty edition."""
+    """Copy one immutable built-in Department template into an empty edition.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    template_identifier : str
+        The template identifier applied within the audited domain transition.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    confirmation_name : str
+        The human-readable confirmation name shown to authorized readers.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    BuiltinStructureTemplateResult
+        The BuiltinStructureTemplateResult produced by apply builtin structure
+        template.
+
+    Raises
+    ------
+    StructureLimitConflictError
+        If the operation would exceed a configured hard limit.
+    StructureStateConflictError
+        If the target lifecycle state does not permit the transition.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     expected_version = _validate_expected_version(expected_version)
     retry_key = _validate_uuid(retry_key, field_name="retry_key")
     correlation_id = _validate_uuid(correlation_id, field_name="correlation_id")
@@ -692,7 +840,7 @@ def apply_builtin_structure_template(
             raise StructureStateConflictError("A template requires an empty structure.")
         validate_exact_confirmation(confirmation_name, expected=scope.edition.name)
         if len(template.departments) > MAX_STRUCTURE_DEPARTMENTS:
-            raise StructureLimitConflictError()
+            raise StructureLimitConflictError
 
         by_code: dict[str, Department] = {}
         departments: list[Department] = []
@@ -769,8 +917,49 @@ def create_department(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> DepartmentStructureResult:
-    """Create one edition-owned Department with deterministic code generation."""
+    """Create one edition-owned Department with deterministic code generation.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    name : str
+        The human-readable name to normalize or persist.
+    description : str
+        The human-readable description shown to authorized readers.
+    parent_department_id : UUID | None
+        The parent department identifier within the requested scope.
+    display_order : int | None
+        The deterministic display position within the owning collection.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    DepartmentStructureResult
+        The newly created DepartmentStructureResult.
+
+    Raises
+    ------
+    StructureLimitConflictError
+        If the operation would exceed a configured hard limit.
+    """
     normalized_name = _validate_manual_name(name)
     normalized_description = normalize_department_description(description)
     requested_display_order = (
@@ -846,7 +1035,7 @@ def create_department(
         _require_editable_lifecycle(scope)
         current_version = _require_expected_version(scope, expected_version)
         if len(scope.departments) >= MAX_STRUCTURE_DEPARTMENTS:
-            raise StructureLimitConflictError()
+            raise StructureLimitConflictError
         parent = (
             _department_by_id(scope, parent_department_id)
             if parent_department_id is not None
@@ -925,8 +1114,44 @@ def update_department(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> DepartmentStructureResult:
-    """Completely replace one current Department's editable properties."""
+    """Completely replace one current Department's editable properties.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    department_id : UUID
+        The department identifier within the requested scope.
+    name : str
+        The human-readable name to normalize or persist.
+    description : str
+        The human-readable description shown to authorized readers.
+    parent_department_id : UUID | None
+        The parent department identifier within the requested scope.
+    display_order : int | None
+        The deterministic display position within the owning collection.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    DepartmentStructureResult
+        The updated DepartmentStructureResult after the transition is committed.
+    """
     department_id = _validate_uuid(department_id, field_name="department_id")
     normalized_name = _validate_manual_name(name)
     normalized_description = normalize_department_description(description)
@@ -1115,8 +1340,43 @@ def retire_department(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> DepartmentStructureResult:
-    """Retire one dependency-free current Department without deleting history."""
+    """Retire one dependency-free current Department without deleting history.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    department_id : UUID
+        The department identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    DepartmentStructureResult
+        The resolved DepartmentStructureResult for retire department.
+
+    Raises
+    ------
+    IntegrityError
+        If a concurrent write violates a durable database invariant.
+    StructureDependencyConflictError
+        If the operation encounters a structure dependency conflict condition.
+    """
     department_id = _validate_uuid(department_id, field_name="department_id")
     expected_version = _validate_expected_version(expected_version)
     correlation_id = _validate_uuid(correlation_id, field_name="correlation_id")
@@ -1141,7 +1401,7 @@ def retire_department(
             current_version = _require_expected_version(scope, expected_version)
             department = _department_by_id(scope, department_id)
             if _retirement_dependencies(scope, department):
-                raise StructureDependencyConflictError()
+                raise StructureDependencyConflictError
             resulting_version = current_version + 1
             control = _new_or_advanced_control(
                 scope=scope,
@@ -1185,7 +1445,7 @@ def retire_department(
             )
     except IntegrityError as error:
         if "current authority blocks Department retirement" in str(error):
-            raise StructureDependencyConflictError() from error
+            raise StructureDependencyConflictError from error
         raise
 
 
@@ -1250,13 +1510,29 @@ def _delete_department_without_cascade(department: Department) -> int:
     The savepoint is required because PostgreSQL marks the statement's
     transaction as failed before reporting a foreign-key dependency that is
     not represented in Django's model graph.
-    """
 
+    Parameters
+    ----------
+    department : Department
+        The department applied within the audited domain transition.
+
+    Returns
+    -------
+    int
+        The resolved int for delete department without cascade.
+
+    Raises
+    ------
+    IntegrityError
+        If a concurrent write violates a durable database invariant.
+    StructureDependencyConflictError
+        If the operation encounters a structure dependency conflict condition.
+    """
     try:
         with transaction.atomic():
             deleted_count, _detail = department.delete()
     except (ProtectedError, RestrictedError) as error:
-        raise StructureDependencyConflictError() from error
+        raise StructureDependencyConflictError from error
     except IntegrityError as error:
         cause = error.__cause__
         database_message = str(error)
@@ -1267,7 +1543,7 @@ def _delete_department_without_cascade(department: Department) -> int:
             or "Department deletion is protected by retained dependencies"
             in database_message
         ):
-            raise StructureDependencyConflictError() from error
+            raise StructureDependencyConflictError from error
         raise
     return deleted_count
 
@@ -1286,8 +1562,45 @@ def delete_unused_department(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> DepartmentStructureResult:
-    """Hard-delete one provably unused, command-created current leaf."""
+    """Hard-delete one provably unused, command-created current leaf.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    department_id : UUID
+        The department identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    confirmation_name : str
+        The human-readable confirmation name shown to authorized readers.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    DepartmentStructureResult
+        The resolved DepartmentStructureResult for delete unused department.
+
+    Raises
+    ------
+    StructureDependencyConflictError
+        If the operation encounters a structure dependency conflict condition.
+    StructureStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     department_id = _validate_uuid(department_id, field_name="department_id")
     expected_version = _validate_expected_version(expected_version)
     correlation_id = _validate_uuid(correlation_id, field_name="correlation_id")
@@ -1313,11 +1626,11 @@ def delete_unused_department(
         department = _department_by_id(scope, department_id)
         validate_exact_confirmation(confirmation_name, expected=department.name)
         if _has_deletion_dependencies(scope, department):
-            raise StructureDependencyConflictError()
+            raise StructureDependencyConflictError
         resulting_version = current_version + 1
         deleted_name = department.name
         if scope.control is None:
-            raise StructureStateConflictError()
+            raise StructureStateConflictError
         control = _new_or_advanced_control(
             scope=scope,
             origin=EditionStructureControl.Origin.MANUAL,
@@ -1325,7 +1638,7 @@ def delete_unused_department(
         )
         deleted_count = _delete_department_without_cascade(department)
         if deleted_count != 1:
-            raise StructureDependencyConflictError()
+            raise StructureDependencyConflictError
         receipt = _append_change_evidence(
             scope=scope,
             actor=actor,

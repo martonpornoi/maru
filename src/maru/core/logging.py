@@ -29,6 +29,18 @@ class SafeJsonFormatter(logging.Formatter):
     )
 
     def format(self, record: logging.LogRecord) -> str:
+        """Format the log record as structured JSON.
+
+        Parameters
+        ----------
+        record : logging.LogRecord
+            The domain record to validate, persist, or project.
+
+        Returns
+        -------
+        str
+            The normalized text for format.
+        """
         payload: dict[str, object] = {
             "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname,

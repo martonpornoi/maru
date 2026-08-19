@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
@@ -13,7 +14,6 @@ from rest_framework.test import APIClient
 from maru.audit.models import AuditEvent
 from maru.authorization.policy import PolicyDecision
 from maru.effects.models import DomainEvent, OutboxMessage
-from maru.events.models import EventEdition
 from maru.organizations.models import Organization
 from maru.workforce.models import (
     Department,
@@ -27,6 +27,9 @@ from maru.workforce.structure_commands import (
 )
 from maru.workforce.structure_templates import AWOOSTRIA_REFERENCE_V1
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 

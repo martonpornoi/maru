@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from uuid import UUID
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from maru.effects.queries import AggregateDomainFact, aggregate_domain_facts
 from maru.identity.queries import account_display_labels
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
 
 _EVENT_LABELS = {
     "organizations.convention_series.created.v1": "Created convention series",
@@ -37,6 +40,20 @@ _FIELD_LABELS = {
 
 @dataclass(frozen=True, slots=True)
 class RecordActivity:
+    """Describe record activity.
+
+    Attributes
+    ----------
+    action
+        The stable action code describing the requested transition.
+    actor_label
+        The human-readable actor label shown to authorized readers.
+    changed_field_labels
+        The changed field labels retained in this immutable projection.
+    occurred_at
+        The timezone-aware timestamp for occurred.
+    """
+
     action: str
     actor_label: str
     changed_field_labels: tuple[str, ...]
@@ -62,8 +79,26 @@ def record_activity(
     time_zone: str,
     limit: int = 20,
 ) -> tuple[RecordActivity, ...]:
-    """Project allowlisted domain facts without exposing values or audit data."""
+    """Project allowlisted domain facts without exposing values or audit data.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    aggregate_type : str
+        The stable domain type of the target aggregate.
+    aggregate_id : UUID
+        The aggregate identifier whose state is being read or changed.
+    time_zone : str
+        The IANA time-zone name used for localized presentation.
+    limit : int, default=20
+        The maximum number of records to return.
+
+    Returns
+    -------
+    tuple[RecordActivity, ...]
+        The matching record activity records in deterministic order.
+    """
     facts = aggregate_domain_facts(
         organization_id=organization_id,
         aggregate_type=aggregate_type,

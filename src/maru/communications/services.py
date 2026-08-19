@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import smtplib
 from dataclasses import dataclass
-from uuid import UUID
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
@@ -17,7 +17,6 @@ from maru.communications.models import (
     NotificationMessage,
     NotificationPreference,
 )
-from maru.effects.models import DomainEvent
 from maru.effects.worker import (
     EffectContext,
     PermanentEffectError,
@@ -27,9 +26,28 @@ from maru.identity.models import Account, AccountRestriction
 from maru.registration.queries import RegistrationNotificationContext
 from maru.registration.queries import notification_context as registration_context
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from maru.effects.models import DomainEvent
+
 
 @dataclass(frozen=True, slots=True)
 class RenderedNotification:
+    """Describe rendered notification.
+
+    Attributes
+    ----------
+    message_type
+        The closed message type discriminator defined by the domain catalog.
+    subject
+        The tenant-scoped person or resource governed by the operation.
+    body
+        The body retained in this immutable projection.
+    action_path
+        The action path retained in this immutable projection.
+    """
+
     message_type: str
     subject: str
     body: str
@@ -99,6 +117,25 @@ def render_registration_notification(
     event_name: str,
     context: RegistrationNotificationContext,
 ) -> RenderedNotification:
+    """Render registration notification.
+
+    Parameters
+    ----------
+    event_name : str
+        The human-readable event name shown to authorized readers.
+    context : RegistrationNotificationContext
+        The resolved context for the operation.
+
+    Returns
+    -------
+    RenderedNotification
+        The rendered registration notification.
+
+    Raises
+    ------
+    PermanentEffectError
+        If the operation encounters a permanent effect condition.
+    """
     template = EVENT_LABELS.get(event_name)
     if template is None:
         raise PermanentEffectError("notification_template_missing")
@@ -234,6 +271,22 @@ def deliver_registration_notification(
     event: DomainEvent,
     effect_context: EffectContext,
 ) -> None:
+    """Return deliver registration notification.
+
+    Parameters
+    ----------
+    event : DomainEvent
+        The immutable domain event to process.
+    effect_context : EffectContext
+        The effect context applied within the audited domain transition.
+
+    Raises
+    ------
+    PermanentEffectError
+        If the operation encounters a permanent effect condition.
+    TransientEffectError
+        If the operation encounters a transient effect condition.
+    """
     if timezone.now() >= effect_context.deadline:
         raise TransientEffectError("notification_delivery_timeout")
     if event.event_edition_id is None:
@@ -266,8 +319,22 @@ def deliver_restriction_notification(
     event: DomainEvent,
     effect_context: EffectContext,
 ) -> None:
-    """Deliver only the safe attendee-facing restriction explanation."""
+    """Deliver only the safe attendee-facing restriction explanation.
 
+    Parameters
+    ----------
+    event : DomainEvent
+        The immutable domain event to process.
+    effect_context : EffectContext
+        The effect context applied within the audited domain transition.
+
+    Raises
+    ------
+    PermanentEffectError
+        If the operation encounters a permanent effect condition.
+    TransientEffectError
+        If the operation encounters a transient effect condition.
+    """
     if timezone.now() >= effect_context.deadline:
         raise TransientEffectError("notification_delivery_timeout")
     restriction = (
@@ -293,13 +360,10 @@ def deliver_restriction_notification(
             "purpose": NotificationMessage.Purpose.OPERATIONAL,
             "locale": restriction.account.preferred_language,
             "subject": f"Account access changed — {edition_label}",
-            "body": "\n".join(
-                (
-                    restriction.attendee_message,
-                    "",
-                    "You can review the restriction and submit an appeal in Maru.",
-                    "Review account security: /admin/workspace/?view=security",
-                )
+            "body": (
+                f"{restriction.attendee_message}\n\n"
+                "You can review the restriction and submit an appeal in Maru.\n"
+                "Review account security: /admin/workspace/?view=security"
             ),
             "action_path": "/admin/workspace/?view=security",
             "rendered_at": timezone.now(),
@@ -313,6 +377,20 @@ def deliver_restriction_notification(
 
 
 def mark_message_read(*, account: Account, message_id: UUID) -> NotificationMessage:
+    """Mark message read.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    message_id : UUID
+        The identifier of the message.
+
+    Returns
+    -------
+    NotificationMessage
+        The updated NotificationMessage after the transition commits.
+    """
     with transaction.atomic():
         message = NotificationMessage.objects.select_for_update().get(
             id=message_id,

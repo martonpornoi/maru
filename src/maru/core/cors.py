@@ -21,9 +21,28 @@ class RegistrationClientCorsMiddleware:
     """Expose versioned APIs only to deployment-approved browser origins."""
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        """Initialize the RegistrationClientCorsMiddleware instance.
+
+        Parameters
+        ----------
+        get_response : Callable[[HttpRequest], HttpResponse]
+            The callback invoked to get response.
+        """
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
+        """Invoke the configured operation.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        HttpResponse
+            The HTTP response for the requested operation.
+        """
         origin = request.headers.get("Origin", "")
         allowed = origin in set(settings.MARU_REGISTRATION_CLIENT_ORIGINS)
         is_api = (

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
 from django.utils import timezone
-from rest_framework.response import Response
 from rest_framework.test import APIClient
 
 from maru.authorization.models import ScopedResourceBinding
@@ -38,6 +38,9 @@ from maru.logistics.services import (
 )
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.workforce_helpers import create_department_for_test
+
+if TYPE_CHECKING:
+    from rest_framework.response import Response
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

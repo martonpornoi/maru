@@ -63,8 +63,23 @@ def lock_authority_provenance_writer_boundary() -> int:
     transaction and before locking Organization or Department rows. The shared
     advisory lock serializes with cutover; the allowlisted latch helper retains
     the least-privilege runtime role and current trigger contract.
-    """
 
+    Returns
+    -------
+    int
+        The resolved int for lock authority provenance writer boundary.
+
+    Raises
+    ------
+    AuthorityProvenanceWriterBoundaryError
+        If the operation encounters a authority provenance writer boundary
+        condition.
+    AuthorityProvenanceWriterRestartRequiredError
+        If the operation encounters a authority provenance writer restart
+        required condition.
+    TransactionManagementError
+        If the operation encounters a transaction management condition.
+    """
     if connection.get_autocommit() or not connection.in_atomic_block:
         raise TransactionManagementError(
             "The authority writer boundary requires an atomic transaction."
@@ -126,6 +141,8 @@ class _ResolvedTarget(Protocol):
 
 
 class PersistentSourceKind(StrEnum):
+    """Enumerate supported persistent source kind values."""
+
     CAPABILITY_GRANT = "capability_grant"
     ROLE_ASSIGNMENT = "role_assignment"
 
@@ -145,7 +162,33 @@ class ControlHorizonMode(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class AuthorizedControl:
-    """One exact, source-bearing control selected for an issuance writer."""
+    """One exact, source-bearing control selected for an issuance writer.
+
+    Attributes
+    ----------
+    role
+        The immutable or edition-owned role evaluated for authority.
+    principal_id
+        The principal identifier within the requested scope.
+    capability_code
+        The stable capability code required by the operation.
+    source_kind
+        The closed source kind discriminator defined by the domain catalog.
+    source_issuance_ordinal
+        The deterministic display position within the owning collection.
+    source_authority_id
+        The source authority identifier within the requested scope.
+    source_scope
+        The source scope retained in this immutable projection.
+    source_effective_from
+        The timezone-aware boundary for source effective from.
+    source_expires_at
+        The timezone-aware timestamp for source expires.
+    evaluated_at
+        The timezone-aware timestamp for evaluated.
+    policy_version
+        The expected policy version used to reject stale updates.
+    """
 
     role: str
     principal_id: UUID
@@ -166,6 +209,23 @@ class AuthorityIssuanceCurrentCheck:
 
     The result boundary is positional booleans only.  Callers retain no shared
     validator state and receive no authority or issuance identifiers back.
+
+    Attributes
+    ----------
+    issuance_ordinal
+        The deterministic display position within the owning collection.
+    principal_id
+        The principal identifier within the requested scope.
+    capability_code
+        The stable capability code required by the operation.
+    target
+        The exact domain resource targeted by the operation.
+    requested_effective_from
+        The timezone-aware boundary for requested effective from.
+    requested_expires_at
+        The timezone-aware timestamp for requested expires.
+    horizon_mode
+        The closed horizon mode discriminator defined by the domain catalog.
     """
 
     issuance_ordinal: int
@@ -342,8 +402,19 @@ def _scope_contains(*, source: _Scope, target: _Scope) -> bool:
 
 
 def _resolved_target_is_current(target: _ResolvedTarget) -> bool:
-    """Repeat exact persisted target resolution without importing policy eagerly."""
+    """Repeat exact persisted target resolution without importing policy eagerly.
 
+    Parameters
+    ----------
+    target : _ResolvedTarget
+        The exact domain resource targeted by the operation.
+
+    Returns
+    -------
+    bool
+        `True` when Repeat exact persisted target resolution without importing
+        policy eagerly; otherwise `False`.
+    """
     from maru.authorization.policy import (  # noqa: PLC0415
         resolve_department_target,
         resolve_edition_target,
@@ -446,8 +517,20 @@ def _historical_horizon_is_covered(
 
     A later revocation may not rewrite an already-authorized role definition,
     while a revocation at or before that definition's evaluation still fails.
-    """
 
+    Parameters
+    ----------
+    source : CapabilityGrant | RoleAssignment
+        The immutable source record or definition from which data is derived.
+    expectation : _Expectation
+        The expectation evaluated while historical horizon is covered.
+
+    Returns
+    -------
+    bool
+        `True` when Evaluate one immutable source at a past instant; otherwise
+        `False`.
+    """
     if (
         source.effective_from > expectation.evaluated_at
         or source.effective_from > expectation.requested_effective_from
@@ -634,8 +717,13 @@ def _special_controls_are_historical(
 
 
 def _executive_board_definition() -> tuple[str, str, int, frozenset[str], str]:
-    """Load the representation service's canonical reserved-role definition."""
+    """Load the representation service's canonical reserved-role definition.
 
+    Returns
+    -------
+    tuple[str, str, int, frozenset[str], str]
+        The matching executive board definition records in deterministic order.
+    """
     from maru.organizations.representation import (  # noqa: PLC0415
         EXECUTIVE_BOARD_CAPABILITIES,
         EXECUTIVE_BOARD_MEMBERSHIP_LABEL,
@@ -1118,8 +1206,27 @@ def _validate_issuance_historical(  # noqa: PLR0911
     path: frozenset[int] = frozenset(),
     depth: int = 0,
 ) -> bool:
-    """Prove an entire persistent lineage at one immutable past instant."""
+    """Prove an entire persistent lineage at one immutable past instant.
 
+    Parameters
+    ----------
+    context : _LineageContext
+        The request context supplied by the calling framework.
+    ordinal : int
+        The deterministic display position within the owning collection.
+    expectation : _Expectation
+        The expectation evaluated while validate issuance historical.
+    path : frozenset[int], default=frozenset()
+        The filesystem path to read, validate, or write.
+    depth : int, default=0
+        The depth evaluated while validate issuance historical.
+
+    Returns
+    -------
+    bool
+        `True` when Prove an entire persistent lineage at one immutable past
+        instant; otherwise `False`.
+    """
     key = _validity_key(ordinal, expectation)
     if key in context.historical_validity:
         return context.historical_validity[key]
@@ -1383,8 +1490,27 @@ def role_bundle_provenance_is_historical(
 
     Assignment writers pass ``lock=True`` inside their target transaction.
     Read-only policy and reconciliation paths may leave locking disabled.
-    """
 
+    Parameters
+    ----------
+    bundle : RoleBundle
+        The bundle evaluated while role bundle provenance is historical.
+    evaluated_at : datetime | None, default=None
+        The timezone-aware timestamp for evaluated.
+    lock : bool, default=False
+        The database lock or mutex protecting this transition.
+
+    Returns
+    -------
+    bool
+        `True` when Verify a bundle's complete immutable creation proof;
+        otherwise `False`.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    """
     if lock and not connection.in_atomic_block:
         raise RuntimeError("Role-bundle provenance locking requires a transaction.")
     effective_evaluation = evaluated_at or timezone.now()
@@ -1409,8 +1535,23 @@ def _authority_issuances_are_current_python(
     evaluated_at: datetime,
     lock: bool,
 ) -> tuple[bool, ...]:
-    """Run the Python validator, retaining the lock-capable writer path."""
+    """Run the Python validator, retaining the lock-capable writer path.
 
+    Parameters
+    ----------
+    checks : tuple[AuthorityIssuanceCurrentCheck, ...]
+        The named integrity checks required for readiness.
+    evaluated_at : datetime
+        The timezone-aware timestamp for evaluated.
+    lock : bool
+        The database lock or mutex protecting this transition.
+
+    Returns
+    -------
+    tuple[bool, ...]
+        The matching authority issuances are current python records in
+        deterministic order.
+    """
     context = _LineageContext(lock=lock)
     current_targets: dict[_Scope, bool] = {}
     results: list[bool] = []
@@ -1461,8 +1602,23 @@ def _database_current_check_is_well_formed(
     target_scope: _Scope | None,
     evaluated_at: datetime,
 ) -> bool:
-    """Reject malformed values before they reach PostgreSQL's typed boundary."""
+    """Reject malformed values before they reach PostgreSQL's typed boundary.
 
+    Parameters
+    ----------
+    check : AuthorityIssuanceCurrentCheck
+        The check evaluated while database current check is well formed.
+    target_scope : _Scope | None
+        The target scope evaluated while database current check is well formed.
+    evaluated_at : datetime
+        The timezone-aware timestamp for evaluated.
+
+    Returns
+    -------
+    bool
+        `True` when Reject malformed values before they reach PostgreSQL's typed
+        boundary; otherwise `False`.
+    """
     scope_values = (
         ()
         if target_scope is None
@@ -1510,8 +1666,20 @@ def _authority_issuances_are_current_database(
     cannot authorize an identifier whose current tenant ancestry has changed.
     PostgreSQL receives only already-resolved identifiers and returns positional
     booleans; it never selects or discloses an alternative authority source.
-    """
 
+    Parameters
+    ----------
+    checks : tuple[AuthorityIssuanceCurrentCheck, ...]
+        The named integrity checks required for readiness.
+    evaluated_at : datetime
+        The timezone-aware timestamp for evaluated.
+
+    Returns
+    -------
+    tuple[bool, ...]
+        The matching authority issuances are current database records in
+        deterministic order.
+    """
     results = [False] * len(checks)
     current_targets: dict[_Scope, bool] = {}
     prepared: list[tuple[int, AuthorityIssuanceCurrentCheck, _Scope]] = []
@@ -1624,8 +1792,27 @@ def authority_issuances_are_current(
     retains the independent Python validator.  Neither path performs
     existential source selection, and duplicate ordinals stay distinct input
     positions.
-    """
 
+    Parameters
+    ----------
+    checks : tuple[AuthorityIssuanceCurrentCheck, ...]
+        The named integrity checks required for readiness.
+    evaluated_at : datetime | None, default=None
+        The timezone-aware timestamp for evaluated.
+    lock : bool, default=False
+        The database lock or mutex protecting this transition.
+
+    Returns
+    -------
+    tuple[bool, ...]
+        The matching authority issuances are current records in deterministic
+        order.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    """
     if lock and not connection.in_atomic_block:
         raise RuntimeError("Authority-issuance locking requires a transaction.")
     effective_evaluation = evaluated_at or timezone.now()
@@ -1658,8 +1845,39 @@ def authority_issuance_is_current(
     Single-source and writer checks retain the Python implementation.  The
     database fast path is intentionally confined to the explicit read batch
     boundary above, which is differentially tested against this path.
-    """
 
+    Parameters
+    ----------
+    issuance_ordinal : int
+        The deterministic display position within the owning collection.
+    principal_id : UUID
+        The principal identifier within the requested scope.
+    capability_code : str
+        The stable capability code required by the operation.
+    target : _ResolvedTarget
+        The exact domain resource targeted by the operation.
+    requested_effective_from : datetime
+        The timezone-aware boundary for requested effective from.
+    requested_expires_at : datetime | None
+        The timezone-aware timestamp for requested expires.
+    evaluated_at : datetime | None, default=None
+        The timezone-aware timestamp for evaluated.
+    horizon_mode : ControlHorizonMode, default=ControlHorizonMode.PERSISTENT
+        The closed horizon mode discriminator defined by the domain catalog.
+    lock : bool, default=False
+        The database lock or mutex protecting this transition.
+
+    Returns
+    -------
+    bool
+        `True` when Validate one caller-pinned issuance without selecting a
+        replacement; otherwise `False`.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    """
     effective_evaluation = evaluated_at or timezone.now()
     if lock and not connection.in_atomic_block:
         raise RuntimeError("Authority-issuance locking requires a transaction.")
@@ -1696,8 +1914,39 @@ def select_authorized_control_source(
     The caller supplies no source identifier.  This function must run inside
     the target-writing transaction so the selected issuance and controller are
     locked until the new provenance row is committed.
-    """
 
+    Parameters
+    ----------
+    principal : Account
+        The authenticated principal whose authority is evaluated.
+    role : str
+        The immutable or edition-owned role evaluated for authority.
+    capability_code : str
+        The stable capability code required by the operation.
+    target : _ResolvedTarget
+        The exact domain resource targeted by the operation.
+    requested_expires_at : datetime | None
+        The timezone-aware timestamp for requested expires.
+    requested_effective_from : datetime | None, default=None
+        The timezone-aware boundary for requested effective from.
+    evaluated_at : datetime | None, default=None
+        The timezone-aware timestamp for evaluated.
+    horizon_mode : ControlHorizonMode, default=ControlHorizonMode.PERSISTENT
+        The closed horizon mode discriminator defined by the domain catalog.
+
+    Returns
+    -------
+    AuthorizedControl | None
+        The AuthorizedControl | None produced by select authorized control
+        source.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     if not connection.in_atomic_block:
         raise RuntimeError("Authority source selection requires an open transaction.")
     if role not in {AuthorityControl.Role.ACTOR, AuthorityControl.Role.APPROVER}:
@@ -1808,8 +2057,29 @@ def authorized_control_is_current(
     evaluated_at: datetime | None = None,
     horizon_mode: ControlHorizonMode = ControlHorizonMode.PERSISTENT,
 ) -> bool:
-    """Revalidate a previously selected source without silently rebinding it."""
+    """Revalidate a previously selected source without silently rebinding it.
 
+    Parameters
+    ----------
+    control : AuthorizedControl
+        The control evaluated while authorized control is current.
+    target : _ResolvedTarget
+        The exact domain resource targeted by the operation.
+    requested_expires_at : datetime | None
+        The timezone-aware timestamp for requested expires.
+    requested_effective_from : datetime | None, default=None
+        The timezone-aware boundary for requested effective from.
+    evaluated_at : datetime | None, default=None
+        The timezone-aware timestamp for evaluated.
+    horizon_mode : ControlHorizonMode, default=ControlHorizonMode.PERSISTENT
+        The closed horizon mode discriminator defined by the domain catalog.
+
+    Returns
+    -------
+    bool
+        `True` when Revalidate a previously selected source without silently
+        rebinding it; otherwise `False`.
+    """
     effective_evaluation = evaluated_at or timezone.now()
     effective_start = requested_effective_from or effective_evaluation
     target_scope = _scope_from_target(target)

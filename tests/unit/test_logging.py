@@ -1,9 +1,12 @@
 import json
 import logging
-from types import TracebackType
+from typing import TYPE_CHECKING
 
 from maru.core.correlation import correlation_id
 from maru.core.logging import SafeJsonFormatter
+
+if TYPE_CHECKING:
+    from types import TracebackType
 
 
 def test_safe_json_formatter_uses_allowlist_and_correlation() -> None:

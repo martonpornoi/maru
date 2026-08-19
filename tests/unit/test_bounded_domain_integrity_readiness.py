@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import replace
 from importlib import import_module
+from typing import TYPE_CHECKING, Never
 
 from django.db import migrations
 
@@ -11,6 +11,9 @@ from maru.catalog.readiness import CATALOG_INTEGRITY_CONTRACT
 from maru.charities.readiness import CHARITIES_INTEGRITY_CONTRACT
 from maru.core import database_integrity_readiness as integrity
 from maru.venues.readiness import VENUES_INTEGRITY_CONTRACT
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 CONTRACTS = (
     APPLICATIONS_INTEGRITY_CONTRACT,
@@ -173,7 +176,7 @@ def test_function_catalog_comparison_separates_definition_acl_and_owner_drift() 
 
 
 def test_database_integrity_wrapper_fails_closed_on_catalog_error(monkeypatch) -> None:
-    def fail(_contract):  # type: ignore[no-untyped-def]
+    def fail(_contract) -> Never:  # type: ignore[no-untyped-def]
         raise RuntimeError("private catalog detail")
 
     monkeypatch.setattr(integrity, "inspect_database_integrity_catalog", fail)

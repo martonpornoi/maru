@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from django.db import transaction
 
-from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.workforce.edition_write_scope import (
     lock_active_department_write_target,
     lock_workforce_edition_write_scope,
@@ -26,6 +25,10 @@ from maru.workforce.structure_commands import (
 )
 from maru.workforce.structure_templates import AWOOSTRIA_REFERENCE_V1
 from tests.factories import AccountFactory
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
 
 
 def create_department_for_test(

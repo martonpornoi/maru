@@ -128,7 +128,7 @@ def mounted_api_schema() -> dict[str, Any]:
         public=True,
     )
     assert generated is not None
-    return cast(dict[str, Any], generated)
+    return cast("dict[str, Any]", generated)
 
 
 def _domain_operations(
@@ -149,7 +149,9 @@ def _domain_operations(
         module = matching_modules[0]
         for method, operation in path_item.items():
             if method in HTTP_METHODS:
-                grouped[module].append((path, method, cast(dict[str, Any], operation)))
+                grouped[module].append(
+                    (path, method, cast("dict[str, Any]", operation))
+                )
     return grouped
 
 
@@ -181,7 +183,7 @@ def _effective_security(
     operation: dict[str, Any],
 ) -> list[dict[str, list[str]]]:
     return cast(
-        list[dict[str, list[str]]],
+        "list[dict[str, list[str]]]",
         operation.get("security", schema.get("security", [])),
     )
 
@@ -191,7 +193,7 @@ def _request_object_schemas(
     schema: dict[str, Any],
     request_schema: dict[str, Any],
 ) -> tuple[list[tuple[str, dict[str, Any]]], set[str]]:
-    components = cast(dict[str, Any], schema["components"]["schemas"])
+    components = cast("dict[str, Any]", schema["components"]["schemas"])
     objects: list[tuple[str, dict[str, Any]]] = []
     visited_components: set[str] = set()
 
@@ -249,7 +251,7 @@ def _operation_by_id(
         if method in HTTP_METHODS and operation.get("operationId") == operation_id
     ]
     assert len(matches) == 1, operation_id
-    return cast(dict[str, Any], matches[0])
+    return cast("dict[str, Any]", matches[0])
 
 
 def test_mounted_domain_operations_are_complete_typed_and_correctly_private(

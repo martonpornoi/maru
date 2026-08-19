@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -39,6 +38,10 @@ from maru.identity.models import (
     PlatformIdentityDeliveryReconciliationReceipt,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
+
 RECONCILIATION_CONTRACT_VERSION = "page10-invitation-delivery-reconciliation-v1"
 MAX_PROVIDER_REFERENCE_LENGTH = 160
 MAX_DELIVERY_ATTEMPTS = 100
@@ -46,6 +49,18 @@ MAX_DELIVERY_ATTEMPTS = 100
 
 @dataclass(frozen=True, slots=True)
 class DeliveryReconciliationResult:
+    """Describe delivery reconciliation result.
+
+    Attributes
+    ----------
+    delivery
+        The delivery retained in this immutable projection.
+    receipt
+        The immutable command receipt proving the accepted transition.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     delivery: PlatformIdentityDelivery
     receipt: PlatformIdentityDeliveryReconciliationReceipt
     replayed: bool
@@ -128,8 +143,18 @@ def _require_reconcilable(delivery: PlatformIdentityDelivery, *, now: datetime) 
 
 
 def _reconciliation_occurred_at(delivery: PlatformIdentityDelivery) -> datetime:
-    """Keep reconciliation evidence monotonic across worker clock movement."""
+    """Keep reconciliation evidence monotonic across worker clock movement.
 
+    Parameters
+    ----------
+    delivery : PlatformIdentityDelivery
+        The delivery evaluated while reconciliation occurred at.
+
+    Returns
+    -------
+    datetime
+        The resolved datetime for reconciliation occurred at.
+    """
     observed_at = timezone.now()
     required_at = delivery.reconciliation_required_at
     if required_at is not None and required_at > observed_at:
@@ -215,6 +240,41 @@ def resolve_platform_identity_delivery_as_delivered(
     request_id: UUID | None = None,
     source_channel: object = "service",
 ) -> DeliveryReconciliationResult:
+    """Resolve platform identity delivery as delivered.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    delivery_id : UUID
+        The identifier of the delivery.
+    expected_version : object
+        The aggregate version required for optimistic concurrency.
+    provider_reference : object
+        The provider-owned external reference.
+    reason : object
+        The operator-supplied reason for the operation.
+    retry_key : object
+        The stable key used to retry the operation safely.
+    correlation_id : object
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : object, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    DeliveryReconciliationResult
+        The delivery reconciliation result.
+
+    Raises
+    ------
+    InvitationStateConflictError
+        If the target lifecycle state does not permit the transition.
+    InvitationVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     _require_platform_actor(actor)
     version = _positive_expected_version(expected_version)
     normalized_reference = _normalize_provider_reference(provider_reference)
@@ -322,6 +382,39 @@ def resolve_platform_identity_delivery_for_retry(
     request_id: UUID | None = None,
     source_channel: object = "service",
 ) -> DeliveryReconciliationResult:
+    """Resolve platform identity delivery for retry.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    delivery_id : UUID
+        The identifier of the delivery.
+    expected_version : object
+        The aggregate version required for optimistic concurrency.
+    reason : object
+        The operator-supplied reason for the operation.
+    retry_key : object
+        The stable key used to retry the operation safely.
+    correlation_id : object
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : object, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    DeliveryReconciliationResult
+        The delivery reconciliation result.
+
+    Raises
+    ------
+    InvitationStateConflictError
+        If the target lifecycle state does not permit the transition.
+    InvitationVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     _require_platform_actor(actor)
     version = _positive_expected_version(expected_version)
     normalized_reason = normalize_invitation_reason(reason)

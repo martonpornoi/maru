@@ -56,31 +56,73 @@ _SOURCE_CHANNEL = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
 
 
 class ProfileExtensionValueError(Exception):
+    """Signal profile extension value."""
+
     reason_code = "profile_extension_value_error"
 
 
 class ProfileExtensionValueUnavailableError(ProfileExtensionValueError):
+    """Signal profile extension value unavailable."""
+
     reason_code = "profile_extension_value_unavailable"
 
 
 class ProfileExtensionValueSequenceConflictError(ProfileExtensionValueError):
+    """Signal profile extension value sequence conflict."""
+
     reason_code = "profile_extension_value_sequence_conflict"
 
 
 class ProfileExtensionValueRetryConflictError(ProfileExtensionValueError):
+    """Signal profile extension value retry conflict."""
+
     reason_code = "profile_extension_value_retry_conflict"
 
 
 class ProfileExtensionValueEvidenceConflictError(ProfileExtensionValueError):
+    """Signal profile extension value evidence conflict."""
+
     reason_code = "profile_extension_value_evidence_conflict"
 
 
 class ProfileExtensionValueLimitExceededError(ProfileExtensionValueError):
+    """Signal profile extension value limit exceeded."""
+
     reason_code = "profile_extension_value_limit_exceeded"
 
 
 @dataclass(frozen=True, slots=True)
 class ProfileExtensionValueCommandResult:
+    """Describe profile extension value command result.
+
+    Attributes
+    ----------
+    registration_id
+        The attendee registration identifier within the edition scope.
+    field_id
+        The field identifier within the requested scope.
+    field_key
+        The stable field key used to authenticate or deduplicate the operation.
+    field_version
+        The expected field version used to reject stale updates.
+    revision_id
+        The revision identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    result_sequence
+        The expected result sequence used to reject stale updates.
+    value
+        The untrusted input to normalize, validate, or compare.
+    writer_kind
+        The closed writer kind discriminator defined by the domain catalog.
+    source_channel
+        The closed channel code identifying where the request originated.
+    changed_at
+        The timezone-aware timestamp for changed.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     registration_id: UUID
     field_id: UUID
     field_key: str
@@ -97,6 +139,46 @@ class ProfileExtensionValueCommandResult:
 
 @dataclass(frozen=True, slots=True)
 class ProfileExtensionValueFieldProjection:
+    """Describe profile extension value field projection.
+
+    Attributes
+    ----------
+    field_id
+        The field identifier within the requested scope.
+    field_key
+        The stable field key used to authenticate or deduplicate the operation.
+    field_version
+        The expected field version used to reject stale updates.
+    label
+        The human-readable label shown to authorized readers.
+    help_text
+        The help text retained in this immutable projection.
+    field_type
+        The closed field type discriminator defined by the domain catalog.
+    options
+        The configured option codes valid for the source question.
+    purpose
+        The documented purpose constraining collection and processing.
+    classification
+        The closed sensitivity classification governing disclosure.
+    audience_policy
+        The closed audience policy governing validation or disclosure.
+    audience_department_id
+        The audience department identifier within the requested scope.
+    required
+        The required retained in this immutable projection.
+    writer_policy
+        The closed writer policy governing validation or disclosure.
+    can_write
+        The can write retained in this immutable projection.
+    current_value
+        The current value retained in this immutable projection.
+    current_sequence
+        The expected current sequence used to reject stale updates.
+    updated_at
+        The timezone-aware timestamp for updated.
+    """
+
     field_id: UUID
     field_key: str
     field_version: int
@@ -118,6 +200,18 @@ class ProfileExtensionValueFieldProjection:
 
 @dataclass(frozen=True, slots=True)
 class ProfileExtensionValueWorkspace:
+    """Describe profile extension value workspace.
+
+    Attributes
+    ----------
+    registration_id
+        The attendee registration identifier within the edition scope.
+    snapshot_digest
+        The canonical digest used to verify snapshot.
+    fields
+        The canonical field names included in the operation.
+    """
+
     registration_id: UUID
     snapshot_digest: str
     fields: tuple[ProfileExtensionValueFieldProjection, ...]
@@ -125,6 +219,20 @@ class ProfileExtensionValueWorkspace:
 
 @dataclass(frozen=True, slots=True)
 class DirectoryProfileExtensionProjection:
+    """Describe directory profile extension projection.
+
+    Attributes
+    ----------
+    field_id
+        The field identifier within the requested scope.
+    label
+        The human-readable label shown to authorized readers.
+    value
+        The untrusted input to normalize, validate, or compare.
+    audience_policy
+        The closed audience policy governing validation or disclosure.
+    """
+
     field_id: UUID
     label: str
     value: object
@@ -260,7 +368,7 @@ def _request_digest(
         )
         row = cursor.fetchone()
     if row is None or not isinstance(row[0], str):
-        raise ProfileExtensionValueEvidenceConflictError()
+        raise ProfileExtensionValueEvidenceConflictError
     return row[0]
 
 
@@ -305,7 +413,7 @@ def _fresh_actor(actor: Account) -> Account:
         account_kind=Account.Kind.PERSON,
     ).first()
     if current is None:
-        raise ProfileExtensionValueUnavailableError()
+        raise ProfileExtensionValueUnavailableError
     return current
 
 
@@ -447,7 +555,7 @@ def _require_exact_evidence(
             and control.latest_revision_id != revision.id
         )
     ):
-        raise ProfileExtensionValueEvidenceConflictError()
+        raise ProfileExtensionValueEvidenceConflictError
 
 
 def _result(
@@ -486,8 +594,32 @@ def authorize_profile_extension_value_write_scope(
     This is an early non-disclosing gate only. The append command repeats the
     decision under its registration lock and once more immediately before the
     durable receipt is created.
-    """
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    registration_id : UUID
+        The attendee registration identifier within the edition scope.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    UUID
+        The resolved UUID for authorize profile extension value write scope.
+
+    Raises
+    ------
+    ProfileExtensionValueUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     organization_id = _strict_uuid(organization_id, field="organization_id")
     edition_id = _strict_uuid(edition_id, field="edition_id")
     registration_id = _strict_uuid(registration_id, field="registration_id")
@@ -500,7 +632,7 @@ def authorize_profile_extension_value_write_scope(
         edition_id=edition_id,
     ).first()
     if registration is None:
-        raise ProfileExtensionValueUnavailableError()
+        raise ProfileExtensionValueUnavailableError
     _writer_authorization(
         actor=current_actor,
         registration=registration,
@@ -528,8 +660,53 @@ def append_profile_extension_value(  # noqa: PLR0915
     source_channel: str,
     reason: str = "",
 ) -> ProfileExtensionValueCommandResult:
-    """Append one exact authorized value revision with durable replay evidence."""
+    """Append one exact authorized value revision with durable replay evidence.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    registration_id : UUID
+        The attendee registration identifier within the edition scope.
+    field_id : UUID
+        The field identifier within the requested scope.
+    value : object
+        The untrusted input to normalize, validate, or compare.
+    expected_sequence : int
+        The expected expected sequence used to reject stale updates.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None
+        The correlation identifier attached to the incoming request.
+    source_channel : str
+        The closed channel code identifying where the request originated.
+    reason : str, default=''
+        The operator-supplied rationale recorded with the change.
+
+    Returns
+    -------
+    ProfileExtensionValueCommandResult
+        The updated ProfileExtensionValueCommandResult after the transition is
+        committed.
+
+    Raises
+    ------
+    ProfileExtensionValueRetryConflictError
+        If a retry key is reused with different command intent.
+    ProfileExtensionValueSequenceConflictError
+        If the operation encounters a profile extension value sequence conflict
+        condition.
+    ProfileExtensionValueUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     organization_id = _strict_uuid(organization_id, field="organization_id")
     edition_id = _strict_uuid(edition_id, field="edition_id")
     registration_id = _strict_uuid(registration_id, field="registration_id")
@@ -555,7 +732,7 @@ def append_profile_extension_value(  # noqa: PLR0915
         .first()
     )
     if registration is None:
-        raise ProfileExtensionValueUnavailableError()
+        raise ProfileExtensionValueUnavailableError
     writer_kind, capability, obligations = _writer_authorization(
         actor=actor,
         registration=registration,
@@ -593,7 +770,7 @@ def append_profile_extension_value(  # noqa: PLR0915
             source_channel=source_channel,
         )
         if replay.request_digest != digest:
-            raise ProfileExtensionValueRetryConflictError()
+            raise ProfileExtensionValueRetryConflictError
         _require_exact_evidence(replay)
         return _result(replay, replayed=True)
     field = (
@@ -607,7 +784,7 @@ def append_profile_extension_value(  # noqa: PLR0915
         .first()
     )
     if field is None:
-        raise ProfileExtensionValueUnavailableError()
+        raise ProfileExtensionValueUnavailableError
     _validate_writer_policy(field=field, writer_kind=writer_kind, reason=reason)
     normalized_value = _normalize_profile_extension_value(field, value)
     if field.required and normalized_value in (None, "", []):
@@ -640,7 +817,7 @@ def append_profile_extension_value(  # noqa: PLR0915
             current_sequence=0,
         )
     if control.current_sequence != expected_sequence:
-        raise ProfileExtensionValueSequenceConflictError()
+        raise ProfileExtensionValueSequenceConflictError
     result_sequence = expected_sequence + 1
     stored_value = (
         Value(
@@ -758,8 +935,37 @@ def read_profile_extension_values(  # noqa: PLR0912, PLR0915
     correlation_id: UUID,
     source_channel: str,
 ) -> ProfileExtensionValueWorkspace:
-    """Return one bounded, audited, policy-filtered current-value projection."""
+    """Return one bounded, audited, policy-filtered current-value projection.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    registration_id : UUID
+        The attendee registration identifier within the edition scope.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    ProfileExtensionValueWorkspace
+        The ProfileExtensionValueWorkspace produced by read profile extension
+        values.
+
+    Raises
+    ------
+    ProfileExtensionValueLimitExceededError
+        If the operation encounters a profile extension value limit exceeded
+        condition.
+    ProfileExtensionValueUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     organization_id = _strict_uuid(organization_id, field="organization_id")
     edition_id = _strict_uuid(edition_id, field="edition_id")
     registration_id = _strict_uuid(registration_id, field="registration_id")
@@ -777,7 +983,7 @@ def read_profile_extension_values(  # noqa: PLR0912, PLR0915
         .first()
     )
     if registration is None:
-        raise ProfileExtensionValueUnavailableError()
+        raise ProfileExtensionValueUnavailableError
     is_owner = actor.id == registration.account_id
     if is_owner:
         writer_kind, capability, obligations = _writer_authorization(
@@ -818,7 +1024,7 @@ def read_profile_extension_values(  # noqa: PLR0912, PLR0915
         ]
     )
     if len(candidate_fields) > MAX_PROFILE_EXTENSION_FIELDS:
-        raise ProfileExtensionValueLimitExceededError()
+        raise ProfileExtensionValueLimitExceededError
     staff_decisions: dict[UUID, PolicyDecision] = {}
     if is_owner:
         fields = candidate_fields
@@ -831,7 +1037,7 @@ def read_profile_extension_values(  # noqa: PLR0912, PLR0915
             field for field in candidate_fields if field.id in staff_decisions
         )
         if not fields:
-            raise ProfileExtensionValueUnavailableError()
+            raise ProfileExtensionValueUnavailableError
         obligations = frozenset(
             obligation
             for decision in staff_decisions.values()
@@ -911,7 +1117,7 @@ def read_profile_extension_values(  # noqa: PLR0912, PLR0915
         _staff_audience_decision(actor=current_actor, field=field) is None
         for field in fields
     ):
-        raise ProfileExtensionValueUnavailableError()
+        raise ProfileExtensionValueUnavailableError
     snapshot_digest = canonical_digest(
         {
             "contract": "maru.registration-profile-extension-value-projection.v1",
@@ -964,8 +1170,32 @@ def read_directory_profile_extension_values(
     Consent, subject confirmation, and viewer confirmation are all rechecked
     immediately before release, so a withdrawal or lost confirmation cannot
     wait for a cache or publication cleanup job.
-    """
 
+    Parameters
+    ----------
+    actor : Account | None
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    dict[UUID, tuple[DirectoryProfileExtensionProjection, ...]]
+        The matching read directory profile extension values records in
+        deterministic order.
+
+    Raises
+    ------
+    ProfileExtensionValueLimitExceededError
+        If the operation encounters a profile extension value limit exceeded
+        condition.
+    """
     organization_id = _strict_uuid(organization_id, field="organization_id")
     edition_id = _strict_uuid(edition_id, field="edition_id")
     correlation_id = _strict_uuid(correlation_id, field="correlation_id")
@@ -999,7 +1229,7 @@ def read_directory_profile_extension_values(
         ).order_by("position", "key", "id")[: MAX_PROFILE_EXTENSION_FIELDS + 1]
     )
     if len(fields) > MAX_PROFILE_EXTENSION_FIELDS:
-        raise ProfileExtensionValueLimitExceededError()
+        raise ProfileExtensionValueLimitExceededError
     eligible_registration_ids = tuple(
         AttendeeRegistrationProfile.objects.filter(
             organization_id=organization_id,
@@ -1025,7 +1255,7 @@ def read_directory_profile_extension_values(
         ]
     )
     if len(controls) > MAX_DIRECTORY_PROFILE_EXTENSION_VALUES:
-        raise ProfileExtensionValueLimitExceededError()
+        raise ProfileExtensionValueLimitExceededError
     field_by_key = {field.key: field for field in fields}
     field_order = {field.id: ordinal for ordinal, field in enumerate(fields)}
     projections: dict[UUID, list[DirectoryProfileExtensionProjection]] = {}

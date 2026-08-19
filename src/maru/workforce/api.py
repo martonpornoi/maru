@@ -4,12 +4,11 @@ import logging
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 from uuid import UUID
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.files.uploadedfile import UploadedFile
 from django.db import DatabaseError
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
@@ -99,6 +98,9 @@ from maru.workforce.structure_snapshot import (
     load_version_fenced_snapshot,
 )
 
+if TYPE_CHECKING:
+    from django.core.files.uploadedfile import UploadedFile
+
 logger = logging.getLogger(__name__)
 PROBLEM_CONTENT_TYPE = "application/problem+json"
 IDEMPOTENCY_HEADER_NAME = "Idempotency-Key"
@@ -137,9 +139,18 @@ class WorkforceStructureConflict(APIException):
         code: str,
         errors: Mapping[str, list[str]],
     ) -> None:
+        """Initialize the WorkforceStructureConflict instance.
+
+        Parameters
+        ----------
+        code : str
+            The stable domain code to resolve or validate.
+        errors : Mapping[str, list[str]]
+            The errors resolved from the authorized request.
+        """
         super().__init__(
             detail=cast(
-                Any,
+                "Any",
                 {
                     "detail": self.default_detail,
                     "code": code,
@@ -211,8 +222,22 @@ def _authorize_structure_mutation(
     organization_id: UUID,
     edition_id: UUID,
 ) -> _StructureMutationScope:
-    """Require exact view and manage authority before parsing header or body."""
+    """Require exact view and manage authority before parsing header or body.
 
+    Parameters
+    ----------
+    request : Request
+        The incoming HTTP request and authenticated principal context.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    _StructureMutationScope
+        The resolved _StructureMutationScope for authorize structure mutation.
+    """
     account = request.user
     if not isinstance(account, Account) or not account.is_active:
         _raise_structure_mutation_unavailable()
@@ -260,7 +285,7 @@ def _authorize_structure_mutation(
 def _raise_idempotency_header_error(*, detail: str, code: str) -> Never:
     raise ApiValidationError(
         cast(
-            Any,
+            "Any",
             {
                 "detail": detail,
                 "code": code,
@@ -272,8 +297,18 @@ def _raise_idempotency_header_error(*, detail: str, code: str) -> Never:
 
 
 def _structure_idempotency_key(request: Request) -> UUID:
-    """Parse exactly one canonical lower-case, hyphenated UUID header."""
+    """Parse exactly one canonical lower-case, hyphenated UUID header.
 
+    Parameters
+    ----------
+    request : Request
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    UUID
+        The resolved UUID for structure idempotency key.
+    """
     raw_value = request.headers.get(IDEMPOTENCY_HEADER_NAME)
     if raw_value is None or not raw_value.strip():
         _raise_idempotency_header_error(
@@ -311,7 +346,7 @@ def _validated_structure_payload(
     serializer = serializer_class(data=payload)
     reject_unknown_fields(payload, allowed_fields=frozenset(serializer.fields))
     serializer.is_valid(raise_exception=True)
-    return cast(dict[str, object], serializer.validated_data)
+    return cast("dict[str, object]", serializer.validated_data)
 
 
 _SAFE_STRUCTURE_VALIDATION_FIELDS = frozenset(
@@ -353,8 +388,19 @@ def _django_structure_validation_errors(
 
 
 def _is_safe_structure_input_validation(error: DjangoValidationError) -> bool:
-    """Return whether every reported error belongs to submitted organizer input."""
+    """Return whether every reported error belongs to submitted organizer input.
 
+    Parameters
+    ----------
+    error : DjangoValidationError
+        The error resolved from the authorized request.
+
+    Returns
+    -------
+    bool
+        `True` when every reported error belongs to submitted organizer input;
+        otherwise `False`.
+    """
     if not hasattr(error, "error_dict"):
         return False
     field_names = frozenset(error.error_dict)
@@ -381,7 +427,7 @@ def _execute_structure_command[
         code = _django_structure_validation_code(error)
         raise ApiValidationError(
             cast(
-                Any,
+                "Any",
                 {
                     "detail": "The structure input is invalid.",
                     "code": code,
@@ -432,7 +478,7 @@ class _WorkforceStructureAutoSchema(_WorkforceStructureMutationAutoSchema):
     def _get_request_body(self, direction: str = "request") -> dict[str, Any] | None:
         if self.method != "DELETE":
             return cast(
-                dict[str, Any] | None,
+                "dict[str, Any] | None",
                 super()._get_request_body(direction),  # type: ignore[no-untyped-call]
             )
         schema, required = self._get_request_for_media_type(  # type: ignore[no-untyped-call]
@@ -499,8 +545,23 @@ def _load_workforce_structure_snapshot(
     organization_id: UUID,
     edition_id: UUID,
 ) -> StructureSnapshotRead[_WorkforceStructureSnapshot]:
-    """Read the complete authorized composition in the caller's snapshot."""
+    """Read the complete authorized composition in the caller's snapshot.
 
+    Parameters
+    ----------
+    account : Account
+        The platform account whose state or access is being evaluated.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    StructureSnapshotRead[_WorkforceStructureSnapshot]
+        The StructureSnapshotRead[_WorkforceStructureSnapshot] produced by load
+        workforce structure snapshot.
+    """
     projection_at = timezone_now()
     _authorize_structure(
         account=account,
@@ -572,6 +633,29 @@ class WorkforceStructureView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve the structure.
+
+        Return the current, human-readable edition organization hierarchy.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         reject_unknown_fields(request.query_params, allowed_fields=frozenset())
         try:
@@ -592,7 +676,7 @@ class WorkforceStructureView(APIView):
                 edition_id=edition_id,
                 at=response_authorized_at,
             )
-            http_method = cast(str, request.method)
+            http_method = cast("str", request.method)
             append_structure_read_audit(
                 actor=account,
                 organization_id=organization_id,
@@ -634,6 +718,8 @@ class _WorkforceStructureMutationView(APIView):
 
 
 class WorkforceStructureTemplateApplicationView(_WorkforceStructureMutationView):
+    """Expose workforce structure template application through the HTTP API."""
+
     @extend_schema(
         operation_id="workforce_apply_structure_template",
         parameters=[_STRUCTURE_IDEMPOTENCY_PARAMETER],
@@ -667,6 +753,24 @@ class WorkforceStructureTemplateApplicationView(_WorkforceStructureMutationView)
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Apply the structure template.
+
+        Reach explicit uniform denials while retaining authenticated CSRF checks.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         scope = _authorize_structure_mutation(
             request=request,
             organization_id=organization_id,
@@ -684,10 +788,10 @@ class WorkforceStructureTemplateApplicationView(_WorkforceStructureMutationView)
                 organization_id=organization_id,
                 series_id=scope.series_id,
                 edition_id=edition_id,
-                template_identifier=cast(str, values["template"]),
-                expected_version=cast(int, values["expected_version"]),
-                confirmation_name=cast(str, values["confirmation_name"]),
-                reason=cast(str, values["reason"]),
+                template_identifier=cast("str", values["template"]),
+                expected_version=cast("int", values["expected_version"]),
+                confirmation_name=cast("str", values["confirmation_name"]),
+                reason=cast("str", values["reason"]),
                 retry_key=retry_key,
                 correlation_id=correlation_id,
                 request_id=correlation_id,
@@ -702,6 +806,8 @@ class WorkforceStructureTemplateApplicationView(_WorkforceStructureMutationView)
 
 
 class WorkforceDepartmentCollectionView(_WorkforceStructureMutationView):
+    """Expose workforce department collection through the HTTP API."""
+
     @extend_schema(
         operation_id="workforce_create_department",
         parameters=[_STRUCTURE_IDEMPOTENCY_PARAMETER],
@@ -738,6 +844,24 @@ class WorkforceDepartmentCollectionView(_WorkforceStructureMutationView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Create the department.
+
+        Reach explicit uniform denials while retaining authenticated CSRF checks.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         scope = _authorize_structure_mutation(
             request=request,
             organization_id=organization_id,
@@ -755,15 +879,15 @@ class WorkforceDepartmentCollectionView(_WorkforceStructureMutationView):
                 organization_id=organization_id,
                 series_id=scope.series_id,
                 edition_id=edition_id,
-                name=cast(str, values["name"]),
-                description=cast(str, values["description"]),
+                name=cast("str", values["name"]),
+                description=cast("str", values["description"]),
                 parent_department_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     values["parent_department_id"],
                 ),
-                display_order=cast(int, values["display_order"]),
-                expected_version=cast(int, values["expected_version"]),
-                reason=cast(str, values["reason"]),
+                display_order=cast("int", values["display_order"]),
+                expected_version=cast("int", values["expected_version"]),
+                reason=cast("str", values["reason"]),
                 retry_key=retry_key,
                 correlation_id=correlation_id,
                 request_id=correlation_id,
@@ -781,6 +905,8 @@ class WorkforceDepartmentCollectionView(_WorkforceStructureMutationView):
 
 
 class WorkforceDepartmentDetailView(_WorkforceStructureMutationView):
+    """Expose workforce department detail through the HTTP API."""
+
     schema = _WorkforceStructureAutoSchema()
 
     @extend_schema(
@@ -812,6 +938,26 @@ class WorkforceDepartmentDetailView(_WorkforceStructureMutationView):
         edition_id: UUID,
         department_id: UUID,
     ) -> Response:
+        """Update the department.
+
+        Reach explicit uniform denials while retaining authenticated CSRF checks.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        department_id : UUID
+            The department identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         scope = _authorize_structure_mutation(
             request=request,
             organization_id=organization_id,
@@ -829,15 +975,15 @@ class WorkforceDepartmentDetailView(_WorkforceStructureMutationView):
                 series_id=scope.series_id,
                 edition_id=edition_id,
                 department_id=department_id,
-                name=cast(str, values["name"]),
-                description=cast(str, values["description"]),
+                name=cast("str", values["name"]),
+                description=cast("str", values["description"]),
                 parent_department_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     values["parent_department_id"],
                 ),
-                display_order=cast(int, values["display_order"]),
-                expected_version=cast(int, values["expected_version"]),
-                reason=cast(str, values["reason"]),
+                display_order=cast("int", values["display_order"]),
+                expected_version=cast("int", values["expected_version"]),
+                reason=cast("str", values["reason"]),
                 correlation_id=correlation_id,
                 request_id=correlation_id,
                 source_channel="api",
@@ -878,6 +1024,26 @@ class WorkforceDepartmentDetailView(_WorkforceStructureMutationView):
         edition_id: UUID,
         department_id: UUID,
     ) -> Response:
+        """Delete the department.
+
+        Reach explicit uniform denials while retaining authenticated CSRF checks.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        department_id : UUID
+            The department identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         scope = _authorize_structure_mutation(
             request=request,
             organization_id=organization_id,
@@ -895,9 +1061,9 @@ class WorkforceDepartmentDetailView(_WorkforceStructureMutationView):
                 series_id=scope.series_id,
                 edition_id=edition_id,
                 department_id=department_id,
-                expected_version=cast(int, values["expected_version"]),
-                confirmation_name=cast(str, values["confirmation_name"]),
-                reason=cast(str, values["reason"]),
+                expected_version=cast("int", values["expected_version"]),
+                confirmation_name=cast("str", values["confirmation_name"]),
+                reason=cast("str", values["reason"]),
                 correlation_id=correlation_id,
                 request_id=correlation_id,
                 source_channel="api",
@@ -911,6 +1077,8 @@ class WorkforceDepartmentDetailView(_WorkforceStructureMutationView):
 
 
 class WorkforceDepartmentRetireView(_WorkforceStructureMutationView):
+    """Expose workforce department retire through the HTTP API."""
+
     @extend_schema(
         operation_id="workforce_retire_department",
         request=WorkforceDepartmentRetireSerializer,
@@ -940,6 +1108,26 @@ class WorkforceDepartmentRetireView(_WorkforceStructureMutationView):
         edition_id: UUID,
         department_id: UUID,
     ) -> Response:
+        """Retire the department.
+
+        Reach explicit uniform denials while retaining authenticated CSRF checks.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        department_id : UUID
+            The department identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         scope = _authorize_structure_mutation(
             request=request,
             organization_id=organization_id,
@@ -957,8 +1145,8 @@ class WorkforceDepartmentRetireView(_WorkforceStructureMutationView):
                 series_id=scope.series_id,
                 edition_id=edition_id,
                 department_id=department_id,
-                expected_version=cast(int, values["expected_version"]),
-                reason=cast(str, values["reason"]),
+                expected_version=cast("int", values["expected_version"]),
+                reason=cast("str", values["reason"]),
                 correlation_id=correlation_id,
                 request_id=correlation_id,
                 source_channel="api",
@@ -1015,6 +1203,8 @@ def _document_payload(item: OnboardingDocumentRequest) -> dict[str, object]:
 
 
 class PublicVolunteerOpportunityListView(APIView):
+    """Expose public volunteer opportunity list through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -1022,6 +1212,20 @@ class PublicVolunteerOpportunityListView(APIView):
         responses=VolunteerOpportunitySerializer(many=True),
     )
     def get(self, request: Request, edition_id: UUID) -> Response:
+        """List public volunteer opportunities.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         del request
         edition = get_object_or_404(
             EventEdition.objects.exclude(lifecycle__in=("archived", "cancelled")),
@@ -1053,6 +1257,8 @@ class PublicVolunteerOpportunityListView(APIView):
 
 
 class MyVolunteerApplicationCreateView(APIView):
+    """Expose my volunteer application create through the HTTP API."""
+
     @extend_schema(
         operation_id="workforce_submit_my_volunteer_application",
         request=VolunteerApplicationSubmitSerializer,
@@ -1065,6 +1271,31 @@ class MyVolunteerApplicationCreateView(APIView):
         edition_id: UUID,
         opportunity_id: UUID,
     ) -> Response:
+        """Submit my volunteer application.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        opportunity_id : UUID
+            The opportunity identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         account = _account(request)
         serializer = VolunteerApplicationSubmitSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -1078,7 +1309,7 @@ class MyVolunteerApplicationCreateView(APIView):
             application = submit_volunteer_application(
                 actor=account,
                 opportunity_id=opportunity_id,
-                motivation=cast(str, serializer.validated_data["motivation"]),
+                motivation=cast("str", serializer.validated_data["motivation"]),
                 correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             )
         except (ObjectDoesNotExist, DjangoValidationError) as error:
@@ -1103,6 +1334,8 @@ class MyVolunteerApplicationCreateView(APIView):
 
 
 class MyOnboardingDocumentListView(APIView):
+    """Expose my onboarding document list through the HTTP API."""
+
     @extend_schema(
         operation_id="workforce_list_my_onboarding_documents",
         responses=OnboardingDocumentRequestSerializer(many=True),
@@ -1113,6 +1346,27 @@ class MyOnboardingDocumentListView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List my onboarding documents.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         account = _account(request)
         decision = decide(
             principal=account,
@@ -1144,6 +1398,8 @@ class MyOnboardingDocumentListView(APIView):
 
 
 class MyOnboardingDocumentUploadView(APIView):
+    """Expose my onboarding document upload through the HTTP API."""
+
     parser_classes = (MultiPartParser, FormParser)
 
     @extend_schema(
@@ -1158,6 +1414,31 @@ class MyOnboardingDocumentUploadView(APIView):
         edition_id: UUID,
         document_request_id: UUID,
     ) -> Response:
+        """Upload my onboarding document.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        document_request_id : UUID
+            The document request identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         account = _account(request)
         serializer = OnboardingDocumentUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -1172,7 +1453,7 @@ class MyOnboardingDocumentUploadView(APIView):
             item = upload_onboarding_document(
                 actor=account,
                 request_id=document_request_id,
-                upload=cast(UploadedFile, serializer.validated_data["document"]),
+                upload=cast("UploadedFile", serializer.validated_data["document"]),
                 correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             )
         except (ObjectDoesNotExist, DjangoValidationError) as error:

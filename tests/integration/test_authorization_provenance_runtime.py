@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -35,7 +36,6 @@ from maru.authorization.provenance import (
     role_bundle_provenance_is_historical,
     select_authorized_control_source,
 )
-from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import (
     Organization,
@@ -49,6 +49,9 @@ from maru.organizations.representation import (
     respond_to_representation_invitation,
 )
 from tests.factories import AccountFactory, EventEditionFactory, OrganizationFactory
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 

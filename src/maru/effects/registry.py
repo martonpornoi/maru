@@ -15,6 +15,20 @@ MAX_EVENT_CODE_LENGTH = 80
 
 @dataclass(frozen=True, slots=True)
 class EventDefinition:
+    """Describe event definition.
+
+    Attributes
+    ----------
+    name
+        The human-readable name to normalize or persist.
+    schema_version
+        The expected schema version used to reject stale updates.
+    description
+        The human-readable description shown to authorized readers.
+    validator
+        The validator retained in this immutable projection.
+    """
+
     name: str
     schema_version: int
     description: str
@@ -970,6 +984,18 @@ if len(DEFINITIONS_BY_NAME) != len(EVENT_DEFINITIONS):
 
 
 def event_definition(name: str) -> EventDefinition | None:
+    """Return event definition.
+
+    Parameters
+    ----------
+    name : str
+        The human-readable name.
+
+    Returns
+    -------
+    EventDefinition | None
+        The matching EventDefinition, or `None` when no authorized record exists.
+    """
     return DEFINITIONS_BY_NAME.get(name)
 
 
@@ -979,6 +1005,22 @@ def validate_event_payload(
     schema_version: int,
     payload: Any,
 ) -> None:
+    """Validate event payload.
+
+    Parameters
+    ----------
+    event_name : str
+        The human-readable event name shown to authorized readers.
+    schema_version : int
+        The expected schema version used to reject stale updates.
+    payload : Any
+        The validated payload to process.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     definition = event_definition(event_name)
     if definition is None:
         raise ValidationError(

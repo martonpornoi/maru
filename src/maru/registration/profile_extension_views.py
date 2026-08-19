@@ -355,6 +355,20 @@ def my_profile_extension_values(
     request: HttpRequest,
     edition_id: UUID,
 ) -> HttpResponse:
+    """Return my profile extension values.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.GET:
         return _plain_error("Unsupported query parameters.", status=400)
     actor = _active_person(request)
@@ -389,6 +403,22 @@ def update_my_profile_extension_value(
     edition_id: UUID,
     field_id: UUID,
 ) -> HttpResponse:
+    """Update my profile extension value.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    field_id : UUID
+        The identifier of the field.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     actor = _active_person(request)
     registration = _owned_registration(actor=actor, edition_id=edition_id)
     correlation_id = _request_id(request)
@@ -442,6 +472,26 @@ def staff_profile_extension_values(
     edition_slug: str,
     registration_id: UUID,
 ) -> HttpResponse:
+    """Return staff profile extension values.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    registration_id : UUID
+        The identifier of the registration.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     if request.GET:
         return _plain_error("Unsupported query parameters.", status=400)
     actor = _active_person(request)
@@ -484,6 +534,28 @@ def update_staff_profile_extension_value(
     registration_id: UUID,
     field_id: UUID,
 ) -> HttpResponse:
+    """Update staff profile extension value.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    registration_id : UUID
+        The identifier of the registration.
+    field_id : UUID
+        The identifier of the field.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     actor = _active_person(request)
     registration = _staff_registration(
         organization_slug=organization_slug,

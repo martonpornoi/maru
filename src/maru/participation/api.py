@@ -37,11 +37,30 @@ from maru.participation.serializers import (
 
 
 class MyContextView(APIView):
+    """Expose my context through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_retrieve_my_context",
         responses=MyContextSerializer,
     )
     def get(self, request: Request) -> Response:
+        """Retrieve my context.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -96,11 +115,30 @@ class MyContextView(APIView):
 
 
 class MyParticipationHistoryView(APIView):
+    """Expose my participation history through the HTTP API."""
+
     @extend_schema(
         operation_id="participation_list_my_history",
         responses=ParticipationHistorySerializer(many=True),
     )
     def get(self, request: Request) -> Response:
+        """List my history.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -193,6 +231,8 @@ def _staff_participations(
 
 
 class EditionParticipationListView(GenericAPIView[Participation]):
+    """Expose edition participation list through the HTTP API."""
+
     serializer_class = StaffParticipationSummarySerializer
     pagination_class = StandardPageNumberPagination
 
@@ -207,6 +247,31 @@ class EditionParticipationListView(GenericAPIView[Participation]):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the staff summaries.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        RuntimeError
+            If a required runtime invariant or dependency is unavailable.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")
@@ -268,14 +333,14 @@ class EditionParticipationListView(GenericAPIView[Participation]):
         )
         if search := values.get("search"):
             participations = participations.filter(
-                account__display_name__icontains=cast(str, search)
+                account__display_name__icontains=cast("str", search)
             )
         if status := values.get("status"):
-            participations = participations.filter(status=cast(str, status))
+            participations = participations.filter(status=cast("str", status))
         if capacity := values.get("capacity"):
             participations = participations.filter(
-                Q(capacities__code=cast(str, capacity))
-                | Q(capacities__label_snapshot__iexact=cast(str, capacity)),
+                Q(capacities__code=cast("str", capacity))
+                | Q(capacities__label_snapshot__iexact=cast("str", capacity)),
                 capacities__status__in=(
                     ParticipationCapacity.Status.PROPOSED,
                     ParticipationCapacity.Status.ACTIVE,
@@ -306,6 +371,8 @@ class EditionParticipationListView(GenericAPIView[Participation]):
 
 
 class EditionParticipationDetailView(APIView):
+    """Expose edition participation detail through the HTTP API."""
+
     @extend_schema(
         operation_id="participation_retrieve_staff_summary",
         responses=StaffParticipationSummarySerializer,
@@ -317,6 +384,33 @@ class EditionParticipationDetailView(APIView):
         edition_id: UUID,
         account_id: UUID,
     ) -> Response:
+        """Retrieve the staff summary.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        account_id : UUID
+            The platform account identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")

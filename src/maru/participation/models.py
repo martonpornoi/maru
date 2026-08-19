@@ -14,6 +14,18 @@ CAPACITY_CODE_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 
 
 def validate_capacity_code(value: str) -> None:
+    """Validate capacity code.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not CAPACITY_CODE_PATTERN.fullmatch(value):
         raise ValidationError(
             "Use a stable lowercase capacity code.",
@@ -22,7 +34,11 @@ def validate_capacity_code(value: str) -> None:
 
 
 class Participation(UUIDTimeStampedModel):
+    """Store participation records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         INTERESTED = "interested", "Interested"
         PENDING = "pending", "Pending"
         CONFIRMED = "confirmed", "Confirmed"
@@ -55,6 +71,8 @@ class Participation(UUIDTimeStampedModel):
     public_history_visible = models.BooleanField(default=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition__starts_on", "id")
         constraints = [
             models.UniqueConstraint(
@@ -64,6 +82,13 @@ class Participation(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.account_id:
             validate_convention_subject(self.account)
@@ -89,6 +114,15 @@ class Participation(UUIDTimeStampedModel):
                 )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         if self.edition_id:
             if not self.edition_name_snapshot:
                 self.edition_name_snapshot = self.edition.name
@@ -98,11 +132,22 @@ class Participation(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable Participation label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.account} — {self.edition_name_snapshot}"
 
 
 class ParticipationCapacity(UUIDTimeStampedModel):
+    """Store participation capacity records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PROPOSED = "proposed", "Proposed"
         ACTIVE = "active", "Active"
         COMPLETED = "completed", "Completed"
@@ -126,6 +171,8 @@ class ParticipationCapacity(UUIDTimeStampedModel):
     ended_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name_plural = "participation capacities"
         ordering = ("participation_id", "code", "created_at")
         constraints = [
@@ -136,6 +183,13 @@ class ParticipationCapacity(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.participation_id:
             current_lifecycle = (
@@ -150,8 +204,24 @@ class ParticipationCapacity(UUIDTimeStampedModel):
                 )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable ParticipationCapacity label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.label_snapshot} — {self.participation}"

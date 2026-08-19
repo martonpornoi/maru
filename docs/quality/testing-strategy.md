@@ -1,7 +1,7 @@
 # Testing strategy
 
 Status: Active
-Last updated: 2026-08-16
+Last updated: 2026-08-19
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
@@ -208,8 +208,16 @@ The workflow separates concerns so a fast failure does not wait behind the
 complete PostgreSQL suite:
 
 - **Static quality** checks the lock, Ruff formatting/lint, strict mypy,
-  documentation, and submitted-diff whitespace without provisioning
-  PostgreSQL or Node.
+  maintained-document validation, and submitted-diff whitespace without
+  provisioning PostgreSQL or Node. Ruff selects every rule and permits only
+  the eight global exemption categories accepted by ADR 0059; tests and named
+  framework adapters carry narrower file-scoped boundaries.
+- **Contributor documentation** validates complete NumPy signature sections,
+  including private callables, star arguments, types, defaults, return/yield
+  types, assertions, and exact direct raises, with PyDocLint. It applies Maru's
+  semantic quality gate to boilerplate prose, direct exceptions, and public
+  dataclass attributes, builds the complete MyST/Napoleon/AutoAPI Sphinx site
+  with warnings fatal, and retains the generated HTML artifact for 14 days.
 - **Django and generated contracts** checks local configuration, migration
   drift, both production exact-provenance modes, OpenAPI, and the generated
   TypeScript client.

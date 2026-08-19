@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -15,8 +16,6 @@ from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from maru.authorization.models import RoleBundle, ScopedResourceBinding
-from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.workforce import services
 from maru.workforce.admin import PositionAdmin, PositionAssignmentAdmin
 from maru.workforce.edition_write_scope import (
@@ -35,6 +34,10 @@ from tests.support.authority import (
     create_provenance_backed_role_bundle,
     grant_board_controllers_edition_capability,
 )
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

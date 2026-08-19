@@ -56,7 +56,23 @@ class AuthorityProvenanceActivationTransactionError(AuthorityProvenanceActivatio
 
 @dataclass(frozen=True, slots=True)
 class AuthorityProvenanceActivationResult:
-    """Identifier-minimized result suitable for an operator command."""
+    """Identifier-minimized result suitable for an operator command.
+
+    Attributes
+    ----------
+    activated
+        The activated retained in this immutable projection.
+    contract_version
+        The expected contract version used to reject stale updates.
+    policy_version
+        The expected policy version used to reject stale updates.
+    correlation_id
+        The request correlation identifier used for audit tracing.
+    blocker_total
+        The blocker total retained in this immutable projection.
+    production_status
+        The closed production status discriminator defined by the domain catalog.
+    """
 
     activated: bool
     contract_version: str
@@ -81,7 +97,6 @@ def _normalized_text(value: str, *, maximum: int, label: str) -> str:
 
 def _lock_activation_boundary() -> None:
     """Serialize cutover against every compatible authority writer."""
-
     with connection.cursor() as cursor:
         cursor.execute("SHOW lock_timeout")
         previous_lock_timeout = str(cursor.fetchone()[0])
@@ -105,14 +120,19 @@ def _pin_activation_search_path() -> None:
     The setting is transaction-local and therefore cannot leak into the
     connection pool after the maintenance transaction commits or rolls back.
     """
-
     with connection.cursor() as cursor:
         cursor.execute("SET LOCAL search_path = public, pg_temp")
 
 
 def _require_read_committed() -> None:
-    """Keep the post-barrier eligibility read on a fresh MVCC snapshot."""
+    """Keep the post-barrier eligibility read on a fresh MVCC snapshot.
 
+    Raises
+    ------
+    AuthorityProvenanceActivationTransactionError
+        If the operation encounters a authority provenance activation
+        transaction condition.
+    """
     with connection.cursor() as cursor:
         cursor.execute("SHOW transaction_isolation")
         row = cursor.fetchone()
@@ -269,8 +289,41 @@ def activate_authority_provenance(
     acknowledge_processes_stopped: bool,
     source_channel: str = "service",
 ) -> AuthorityProvenanceActivationResult:
-    """Irreversibly select exact lineage after a locked, zero-blocker proof."""
+    """Irreversibly select exact lineage after a locked, zero-blocker proof.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    acknowledge_processes_stopped : bool
+        The acknowledge processes stopped evaluated while activate authority provenance.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    AuthorityProvenanceActivationResult
+        The AuthorityProvenanceActivationResult produced by activate authority
+        provenance.
+
+    Raises
+    ------
+    AuthorityProvenanceActivationEnvironmentError
+        If the operation encounters a authority provenance activation
+        environment condition.
+    AuthorityProvenanceActivationError
+        If the operation encounters a authority provenance activation condition.
+    AuthorityProvenanceActivationTransactionError
+        If the operation encounters a authority provenance activation
+        transaction condition.
+    ProcessesStoppedAcknowledgementRequiredError
+        If the operation encounters a processes stopped acknowledgement required
+        condition.
+    """
     if acknowledge_processes_stopped is not True:
         raise ProcessesStoppedAcknowledgementRequiredError(
             "Activation requires explicit stopped-process acknowledgement."

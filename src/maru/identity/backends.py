@@ -19,6 +19,24 @@ class EmailOrHandleBackend(ModelBackend):
         password: str | None = None,
         **kwargs: Any,
     ) -> Account | None:
+        """Authenticate.
+
+        Parameters
+        ----------
+        request : HttpRequest | None
+            The incoming HTTP request and authenticated principal context.
+        username : str | None, default=None
+            The username evaluated while authenticate.
+        password : str | None, default=None
+            The plaintext secret to verify without logging or retaining it.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        Account | None
+            The resolved Account | None for authenticate.
+        """
         del request
         identifier = username or kwargs.get(Account.USERNAME_FIELD)
         if not isinstance(identifier, str) or password is None:

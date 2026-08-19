@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 from uuid import UUID
 
-from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import FieldDoesNotExist, PermissionDenied
-from django.db import models
 from django.db.models import Q, QuerySet
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect
@@ -26,6 +24,10 @@ from maru.core.admin import HttpsURLAdminMixin
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import ConventionSeries, Organization
+
+if TYPE_CHECKING:
+    from django import forms
+    from django.db import models
 
 ADMIN_EDITION_SESSION_KEY = "maru.admin.edition_id"
 ADMIN_PATH_PREFIX = "/admin/"
@@ -76,8 +78,17 @@ def _authorized_admin_scopes(
     selection. In the exact contract it validates every candidate row's pinned
     issuance recursively; a missing or malformed required contract returns no
     scope before any organization or edition name is queried.
-    """
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    tuple[AuthorizedScopeProjection, ...]
+        The matching authorized admin scopes records in deterministic order.
+    """
     cached = getattr(
         request,
         _AUTHORIZED_ADMIN_SCOPES_CACHE_ATTRIBUTE,
@@ -109,8 +120,20 @@ def authorized_admin_organization_ids(
     Platform callers retain their explicit oversight branch and should not use
     this organizer-scope query as a substitute for it. Narrower authority does
     not flow upward into organization-record routes.
-    """
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    capability_codes : frozenset[str]
+        The closed set of capability codes accepted by the domain catalog.
+
+    Returns
+    -------
+    frozenset[UUID]
+        The matching authorized admin organization ids records in deterministic
+        order.
+    """
     return frozenset(
         scope.organization_id
         for scope in _authorized_admin_scopes(request)
@@ -126,8 +149,21 @@ def _authorized_admin_edition_scope_ids(
     *,
     capability_codes: frozenset[str],
 ) -> tuple[frozenset[UUID], frozenset[UUID]]:
-    """Return organization-wide and exact-edition authority separately."""
+    """Return organization-wide and exact-edition authority separately.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    capability_codes : frozenset[str]
+        The closed set of capability codes accepted by the domain catalog.
+
+    Returns
+    -------
+    tuple[frozenset[UUID], frozenset[UUID]]
+        The matching authorized admin edition scope ids records in deterministic
+        order.
+    """
     organization_ids: set[UUID] = set()
     edition_ids: set[UUID] = set()
     for scope in _authorized_admin_scopes(request):
@@ -149,8 +185,21 @@ def authorized_admin_edition_ids(
     *,
     capability_codes: frozenset[str],
 ) -> frozenset[UUID]:
-    """Resolve name-free edition IDs for org-wide or exact-edition authority."""
+    """Resolve name-free edition IDs for org-wide or exact-edition authority.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    capability_codes : frozenset[str]
+        The closed set of capability codes accepted by the domain catalog.
+
+    Returns
+    -------
+    frozenset[UUID]
+        The matching authorized admin edition ids records in deterministic
+        order.
+    """
     organization_ids, edition_ids = _authorized_admin_edition_scope_ids(
         request,
         capability_codes=capability_codes,
@@ -180,8 +229,35 @@ def authorized_admin_edition_for_route(
     organization, series, or edition name cannot enter the response before
     authorization. Every destination must still repeat its sealed-target
     policy decision after this candidate-resolution gate.
-    """
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+    capability_code : str
+        The stable capability code required by the operation.
+
+    Returns
+    -------
+    tuple[Organization, ConventionSeries, EventEdition]
+        The matching authorized admin edition for route records in deterministic
+        order.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     editions = EventEdition.objects.select_related("organization", "series").filter(
         organization__slug__iexact=organization_slug,
         series__slug__iexact=series_slug,
@@ -207,8 +283,18 @@ def has_active_admin_scope(request: HttpRequest) -> bool:
     Django's ``is_staff`` flag remains the boundary for specialist model
     administration.  Ordinary access requires at least one current capability
     whose complete compatibility or exact-lineage policy decision succeeds.
-    """
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    bool
+        `True` when the account may enter convention management; otherwise
+        `False`.
+    """
     cached = getattr(request, _ACTIVE_ADMIN_SCOPE_CACHE_ATTRIBUTE, _NOT_CACHED)
     if cached is not _NOT_CACHED:
         return bool(cached)
@@ -223,8 +309,18 @@ def has_active_admin_scope(request: HttpRequest) -> bool:
 
 
 def admin_shell_access(request: HttpRequest) -> dict[str, bool]:
-    """Expose the management-shell boundary without granting Django staff."""
+    """Expose the management-shell boundary without granting Django staff.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    dict[str, bool]
+        A mapping containing the resolved admin shell access data.
+    """
     account = _active_account(request)
     return {
         "active": account is not None,
@@ -241,8 +337,18 @@ def admin_organization_navigation(
     This is navigation only.  Every destination repeats its own capability
     decision.  Invalid delegated grants are excluded before an organization
     name can enter the projection.
-    """
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    tuple[dict[str, object], ...]
+        The matching admin organization navigation records in deterministic
+        order.
+    """
     cached = getattr(
         request,
         _ADMIN_ORGANIZATION_NAVIGATION_CACHE_ATTRIBUTE,
@@ -295,8 +401,18 @@ def admin_organization_navigation(
 
 
 def _authorized_admin_editions(request: HttpRequest) -> QuerySet[EventEdition]:
-    """Scope selector candidates before any edition row is evaluated."""
+    """Scope selector candidates before any edition row is evaluated.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    QuerySet[EventEdition]
+        The matching authorized admin editions records in deterministic order.
+    """
     cached = getattr(request, _AUTHORIZED_EDITIONS_CACHE_ATTRIBUTE, _NOT_CACHED)
     if cached is not _NOT_CACHED:
         return cast("QuerySet[EventEdition]", cached)
@@ -324,8 +440,18 @@ def _authorized_admin_editions(request: HttpRequest) -> QuerySet[EventEdition]:
 
 
 def selected_admin_edition(request: HttpRequest) -> EventEdition | None:
-    """Resolve and request-cache the selected bootstrap edition."""
+    """Resolve and request-cache the selected bootstrap edition.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    EventEdition | None
+        The resolved EventEdition | None for selected admin edition.
+    """
     cached = getattr(request, _REQUEST_CACHE_ATTRIBUTE, _NOT_CACHED)
     if cached is not _NOT_CACHED:
         return cached if isinstance(cached, EventEdition) else None
@@ -349,8 +475,18 @@ def selected_admin_edition(request: HttpRequest) -> EventEdition | None:
 
 
 def admin_edition_options(request: HttpRequest) -> dict[str, object]:
-    """Return selector state only for accounts with active scoped authority."""
+    """Return selector state only for accounts with active scoped authority.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    dict[str, object]
+        A mapping containing the resolved admin edition options data.
+    """
     if not has_active_admin_scope(request):
         selected_admin_edition(request)
         return {"available": False, "selected": None, "editions": ()}
@@ -407,8 +543,25 @@ def _safe_admin_return_path(request: HttpRequest) -> str:
 @login_required(login_url="staff-login")
 @require_POST
 def change_admin_edition_context(request: HttpRequest) -> HttpResponse:
-    """Select or clear an edition within the account's active authority."""
+    """Select or clear an edition within the account's active authority.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     if not has_active_admin_scope(request):
         raise PermissionDenied
 
@@ -457,6 +610,20 @@ class EditionContextAdmin(
         request: HttpRequest,
         edition: EventEdition,
     ) -> Q:
+        """Return edition context q.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        edition : EventEdition
+            The event edition that scopes the operation.
+
+        Returns
+        -------
+        Q
+            A Django query predicate for edition context q.
+        """
         del request
         value = getattr(edition, self.edition_context_value_attribute)
         return Q(**{self.edition_context_lookup: value})
@@ -467,9 +634,37 @@ class EditionContextAdmin(
         queryset: QuerySet[models.Model],
         edition: EventEdition,
     ) -> QuerySet[models.Model]:
+        """Return scope queryset to edition.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        queryset : QuerySet[models.Model]
+            The tenant-scoped queryset to filter or serialize.
+        edition : EventEdition
+            The event edition that scopes the operation.
+
+        Returns
+        -------
+        QuerySet[models.Model]
+            The matching scope queryset to edition records in deterministic order.
+        """
         return queryset.filter(self.edition_context_q(request, edition))
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[models.Model]:
+        """Return the permission-scoped queryset.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        QuerySet[models.Model]
+            The matching get queryset records in deterministic order.
+        """
         queryset = super().get_queryset(request)
         edition = selected_admin_edition(request)
         if edition is None:
@@ -477,6 +672,18 @@ class EditionContextAdmin(
         return self.scope_queryset_to_edition(request, queryset, edition)
 
     def get_list_filter(self, request: HttpRequest) -> Any:
+        """Return list filter.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Any
+            The resolved Any for the requested scope.
+        """
         list_filter = super().get_list_filter(request)
         if selected_admin_edition(request) is None:
             return list_filter
@@ -489,6 +696,18 @@ class EditionContextAdmin(
         )
 
     def get_changeform_initial_data(self, request: HttpRequest) -> dict[str, Any]:
+        """Return changeform initial data.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved get changeform initial data data.
+        """
         initial = super().get_changeform_initial_data(request)
         edition = selected_admin_edition(request)
         if edition is None:
@@ -512,6 +731,22 @@ class EditionContextAdmin(
         request: HttpRequest,
         **kwargs: Any,
     ) -> forms.ModelChoiceField[Any] | None:
+        """Return formfield for foreignkey.
+
+        Parameters
+        ----------
+        db_field : models.ForeignKey[Any, Any]
+            The db field evaluated while formfield for foreignkey.
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        forms.ModelChoiceField[Any] | None
+            The scoped choice field, or ``None`` for an unrelated relation.
+        """
         edition = selected_admin_edition(request)
         if edition is not None:
             if db_field.name == "edition":

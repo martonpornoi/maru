@@ -9,11 +9,14 @@ the currently lightest shard, with stable path and shard-index tie-breaks.
 from __future__ import annotations
 
 import argparse
-from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 INTEGRATION_TEST_DIRECTORY = REPOSITORY_ROOT / "tests" / "integration"
@@ -21,12 +24,27 @@ INTEGRATION_TEST_DIRECTORY = REPOSITORY_ROOT / "tests" / "integration"
 
 @dataclass(frozen=True, slots=True)
 class WeightedTestFile:
-    """An integration test file and its positive scheduling weight."""
+    """An integration test file and its positive scheduling weight.
+
+    Attributes
+    ----------
+    path
+        The filesystem path to read, validate, or write.
+    weight
+        The weight retained in this immutable projection.
+    """
 
     path: Path
     weight: int
 
     def __post_init__(self) -> None:
+        """Implement `__post_init__` for WeightedTestFile.
+
+        Raises
+        ------
+        ValueError
+            If the requested operation violates this domain contract.
+        """
         if self.weight < 1:
             raise ValueError("test-file weight must be positive")
 
@@ -36,8 +54,18 @@ def _path_key(path: Path) -> str:
 
 
 def discover_integration_tests(directory: Path) -> tuple[Path, ...]:
-    """Return every direct ``test_*.py`` integration file in stable order."""
+    """Return every direct ``test_*.py`` integration file in stable order.
 
+    Parameters
+    ----------
+    directory : Path
+        The filesystem path for directory.
+
+    Returns
+    -------
+    tuple[Path, ...]
+        The matching discover integration tests records in deterministic order.
+    """
     return tuple(
         sorted(
             (path for path in directory.glob("test_*.py") if path.is_file()),
@@ -47,8 +75,18 @@ def discover_integration_tests(directory: Path) -> tuple[Path, ...]:
 
 
 def weigh_test_files(test_files: Sequence[Path]) -> tuple[WeightedTestFile, ...]:
-    """Weigh files by byte size, using one byte for a possible empty file."""
+    """Weigh files by byte size, using one byte for a possible empty file.
 
+    Parameters
+    ----------
+    test_files : Sequence[Path]
+        The selected test files to validate in deterministic order.
+
+    Returns
+    -------
+    tuple[WeightedTestFile, ...]
+        The matching weigh test files records in deterministic order.
+    """
     return tuple(
         WeightedTestFile(path=path, weight=max(path.stat().st_size, 1))
         for path in test_files
@@ -58,8 +96,22 @@ def weigh_test_files(test_files: Sequence[Path]) -> tuple[WeightedTestFile, ...]
 def validate_shard_inputs(
     *, shard_index: int, shard_count: int, test_count: int
 ) -> None:
-    """Reject shard selections that could skip or accidentally broaden tests."""
+    """Reject shard selections that could skip or accidentally broaden tests.
 
+    Parameters
+    ----------
+    shard_index : int
+        The shard index evaluated while validate shard inputs.
+    shard_count : int
+        The bounded number of shard records.
+    test_count : int
+        The bounded number of test records.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     if test_count < 1:
         raise ValueError("no integration test files were discovered")
     if shard_count < 1:
@@ -73,8 +125,25 @@ def validate_shard_inputs(
 def partition_test_files(
     test_files: Sequence[WeightedTestFile], shard_count: int
 ) -> tuple[tuple[Path, ...], ...]:
-    """Greedily partition weighted files with deterministic stable tie-breaks."""
+    """Greedily partition weighted files with deterministic stable tie-breaks.
 
+    Parameters
+    ----------
+    test_files : Sequence[WeightedTestFile]
+        The selected test files to validate in deterministic order.
+    shard_count : int
+        The bounded number of shard records.
+
+    Returns
+    -------
+    tuple[tuple[Path, ...], ...]
+        The matching partition test files records in deterministic order.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     validate_shard_inputs(
         shard_index=1,
         shard_count=shard_count,
@@ -128,14 +197,34 @@ def _argument_parser() -> argparse.ArgumentParser:
 
 
 def invoke_pytest(arguments: Sequence[str]) -> int:
-    """Invoke pytest in-process and normalize its exit status to an integer."""
+    """Invoke pytest in-process and normalize its exit status to an integer.
 
+    Parameters
+    ----------
+    arguments : Sequence[str]
+        The arguments evaluated while invoke pytest.
+
+    Returns
+    -------
+    int
+        The resolved int for invoke pytest.
+    """
     return int(pytest.main(list(arguments)))
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Select one shard and invoke pytest in this Python process."""
+    """Select one shard and invoke pytest in this Python process.
 
+    Parameters
+    ----------
+    argv : Sequence[str] | None, default=None
+        The argv evaluated while main.
+
+    Returns
+    -------
+    int
+        The process exit status; zero indicates success.
+    """
     parser = _argument_parser()
     namespace, pytest_arguments = parser.parse_known_args(
         list(argv) if argv is not None else None

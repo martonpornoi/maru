@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Protocol, cast
+from typing import TYPE_CHECKING, Protocol, cast
 from uuid import UUID
 
 from django import template
@@ -30,6 +29,9 @@ from maru.authorization.policy import (
 from maru.events.admin_context import selected_admin_edition
 from maru.events.models import EventEdition
 from maru.organizations.models import ConventionSeries, Organization
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 register = template.Library()
 
@@ -260,14 +262,14 @@ def _object_scope_values(  # noqa: PLR0911, PLR0912
         )
     model_label = str(getattr(getattr(value, "_meta", None), "label_lower", ""))
     if model_label == "workforce.department":
-        department = cast(_DepartmentContextObject, value)
+        department = cast("_DepartmentContextObject", value)
         return department.organization_id, department.edition_id, department.id, None
     if model_label == "workforce.position":
         from maru.authorization.bindings import (  # noqa: PLC0415
             workforce_position_binding_id,
         )
 
-        position = cast(_PositionContextObject, value)
+        position = cast("_PositionContextObject", value)
         return (
             position.organization_id,
             position.edition_id,
@@ -279,7 +281,7 @@ def _object_scope_values(  # noqa: PLR0911, PLR0912
             charity_selection_binding_id,
         )
 
-        selection = cast(_ResponsibleDepartmentContextObject, value)
+        selection = cast("_ResponsibleDepartmentContextObject", value)
         return (
             selection.organization_id,
             selection.edition_id,
@@ -289,7 +291,7 @@ def _object_scope_values(  # noqa: PLR0911, PLR0912
     if model_label == "venues.editionspaceselection":
         from maru.venues.bindings import edition_space_binding_id  # noqa: PLC0415
 
-        selection = cast(_ResponsibleDepartmentContextObject, value)
+        selection = cast("_ResponsibleDepartmentContextObject", value)
         return (
             selection.organization_id,
             selection.edition_id,
@@ -336,7 +338,7 @@ def _typed_target(
         )
         from maru.charities.models import CharitySelection  # noqa: PLC0415
 
-        charity_selection_id = cast(UUID | str, kwargs.get("selection_id"))
+        charity_selection_id = cast("UUID | str", kwargs.get("selection_id"))
         charity_selection = (
             CharitySelection.objects.filter(
                 pk=charity_selection_id,
@@ -358,7 +360,7 @@ def _typed_target(
         from maru.venues.bindings import edition_space_binding_id  # noqa: PLC0415
         from maru.venues.models import EditionSpaceSelection  # noqa: PLC0415
 
-        space_selection_id = cast(UUID | str, kwargs.get("space_selection_id"))
+        space_selection_id = cast("UUID | str", kwargs.get("space_selection_id"))
         space_selection = (
             EditionSpaceSelection.objects.filter(
                 pk=space_selection_id,
@@ -488,8 +490,18 @@ def _inferred_spec(
 
 @register.simple_tag(takes_context=True)
 def maru_page_access(context: template.Context) -> PageAccessSummary:
-    """Resolve the shared component from an explicit spec or page context."""
+    """Resolve the shared component from an explicit spec or page context.
 
+    Parameters
+    ----------
+    context : template.Context
+        The request context supplied by the calling framework.
+
+    Returns
+    -------
+    PageAccessSummary
+        The resolved PageAccessSummary for maru page access.
+    """
     if context.get("maru_suppress_page_access_component"):
         return unavailable_page_access()
     request = context.get("request")

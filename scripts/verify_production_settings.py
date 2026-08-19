@@ -5,10 +5,12 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[1]
 MANAGE_PY: Final = REPOSITORY_ROOT / "src" / "manage.py"
@@ -82,8 +84,20 @@ def verification_environment(
     *,
     exact_provenance_required: Literal["false", "true"],
 ) -> dict[str, str]:
-    """Build one isolated child environment without inherited Maru settings."""
+    """Build one isolated child environment without inherited Maru settings.
 
+    Parameters
+    ----------
+    parent_environment : Mapping[str, str]
+        The parent environment mapping to validate or transform.
+    exact_provenance_required : Literal['false', 'true']
+        The exact provenance required evaluated while verification environment.
+
+    Returns
+    -------
+    dict[str, str]
+        A mapping containing the resolved verification environment data.
+    """
     environment = {
         name: value
         for name, value in parent_environment.items()
@@ -97,8 +111,18 @@ def verification_environment(
 def verify_production_settings(
     parent_environment: Mapping[str, str] | None = None,
 ) -> int:
-    """Run both supported exact-provenance settings in separate processes."""
+    """Run both supported exact-provenance settings in separate processes.
 
+    Parameters
+    ----------
+    parent_environment : Mapping[str, str] | None, default=None
+        The parent environment mapping to validate or transform.
+
+    Returns
+    -------
+    int
+        The resolved int for verify production settings.
+    """
     inherited_environment = (
         os.environ if parent_environment is None else parent_environment
     )
@@ -120,6 +144,13 @@ def verify_production_settings(
 
 
 def main() -> None:
+    """Run the command-line entry point.
+
+    Raises
+    ------
+    SystemExit
+        If production-settings verification detects an unsafe configuration.
+    """
     raise SystemExit(verify_production_settings())
 
 
