@@ -1,0 +1,80 @@
+{% extends "registration/base_public.html" %}
+
+{% block title %}Edit current profile details{% endblock %}
+
+{% block content %}
+  <a class="button secondary" href="{% url 'public-registration-profile' registration.edition_id %}">
+    Back to registration profile
+  </a>
+
+  <div class="page-heading">
+    <p class="eyebrow">Your convention profile</p>
+    <h1>Edit current profile details</h1>
+    <p>
+      These values are kept separately from your immutable registration
+      submission. Each save appends a new revision for this edition.
+    </p>
+  </div>
+
+  {% if profile_extension_editors %}
+    <div class="profile-grid">
+      {% for editor in profile_extension_editors %}
+        <section class="profile-card">
+          <p class="section-kicker">{{ editor.field.classification }} profile field</p>
+          <h2>{{ editor.field.label }}</h2>
+          <p>{{ editor.field.purpose }}</p>
+          {% if editor.field.help_text %}<p class="muted">{{ editor.field.help_text }}</p>{% endif %}
+          <dl>
+            <div>
+              <dt>Audience</dt>
+              <dd>
+                {% if editor.field.audience_policy == "self" %}Only you
+                {% elif editor.field.audience_policy == "confirmed_attendees" %}Confirmed attendees when directory consent is current
+                {% elif editor.field.audience_policy == "public" %}Public attendee directory when directory consent is current
+                {% else %}Policy-controlled audience{% endif %}
+              </dd>
+            </div>
+            <div>
+              <dt>Current value</dt>
+              <dd>
+                {% if editor.field.current_value is None %}Not supplied
+                {% elif editor.field.field_type == "boolean" %}{{ editor.field.current_value|yesno:"Yes,No" }}
+                {% elif editor.field.field_type == "multiple_choice" %}{{ editor.field.current_value|join:", " }}
+                {% else %}{{ editor.field.current_value }}{% endif %}
+              </dd>
+            </div>
+            <div><dt>Revision</dt><dd>{{ editor.field.current_sequence }}</dd></div>
+          </dl>
+
+          {% if editor.form %}
+            <form
+              method="post"
+              action="{% url 'update-my-profile-extension-value' registration.edition_id editor.field.field_id %}"
+              novalidate
+            >
+              {% csrf_token %}
+              {% for hidden in editor.form.hidden_fields %}{{ hidden }}{% endfor %}
+              {{ editor.form.non_field_errors }}
+              <div class="field">
+                {{ editor.form.value.errors }}
+                {{ editor.form.value.label_tag }}
+                {{ editor.form.value }}
+                {% if editor.form.value.help_text %}<small>{{ editor.form.value.help_text }}</small>{% endif %}
+              </div>
+              <button class="button" type="submit">Save current detail</button>
+            </form>
+          {% else %}
+            <p class="restricted-note">
+              This value is visible to you but maintained by authorized registration staff.
+            </p>
+          {% endif %}
+        </section>
+      {% endfor %}
+    </div>
+  {% else %}
+    <section class="empty-state">
+      <h2>No current profile details are requested</h2>
+      <p>This edition has no active self-visible profile extensions.</p>
+    </section>
+  {% endif %}
+{% endblock %}

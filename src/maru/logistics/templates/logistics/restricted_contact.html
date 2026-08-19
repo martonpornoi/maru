@@ -1,0 +1,27 @@
+{% extends "admin/base_site.html" %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-management-page">
+    <header class="maru-page-header">
+      <div>
+        <p class="maru-eyebrow">{{ organization.name }} / {{ convention_series.name }} / {{ edition.name }}</p>
+        <h1>Restricted logistics contact</h1>
+        <p>This purpose-bound read was audited and this page expires from normal navigation.</p>
+      </div>
+    </header>
+    <section class="module">
+      <dl>
+        <dt>Label</dt><dd>{{ contact.label }}</dd>
+        <dt>Recipient</dt><dd>{{ contact.recipient_name|default:"Not specified" }}</dd>
+        <dt>Address</dt><dd>{{ contact.postal_address|linebreaksbr }}</dd>
+        <dt>Access instructions</dt><dd>{{ contact.access_instructions|default:"None"|linebreaksbr }}</dd>
+        <dt>Email</dt><dd>{{ contact.contact_email|default:"Not specified" }}</dd>
+        <dt>Phone</dt><dd>{{ contact.contact_phone|default:"Not specified" }}</dd>
+        <dt>Retention deadline</dt><dd>{{ contact.retention_until|default:"Organization record" }}</dd>
+      </dl>
+      <p><a href="{% url 'logistics-workspace' organization.slug convention_series.slug edition.slug %}">Return to Logistics</a></p>
+    </section>
+  </div>
+{% endblock %}

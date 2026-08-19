@@ -94,6 +94,36 @@ def test_unknown_event_and_version_are_rejected() -> None:
         )
 
 
+def test_profile_extension_value_event_is_minimized_and_strict() -> None:
+    payload = {
+        "field_id": "17bc39a2-9cf4-4876-8fc8-65469223843e",
+        "field_version": "2",
+        "registration_id": "5cfba0c4-7b50-4c29-a6ae-3f4c5def3792",
+        "sequence": "3",
+        "writer_kind": "staff",
+    }
+    validate_event_payload(
+        event_name="registration.profile_extension.value_appended.v1",
+        schema_version=1,
+        payload=payload,
+    )
+
+    invalid_payloads = (
+        {**payload, "value": "must-not-leak"},
+        {**payload, "field_id": "not-a-uuid"},
+        {**payload, "field_version": "0"},
+        {**payload, "sequence": "1.0"},
+        {**payload, "writer_kind": "platform_admin"},
+    )
+    for invalid_payload in invalid_payloads:
+        with pytest.raises(ValidationError):
+            validate_event_payload(
+                event_name="registration.profile_extension.value_appended.v1",
+                schema_version=1,
+                payload=invalid_payload,
+            )
+
+
 @pytest.mark.parametrize(
     "payload",
     [

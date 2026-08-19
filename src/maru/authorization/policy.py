@@ -1,6 +1,6 @@
 """Deny-by-default policy evaluation over server-resolved targets."""
 
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, TypeGuard, cast
@@ -11,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import F, Model, Q
 from django.utils import timezone
 
+from maru.authorization.bindings import resource_binding_target_exists
 from maru.authorization.catalog import POLICY_VERSION, ScopeLevel, capability
 from maru.authorization.models import (
     AUTHORITY_PROVENANCE_ACTIVATION_POLICY_VERSION,
@@ -224,17 +225,7 @@ def resolve_resource_target(
     )
     if row is None:
         return None
-    if row["resource_kind"] != ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION:
-        return None
-    from maru.workforce.models import Position  # noqa: PLC0415
-
-    position_exists = Position.objects.filter(
-        pk=row["resource_id"],
-        organization_id=row["organization_id"],
-        edition_id=row["edition_id"],
-        department_id=row["department_id"],
-    ).exists()
-    if not position_exists:
+    if not resource_binding_target_exists(row):
         return None
     return _seal_target(
         organization_id=row["organization_id"],
@@ -511,6 +502,33 @@ def _exact_issuance_allows(
     )
 
 
+def _logistics_manifest_projection_targets(
+    bindings: Collection[Mapping[str, Any]],
+) -> dict[UUID, tuple[UUID, UUID, UUID]]:
+    from maru.logistics.models import LogisticsManifest  # noqa: PLC0415
+
+    resource_ids = {
+        row["resource_id"]
+        for row in bindings
+        if row["resource_kind"] == ScopedResourceBinding.ResourceKind.LOGISTICS_MANIFEST
+    }
+    return {
+        row["id"]: (
+            row["organization_id"],
+            row["edition_id"],
+            row["responsible_department_id"],
+        )
+        for row in LogisticsManifest.objects.filter(id__in=resource_ids)
+        .order_by()
+        .values(
+            "id",
+            "organization_id",
+            "edition_id",
+            "responsible_department_id",
+        )
+    }
+
+
 def _bulk_authority_projection_targets(
     scope_keys: Collection[_AuthorityScopeKey],
 ) -> dict[_AuthorityScopeKey, ResolvedAuthorizationTarget]:
@@ -526,8 +544,10 @@ def _bulk_authority_projection_targets(
     if not scope_keys:
         return {}
 
+    from maru.charities.models import CharitySelection  # noqa: PLC0415
     from maru.events.models import EventEdition  # noqa: PLC0415
     from maru.organizations.models import Organization  # noqa: PLC0415
+    from maru.venues.models import EditionSpaceSelection  # noqa: PLC0415
     from maru.workforce.models import Department, Position  # noqa: PLC0415
 
     organization_ids = {scope[0] for scope in scope_keys}
@@ -589,6 +609,48 @@ def _bulk_authority_projection_targets(
         .order_by()
         .values("id", "organization_id", "edition_id", "department_id")
     }
+    charity_selection_ids = {
+        row["resource_id"]
+        for row in bindings.values()
+        if row["resource_kind"] == ScopedResourceBinding.ResourceKind.CHARITY_SELECTION
+    }
+    charity_selections = {
+        row["id"]: (
+            row["organization_id"],
+            row["edition_id"],
+            row["responsible_department_id"],
+        )
+        for row in CharitySelection.objects.filter(id__in=charity_selection_ids)
+        .order_by()
+        .values(
+            "id",
+            "organization_id",
+            "edition_id",
+            "responsible_department_id",
+        )
+    }
+    venue_space_ids = {
+        row["resource_id"]
+        for row in bindings.values()
+        if row["resource_kind"]
+        == ScopedResourceBinding.ResourceKind.VENUE_EDITION_SPACE
+    }
+    venue_spaces = {
+        row["id"]: (
+            row["organization_id"],
+            row["edition_id"],
+            row["responsible_department_id"],
+        )
+        for row in EditionSpaceSelection.objects.filter(id__in=venue_space_ids)
+        .order_by()
+        .values(
+            "id",
+            "organization_id",
+            "edition_id",
+            "responsible_department_id",
+        )
+    }
+    logistics_manifests = _logistics_manifest_projection_targets(bindings.values())
 
     resolved: dict[_AuthorityScopeKey, ResolvedAuthorizationTarget] = {}
     for scope_key in scope_keys:
@@ -620,15 +682,43 @@ def _bulk_authority_projection_targets(
             )
             continue
         binding = bindings.get(binding_id)
+        workforce_target_valid = (
+            binding is not None
+            and binding["resource_kind"]
+            == ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION
+            and positions.get(binding["resource_id"])
+            == (organization_id, edition_id, department_id)
+        )
+        charity_target_valid = (
+            binding is not None
+            and binding["resource_kind"]
+            == ScopedResourceBinding.ResourceKind.CHARITY_SELECTION
+            and charity_selections.get(binding["resource_id"])
+            == (organization_id, edition_id, department_id)
+        )
+        venue_target_valid = (
+            binding is not None
+            and binding["resource_kind"]
+            == ScopedResourceBinding.ResourceKind.VENUE_EDITION_SPACE
+            and venue_spaces.get(binding["resource_id"])
+            == (organization_id, edition_id, department_id)
+        )
         if (
             binding is None
             or binding["organization_id"] != organization_id
             or binding["edition_id"] != edition_id
             or binding["department_id"] != department_id
-            or binding["resource_kind"]
-            != ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION
-            or positions.get(binding["resource_id"])
-            != (organization_id, edition_id, department_id)
+            or not (
+                workforce_target_valid
+                or charity_target_valid
+                or venue_target_valid
+                or (
+                    binding["resource_kind"]
+                    == ScopedResourceBinding.ResourceKind.LOGISTICS_MANIFEST
+                    and logistics_manifests.get(binding["resource_id"])
+                    == (organization_id, edition_id, department_id)
+                )
+            )
         ):
             continue
         resolved[scope_key] = _seal_target(

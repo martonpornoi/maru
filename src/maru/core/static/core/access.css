@@ -1,0 +1,149 @@
+.maru-access-summary,
+.maru-access-workspace__panel,
+.maru-access-preview-banner {
+  border: 1px solid color-mix(in srgb, var(--primary, #0b3b70) 22%, #d8dee8);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--body-bg, #fff) 96%, #eaf2fb);
+  padding: 1rem 1.15rem;
+  margin: 0 0 1.25rem;
+}
+
+.maru-access-summary__heading,
+.maru-access-preview-banner,
+.maru-access-workspace__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.maru-access-summary h2,
+.maru-access-workspace h1,
+.maru-access-workspace h2 {
+  margin-top: 0;
+}
+
+.maru-access-summary__kicker {
+  margin: 0 0 0.25rem;
+  color: var(--body-quiet-color, #4d5968);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.maru-access-summary__scope {
+  margin: 0;
+  color: var(--body-quiet-color, #4d5968);
+}
+
+.maru-access-summary__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.maru-access-summary__audiences,
+.maru-access-summary__decisions,
+.maru-access-preview-capabilities,
+.maru-access-assignment-list {
+  list-style: none;
+  padding: 0;
+}
+
+.maru-access-summary__audiences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.maru-access-summary__audiences li,
+.maru-access-preview-capabilities > li > span {
+  border-radius: 999px;
+  background: #eaf2fb;
+  color: #123a62;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.maru-access-summary__decisions li,
+.maru-access-preview-capabilities li,
+.maru-access-assignment-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid #d8dee8;
+  padding: 0.7rem 0;
+}
+
+.maru-access-summary__decisions span,
+.maru-access-assignment-list span,
+.maru-access-assignment-list small {
+  display: block;
+  color: var(--body-quiet-color, #4d5968);
+}
+
+.maru-access-summary__note {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  color: var(--body-quiet-color, #4d5968);
+}
+
+.maru-access-workspace {
+  max-width: 78rem;
+}
+
+.maru-access-workspace__heading {
+  margin-bottom: 1.25rem;
+}
+
+.maru-access-preview-banner {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-color: #d58a00;
+  background: #fff4d6;
+  color: #452c00;
+}
+
+.maru-access-preview-banner p {
+  margin-bottom: 0;
+}
+
+.maru-access-preview-forms,
+.maru-access-assignment-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.maru-access-preview-forms form,
+.maru-access-assignment-form > div,
+.maru-access-assignment-list form {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.maru-access-assignment-form__wide {
+  grid-column: 1 / -1;
+}
+
+.maru-access-assignment-list > li > div {
+  min-width: 16rem;
+}
+
+@media (max-width: 48rem) {
+  .maru-access-summary__heading,
+  .maru-access-preview-banner,
+  .maru-access-workspace__heading,
+  .maru-access-preview-capabilities li,
+  .maru-access-assignment-list li {
+    display: block;
+  }
+
+  .maru-access-summary__actions,
+  .maru-access-assignment-list form {
+    margin-top: 0.75rem;
+  }
+}

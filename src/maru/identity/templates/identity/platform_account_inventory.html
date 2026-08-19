@@ -1,0 +1,175 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'identity/account_invitations.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}User accounts · Maru{% endblock %}
+{% block baseline_breadcrumbs %}Platform administration &rsaquo; User accounts{% endblock %}
+
+{% block baseline_content %}
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">People</p>
+    <h1>User accounts</h1>
+    <p class="baseline-intro">
+      Find the people who can sign in to Maru and see whether their account
+      invitation is complete. Creating an account does not give the person a
+      convention role or registration.
+    </p>
+    <div class="baseline-form-actions">
+      <a class="baseline-primary-link" href="{% url 'platform-account-invite' %}">Invite a user account</a>
+      <a class="baseline-secondary-link" href="{% url 'baseline-admin-home' %}">Continue to organization setup</a>
+    </div>
+  </header>
+
+  {% if account_inventory_state == "invalid" %}
+    <section class="baseline-state baseline-state--error identity-state-panel" role="alert">
+      <h2>Review the inventory request</h2>
+      <p>
+        Maru did not run an account search or release identity labels. Remove
+        unsupported options and review the highlighted filters.
+      </p>
+    </section>
+  {% elif account_inventory_state == "stale" %}
+    <section class="baseline-state baseline-state--warning identity-state-panel" role="status">
+      <h2>The account inventory changed</h2>
+      <p>
+        This page cursor no longer describes one coherent inventory version.
+        <a href="{% url 'platform-account-inventory' %}">Start again from the first page</a>.
+      </p>
+    </section>
+  {% elif account_inventory_state == "limit_exceeded" %}
+    <section class="baseline-state baseline-state--warning identity-state-panel" role="status">
+      <h2>The complete result cannot be shown safely</h2>
+      <p>
+        Maru did not truncate a protected collection. Narrow the filters or ask
+        an identity operator to review the code-owned inventory ceiling.
+      </p>
+    </section>
+  {% elif account_inventory_state == "unavailable" %}
+    <section class="baseline-state baseline-state--error identity-state-panel" role="alert">
+      <h2>Accounts are temporarily unavailable</h2>
+      <p>
+        Required authorization, projection, or read-audit evidence could not be
+        completed. No account labels or partial results were released.
+      </p>
+    </section>
+  {% elif inventory %}
+    <section class="baseline-panel" aria-labelledby="account-inventory-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">People</p>
+          <h2 id="account-inventory-title">Current user accounts</h2>
+        </div>
+        <span class="baseline-count">
+          {{ inventory.items|length }} result{{ inventory.items|length|pluralize }} · version {{ inventory.aggregate_version }}
+        </span>
+      </div>
+      {% if inventory.items %}
+        <div class="baseline-table-wrap" aria-label="User account results">
+          <table class="baseline-table identity-account-table">
+            <caption class="baseline-visually-hidden">
+              Audited platform accounts on this bounded result page
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Account</th>
+                <th scope="col">Kind</th>
+                <th scope="col">Access state</th>
+                <th scope="col">Current invitation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in inventory.items %}
+                <tr>
+                  <th scope="row" data-label="Account">
+                    <span class="baseline-record-name">
+                      {% if item.display_name %}{{ item.display_name }}{% elif item.login_handle %}{{ item.login_handle }}{% else %}Unnamed account{% endif %}
+                    </span>
+                    <span class="identity-account-contact">{{ item.email }}</span>
+                    {% if item.login_handle %}<span class="baseline-record-slug">@{{ item.login_handle }}</span>{% endif %}
+                  </th>
+                  <td data-label="Kind">
+                    {% if item.account_kind == "platform_administrator" %}Platform administrator{% else %}Person{% endif %}
+                  </td>
+                  <td data-label="Access state">
+                    <span class="identity-status" data-state="{% if item.is_active %}active{% else %}inactive{% endif %}">
+                      {% if item.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                    <span class="identity-secondary-state">
+                      {% if item.is_email_verified %}Email verified{% else %}Email not verified{% endif %}
+                    </span>
+                  </td>
+                  <td data-label="Current invitation">
+                    {% if item.current_invitation %}
+                      <a class="baseline-record-name" href="{% url 'platform-account-invitation-detail' item.current_invitation.invitation_id %}">
+                        {{ item.current_invitation.status|capfirst }} · version {{ item.current_invitation.aggregate_version }}
+                      </a>
+                      <span class="identity-secondary-state">
+                        Delivery: {{ item.current_invitation.delivery_state|default:"No current delivery"|capfirst }}
+                      </span>
+                    {% else %}
+                      <span>No invitation history</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if next_page_url %}
+          <nav class="identity-pagination" aria-label="Account inventory pages">
+            <a class="baseline-primary-link" rel="next" href="{{ next_page_url }}">Next bounded page</a>
+          </nav>
+        {% endif %}
+      {% else %}
+        <div class="baseline-state" data-state="empty">
+          <h3>No user accounts match these filters</h3>
+          <p>
+            Clear or change the filters. Maru did not turn an empty result into
+            proof that a particular identity does or does not exist.
+          </p>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <section class="baseline-panel identity-filter-panel" aria-labelledby="account-filter-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Refine the list</p>
+        <h2 id="account-filter-title">Search and filter</h2>
+      </div>
+    </div>
+    <form method="get" action="{% url 'platform-account-inventory' %}" class="baseline-form identity-filter-form" novalidate>
+      {% if filter_form.non_field_errors %}
+        <div class="baseline-errors" role="alert">{{ filter_form.non_field_errors }}</div>
+      {% endif %}
+      <div class="identity-filter-grid">
+        {% include "core/_baseline_form_field.html" with field=filter_form.search %}
+        {% include "core/_baseline_form_field.html" with field=filter_form.search_mode %}
+        {% include "core/_baseline_form_field.html" with field=filter_form.kind %}
+        {% include "core/_baseline_form_field.html" with field=filter_form.state %}
+      </div>
+      <div class="baseline-form-actions">
+        <button type="submit">Apply filters</button>
+        <a class="baseline-secondary-link" href="{% url 'platform-account-inventory' %}">Clear filters</a>
+      </div>
+    </form>
+  </section>
+
+  {% include "core/_baseline_access_summary.html" with access_operation="view the audited platform account inventory and manage invitations" %}
+
+  <aside class="baseline-boundary" aria-labelledby="account-boundary-title">
+    <p class="baseline-kicker">Access boundary</p>
+    <h2 id="account-boundary-title">A user account is not a convention role</h2>
+    <p>
+      Inviting or activating a person account creates no organization
+      membership, Executive Board appointment, registration, application,
+      volunteer role, Department position, shift, entitlement, or public entry.
+      Those relationships begin only in their own governed workflows.
+    </p>
+  </aside>
+{% endblock %}

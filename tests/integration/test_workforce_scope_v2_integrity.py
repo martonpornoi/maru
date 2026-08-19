@@ -7,7 +7,13 @@ from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import IntegrityError, close_old_connections, connection, transaction
+from django.db import (
+    IntegrityError,
+    close_old_connections,
+    connection,
+    connections,
+    transaction,
+)
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 
@@ -322,7 +328,7 @@ def test_concurrent_department_reparenting_cannot_create_write_skew_cycle() -> N
         except StructureVersionConflictError:
             return "version_conflict"
         finally:
-            close_old_connections()
+            connections.close_all()
         return "committed"
 
     with ThreadPoolExecutor(max_workers=2) as executor:

@@ -80,12 +80,25 @@ shared `/admin/` shell. Pages 1–2 are platform-administrator-only; active
 scoped non-staff accounts may use permitted Pages 3–8 and Convention work,
 while specialist records still require independent Django staff/model
 permissions.
+After signing in as the platform administrator, browse the searchable API
+reference at <http://127.0.0.1:8000/api/v1/docs/> or the reading-focused ReDoc
+view at <http://127.0.0.1:8000/api/v1/redoc/>. Tooling uses the canonical
+machine-readable schema at <http://127.0.0.1:8000/api/v1/schema>. All three
+render the same contract; see [development setup](docs/development/setup.md)
+for the generation and security boundary.
 For a new empty database, create one
 bootstrap administrator with:
 
 ```powershell
 uv run python src/manage.py createsuperuser
 ```
+
+This management command is the only generic bootstrap path for the first
+platform administrator. The Django **Accounts** specialist record is
+inspection-only: it cannot create people, set or reset passwords, change
+platform privileges or lifecycle, or attach convention relationships. After
+bootstrap, invite ordinary person accounts from **Platform administration >
+Accounts > Invite** so each recipient chooses their own password.
 
 The local baseline prepared during ADR 0030 uses:
 

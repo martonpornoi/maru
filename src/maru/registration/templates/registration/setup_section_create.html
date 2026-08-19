@@ -1,0 +1,50 @@
+{% extends "registration/setup_action_base.html" %}
+
+{% block registration_action_title %}Create registration section{% endblock %}
+{% block registration_action_breadcrumb %}<a href="{% url 'registration-setup-configuration' organization.slug convention_series.slug edition.slug configuration.id %}">Builder</a> &rsaquo; Add section{% endblock %}
+{% block registration_action_heading %}Create registration section{% endblock %}
+{% block registration_action_intro %}
+  Add one attendee-facing grouping to {{ configuration.name }}. Questions remain
+  separate records and are not part of this bounded slice.
+{% endblock %}
+{% block registration_reload_link %}
+  <a href="{% url 'registration-setup-section-create' organization.slug convention_series.slug edition.slug configuration.id %}">Reload the latest section form</a>
+{% endblock %}
+
+{% block registration_action_content %}
+  {% if not registration_mutations_allowed and not show_submitted_form %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>Section changes are read-only</h2>
+      <p>{{ registration_mutation_blocked_reason }}</p>
+    </div>
+  {% else %}
+    {% if form.non_field_errors or form.expected_version.errors or form.retry_key.errors %}
+      <div class="baseline-errors" role="alert">{{ form.non_field_errors }}{{ form.expected_version.errors }}{{ form.retry_key.errors }}</div>
+    {% endif %}
+    <form method="post" action="{% url 'create-registration-setup-section' organization.slug convention_series.slug edition.slug configuration.id %}" class="baseline-form registration-setup-form" novalidate>
+      {% csrf_token %}
+      {{ form.expected_version }}
+      {{ form.retry_key }}
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="registration-section-details-title">
+        <div class="baseline-section-heading">
+          <p class="baseline-kicker">Attendee-facing structure</p>
+          <h2 id="registration-section-details-title">Section details and placement</h2>
+          <p>
+            The title and description may be shown to attendees. The key is a
+            stable integration identifier. Placement uses a bounded preceding
+            section so keyboard use never depends on dragging.
+          </p>
+        </div>
+        {% include "core/_baseline_form_field.html" with field=form.key %}
+        {% include "core/_baseline_form_field.html" with field=form.title %}
+        {% include "core/_baseline_form_field.html" with field=form.description %}
+        {% include "core/_baseline_form_field.html" with field=form.after_section_id %}
+        {% include "core/_baseline_form_field.html" with field=form.reason %}
+      </section>
+      <div class="baseline-form-actions registration-primary-actions">
+        <button type="submit"{% if reload_required or not registration_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Create section</button>
+        <a class="baseline-secondary-link" href="{% url 'registration-setup-configuration' organization.slug convention_series.slug edition.slug configuration.id %}">Cancel</a>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}

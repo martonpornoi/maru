@@ -1,7 +1,7 @@
 # Synthetic demonstration data
 
 Status: Implemented synthetic fixture; public-roster rehearsal retired fail-closed
-Last updated: 2026-08-01
+Last updated: 2026-08-03
 
 ## Purpose and requirements
 
@@ -72,8 +72,11 @@ remain verifiable after the edition becomes read-only, but the fixture refuses
 to create a missing Position or assignment after Draft/Preparing. Existing
 legacy demo Department identifiers are preserved for upgrade compatibility.
 
-Every Maru model registered under `/admin/` has at least one deterministic
-example after seeding. The registration detail page is a person-focused
+Every ordinary Maru data model registered under `/admin/` has at least one
+deterministic example after seeding. Operational liveness evidence is the
+deliberate exception: the fixture never fabricates a
+`PlatformInvitationSchedulerRun`, because doing so would make readiness report
+a scheduler that has not actually run. The registration detail page is a person-focused
 read-only dossier: it renders the actual submitted questions and answers,
 account/restriction status, organizer roles and convention capacities,
 entitlements and Infinity status, payment totals, internal comments, and links

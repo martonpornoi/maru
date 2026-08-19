@@ -1,0 +1,114 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <main id="content" class="maru-management-page">
+    <header class="maru-page-header">
+      <div>
+        <p class="maru-eyebrow">{{ organization.name }} / {{ convention_series.name }} / {{ edition.name }}</p>
+        <h1>Venues and spaces</h1>
+        <p>Reuse governed property facts, then make explicit edition selections and capacity snapshots.</p>
+      </div>
+      {% if can_manage_properties %}
+        <p><a class="button" href="{% url 'venue-property-create-page' organization.slug convention_series.slug edition.slug %}">+ Register property</a></p>
+      {% endif %}
+    </header>
+
+    <section class="module" aria-labelledby="venue-space-title">
+      <h2 id="venue-space-title">Edition spaces</h2>
+      {% if spaces %}
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Venue / space</th>
+              <th scope="col">Configuration</th>
+              <th scope="col">Capacities</th>
+              <th scope="col">Availability</th>
+              <th scope="col">Bookings</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for space in spaces %}
+              <tr>
+                <th scope="row">
+                  <a href="{% url 'venue-space-schedule-page' organization.slug convention_series.slug edition.slug space.id %}">
+                    {{ space.venue_name }} / {{ space.local_name }}
+                  </a>
+                </th>
+                <td>{{ space.configuration_name }}</td>
+                <td>seated {{ space.seated_capacity }}, standing {{ space.standing_capacity }}, table {{ space.table_capacity }}, fire {{ space.fire_capacity }}</td>
+                <td>version {{ space.availability_version }}</td>
+                <td>{{ space.active_booking_count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No physical spaces are selected for this edition.</p>
+      {% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="venue-selection-title">
+      <h2 id="venue-selection-title">Selected properties</h2>
+      {% if venue_selections %}
+        <ul>
+          {% for selection in venue_selections %}
+            <li><strong>{{ selection.local_name }}</strong> - {{ selection.property.public_name }} - {{ selection.responsible_department.name }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No reusable property has been selected for this edition.</p>
+      {% endif %}
+    </section>
+
+    {% if can_select %}
+      <section class="module" aria-labelledby="select-property-title">
+        <h2 id="select-property-title">Select a property for this edition</h2>
+        <p>The responsible Department becomes the exact scope for every selected physical space.</p>
+        <form method="post" action="{% url 'venue-edition-select' organization.slug convention_series.slug edition.slug %}">
+          {% csrf_token %}
+          {{ venue_selection_form.as_p }}
+          <button type="submit">Select property</button>
+        </form>
+      </section>
+
+      <section class="module" aria-labelledby="select-space-title">
+        <h2 id="select-space-title">Select a physical space or combination</h2>
+        <p>A physical room uses its approved source configuration. A combination requires an explicit edition capacity snapshot.</p>
+        <form method="post" action="{% url 'venue-space-select' organization.slug convention_series.slug edition.slug %}">
+          {% csrf_token %}
+          {{ space_selection_form.as_p }}
+          <button type="submit">Select space</button>
+        </form>
+      </section>
+    {% endif %}
+
+    <section class="module" aria-labelledby="venue-property-title">
+      <h2 id="venue-property-title">Organizer property directory</h2>
+      <p>Provider, contact, contract, and internal facts on this directory are restricted and audited.</p>
+      {% if properties %}
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Property</th>
+              <th scope="col">Provider / legal name</th>
+              <th scope="col">Location</th>
+              <th scope="col">Lifecycle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for property in properties %}
+              <tr>
+                <th scope="row"><a href="{% url 'venue-property-detail-page' organization.slug convention_series.slug edition.slug property.id %}">{{ property.public_name }}</a></th>
+                <td>{{ property.provider_name|default:property.legal_name }}</td>
+                <td>{{ property.location_name }}{% if property.country_code %} / {{ property.country_code }}{% endif %}</td>
+                <td>{{ property.lifecycle|capfirst }} / version {{ property.aggregate_version }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No reusable hotel or venue properties are registered.</p>
+      {% endif %}
+    </section>
+  </main>
+{% endblock %}

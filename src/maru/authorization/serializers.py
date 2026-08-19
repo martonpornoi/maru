@@ -1,5 +1,7 @@
 """Human-readable Management Console access contracts."""
 
+from typing import Any, cast
+
 from rest_framework import serializers
 
 
@@ -10,8 +12,10 @@ class AccessCapabilitySerializer(serializers.Serializer[dict[str, object]]):
 
 
 class AccessGroupSerializer(serializers.Serializer[dict[str, object]]):
+    role_version_id = serializers.UUIDField()
     code = serializers.CharField()
     name = serializers.CharField()
+    version = serializers.IntegerField()
     description = serializers.CharField()
     capability_count = serializers.IntegerField()
     capabilities = AccessCapabilitySerializer(many=True)
@@ -31,10 +35,29 @@ class AccessAssignmentSerializer(serializers.Serializer[dict[str, object]]):
     approved_by_name = serializers.CharField()
 
 
+class EffectiveAccessActionSerializer(serializers.Serializer[dict[str, object]]):
+    capability_code = serializers.CharField()
+    label = serializers.CharField()  # type: ignore[assignment]
+    allowed = serializers.BooleanField()
+    permitted_fields = serializers.ListField(child=serializers.CharField())
+    obligations = serializers.ListField(child=serializers.CharField())
+    reason_code = serializers.CharField()
+    source_category = serializers.CharField()
+    source_label = serializers.CharField()
+
+
+class EffectiveAccessSummarySerializer(serializers.Serializer[dict[str, object]]):
+    scope_level = serializers.CharField()
+    scope_label = serializers.CharField()
+    can_manage_access = serializers.BooleanField()
+    actions = EffectiveAccessActionSerializer(many=True)
+
+
 class AccessWorkspaceSerializer(serializers.Serializer[dict[str, object]]):
     organization_name = serializers.CharField()
     edition_name = serializers.CharField()
     can_revoke_assignments = serializers.BooleanField()
+    effective_access = EffectiveAccessSummarySerializer()
     groups = AccessGroupSerializer(many=True)
     assignments = AccessAssignmentSerializer(many=True)
 
@@ -56,3 +79,66 @@ class AccessAssignmentReplaceSerializer(serializers.Serializer[dict[str, object]
 
 class AccessAssignmentRevokeSerializer(serializers.Serializer[dict[str, object]]):
     reason = serializers.CharField(max_length=240, trim_whitespace=True)
+
+
+class _ClosedPreviewInputSerializer(serializers.Serializer[dict[str, object]]):
+    """Reject undeclared fields instead of silently discarding them."""
+
+    def to_internal_value(self, data: Any) -> dict[str, object]:
+        if not isinstance(data, dict):
+            self.fail("invalid")
+        unexpected = sorted(set(data) - set(self.fields))
+        if unexpected:
+            raise serializers.ValidationError(
+                dict.fromkeys(unexpected, "Unexpected field.")
+            )
+        return cast(dict[str, object], super().to_internal_value(data))
+
+
+class AccessPreviewRequestSerializer(_ClosedPreviewInputSerializer):
+    mode = serializers.ChoiceField(choices=("person", "role"))
+    person_email = serializers.EmailField(
+        max_length=254,
+        required=False,
+        allow_blank=False,
+    )
+    role_version_id = serializers.UUIDField(required=False)
+
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        mode = attrs.get("mode")
+        has_person = "person_email" in attrs
+        has_role = "role_version_id" in attrs
+        if mode == "person" and (not has_person or has_role):
+            raise serializers.ValidationError(
+                "Person preview requires only an exact person email."
+            )
+        if mode == "role" and (not has_role or has_person):
+            raise serializers.ValidationError(
+                "Role preview requires only one immutable role version."
+            )
+        return attrs
+
+
+class AccessPreviewCapabilitySerializer(serializers.Serializer[dict[str, object]]):
+    capability_code = serializers.CharField()
+    label = serializers.CharField()  # type: ignore[assignment]
+    description = serializers.CharField()
+    source_category = serializers.CharField()
+    source_label = serializers.CharField()
+    obligations = serializers.ListField(child=serializers.CharField())
+    visible_fields = serializers.ListField(child=serializers.CharField())
+    data_preview_available = serializers.BooleanField()
+    disclosure_limited = serializers.BooleanField()
+
+
+class AccessPreviewSerializer(serializers.Serializer[dict[str, object]]):
+    mode = serializers.ChoiceField(choices=("person", "role"))
+    subject_id = serializers.UUIDField()
+    subject_label = serializers.CharField()
+    scope_level = serializers.CharField()
+    scope_label = serializers.CharField()
+    evaluated_at = serializers.DateTimeField()
+    capabilities = AccessPreviewCapabilitySerializer(many=True)
+    disclosure_limited_count = serializers.IntegerField()
+    session_unchanged = serializers.BooleanField()
+    mutation_allowed = serializers.BooleanField()

@@ -1,0 +1,65 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Review {{ submission.definition.name }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'application-review-workspace' edition.organization_id edition.id %}">Application review</a>
+    &rsaquo; {{ submission.definition.name }}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <header>
+      <p class="maru-personal-kicker">{{ submission.get_state_display }}</p>
+      <h1>Review {{ submission.definition.name }}</h1>
+      <p>
+        Applicant: {{ submission.account.display_name }}
+        &middot; definition v{{ submission.definition.version }}
+        &middot; expected submission version {{ submission.aggregate_version }}
+        &middot; adapter {{ submission.definition.get_target_adapter_kind_display }}
+      </p>
+    </header>
+    <section class="module">
+      <h2>Reviewer-visible answers only</h2>
+      {% if answers %}
+        <dl>
+          {% for answer in answers %}
+            <dt>{{ answer.key }}</dt>
+            <dd>
+              {{ answer.value }}
+              <br>{{ answer.classification }} &middot; source {{ answer.source }}
+              &middot; immutable revision {{ answer.sequence }}
+            </dd>
+          {% endfor %}
+        </dl>
+      {% else %}<p>No answer is visible under this review policy.</p>{% endif %}
+    </section>
+    <section class="module">
+      <h2>Immutable review provenance</h2>
+      {% if decisions %}
+        <ol>
+          {% for item in decisions %}
+            <li>
+              {{ item.get_decision_display }} &middot; {{ item.created_at }}
+              &middot; {{ item.get_reviewer_basis_display }}
+              {% if item.reviewer_role_bundle %}&middot; {{ item.reviewer_role_bundle.name }} v{{ item.reviewer_role_bundle.version }}{% endif %}
+              <br>{{ item.reason }}
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}<p>No review decision has been recorded.</p>{% endif %}
+    </section>
+    {% if review_forms %}
+      <section class="module">
+        <h2>Record accountable decision</h2>
+        {% for form in review_forms %}
+          <form method="post" action="{% url 'application-review-decision' edition.organization_id edition.id submission.id %}">
+            {% csrf_token %}{{ form.as_p }}
+            <button type="submit">Record {{ form.decision.value }}</button>
+          </form>
+        {% endfor %}
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

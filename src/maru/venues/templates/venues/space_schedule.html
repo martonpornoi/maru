@@ -1,0 +1,115 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <main id="content" class="maru-management-page">
+    <p><a href="{% url 'venue-workspace' organization.slug convention_series.slug edition.slug %}">Back to venues and spaces</a></p>
+    <header class="maru-page-header">
+      <div>
+        <p class="maru-eyebrow">Staff-only operational schedule / {{ edition.name }}</p>
+        <h1>{{ schedule.space.venue_name }} / {{ schedule.space.local_name }}</h1>
+        <p>{{ schedule.space.configuration_name }} / seated {{ schedule.space.seated_capacity }} / standing {{ schedule.space.standing_capacity }} / table {{ schedule.space.table_capacity }} / fire {{ schedule.space.fire_capacity }}</p>
+      </div>
+    </header>
+
+    <section class="module" aria-labelledby="venue-availability-title">
+      <h2 id="venue-availability-title">Hard availability</h2>
+      <p>Times are entered in {{ edition.time_zone }}. Setup and teardown must also fit inside these windows.</p>
+      {% if schedule.availability %}
+        <ul>
+          {% for interval in schedule.availability %}
+            <li>{{ interval.starts_at }} to {{ interval.ends_at }}{% if interval.opening_restriction %} - {{ interval.opening_restriction }}{% endif %}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No hard availability is configured; booking creation fails closed.</p>
+      {% endif %}
+      {% if availability_form %}
+        <details{% if availability_form.errors %} open{% endif %}>
+          <summary>Replace availability version {{ space_selection.current_availability_version }}</summary>
+          <form method="post" action="{% url 'venue-availability-set' organization.slug convention_series.slug edition.slug space_selection.id %}">
+            {% csrf_token %}{{ availability_form.as_p }}
+            <button type="submit">Replace availability</button>
+          </form>
+        </details>
+      {% endif %}
+    </section>
+
+    <section class="module" aria-labelledby="venue-booking-title">
+      <h2 id="venue-booking-title">Operational bookings</h2>
+      <p>Setup, teardown, internal titles, expected attendance, and provider references stay on this restricted page. Only approved and separately published attendee-safe fields reach the public schedule.</p>
+      {% if booking_rows %}
+        {% for row in booking_rows %}
+          <article class="module">
+            <h3>{{ row.record.internal_title }} / {{ row.record.get_kind_display }}</h3>
+            <p>Version {{ row.record.aggregate_version }} / {{ row.record.get_review_state_display }} / {{ row.record.get_publication_state_display }} / {{ row.record.get_lifecycle_display }}</p>
+            <dl>
+              <dt>Setup</dt><dd>{{ row.record.setup_starts_at }} to {{ row.record.effective_starts_at }}</dd>
+              <dt>Effective</dt><dd>{{ row.record.effective_starts_at }} to {{ row.record.effective_ends_at }}</dd>
+              <dt>Teardown</dt><dd>{{ row.record.effective_ends_at }} to {{ row.record.teardown_ends_at }}</dd>
+              <dt>Capacity</dt><dd>{{ row.record.expected_attendance }} / {{ row.record.get_capacity_mode_display }}</dd>
+              <dt>Attendee title</dt><dd>{{ row.record.public_title|default:"Not provided" }}</dd>
+            </dl>
+
+            {% if row.reschedule_form %}
+              <details{% if row.reschedule_form.errors %} open{% endif %}>
+                <summary>Reschedule or edit this booking</summary>
+                <form method="post" action="{% url 'venue-booking-reschedule' organization.slug convention_series.slug edition.slug space_selection.id row.record.id %}">
+                  {% csrf_token %}{{ row.reschedule_form.as_p }}
+                  <button type="submit">Save and require fresh review</button>
+                </form>
+              </details>
+            {% endif %}
+
+            {% if row.state_forms.approve %}
+              <form method="post" action="{% url 'venue-booking-command-page' organization.slug convention_series.slug edition.slug space_selection.id row.record.id 'approve' %}">
+                {% csrf_token %}{{ row.state_forms.approve.as_p }}
+                <button type="submit">Approve independently</button>
+              </form>
+            {% endif %}
+            {% if row.state_forms.publish %}
+              <form method="post" action="{% url 'venue-booking-command-page' organization.slug convention_series.slug edition.slug space_selection.id row.record.id 'publish' %}">
+                {% csrf_token %}{{ row.state_forms.publish.as_p }}
+                <button type="submit">Publish attendee-safe schedule item</button>
+              </form>
+            {% endif %}
+            {% if row.state_forms.withdraw %}
+              <form method="post" action="{% url 'venue-booking-command-page' organization.slug convention_series.slug edition.slug space_selection.id row.record.id 'withdraw' %}">
+                {% csrf_token %}{{ row.state_forms.withdraw.as_p }}
+                <button type="submit">Withdraw publication</button>
+              </form>
+            {% endif %}
+            {% if row.state_forms.cancel %}
+              <form method="post" action="{% url 'venue-booking-command-page' organization.slug convention_series.slug edition.slug space_selection.id row.record.id 'cancel' %}">
+                {% csrf_token %}{{ row.state_forms.cancel.as_p }}
+                <button type="submit">Cancel booking</button>
+              </form>
+            {% endif %}
+
+            <details>
+              <summary>Immutable history</summary>
+              <ol>
+                {% for entry in row.record.history_entries.all %}
+                  <li>{{ entry.created_at }} / {{ entry.action }} / version {{ entry.resulting_version }} / {{ entry.reason }}</li>
+                {% empty %}
+                  <li>No history projection is available.</li>
+                {% endfor %}
+              </ol>
+            </details>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p>No bookings are registered for this space.</p>
+      {% endif %}
+
+      {% if booking_form %}
+        <details{% if booking_form.errors %} open{% endif %}>
+          <summary>Create an operational booking</summary>
+          <form method="post" action="{% url 'venue-booking-create' organization.slug convention_series.slug edition.slug space_selection.id %}">
+            {% csrf_token %}{{ booking_form.as_p }}
+            <button type="submit">Create draft booking</button>
+          </form>
+        </details>
+      {% endif %}
+    </section>
+  </main>
+{% endblock %}

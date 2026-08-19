@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Registration commerce · {{ edition.name }}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Administration</a> › Registration commerce</div>{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="baseline-page registration-commerce-page">
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">{{ organization.name }} / {{ convention_series.name }}</p>
+      <h1>Registration commerce</h1>
+      <p>{{ edition.name }} · command version {{ control_version }}</p>
+    </header>
+
+    <section class="baseline-panel">
+      <div class="baseline-panel-heading"><div><p class="baseline-kicker">Overall admission</p><h2>Capacity</h2></div><span class="baseline-count">{{ overall_occupied }} occupied / {{ overall_effective_capacity }} effective / {{ overall_hard_ceiling }} ceiling</span></div>
+      <p>{{ overall_waitlisted }} registration(s) are waiting across all products.</p>
+      <form method="post" action="{% url 'registration-commerce-adjust-overall' organization.slug convention_series.slug edition.slug %}" class="baseline-form" novalidate>
+        {% csrf_token %}{{ overall_capacity_form.product_id }}{{ overall_capacity_form.expected_control_version }}{{ overall_capacity_form.idempotency_key }}
+        {% include "core/_baseline_form_field.html" with field=overall_capacity_form.new_capacity %}
+        {% include "core/_baseline_form_field.html" with field=overall_capacity_form.reason %}
+        <div class="baseline-form-actions"><button type="submit">Record overall adjustment</button></div>
+      </form>
+    </section>
+
+    {% for item in products %}
+      <section class="baseline-panel">
+        <div class="baseline-panel-heading"><div><p class="baseline-kicker">Admission product</p><h2>{{ item.product.name }}</h2></div><span class="baseline-count">{{ item.occupied }} occupied + {{ item.holds }} held / {{ item.effective_capacity }} effective / {{ item.hard_ceiling }} ceiling</span></div>
+        <p>{{ item.waitlisted }} registration(s) are waiting. Batch offers always take the next eligible rows in FIFO order; no person selector exists.</p>
+        <div class="baseline-field-grid">
+          <form method="post" action="{% url 'registration-commerce-adjust-product' organization.slug convention_series.slug edition.slug item.product.id %}" class="baseline-form" novalidate>
+            {% csrf_token %}{{ item.capacity_form.product_id }}{{ item.capacity_form.expected_control_version }}{{ item.capacity_form.idempotency_key }}
+            {% include "core/_baseline_form_field.html" with field=item.capacity_form.new_capacity %}
+            {% include "core/_baseline_form_field.html" with field=item.capacity_form.reason %}
+            <div class="baseline-form-actions"><button type="submit">Record product adjustment</button></div>
+          </form>
+          <form method="post" action="{% url 'registration-commerce-offer-batch' organization.slug convention_series.slug edition.slug item.product.id %}" class="baseline-form" novalidate>
+            {% csrf_token %}{{ item.batch_form.product_id }}{{ item.batch_form.expected_control_version }}{{ item.batch_form.idempotency_key }}
+            {% include "core/_baseline_form_field.html" with field=item.batch_form.batch_size %}
+            {% include "core/_baseline_form_field.html" with field=item.batch_form.reason %}
+            <div class="baseline-form-actions"><button type="submit">Offer next FIFO batch</button></div>
+          </form>
+        </div>
+      </section>
+    {% endfor %}
+
+    <section class="baseline-panel">
+      <div class="baseline-panel-heading"><div><p class="baseline-kicker">Purpose-scoped evidence</p><h2>Recent registration-commerce activity</h2></div></div>
+      {% if activity %}<ol class="timeline">{% for item in activity %}<li><strong>{{ item.action }}</strong><span>{{ item.actor_label }} · {{ item.target_count }} target(s)</span><time>{{ item.occurred_at }}</time></li>{% endfor %}</ol>{% else %}<p>No governed commerce action has been recorded yet.</p>{% endif %}
+    </section>
+  </div>
+{% endblock %}

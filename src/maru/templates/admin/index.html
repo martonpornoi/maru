@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n static %}
+{% load i18n static admin_edition_context %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -13,45 +13,58 @@
 {% block nav-breadcrumbs %}{% endblock %}
 
 {% block content %}
+  {% admin_edition_context request as maru_home_edition_context %}
   <div id="content-main">
     {% if maru_shell_access.workspace_available %}
-    <section class="maru-admin-workspaces" aria-labelledby="maru-work-heading">
+    <section class="maru-admin-workspaces maru-admin-home-priority" aria-labelledby="maru-work-heading">
       <div>
-        <h2 id="maru-work-heading">Convention work</h2>
+        <p class="maru-admin-section-kicker">Current work</p>
+        <h2 id="maru-work-heading">
+          {% if maru_home_edition_context.selected %}
+            Continue setting up {{ maru_home_edition_context.selected.name }}
+          {% else %}
+            Continue convention setup
+          {% endif %}
+        </h2>
         <p>
-          Registration service, people, access, reports, and guided setup use
-          the same administration shell as the records below.
+          Follow the guided checklist for governance, people, registration,
+          and operational readiness. Maru will show the next safe action.
         </p>
       </div>
       <div class="maru-admin-workspace-grid">
+        {% if maru_home_edition_context.selected or not request.user.is_platform_administrator %}
+        <a class="maru-admin-workspace-primary" href="{% url 'management-console' %}?view=setup">
+          <strong>Continue setup</strong>
+          <span>Open the checklist and pick up where the team left off.</span>
+        </a>
+        {% else %}
+        <a class="maru-admin-workspace-primary" href="{% url 'baseline-admin-home' %}">
+          <strong>Choose an organization</strong>
+          <span>Create or open the organization that will run the convention.</span>
+        </a>
+        {% endif %}
         <a href="{% url 'management-console' %}">
           <strong>Today</strong>
-          <span>Current state, actions, forms, and edition summary.</span>
+          <span>See current status, assigned work, warnings, and deadlines.</span>
         </a>
         <a href="{% url 'management-console' %}?view=people">
           <strong>People</strong>
-          <span>Find participants and inspect safe operational details.</span>
-        </a>
-        <a href="{% url 'management-console' %}?view=setup&amp;access=1">
-          <strong>Manage access</strong>
-          <span>Review scoped groups and share authority with accountable people.</span>
+          <span>Find attendees, staff, volunteers, and other team members.</span>
         </a>
         <a href="{% url 'management-console' %}?view=commerce">
-          <strong>Registration</strong>
-          <span>Configure registration and serve attendees.</span>
+          <strong>Registration &amp; service</strong>
+          <span>Configure registration and help current attendees.</span>
         </a>
         <a href="{% url 'management-console' %}?view=reports">
           <strong>Reports &amp; badges</strong>
           <span>Review attendance and export minimized badge data.</span>
         </a>
-        <a href="{% url 'management-console' %}?view=setup">
-          <strong>Setup guide</strong>
-          <span>Leadership, lifecycle, access, and closeout readiness.</span>
-        </a>
-        <a href="{% url 'management-console' %}?view=security">
-          <strong>Security history</strong>
-          <span>Review important events for the signed-in account.</span>
-        </a>
+        {% if request.user.is_platform_administrator %}
+          <a href="{% url 'platform-account-inventory' %}">
+            <strong>User accounts</strong>
+            <span>Find login identities and review invitation status.</span>
+          </a>
+        {% endif %}
       </div>
     </section>
     {% else %}
@@ -72,21 +85,18 @@
       </section>
     {% endif %}
     {% if app_list %}
-    <div class="maru-admin-directory">
-      <h2>All administration areas</h2>
+    <section class="maru-admin-directory maru-specialist-gateway" aria-labelledby="maru-specialist-heading">
+      <h2 id="maru-specialist-heading">Need a technical record?</h2>
       <p>
-        Every available menu item is explained below. Colors show related
-        functions; applications and records remain alphabetical so they are
-        still easy to scan.
+        Low-frequency framework records remain available to authorized
+        specialists without filling the home page or primary navigation.
       </p>
-    </div>
-      {% include "admin/_descriptive_app_list.html" with app_list=app_list show_changelinks=True %}
-    {% else %}
-      <p>
-        This account has no specialist record permissions. Django specialist
-        records remain available only to accounts with separate framework
-        staff permissions.
-      </p>
+      <a
+        href="#nav-specialist-records"
+        class="maru-admin-directory-link"
+        data-navigation-specialist-gateway
+      >Open specialist records</a>
+    </section>
     {% endif %}
   </div>
 {% endblock %}
@@ -94,10 +104,10 @@
 {% block sidebar %}
   <div id="content-related">
     <div class="module" id="recent-actions-module">
-      <h2>{% translate "Recent actions" %}</h2>
-      <h3>{% translate "My actions" %}</h3>
+      <h2>{% translate "Recent work" %}</h2>
+      <h3>{% translate "Your latest changes" %}</h3>
       {% load log %}
-      {% get_admin_log 10 as admin_log for_user user %}
+      {% get_admin_log 6 as admin_log for_user user %}
       {% if not admin_log %}
         <p>{% translate "None available" %}</p>
       {% else %}

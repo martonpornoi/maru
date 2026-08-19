@@ -4,7 +4,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.support.migrations import restore_current_migration_graph
+from tests.support.migrations import flush_then_restore_current_migration_graph
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ def restores_current_migration_graph(transactional_db: None) -> Iterator[None]:
     try:
         yield
     finally:
-        restore_current_migration_graph()
+        flush_then_restore_current_migration_graph()
 
 
 @pytest.fixture

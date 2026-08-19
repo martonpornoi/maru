@@ -10,11 +10,12 @@ from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.files.uploadedfile import UploadedFile
-from django.db import IntegrityError
+from django.db import DatabaseError, IntegrityError
 from django.db.models import Prefetch, QuerySet
 from django.http import FileResponse, Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -34,7 +35,20 @@ from maru.identity.services import (
     request_fingerprint,
 )
 from maru.participation.models import ParticipationCapacity
-from maru.registration.availability import assess_product_availability
+from maru.registration.availability import (
+    OCCUPIED_REGISTRATION_STATES,
+    assess_product_availability,
+)
+from maru.registration.commerce import (
+    effective_product_capacity,
+    pending_target_capacity_holds,
+    reserve_admission_tier_replacement,
+)
+from maru.registration.commerce_forms import (
+    DemoPaymentForm,
+    HostedPaymentStartForm,
+    TierReplacementReservationForm,
+)
 from maru.registration.forms import (
     AttendeeProfileForm,
     BaseAttendeeFursuitFormSet,
@@ -48,17 +62,25 @@ from maru.registration.guardians import accept_guardian_consent
 from maru.registration.media import media_is_safe
 from maru.registration.models import (
     AdmissionProduct,
+    AdmissionTierReplacement,
     AttendeeFursuit,
     AttendeeRegistrationProfile,
     ConfigurationStatus,
     Entitlement,
     MediaReviewStatus,
+    PaymentProviderAccount,
     Registration,
     RegistrationConfiguration,
     RegistrationTimelineEntry,
 )
+from maru.registration.payments import create_payment_intent
 from maru.registration.presentation import attendance_labels
 from maru.registration.profile_choices import language_labels
+from maru.registration.profile_extension_values import (
+    ProfileExtensionValueError,
+    read_directory_profile_extension_values,
+    read_profile_extension_values,
+)
 from maru.registration.profile_policy import (
     DIRECTORY_CONSENT_VERSION,
     PROFILE_FIELD_POLICY,
@@ -690,21 +712,171 @@ def confirm_local_demo_payment(
         Registration,
         account=account,
         edition_id=edition_id,
-        state=Registration.State.PAYMENT_PENDING,
     )
+    form = DemoPaymentForm(request.POST)
+    if form.is_valid():
+        idempotency_key = cast(UUID, form.cleaned_data["idempotency_key"])
+    elif set(request.POST) <= {"csrfmiddlewaretoken"}:
+        # Backward-compatible local test control; rendered forms always submit
+        # the retained key so browser retries remain deterministic.
+        idempotency_key = uuid4()
+    else:
+        raise Http404
     try:
         confirm_demo_payment(
             organization_id=registration.organization_id,
             edition_id=registration.edition_id,
             actor=account,
             registration_id=registration.id,
-            idempotency_key=uuid4(),
+            idempotency_key=idempotency_key,
             correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             source_channel="reference_web",
         )
     except ValidationError:
         raise Http404 from None
     return redirect("public-registration-profile", edition_id=edition_id)
+
+
+@login_required(login_url="staff-login")
+def reserve_local_tier_replacement(
+    request: HttpRequest,
+    edition_id: UUID,
+) -> HttpResponse:
+    """Reserve one higher admission tier from the attendee's profile page."""
+
+    if request.method != "POST":
+        raise Http404
+    account = _account(request)
+    if account is None:
+        raise Http404
+    registration = get_object_or_404(
+        Registration,
+        account=account,
+        edition_id=edition_id,
+    )
+    form = TierReplacementReservationForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "The admission upgrade request was invalid.")
+        return redirect("public-registration-profile", edition_id=edition_id)
+    try:
+        result = reserve_admission_tier_replacement(
+            organization_id=registration.organization_id,
+            edition_id=registration.edition_id,
+            registration_id=registration.id,
+            target_product_id=cast(UUID, form.cleaned_data["target_product_id"]),
+            actor=account,
+            expected_registration_version=cast(
+                int,
+                form.cleaned_data["expected_registration_version"],
+            ),
+            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="reference_web",
+        )
+    except (ObjectDoesNotExist, ValidationError):
+        messages.error(request, "That admission upgrade is no longer available.")
+    else:
+        messages.success(
+            request,
+            (
+                "Your admission upgrade is already reserved."
+                if result.replayed
+                else "Your admission upgrade is reserved until its payment deadline."
+            ),
+        )
+    return redirect("public-registration-profile", edition_id=edition_id)
+
+
+@login_required(login_url="staff-login")
+def create_local_hosted_payment(
+    request: HttpRequest,
+    edition_id: UUID,
+) -> HttpResponse:
+    """Start hosted checkout for ordinary admission or a pending upgrade."""
+
+    if request.method != "POST":
+        raise Http404
+    account = _account(request)
+    if account is None:
+        raise Http404
+    registration = get_object_or_404(
+        Registration,
+        account=account,
+        edition_id=edition_id,
+    )
+    form = HostedPaymentStartForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "The payment request was invalid.")
+        return redirect("public-registration-profile", edition_id=edition_id)
+    try:
+        intent = create_payment_intent(
+            registration=registration,
+            provider_account_id=cast(
+                UUID,
+                form.cleaned_data["provider_account_id"],
+            ),
+            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            return_url=request.build_absolute_uri(
+                reverse("public-registration-profile", args=(edition_id,))
+            ),
+        )
+    except (ObjectDoesNotExist, ValidationError):
+        messages.error(request, "Hosted payment is not available right now.")
+        return redirect("public-registration-profile", edition_id=edition_id)
+    if not intent.checkout_url:
+        messages.error(request, "Hosted payment is waiting for reconciliation.")
+        return redirect("public-registration-profile", edition_id=edition_id)
+    return redirect(intent.checkout_url)
+
+
+def _tier_replacement_options(
+    *,
+    registration: Registration,
+    account: Account,
+) -> tuple[dict[str, object], ...]:
+    if (
+        registration.state not in PAID_REGISTRATION_STATES
+        or registration.confirmation_basis != Registration.ConfirmationBasis.PROVIDER
+    ):
+        return ()
+    now = timezone.now()
+    options: list[dict[str, object]] = []
+    products = registration.configuration.products.filter(
+        status=AdmissionProduct.Status.AVAILABLE,
+        price_minor__gt=registration.product.price_minor,
+    ).order_by("price_minor", "position", "id")
+    for product in products:
+        availability = assess_product_availability(
+            product=product,
+            account=account,
+            at=now,
+        )
+        if not availability.selectable and availability.code != "capacity_reached":
+            continue
+        occupied = Registration.objects.filter(
+            product=product,
+            state__in=OCCUPIED_REGISTRATION_STATES,
+        ).count()
+        if occupied + pending_target_capacity_holds(
+            product, at=now
+        ) >= effective_product_capacity(product):
+            continue
+        options.append(
+            {
+                "product": product,
+                "amount_due_minor": product.price_minor
+                - registration.product.price_minor,
+                "form": TierReplacementReservationForm(
+                    initial={
+                        "target_product_id": product.id,
+                        "expected_registration_version": (
+                            registration.aggregate_version
+                        ),
+                    }
+                ),
+            }
+        )
+    return tuple(options)
 
 
 @login_required(login_url="staff-login")
@@ -721,6 +893,7 @@ def public_registration_profile(
             "edition",
             "edition__series",
             "product",
+            "configuration",
             "participation",
             "submission",
         )
@@ -770,12 +943,49 @@ def public_registration_profile(
         for entitlement in registration.entitlements.all()
         if entitlement.status == Entitlement.Status.ACTIVE
     ]
-    return TemplateResponse(
+    tier_replacement = (
+        AdmissionTierReplacement.objects.filter(
+            registration=registration,
+            status=AdmissionTierReplacement.Status.PAYMENT_PENDING,
+            payment_due_at__gt=timezone.now(),
+        )
+        .select_related("target_product")
+        .first()
+    )
+    payment_available = (
+        registration.state == Registration.State.PAYMENT_PENDING
+        or tier_replacement is not None
+    )
+    providers = tuple(
+        PaymentProviderAccount.objects.filter(
+            organization_id=registration.organization_id,
+            enabled=True,
+        ).order_by("display_name", "id")
+    )
+    try:
+        profile_extensions = read_profile_extension_values(
+            actor=account,
+            organization_id=registration.organization_id,
+            edition_id=registration.edition_id,
+            registration_id=registration.id,
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except (DatabaseError, ProfileExtensionValueError):
+        profile_extensions = None
+    response = TemplateResponse(
         request,
         "registration/public_profile.html",
         {
             "registration": registration,
             "profile": profile,
+            "profile_extensions": (
+                profile_extensions.fields if profile_extensions is not None else ()
+            ),
+            "profile_extensions_editable": bool(
+                profile_extensions is not None
+                and any(field.can_write for field in profile_extensions.fields)
+            ),
             "spoken_language_labels": (
                 language_labels(profile.spoken_language_codes) if profile else []
             ),
@@ -784,11 +994,31 @@ def public_registration_profile(
             ),
             "capacities": capacities,
             "entitlements": entitlements,
+            "tier_replacement": tier_replacement,
+            "tier_replacement_options": (
+                ()
+                if tier_replacement is not None
+                else _tier_replacement_options(
+                    registration=registration,
+                    account=account,
+                )
+            ),
+            "hosted_payment_options": tuple(
+                {
+                    "provider": provider,
+                    "form": HostedPaymentStartForm(
+                        initial={"provider_account_id": provider.id}
+                    ),
+                }
+                for provider in providers
+            )
+            if payment_available
+            else (),
+            "demo_payment_form": DemoPaymentForm(),
             "submitted_groups": _submitted_groups(registration),
             "directory_allowed": registration.state in PAID_REGISTRATION_STATES,
             "local_demo_payment_available": (
-                settings.DEMO_PAYMENT_ADAPTER_ENABLED
-                and registration.state == Registration.State.PAYMENT_PENDING
+                settings.DEMO_PAYMENT_ADAPTER_ENABLED and payment_available
             ),
             "waitlist_position": (
                 Registration.objects.filter(
@@ -803,6 +1033,9 @@ def public_registration_profile(
             ),
         },
     )
+    response["Cache-Control"] = "private, no-store"
+    response["Pragma"] = "no-cache"
+    return response
 
 
 @login_required(login_url="staff-login")
@@ -937,6 +1170,16 @@ def public_attendee_directory(
         )
         .order_by("account__display_name", "id")
     )
+    try:
+        extension_values = read_directory_profile_extension_values(
+            actor=_account(request),
+            organization_id=edition.organization_id,
+            edition_id=edition.id,
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except (DatabaseError, ProfileExtensionValueError):
+        extension_values = {}
     public_profiles = [
         {
             "profile": profile,
@@ -946,6 +1189,7 @@ def public_attendee_directory(
                 if profile.directory_consent_version == DIRECTORY_CONSENT_VERSION
                 else ()
             ),
+            "extension_values": extension_values.get(profile.registration_id, ()),
         }
         for profile in profiles
     ]

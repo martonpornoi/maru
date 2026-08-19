@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, close_old_connections, transaction
+from django.db import IntegrityError, close_old_connections, connections, transaction
 from django.utils import timezone
 
 from maru.authorization.bindings import ensure_workforce_position_binding
@@ -319,7 +319,7 @@ def test_binding_and_retirement_serialize_without_deadlock() -> None:
                 assert release_binding.wait(timeout=5)
                 return binding.id
         finally:
-            close_old_connections()
+            connections.close_all()
 
     def retire_department() -> str:
         close_old_connections()
@@ -331,7 +331,7 @@ def test_binding_and_retirement_serialize_without_deadlock() -> None:
         except IntegrityError:
             return "rejected"
         finally:
-            close_old_connections()
+            connections.close_all()
         return "retired"
 
     with ThreadPoolExecutor(max_workers=2) as executor:

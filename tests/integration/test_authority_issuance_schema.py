@@ -11,7 +11,13 @@ from uuid import uuid4
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, close_old_connections, connection, transaction
+from django.db import (
+    IntegrityError,
+    close_old_connections,
+    connection,
+    connections,
+    transaction,
+)
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 
@@ -471,7 +477,7 @@ def test_concurrent_controls_cannot_commit_the_same_principal_twice() -> None:
         else:
             return "committed"
         finally:
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         actor_future = executor.submit(

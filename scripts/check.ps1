@@ -6,6 +6,7 @@ uv run mypy src
 uv run python scripts/validate_docs.py
 uv run python src/manage.py makemigrations --check --dry-run
 uv run python src/manage.py check
+uv run python scripts/verify_production_settings.py
 uv run python src/manage.py spectacular --file openapi.yaml --validate
 uv run pytest --cov=maru --cov-report=term-missing
 

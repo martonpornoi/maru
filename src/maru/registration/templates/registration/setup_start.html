@@ -1,0 +1,86 @@
+{% extends "registration/setup_action_base.html" %}
+
+{% block registration_action_title %}Start registration{% endblock %}
+{% block registration_action_breadcrumb %}Choose starting point{% endblock %}
+{% block registration_action_heading %}Choose a registration starting point{% endblock %}
+{% block registration_action_intro %}
+  Create one independent draft for {{ edition.name }}. Imported definitions are
+  copied now and never remain linked to their source.
+{% endblock %}
+{% block registration_reload_link %}
+  <a href="{% url 'registration-setup-start' organization.slug convention_series.slug edition.slug %}">Reload current source choices</a>
+{% endblock %}
+
+{% block registration_action_content %}
+  {% if not setup_start_available and not show_submitted_form %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>Registration setup already exists</h2>
+      <p>Return to Registration and open the current configuration.</p>
+    </div>
+  {% else %}
+    {% if form.non_field_errors or form.expected_version.errors or form.retry_key.errors %}
+      <div class="baseline-errors" role="alert">
+        {{ form.non_field_errors }}
+        {{ form.expected_version.errors }}
+        {{ form.retry_key.errors }}
+      </div>
+    {% endif %}
+    <form method="post" action="{% url 'start-registration-setup' organization.slug convention_series.slug edition.slug %}" class="baseline-form registration-setup-form" novalidate>
+      {% csrf_token %}
+      {{ form.expected_version }}
+      {{ form.retry_key }}
+
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="registration-source-title">
+        <div class="baseline-section-heading">
+          <p class="baseline-kicker">Copy-on-write source</p>
+          <h2 id="registration-source-title">Source and version name</h2>
+          <p>
+            A platform starter, published template, or prior edition must be one
+            of the bounded exact versions shown here. A starter is copied into
+            this organizer-owned draft, retains its version and digest provenance,
+            and never live-updates. Blank creates zero sections, zero custom
+            questions, and zero products.
+          </p>
+        </div>
+        {% include "core/_baseline_form_field.html" with field=form.source_kind %}
+        {% include "core/_baseline_form_field.html" with field=form.source_id %}
+        {% include "core/_baseline_form_field.html" with field=form.name %}
+      </section>
+
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="registration-window-title">
+        <div class="baseline-section-heading">
+          <p class="baseline-kicker">Edition-owned policy</p>
+          <h2 id="registration-window-title">Window, capacity, and payment defaults</h2>
+          <p>
+            Times use {{ edition.time_zone }}. Prior-edition copies may leave a
+            value blank to inherit it; blank, starter, and template-based drafts
+            require explicit values. An entered zero is never treated as inheritance.
+          </p>
+        </div>
+        <div class="baseline-field-grid">
+          {% include "core/_baseline_form_field.html" with field=form.opens_at %}
+          {% include "core/_baseline_form_field.html" with field=form.closes_at %}
+        </div>
+        <div class="baseline-field-grid">
+          {% include "core/_baseline_form_field.html" with field=form.capacity %}
+          {% include "core/_baseline_form_field.html" with field=form.capacity_ceiling %}
+          {% include "core/_baseline_form_field.html" with field=form.currency %}
+        </div>
+        <div class="baseline-field-grid">
+          {% include "core/_baseline_form_field.html" with field=form.minimum_age %}
+          {% include "core/_baseline_form_field.html" with field=form.default_payment_window_minutes %}
+        </div>
+        <div class="baseline-field-grid">
+          {% include "core/_baseline_form_field.html" with field=form.waitlist_enabled %}
+          {% include "core/_baseline_form_field.html" with field=form.automatic_waitlist_promotion %}
+        </div>
+        {% include "core/_baseline_form_field.html" with field=form.reason %}
+      </section>
+
+      <div class="baseline-form-actions registration-primary-actions">
+        <button type="submit"{% if reload_required or not setup_start_available %} disabled aria-disabled="true"{% endif %}>Create registration draft</button>
+        <a class="baseline-secondary-link" href="{% url 'registration-setup' organization.slug convention_series.slug edition.slug %}">Cancel</a>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}

@@ -5,7 +5,8 @@
 {% block structure_action_heading %}Create Department{% endblock %}
 {% block structure_action_intro %}
   Add one operational Department to {{ edition.name }}. Maru creates its stable
-  code and records this reasoned structure version.
+  code, places it after its siblings, and records this reasoned structure
+  version.
 {% endblock %}
 {% block structure_reload_link %}
   <a href="{% url 'organization-structure-department-create' organization.slug convention_series.slug edition.slug %}">Reload the latest creation form</a>
@@ -41,10 +42,7 @@
       </div>
       {% include "core/_baseline_form_field.html" with field=form.name %}
       {% include "core/_baseline_form_field.html" with field=form.description %}
-      <div class="baseline-field-grid">
-        {% include "core/_baseline_form_field.html" with field=form.parent_department_id %}
-        {% include "core/_baseline_form_field.html" with field=form.display_order %}
-      </div>
+      {% include "core/_baseline_form_field.html" with field=form.parent_department_id %}
       {% include "core/_baseline_form_field.html" with field=form.reason %}
     </section>
 

@@ -10,6 +10,7 @@ from django.db import models
 from maru.core.models import UUIDTimeStampedModel
 
 MAX_SAFE_METADATA_TEXT_LENGTH = 160
+SHA256_HEX_LENGTH = 64
 SHA256_VALIDATOR = RegexValidator(
     regex=r"^[0-9a-f]{64}$",
     message="Use a lowercase SHA-256 hex digest.",
@@ -22,6 +23,7 @@ SAFE_METADATA_TYPES: dict[str, type[object] | tuple[type[object], ...]] = {
     "contract_version": str,
     "export_classification": str,
     "http_method": str,
+    "policy_digest": str,
     "policy_version": str,
     "remote_provider": str,
     "route_name": str,
@@ -54,6 +56,18 @@ def validate_safe_metadata(value: dict[str, object]) -> None:
         if isinstance(item, str) and len(item) > MAX_SAFE_METADATA_TEXT_LENGTH:
             raise ValidationError(
                 f"Audit metadata value is too long: {key}",
+                code="unsafe_audit_metadata",
+            )
+        if (
+            key == "policy_digest"
+            and isinstance(item, str)
+            and (
+                len(item) != SHA256_HEX_LENGTH
+                or any(character not in "0123456789abcdef" for character in item)
+            )
+        ):
+            raise ValidationError(
+                "Audit policy digest must be lowercase SHA-256 hex.",
                 code="unsafe_audit_metadata",
             )
         if key == "target_count":
@@ -149,6 +163,35 @@ class AuditEvent(UUIDTimeStampedModel):
 
     class Meta:
         ordering = ("occurred_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("principal_id", "idempotency_key_hash"),
+                condition=(
+                    models.Q(
+                        capability_code=(
+                            "identity.reconcile_account_invitation_delivery"
+                        ),
+                        operation=("identity.account_invitation.delivery_reconcile"),
+                    )
+                    & ~models.Q(idempotency_key_hash="")
+                ),
+                name="audit_identity_reconcile_retry_unique",
+            ),
+            models.UniqueConstraint(
+                fields=("operation", "target_id"),
+                condition=(
+                    models.Q(
+                        operation__in=(
+                            "identity.account_invitation.retention_apply",
+                            "identity.account_invitation.retention_hold.place",
+                            "identity.account_invitation.retention_hold.release",
+                        )
+                    )
+                    & models.Q(target_id__isnull=False)
+                ),
+                name="audit_identity_retention_action_unique",
+            ),
+        ]
         indexes = [
             models.Index(
                 fields=("organization_id", "occurred_at"),

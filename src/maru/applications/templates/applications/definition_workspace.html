@@ -1,0 +1,66 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Applications &middot; {{ edition.name }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    {{ edition.organization.name }} &rsaquo; {{ edition.name }} &rsaquo; Applications
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <header>
+      <p class="maru-personal-kicker">Shared form studio</p>
+      <h1>Applications</h1>
+      <p>
+        Copy one reviewed code-owned starter into an independent edition draft.
+        Registration remains its own one-per-attendee workflow.
+      </p>
+    </header>
+
+    <section class="module">
+      <h2>Definition versions</h2>
+      {% if definitions %}
+        <ul>
+          {% for definition in definitions %}
+            <li>
+              <a href="{% url 'application-definition-detail' edition.organization_id edition.id definition.id %}">
+                <strong>{{ definition.name }}</strong>
+              </a>
+              &middot; {{ definition.code }} v{{ definition.version }}
+              &middot; {{ definition.get_status_display }}
+              &middot; expected version {{ definition.aggregate_version }}
+              &middot; {{ definition.get_target_adapter_kind_display }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No application definition has been copied into this edition.</p>
+      {% endif %}
+    </section>
+
+    <section class="module">
+      <h2>Start from a code-owned workflow</h2>
+      <ul>
+        {% for starter in starters %}
+          <li>
+            <strong>{{ starter.name }}</strong>
+            &middot; {{ starter.classification }}
+            {% if starter.is_external %}
+              &middot; managed by {{ starter.owner_module }}
+              {% if starter.code == "registration" %}
+                &middot;
+                <a href="{% url 'registration-setup' edition.organization.slug edition.series.slug edition.slug %}">Open registration setup</a>
+              {% endif %}
+            {% else %}
+              &middot; {{ starter.target_adapter_kind }}
+              &middot;
+              <a href="{% url 'application-starter-copy-page' edition.organization_id edition.id starter.code %}">Review and copy</a>
+            {% endif %}
+            <br>{{ starter.description }}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+{% endblock %}

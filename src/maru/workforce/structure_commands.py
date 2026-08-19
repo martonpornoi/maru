@@ -41,6 +41,7 @@ from maru.workforce.models import (
 )
 from maru.workforce.queries import MAX_STRUCTURE_DEPARTMENTS, MAX_STRUCTURE_DEPTH
 from maru.workforce.structure_inputs import (
+    MAX_DEPARTMENT_DISPLAY_ORDER,
     canonical_request_digest,
     generate_department_code,
     normalize_department_description,
@@ -63,6 +64,57 @@ _EDITABLE_EDITION_LIFECYCLES = frozenset(
 )
 _SOURCE_CHANNEL_PATTERN = re.compile(r"[a-z][a-z0-9_-]*\Z")
 _MAX_SOURCE_CHANNEL_LENGTH = 32
+
+
+def _automatic_sibling_display_order(
+    scope: _LockedScope,
+    *,
+    parent_department_id: UUID | None,
+    current_department: Department | None = None,
+) -> int:
+    """Keep a unique current rank or append safely after the locked siblings."""
+
+    sibling_orders = {
+        department.display_order
+        for department in scope.departments
+        if department.parent_id == parent_department_id
+        and (current_department is None or department.id != current_department.id)
+    }
+    if (
+        current_department is not None
+        and current_department.parent_id == parent_department_id
+        and current_department.display_order not in sibling_orders
+    ):
+        return current_department.display_order
+
+    if (
+        current_department is not None
+        and current_department.parent_id == parent_department_id
+    ):
+        # Heal an old duplicate into the nearest following gap. This avoids
+        # moving it past unrelated siblings that already have a later rank.
+        for candidate in range(
+            current_department.display_order + 1,
+            MAX_DEPARTMENT_DISPLAY_ORDER + 1,
+        ):
+            if candidate not in sibling_orders:
+                return candidate
+        for candidate in range(current_department.display_order):
+            if candidate not in sibling_orders:
+                return candidate
+        raise StructureLimitConflictError()
+
+    appended_order = max(sibling_orders, default=-1) + 1
+    if appended_order <= MAX_DEPARTMENT_DISPLAY_ORDER:
+        return appended_order
+
+    # The edition-wide Department ceiling makes exhaustion impossible in the
+    # current contract, but use a bounded gap fallback so the helper remains
+    # correct if a historical/API-supplied sibling already uses the maximum.
+    for candidate in range(MAX_DEPARTMENT_DISPLAY_ORDER + 1):
+        if candidate not in sibling_orders:
+            return candidate
+    raise StructureLimitConflictError()
 
 
 class StructureCommandError(RuntimeError):
@@ -709,7 +761,7 @@ def create_department(
     name: str,
     description: str,
     parent_department_id: UUID | None,
-    display_order: int,
+    display_order: int | None,
     expected_version: int,
     reason: str,
     retry_key: UUID,
@@ -721,7 +773,11 @@ def create_department(
 
     normalized_name = _validate_manual_name(name)
     normalized_description = normalize_department_description(description)
-    display_order = validate_department_display_order(display_order)
+    requested_display_order = (
+        validate_department_display_order(display_order)
+        if display_order is not None
+        else None
+    )
     expected_version = _validate_expected_version(expected_version)
     retry_key = _validate_uuid(retry_key, field_name="retry_key")
     correlation_id = _validate_uuid(correlation_id, field_name="correlation_id")
@@ -750,7 +806,11 @@ def create_department(
             "parent_department_id": (
                 str(parent_department_id) if parent_department_id else None
             ),
-            "display_order": display_order,
+            "display_order": (
+                requested_display_order
+                if requested_display_order is not None
+                else "automatic"
+            ),
             "expected_version": expected_version,
             "reason": normalized_reason,
         }
@@ -792,6 +852,14 @@ def create_department(
             if parent_department_id is not None
             else None
         )
+        effective_display_order = (
+            requested_display_order
+            if requested_display_order is not None
+            else _automatic_sibling_display_order(
+                scope,
+                parent_department_id=parent.id if parent else None,
+            )
+        )
         resulting_version = current_version + 1
         department = Department(
             organization=scope.organization,
@@ -803,7 +871,7 @@ def create_department(
             ),
             name=normalized_name,
             description=normalized_description,
-            display_order=display_order,
+            display_order=effective_display_order,
             created_in_structure_version=resulting_version,
             last_changed_in_structure_version=resulting_version,
         )
@@ -850,7 +918,7 @@ def update_department(
     name: str,
     description: str,
     parent_department_id: UUID | None,
-    display_order: int,
+    display_order: int | None,
     expected_version: int,
     reason: str,
     correlation_id: UUID,
@@ -862,7 +930,11 @@ def update_department(
     department_id = _validate_uuid(department_id, field_name="department_id")
     normalized_name = _validate_manual_name(name)
     normalized_description = normalize_department_description(description)
-    display_order = validate_department_display_order(display_order)
+    requested_display_order = (
+        validate_department_display_order(display_order)
+        if display_order is not None
+        else None
+    )
     expected_version = _validate_expected_version(expected_version)
     correlation_id = _validate_uuid(correlation_id, field_name="correlation_id")
     if parent_department_id is not None:
@@ -894,11 +966,20 @@ def update_department(
             if parent_department_id is not None
             else None
         )
+        effective_display_order = (
+            requested_display_order
+            if requested_display_order is not None
+            else _automatic_sibling_display_order(
+                scope,
+                parent_department_id=parent.id if parent else None,
+                current_department=department,
+            )
+        )
         replacement = {
             "name": normalized_name,
             "description": normalized_description,
             "parent_id": parent.id if parent else None,
-            "display_order": display_order,
+            "display_order": effective_display_order,
         }
         changed_fields = tuple(
             sorted(
@@ -945,7 +1026,7 @@ def update_department(
         department.name = normalized_name
         department.description = normalized_description
         department.parent = parent
-        department.display_order = display_order
+        department.display_order = effective_display_order
         department.last_changed_in_structure_version = resulting_version
         department.save(
             update_fields=(

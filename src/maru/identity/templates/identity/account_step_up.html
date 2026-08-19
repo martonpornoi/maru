@@ -1,0 +1,32 @@
+{% extends baseline_admin_parent_template %}
+{% load i18n static %}
+
+{% block bodyclass %}{{ block.super }} baseline-page baseline-page--form{% endblock %}
+
+{% block content %}
+<main id="content-main" class="baseline-record-page" aria-labelledby="step-up-title">
+  <header class="baseline-record-header">
+    <p class="baseline-eyebrow">Account security</p>
+    <h1 id="step-up-title">Confirm it is you</h1>
+    <p>Privileged changes require a recent password check for this signed-in session.</p>
+  </header>
+
+  <section class="module aligned baseline-form-module" aria-labelledby="step-up-form-title">
+    <h2 id="step-up-form-title">Current password</h2>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {{ form.next }}
+      <div class="form-row{% if form.password.errors %} errors{% endif %}">
+        {{ form.password.errors }}
+        {{ form.password.label_tag }}
+        {{ form.password }}
+        {% if form.password.help_text %}<div class="help">{{ form.password.help_text }}</div>{% endif %}
+      </div>
+      <div class="submit-row">
+        <button type="submit" class="default">Confirm session</button>
+      </div>
+    </form>
+  </section>
+</main>
+{% endblock %}

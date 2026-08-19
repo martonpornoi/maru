@@ -1,7 +1,7 @@
 # Testing strategy
 
 Status: Active
-Last updated: 2026-08-02
+Last updated: 2026-08-16
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
@@ -196,6 +196,70 @@ empty/error states, and narrow-viewport overflow.
 - load tests for registration opening, timetable publication, announcements,
   search, and bulk check-in;
 - safe deployment with active jobs and supported database migrations.
+
+## GitHub acceptance topology
+
+The required GitHub `CI` workflow runs on pull requests, merge-queue
+candidates, pushes to the protected default branch, and manual dispatch.
+Superseded pull-request runs are cancelled, while default-branch and merge-
+queue evidence is never cancelled by a later ref.
+
+The workflow separates concerns so a fast failure does not wait behind the
+complete PostgreSQL suite:
+
+- **Static quality** checks the lock, Ruff formatting/lint, strict mypy,
+  documentation, and submitted-diff whitespace without provisioning
+  PostgreSQL or Node.
+- **Django and generated contracts** checks local configuration, migration
+  drift, both production exact-provenance modes, OpenAPI, and the generated
+  TypeScript client.
+- **Staff Console** installs the frozen pnpm lock, type-checks, runs Vitest,
+  builds production assets, and rejects generated-static drift.
+- **Unit tests** run as one suite and publish JUnit plus a partial coverage data
+  file. PostgreSQL remains available because one unit-level media contract uses
+  a real transactional database boundary.
+- **PostgreSQL integration** distributes every direct
+  `tests/integration/test_*.py` file across 12 isolated jobs. Files stay whole
+  and each shard remains serialized internally; only independent GitHub
+  runners and databases execute in parallel.
+- **Combined coverage** downloads the unit and all integration coverage parts,
+  combines them once, and applies the repository's branch-aware 90-percent
+  threshold to the complete test inventory.
+- **Dependency security** runs the locked Python and production pnpm advisory
+  audits independently of behavior tests.
+- **CI gate** depends on every required result and provides one stable branch-
+  protection check name.
+
+The repository-owned shard selector uses deterministic source-file-size
+weights until repeated GitHub durations justify a checked-in timing map. It
+validates that the discovered inventory is non-empty and assigns every file
+exactly once. Matrix fail-fast is disabled so one failure cannot hide the
+remaining shard outcomes. There are no blanket retries. JUnit and hidden
+partial coverage data are retained for 14 days, and external actions plus the
+PostgreSQL image are pinned to reviewed immutable digests.
+
+The ephemeral Actions databases prove migrations, constraints, authorization,
+and transactional behavior; they are not production restore/PITR or runtime-
+credential evidence.
+
+### Next GitHub testing layers
+
+The next expansion should add:
+
+- a small pull-request Playwright matrix for platform administrator, Board or
+  Department authority, attendee, and denial journeys at 390 and 1,280 CSS
+  pixels, including keyboard completion and automated accessibility;
+- nightly Python 3.12/3.13/3.14 unit and contract compatibility, migration-
+  from-zero, concurrency repetition, randomized-order seed capture, and the
+  broader responsive/visual-state matrix;
+- CodeQL for Python and TypeScript, native dependency review, and repository
+  secret-scanning/push-protection policy; and
+- a release workflow for clean-build provenance, SBOM/attestation, synthetic
+  previous-version restoration, and production-shaped recovery rehearsal.
+
+Automated accessibility is supplementary evidence. Representative keyboard,
+screen-reader, owner, restore/PITR, and production-governance acceptance remain
+human or production-shaped release gates.
 
 ## Test data
 

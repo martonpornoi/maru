@@ -134,6 +134,15 @@ def test_product_and_minor_policy_validation_explain_invalid_configuration() -> 
         product(required_capacity_codes=["volunteer", "volunteer"]).full_clean()
     with pytest.raises(ValidationError, match="explanation"):
         product(required_capacity_codes=["volunteer"]).full_clean()
+    with pytest.raises(ValidationError, match="no more than 32"):
+        product(
+            required_capacity_codes=[f"capacity-{index}" for index in range(33)],
+            eligibility_explanation="Synthetic restricted capacity.",
+        ).full_clean()
+    with pytest.raises(ValidationError, match="between 1 and 1000000"):
+        product(capacity=1_000_001).full_clean()
+    with pytest.raises(ValidationError, match="must not exceed"):
+        product(price_minor=1_000_000_000_001).full_clean()
 
     reviewer = AccountFactory()
     invalid_age = MinorRegistrationPolicy(

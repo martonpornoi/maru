@@ -5,7 +5,13 @@ from threading import Event
 from uuid import UUID, uuid4
 
 import pytest
-from django.db import DatabaseError, close_old_connections, connection, transaction
+from django.db import (
+    DatabaseError,
+    close_old_connections,
+    connection,
+    connections,
+    transaction,
+)
 from django.db.transaction import TransactionManagementError
 from django.test.utils import CaptureQueriesContext
 
@@ -71,7 +77,7 @@ def _hold_edition_mutex(
             assert release.wait(timeout=10)
     finally:
         acquired.set()
-        close_old_connections()
+        connections.close_all()
 
 
 def _start_mutex_holder(

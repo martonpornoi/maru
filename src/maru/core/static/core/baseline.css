@@ -488,6 +488,11 @@ a.baseline-record-name:focus-visible {
   font: inherit;
 }
 
+.baseline-form select {
+  height: auto;
+  min-height: 2.75rem;
+}
+
 .baseline-form textarea {
   min-height: 7rem;
   resize: vertical;

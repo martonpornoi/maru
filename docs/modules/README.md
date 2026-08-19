@@ -10,13 +10,13 @@ Organization structure workflow. Its read uses the implemented edition
 aggregate/version fence and one complete retry. Page 9a.1's workforce
 `0006`/`0007` stopped-writer database boundary, immutable template application,
 Department command core, repository-owned writer reconciliation, and pinned
-runtime trigger catalog are also implemented and focused-verified. Their strict
-HTML/API mutation adapters are mounted; the API focus passes 48 tests and the
-combined Page 9 gate passes 159 tests in 102.89 seconds. The definitive
-adapter-expanded repository gate passes 1,693 tests at 90.50 percent total
-branch-inclusive coverage. Reliable Page 9 narrow-viewport evidence,
-accessibility, complete visual states, owner rehearsal, production authority
-reconciliation, cutover, and representative restore/PITR remain open. ADR 0037 and
+runtime trigger catalog are also implemented and focused-verified. The
+2026-08-11 canonical current-tree gate passed 4,067 of 4,067 tests at 90.78
+percent total branch-aware coverage. A bounded authenticated read-only Logistics
+journey also passed at 1,920 and 390 CSS pixels. Broader mutation-role browser
+states, keyboard and automated accessibility evidence, owner rehearsal,
+production authority reconciliation, cutover, and representative restore/PITR
+remain open. ADR 0037 and
 `docs/project/PRODUCTION_CONSOLIDATION.md` distinguish mounted,
 API-only, preserved/unmounted, partial, absent, and deployment-gated
 capabilities. ADR 0041's exact Department/resource scope prerequisite is
@@ -37,6 +37,16 @@ pre-reset implementation unless the paragraph explicitly identifies the ADR
 - [`activity`](activity.md) - bounded value-minimized record history
 - [`registration`](registration.md) - configurable forms, products, attendee
   lifecycle, entitlements, and check-in
+- [`catalog`](catalog.md) - edition merchandise, charity-support products,
+  attendee orders, governed stock, and payment reconciliation
+- [`applications`](applications.md) - versioned typed form definitions,
+  append-only applications, assigned review queues, and target adapters
+- [`charities`](charities.md) - reusable partners, governed edition selection,
+  independent review, approved media, and minimized public snapshots
+- [`venues`](venues.md) - reusable hotels and venues, exact edition space
+  selection, hard availability, operational bookings, and public schedules
+- [`logistics`](logistics.md) - equipment offers, storage and containment,
+  manifests, restricted operational contacts, and append-only custody
 - [`workforce`](workforce.md) - departments, positions, volunteer openings,
   reviewed agreements, assignments, and scoped access activation
 - [`communications`](communications.md) - canonical service inbox and email
@@ -45,7 +55,8 @@ pre-reset implementation unless the paragraph explicitly identifies the ADR
 - [`privacy operations`](privacyops.md) - subject rights, historical
   corrections, retention, and disposal evidence
 - [`Convention work`](staff-console.md) - React/TypeScript workflows mounted in
-  the unified shell; current browser and release verification pending
+  the unified shell; canonical repository acceptance and bounded read-only
+  responsive verification recorded, with broader browser acceptance pending
 - [`demo data`](demo-data.md) - local-only synthetic cross-module fixture
 - [`Marucon admin-first rehearsal`](../operations/marucon-admin-rehearsal.md) -
   retired public-roster path and the supported synthetic replacement journey

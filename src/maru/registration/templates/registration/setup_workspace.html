@@ -1,0 +1,156 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'registration/setup.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}{% if edition %}Registration · {{ edition.name }}{% else %}Registration setup unavailable{% endif %} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if organization %}
+    {% if baseline_can_view_organization %}<a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>{% else %}{{ organization.name }}{% endif %}
+    &rsaquo;
+    {% if baseline_can_view_organization %}<a href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}">{{ convention_series.name }}</a>{% else %}{{ convention_series.name }}{% endif %}
+    &rsaquo;
+    {% if baseline_can_view_edition %}<a href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}">{{ edition.name }}</a>{% else %}{{ edition.name }}{% endif %}
+    &rsaquo; Registration
+  {% else %}
+    Registration setup unavailable
+  {% endif %}
+{% endblock %}
+
+{% block baseline_content %}
+  {% if registration_request_invalid %}
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Edition registration</p>
+      <h1>Invalid registration setup request</h1>
+    </header>
+    <div class="baseline-state baseline-state--error" role="alert">
+      <h2>Remove unsupported URL options</h2>
+      <p>
+        Registration setup pages use their exact route and do not accept query
+        parameters. No convention data was shown or changed.
+      </p>
+    </div>
+  {% elif registration_load_failed %}
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Edition registration</p>
+      <h1>Registration setup unavailable</h1>
+    </header>
+    <div class="baseline-state baseline-state--error" role="alert">
+      <h2>The complete registration workspace could not be loaded</h2>
+      <p>
+        Required authorization, bounded projection, or read-audit evidence
+        failed. Maru released no partial configuration, source, or section labels.
+      </p>
+    </div>
+  {% else %}
+    {% if baseline_can_view_edition %}
+      <a class="baseline-back-link" href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}">← {{ edition.name }}</a>
+    {% endif %}
+
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Edition registration</p>
+      <h1>Registration</h1>
+      <p class="baseline-intro">
+        Establish one edition-owned attendee registration form, review its
+        independent copy, and preserve the meaning of every later submission.
+      </p>
+      <p class="baseline-record-meta">
+        <span>Organization: <strong>{{ organization.name }}</strong></span>
+        <span>Series: <strong>{{ convention_series.name }}</strong></span>
+        <span>Edition: <strong>{{ edition.name }}</strong></span>
+        <span>Edition lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+      </p>
+    </header>
+
+    <section class="baseline-access-summary" aria-labelledby="registration-access-title">
+      <div>
+        <p class="baseline-kicker" id="registration-access-title">Your effective access</p>
+        <p class="baseline-access-line">
+          <strong>{{ registration_access_label }}</strong>
+          <span>allows you to manage registration configuration for this exact edition.</span>
+        </p>
+      </div>
+      <details>
+        <summary>Why can I access this?</summary>
+        {% if registration_access_label == "Platform oversight" %}
+          <p>
+            Platform oversight attributes every action to your administrator
+            account. It does not make that account a member, participant,
+            registrant, volunteer, or workforce assignee.
+          </p>
+        {% else %}
+          <p>
+            Your current exact-edition grant or immutable scoped role includes
+            registration configuration management. Selected navigation does not
+            grant this access.
+          </p>
+        {% endif %}
+      </details>
+    </section>
+
+    {% if not registration_workspace.current_configuration %}
+      <section class="baseline-state registration-setup-empty" aria-labelledby="registration-not-configured-title">
+        <p class="baseline-kicker">Setup state</p>
+        <h2 id="registration-not-configured-title">Not configured</h2>
+        <p>
+          No registration configuration exists for this edition. Start blank,
+          copy one authorized published template, or copy one exact eligible
+          prior-edition version.
+        </p>
+        <p>
+          <a class="registration-setup-action" href="{% url 'registration-setup-start' organization.slug convention_series.slug edition.slug %}">Choose a starting point</a>
+        </p>
+        <p class="registration-source-counts">
+          {{ registration_workspace.published_templates|length }} published template version{{ registration_workspace.published_templates|length|pluralize }} and
+          {{ registration_workspace.prior_configurations|length }} eligible prior-edition version{{ registration_workspace.prior_configurations|length|pluralize }} are currently available.
+        </p>
+      </section>
+    {% else %}
+      <section class="baseline-panel" aria-labelledby="registration-current-title">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">Setup state</p>
+            <h2 id="registration-current-title">
+              {% if registration_workspace.setup_state == "draft_in_review" %}Draft in review{% elif registration_workspace.setup_state == "active" %}Active registration version{% else %}Retired registration version{% endif %}
+            </h2>
+          </div>
+          <span class="baseline-count">Setup version {{ registration_workspace.aggregate_version }}</span>
+        </div>
+        <div class="registration-setup-summary">
+          <div>
+            <h3>{{ registration_workspace.current_configuration.name }}</h3>
+            <p>
+              Form version {{ registration_workspace.current_configuration.version }} ·
+              {{ registration_workspace.current_configuration.status|capfirst }} ·
+              {% if registration_workspace.current_configuration.origin == "blank" %}started blank{% elif registration_workspace.current_configuration.origin == "published_template" %}copied from a published template{% elif registration_workspace.current_configuration.origin == "prior_edition" %}copied from a prior edition{% else %}existing provenance{% endif %}
+            </p>
+          </div>
+          <dl class="registration-setup-counts">
+            <div><dt>Sections</dt><dd>{{ registration_workspace.sections|length }}</dd></div>
+            <div><dt>Questions</dt><dd>{{ registration_workspace.question_count }}</dd></div>
+            <div><dt>Products</dt><dd>{{ registration_workspace.product_count }}</dd></div>
+          </dl>
+        </div>
+        <div class="registration-setup-actions" aria-label="Registration setup actions">
+          <a class="registration-setup-action" href="{% url 'registration-setup-configuration' organization.slug convention_series.slug edition.slug registration_workspace.current_configuration.id %}">
+            {% if registration_workspace.current_configuration.status == "draft" %}Open registration builder{% else %}Review immutable version{% endif %}
+          </a>
+        </div>
+      </section>
+    {% endif %}
+
+    <aside class="baseline-boundary" aria-labelledby="registration-boundary-title">
+      <p class="baseline-kicker">Meaning boundary</p>
+      <h2 id="registration-boundary-title">Configuration does not create a registrant</h2>
+      <p>
+        Starting or editing this form creates no account, membership,
+        participation, registration, reservation, payment, entitlement, shift,
+        or public-directory entry. Attendee data begins only through the
+        separately governed public or staff-assisted registration workflow.
+      </p>
+    </aside>
+  {% endif %}
+{% endblock %}

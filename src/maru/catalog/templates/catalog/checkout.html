@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Checkout {{ order.reference }}{% endblock %}
+{% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-catalog-orders' edition.id %}">Orders</a> › {{ order.reference }}</div>{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="baseline-page">
+    <header class="baseline-page-heading"><p class="baseline-kicker">{{ edition.name }}</p><h1>{{ order.reference }}</h1><p>{{ order.get_status_display }} · {{ order.total_minor }} {{ order.currency }}</p></header>
+    <section class="baseline-panel">
+      <h2>Order</h2>
+      <ul>{% for line in order.lines.all %}<li>{{ line.quantity }} × {{ line.product_name_snapshot }} / {{ line.variant_name_snapshot }} — {{ line.line_total_minor }} {{ order.currency }}</li>{% endfor %}</ul>
+    </section>
+    {% if order.status == "payment_pending" %}
+      <section class="baseline-panel">
+        <h2>Payment</h2>
+        <form method="post" action="{% url 'my-catalog-hosted-payment' edition.id order.id %}">{% csrf_token %}{{ payment_form.expected_catalog_version }}{{ payment_form.expected_order_version }}{{ payment_form.idempotency_key }}<button type="submit">Open hosted checkout</button></form>
+        <form method="post" action="{% url 'my-catalog-demo-payment' edition.id order.id %}">{% csrf_token %}{{ payment_form.expected_catalog_version }}{{ payment_form.expected_order_version }}{{ payment_form.idempotency_key }}<button type="submit">Complete deterministic demo payment</button></form>
+      </section>
+    {% endif %}
+    <section class="baseline-panel"><h2>Timeline</h2><ol>{% for entry in order.timeline_entries.all %}<li><strong>{{ entry.title }}</strong> — {{ entry.summary }} <time>{{ entry.occurred_at }}</time></li>{% endfor %}</ol></section>
+  </div>
+{% endblock %}

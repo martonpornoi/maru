@@ -220,6 +220,9 @@ class ScopedResourceBinding(UUIDTimeStampedModel):
 
     class ResourceKind(models.TextChoices):
         WORKFORCE_POSITION = "workforce.position", "Workforce position"
+        CHARITY_SELECTION = "charity.selection", "Charity selection"
+        VENUE_EDITION_SPACE = "venue.edition_space", "Edition venue space"
+        LOGISTICS_MANIFEST = "logistics.manifest", "Logistics manifest"
 
     organization = models.ForeignKey(
         "organizations.Organization",
@@ -247,7 +250,14 @@ class ScopedResourceBinding(UUIDTimeStampedModel):
                 name="authorization_resource_binding_unique",
             ),
             models.CheckConstraint(
-                condition=models.Q(resource_kind="workforce.position"),
+                condition=models.Q(
+                    resource_kind__in=(
+                        "workforce.position",
+                        "charity.selection",
+                        "venue.edition_space",
+                        "logistics.manifest",
+                    )
+                ),
                 name="authorization_resource_kind_known",
             ),
         ]

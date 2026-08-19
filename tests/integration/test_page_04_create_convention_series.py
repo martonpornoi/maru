@@ -73,7 +73,10 @@ def test_organization_record_shows_only_its_series_and_contextual_add() -> None:
     assert "Synthetic Retreat" in content
     assert "Inactive" in content
     assert "Other Tenant Brand" not in content
-    assert content.count('class="baseline-sidebar-row"') == 2
+    assert content.count('class="baseline-sidebar-row"') == 3
+    assert 'href="/admin/platform/accounts/"' in content
+    assert "Accounts" in content
+    assert 'aria-label="Invite person account"' in content
     assert content.count('aria-current="page"') == 1
     assert 'class="baseline-sidebar-context"' in content
     assert "Organization record" in content
@@ -147,7 +150,10 @@ def test_platform_administrator_can_open_scoped_series_creation() -> None:
     assert '<option value="active" selected>Active</option>' in content
     assert "One recurring brand, no edition" in content
     assert "does not make this platform account part" in content
-    assert content.count('class="baseline-sidebar-row"') == 2
+    assert content.count('class="baseline-sidebar-row"') == 3
+    assert 'href="/admin/platform/accounts/"' in content
+    assert "Accounts" in content
+    assert 'aria-label="Invite person account"' in content
     assert content.count('aria-current="page"') == 1
     assert 'class="baseline-sidebar-context"' in content
     assert "Organization record" in content

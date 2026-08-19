@@ -43,7 +43,7 @@ def test_platform_administrator_can_reach_the_step_by_step_workflow() -> None:
     assert "Convention work" in content
 
 
-def test_admin_home_exposes_the_compact_platform_navigation_row() -> None:
+def test_admin_home_exposes_searchable_platform_navigation_destinations() -> None:
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     client = Client()
     client.force_login(administrator)
@@ -52,12 +52,23 @@ def test_admin_home_exposes_the_compact_platform_navigation_row() -> None:
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Platform administration" in content
-    assert 'class="maru-platform-navigation"' in content
-    assert 'class="baseline-sidebar-row"' in content
+    assert content.count('id="nav-sidebar"') == 1
+    assert content.count('id="nav-filter"') == 1
+    assert "<h2>Platform</h2>" in content
+    assert (
+        'data-navigation-search="organizations find and continue setting up' in content
+    )
+    assert "organizers conventions tenants foundation platform" in content
+    assert 'data-navigation-search="add organization create a new organizer' in content
+    assert "new organizer convention tenant actions" in content
+    assert 'value="platform.organizations"' in content
+    assert 'data-navigation-kind="action"' in content
     assert 'href="/admin/platform/organizations/"' in content
     assert 'href="/admin/platform/organizations/new/"' in content
-    assert 'aria-label="Add organization"' in content
+    assert "<span>Organizations</span>" in content
+    assert "<span>Add organization</span>" in content
+    assert 'class="maru-platform-navigation"' not in content
+    assert 'class="baseline-sidebar-row"' not in content
 
 
 def test_platform_workflow_uses_one_admin_shell_and_breadcrumb_trail() -> None:
@@ -80,7 +91,7 @@ def test_platform_workflow_uses_one_admin_shell_and_breadcrumb_trail() -> None:
     assert 'data-page="create-organization"' in content
 
 
-def test_platform_sidebar_progressively_reveals_the_exact_edition_context() -> None:
+def test_platform_navigation_flattens_the_exact_edition_context() -> None:
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     organization = OrganizationFactory(name="Synthetic Maru Organizers")
     series = ConventionSeriesFactory(
@@ -108,14 +119,18 @@ def test_platform_sidebar_progressively_reveals_the_exact_edition_context() -> N
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert 'class="maru-platform-navigation"' in content
-    assert 'class="baseline-sidebar-row"' in content
+    assert content.count('id="nav-filter"') == 1
+    assert 'class="maru-platform-navigation"' not in content
+    assert 'class="baseline-sidebar-row"' not in content
     assert "Synthetic Maru Organizers" in content
     assert "Synthetic Marucon" in content
     assert "Synthetic Marucon 2031" in content
     assert "Organization record" in content
     assert "Series record" in content
-    assert "Overview" in content
+    assert "<span>Edition overview</span>" in content
+    assert f'value="organization.{organization.id}.record"' in content
+    assert f'value="series.{series.id}.record"' in content
+    assert f'value="edition.{edition.id}.overview"' in content
     assert (
         f'href="/admin/platform/organizations/{organization.slug}/series/'
         f'{series.slug}/editions/{edition.slug}/"' in content
@@ -152,7 +167,8 @@ def test_platform_navigation_is_hidden_from_ordinary_accounts() -> None:
     admin_content = admin_response.content.decode()
     assert "Platform administration" not in admin_content
     assert admin_content.count('id="nav-filter"') == 1
-    assert '<input type="hidden" id="nav-filter" value="">' in admin_content
+    assert 'type="search"' in admin_content
+    assert "Find a page" in admin_content
     assert platform_response.status_code == 403
 
 

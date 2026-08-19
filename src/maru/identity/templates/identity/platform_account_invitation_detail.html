@@ -1,0 +1,374 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'identity/account_invitations.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}Account invitation · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  Platform administration &rsaquo;
+  <a href="{% url 'platform-account-inventory' %}">User accounts</a>
+  &rsaquo; Invitation
+{% endblock %}
+
+{% block baseline_content %}
+  {% if invitation_detail_state == "invalid" %}
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Platform identity</p>
+      <h1>Invalid invitation request</h1>
+    </header>
+    <section class="baseline-state baseline-state--error identity-state-panel" role="alert">
+      <h2>Use the clean invitation route</h2>
+      <p>No protected identity values were loaded or released.</p>
+    </section>
+  {% elif invitation_detail_state == "step_up_required" %}
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Platform identity</p>
+      <h1>Extra sign-in check required</h1>
+    </header>
+    <section class="baseline-state baseline-state--warning identity-state-panel" role="alert">
+      <h2>Confirm this session before reconciling delivery</h2>
+      <p>
+        Complete the account-security step-up for this signed-in session, then
+        reopen the invitation and submit the reconciliation again. Maru did
+        not parse or redisplay the submitted delivery evidence.
+      </p>
+    </section>
+  {% elif invitation_detail_state == "limit_exceeded" %}
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Platform identity</p>
+      <h1>Invitation timeline unavailable</h1>
+    </header>
+    <section class="baseline-state baseline-state--warning identity-state-panel" role="status">
+      <h2>The complete timeline exceeds its safety ceiling</h2>
+      <p>
+        Maru did not show a partial lifecycle. An identity operator must review
+        the retained history before this detail page can be released.
+      </p>
+    </section>
+  {% elif invitation_detail_state == "unavailable" %}
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Platform identity</p>
+      <h1>Invitation unavailable</h1>
+    </header>
+    <section class="baseline-state baseline-state--error identity-state-panel" role="alert">
+      <h2>The protected record could not be loaded</h2>
+      <p>
+        Authorization, projection, or mandatory read-audit evidence failed.
+        Maru released no identity labels or partial history.
+      </p>
+    </section>
+  {% elif invitation %}
+    <a class="baseline-back-link" href="{% url 'platform-account-inventory' %}">← User accounts</a>
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">Account invitation</p>
+      <h1>{% if invitation.display_name %}{{ invitation.display_name }}{% elif invitation.login_handle %}{{ invitation.login_handle }}{% else %}Invited person account{% endif %}</h1>
+      <p class="baseline-intro">
+        Review this recipient-owned identity setup, its delivery control, and
+        its complete bounded lifecycle. No convention relationship is implied.
+      </p>
+      <p class="baseline-record-meta">
+        <span>Status: <strong>{{ invitation.status|capfirst }}</strong></span>
+        <span>Invitation version: <strong>{{ invitation.invitation_version }}</strong></span>
+        <span>Inventory version: <strong>{{ invitation.aggregate_version }}</strong></span>
+      </p>
+    </header>
+
+    {% include "core/_baseline_access_summary.html" with access_operation="inspect and manage this platform account invitation" %}
+
+    <section class="baseline-panel" aria-labelledby="account-next-step-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Next step</p>
+          {% if invitation.status == "accepted" %}
+            <h2 id="account-next-step-title">Continue to organization setup</h2>
+          {% elif invitation.status == "pending" %}
+            <h2 id="account-next-step-title">Recipient account acceptance</h2>
+          {% elif invitation.status == "expired" %}
+            <h2 id="account-next-step-title">Reissue the invitation</h2>
+          {% else %}
+            <h2 id="account-next-step-title">Return to user accounts</h2>
+          {% endif %}
+        </div>
+      </div>
+      {% if invitation.status == "accepted" %}
+        <p>
+          This person now has an active, verified user account. To establish a
+          Board role, choose the organization and open Representation &amp; access.
+        </p>
+      {% elif invitation.status == "pending" %}
+        <p>
+          The person must accept this invitation and choose their password
+          before their email can be used for an Executive Board appointment.
+          You can prepare the organization while you wait.
+        </p>
+      {% elif invitation.status == "expired" %}
+        <p>
+          Queue a fresh invitation below. Continue to Board setup only after
+          the recipient has accepted and the account is active and verified.
+        </p>
+      {% else %}
+        <p>
+          This invitation cannot continue to a Board appointment. Review the
+          user account list before choosing an organization.
+        </p>
+      {% endif %}
+      <div class="baseline-form-actions">
+        <a class="baseline-primary-link" href="{% url 'platform-account-inventory' %}">View user accounts</a>
+        <a class="baseline-secondary-link" href="{% url 'baseline-admin-home' %}">Choose an organization</a>
+      </div>
+    </section>
+
+    {% if action_error %}
+      <div class="baseline-errors" role="alert">
+        <p>{{ action_error }}</p>
+        {% if reload_required %}
+          <p><a href="{% url 'platform-account-invitation-detail' invitation.invitation_id %}">Reload the current invitation</a></p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <section class="baseline-panel" aria-labelledby="invited-account-summary-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Reserved identity</p>
+          <h2 id="invited-account-summary-title">Person account</h2>
+        </div>
+        <span class="baseline-count">{% if invitation.is_active %}Active{% else %}Inactive{% endif %}</span>
+      </div>
+      <dl class="baseline-fact-grid identity-fact-grid">
+        <div><dt>Email address</dt><dd>{{ invitation.email }}</dd></div>
+        <div><dt>Username</dt><dd>{{ invitation.login_handle|default:"Not set" }}</dd></div>
+        <div><dt>Display name</dt><dd>{{ invitation.display_name|default:"Not set" }}</dd></div>
+        <div><dt>Kind</dt><dd>{% if invitation.account_kind == "person" %}Person{% else %}{{ invitation.account_kind|capfirst }}{% endif %}</dd></div>
+        <div><dt>Email verification</dt><dd>{% if invitation.is_email_verified %}Verified{% else %}Not verified{% endif %}</dd></div>
+        <div><dt>Expires</dt><dd>{{ invitation.expires_at|date:"DATETIME_FORMAT" }}</dd></div>
+        <div><dt>Created by</dt><dd>{{ invitation.created_by_display_name|default:"Platform administrator" }}</dd></div>
+        <div><dt>Created</dt><dd>{{ invitation.created_at|date:"DATETIME_FORMAT" }}</dd></div>
+      </dl>
+    </section>
+
+    <section class="baseline-panel" aria-labelledby="invitation-delivery-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Durable effect</p>
+          <h2 id="invitation-delivery-title">Current delivery</h2>
+        </div>
+        <span class="baseline-count">
+          {% if invitation.current_delivery %}{{ invitation.current_delivery.status|capfirst }}{% else %}No current delivery{% endif %}
+        </span>
+      </div>
+      {% if invitation.current_delivery %}
+        <dl class="baseline-fact-grid identity-fact-grid">
+          <div><dt>Attempts</dt><dd>{{ invitation.current_delivery.attempt_count }} of {{ invitation.current_delivery.max_attempts }}</dd></div>
+          <div><dt>Delivery version</dt><dd>{{ invitation.current_delivery.aggregate_version }}</dd></div>
+          <div><dt>Reconciliation</dt><dd>{{ invitation.current_delivery.reconciliation_state|capfirst }}</dd></div>
+          <div><dt>Last attempt</dt><dd>{{ invitation.current_delivery.last_attempt_at|date:"DATETIME_FORMAT"|default:"Not attempted" }}</dd></div>
+          <div><dt>Next retry</dt><dd>{{ invitation.current_delivery.next_retry_at|date:"DATETIME_FORMAT"|default:"Not scheduled" }}</dd></div>
+          <div><dt>Confirmed delivery</dt><dd>{{ invitation.current_delivery.delivered_at|date:"DATETIME_FORMAT"|default:"Not confirmed" }}</dd></div>
+          <div><dt>Safe result code</dt><dd>{{ invitation.current_delivery.safe_error_code|default:"No failure code" }}</dd></div>
+        </dl>
+      {% else %}
+        <div class="baseline-state"><h3>No current delivery</h3><p>This terminal invitation has no active delivery effect.</p></div>
+      {% endif %}
+    </section>
+
+    {% if invitation.current_delivery and invitation.current_delivery.reconciliation_state == "required" %}
+      <section class="baseline-panel identity-lifecycle-actions" aria-labelledby="delivery-reconciliation-title">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">Uncertain provider outcome</p>
+            <h2 id="delivery-reconciliation-title">Reconcile current delivery</h2>
+          </div>
+          <span class="baseline-count">Step-up required</span>
+        </div>
+        <div class="identity-action-body">
+          <p>
+            Check the restricted provider console first. Confirm delivery only
+            when the provider accepted this exact message; otherwise schedule
+            one bounded retry. These commands never reveal the encrypted code
+            or private provider failure details in Maru.
+          </p>
+        </div>
+
+        <details{% if active_action == "delivery_delivered" %} open{% endif %}>
+          <summary>Confirm provider delivery</summary>
+          <div class="identity-action-body">
+            {% if delivery_delivered_form.non_field_errors or delivery_delivered_form.expected_version.errors or delivery_delivered_form.retry_key.errors %}
+              <div class="baseline-errors" role="alert">
+                {{ delivery_delivered_form.non_field_errors }}
+                {{ delivery_delivered_form.expected_version.errors }}
+                {{ delivery_delivered_form.retry_key.errors }}
+              </div>
+            {% endif %}
+            <form method="post" action="{% url 'platform-identity-delivery-resolve-delivered' invitation.invitation_id invitation.current_delivery.delivery_id %}" class="baseline-form" novalidate>
+              {% csrf_token %}
+              {{ delivery_delivered_form.expected_version }}
+              {{ delivery_delivered_form.retry_key }}
+              {% include "core/_baseline_form_field.html" with field=delivery_delivered_form.provider_reference %}
+              {% include "core/_baseline_form_field.html" with field=delivery_delivered_form.reason %}
+              <div class="baseline-form-actions"><button type="submit"{% if reload_required %} disabled aria-disabled="true"{% endif %}>Record confirmed delivery</button></div>
+            </form>
+          </div>
+        </details>
+
+        <details{% if active_action == "delivery_retry" %} open{% endif %}>
+          <summary>Schedule controlled retry</summary>
+          <div class="identity-action-body">
+            {% if delivery_retry_form.non_field_errors or delivery_retry_form.expected_version.errors or delivery_retry_form.retry_key.errors %}
+              <div class="baseline-errors" role="alert">
+                {{ delivery_retry_form.non_field_errors }}
+                {{ delivery_retry_form.expected_version.errors }}
+                {{ delivery_retry_form.retry_key.errors }}
+              </div>
+            {% endif %}
+            <form method="post" action="{% url 'platform-identity-delivery-resolve-retry' invitation.invitation_id invitation.current_delivery.delivery_id %}" class="baseline-form" novalidate>
+              {% csrf_token %}
+              {{ delivery_retry_form.expected_version }}
+              {{ delivery_retry_form.retry_key }}
+              {% include "core/_baseline_form_field.html" with field=delivery_retry_form.reason %}
+              <div class="baseline-form-actions"><button type="submit"{% if reload_required %} disabled aria-disabled="true"{% endif %}>Schedule one retry</button></div>
+            </form>
+          </div>
+        </details>
+      </section>
+    {% endif %}
+
+    {% if invitation.status == "pending" or invitation.status == "expired" %}
+      <section class="baseline-panel identity-lifecycle-actions" aria-labelledby="invitation-actions-title">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">Separate lifecycle commands</p>
+            <h2 id="invitation-actions-title">Invitation actions</h2>
+          </div>
+        </div>
+
+        <details{% if active_action == "reissue" %} open{% endif %}>
+          <summary>Reissue invitation</summary>
+          <div class="identity-action-body">
+            <p>
+              Invalidate the previous code, extend the code-owned expiry, and
+              queue a fresh encrypted delivery. The reserved account stays inactive.
+            </p>
+            {% if reissue_form.non_field_errors or reissue_form.expected_version.errors or reissue_form.retry_key.errors %}
+              <div class="baseline-errors" role="alert">
+                {{ reissue_form.non_field_errors }}
+                {{ reissue_form.expected_version.errors }}
+                {{ reissue_form.retry_key.errors }}
+              </div>
+            {% endif %}
+            <form method="post" action="{% url 'platform-account-invitation-reissue' invitation.invitation_id %}" class="baseline-form" novalidate>
+              {% csrf_token %}
+              {{ reissue_form.expected_version }}
+              {{ reissue_form.retry_key }}
+              {% include "core/_baseline_form_field.html" with field=reissue_form.reason %}
+              <div class="baseline-form-actions"><button type="submit"{% if reload_required %} disabled aria-disabled="true"{% endif %}>Queue fresh invitation</button></div>
+            </form>
+          </div>
+        </details>
+
+        {% if invitation.status == "pending" %}
+          <details class="identity-danger-disclosure"{% if active_action == "revoke" %} open{% endif %}>
+            <summary>Revoke invitation</summary>
+            <div class="identity-action-body baseline-danger-zone">
+              <p>
+                Permanently invalidate the current code and destroy any retained
+                encrypted payload. The inactive reserved identity is kept for an
+                explicit later identity-lifecycle decision.
+              </p>
+              {% if revoke_form.non_field_errors or revoke_form.expected_version.errors or revoke_form.retry_key.errors %}
+                <div class="baseline-errors" role="alert">
+                  {{ revoke_form.non_field_errors }}
+                  {{ revoke_form.expected_version.errors }}
+                  {{ revoke_form.retry_key.errors }}
+                </div>
+              {% endif %}
+              <form method="post" action="{% url 'platform-account-invitation-revoke' invitation.invitation_id %}" class="baseline-form baseline-danger-form" novalidate>
+                {% csrf_token %}
+                {{ revoke_form.expected_version }}
+                {{ revoke_form.retry_key }}
+                {% include "core/_baseline_form_field.html" with field=revoke_form.reason %}
+                <div class="baseline-form-actions"><button type="submit"{% if reload_required %} disabled aria-disabled="true"{% endif %}>Revoke invitation</button></div>
+              </form>
+            </div>
+          </details>
+        {% endif %}
+      </section>
+    {% else %}
+      <section class="baseline-read-only baseline-panel" aria-labelledby="terminal-invitation-title">
+        <p class="baseline-kicker">Terminal lifecycle</p>
+        <h2 id="terminal-invitation-title">No invitation action is available</h2>
+        <p>
+          Accepted and revoked invitations cannot be reissued or changed. The
+          retained lifecycle remains inspection-only.
+        </p>
+      </section>
+    {% endif %}
+
+    <section class="baseline-panel" aria-labelledby="invitation-history-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Retained evidence</p>
+          <h2 id="invitation-history-title">Invitation lifecycle</h2>
+        </div>
+        <span class="baseline-count">{{ invitation.transitions|length }} transition{{ invitation.transitions|length|pluralize }}</span>
+      </div>
+      {% if invitation.transitions %}
+        <ol class="baseline-activity-list identity-timeline">
+          {% for transition in invitation.transitions %}
+            <li>
+              <div><strong>{{ transition.operation|capfirst }}</strong><span>version {{ transition.version }}</span></div>
+              <p>{{ transition.reason }}</p>
+              <p class="baseline-activity-meta">
+                <span>{{ transition.occurred_at|date:"DATETIME_FORMAT" }}</span>
+                <span>{% if transition.actor_display_name %}{{ transition.actor_display_name }}{% else %}System policy{% endif %}</span>
+                <span>{{ transition.source_channel }}</span>
+              </p>
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <div class="baseline-state"><h3>No transition evidence</h3><p>The invitation record is incomplete and should be reviewed.</p></div>
+      {% endif %}
+    </section>
+
+    <section class="baseline-panel" aria-labelledby="delivery-attempts-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">Delivery evidence</p>
+          <h2 id="delivery-attempts-title">Delivery attempts</h2>
+        </div>
+        <span class="baseline-count">{{ invitation.delivery_attempts|length }} attempt{{ invitation.delivery_attempts|length|pluralize }}</span>
+      </div>
+      {% if invitation.delivery_attempts %}
+        <ol class="baseline-activity-list identity-timeline">
+          {% for attempt in invitation.delivery_attempts %}
+            <li>
+              <div><strong>{{ attempt.outcome|capfirst }}</strong><span>attempt {{ attempt.attempt_number }}</span></div>
+              <p class="baseline-activity-meta">
+                <span>{{ attempt.started_at|date:"DATETIME_FORMAT" }} – {{ attempt.finished_at|date:"DATETIME_FORMAT" }}</span>
+                {% if attempt.safe_error_code %}<span>{{ attempt.safe_error_code }}</span>{% endif %}
+                {% if attempt.next_retry_at %}<span>Retry {{ attempt.next_retry_at|date:"DATETIME_FORMAT" }}</span>{% endif %}
+              </p>
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <div class="baseline-state"><h3>No delivery attempt yet</h3><p>The durable effect is waiting for its dedicated delivery worker.</p></div>
+      {% endif %}
+    </section>
+
+    <aside class="baseline-boundary" aria-labelledby="invitation-detail-boundary-title">
+      <p class="baseline-kicker">Access boundary</p>
+      <h2 id="invitation-detail-boundary-title">Account security is platform-scoped</h2>
+      <p>
+        Only active platform administrators can inspect this C2 record. The
+        invitation itself grants no convention access, and its bearer code,
+        digest, encrypted payload, provider reference, and network fingerprint
+        are never exposed here.
+      </p>
+    </aside>
+  {% endif %}
+{% endblock %}

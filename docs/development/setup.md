@@ -1,7 +1,7 @@
 # Development setup
 
 Status: Production-consolidation M1.1/M2.1 locally migrated and smoke-verified
-Last updated: 2026-08-01
+Last updated: 2026-08-16
 
 ## Prerequisites
 
@@ -31,6 +31,36 @@ omitted, so keep `MARU_DATABASE_URL` set in the server terminal.
 Override settings with environment variables described in `.env.example`.
 Maru does not automatically read `.env`; a shell or supervised runtime supplies
 configuration.
+
+## API contract and interactive documentation
+
+After signing in as an active platform administrator, use:
+
+- <http://127.0.0.1:8000/api/v1/docs/> for the searchable Swagger reference;
+- <http://127.0.0.1:8000/api/v1/redoc/> for the reading-focused ReDoc reference;
+  and
+- <http://127.0.0.1:8000/api/v1/schema> for the authoritative machine-readable
+  OpenAPI 3.1 contract.
+
+Swagger and ReDoc render that same schema; they do not define another contract.
+Swagger submit methods are disabled, and neither view grants credentials or
+bypasses API authentication, tenant/edition scope, capabilities, CSRF,
+step-up, strict-input, or idempotency controls. The schema and both references
+are private to a freshly resolved active platform administrator and are not
+exposed through registration-client CORS.
+
+The browser assets are supplied locally by the locked
+`drf-spectacular-sidecar` package. Generate and validate the drift-controlled
+artifact with:
+
+```powershell
+uv run python src/manage.py spectacular --file openapi.yaml --validate
+```
+
+The checked-in `openapi.yaml` and generated TypeScript definitions remain the
+build artifacts consumed by clients. Production builds must run
+`collectstatic` and serve the bundled documentation assets from the same
+immutable release.
 
 ## Bootstrap login
 
@@ -213,6 +243,10 @@ The command creates:
 - lifecycle transitions through the authorized command, with their audit,
   domain-event, and pending outbox records.
 
+The fixture deliberately leaves invitation-scheduler liveness evidence empty.
+Only an actual delivery, expiry, or retention scheduler run may write that
+heartbeat; synthetic data must not make readiness report a live worker.
+
 Every synthetic account uses the static local-only password
 `Z7!maru-demo-fixture-2026`. Addresses use the reserved `.invalid` top-level
 domain. The command is available only under local and test settings, never
@@ -311,6 +345,17 @@ database might contain valuable work.
 The edition-creation API requires a UUID `Idempotency-Key` HTTP header; its JSON
 body must not contain `idempotency_key`. HTML Page 6 manages its own hidden
 retry UUID. Both adapters call the same service and receipt boundary.
+
+All Page 10 platform-invitation API mutations likewise require a canonical
+lower-case UUID `Idempotency-Key` header and reject `retry_key` in JSON. Public
+acceptance is JSON-only at `/api/v1/public/account-invitations/accept`; submit
+the invitation code in the body, never in a path or query string. The exact-
+origin CORS response permits `Idempotency-Key` for approved seasonal clients.
+Page 10 Registration definition mutations use the same header-only retry
+contract on the canonical configuration-command and profile-extension-field
+endpoints. Their JSON bodies must not contain `retry_key`; configuration
+commands additionally require one documented closed `operation` value and the
+current positive `expected_version`.
 
 See the [effect worker runbook](../operations/effects-worker-runbook.md) before
 quarantine replay or queue recovery.

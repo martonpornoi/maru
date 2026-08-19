@@ -12,6 +12,7 @@ from django.db import (
     IntegrityError,
     close_old_connections,
     connection,
+    connections,
     transaction,
 )
 from django.utils import timezone
@@ -430,7 +431,7 @@ def test_exclusive_cutover_barrier_rejects_a_concurrent_raw_writer() -> None:
                 assert release.wait(timeout=10)
         finally:
             acquired.set()
-            close_old_connections()
+            connections.close_all()
 
     with ThreadPoolExecutor(max_workers=1) as executor:
         holder = executor.submit(hold_exclusive_barrier)

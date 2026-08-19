@@ -1,0 +1,20 @@
+{% extends "registration/setup_action_base.html" %}
+
+{% block registration_action_title %}Minor registration policy{% endblock %}
+{% block registration_action_breadcrumb %}Minor policy{% endblock %}
+{% block registration_action_heading %}Minor registration policy{% endblock %}
+{% block registration_action_intro %}Record the guardian threshold and jurisdiction-reviewed notice evidence for this exact form version. The reviewer and review time are attributed by Maru, never accepted from the browser.{% endblock %}
+{% block registration_reload_link %}<a href="{% url 'registration-setup-minor-policy' organization.slug convention_series.slug edition.slug configuration.id %}">Reload the current minor policy</a>{% endblock %}
+
+{% block registration_action_content %}
+  <section class="baseline-panel baseline-form-panel" aria-labelledby="minor-policy-editor-title">
+    <div class="baseline-section-heading"><p class="baseline-kicker">Guardian workflow</p><h2 id="minor-policy-editor-title">{% if minor_policy %}Update policy{% else %}Create policy{% endif %}</h2><p>A disabled policy may omit legal evidence. Enabling it requires every evidence field and a threshold above the configuration minimum age.</p></div>
+    <form method="post" action="{% url 'registration-setup-minor-policy' organization.slug convention_series.slug edition.slug configuration.id %}" class="baseline-form" novalidate>{% csrf_token %}
+      {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+      {% if form.non_field_errors %}<div class="baseline-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      {% for field in form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}
+      <div class="baseline-form-actions"><button type="submit"{% if reload_required or not registration_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Save minor policy</button><a class="baseline-secondary-link" href="{{ definition_back_location }}">Cancel</a></div>
+    </form>
+  </section>
+  {% if minor_policy %}<section class="baseline-panel registration-section-danger" aria-labelledby="minor-policy-remove-title"><h2 id="minor-policy-remove-title">Remove unused policy</h2><p>Removal never cascades into guardian consent evidence. Maru refuses when any protected record depends on this policy.</p><form method="post" action="{% url 'remove-registration-setup-minor-policy' organization.slug convention_series.slug edition.slug configuration.id %}" class="baseline-form" novalidate>{% csrf_token %}{% for hidden in remove_form.hidden_fields %}{{ hidden }}{% endfor %}{% for field in remove_form.visible_fields %}{% include "core/_baseline_form_field.html" with field=field %}{% endfor %}<div class="baseline-form-actions"><button type="submit" class="registration-danger-button">Remove policy</button></div></form></section>{% endif %}
+{% endblock %}

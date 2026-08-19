@@ -17,7 +17,6 @@ def _create_data(**overrides: str) -> dict[str, str]:
         "name": "Registration",
         "description": "Attendee intake and badge support.",
         "parent_department_id": "",
-        "display_order": "20",
         "expected_version": "0",
         "reason": "Establish the operational structure.",
         "retry_key": str(uuid4()),
@@ -29,11 +28,6 @@ def _create_data(**overrides: str) -> dict[str, str]:
 @pytest.mark.parametrize(
     ("field_name", "value"),
     [
-        ("display_order", "+1"),
-        ("display_order", " 1"),
-        ("display_order", "01"),
-        ("display_order", "1.0"),
-        ("display_order", "\uff11"),
         ("expected_version", "-1"),
     ],
 )
@@ -178,13 +172,33 @@ def test_department_action_forms_use_unique_unprefixed_dom_identifiers() -> None
     assert "No parent \u2014 top-level Department" in str(update)
 
 
+def test_department_forms_keep_display_order_server_owned() -> None:
+    creation = DepartmentCreationForm(
+        parent_choices=(),
+        expected_version=0,
+    )
+    update = DepartmentUpdateForm(
+        parent_choices=(),
+        expected_version=1,
+    )
+    forged = DepartmentCreationForm(
+        _create_data(display_order="25"),
+        parent_choices=(),
+        expected_version=0,
+    )
+
+    assert "display_order" not in creation.fields
+    assert "display_order" not in update.fields
+    assert not forged.is_valid()
+    assert "unsupported input fields" in str(forged.non_field_errors()).lower()
+
+
 def test_existing_department_actions_require_a_positive_structure_version() -> None:
     update = DepartmentUpdateForm(
         {
             "name": "Registration",
             "description": "",
             "parent_department_id": "",
-            "display_order": "0",
             "expected_version": "0",
             "reason": "Update the Department.",
         },

@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}My equipment offers{% endblock %}
+{% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs" aria-current="page">My Maru / Equipment offers</div>{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-management-page">
+    <header class="maru-page-header">
+      <div>
+        <p class="maru-eyebrow">My Maru</p>
+        <h1>My equipment offers</h1>
+        <p>Only conventions where you may currently offer equipment or already own an offer appear here.</p>
+      </div>
+    </header>
+    <section class="module" aria-labelledby="offer-editions-title">
+      <h2 id="offer-editions-title">Conventions</h2>
+      {% if offer_editions %}
+        <ul>
+          {% for item in offer_editions %}
+            <li>
+              <a href="{% url 'my-logistics-offers' item.organization_slug item.series_slug item.edition_slug %}">
+                <strong>{{ item.edition_name }}</strong> — {{ item.organization_name }}
+              </a>
+              <span>
+                {{ item.offer_count }} offer{{ item.offer_count|pluralize }};
+                {{ item.pending_offer_count }} pending
+                {% if item.can_submit %}; new offers open{% endif %}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No equipment-offer editions are currently available, and you have no existing offers.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

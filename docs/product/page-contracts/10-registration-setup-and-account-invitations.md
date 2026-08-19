@@ -8,11 +8,11 @@
 - Public acceptance route: `/accounts/invitations/accept/`
 - Requirements: IDN-001, IDN-002, IDN-004, IDN-006, IDN-007, IDN-009,
   IDN-011, IDN-013, EVT-002, EVT-003, REG-001, REG-002, REG-012 through
-  REG-015, REG-021 through REG-024, UX-019, UX-020, UX-026, AUD-001 through
-  AUD-003, AUD-005, PRI-001, PRI-004, PRI-009, INT-001, INT-002, NFR-001
-  through NFR-004, NFR-008 through NFR-010
+  REG-015, REG-021 through REG-024, UX-019, UX-020, UX-026, UX-029,
+  AUD-001 through AUD-003, AUD-005, PRI-001, PRI-004, PRI-009, INT-001,
+  INT-002, NFR-001 through NFR-004, NFR-008 through NFR-010
 - Decisions: ADRs 0005, 0007, 0009, 0010, 0013, 0016, 0019, 0026, 0029,
-  0031, 0039, 0042, 0045, and 0047
+  0031, 0039, 0042, 0045, 0047, and 0055
 
 ## Purpose, outcome, and current truth
 
@@ -39,19 +39,59 @@ This contract does not assert that the current registration APIs, Django
 model-admin pages, React registration destination, fixture writers, or identity
 bootstrap already meet it. Those are inputs to the staged migration in ADR
 0047. Page 10 becomes the canonical writer only after its readiness gate is
-active. The current service's at-least-one-custom-question activation gate and
-truthiness-based capacity inheritance do not meet this contract and must be
-replaced before that gate can pass.
+active. Legacy compatibility writers with an at-least-one-custom-question gate
+or truthiness-based capacity inheritance do not meet this contract and must be
+retired or reconciled before that gate can pass.
+
+### Working-tree implementation checkpoint
+
+The builder and definition-command core is independently accepted. Independent
+review rejected the first configuration and profile-definition lifecycle cores
+for incomplete authoritative evidence, source provenance, database
+immutability, nested validation, review durability, and populated downgrade
+behavior. A second configuration corrective candidate now adds the governed
+reusable-template publication command and proves complete catalog and prior-
+edition source graphs before listing, importing, or replaying them. Imported
+eligibility is fixed at the successful import ceremony; later edition-date or
+label changes do not rewrite that fact, and same-organization cross-series
+policy copies use the source edition's actual series authority. Additive
+registration migration `0037` guards complete template publication and active
+configuration evidence. This candidate still awaits a separate independent
+verdict. Invitation-retention v7 was likewise
+rejected; its v8 corrective candidate now has permanent receipt-aware
+tombstones, complete provider-reference disposal, fair bounded assessment,
+strict database-time/source evidence, and populated-v7 recovery tests, but
+still awaits an independent verdict. Canonical lifecycle adapters, successor and
+retirement commands, profile-value commands, compatibility-writer
+reconciliation, stopped-writer guards, and production cutover remain separate
+work; this checkpoint does not mark Page 10 implemented or production ready.
+
+Independently of that registration cutover, the first management-experience
+slice implements the **User accounts** inventory, contextual invitation flow,
+status-aware invitation next steps, and the handoff toward Page 8. Focused HTML
+integration tests cover that presentation. It changes no invitation command,
+identity-retention, authorization, or convention-relationship behavior and is
+not evidence that the broader Page 10 writer is ready.
 
 ## Placement and navigation
 
-The shared sidebar has two independently authorized entries:
+The shared task-oriented navigation has two independently authorized durable
+destinations:
 
-- **Accounts** with an adjacent **Invite** action in Platform administration,
-  visible only to active platform administrators; and
+- **User accounts** in Platform administration, visible only to active platform
+  administrators; and
 - **Registration** once beneath the selected exact edition, visible only after
   the complete route scope is safely resolved and the viewer may access the
   registration setup workspace.
+
+**Invite account** is a contextual action owned by **User accounts**. It remains
+discoverable through navigation search's search-only **Actions** group and is
+not pinnable or rendered as an equal-weight permanent sidebar destination. The
+inventory presents **Invite a user account** as its primary action. Search
+matches stable generic terms including `users`, `people`, `staff`, and
+`volunteers`; it never indexes protected account or tenant values. Authorized
+technical identity records remain in the collapsed, searchable **Specialist
+records** gateway.
 
 Each child page has exactly one current navigation action. It uses the same
 Maru logo, side-menu position, record header, modules, forms, buttons, status
@@ -61,10 +101,22 @@ embedded competing shell.
 
 The registration header shows the organization, series, edition, edition
 lifecycle, active registration version, setup state, and a computed
-effective-access explanation. The Accounts header explicitly says that account
-provisioning does not grant convention access. A **Manage access** control is
-shown only when the underlying exact-scope authority workflow exists and the
-viewer may use it; no inert page-local ACL editor is rendered.
+effective-access explanation. The **User accounts** header explicitly says
+that account provisioning does not grant convention access. Its results appear
+before the longer account-boundary explanation. Invitation detail presents a
+status-aware next step: wait for recipient acceptance, reissue an expired
+invitation, return to User accounts, or—only after acceptance—choose an
+organization and continue to **Representation & access**. That continuity does
+not create a membership, Board appointment, or authority and does not weaken
+Page 8's eligibility rules. A **Manage access** control is shown only when the
+underlying exact-scope authority workflow exists and the viewer may use it; no
+inert page-local ACL editor is rendered.
+
+At 1,100 CSS pixels and below the shared navigation uses the accessible
+closed-by-default overlay drawer and compact context selector defined by ADR
+0055. Wider layouts retain the persistent sidebar. The account inventory,
+invitation forms/detail, and eventual registration builder must reflow without
+page-level horizontal scrolling.
 
 ## Canonical browser surfaces
 
@@ -155,6 +207,8 @@ POST /api/v1/platform/account-invitations/{invitation_id}/reissue
 POST /api/v1/platform/account-invitations/{invitation_id}/revoke
 POST /api/v1/public/account-invitations/accept
 
+GET  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/setup
+POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/setup
 GET  /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration
 POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration/drafts
 POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration/{configuration_id}/commands
@@ -203,7 +257,7 @@ record.
 | Active person account | Own accepted identity and security history only | None unless separately authorized | None unless separately authorized | Own exact registration's attendee-visible, attendee-writable active fields |
 | Exact-edition configuration manager | No platform inventory or invitation right | Read and mutate through `registration.manage_configuration` within field/lifecycle policy | Manage definitions through `registration.manage_configuration` | No staff value access merely because definitions can be managed |
 | Exact-edition registration profile staff | No platform inventory or invitation right | No builder access merely from profile access | Read only if separately granted configuration authority | Read through `registration.view_profile_extensions`; write staff-permitted fields through `registration.update_profile_extensions` and a reason |
-| Active platform administrator | Global minimized account inventory and invitation commands | Explicit attributed oversight at the exact resolved edition | Explicit attributed oversight | Explicit oversight does not make the administrator the subject and never creates convention relationships |
+| Active platform administrator | Global minimized account inventory and invitation commands | Explicit attributed oversight at the exact resolved edition | Explicit attributed definition oversight | No profile-value access from platform status alone; a current person relationship and exact tenant capability are required |
 
 The two profile-extension staff capabilities are additive Page 10 capabilities;
 they must enter the versioned capability catalog with an exact-edition ceiling
@@ -438,10 +492,27 @@ C1/C2 is allowed. Keys beginning with `infinity`, `admission`, `entitlement`,
 `payment`, `role`, `capacity`, or `restriction` are rejected for the
 authoritative-domain reason, not merely as a naming preference.
 
+Implementation staging note: the current corrective lifecycle candidate
+accepts only a blank source for a newly created canonical profile definition.
+Template and prior-edition source selection fails closed until storage can bind
+the claim to one exact source definition identifier, generation, and canonical
+digest as this contract requires. Historical legacy container pointers remain
+preserved but do not authorize a new import claim.
+
 Create/update, approval, activation, retirement, and successor creation are
 separate commands. Approval records the actual current actor and server time.
 Activation requires approved current review and expected version. Retirement
-does not erase earlier values.
+does not erase earlier values. One predecessor may have at most one non-retired
+successor. The model and database enforce that invariant independently of the
+command, activation proves the exact successor-start evidence graph, and a
+retired definition version is terminal.
+
+Lifecycle retry replay is evidence verification, not receipt lookup. The exact
+action-specific target tuple and current definition digest must match the
+immutable receipt, audit, event, and required outbox graph. Receipt and target
+evidence is append-only at the database boundary. A populated downgrade that
+would remove successor action semantics fails closed and uses fix-forward
+recovery.
 
 Value writes accept one exact field identifier, the typed value, current
 expected field-key sequence, retry key, and a staff reason of 1–500 characters
@@ -451,6 +522,39 @@ actor, source channel, time, or audit data. A required field cannot receive an
 empty normalized value. An explicit clearing revision is available only where
 the definition is optional and the owning retention/purpose policy permits it;
 history remains append-only.
+
+The value aggregate has one durable control per registration/stable field key
+and one immutable receipt per successful command. The receipt binds actor,
+writer kind, exact scope and field, request digest, expected/result sequence,
+retry key, revision, correlation, and minimized audit/event/outbox evidence.
+An exact retry returns that historical result even after later commands advance
+the control; it does not require the historical revision to remain current.
+Revision and receipt insertion, current-pointer advancement, evidence, and the
+response projection either commit together or roll back together.
+
+The attendee/staff value projection is a deterministic limit-plus-one query of
+at most 128 active fields. It releases only the current value and sequence for
+each permitted stable key, performs a fresh final authorization decision,
+appends a sensitive-read audit, and includes a digest over field identifiers,
+definition versions, and current sequences. It never returns revision history
+or staff-only definitions to an attendee.
+
+Each profile-extension definition selects exactly one reader audience: owner
+self-service, exact registration staff, one exact current Department/team, all
+confirmed attendees, or public. Writer policy remains separate and cannot be
+broadened through the reader setting. Confirmed-attendee and public values join
+only the minimized attendee-directory projection, require current edition
+directory consent plus confirmed/check-in state, and are rechecked immediately
+before release. Withdrawal therefore removes publication without a cleanup job.
+
+The v1 value `POST` adapters require `expected_sequence` in the closed JSON
+body and one canonical lower-case UUID in `Idempotency-Key`; successful
+responses include `Idempotent-Replay`. Missing/invalid input is `400`, hidden
+scope or field is `404`, sequence/retry/limit conflict is `409`, and incomplete
+atomic evidence is a name/value-free RFC 9457 `503`. Staff reads and writes use
+only `registration.view_profile_extensions` and
+`registration.update_profile_extensions`; broader registration-summary or
+on-behalf authority does not imply access.
 
 ## Limits, ordering, and fail-closed reads
 
@@ -462,6 +566,7 @@ projection or hide omitted records behind an apparently complete editor:
 | accounts returned per page | 100 |
 | invitation transition/delivery rows shown per detail | 100 |
 | selectable published template versions | 100 |
+| selectable platform starter versions | 100 |
 | selectable prior editions | 100 |
 | drafts per edition | 32 |
 | sections per configuration | 64 |
@@ -495,13 +600,19 @@ reasoned lifecycle transition, not deletion. A successor copies independent
 draft rows and retains exact predecessor provenance; it never changes the form
 or price snapshot held by an existing registration.
 
-Imported content records source organization, optional series, exact template
+Imported tenant content records source organization, optional series, exact template
 or edition/configuration identity, source version, canonical content digest,
 import time, importing actor, and `review required`. Source labels are shown
 only after current source-scope authorization; stable identifiers/digest may
 remain as non-disclosing evidence if later access is lost. Import never copies
 accounts, answers, registrations, submissions, orders, entitlements, payment
 evidence, invitations, assignments, or profile values.
+
+Code-owned platform starters use a deterministic catalog identifier plus exact
+starter version and digest instead of pretending to be tenant records. Explicit
+selection copies independent edition-owned sections/questions/products into a
+review-required draft. Catalog upgrades never rewrite an existing copy, and
+organizer edits never alter the code-owned starter or another tenant's copy.
 
 Ordinary configuration mutations are allowed for Draft/Preparing edition work
 under a non-Suspended, non-Closed organization. Ready, Live, and Closing
@@ -551,8 +662,8 @@ state is prevented by the command receipt and challenge state.
 | token digest, abuse counters, request fingerprint | C3 | identity-security worker and authorized security operations only |
 | invitation reason and safe delivery failure detail | C2 | active platform administrators; value excluded from audit/event/log metadata |
 | configuration/template definitions | C1 or C2 | exact edition/template authority; published public wording is a separate projection decision |
-| profile-extension definition | Declared C1 or C2 | exact edition authority; purpose and writer policy mandatory |
-| profile-extension value and staff reason | Inherits C1/C2 field, reason C2 | owner and exact authorized staff only; never catalog-wide |
+| profile-extension definition | Declared C1 or C2 | exact edition authority; purpose, reader audience, and separate writer policy mandatory |
+| profile-extension value and staff reason | Inherits C1/C2 field, reason C2 | owner, exact registration/Department audience, or consented minimized confirmed/public directory projection; never catalog-wide |
 | legal name/address/date of birth/guardian/emergency/safety data | C3 purpose-specific domain | excluded from generic Page 10 question and extension definitions |
 | audit, receipt, event, delivery control | C1–C3 minimized evidence | append-only/control access; no source values or bearer secret |
 
@@ -636,8 +747,9 @@ Page 10 cannot be marked implemented until verification includes:
 - delivery-worker tests for delayed, duplicated, transiently failed,
   permanently failed, revoked, superseded, expired, and consumed invitations;
 - browser tests for empty, populated, denied, stale, overflow, dependency,
-  delivery-failure, success, validation, keyboard-ordering, and 390-pixel
-  states in the shared Maru shell;
+  delivery-failure, success, validation, keyboard ordering, the
+  320/390/768/958/1,024/1,280/1,920-pixel matrix, and 200 percent zoom in the
+  shared Maru shell;
 - accessibility checks plus manual keyboard and representative screen-reader
   evidence; and
 - performance tests at every declared ceiling with query counts, response-size
@@ -672,6 +784,17 @@ writer generation, worker availability, invitation expiry/cleanup scheduler,
 email adapter configuration, outbox lag, authorization catalog version, and
 OpenAPI parity. A missing dependency fails closed before Page 10 is mounted as
 canonical.
+
+The invitation-retention production gate requires one complete approved JSON
+policy, its exact migration-owner-activated database control, a successful
+`retention-v2` heartbeat no more than 26 hours old, no unheld due backlog more
+than 24 hours old, and immediate C4 envelope destruction for every terminal
+invitation. No duration is inferred by code. Holds remain separate audited
+commands; the worker still records and traverses held rows fairly while
+readiness excludes them from actionable backlog. Page 10 setup edits cannot
+release a hold or smuggle in deletion. Every successful scheduler heartbeat
+uses a database-materialized timestamp and an INSERT-time cursor-coherence
+guard; no public service accepts an evidence-time override.
 
 Metrics are low-cardinality and contain no email, handle, name, reason, field
 label, value, token, configuration name, or tenant name. Required signals

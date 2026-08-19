@@ -45,7 +45,9 @@ initial schema, service, HTML, authorization, and synthetic-fixture lifecycle
 are backend-verified alongside the M1.1 shell. ADR 0041 implements exact
 department/typed-resource scope without implicit hierarchy inheritance through
 sealed targets, policy, commands, immutable bindings, and database guards.
-Its contextual access editor remains unmounted. ADR 0042 makes repository
+ADR 0049 now mounts the contextual Access explanation, scoped assignment
+workspace, and read-only exact-person/immutable-role preview; deployment-
+shaped responsive/accessibility/load and owner evidence remain. ADR 0042 makes repository
 fixtures synthetic-only and removes the public-roster rehearsal implementation. ADR 0043 adds
 global platform emergency containment when a Board controller must be removed.
 ADR 0044 accepts exact actor/approver authority-source lineage, deterministic
@@ -72,7 +74,11 @@ immutable 22-Department
 `awoostria-reference@1` catalog pins Helper Board as sole root and contains no
 Executive Board Department. Page 9a.1 now mounts same-shell child forms and
 five strict API mutation operations for template application and Department
-create/update/reparent/reorder/retire/protected-delete. The definitive
+create/update/reparent/reorder/retire/protected-delete. ADR 0048 keeps the
+browser's sibling order server-owned: create and reparent append under the
+aggregate lock, unique placement survives ordinary edits, and saving an old
+duplicate uses the nearest following free position. The strict API retains
+explicit bounded ordering. The definitive
 adapter-expanded repository gate passes 1,693 tests in 1,653.43 seconds at
 90.50 percent total branch-inclusive coverage. Its 118 targeted new cases
 comprise 59 HTML, 50 API/contract, and 9 immutable-template invariant cases;
@@ -81,6 +87,43 @@ authenticated responsive-browser matrix remains pending. Production authority
 reconciliation,
 cutover, representative restore/PITR, accessibility, and owner evidence remain
 gates.
+
+ADR 0055 starts the management-experience recovery without replacing the
+canonical shell or authorization boundary. Its first repository-verified slice
+adds task-oriented navigation and administration home, code-owned natural-
+language search, progressive specialist-record disclosure, an accessible
+intermediate/narrow drawer, a shrinkable convention-context control, and a
+coherent User accounts -> invitation -> Executive Board progression. Focused
+static and 56-of-56 integration behaviors pass. The complete authenticated
+width/zoom, keyboard, automated-accessibility, screen-reader, and owner matrix,
+plus conversion of the remaining management journeys, remains required.
+
+The 2026-08-11 canonical repository acceptance supersedes those earlier
+focused counts as the current whole-tree gate: Ruff formatting/lint over 624
+files, strict mypy over 355 source files, deterministic frontend/OpenAPI,
+zero migration drift, and 4,067 of 4,067 collected tests pass in 15,558.23
+seconds (4:19:18) at 90.78 percent total branch-aware coverage. Behavior and
+security coverage repair in Registration and Identity retained the configured
+threshold and exclusions policy and exposed two real defects: Registration
+setup dependency failures now preserve `503` ordering, and canonical UUID forms
+follow the documented lower-case hyphenated version-agnostic shape. Installed
+module readiness, least-privilege ACL/runtime-role, and migration-graph checks
+pass. An authenticated read-only Logistics browser journey also passes at
+1,920- and 390-pixel widths. This accepts the repository gate and that scoped
+browser slice only; deployment/stopped-writer cutover, broader visual and
+mutation-role coverage, keyboard/automated accessibility, representative
+restore/PITR, and owner/governance gates remain.
+
+GitHub acceptance is now being moved from one impossible 45-minute job to
+separate static, Django/generated-contract, frontend, unit, dependency-
+security, and combined-coverage gates plus 12 isolated PostgreSQL integration
+shards. Every integration file remains whole and serialized inside its shard,
+while independent Actions runners provide database-safe parallelism. One
+stable `CI gate` is the branch-protection target. Pull-request browser smoke,
+nightly compatibility/concurrency/visual matrices, CodeQL/dependency review,
+and release recovery/attestation remain the next testing-infrastructure
+outcomes; ephemeral Actions databases do not satisfy production restore/PITR.
+
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current
@@ -167,11 +210,12 @@ confirmed empty Draft can be deleted, but a created series or any other
 protected relationship refuses deletion. Series creation generates scoped
 identity and audit evidence only. Edition creation starts one Draft identity
 with idempotency receipt, audit, domain event, and outbox; it does not create
-registration, programme, venue, people, or workforce records. The access
-summary distinguishes platform, Board, exact-edition, and own-invitation
-authority but remains provisional: exact department/resource enforcement now
-exists below the UI, while the computed human explanation and field-purpose
-detail remain Phase 1 work. Draft organizations
+registration, programme, venue, people, or workforce records. The Access
+component now resolves platform, Board, exact-edition, exact Department, typed
+resource, self, attendee/public, safeguarding, security, and fixed-policy
+contexts. Named relationship reads are audited, and signed exact-person or
+immutable-role preview is capped and read-only; it never creates page ACLs or
+changes the session principal. Draft organizations
 created during this interval must be brought under the IDN-012 Executive Board
 invariant before activation.
 
@@ -205,9 +249,10 @@ legacy reconciliation, representative unbounded candidate-cardinality load,
 deployment restore/PITR, and an actual production cutover remain open before
 production approval and the contextual hierarchy editor.
 Appointment expiry, routine replacement/removal,
-planned suspension/reactivation, invitation delivery, the contextual
-department/resource assignment editor, and the full
-effective-access header remain later M2 work.
+planned suspension/reactivation, invitation delivery, and the remaining
+specialist relationship resolvers remain later M2 work. The contextual Access
+component and scoped assignment/preview workspace are mounted; deployment-
+shaped accessibility, load, and owner evidence remain.
 
 Page 9a.0 adds one exact-edition Organization structure read beneath that
 foundation. Platform oversight remains non-participating; ordinary users need
@@ -277,25 +322,37 @@ policy without changing the immutable submission. Authoritative Infinity,
 payment, entitlement, capacity, role, and restriction facts cannot be
 reintroduced as extension fields.
 
-ADR 0047 and the Page 10 contract are accepted as the canonical remount and
-writer-cutover target. They add a platform-admin-only Accounts inventory with
-optional recipient-owned account invitations, plus one edition-scoped
-Registration workspace for explicit copy-on-write setup, governed builder
-commands, activation, and profile-extension definitions. The contract requires
-durable encrypted platform identity delivery, separate aggregate and schema
-versions, exact-scope authorization, closed inputs, idempotency, atomic audit
-and outbox evidence, and staged retirement of direct admin/fixture writers.
-Implementation and release evidence are in progress; acceptance of the
-contract is not a production-readiness claim.
+ADR 0047 and the Page 10 contract remain the canonical remount and writer-
+cutover target. The working tree now mounts the platform Accounts inventory,
+recipient-owned invitation and delivery flow, one edition-scoped Registration
+workspace, copy-on-write blank/prior/template setup, the immutable
+`convention-registration` starter, governed definition/lifecycle commands, and
+closed profile-extension reader and writer policies. Profile values use
+sequence-fenced append-only revisions, exact self/staff/Department policy,
+audited projections, strict API adapters, and same-shell self/staff editing.
+Direct compatibility-writer retirement, stopped-writer activation, the final
+configuration successor/cutover stages, and approved invitation-retention
+activation remain open and must not be inferred from the mounted journeys.
 
-The repository-controlled safety boundary is complete, but the phase exit
-criterion is not an automatic production approval. A concrete provider and
-deployment must be certified; workers, SMTP, scanner/storage, telemetry, relay,
-devices/printers, and retention policies must be provisioned; representative
-load must be measured; and partner privacy, finance, security, safeguarding,
-jurisdiction, operations, and go/no-go review must pass. Admission transfer,
-product change/repricing, badge layout/printing, and broader fulfilment remain
-explicit product gaps.
+ADR 0050 adds the bounded admission-commerce slice: same-attendee upward tier
+replacement with target hold and authenticated exact-difference payment,
+append-only effective capacity under hard ceilings, and operator-selected
+batch size with strict FIFO people selection. A separate edition-owned catalog
+supports merchandise, donations, confirmed-charity beneficiaries, finite
+supporter stock, owned orders, payment evidence, and staff activity without
+turning catalog items into admission entitlements. These are executable
+same-shell/API journeys, not a claim that refunds, exchange, shipping,
+fulfilment, charity settlement, or statutory accounting are complete.
+
+The repository-controlled registration slices are substantial, but the phase
+exit criterion is not an automatic production approval. A real payment
+provider and webhook credentials must be certified; workers, SMTP, object
+storage/scanning, telemetry, relay, devices/printers, and approved retention
+policies must be provisioned; representative load must be measured; and
+partner privacy, finance, security, safeguarding, jurisdiction, operations,
+accessibility, recovery, and go/no-go review must pass. Admission transfer and
+downgrade, unpaid-order expiry/cancellation, refunds/exchanges, badge
+layout/printing, and broader fulfilment remain explicit product gaps.
 
 ## Phase 3: Programme and workforce
 
@@ -325,12 +382,32 @@ work destination is removed. The Page 9a.1 aggregate, built-in-template
 application, Department create/update/reparent/reorder/retire/protected-delete
 commands, writer reconciliation, versioned read retry, and database/runtime
 trigger contract are now exposed through strict same-shell HTML and versioned
-API adapters. Their definitive adapter-expanded repository and coverage gate
+API adapters. The browser assigns sibling placement automatically while the API
+retains explicit bounded ordering. Their definitive adapter-expanded repository and coverage gate
 passes; authenticated responsive acceptance is still pending. Position editing
 remains Page 9b.
 Qualifications, availability,
 shifts, work records, purpose-built approval UI, and the programme/schedule
 side of this phase remain.
+
+ADR 0051 now supplies a bounded typed Applications studio with immutable
+platform starters copied into edition-owned drafts, closed field vocabularies,
+eligibility/cardinality/windows, exact owner Departments, named or immutable-
+role reviewers, append-only answers/decisions, and organizer/applicant/reviewer
+same-shell journeys. Acceptance writes a typed transition receipt only; actual
+programme, workforce, SecOps, merchandise, and other target adapters remain
+separate work. Configurable staff answer-correction windows, full structured
+review rubrics/conflict handling, and the shared programme/workforce lifecycle
+therefore remain open.
+
+ADR 0053 supplies the reusable venue catalog and an operational booking slice:
+edition space selections snapshot physical members, hard availability and
+configured/fire capacities are enforced, setup/effective/teardown conflicts
+are transactionally checked, and independent approval/publication feeds a
+minimized public and participant-scoped My schedule. It is not yet the shared
+programme timetable: programme ownership, release comparison, person/
+equipment/qualification conflicts, operational layers, and calendar/signage/
+print exports remain open.
 
 The reviewed legacy prototype supplies behavior-level acceptance input for
 this phase: proposal revision history; an explicit approved-to-programme
@@ -362,6 +439,25 @@ projections, rotation/access telemetry, preview-first imports, and archive
 views. Current tenancy, authorization, privacy, audit, connector, and closure
 requirements remain authoritative.
 
+Repository status: reusable properties, sites, buildings, spaces,
+configurations/combinations, reviewed media/layout references, accommodation
+room-night inventory, edition selections, hard availability, and physical
+occupancy are now current module behavior rather than prototype-only input.
+The bounded Logistics module implements person-owned equipment offers,
+restricted retention-bound contacts, typed acyclic storage/vehicle/venue
+nodes, serialized assets and stock lots, physical keys and keyholders,
+loan/rental return obligations, kits, manifests, append-only movement/custody
+events, discrepancies, Stage Tech receiving, and bounded offline
+reconciliation. Demand/reservation planning, driver/route optimization,
+supplier invoice linkage, low-stock/wastage policy, and complete loss/disposal
+workflows remain partial or absent; broader Phase 4 operations still cannot
+discard their spreadsheets solely because this kernel exists.
+Its installed migration/auth/API/UI, readiness, runtime-role, navigation, and
+demo-seed acceptance matrix passes 26 of 26 cases. The canonical repository
+gate and scoped authenticated read-only browser journey at 1,920 and 390 pixels
+also pass; broader mutation-role, visual-state, keyboard/accessibility, restore/
+PITR, owner, and deployment evidence remain separate gates.
+
 ## Phase 5: Extended convention ecosystem
 
 Possible outcomes, prioritized by partner need:
@@ -376,6 +472,15 @@ Possible outcomes, prioritized by partner need:
 
 Exit criterion: Defined per selected capability; this phase is not a promise to
 implement every possible feature.
+
+Repository status: reusable governed charity partners and independently
+reviewed edition publication now satisfy the bounded FUR-011 directory
+workflow, and the edition catalog provides an owned ordering/stock/payment
+slice. Charity campaigns, donated-value/cost/settlement reconciliation,
+auctions, refunds/exchanges, supplier and shipping fulfilment, handover, and
+accounting export remain future workflows. Media and layout records retain
+governed source/rendition references; they do not constitute the production
+object-storage, upload, malware-scanning, or rendition pipeline.
 
 The more detailed, vertical sequence is maintained in
 [`DELIVERY_PLAN.md`](DELIVERY_PLAN.md); implementation-ready foundation work is

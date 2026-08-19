@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
+from maru.authorization.bindings import resource_binding_target_exists
 from maru.authorization.catalog import (
     POLICY_VERSION,
     ScopeLevel,
@@ -49,7 +50,7 @@ from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
-from maru.workforce.models import Department, Position
+from maru.workforce.models import Department
 
 GRANT_CAPABILITY = "authorization.grant_direct"
 REVOKE_CAPABILITY = "authorization.revoke"
@@ -481,21 +482,7 @@ def _lock_target(  # noqa: PLR0912
                 "The requested authority scope is unavailable.",
                 reason_code="scope_unavailable",
             )
-        position_exists = (
-            Position.objects.select_for_update()
-            .filter(
-                pk=resource_binding.resource_id,
-                organization_id=target.organization_id,
-                edition_id=edition_id,
-                department_id=department_id,
-            )
-            .exists()
-        )
-        if (
-            resource_binding.resource_kind
-            != ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION
-            or not position_exists
-        ):
+        if not resource_binding_target_exists(resource_binding, for_update=True):
             _raise_validation(
                 "The requested authority scope is unavailable.",
                 reason_code="scope_unavailable",

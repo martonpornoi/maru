@@ -219,7 +219,14 @@ def test_page_8_uses_the_shared_shell_and_strict_post_only_provisioning() -> Non
     assert 'id="nav-sidebar"' in content
     assert "Representation &amp; access" in content
     assert "Organization record" in content
-    assert "My governance invitations" in content
+    assert "Governance invitations" in content
+    assert "Board setup" in content
+    assert "Step 1 of 3" in content
+    assert "1. Create the Executive Board" in content
+    assert "2. Invite at least two controllers" in content
+    assert "3. Activate governance" in content
+    assert f'href="{reverse("platform-account-inventory")}"' in content
+    assert f'href="{reverse("platform-account-invite")}"' in content
     assert "Quick Start" not in content
     assert 'name="reason"' in content
     assert 'name="organization"' not in content
@@ -248,6 +255,9 @@ def test_page_8_uses_the_shared_shell_and_strict_post_only_provisioning() -> Non
         OrganizationRepresentation.objects.filter(organization=organization).count()
         == 1
     )
+    progressed = client.get(url).content.decode()
+    assert "Step 2 of 3" in progressed
+    assert "Invite a Board controller" in progressed
 
 
 def test_invitation_lookup_is_exact_generic_and_strict() -> None:
@@ -356,7 +366,7 @@ def test_exact_invitees_see_only_their_term_and_can_accept_or_decline() -> None:
     assert second.email not in content
     assert "Organization record" not in content
     assert "Convention work" not in content
-    assert "My account" in content
+    assert "My Maru" in content
     assert '<table class="baseline-table">' in content
     assert 'data-label="Person"' in content
     assert content.count('class="maru-admin-brand"') == 1
@@ -495,6 +505,9 @@ def test_activation_form_is_versioned_strict_and_reveals_active_authority() -> N
     assert "Active Executive Board controllers" in controller_content
     assert appointments[1].account.email in controller_content
     assert "Active role assignment" in controller_content
+    assert "Board setup" in controller_content
+    assert "Complete" in controller_content
+    assert "Review user accounts" not in controller_content
     assert "Activate Executive Board" not in controller_content
     assert "Invite controller" not in controller_content
 
@@ -742,7 +755,7 @@ def test_activated_controller_can_complete_pages_3_through_7() -> None:
     assert record.status_code == 200
     record_content = record.content.decode()
     assert 'data-page="organization-record"' in record_content
-    assert "Organization management" in record_content
+    assert "Organization record" in record_content
     assert "Representation &amp; access" in record_content
     assert "Convention work" in record_content
     assert "Save changes" in record_content

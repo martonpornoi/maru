@@ -1,0 +1,76 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'registration/setup.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}{% block registration_action_title %}Registration{% endblock %} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if baseline_can_view_organization %}<a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>{% else %}{{ organization.name }}{% endif %}
+  &rsaquo;
+  {% if baseline_can_view_organization %}<a href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}">{{ convention_series.name }}</a>{% else %}{{ convention_series.name }}{% endif %}
+  &rsaquo;
+  {% if baseline_can_view_edition %}<a href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}">{{ edition.name }}</a>{% else %}{{ edition.name }}{% endif %}
+  &rsaquo;
+  <a href="{% url 'registration-setup' organization.slug convention_series.slug edition.slug %}">Registration</a>
+  &rsaquo; {% block registration_action_breadcrumb %}Manage{% endblock %}
+{% endblock %}
+
+{% block baseline_content %}
+  <a class="baseline-back-link" href="{% url 'registration-setup' organization.slug convention_series.slug edition.slug %}">← Registration</a>
+
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">{{ edition.name }} · Registration setup</p>
+    <h1>{% block registration_action_heading %}Manage registration{% endblock %}</h1>
+    <p class="baseline-intro">{% block registration_action_intro %}{% endblock %}</p>
+    <p class="baseline-record-meta">
+      <span>Setup version: <strong>{{ registration_workspace.aggregate_version }}</strong></span>
+      <span>Edition lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+      {% if registration_workspace.current_configuration %}
+        <span>Form version: <strong>{{ registration_workspace.current_configuration.version }}</strong></span>
+      {% endif %}
+    </p>
+  </header>
+
+  <section class="baseline-access-summary" aria-labelledby="registration-action-access-title">
+    <div>
+      <p class="baseline-kicker" id="registration-action-access-title">Your effective access</p>
+      <p class="baseline-access-line">
+        <strong>{{ registration_access_label }}</strong>
+        <span>allows governed configuration changes for this exact edition while its lifecycle permits them.</span>
+      </p>
+    </div>
+    <details>
+      <summary>What does this access mean?</summary>
+      <p>
+        Every write repeats current exact-scope authorization, locks the setup,
+        and records one versioned retry-safe command with audit and outbox evidence.
+      </p>
+      {% if registration_access_label == "Platform oversight" %}
+        <p>Platform oversight does not make this administrator a convention subject.</p>
+      {% endif %}
+    </details>
+  </section>
+
+  {% if action_error %}
+    <div class="baseline-state baseline-state--error registration-action-error" role="alert">
+      <h2>Registration setup was not changed</h2>
+      <p>{{ action_error }}</p>
+      {% if reload_required %}<p>{% block registration_reload_link %}{% endblock %}</p>{% endif %}
+    </div>
+  {% endif %}
+
+  {% block registration_action_content %}{% endblock %}
+
+  <aside class="baseline-boundary" aria-labelledby="registration-action-boundary-title">
+    <p class="baseline-kicker">Historical boundary</p>
+    <h2 id="registration-action-boundary-title">Draft wording is versioned</h2>
+    <p>
+      Sections organize custom questions. They do not replace the typed legal,
+      address, guardian, emergency, payment, entitlement, role, or restriction
+      domains, and they never rewrite an attendee's existing submission.
+    </p>
+  </aside>
+{% endblock %}

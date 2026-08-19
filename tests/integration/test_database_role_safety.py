@@ -22,6 +22,7 @@ from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
     RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
+    RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS,
     probe_runtime_database_role_safety,
 )
 from maru.authorization.models import CapabilityGrant
@@ -29,6 +30,9 @@ from maru.authorization.policy import (
     decide,
     project_active_authority_scopes,
     resolve_organization_target,
+)
+from maru.authorization.provenance_readiness import (
+    build_authority_provenance_readiness_report,
 )
 from maru.events.models import EventEdition
 from maru.identity.models import Account
@@ -63,6 +67,62 @@ _PAGE9_TRIGGER_HELPER_IDENTITIES = (
     "public.maru_prevent_department_structure_truncate()",
     "public.maru_guard_position_retired_department()",
     "public.maru_guard_assignment_retired_department()",
+)
+
+_APPLICATION_DRAFT_CHILD_RELATIONS = (
+    "public.applications_applicationownerdepartment",
+    "public.applications_applicationreviewerrole",
+    "public.applications_applicationreviewerperson",
+    "public.applications_applicationsection",
+    "public.applications_applicationquestion",
+)
+_BOUNDED_DOMAIN_PROFILE_REPRESENTATIVES = (
+    (
+        "public.applications_applicationanswerrevision",
+        "INSERT",
+        "UPDATE",
+    ),
+    (
+        "public.applications_applicationdefinition",
+        "UPDATE",
+        "DELETE",
+    ),
+    (
+        "public.charities_charityselectiontimelineentry",
+        "INSERT",
+        "UPDATE",
+    ),
+    (
+        "public.charities_charitypartner",
+        "UPDATE",
+        "DELETE",
+    ),
+    (
+        "public.catalog_catalogorderline",
+        "INSERT",
+        "UPDATE",
+    ),
+    (
+        "public.catalog_editioncatalog",
+        "UPDATE",
+        "DELETE",
+    ),
+    (
+        "public.venues_venuebookinghistory",
+        "INSERT",
+        "UPDATE",
+    ),
+    (
+        "public.venues_venueproperty",
+        "UPDATE",
+        "DELETE",
+    ),
+)
+_BOUNDED_DOMAIN_GRANT_OPTION_REPRESENTATIVES = (
+    "public.applications_applicationdefinition",
+    "public.charities_charitypartner",
+    "public.catalog_editioncatalog",
+    "public.venues_venueproperty",
 )
 
 
@@ -219,6 +279,24 @@ def _provision_runtime_role(
             )
             cursor.execute(
                 sql.SQL("GRANT SELECT, INSERT ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" TO ")
+                + role
+            )
+        for identity in RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS:
+            cursor.execute(
+                sql.SQL("REVOKE INSERT, DELETE, REFERENCES ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" FROM ")
+                + role
+            )
+            cursor.execute(
+                sql.SQL("REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" FROM PUBLIC")
+            )
+            cursor.execute(
+                sql.SQL("GRANT SELECT, UPDATE ON TABLE ")
                 + sql.SQL(identity)
                 + sql.SQL(" TO ")
                 + role
@@ -537,19 +615,31 @@ def _assert_structure_relation_privileges(*, role_name: str) -> None:
             role_name=role_name,
             identity=identity,
         ) == (True, False, False, False, False, False, False, False)
-    assert _table_privilege_matrix(
-        role_name=role_name,
-        identity=RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0],
-    ) == (True, True, False, False, False, False, False, False)
-    assert _table_privilege_matrix(
-        role_name=role_name,
-        identity=RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0],
-    ) == (True, True, True, False, False, False, False, False)
+    for identity in RUNTIME_DATABASE_SELECT_INSERT_RELATIONS:
+        assert _table_privilege_matrix(
+            role_name=role_name,
+            identity=identity,
+        ) == (True, True, False, False, False, False, False, False)
+    for identity in RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS:
+        assert _table_privilege_matrix(
+            role_name=role_name,
+            identity=identity,
+        ) == (True, False, True, False, False, False, False, False)
+    for identity in RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS:
+        assert _table_privilege_matrix(
+            role_name=role_name,
+            identity=identity,
+        ) == (True, True, True, False, False, False, False, False)
     department_privileges = _table_privilege_matrix(
         role_name=role_name,
         identity="public.workforce_department",
     )
     assert department_privileges[:4] == (True, True, True, True)
+    for identity in _APPLICATION_DRAFT_CHILD_RELATIONS:
+        assert _table_privilege_matrix(
+            role_name=role_name,
+            identity=identity,
+        )[:4] == (True, True, True, True)
 
 
 def _assert_default_table_privileges(
@@ -740,6 +830,104 @@ def test_explicit_runtime_data_plane_and_function_allowlist_is_accepted() -> Non
     assert not result.current_user_matches
     assert not result.current_session_is_safe
     _assert_structure_relation_privileges(role_name=role_name)
+
+
+def test_bounded_domain_relation_catalog_tampering_fails_closed() -> None:
+    _prepare_least_privilege_boundary()
+    role_name = _create_role()
+    _provision_runtime_role(role_name)
+
+    for (
+        identity,
+        required_privilege,
+        forbidden_privilege,
+    ) in _BOUNDED_DOMAIN_PROFILE_REPRESENTATIVES:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    sql.SQL("REVOKE ")
+                    + sql.SQL(required_privilege)
+                    + sql.SQL(" ON TABLE ")
+                    + sql.SQL(identity)
+                    + sql.SQL(" FROM ")
+                    + sql.Identifier(role_name)
+                )
+            missing = probe_runtime_database_role_safety(role_name=role_name)
+            assert not missing.required_relation_privileges_available
+            assert not missing.target_role_is_safe
+            transaction.set_rollback(True)
+        assert probe_runtime_database_role_safety(
+            role_name=role_name
+        ).target_role_is_safe
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    sql.SQL("GRANT ")
+                    + sql.SQL(forbidden_privilege)
+                    + sql.SQL(" ON TABLE ")
+                    + sql.SQL(identity)
+                    + sql.SQL(" TO ")
+                    + sql.Identifier(role_name)
+                )
+            excessive = probe_runtime_database_role_safety(role_name=role_name)
+            assert not excessive.required_relation_privileges_available
+            assert not excessive.target_role_is_safe
+            transaction.set_rollback(True)
+        assert probe_runtime_database_role_safety(
+            role_name=role_name
+        ).target_role_is_safe
+
+
+def test_bounded_domain_relation_grant_options_fail_closed() -> None:
+    _prepare_least_privilege_boundary()
+    role_name = _create_role()
+    _provision_runtime_role(role_name)
+
+    for identity in _BOUNDED_DOMAIN_GRANT_OPTION_REPRESENTATIVES:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    sql.SQL("GRANT SELECT ON TABLE ")
+                    + sql.SQL(identity)
+                    + sql.SQL(" TO ")
+                    + sql.Identifier(role_name)
+                    + sql.SQL(" WITH GRANT OPTION")
+                )
+            result = probe_runtime_database_role_safety(role_name=role_name)
+            assert not result.grant_options_safe
+            assert not result.target_role_is_safe
+            transaction.set_rollback(True)
+        assert probe_runtime_database_role_safety(
+            role_name=role_name
+        ).target_role_is_safe
+
+
+def test_bounded_domain_excess_mutation_privilege_blocks_activation_readiness() -> None:
+    _prepare_least_privilege_boundary()
+    role_name = _create_role()
+    _provision_runtime_role(role_name)
+
+    with override_settings(RUNTIME_DATABASE_ROLE=role_name):
+        baseline = build_authority_provenance_readiness_report()
+        assert baseline["known_production_gates"]["runtime_database_role"] == (
+            "resolved"
+        )
+        for identity in _BOUNDED_DOMAIN_GRANT_OPTION_REPRESENTATIVES:
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        sql.SQL("GRANT DELETE ON TABLE ")
+                        + sql.SQL(identity)
+                        + sql.SQL(" TO ")
+                        + sql.Identifier(role_name)
+                    )
+                unavailable = build_authority_provenance_readiness_report()
+                assert (
+                    unavailable["known_production_gates"]["runtime_database_role"]
+                    == "unresolved"
+                )
+                transaction.set_rollback(True)
 
 
 def test_page9_trigger_helpers_do_not_expand_runtime_execute_closure() -> None:
@@ -1187,6 +1375,7 @@ def test_missing_required_relation_dml_is_rejected() -> None:
     ("identity", "privilege"),
     [
         (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "INSERT"),
+        (RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS[0], "UPDATE"),
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "INSERT"),
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "UPDATE"),
     ],
@@ -1222,6 +1411,11 @@ def test_missing_required_structure_relation_privilege_is_rejected(
         (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "DELETE", False),
         (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "REFERENCES", False),
         (RUNTIME_DATABASE_SELECT_INSERT_RELATIONS[0], "REFERENCES", True),
+        (RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS[0], "INSERT", False),
+        (RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS[0], "INSERT", True),
+        (RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS[0], "DELETE", False),
+        (RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS[0], "REFERENCES", False),
+        (RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS[0], "REFERENCES", True),
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "DELETE", False),
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "REFERENCES", False),
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "REFERENCES", True),
@@ -1279,6 +1473,7 @@ def test_forbidden_structure_relation_privilege_is_rejected(
     "identity",
     [
         *RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
+        *RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS,
         *RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
     ],
 )
@@ -1860,6 +2055,11 @@ def test_genuine_runtime_login_is_safe_and_persistent_replica_setting_is_not() -
                     "dependencies": {
                         "database": "ok",
                         "authority_provenance": "ok",
+                        "applications_integrity": "ok",
+                        "charities_integrity": "ok",
+                        "catalog_integrity": "ok",
+                        "venues_integrity": "ok",
+                        "logistics": "ok",
                     },
                 }
 

@@ -1,6 +1,7 @@
 """Registration configuration, commerce, and operational history."""
+# ruff: noqa: DJ012
 
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlsplit
 
 from django.conf import settings
@@ -9,9 +10,10 @@ from django.core.validators import (
     FileExtensionValidator,
     MaxValueValidator,
     MinValueValidator,
+    RegexValidator,
 )
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Value
 from django.db.models.functions import Lower
 
 from maru.core.models import UUIDTimeStampedModel
@@ -27,10 +29,88 @@ from maru.registration.profile_choices import (
 )
 
 MAX_QUESTION_OPTION_LENGTH = 120
+MAX_QUESTION_OPTIONS = 64
+MAX_PRODUCT_CAPACITY_CODES = 32
+MAX_CAPACITY_CODE_LENGTH = 80
+MAX_REGISTRATION_CAPACITY = 1_000_000
+MAX_PRODUCT_PRICE_MINOR = 1_000_000_000_000
 MINIMUM_CHOICE_OPTIONS = 2
 MINIMUM_PAYMENT_WINDOW_MINUTES = 15
 MAXIMUM_PAYMENT_WINDOW_MINUTES = 60 * 24 * 30
 COUNTRY_CODE_LENGTH = 2
+
+_SHA256_VALIDATOR = RegexValidator(
+    regex=r"^[0-9a-f]{64}$",
+    message="Use a lowercase SHA-256 digest.",
+    code="invalid_registration_setup_digest",
+)
+
+_PROFILE_VALUE_SOURCE_VALIDATOR = RegexValidator(
+    regex=r"^[a-z][a-z0-9_-]{0,31}$",
+    message="Use one registered source channel.",
+    code="invalid_profile_extension_value_source",
+)
+
+
+class RegistrationSetupOrigin(models.TextChoices):
+    LEGACY_EXISTING = "legacy_existing", "Legacy existing"
+    BLANK = "blank", "Blank"
+    PLATFORM_STARTER = "platform_starter", "Platform starter"
+    PUBLISHED_TEMPLATE = "published_template", "Published template"
+    PRIOR_EDITION = "prior_edition", "Prior edition"
+    SUCCESSOR = "successor", "Successor"
+
+
+class RegistrationProvenanceStatus(models.TextChoices):
+    COMPLETE = "complete", "Complete"
+    LEGACY_UNKNOWN = "legacy_unknown", "Legacy unknown"
+
+
+class RegistrationCommandChangeKind(models.TextChoices):
+    CREATED = "created", "Created"
+    UPDATED = "updated", "Updated"
+    MOVED = "moved", "Moved"
+    REVIEWED = "reviewed", "Reviewed"
+    ACTIVATED = "activated", "Activated"
+    PUBLISHED = "published", "Published"
+    RETIRED = "retired", "Retired"
+    DELETED = "deleted", "Deleted"
+
+
+class CatalogVersionStampedModel(models.Model):
+    """Nullable command-version evidence during the additive writer cutover."""
+
+    created_in_catalog_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    last_changed_in_catalog_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+
+    class Meta:
+        abstract = True
+
+
+class SetupVersionStampedModel(models.Model):
+    """Nullable command-version evidence during the additive writer cutover."""
+
+    created_in_setup_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    last_changed_in_setup_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+
+    class Meta:
+        abstract = True
 
 
 class TemplateStatus(models.TextChoices):
@@ -80,6 +160,11 @@ def _validate_question_options(
             code="invalid_question_options",
         )
     normalized = [option.strip() for option in options]
+    if len(normalized) > MAX_QUESTION_OPTIONS:
+        raise ValidationError(
+            {"options": f"Choose no more than {MAX_QUESTION_OPTIONS} options."},
+            code="question_option_limit_exceeded",
+        )
     if len(set(normalized)) != len(normalized):
         raise ValidationError(
             {"options": "Question option labels must be unique."},
@@ -125,6 +210,28 @@ class RegistrationTemplate(UUIDTimeStampedModel):
     )
     created_by_id = models.UUIDField()
     published_at = models.DateTimeField(null=True, blank=True)
+    provenance_status = models.CharField(
+        max_length=24,
+        choices=RegistrationProvenanceStatus,
+        default=RegistrationProvenanceStatus.LEGACY_UNKNOWN,
+        editable=False,
+    )
+    content_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        validators=(_SHA256_VALIDATOR,),
+        editable=False,
+    )
+    created_in_catalog_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    last_changed_in_catalog_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
 
     class Meta:
         ordering = ("organization_id", "code", "-version", "id")
@@ -142,6 +249,25 @@ class RegistrationTemplate(UUIDTimeStampedModel):
                 ),
                 name="registration_template_publish_time_matches_status",
             ),
+            models.CheckConstraint(
+                condition=(
+                    Q(created_in_catalog_version__isnull=True)
+                    | Q(created_in_catalog_version__gt=0)
+                )
+                & (
+                    Q(last_changed_in_catalog_version__isnull=True)
+                    | Q(last_changed_in_catalog_version__gt=0)
+                )
+                & (
+                    Q(created_in_catalog_version__isnull=True)
+                    | Q(
+                        last_changed_in_catalog_version__gte=models.F(
+                            "created_in_catalog_version"
+                        )
+                    )
+                ),
+                name="reg_template_catalog_versions_valid",
+            ),
         ]
 
     def clean(self) -> None:
@@ -154,6 +280,15 @@ class RegistrationTemplate(UUIDTimeStampedModel):
         ):
             raise ValidationError(
                 {"series": "The template series must belong to its organization."}
+            )
+        if self.provenance_status == RegistrationProvenanceStatus.COMPLETE and (
+            not self.content_digest
+            or self.created_in_catalog_version is None
+            or self.last_changed_in_catalog_version is None
+        ):
+            raise ValidationError(
+                "Complete template provenance requires digest and version stamps.",
+                code="registration_template_complete_provenance_incomplete",
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -233,7 +368,7 @@ class AbstractQuestion(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
 
-class RegistrationTemplateSection(UUIDTimeStampedModel):
+class RegistrationTemplateSection(UUIDTimeStampedModel, CatalogVersionStampedModel):
     template = models.ForeignKey(
         RegistrationTemplate,
         on_delete=models.PROTECT,
@@ -253,6 +388,9 @@ class RegistrationTemplateSection(UUIDTimeStampedModel):
             ),
         ]
 
+    def __str__(self) -> str:
+        return f"{self.template.name}: {self.title}"
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         if self.template.status != TemplateStatus.DRAFT:
             raise ValidationError(
@@ -271,11 +409,8 @@ class RegistrationTemplateSection(UUIDTimeStampedModel):
             )
         return super().delete(*args, **kwargs)
 
-    def __str__(self) -> str:
-        return f"{self.template.name}: {self.title}"
 
-
-class RegistrationTemplateQuestion(AbstractQuestion):
+class RegistrationTemplateQuestion(AbstractQuestion, CatalogVersionStampedModel):
     section = models.ForeignKey(
         RegistrationTemplateSection,
         on_delete=models.PROTECT,
@@ -297,6 +432,9 @@ class RegistrationTemplateQuestion(AbstractQuestion):
                 name="registration_template_question_key_unique",
             ),
         ]
+
+    def __str__(self) -> str:
+        return f"{self.template.name}: {self.label}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         if self.template.status != TemplateStatus.DRAFT:
@@ -325,9 +463,6 @@ class RegistrationTemplateQuestion(AbstractQuestion):
             )
         return super().delete(*args, **kwargs)
 
-    def __str__(self) -> str:
-        return f"{self.template.name}: {self.label}"
-
 
 class AbstractProduct(UUIDTimeStampedModel):
     code = models.SlugField(max_length=80, validators=[validate_lowercase_slug])
@@ -335,6 +470,14 @@ class AbstractProduct(UUIDTimeStampedModel):
     description = models.TextField(blank=True)
     price_minor = models.PositiveBigIntegerField(default=0)
     capacity = models.PositiveIntegerField()
+    capacity_ceiling = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Optional hard ceiling for governed live capacity adjustments. "
+            "When omitted, the configured capacity is the ceiling."
+        ),
+    )
     position = models.PositiveIntegerField(default=0)
     entitlement_code = models.SlugField(
         max_length=80,
@@ -385,6 +528,39 @@ class AbstractProduct(UUIDTimeStampedModel):
 
     def clean(self) -> None:
         super().clean()
+        if not 1 <= self.capacity <= MAX_REGISTRATION_CAPACITY:
+            raise ValidationError(
+                {
+                    "capacity": (
+                        "Product capacity must be between 1 and "
+                        f"{MAX_REGISTRATION_CAPACITY}."
+                    )
+                },
+                code="product_capacity_out_of_range",
+            )
+        if self.capacity_ceiling is not None and not (
+            self.capacity <= self.capacity_ceiling <= MAX_REGISTRATION_CAPACITY
+        ):
+            raise ValidationError(
+                {
+                    "capacity_ceiling": (
+                        "The product capacity ceiling must be at least its initial "
+                        "capacity and no more than "
+                        f"{MAX_REGISTRATION_CAPACITY}."
+                    )
+                },
+                code="product_capacity_ceiling_out_of_range",
+            )
+        if self.price_minor > MAX_PRODUCT_PRICE_MINOR:
+            raise ValidationError(
+                {
+                    "price_minor": (
+                        "Price must not exceed "
+                        f"{MAX_PRODUCT_PRICE_MINOR} minor currency units."
+                    )
+                },
+                code="product_price_out_of_range",
+            )
         if (
             self.sales_open_at is not None
             and self.sales_close_at is not None
@@ -415,7 +591,26 @@ class AbstractProduct(UUIDTimeStampedModel):
                 },
                 code="duplicate_product_capacity_code",
             )
+        if len(codes) > MAX_PRODUCT_CAPACITY_CODES:
+            raise ValidationError(
+                {
+                    "required_capacity_codes": (
+                        "Choose no more than "
+                        f"{MAX_PRODUCT_CAPACITY_CODES} capacity codes."
+                    )
+                },
+                code="product_capacity_code_limit_exceeded",
+            )
         for code in codes:
+            if len(code) > MAX_CAPACITY_CODE_LENGTH:
+                raise ValidationError(
+                    {
+                        "required_capacity_codes": (
+                            "Capacity codes must use no more than 80 characters."
+                        )
+                    },
+                    code="product_capacity_code_too_long",
+                )
             validate_capacity_code(code)
         if codes and not self.eligibility_explanation.strip():
             raise ValidationError(
@@ -438,7 +633,7 @@ class AbstractProduct(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
 
-class RegistrationTemplateProduct(AbstractProduct):
+class RegistrationTemplateProduct(AbstractProduct, CatalogVersionStampedModel):
     template = models.ForeignKey(
         RegistrationTemplate,
         on_delete=models.PROTECT,
@@ -453,6 +648,9 @@ class RegistrationTemplateProduct(AbstractProduct):
                 name="registration_template_product_code_unique",
             ),
         ]
+
+    def __str__(self) -> str:
+        return f"{self.template.name}: {self.name}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         if self.template.status != TemplateStatus.DRAFT:
@@ -470,8 +668,204 @@ class RegistrationTemplateProduct(AbstractProduct):
             )
         return super().delete(*args, **kwargs)
 
+
+class RegistrationTemplateCatalogControl(UUIDTimeStampedModel):
+    """Optimistic-concurrency control for one organization's template catalog."""
+
+    organization = models.OneToOneField(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="registration_template_catalog_control",
+    )
+    aggregate_version = models.PositiveBigIntegerField()
+    provenance_status = models.CharField(
+        max_length=24,
+        choices=RegistrationProvenanceStatus,
+        default=RegistrationProvenanceStatus.LEGACY_UNKNOWN,
+        editable=False,
+    )
+
+    class Meta:
+        ordering = ("organization_id",)
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(aggregate_version__gt=0),
+                name="reg_template_catalog_version_positive",
+            ),
+        ]
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def __str__(self) -> str:
-        return f"{self.template.name}: {self.name}"
+        return f"Registration template catalog v{self.aggregate_version}"
+
+
+class RegistrationTemplateCatalogCommandReceipt(UUIDTimeStampedModel):
+    """Immutable, minimized evidence for one successful template command."""
+
+    class Action(models.TextChoices):
+        TEMPLATE_CREATED = "template_created", "Template created"
+        TEMPLATE_UPDATED = "template_updated", "Template updated"
+        TEMPLATE_PUBLISHED = "template_published", "Template published"
+        TEMPLATE_RETIRED = "template_retired", "Template retired"
+        SECTION_CREATED = "section_created", "Section created"
+        SECTION_UPDATED = "section_updated", "Section updated"
+        SECTION_MOVED = "section_moved", "Section moved"
+        SECTION_DELETED = "section_deleted", "Section deleted"
+        QUESTION_CREATED = "question_created", "Question created"
+        QUESTION_UPDATED = "question_updated", "Question updated"
+        QUESTION_MOVED = "question_moved", "Question moved"
+        QUESTION_DELETED = "question_deleted", "Question deleted"
+        PRODUCT_CREATED = "product_created", "Product created"
+        PRODUCT_UPDATED = "product_updated", "Product updated"
+        PRODUCT_MOVED = "product_moved", "Product moved"
+        PRODUCT_DELETED = "product_deleted", "Product deleted"
+
+    catalog = models.ForeignKey(
+        RegistrationTemplateCatalogControl,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="registration_template_catalog_command_receipts",
+    )
+    action = models.CharField(max_length=32, choices=Action)
+    resulting_version = models.PositiveBigIntegerField()
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="registration_template_catalog_commands_acted",
+    )
+    reason = models.CharField(max_length=500)
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(max_length=32)
+    retry_key = models.UUIDField(null=True, blank=True)
+    request_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        validators=(_SHA256_VALIDATOR,),
+    )
+
+    class Meta:
+        ordering = ("organization_id", "resulting_version", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("catalog", "resulting_version"),
+                name="reg_template_receipt_version_unique",
+            ),
+            models.UniqueConstraint(
+                fields=("organization", "actor", "retry_key"),
+                condition=Q(retry_key__isnull=False),
+                name="reg_template_retry_key_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(resulting_version__gt=0),
+                name="reg_template_receipt_version_positive",
+            ),
+            models.CheckConstraint(
+                condition=~Q(reason="") & ~Q(source_channel=""),
+                name="reg_template_receipt_evidence_nonblank",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "action", "created_at"),
+                name="reg_tpl_rcpt_action_idx",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.catalog_id and self.catalog.organization_id != self.organization_id:
+            raise ValidationError(
+                "Template command receipt must match its organization scope.",
+                code="registration_template_receipt_scope_mismatch",
+            )
+        if bool(self.retry_key) != bool(self.request_digest):
+            raise ValidationError(
+                "Retry key and request digest evidence must be recorded together.",
+                code="registration_template_retry_evidence_incomplete",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Registration template command receipts are immutable.",
+                code="immutable_registration_template_command_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Registration template command receipts require retention workflow.",
+            code="protected_registration_template_command_receipt",
+        )
+
+
+class RegistrationTemplateCatalogCommandTarget(UUIDTimeStampedModel):
+    """Stable, label-free target evidence attached to a template receipt."""
+
+    class TargetKind(models.TextChoices):
+        TEMPLATE = "template", "Template"
+        SECTION = "section", "Section"
+        QUESTION = "question", "Question"
+        PRODUCT = "product", "Product"
+
+    receipt = models.ForeignKey(
+        RegistrationTemplateCatalogCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="targets",
+    )
+    target_kind = models.CharField(max_length=24, choices=TargetKind)
+    target_id = models.UUIDField()
+    change_kind = models.CharField(
+        max_length=16,
+        choices=RegistrationCommandChangeKind,
+    )
+    target_schema_version = models.PositiveIntegerField(null=True, blank=True)
+    content_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        validators=(_SHA256_VALIDATOR,),
+    )
+
+    class Meta:
+        ordering = ("receipt_id", "target_kind", "target_id", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("receipt", "target_kind", "target_id"),
+                name="reg_template_receipt_target_unique",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(target_schema_version__isnull=True)
+                    | Q(target_schema_version__gt=0)
+                ),
+                name="reg_template_target_schema_ver_positive",
+            ),
+        ]
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Registration template command targets are immutable.",
+                code="immutable_registration_template_command_target",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Registration template command targets require retention workflow.",
+            code="protected_registration_template_command_target",
+        )
 
 
 class RegistrationConfiguration(UUIDTimeStampedModel):
@@ -506,11 +900,79 @@ class RegistrationConfiguration(UUIDTimeStampedModel):
         null=True,
         blank=True,
     )
+    source_configuration = models.ForeignKey(
+        "self",
+        on_delete=models.PROTECT,
+        related_name="successor_configurations",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    origin = models.CharField(
+        max_length=24,
+        choices=RegistrationSetupOrigin,
+        default=RegistrationSetupOrigin.LEGACY_EXISTING,
+        editable=False,
+    )
+    provenance_status = models.CharField(
+        max_length=24,
+        choices=RegistrationProvenanceStatus,
+        default=RegistrationProvenanceStatus.LEGACY_UNKNOWN,
+        editable=False,
+    )
+    source_version = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    source_content_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        validators=(_SHA256_VALIDATOR,),
+        editable=False,
+    )
+    content_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        validators=(_SHA256_VALIDATOR,),
+        editable=False,
+    )
+    source_imported_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    source_imported_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="registration_configuration_imports",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    created_in_setup_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    last_changed_in_setup_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
     review_required = models.BooleanField(default=True)
     review_note = models.TextField(blank=True)
     opens_at = models.DateTimeField()
     closes_at = models.DateTimeField()
     capacity = models.PositiveIntegerField()
+    capacity_ceiling = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Optional hard ceiling for reasoned live capacity adjustments. "
+            "When omitted, the initial capacity is the ceiling."
+        ),
+    )
     currency = models.CharField(max_length=3)
     minimum_age = models.PositiveSmallIntegerField(
         default=18,
@@ -572,10 +1034,112 @@ class RegistrationConfiguration(UUIDTimeStampedModel):
                 ),
                 name="registration_configuration_activation_matches_status",
             ),
+            models.CheckConstraint(
+                condition=(
+                    Q(created_in_setup_version__isnull=True)
+                    | Q(created_in_setup_version__gt=0)
+                )
+                & (
+                    Q(last_changed_in_setup_version__isnull=True)
+                    | Q(last_changed_in_setup_version__gt=0)
+                )
+                & (
+                    Q(created_in_setup_version__isnull=True)
+                    | Q(
+                        last_changed_in_setup_version__gte=models.F(
+                            "created_in_setup_version"
+                        )
+                    )
+                ),
+                name="reg_configuration_setup_versions_valid",
+            ),
+            models.CheckConstraint(
+                condition=(Q(source_version__isnull=True) | Q(source_version__gt=0)),
+                name="reg_configuration_source_version_positive",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~Q(provenance_status=RegistrationProvenanceStatus.COMPLETE)
+                    | (
+                        Q(content_digest__regex=r"^[0-9a-f]{64}$")
+                        & Q(created_in_setup_version__isnull=False)
+                        & Q(last_changed_in_setup_version__isnull=False)
+                        & (
+                            Q(
+                                origin=RegistrationSetupOrigin.BLANK,
+                                source_template__isnull=True,
+                                source_edition__isnull=True,
+                                source_configuration__isnull=True,
+                                source_version__isnull=True,
+                                source_content_digest="",
+                                source_imported_at__isnull=True,
+                                source_imported_by__isnull=True,
+                            )
+                            | Q(
+                                origin=RegistrationSetupOrigin.PUBLISHED_TEMPLATE,
+                                source_template__isnull=False,
+                                source_edition__isnull=True,
+                                source_configuration__isnull=True,
+                                source_version__isnull=False,
+                                source_content_digest__regex=r"^[0-9a-f]{64}$",
+                                source_imported_at__isnull=False,
+                                source_imported_by__isnull=False,
+                            )
+                            | Q(
+                                origin=RegistrationSetupOrigin.PLATFORM_STARTER,
+                                source_template__isnull=True,
+                                source_edition__isnull=True,
+                                source_configuration__isnull=True,
+                                source_version__isnull=False,
+                                source_content_digest__regex=r"^[0-9a-f]{64}$",
+                                source_imported_at__isnull=False,
+                                source_imported_by__isnull=False,
+                            )
+                            | Q(
+                                origin__in=(
+                                    RegistrationSetupOrigin.PRIOR_EDITION,
+                                    RegistrationSetupOrigin.SUCCESSOR,
+                                ),
+                                source_template__isnull=True,
+                                source_edition__isnull=False,
+                                source_configuration__isnull=False,
+                                source_version__isnull=False,
+                                source_content_digest__regex=r"^[0-9a-f]{64}$",
+                                source_imported_at__isnull=False,
+                                source_imported_by__isnull=False,
+                            )
+                        )
+                    )
+                ),
+                name="reg_configuration_complete_provenance_shape",
+            ),
         ]
 
-    def clean(self) -> None:
+    def clean(self) -> None:  # noqa: PLR0912
         super().clean()
+        if not 1 <= self.capacity <= MAX_REGISTRATION_CAPACITY:
+            raise ValidationError(
+                {
+                    "capacity": (
+                        "Registration capacity must be between 1 and "
+                        f"{MAX_REGISTRATION_CAPACITY}."
+                    )
+                },
+                code="registration_capacity_out_of_range",
+            )
+        if self.capacity_ceiling is not None and not (
+            self.capacity <= self.capacity_ceiling <= MAX_REGISTRATION_CAPACITY
+        ):
+            raise ValidationError(
+                {
+                    "capacity_ceiling": (
+                        "The registration capacity ceiling must be at least the "
+                        "initial capacity and no more than "
+                        f"{MAX_REGISTRATION_CAPACITY}."
+                    )
+                },
+                code="registration_capacity_ceiling_out_of_range",
+            )
         if self.organization_id and self.edition_id:
             if self.edition.organization_id != self.organization_id:
                 raise ValidationError(
@@ -602,17 +1166,123 @@ class RegistrationConfiguration(UUIDTimeStampedModel):
             raise ValidationError(
                 {"source_edition": "Source and target must share an organization."}
             )
+        if self.source_configuration_id:
+            source_configuration = self.source_configuration
+            if (
+                source_configuration is None
+                or source_configuration.id == self.id
+                or source_configuration.organization_id != self.organization_id
+                or (
+                    self.source_edition_id is not None
+                    and source_configuration.edition_id != self.source_edition_id
+                )
+            ):
+                raise ValidationError(
+                    {"source_configuration": "Choose an exact compatible source."},
+                    code="registration_source_configuration_mismatch",
+                )
+        if bool(self.source_imported_at) != bool(self.source_imported_by_id):
+            raise ValidationError(
+                "Import time and actor evidence must be recorded together.",
+                code="registration_import_evidence_incomplete",
+            )
+        if (self.source_version is not None or self.source_content_digest) and not (
+            self.source_template_id
+            or self.source_configuration_id
+            or self.origin == RegistrationSetupOrigin.PLATFORM_STARTER
+        ):
+            raise ValidationError(
+                "Source version and digest require an exact source record.",
+                code="registration_source_evidence_without_source",
+            )
+        if self.provenance_status == RegistrationProvenanceStatus.COMPLETE:
+            if (
+                not self.content_digest
+                or self.created_in_setup_version is None
+                or self.last_changed_in_setup_version is None
+            ):
+                raise ValidationError(
+                    "Complete provenance requires digest and command-version stamps.",
+                    code="registration_complete_provenance_incomplete",
+                )
+            complete_source_evidence = (
+                self.source_version is not None
+                and bool(self.source_content_digest)
+                and self.source_imported_at is not None
+                and self.source_imported_by_id is not None
+            )
+            if self.origin == RegistrationSetupOrigin.BLANK:
+                if self.source_template_id or self.source_configuration_id:
+                    raise ValidationError(
+                        "Blank setup cannot identify an imported source.",
+                        code="registration_blank_source_conflict",
+                    )
+            elif self.origin == RegistrationSetupOrigin.PUBLISHED_TEMPLATE:
+                if not self.source_template_id or not complete_source_evidence:
+                    raise ValidationError(
+                        "Published-template setup requires complete source evidence.",
+                        code="registration_template_provenance_incomplete",
+                    )
+            elif self.origin == RegistrationSetupOrigin.PLATFORM_STARTER:
+                if (
+                    self.source_template_id
+                    or self.source_edition_id
+                    or self.source_configuration_id
+                    or not complete_source_evidence
+                ):
+                    raise ValidationError(
+                        "Platform-starter setup requires immutable catalog evidence.",
+                        code="registration_starter_provenance_incomplete",
+                    )
+            elif self.origin in {
+                RegistrationSetupOrigin.PRIOR_EDITION,
+                RegistrationSetupOrigin.SUCCESSOR,
+            }:
+                if not self.source_configuration_id or not complete_source_evidence:
+                    raise ValidationError(
+                        "Configuration copy requires complete source evidence.",
+                        code="registration_configuration_provenance_incomplete",
+                    )
+            else:
+                raise ValidationError(
+                    "Legacy-existing setup cannot claim complete provenance.",
+                    code="registration_legacy_provenance_conflict",
+                )
         validate_currency_codes([self.currency])
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         self.currency = self.currency.upper()
         if not self._state.adding:
-            current_status = (
+            immutable_fields = (
+                "organization_id",
+                "edition_id",
+                "version",
+                "source_template_id",
+                "source_edition_id",
+                "source_configuration_id",
+                "origin",
+                "provenance_status",
+                "source_version",
+                "source_content_digest",
+                "source_imported_at",
+                "source_imported_by_id",
+                "created_in_setup_version",
+                "created_by_id",
+            )
+            current = (
                 type(self)
                 .objects.filter(pk=self.pk)
-                .values_list("status", flat=True)
+                .values("status", *immutable_fields)
                 .first()
             )
+            if current is not None and any(
+                getattr(self, field) != current[field] for field in immutable_fields
+            ):
+                raise ValidationError(
+                    "Registration configuration source provenance is immutable.",
+                    code="immutable_registration_configuration_provenance",
+                )
+            current_status = current["status"] if current is not None else None
             if current_status in {
                 ConfigurationStatus.ACTIVE,
                 ConfigurationStatus.RETIRED,
@@ -640,7 +1310,292 @@ class RegistrationConfiguration(UUIDTimeStampedModel):
         return f"{self.edition.name}: {self.name} v{self.version}"
 
 
-class RegistrationSection(UUIDTimeStampedModel):
+class RegistrationSetupControl(UUIDTimeStampedModel):
+    """Optimistic-concurrency aggregate for one edition's registration setup."""
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="registration_setup_controls",
+    )
+    edition = models.OneToOneField(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="registration_setup_control",
+    )
+    origin = models.CharField(max_length=24, choices=RegistrationSetupOrigin)
+    provenance_status = models.CharField(
+        max_length=24,
+        choices=RegistrationProvenanceStatus,
+        default=RegistrationProvenanceStatus.LEGACY_UNKNOWN,
+        editable=False,
+    )
+    aggregate_version = models.PositiveBigIntegerField()
+
+    class Meta:
+        ordering = ("organization_id", "edition_id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(aggregate_version__gt=0),
+                name="registration_setup_version_positive",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~Q(provenance_status=RegistrationProvenanceStatus.COMPLETE)
+                    | ~Q(origin=RegistrationSetupOrigin.LEGACY_EXISTING)
+                ),
+                name="reg_setup_complete_origin_nonlegacy",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition"),
+                name="registration_setup_scope_idx",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.edition_id and self.edition.organization_id != self.organization_id:
+            raise ValidationError(
+                "Registration setup control must match its edition scope.",
+                code="registration_setup_control_scope_mismatch",
+            )
+        if (
+            self.provenance_status == RegistrationProvenanceStatus.COMPLETE
+            and self.origin == RegistrationSetupOrigin.LEGACY_EXISTING
+        ):
+            raise ValidationError(
+                "Legacy-existing setup cannot claim complete provenance.",
+                code="registration_setup_legacy_provenance_conflict",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            immutable_fields = (
+                "organization_id",
+                "edition_id",
+                "origin",
+                "provenance_status",
+            )
+            current = (
+                type(self).objects.filter(pk=self.pk).values(*immutable_fields).first()
+            )
+            if current is not None and any(
+                getattr(self, field) != current[field] for field in immutable_fields
+            ):
+                raise ValidationError(
+                    "Registration setup source provenance is immutable.",
+                    code="immutable_registration_setup_provenance",
+                )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"Registration setup v{self.aggregate_version} - {self.edition}"
+
+
+class RegistrationSetupCommandReceipt(UUIDTimeStampedModel):
+    """Immutable, minimized evidence for one successful setup command."""
+
+    class Action(models.TextChoices):
+        SETUP_STARTED = "setup_started", "Setup started"
+        SUCCESSOR_STARTED = "successor_started", "Successor started"
+        CONFIGURATION_REVIEWED = "configuration_reviewed", "Configuration reviewed"
+        CONFIGURATION_ACTIVATED = (
+            "configuration_activated",
+            "Configuration activated",
+        )
+        CONFIGURATION_RETIRED = "configuration_retired", "Configuration retired"
+        SECTION_CREATED = "section_created", "Section created"
+        SECTION_UPDATED = "section_updated", "Section updated"
+        SECTION_MOVED = "section_moved", "Section moved"
+        SECTION_DELETED = "section_deleted", "Section deleted"
+        QUESTION_CREATED = "question_created", "Question created"
+        QUESTION_UPDATED = "question_updated", "Question updated"
+        QUESTION_MOVED = "question_moved", "Question moved"
+        QUESTION_DELETED = "question_deleted", "Question deleted"
+        PRODUCT_CREATED = "product_created", "Product created"
+        PRODUCT_UPDATED = "product_updated", "Product updated"
+        PRODUCT_MOVED = "product_moved", "Product moved"
+        PRODUCT_DELETED = "product_deleted", "Product deleted"
+        MINOR_POLICY_CREATED = "minor_policy_created", "Minor policy created"
+        MINOR_POLICY_UPDATED = "minor_policy_updated", "Minor policy updated"
+        MINOR_POLICY_REMOVED = "minor_policy_removed", "Minor policy removed"
+        PROFILE_FIELD_CREATED = "profile_field_created", "Profile field created"
+        PROFILE_FIELD_UPDATED = "profile_field_updated", "Profile field updated"
+        PROFILE_FIELD_MOVED = "profile_field_moved", "Profile field moved"
+        PROFILE_FIELD_REVIEWED = "profile_field_reviewed", "Profile field reviewed"
+        PROFILE_FIELD_ACTIVATED = (
+            "profile_field_activated",
+            "Profile field activated",
+        )
+        PROFILE_FIELD_SUCCESSOR_STARTED = (
+            "profile_field_successor_started",
+            "Profile field successor started",
+        )
+        PROFILE_FIELD_RETIRED = "profile_field_retired", "Profile field retired"
+
+    setup = models.ForeignKey(
+        RegistrationSetupControl,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="registration_setup_command_receipts",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="registration_setup_command_receipts",
+    )
+    action = models.CharField(max_length=32, choices=Action)
+    resulting_version = models.PositiveBigIntegerField()
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="registration_setup_commands_acted",
+    )
+    reason = models.CharField(max_length=500)
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(max_length=32)
+    retry_key = models.UUIDField(null=True, blank=True)
+    request_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        validators=(_SHA256_VALIDATOR,),
+    )
+
+    class Meta:
+        ordering = ("edition_id", "resulting_version", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("setup", "resulting_version"),
+                name="registration_setup_receipt_version_unique",
+            ),
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"),
+                condition=Q(retry_key__isnull=False),
+                name="registration_setup_retry_key_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(resulting_version__gt=0),
+                name="registration_setup_receipt_ver_positive",
+            ),
+            models.CheckConstraint(
+                condition=~Q(reason="") & ~Q(source_channel=""),
+                name="registration_setup_receipt_evidence_nonblank",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "resulting_version"),
+                name="reg_setup_rcpt_scope_idx",
+            ),
+            models.Index(
+                fields=("edition", "action", "created_at"),
+                name="reg_setup_receipt_action_idx",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.setup_id and (
+            self.setup.organization_id != self.organization_id
+            or self.setup.edition_id != self.edition_id
+        ):
+            raise ValidationError(
+                "Registration setup receipt must match its exact edition scope.",
+                code="registration_setup_receipt_scope_mismatch",
+            )
+        if bool(self.retry_key) != bool(self.request_digest):
+            raise ValidationError(
+                "Retry key and request digest evidence must be recorded together.",
+                code="registration_setup_retry_evidence_incomplete",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Registration setup command receipts are immutable.",
+                code="immutable_registration_setup_command_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Registration setup command receipts require retention workflow.",
+            code="protected_registration_setup_command_receipt",
+        )
+
+
+class RegistrationSetupCommandTarget(UUIDTimeStampedModel):
+    """Stable, label-free target evidence attached to a setup receipt."""
+
+    class TargetKind(models.TextChoices):
+        CONFIGURATION = "configuration", "Configuration"
+        SECTION = "section", "Section"
+        QUESTION = "question", "Question"
+        PRODUCT = "product", "Product"
+        MINOR_POLICY = "minor_policy", "Minor policy"
+        PROFILE_FIELD = "profile_field", "Profile field"
+
+    receipt = models.ForeignKey(
+        RegistrationSetupCommandReceipt,
+        on_delete=models.PROTECT,
+        related_name="targets",
+    )
+    target_kind = models.CharField(max_length=24, choices=TargetKind)
+    target_id = models.UUIDField()
+    change_kind = models.CharField(
+        max_length=16,
+        choices=RegistrationCommandChangeKind,
+    )
+    target_schema_version = models.PositiveIntegerField(null=True, blank=True)
+    content_digest = models.CharField(
+        max_length=64,
+        blank=True,
+        validators=(_SHA256_VALIDATOR,),
+    )
+
+    class Meta:
+        ordering = ("receipt_id", "target_kind", "target_id", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("receipt", "target_kind", "target_id"),
+                name="registration_setup_receipt_target_unique",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(target_schema_version__isnull=True)
+                    | Q(target_schema_version__gt=0)
+                ),
+                name="reg_setup_target_schema_ver_positive",
+            ),
+        ]
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Registration setup command targets are immutable.",
+                code="immutable_registration_setup_command_target",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Registration setup command targets require retention workflow.",
+            code="protected_registration_setup_command_target",
+        )
+
+
+class RegistrationSection(UUIDTimeStampedModel, SetupVersionStampedModel):
     configuration = models.ForeignKey(
         RegistrationConfiguration,
         on_delete=models.PROTECT,
@@ -660,6 +1615,9 @@ class RegistrationSection(UUIDTimeStampedModel):
             ),
         ]
 
+    def __str__(self) -> str:
+        return f"{self.configuration.edition.name}: {self.title}"
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         if self.configuration.status != ConfigurationStatus.DRAFT:
             raise ValidationError(
@@ -678,11 +1636,8 @@ class RegistrationSection(UUIDTimeStampedModel):
             )
         return super().delete(*args, **kwargs)
 
-    def __str__(self) -> str:
-        return f"{self.configuration.edition.name}: {self.title}"
 
-
-class RegistrationQuestion(AbstractQuestion):
+class RegistrationQuestion(AbstractQuestion, SetupVersionStampedModel):
     section = models.ForeignKey(
         RegistrationSection,
         on_delete=models.PROTECT,
@@ -704,6 +1659,9 @@ class RegistrationQuestion(AbstractQuestion):
                 name="registration_question_configuration_key_unique",
             ),
         ]
+
+    def __str__(self) -> str:
+        return f"{self.configuration.edition.name}: {self.label}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         if self.configuration.status != ConfigurationStatus.DRAFT:
@@ -732,11 +1690,8 @@ class RegistrationQuestion(AbstractQuestion):
             )
         return super().delete(*args, **kwargs)
 
-    def __str__(self) -> str:
-        return f"{self.configuration.edition.name}: {self.label}"
 
-
-class AdmissionProduct(AbstractProduct):
+class AdmissionProduct(AbstractProduct, SetupVersionStampedModel):
     class Status(models.TextChoices):
         AVAILABLE = "available", "Available"
         HIDDEN = "hidden", "Hidden"
@@ -765,6 +1720,9 @@ class AdmissionProduct(AbstractProduct):
             ),
         ]
 
+    def __str__(self) -> str:
+        return f"{self.configuration.edition.name}: {self.name}"
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         if self.configuration.status != ConfigurationStatus.DRAFT:
             raise ValidationError(
@@ -780,9 +1738,6 @@ class AdmissionProduct(AbstractProduct):
                 code="immutable_registration_configuration",
             )
         return super().delete(*args, **kwargs)
-
-    def __str__(self) -> str:
-        return f"{self.configuration.edition.name}: {self.name}"
 
 
 class Registration(UUIDTimeStampedModel):
@@ -961,7 +1916,7 @@ class Registration(UUIDTimeStampedModel):
 REGISTRATION_STATE_CHOICES = Registration.State.choices
 
 
-class MinorRegistrationPolicy(UUIDTimeStampedModel):
+class MinorRegistrationPolicy(UUIDTimeStampedModel, SetupVersionStampedModel):
     """Jurisdiction-reviewed guardian policy attached to one form version."""
 
     configuration = models.OneToOneField(
@@ -971,9 +1926,9 @@ class MinorRegistrationPolicy(UUIDTimeStampedModel):
     )
     enabled = models.BooleanField(default=False)
     minor_age_threshold = models.PositiveSmallIntegerField(default=18)
-    guardian_notice_version = models.CharField(max_length=40)
-    jurisdiction_code = models.CharField(max_length=40)
-    review_reference = models.CharField(max_length=120)
+    guardian_notice_version = models.CharField(max_length=40, blank=True)
+    jurisdiction_code = models.CharField(max_length=40, blank=True)
+    review_reference = models.CharField(max_length=120, blank=True)
     reviewed_by = models.ForeignKey(
         "identity.Account",
         on_delete=models.PROTECT,
@@ -983,6 +1938,9 @@ class MinorRegistrationPolicy(UUIDTimeStampedModel):
 
     class Meta:
         verbose_name_plural = "minor registration policies"
+
+    def __str__(self) -> str:
+        return f"Minor policy - {self.configuration}"
 
     def clean(self) -> None:
         super().clean()
@@ -1529,6 +2487,16 @@ class ProfileExtensionWriter(models.TextChoices):
     ATTENDEE_AND_STAFF = "attendee_and_staff", "Attendee and registration staff"
 
 
+class ProfileExtensionAudience(models.TextChoices):
+    """One explicit reader policy, independent from the writer policy."""
+
+    SELF = "self", "Registration owner"
+    REGISTRATION_STAFF = "registration_staff", "Exact registration staff"
+    DEPARTMENT = "department", "Exact department or team"
+    CONFIRMED_ATTENDEES = "confirmed_attendees", "All confirmed attendees"
+    PUBLIC = "public", "Public attendee directory"
+
+
 class ProfileExtensionReviewStatus(models.TextChoices):
     PENDING = "pending", "Pending review"
     APPROVED = "approved", "Approved"
@@ -1541,7 +2509,12 @@ class ProfileExtensionStatus(models.TextChoices):
     RETIRED = "retired", "Retired"
 
 
-class RegistrationProfileExtensionField(UUIDTimeStampedModel):
+class ProfileExtensionValueWriterKind(models.TextChoices):
+    OWNER = "owner", "Registration owner"
+    STAFF = "staff", "Authorized registration staff"
+
+
+class RegistrationProfileExtensionField(UUIDTimeStampedModel, SetupVersionStampedModel):
     """Versioned current-profile field separate from immutable submissions."""
 
     organization = models.ForeignKey(
@@ -1574,6 +2547,18 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel):
         default=QuestionClassification.PERSONAL,
     )
     attendee_visible = models.BooleanField(default=True)
+    audience_policy = models.CharField(
+        max_length=24,
+        choices=ProfileExtensionAudience,
+        default=ProfileExtensionAudience.SELF,
+    )
+    audience_department = models.ForeignKey(
+        "workforce.Department",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="registration_profile_extension_audiences",
+    )
     writer_policy = models.CharField(
         max_length=30,
         choices=ProfileExtensionWriter,
@@ -1631,13 +2616,99 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel):
                 condition=Q(status="active"),
                 name="registration_one_active_profile_extension_field",
             ),
+            models.UniqueConstraint(
+                fields=("supersedes",),
+                condition=Q(supersedes__isnull=False) & ~Q(status="retired"),
+                name="registration_one_open_profile_extension_successor",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        audience_policy=ProfileExtensionAudience.DEPARTMENT,
+                        audience_department__isnull=False,
+                    )
+                    | (
+                        ~Q(audience_policy=ProfileExtensionAudience.DEPARTMENT)
+                        & Q(audience_department__isnull=True)
+                    )
+                ),
+                name="reg_profile_audience_department_shape",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        audience_policy__in=(
+                            ProfileExtensionAudience.SELF,
+                            ProfileExtensionAudience.CONFIRMED_ATTENDEES,
+                            ProfileExtensionAudience.PUBLIC,
+                        ),
+                        attendee_visible=True,
+                    )
+                    | Q(
+                        audience_policy__in=(
+                            ProfileExtensionAudience.REGISTRATION_STAFF,
+                            ProfileExtensionAudience.DEPARTMENT,
+                        ),
+                        attendee_visible=False,
+                    )
+                ),
+                name="reg_profile_audience_legacy_visibility",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "audience_policy", "position"),
+                name="reg_profile_audience_idx",
+            )
         ]
 
-    def clean(self) -> None:
+    def clean(self) -> None:  # noqa: PLR0912
         super().clean()
         _validate_question_options(field_type=self.field_type, options=self.options)
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError("The profile field must match its edition scope.")
+        if self.audience_policy == ProfileExtensionAudience.DEPARTMENT:
+            department = self.audience_department
+            if (
+                department is None
+                or department.organization_id != self.organization_id
+                or department.edition_id != self.edition_id
+                or department.retired_at is not None
+            ):
+                raise ValidationError(
+                    {
+                        "audience_department": (
+                            "Choose one active department in this exact edition."
+                        )
+                    },
+                    code="profile_extension_audience_department_mismatch",
+                )
+        elif self.audience_department_id is not None:
+            raise ValidationError(
+                {
+                    "audience_department": (
+                        "Only the department audience accepts a department."
+                    )
+                },
+                code="profile_extension_audience_department_unexpected",
+            )
+        source_binding_changed = self._state.adding
+        if not self._state.adding and self.pk is not None:
+            persisted_source = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values("source_template_id", "source_prior_edition_id")
+                .first()
+            )
+            if persisted_source is not None and (
+                persisted_source["source_template_id"] != self.source_template_id
+                or persisted_source["source_prior_edition_id"]
+                != self.source_prior_edition_id
+            ):
+                raise ValidationError(
+                    "Profile-extension source provenance is immutable.",
+                    code="immutable_profile_extension_source",
+                )
         if self.source_template_id and self.source_prior_edition_id:
             raise ValidationError(
                 "Choose either template or prior-edition provenance, not both."
@@ -1651,7 +2722,15 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel):
                     source_template.series_id is not None
                     and source_template.series_id != self.edition.series_id
                 )
-                or source_template.status != TemplateStatus.PUBLISHED
+                or (
+                    self._state.adding
+                    and source_template.status != TemplateStatus.PUBLISHED
+                )
+                or (
+                    not self._state.adding
+                    and source_template.status
+                    not in {TemplateStatus.PUBLISHED, TemplateStatus.RETIRED}
+                )
             ):
                 raise ValidationError(
                     {"source_template": "Choose an applicable published template."}
@@ -1662,7 +2741,10 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel):
                 source_edition is None
                 or source_edition.organization_id != self.organization_id
                 or source_edition.id == self.edition_id
-                or source_edition.starts_on >= self.edition.starts_on
+                or (
+                    source_binding_changed
+                    and source_edition.starts_on >= self.edition.starts_on
+                )
             ):
                 raise ValidationError(
                     {
@@ -1671,27 +2753,38 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel):
                         )
                     }
                 )
-        if (
-            self.writer_policy
-            in {
-                ProfileExtensionWriter.ATTENDEE,
-                ProfileExtensionWriter.ATTENDEE_AND_STAFF,
-            }
-            and not self.attendee_visible
-        ):
+        if self.writer_policy in {
+            ProfileExtensionWriter.ATTENDEE,
+            ProfileExtensionWriter.ATTENDEE_AND_STAFF,
+        } and self.audience_policy not in {
+            ProfileExtensionAudience.SELF,
+            ProfileExtensionAudience.CONFIRMED_ATTENDEES,
+            ProfileExtensionAudience.PUBLIC,
+        }:
             raise ValidationError(
                 {
-                    "attendee_visible": (
-                        "An attendee-writable profile field must be visible "
-                        "to attendees."
+                    "audience_policy": (
+                        "An attendee-writable profile field must include its owner."
                     )
                 }
             )
-        if self.status == ProfileExtensionStatus.ACTIVE and (
-            self.review_status != ProfileExtensionReviewStatus.APPROVED
-            or self.approved_by_id is None
-            or self.approved_at is None
-        ):
+        approval_is_complete = (
+            self.review_status == ProfileExtensionReviewStatus.APPROVED
+            and self.approved_by_id is not None
+            and self.approved_at is not None
+        )
+        if self.review_status == ProfileExtensionReviewStatus.APPROVED:
+            if not approval_is_complete:
+                raise ValidationError(
+                    "Approved profile fields require complete approval evidence.",
+                    code="profile_extension_approval_evidence_incomplete",
+                )
+        elif self.approved_by_id is not None or self.approved_at is not None:
+            raise ValidationError(
+                "Unapproved profile fields cannot carry approval evidence.",
+                code="profile_extension_approval_evidence_unexpected",
+            )
+        if self.status == ProfileExtensionStatus.ACTIVE and not approval_is_complete:
             raise ValidationError(
                 "An active profile field requires recorded approval.",
                 code="profile_extension_approval_required",
@@ -1707,11 +2800,54 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel):
                 raise ValidationError(
                     {
                         "supersedes": (
-                            "A superseded field must be an earlier version of the "
-                            "same edition key."
+                            "A successor must be a later version of the same "
+                            "edition key."
                         )
                     }
                 )
+            if self._state.adding:
+                if previous.status != ProfileExtensionStatus.ACTIVE:
+                    raise ValidationError(
+                        {
+                            "supersedes": (
+                                "A successor starts from the active definition."
+                            )
+                        },
+                        code="profile_extension_successor_source_not_active",
+                    )
+                if (
+                    type(self)
+                    .objects.filter(supersedes_id=self.supersedes_id)
+                    .exclude(status=ProfileExtensionStatus.RETIRED)
+                    .exists()
+                ):
+                    raise ValidationError(
+                        {
+                            "supersedes": (
+                                "An active definition can have only one open "
+                                "successor. Retire its existing draft first."
+                            )
+                        },
+                        code="profile_extension_open_successor_exists",
+                    )
+                highest_version = (
+                    type(self)
+                    .objects.filter(edition_id=self.edition_id, key=self.key)
+                    .order_by("-version")
+                    .values_list("version", flat=True)
+                    .first()
+                    or 0
+                )
+                if self.version != highest_version + 1:
+                    raise ValidationError(
+                        {
+                            "version": (
+                                "A successor must use the next version number not "
+                                "yet used for this edition key."
+                            )
+                        },
+                        code="profile_extension_successor_version_invalid",
+                    )
         reserved_prefixes = (
             "infinity",
             "admission",
@@ -1729,12 +2865,37 @@ class RegistrationProfileExtensionField(UUIDTimeStampedModel):
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         self.key = self.key.lower()
+        # Preserve the pre-audience model-construction contract while callers
+        # migrate to the explicit policy vocabulary. A newly constructed
+        # legacy ``attendee_visible=False`` field meant staff-only.
+        if (
+            self._state.adding
+            and self.audience_policy == ProfileExtensionAudience.SELF
+            and self.attendee_visible is False
+        ):
+            self.audience_policy = ProfileExtensionAudience.REGISTRATION_STAFF
+        self.attendee_visible = self.audience_policy in {
+            ProfileExtensionAudience.SELF,
+            ProfileExtensionAudience.CONFIRMED_ATTENDEES,
+            ProfileExtensionAudience.PUBLIC,
+        }
         if not self._state.adding:
             current = type(self).objects.filter(pk=self.pk).values("status").first()
+            if current and current["status"] == ProfileExtensionStatus.RETIRED:
+                raise ValidationError(
+                    "Retired profile field versions are immutable.",
+                    code="immutable_retired_profile_extension_field",
+                )
             if current and current["status"] == ProfileExtensionStatus.ACTIVE:
                 update_fields = set(kwargs.get("update_fields") or ())
                 if self.status != ProfileExtensionStatus.RETIRED or (
-                    update_fields and not update_fields <= {"status", "updated_at"}
+                    update_fields
+                    and not update_fields
+                    <= {
+                        "status",
+                        "last_changed_in_setup_version",
+                        "updated_at",
+                    }
                 ):
                     raise ValidationError(
                         "Active profile field versions are immutable.",
@@ -1777,7 +2938,10 @@ class RegistrationProfileExtensionValueRevision(UUIDTimeStampedModel):
         on_delete=models.PROTECT,
         related_name="registration_profile_extension_value_revisions",
     )
-    source_channel = models.CharField(max_length=40)
+    source_channel = models.CharField(
+        max_length=32,
+        validators=(_PROFILE_VALUE_SOURCE_VALIDATOR,),
+    )
     reason = models.CharField(max_length=500, blank=True)
 
     class Meta:
@@ -1810,7 +2974,15 @@ class RegistrationProfileExtensionValueRevision(UUIDTimeStampedModel):
                 code="immutable_profile_extension_value_revision",
             )
         self.field_key = self.field_key.lower()
-        self.full_clean()
+        stores_json_null = (
+            isinstance(self.value, Value)
+            and self.value.value is None
+            and isinstance(self.value.output_field, models.JSONField)
+        )
+        if stores_json_null:
+            self.full_clean(exclude={"value"})
+        else:
+            self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
@@ -1822,6 +2994,226 @@ class RegistrationProfileExtensionValueRevision(UUIDTimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.registration.reference}: {self.field_key} r{self.sequence}"
+
+
+class RegistrationProfileExtensionValueControl(UUIDTimeStampedModel):
+    """Locked current-sequence pointer for one registration and stable field key."""
+
+    registration = models.ForeignKey(
+        Registration,
+        on_delete=models.PROTECT,
+        related_name="profile_extension_value_controls",
+    )
+    organization_id = models.UUIDField()
+    edition_id = models.UUIDField()
+    field_key = models.SlugField(max_length=80, validators=[validate_lowercase_slug])
+    current_sequence = models.PositiveIntegerField(default=0)
+    latest_revision = models.OneToOneField(
+        RegistrationProfileExtensionValueRevision,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="current_control",
+    )
+
+    class Meta:
+        ordering = ("registration_id", "field_key", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("registration", "field_key"),
+                name="reg_profile_value_control_key_unique",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(current_sequence=0, latest_revision__isnull=True)
+                    | Q(current_sequence__gt=0, latest_revision__isnull=False)
+                ),
+                name="reg_profile_value_control_pointer_complete",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization_id", "edition_id", "registration"),
+                name="reg_prof_val_ctrl_scope_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.registration_id and (
+            self.registration.organization_id != self.organization_id
+            or self.registration.edition_id != self.edition_id
+        ):
+            raise ValidationError(
+                "The profile-value control must match its registration scope.",
+                code="profile_value_control_scope_mismatch",
+            )
+        latest_revision = (
+            self.latest_revision if self.latest_revision_id is not None else None
+        )
+        if latest_revision is not None and (
+            latest_revision.registration_id != self.registration_id
+            or latest_revision.organization_id != self.organization_id
+            or latest_revision.edition_id != self.edition_id
+            or latest_revision.field_key != self.field_key
+            or latest_revision.sequence != self.current_sequence
+        ):
+            raise ValidationError(
+                "The profile-value control must point to its exact latest revision.",
+                code="profile_value_control_revision_mismatch",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.field_key = self.field_key.lower()
+        if not self._state.adding:
+            current = (
+                type(self).objects.filter(pk=self.pk).values("current_sequence").first()
+            )
+            if current and self.current_sequence != current["current_sequence"] + 1:
+                raise ValidationError(
+                    "Profile-value control sequence must advance exactly once.",
+                    code="profile_value_control_sequence_invalid",
+                )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Profile-value controls require the retention workflow.",
+            code="protected_profile_value_control",
+        )
+
+
+class RegistrationProfileExtensionValueCommandReceipt(UUIDTimeStampedModel):
+    """Immutable idempotency and result evidence for one profile-value append."""
+
+    control = models.ForeignKey(
+        RegistrationProfileExtensionValueControl,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    registration = models.ForeignKey(
+        Registration,
+        on_delete=models.PROTECT,
+        related_name="profile_extension_value_command_receipts",
+    )
+    organization_id = models.UUIDField()
+    edition_id = models.UUIDField()
+    field = models.ForeignKey(
+        RegistrationProfileExtensionField,
+        on_delete=models.PROTECT,
+        related_name="value_command_receipts",
+    )
+    revision = models.OneToOneField(
+        RegistrationProfileExtensionValueRevision,
+        on_delete=models.PROTECT,
+        related_name="command_receipt",
+    )
+    actor = models.ForeignKey(
+        "identity.Account",
+        on_delete=models.PROTECT,
+        related_name="registration_profile_extension_value_command_receipts",
+    )
+    writer_kind = models.CharField(
+        max_length=8,
+        choices=ProfileExtensionValueWriterKind,
+    )
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(
+        max_length=64,
+        validators=(_SHA256_VALIDATOR,),
+    )
+    expected_sequence = models.PositiveIntegerField()
+    result_sequence = models.PositiveIntegerField()
+    correlation_id = models.UUIDField()
+    request_id = models.UUIDField(null=True, blank=True)
+    source_channel = models.CharField(
+        max_length=32,
+        validators=(_PROFILE_VALUE_SOURCE_VALIDATOR,),
+    )
+
+    class Meta:
+        ordering = ("registration_id", "result_sequence", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("actor", "registration", "retry_key"),
+                name="reg_profile_value_retry_key_unique",
+            ),
+            models.UniqueConstraint(
+                fields=("control", "result_sequence"),
+                name="reg_profile_value_receipt_sequence_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(result_sequence=models.F("expected_sequence") + 1),
+                name="reg_profile_value_receipt_sequence_exact",
+            ),
+            models.CheckConstraint(
+                condition=Q(source_channel__regex=r"^[a-z][a-z0-9_-]{0,31}$"),
+                name="reg_profile_value_receipt_source_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization_id", "edition_id", "registration"),
+                name="reg_prof_val_rcpt_scope_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.registration_id and (
+            self.registration.organization_id != self.organization_id
+            or self.registration.edition_id != self.edition_id
+        ):
+            raise ValidationError(
+                "The profile-value receipt must match its registration scope.",
+                code="profile_value_receipt_scope_mismatch",
+            )
+        if self.control_id and (
+            self.control.registration_id != self.registration_id
+            or self.control.organization_id != self.organization_id
+            or self.control.edition_id != self.edition_id
+        ):
+            raise ValidationError(
+                "The profile-value receipt must match its sequence control.",
+                code="profile_value_receipt_control_mismatch",
+            )
+        if self.field_id and (
+            self.field.organization_id != self.organization_id
+            or self.field.edition_id != self.edition_id
+        ):
+            raise ValidationError(
+                "The profile-value receipt must match its field scope.",
+                code="profile_value_receipt_field_mismatch",
+            )
+        if self.revision_id and (
+            self.revision.registration_id != self.registration_id
+            or self.revision.field_id != self.field_id
+            or self.revision.actor_id != self.actor_id
+            or self.revision.sequence != self.result_sequence
+            or self.revision.source_channel != self.source_channel
+        ):
+            raise ValidationError(
+                "The profile-value receipt must match its exact result revision.",
+                code="profile_value_receipt_revision_mismatch",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Profile-value command receipts are immutable.",
+                code="immutable_profile_value_command_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Profile-value command receipts require the retention workflow.",
+            code="protected_profile_value_command_receipt",
+        )
 
 
 class RegistrationCommandReceipt(UUIDTimeStampedModel):
@@ -1867,6 +3259,459 @@ class RegistrationCommandReceipt(UUIDTimeStampedModel):
         raise ValidationError(
             "Registration command receipts require the retention workflow.",
             code="protected_registration_command_receipt",
+        )
+
+
+class RegistrationCommerceControl(UUIDTimeStampedModel):
+    """Version fence for governed live registration-commerce operations."""
+
+    configuration = models.OneToOneField(
+        RegistrationConfiguration,
+        on_delete=models.PROTECT,
+        related_name="commerce_control",
+    )
+    organization_id = models.UUIDField()
+    edition_id = models.UUIDField()
+    aggregate_version = models.PositiveBigIntegerField(default=1)
+
+    class Meta:
+        ordering = ("organization_id", "edition_id", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(aggregate_version__gt=0),
+                name="reg_commerce_control_version_positive",
+            )
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.configuration_id and (
+            self.configuration.organization_id != self.organization_id
+            or self.configuration.edition_id != self.edition_id
+        ):
+            raise ValidationError(
+                "The commerce control must match its configuration scope.",
+                code="registration_commerce_control_scope_mismatch",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Registration commerce controls require the recovery workflow.",
+            code="protected_registration_commerce_control",
+        )
+
+
+class RegistrationCommerceCommandReceipt(UUIDTimeStampedModel):
+    """Immutable replay evidence for one governed commerce command."""
+
+    class Operation(models.TextChoices):
+        TIER_REPLACEMENT_RESERVED = (
+            "tier_replacement_reserved",
+            "Admission tier replacement reserved",
+        )
+        OVERALL_CAPACITY_ADJUSTED = (
+            "overall_capacity_adjusted",
+            "Overall capacity adjusted",
+        )
+        PRODUCT_CAPACITY_ADJUSTED = (
+            "product_capacity_adjusted",
+            "Product capacity adjusted",
+        )
+        WAITLIST_BATCH_OFFERED = (
+            "waitlist_batch_offered",
+            "Waitlist batch offered",
+        )
+
+    control = models.ForeignKey(
+        RegistrationCommerceControl,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    registration = models.ForeignKey(
+        Registration,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="commerce_command_receipts",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="registration_commerce_command_receipts",
+    )
+    operation = models.CharField(max_length=48, choices=Operation)
+    idempotency_key = models.UUIDField()
+    request_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    expected_version = models.PositiveBigIntegerField()
+    resulting_version = models.PositiveBigIntegerField()
+    result_id = models.UUIDField()
+    result_count = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ("created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("control", "actor", "idempotency_key"),
+                name="reg_commerce_command_retry_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(expected_version__gt=0),
+                name="reg_commerce_receipt_expected_positive",
+            ),
+            models.CheckConstraint(
+                condition=Q(resulting_version__gt=models.F("expected_version")),
+                name="reg_commerce_receipt_version_advanced",
+            ),
+        ]
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Registration commerce command receipts are immutable.",
+                code="immutable_registration_commerce_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Registration commerce command receipts require retention workflow.",
+            code="protected_registration_commerce_receipt",
+        )
+
+
+class RegistrationCapacityAdjustment(UUIDTimeStampedModel):
+    """Append-only effective-capacity change below an immutable hard ceiling."""
+
+    class Scope(models.TextChoices):
+        OVERALL = "overall", "Overall registration"
+        PRODUCT = "product", "Admission product"
+
+    control = models.ForeignKey(
+        RegistrationCommerceControl,
+        on_delete=models.PROTECT,
+        related_name="capacity_adjustments",
+    )
+    configuration = models.ForeignKey(
+        RegistrationConfiguration,
+        on_delete=models.PROTECT,
+        related_name="capacity_adjustments",
+    )
+    product = models.ForeignKey(
+        AdmissionProduct,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="capacity_adjustments",
+    )
+    organization_id = models.UUIDField()
+    edition_id = models.UUIDField()
+    scope = models.CharField(max_length=16, choices=Scope)
+    previous_capacity = models.PositiveIntegerField()
+    new_capacity = models.PositiveIntegerField()
+    hard_ceiling = models.PositiveIntegerField()
+    control_version = models.PositiveBigIntegerField()
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="registration_capacity_adjustments",
+    )
+    reason = models.CharField(max_length=500)
+    occurred_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ("control_version", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("control", "control_version"),
+                name="reg_capacity_adjustment_version_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(previous_capacity__gt=0, new_capacity__gt=0),
+                name="reg_capacity_adjustment_values_positive",
+            ),
+            models.CheckConstraint(
+                condition=Q(new_capacity__lte=models.F("hard_ceiling")),
+                name="reg_capacity_adjustment_below_ceiling",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(scope="overall", product__isnull=True)
+                    | Q(scope="product", product__isnull=False)
+                ),
+                name="reg_capacity_adjustment_scope_shape",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization_id", "edition_id", "scope", "occurred_at"),
+                name="reg_capacity_scope_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.configuration_id and (
+            self.configuration.organization_id != self.organization_id
+            or self.configuration.edition_id != self.edition_id
+        ):
+            raise ValidationError(
+                "The capacity adjustment scope does not match.",
+                code="registration_capacity_adjustment_scope_mismatch",
+            )
+        if self.control_id and self.control.configuration_id != self.configuration_id:
+            raise ValidationError(
+                "The capacity adjustment control does not match.",
+                code="registration_capacity_adjustment_control_mismatch",
+            )
+        if self.product_id:
+            product = cast(AdmissionProduct, self.product)
+            if product.configuration_id != self.configuration_id:
+                raise ValidationError(
+                    "The capacity adjustment product does not match.",
+                    code="registration_capacity_adjustment_product_mismatch",
+                )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Registration capacity adjustments are append-only.",
+                code="immutable_registration_capacity_adjustment",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Registration capacity adjustments are append-only.",
+            code="protected_registration_capacity_adjustment",
+        )
+
+
+class AdmissionTierReplacement(UUIDTimeStampedModel):
+    """A target-capacity hold for replacing one already-paid admission tier."""
+
+    class Status(models.TextChoices):
+        PAYMENT_PENDING = "payment_pending", "Payment pending"
+        COMPLETED = "completed", "Completed"
+        EXPIRED = "expired", "Expired"
+        CANCELLED = "cancelled", "Cancelled"
+
+    registration = models.ForeignKey(
+        Registration,
+        on_delete=models.PROTECT,
+        related_name="tier_replacements",
+    )
+    organization_id = models.UUIDField()
+    edition_id = models.UUIDField()
+    source_product = models.ForeignKey(
+        AdmissionProduct,
+        on_delete=models.PROTECT,
+        related_name="tier_replacements_from",
+    )
+    target_product = models.ForeignKey(
+        AdmissionProduct,
+        on_delete=models.PROTECT,
+        related_name="tier_replacements_to",
+    )
+    source_product_name_snapshot = models.CharField(max_length=160)
+    target_product_name_snapshot = models.CharField(max_length=160)
+    source_price_minor_snapshot = models.PositiveBigIntegerField()
+    target_price_minor_snapshot = models.PositiveBigIntegerField()
+    amount_due_minor = models.PositiveBigIntegerField()
+    currency = models.CharField(max_length=3)
+    source_entitlement_code = models.SlugField(max_length=80)
+    target_entitlement_code = models.SlugField(max_length=80)
+    target_entitlement_name_snapshot = models.CharField(max_length=160)
+    status = models.CharField(
+        max_length=24,
+        choices=Status,
+        default=Status.PAYMENT_PENDING,
+    )
+    aggregate_version = models.PositiveIntegerField(default=1)
+    expected_registration_version = models.PositiveIntegerField()
+    resulting_registration_version = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+    reserved_at = models.DateTimeField()
+    payment_due_at = models.DateTimeField()
+    completed_at = models.DateTimeField(null=True, blank=True)
+    expired_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="admission_tier_replacements",
+    )
+
+    class Meta:
+        ordering = ("-reserved_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("registration",),
+                condition=Q(status="payment_pending"),
+                name="one_pending_tier_replacement_per_registration",
+            ),
+            models.CheckConstraint(
+                condition=Q(amount_due_minor__gt=0),
+                name="tier_replacement_amount_positive",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    target_price_minor_snapshot__gt=models.F(
+                        "source_price_minor_snapshot"
+                    )
+                ),
+                name="tier_replacement_price_increases",
+            ),
+            models.CheckConstraint(
+                condition=Q(payment_due_at__gt=models.F("reserved_at")),
+                name="tier_replacement_deadline_after_reservation",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization_id", "edition_id", "status", "payment_due_at"),
+                name="tier_replacement_expiry_idx",
+            ),
+            models.Index(
+                fields=("target_product", "status", "reserved_at"),
+                name="tier_replacement_capacity_idx",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.registration_id and (
+            self.registration.organization_id != self.organization_id
+            or self.registration.edition_id != self.edition_id
+        ):
+            raise ValidationError(
+                "The tier replacement scope does not match its registration.",
+                code="tier_replacement_scope_mismatch",
+            )
+        if (
+            self.source_product_id
+            and self.target_product_id
+            and (
+                self.source_product_id == self.target_product_id
+                or self.source_product.configuration_id
+                != self.target_product.configuration_id
+                or self.registration.configuration_id
+                != self.source_product.configuration_id
+            )
+        ):
+            raise ValidationError(
+                "The admission products do not form a valid replacement.",
+                code="tier_replacement_product_mismatch",
+            )
+        if (
+            self.target_price_minor_snapshot - self.source_price_minor_snapshot
+            != self.amount_due_minor
+        ):
+            raise ValidationError(
+                "The tier replacement amount must equal the configured "
+                "price difference.",
+                code="tier_replacement_amount_mismatch",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Admission tier replacements require the retention workflow.",
+            code="protected_admission_tier_replacement",
+        )
+
+
+class WaitlistBatchOffer(UUIDTimeStampedModel):
+    """Immutable evidence for offering only the next strict FIFO batch."""
+
+    control = models.ForeignKey(
+        RegistrationCommerceControl,
+        on_delete=models.PROTECT,
+        related_name="waitlist_batches",
+    )
+    configuration = models.ForeignKey(
+        RegistrationConfiguration,
+        on_delete=models.PROTECT,
+        related_name="waitlist_batches",
+    )
+    product = models.ForeignKey(
+        AdmissionProduct,
+        on_delete=models.PROTECT,
+        related_name="waitlist_batches",
+    )
+    organization_id = models.UUIDField()
+    edition_id = models.UUIDField()
+    requested_size = models.PositiveIntegerField()
+    offered_count = models.PositiveIntegerField()
+    control_version = models.PositiveBigIntegerField()
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="registration_waitlist_batches",
+    )
+    reason = models.CharField(max_length=500)
+    occurred_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ("-occurred_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("control", "control_version"),
+                name="reg_waitlist_batch_version_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(offered_count__lte=models.F("requested_size")),
+                name="reg_waitlist_batch_within_requested",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization_id", "edition_id", "occurred_at"),
+                name="reg_waitlist_batch_scope_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.configuration_id and (
+            self.configuration.organization_id != self.organization_id
+            or self.configuration.edition_id != self.edition_id
+            or self.product.configuration_id != self.configuration_id
+            or self.control.configuration_id != self.configuration_id
+        ):
+            raise ValidationError(
+                "The waitlist batch scope does not match.",
+                code="registration_waitlist_batch_scope_mismatch",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self._state.adding:
+            raise ValidationError(
+                "Waitlist batch evidence is immutable.",
+                code="immutable_waitlist_batch_offer",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        _ = args, kwargs
+        raise ValidationError(
+            "Waitlist batch evidence is immutable.",
+            code="protected_waitlist_batch_offer",
         )
 
 
@@ -1943,6 +3788,13 @@ class PaymentIntent(UUIDTimeStampedModel):
         on_delete=models.PROTECT,
         related_name="payment_intents",
     )
+    tier_replacement = models.ForeignKey(
+        AdmissionTierReplacement,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="payment_intents",
+    )
     organization_id = models.UUIDField()
     edition_id = models.UUIDField()
     provider_account = models.ForeignKey(
@@ -1995,6 +3847,22 @@ class PaymentIntent(UUIDTimeStampedModel):
                 "The payment intent does not match its registration scope.",
                 code="payment_intent_scope_mismatch",
             )
+        if self.tier_replacement_id:
+            tier_replacement = cast(
+                AdmissionTierReplacement,
+                self.tier_replacement,
+            )
+            if (
+                tier_replacement.registration_id != self.registration_id
+                or tier_replacement.organization_id != self.organization_id
+                or tier_replacement.edition_id != self.edition_id
+                or self.amount_minor != tier_replacement.amount_due_minor
+                or self.currency != tier_replacement.currency
+            ):
+                raise ValidationError(
+                    "The payment intent does not match its tier replacement.",
+                    code="payment_intent_tier_replacement_mismatch",
+                )
 
 
 class PaymentWebhookReceipt(UUIDTimeStampedModel):
@@ -2748,6 +4616,7 @@ class RegistrationLifecycleRun(UUIDTimeStampedModel):
     inactive_cancelled = models.PositiveIntegerField(default=0)
     closed_waitlist_cancelled = models.PositiveIntegerField(default=0)
     promoted = models.PositiveIntegerField(default=0)
+    tier_replacements_expired = models.PositiveIntegerField(default=0)
     restrictions_applied = models.PositiveIntegerField(default=0)
 
     class Meta:

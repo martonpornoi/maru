@@ -38,3 +38,19 @@ def test_registration_client_cors_allows_only_exact_configured_api_origin() -> N
         )
     )
     assert "Access-Control-Allow-Origin" not in non_api
+
+    for private_documentation_path in (
+        "/api/v1/schema",
+        "/api/v1/schema/",
+        "/api/v1/docs",
+        "/api/v1/docs/",
+        "/api/v1/redoc",
+        "/api/v1/redoc/",
+    ):
+        private_documentation = middleware(
+            RequestFactory().get(
+                private_documentation_path,
+                HTTP_ORIGIN="https://register.example",
+            )
+        )
+        assert "Access-Control-Allow-Origin" not in private_documentation

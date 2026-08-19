@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "drf_spectacular",
+    "drf_spectacular_sidecar",
     "maru.core",
     "maru.identity",
     "maru.organizations",
@@ -30,6 +31,11 @@ INSTALLED_APPS = [
     "maru.effects",
     "maru.communications",
     "maru.registration",
+    "maru.catalog",
+    "maru.charities",
+    "maru.applications",
+    "maru.venues",
+    "maru.logistics",
     "maru.workforce",
     "maru.accreditation",
     "maru.privacyops",
@@ -103,7 +109,7 @@ AUTH_USER_MODEL = "identity.Account"
 AUTHENTICATION_BACKENDS = [
     "maru.identity.backends.EmailOrHandleBackend",
 ]
-LOGIN_REDIRECT_URL = "/admin/"
+LOGIN_REDIRECT_URL = "/my/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 REST_FRAMEWORK = {
@@ -127,6 +133,18 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]+",
     "OAS_VERSION": "3.1.0",
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "displayOperationId": True,
+        "displayRequestDuration": True,
+        "docExpansion": "list",
+        "filter": True,
+        "persistAuthorization": False,
+        "supportedSubmitMethods": [],
+    },
     "ENUM_NAME_OVERRIDES": {
         "EditionLifecycleEnum": "maru.events.models.EDITION_LIFECYCLE_CHOICES",
         "RegistrationStateEnum": (
@@ -160,6 +178,10 @@ SPECTACULAR_SETTINGS = {
             "maru.privacyops.models.SUBJECT_RIGHTS_REQUEST_STATUS_CHOICES"
         ),
     },
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "maru.core.openapi.require_explicit_domain_request_bodies",
+    ],
 }
 
 BUILD_VERSION = os.environ.get("MARU_BUILD_VERSION", "development")
@@ -191,6 +213,27 @@ MARU_MEDIA_SCANNER_TIMEOUT_SECONDS = float(
 MEDIA_REQUIRE_SAFETY_RECEIPT = True
 MARU_OFFLINE_MANIFEST_SECRET = os.environ.get("MARU_OFFLINE_MANIFEST_SECRET", "")
 MARU_EXPOSE_TEST_CREDENTIAL_TOKENS = False
+MARU_IDENTITY_INVITATION_ENCRYPTION_KEY_ID = os.environ.get(
+    "MARU_IDENTITY_INVITATION_ENCRYPTION_KEY_ID",
+    "",
+)
+MARU_IDENTITY_INVITATION_PUBLIC_KEY_B64 = os.environ.get(
+    "MARU_IDENTITY_INVITATION_PUBLIC_KEY_B64",
+    "",
+)
+MARU_IDENTITY_INVITATION_DIGEST_ACTIVE_KEY_ID = os.environ.get(
+    "MARU_IDENTITY_INVITATION_DIGEST_ACTIVE_KEY_ID",
+    "",
+)
+MARU_IDENTITY_INVITATION_DIGEST_KEYS_JSON = os.environ.get(
+    "MARU_IDENTITY_INVITATION_DIGEST_KEYS_JSON",
+    "",
+)
+MARU_IDENTITY_INVITATION_RETENTION_POLICY_JSON = os.environ.get(
+    "MARU_IDENTITY_INVITATION_RETENTION_POLICY_JSON",
+    "",
+)
+IDENTITY_INVITATION_ENCRYPTION_REQUIRED = False
 ENFORCE_EDITION_CLOSURE_GATES = True
 REQUIRE_EXACT_AUTHORITY_PROVENANCE = boolean(
     os.environ,

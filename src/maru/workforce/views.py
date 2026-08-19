@@ -135,6 +135,7 @@ class _OrganizationStructureSnapshot:
     can_create_series: bool
     can_create_edition: bool
     can_view_edition: bool
+    can_manage_registration: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -249,6 +250,12 @@ def _load_organization_structure_snapshot(
         resource=edition_target,
         at=evaluated_at,
     ).allowed
+    can_manage_registration = decide(
+        principal=actor,
+        capability_code="registration.manage_configuration",
+        resource=edition_target,
+        at=evaluated_at,
+    ).allowed
     governance = executive_board_governance_anchor(
         organization_id=organization.id,
     )
@@ -275,6 +282,7 @@ def _load_organization_structure_snapshot(
             can_create_series=can_create_series,
             can_create_edition=can_create_edition,
             can_view_edition=can_view_edition,
+            can_manage_registration=can_manage_registration,
         ),
         organization_id=organization.id,
         edition_id=edition.id,
@@ -301,6 +309,7 @@ def _organization_structure_dependency_failure(
             "baseline_can_view_edition": False,
             "baseline_can_view_structure": False,
             "baseline_can_manage_structure": False,
+            "baseline_can_manage_registration": False,
             "baseline_hide_admin_scoped_navigation": True,
             "structure_load_failed": True,
             "structure_request_invalid": False,
@@ -333,6 +342,7 @@ def _organization_structure_bad_request(request: HttpRequest) -> TemplateRespons
             "baseline_can_view_edition": False,
             "baseline_can_view_structure": False,
             "baseline_can_manage_structure": False,
+            "baseline_can_manage_registration": False,
             "baseline_hide_admin_scoped_navigation": True,
             "structure_load_failed": False,
             "structure_request_invalid": True,
@@ -560,6 +570,7 @@ def _structure_page_context(
             "baseline_can_view_edition": snapshot.can_view_edition,
             "baseline_can_view_structure": True,
             "baseline_can_manage_structure": read.can_manage_structure,
+            "baseline_can_manage_registration": snapshot.can_manage_registration,
             "baseline_structure_navigation_current": True,
             "organization": snapshot.organization,
             "convention_series": snapshot.series,
@@ -871,6 +882,7 @@ def organization_structure(
             "baseline_can_view_edition": snapshot.can_view_edition,
             "baseline_can_view_structure": True,
             "baseline_can_manage_structure": can_manage_structure,
+            "baseline_can_manage_registration": snapshot.can_manage_registration,
             "organization": organization,
             "convention_series": series,
             "edition": edition,
@@ -1065,7 +1077,6 @@ def _render_structure_department(
                 "name": department.name,
                 "description": department.description,
                 "parent_department_id": department.parent_id,
-                "display_order": department.display_order,
             },
         )
         retirement_form = DepartmentRetirementForm(
@@ -1430,7 +1441,7 @@ def create_organization_structure_department(  # noqa: PLR0911
                 UUID | None,
                 form.cleaned_data["parent_department_id"],
             ),
-            display_order=int(form.cleaned_data["display_order"]),
+            display_order=None,
             expected_version=int(form.cleaned_data["expected_version"]),
             reason=str(form.cleaned_data["reason"]),
             retry_key=cast(UUID, form.cleaned_data["retry_key"]),
@@ -1566,7 +1577,7 @@ def update_organization_structure_department(  # noqa: PLR0911
                 UUID | None,
                 form.cleaned_data["parent_department_id"],
             ),
-            display_order=int(form.cleaned_data["display_order"]),
+            display_order=None,
             expected_version=int(form.cleaned_data["expected_version"]),
             reason=str(form.cleaned_data["reason"]),
             correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]

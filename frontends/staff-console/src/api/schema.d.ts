@@ -4,6 +4,161 @@
  */
 
 export interface paths {
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        get: operations["catalog_retrieve_edition_catalog"];
+        put?: never;
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        post: operations["catalog_create_edition_catalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/activate/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        post: operations["catalog_activate_edition_catalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/activity/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        get: operations["catalog_list_activity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/orders/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        get: operations["catalog_list_own_orders"];
+        put?: never;
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        post: operations["catalog_place_order"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/orders/{order_id}/payments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        post: operations["catalog_create_payment_intent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/payment-intents/{intent_id}/reconcile/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        post: operations["catalog_reconcile_payment_intent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/products/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        post: operations["catalog_add_product"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/products/{product_id}/variants/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        post: operations["catalog_add_variant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/organizations/{organization_id}/editions/{edition_id}/variants/{variant_id}/stock-adjustments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        post: operations["catalog_adjust_variant_stock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/context": {
         parameters: {
             query?: never;
@@ -228,6 +383,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/my/organizations/{organization_id}/editions/{edition_id}/equipment-offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        get: operations["my_organizations_editions_equipment_offers_list"];
+        put?: never;
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        post: operations["my_organizations_editions_equipment_offers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my/organizations/{organization_id}/editions/{edition_id}/equipment-offers/{offer_id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        post: operations["my_organizations_editions_equipment_offers_withdraw_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my/organizations/{organization_id}/editions/{edition_id}/venue-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        get: operations["venues_list_my_schedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/accommodation-room-types/{room_type_id}/night-inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        put: operations["venues_set_accommodation_night_inventory"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/audit-events": {
         parameters: {
             query?: never;
@@ -238,6 +462,75 @@ export interface paths {
         get: operations["audit_list_security_events"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/charity-partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        get: operations["charities_list_partners"];
+        put?: never;
+        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        post: operations["charities_create_partner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/charity-partners/{partner_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        patch: operations["charities_update_partner"];
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/charity-partners/{partner_id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        post: operations["charities_add_media"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/charity-partners/{partner_id}/media/{media_id}/commands/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        post: operations["charities_command_media"];
         delete?: never;
         options?: never;
         head?: never;
@@ -308,6 +601,23 @@ export interface paths {
         patch: operations["authorization_replace_access_assignment"];
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/access/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Audited, explanatory preview without impersonation or domain mutation. */
+        post: operations["authorization_preview_effective_access"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/editions/{edition_id}/accreditation/me/credentials": {
         parameters: {
             query?: never;
@@ -334,6 +644,212 @@ export interface paths {
         get: operations["staff_list_assigned_actions"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/applications/definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        get: operations["applications_list_definitions"];
+        put?: never;
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        post: operations["applications_create_definition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/applications/definitions/{definition_id}/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        post: operations["applications_command_definition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/applications/definitions/{definition_id}/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        post: operations["applications_start_submission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/applications/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        get: operations["applications_retrieve_my_workspace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/applications/review-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        get: operations["applications_list_review_queue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/applications/starters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        get: operations["applications_list_starters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/applications/submissions/{submission_id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        post: operations["applications_append_answer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/applications/submissions/{submission_id}/review-decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        post: operations["applications_record_review_decision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/applications/submissions/{submission_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        post: operations["applications_submit_submission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/charity-selections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        get: operations["charities_list_selections"];
+        put?: never;
+        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        post: operations["charities_propose_selection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/charity-selections/{selection_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        get: operations["charities_retrieve_selection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/charity-selections/{selection_id}/commands/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        post: operations["charities_command_selection"];
         delete?: never;
         options?: never;
         head?: never;
@@ -414,6 +930,313 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["accreditation_revoke_credential"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/equipment-offers/{offer_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        post: operations["organizations_editions_equipment_offers_review_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        get: operations["organizations_editions_logistics_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        get: operations["organizations_editions_logistics_activity_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/agreements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_editions_logistics_agreements_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_editions_logistics_assets_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        post: operations["organizations_editions_logistics_events_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/manifests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        get: operations["organizations_editions_logistics_manifests_list"];
+        put?: never;
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        post: operations["organizations_editions_logistics_manifests_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/manifests/{manifest_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        get: operations["organizations_editions_logistics_manifests_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/manifests/{manifest_id}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_editions_logistics_manifests_lines_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/manifests/{manifest_id}/lines/{line_id}/receive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_editions_logistics_manifests_lines_receive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/manifests/{manifest_id}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        post: operations["organizations_editions_logistics_manifests_state_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/nodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_editions_logistics_nodes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/offline-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        post: operations["organizations_editions_logistics_offline_batches_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/physical-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_editions_logistics_physical_keys_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/restricted-addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_editions_logistics_restricted_addresses_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/restricted-addresses/{address_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        post: operations["organizations_editions_logistics_restricted_addresses_read_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/stage-receiving": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        get: operations["organizations_editions_logistics_stage_receiving_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/logistics/stock-lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_editions_logistics_stock_lots_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -548,6 +1371,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/commerce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["registration_retrieve_commerce_workspace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/commerce/capacity-adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep self and staff commerce responses out of shared caches. */
+        post: operations["registration_adjust_effective_capacity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/commerce/waitlist-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep self and staff commerce responses out of shared caches. */
+        post: operations["registration_offer_next_waitlist_batch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration": {
         parameters: {
             query?: never;
@@ -558,6 +1431,22 @@ export interface paths {
         get: operations["registration_retrieve_configuration_workspace"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration/{configuration_id}/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["registration_apply_configuration_definition_command"];
         delete?: never;
         options?: never;
         head?: never;
@@ -637,6 +1526,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Keep self and staff commerce responses out of shared caches. */
         post: operations["registration_confirm_my_demo_payment"];
         delete?: never;
         options?: never;
@@ -686,6 +1576,23 @@ export interface paths {
         get: operations["registration_list_my_receipts"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/me/{registration_id}/tier-replacements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Keep self and staff commerce responses out of shared caches. */
+        post: operations["registration_reserve_my_admission_tier_replacement"];
         delete?: never;
         options?: never;
         head?: never;
@@ -772,6 +1679,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-extension-fields": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["registration_list_profile_extension_fields"];
+        put?: never;
+        post: operations["registration_create_profile_extension_field"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-extension-fields/{field_id}/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["registration_apply_profile_extension_field_command"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/profile-media-reviews": {
         parameters: {
             query?: never;
@@ -830,6 +1769,22 @@ export interface paths {
         get: operations["registration_list_settlements"];
         put?: never;
         post: operations["registration_reconcile_settlement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/registration/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["registration_get_setup_start_choices"];
+        put?: never;
+        post: operations["registration_start_governed_setup"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1064,6 +2019,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/venue-spaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_select_space_for_edition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/venue-spaces/{space_selection_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        get: operations["venues_retrieve_space_schedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/venue-spaces/{space_selection_id}/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        put: operations["venues_set_space_availability"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/venue-spaces/{space_selection_id}/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_create_booking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/venue-spaces/{space_selection_id}/bookings/{booking_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        patch: operations["venues_reschedule_booking"];
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/venue-spaces/{space_selection_id}/bookings/{booking_id}/commands/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_apply_booking_command"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/venues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        get: operations["venues_list_edition_workspace"];
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_select_property_for_edition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments": {
         parameters: {
             query?: never;
@@ -1230,6 +2305,176 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/logistics/agreements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_agreements_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/logistics/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_assets_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/logistics/kits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_kits_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/logistics/labels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_labels_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/logistics/nodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_nodes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/logistics/parties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_parties_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/logistics/physical-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_physical_keys_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/logistics/physical-keys/{key_id}/keyholders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_physical_keys_keyholders_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/logistics/restricted-addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_restricted_addresses_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/logistics/stock-lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated logistics API response boundary, including safe errors. */
+        post: operations["organizations_logistics_stock_lots_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/privacy-requests": {
         parameters: {
             query?: never;
@@ -1288,6 +2533,256 @@ export interface paths {
         get: operations["organizations_retrieve_convention_series"];
         put: operations["organizations_update_convention_series"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/venue-layouts/{layout_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_approve_space_layout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/venue-properties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        get: operations["venues_list_properties"];
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_create_property"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/venue-properties/{property_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        patch: operations["venues_update_property"];
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/venue-properties/{property_id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_add_property_media"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/venue-properties/{property_id}/media/{media_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_approve_property_media"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/venue-properties/{property_id}/room-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_create_accommodation_room_type"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/venue-properties/{property_id}/space-combinations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_create_space_combination"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/venue-properties/{property_id}/space-paths": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_create_space_path"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/venue-spaces/{space_id}/layouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Authenticated venue response boundary, including safe error responses. */
+        post: operations["venues_add_space_layout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/account-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["identity_create_platform_account_invitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/account-invitations/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["identity_retrieve_platform_account_invitation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/account-invitations/{invitation_id}/reissue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["identity_reissue_platform_account_invitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/account-invitations/{invitation_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["identity_revoke_platform_account_invitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["identity_list_platform_accounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/account-invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["identity_accept_platform_account_invitation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1487,6 +2982,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/organizations/{organization_id}/editions/{edition_id}/charities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["charities_list_public"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/organizations/{organization_id}/editions/{edition_id}/offline/devices/{device_code}/check-ins": {
         parameters: {
             query?: never;
@@ -1497,6 +3008,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["accreditation_ingest_offline_check_in"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/organizations/{organization_id}/editions/{edition_id}/venue-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["venues_list_public_schedule"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1604,16 +3131,62 @@ export interface components {
             description: string;
         };
         AccessGroup: {
+            /** Format: uuid */
+            role_version_id: string;
             code: string;
             name: string;
+            version: number;
             description: string;
             capability_count: number;
             capabilities: components["schemas"]["AccessCapability"][];
         };
+        AccessPreview: {
+            mode: components["schemas"]["ModeEnum"];
+            /** Format: uuid */
+            subject_id: string;
+            subject_label: string;
+            scope_level: string;
+            scope_label: string;
+            /** Format: date-time */
+            evaluated_at: string;
+            capabilities: components["schemas"]["AccessPreviewCapability"][];
+            disclosure_limited_count: number;
+            session_unchanged: boolean;
+            mutation_allowed: boolean;
+        };
+        AccessPreviewCapability: {
+            capability_code: string;
+            label: string;
+            description: string;
+            source_category: string;
+            source_label: string;
+            obligations: string[];
+            visible_fields: string[];
+            data_preview_available: boolean;
+            disclosure_limited: boolean;
+        };
+        /** @description Reject undeclared fields instead of silently discarding them. */
+        AccessPreviewRequest: {
+            mode: components["schemas"]["ModeEnum"];
+            /** Format: email */
+            person_email?: string;
+            /** Format: uuid */
+            role_version_id?: string;
+        };
+        /**
+         * @description * `incident_response` - incident_response
+         *     * `inventory_verification` - inventory_verification
+         *     * `pickup_coordination` - pickup_coordination
+         *     * `provider_contact` - provider_contact
+         *     * `return_coordination` - return_coordination
+         * @enum {string}
+         */
+        AccessPurposeEnum: "incident_response" | "inventory_verification" | "pickup_coordination" | "provider_contact" | "return_coordination";
         AccessWorkspace: {
             organization_name: string;
             edition_name: string;
             can_revoke_assignments: boolean;
+            effective_access: components["schemas"]["EffectiveAccessSummary"];
             groups: components["schemas"]["AccessGroup"][];
             assignments: components["schemas"]["AccessAssignment"][];
         };
@@ -1653,7 +3226,7 @@ export interface components {
         AccountSecurityEvent: {
             /** Format: uuid */
             readonly id: string;
-            readonly event_type: components["schemas"]["EventTypeEnum"];
+            readonly event_type: components["schemas"]["AccountSecurityEventEventTypeEnum"];
             event_label: string;
             readonly outcome: components["schemas"]["AccountSecurityEventOutcomeEnum"];
             /** Format: date-time */
@@ -1661,6 +3234,24 @@ export interface components {
             readonly source_channel: string;
             readonly detail_code: string;
         };
+        /**
+         * @description * `sign_in` - Signed in
+         *     * `sign_out` - Signed out
+         *     * `credential_changed` - Credential changed
+         *     * `contact_verified` - Contact verified
+         *     * `recovery_requested` - Recovery requested
+         *     * `recovery_completed` - Recovery completed
+         *     * `session_revoked` - Session revoked
+         *     * `step_up_completed` - Extra sign-in check completed
+         *     * `data_export` - Account export
+         *     * `account_invitation_created` - Account invitation created
+         *     * `account_invitation_reissued` - Account invitation reissued
+         *     * `account_invitation_revoked` - Account invitation revoked
+         *     * `account_invitation_expired` - Account invitation expired
+         *     * `account_invitation_accepted` - Account invitation accepted
+         * @enum {string}
+         */
+        AccountSecurityEventEventTypeEnum: "sign_in" | "sign_out" | "credential_changed" | "contact_verified" | "recovery_requested" | "recovery_completed" | "session_revoked" | "step_up_completed" | "data_export" | "account_invitation_created" | "account_invitation_reissued" | "account_invitation_revoked" | "account_invitation_expired" | "account_invitation_accepted";
         /**
          * @description * `succeeded` - Succeeded
          *     * `failed` - Failed
@@ -1684,13 +3275,28 @@ export interface components {
             readonly revocation_reason: string;
         };
         /**
-         * @description * `begin_identity_check` - Begin identity check
-         *     * `verify_identity` - Verify identity and begin work
-         *     * `complete` - Complete
-         *     * `deny` - Deny
+         * @description * `owned` - Owned
+         *     * `loan` - Loan
+         *     * `rental` - Rental
+         *     * `equipment_offer` - Equipment offer
          * @enum {string}
          */
-        ActionEnum: "begin_identity_check" | "verify_identity" | "complete" | "deny";
+        AcquisitionEnum: "owned" | "loan" | "rental" | "equipment_offer";
+        /**
+         * @description * `receive` - Receive
+         *     * `pack` - Pack
+         *     * `unpack` - Unpack
+         *     * `move` - Move
+         *     * `load` - Load
+         *     * `unload` - Unload
+         *     * `handover` - Handover
+         *     * `count` - Count
+         *     * `condition` - Condition
+         *     * `damage` - Damage
+         *     * `return` - Return
+         * @enum {string}
+         */
+        ActionD11Enum: "receive" | "pack" | "unpack" | "move" | "load" | "unload" | "handover" | "count" | "condition" | "damage" | "return";
         ActionItem: {
             key: string;
             level: components["schemas"]["LevelEnum"];
@@ -1706,6 +3312,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
         ActivateConfiguration: {
             /** Format: uuid */
             configuration_id: string;
@@ -1754,9 +3361,295 @@ export interface components {
          * @enum {string}
          */
         AdmissionProductStatusEnum: "available" | "hidden";
+        AdmissionTierReplacement: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly registration_id: string;
+            /** Format: uuid */
+            readonly source_product_id: string;
+            /** Format: uuid */
+            readonly target_product_id: string;
+            readonly source_product_name_snapshot: string;
+            readonly target_product_name_snapshot: string;
+            readonly amount_due_minor: number;
+            readonly currency: string;
+            readonly status: components["schemas"]["AdmissionTierReplacementStatusEnum"];
+            readonly aggregate_version: number;
+            readonly expected_registration_version: number;
+            readonly resulting_registration_version: number | null;
+            /** Format: date-time */
+            readonly reserved_at: string;
+            /** Format: date-time */
+            readonly payment_due_at: string;
+            /** Format: date-time */
+            readonly completed_at: string | null;
+            /** Format: date-time */
+            readonly expired_at: string | null;
+            /** Format: date-time */
+            readonly cancelled_at: string | null;
+        };
+        /**
+         * @description * `payment_pending` - Payment pending
+         *     * `completed` - Completed
+         *     * `expired` - Expired
+         *     * `cancelled` - Cancelled
+         * @enum {string}
+         */
+        AdmissionTierReplacementStatusEnum: "payment_pending" | "completed" | "expired" | "cancelled";
+        ApplicationAnswerProjection: {
+            /** Format: uuid */
+            question_id: string;
+            key: string;
+            question_type: string;
+            value: unknown | null;
+            sequence: number;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        ApplicationApplicantDefinition: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            version: number;
+            aggregate_version: number;
+            status: string;
+            target_adapter_kind: string;
+            name: string;
+            description: string;
+            purpose: string;
+            eligibility_kind: string;
+            maximum_submissions: number;
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+            /** Format: date-time */
+            applicant_edit_until: string;
+            minimum_age: number;
+            sections: components["schemas"]["ApplicationApplicantSection"][];
+        };
+        ApplicationApplicantSection: {
+            /** Format: uuid */
+            id: string;
+            key: string;
+            title: string;
+            help_text: string;
+            questions: components["schemas"]["ApplicationQuestionProjection"][];
+        };
+        ApplicationCommandResult: {
+            /** Format: uuid */
+            receipt_id: string;
+            /** Format: uuid */
+            definition_id: string | null;
+            /** Format: uuid */
+            submission_id: string | null;
+            /** Format: uuid */
+            target_id: string | null;
+            resulting_version: number;
+        };
+        ApplicationDecisionProjection: {
+            sequence: number;
+            decision: string;
+            from_state: string;
+            to_state: string;
+            reason: string;
+            /** Format: date-time */
+            decided_at: string;
+        };
+        ApplicationDefinition: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            version: number;
+            aggregate_version: number;
+            status: string;
+            target_adapter_kind: string;
+            name: string;
+            description: string;
+            purpose: string;
+            eligibility_kind: string;
+            maximum_submissions: number;
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+            /** Format: date-time */
+            applicant_edit_until: string;
+            minimum_age: number;
+            sections: components["schemas"]["ApplicationStaffSection"][];
+            classification: string;
+            audience_policy_code: string;
+            retention_policy_code: string;
+            age_policy_code: string;
+            owner_departments: components["schemas"]["ApplicationOwnerDepartment"][];
+            reviewer_roles: components["schemas"]["ApplicationReviewerRole"][];
+            reviewer_people: components["schemas"]["ApplicationReviewerPerson"][];
+        };
+        ApplicationDefinitionCommandRequest: components["schemas"]["DefinitionConfigure"] | components["schemas"]["SectionAdd"] | components["schemas"]["QuestionAdd"] | components["schemas"]["DefinitionLifecycle"] | components["schemas"]["DefinitionSuccessor"];
+        ApplicationOwnerDepartment: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        ApplicationQuestionConditionProjection: {
+            question_key?: string;
+            operator?: string;
+            value?: unknown;
+        };
+        ApplicationQuestionProjection: {
+            /** Format: uuid */
+            id: string;
+            key: string;
+            field_type: string;
+            label: string;
+            help_text: string;
+            required: boolean;
+            options: components["schemas"]["QuestionOption"][];
+            minimum_length: number | null;
+            maximum_length: number | null;
+            /** Format: decimal */
+            minimum_value: string | null;
+            /** Format: decimal */
+            maximum_value: string | null;
+            maximum_choices: number | null;
+            condition: components["schemas"]["ApplicationQuestionConditionProjection"];
+            applicant_writable: boolean;
+            source_binding: string;
+        };
+        ApplicationReviewSubmissionProjection: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            definition_id: string;
+            definition_name: string;
+            definition_version: number;
+            target_adapter_kind: string;
+            ordinal: number;
+            state: string;
+            aggregate_version: number;
+            /** Format: date-time */
+            submitted_at: string | null;
+            /** Format: date-time */
+            decided_at: string | null;
+            answers: components["schemas"]["ApplicationReviewerAnswerProjection"][];
+            decisions: components["schemas"]["ApplicationDecisionProjection"][];
+            applicant: components["schemas"]["ApplicationReviewerPerson"];
+        };
+        ApplicationReviewerAnswerProjection: {
+            /** Format: uuid */
+            question_id: string;
+            key: string;
+            question_type: string;
+            value: unknown | null;
+            sequence: number;
+            /** Format: date-time */
+            updated_at: string;
+            classification: string;
+            source: string;
+        };
+        ApplicationReviewerPerson: {
+            /** Format: uuid */
+            id: string;
+            display_name: string;
+        };
+        ApplicationReviewerRole: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            version: number;
+        };
+        ApplicationStaffQuestionProjection: {
+            /** Format: uuid */
+            id: string;
+            key: string;
+            field_type: string;
+            label: string;
+            help_text: string;
+            required: boolean;
+            options: components["schemas"]["QuestionOption"][];
+            minimum_length: number | null;
+            maximum_length: number | null;
+            /** Format: decimal */
+            minimum_value: string | null;
+            /** Format: decimal */
+            maximum_value: string | null;
+            maximum_choices: number | null;
+            condition: components["schemas"]["ApplicationQuestionConditionProjection"];
+            applicant_writable: boolean;
+            source_binding: string;
+            purpose: string;
+            classification: string;
+            applicant_visible: boolean;
+            staff_visible: boolean;
+            staff_writable: boolean;
+            reviewer_visible: boolean;
+            public_after_approval: boolean;
+            api_projection: boolean;
+            retention_policy_code: string;
+        };
+        ApplicationStaffSection: {
+            /** Format: uuid */
+            id: string;
+            key: string;
+            title: string;
+            help_text: string;
+            questions: components["schemas"]["ApplicationStaffQuestionProjection"][];
+        };
+        ApplicationStarterSummary: {
+            code: string;
+            name: string;
+            description: string;
+            owner_module: string;
+            target_adapter_kind: string;
+            classification: string;
+            requires_local_policy: boolean;
+        };
+        ApplicationSubmissionProjection: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            definition_id: string;
+            definition_name: string;
+            definition_version: number;
+            target_adapter_kind: string;
+            ordinal: number;
+            state: string;
+            aggregate_version: number;
+            /** Format: date-time */
+            submitted_at: string | null;
+            /** Format: date-time */
+            decided_at: string | null;
+            answers: components["schemas"]["ApplicationAnswerProjection"][];
+            decisions: components["schemas"]["ApplicationDecisionProjection"][];
+        };
         ApproveFinancialOperation: {
             reason: string;
         };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        AssetAgreementCreate: {
+            reason: string;
+            subject: components["schemas"]["LogisticsCatalogSubjectLocator"];
+            kind: components["schemas"]["AssetAgreementCreateKindEnum"];
+            provider: components["schemas"]["ExternalActor"];
+            borrower?: components["schemas"]["ExternalActor"];
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            /** Format: date-time */
+            return_due_at: string;
+            /** Format: uuid */
+            return_address_id?: string | null;
+            provider_reference?: string;
+            terms_reference?: string;
+        };
+        /**
+         * @description * `loan` - Loan
+         *     * `rental` - Rental
+         * @enum {string}
+         */
+        AssetAgreementCreateKindEnum: "loan" | "rental";
         AttendanceLabel: {
             code: string;
             label: string;
@@ -1812,6 +3705,15 @@ export interface components {
             country_breakdown: components["schemas"]["AttendeeCountryBreakdown"][];
             level_breakdown: components["schemas"]["AttendeeLevelBreakdown"][];
         };
+        /**
+         * @description * `self` - self
+         *     * `registration_staff` - registration_staff
+         *     * `department` - department
+         *     * `confirmed_attendees` - confirmed_attendees
+         *     * `public` - public
+         * @enum {string}
+         */
+        AudiencePolicyEnum: "self" | "registration_staff" | "department" | "confirmed_attendees" | "public";
         AuditEventSummary: {
             /** Format: uuid */
             readonly id: string;
@@ -1849,6 +3751,12 @@ export interface components {
          * @enum {string}
          */
         BadgeNameSourceEnum: "registration_answer" | "platform_display_name";
+        /**
+         * @description * `convention` - Convention
+         *     * `charity` - Charity
+         * @enum {string}
+         */
+        BeneficiaryEnum: "convention" | "charity";
         CapacityContext: {
             readonly code: string;
             readonly label_snapshot: string;
@@ -1864,6 +3772,178 @@ export interface components {
          * @enum {string}
          */
         CapacityContextStatusEnum: "proposed" | "active" | "completed" | "withdrawn";
+        /**
+         * @description * `seated` - Seated
+         *     * `standing` - Standing
+         *     * `table` - Table
+         * @enum {string}
+         */
+        CapacityModeEnum: "seated" | "standing" | "table";
+        /** @description Marker for Catalog request objects that reject unknown properties. */
+        CatalogActivate: {
+            expected_version: number;
+            reason: string;
+        };
+        CatalogActivityItem: {
+            action: string;
+            actor_label: string;
+            /** Format: date-time */
+            occurred_at: string;
+            target_count: number;
+        };
+        CatalogActivityList: {
+            activity: components["schemas"]["CatalogActivityItem"][];
+        };
+        CatalogCommandResult: {
+            /** Format: uuid */
+            target_id: string;
+            resulting_version: number;
+            replayed: boolean;
+        };
+        /** @description Marker for Catalog request objects that reject unknown properties. */
+        CatalogCreate: {
+            currency: string;
+            reason: string;
+        };
+        CatalogDetail: {
+            catalog_version: number;
+            currency: string;
+            products: components["schemas"]["CatalogProductProjection"][];
+        };
+        /** @description Marker for Catalog request objects that reject unknown properties. */
+        CatalogOrderCreate: {
+            expected_version: number;
+            lines: components["schemas"]["CatalogOrderLine"][];
+        };
+        /** @description Marker for Catalog request objects that reject unknown properties. */
+        CatalogOrderLine: {
+            /** Format: uuid */
+            variant_id: string;
+            quantity: number;
+        };
+        CatalogOrderLineProjection: {
+            product_name: string;
+            variant_name: string;
+            sku: string;
+            quantity: number;
+            unit_price_minor: number;
+            line_total_minor: number;
+            beneficiary: components["schemas"]["BeneficiaryEnum"];
+            /** Format: uuid */
+            charity_selection_id: string | null;
+            fulfilment_mode: components["schemas"]["FulfilmentModeEnum"];
+        };
+        CatalogOrderList: {
+            orders: components["schemas"]["CatalogOrderProjection"][];
+        };
+        CatalogOrderProjection: {
+            /** Format: uuid */
+            id: string;
+            reference: string;
+            status: string;
+            aggregate_version: number;
+            currency: string;
+            total_minor: number;
+            /** Format: date-time */
+            payment_due_at: string | null;
+            /** Format: date-time */
+            paid_at: string | null;
+            fulfilment_status: string;
+            lines: components["schemas"]["CatalogOrderLineProjection"][];
+            payments: components["schemas"]["CatalogPaymentProjection"][];
+        };
+        /** @description Marker for Catalog request objects that reject unknown properties. */
+        CatalogPaymentCreate: {
+            expected_catalog_version: number;
+            expected_order_version: number;
+            provider: components["schemas"]["ProviderEnum"];
+        };
+        CatalogPaymentProjection: {
+            /** Format: uuid */
+            id: string;
+            provider: components["schemas"]["ProviderEnum"];
+            status: string;
+            checkout_url: string;
+        };
+        /** @description Marker for Catalog request objects that reject unknown properties. */
+        CatalogPaymentReconcile: {
+            expected_catalog_version: number;
+            expected_order_version: number;
+            provider_event_id: string;
+            result: components["schemas"]["ResultEnum"];
+            reason: string;
+        };
+        /** @description Marker for Catalog request objects that reject unknown properties. */
+        CatalogProductAdd: {
+            expected_version: number;
+            reason: string;
+            code: string;
+            kind: components["schemas"]["Kind3c1Enum"];
+            name: string;
+            /** @default  */
+            description: string;
+            /** @default convention */
+            beneficiary: components["schemas"]["BeneficiaryEnum"];
+            /** Format: uuid */
+            charity_selection_id?: string | null;
+            /** Format: date-time */
+            sale_opens_at?: string | null;
+            /** Format: date-time */
+            sale_closes_at?: string | null;
+            /** @default false */
+            preorder_allowed: boolean;
+            /** @default pickup */
+            fulfilment_mode: components["schemas"]["FulfilmentModeEnum"];
+            /** @default 10 */
+            per_order_limit: number;
+        };
+        CatalogProductProjection: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            kind: components["schemas"]["Kind3c1Enum"];
+            name: string;
+            description: string;
+            beneficiary: components["schemas"]["BeneficiaryEnum"];
+            charity_name: string | null;
+            /** Format: date-time */
+            sale_opens_at: string | null;
+            /** Format: date-time */
+            sale_closes_at: string | null;
+            preorder_allowed: boolean;
+            fulfilment_mode: components["schemas"]["FulfilmentModeEnum"];
+            per_order_limit: number;
+            variants: components["schemas"]["CatalogVariantProjection"][];
+        };
+        /** @description Marker for Catalog request objects that reject unknown properties. */
+        CatalogStockAdjust: {
+            expected_version: number;
+            reason: string;
+            new_stock: number;
+        };
+        /** @description Marker for Catalog request objects that reject unknown properties. */
+        CatalogVariantAdd: {
+            expected_version: number;
+            reason: string;
+            sku: string;
+            name: string;
+            price_minor: number;
+            /** @description Supply together with stock_ceiling, or omit both fields. */
+            initial_stock?: number;
+            /** @description Supply together with initial_stock, or omit both fields. */
+            stock_ceiling?: number;
+        };
+        CatalogVariantProjection: {
+            /** Format: uuid */
+            id: string;
+            sku: string;
+            name: string;
+            price_minor: number;
+            currency: string;
+            stock_limited: boolean;
+            available_stock: number | null;
+            preorder_allowed: boolean;
+        };
         ChangePaymentDeadline: {
             /** Format: date-time */
             new_deadline: string;
@@ -1874,15 +3954,137 @@ export interface components {
          * @enum {string}
          */
         ChannelEnum: "email";
+        CharityCommandResult: {
+            /** Format: uuid */
+            object_id: string;
+            /** Format: uuid */
+            receipt_id: string;
+            resulting_version: number;
+            replayed: boolean;
+        };
+        CharityMediaAdd: {
+            kind: components["schemas"]["Kind13fEnum"];
+            source_reference: string;
+            owner_name: string;
+            license_basis: string;
+            usage_scope: string;
+            attribution?: string;
+            /** Format: date-time */
+            expires_at?: string | null;
+            reason: string;
+        };
+        CharityMediaApprove: {
+            expected_version: number;
+            public_reference: string;
+            reason: string;
+        };
+        CharityMediaCommandRequest: components["schemas"]["CharityMediaApprove"] | components["schemas"]["CharityMediaWithdraw"];
+        CharityMediaWithdraw: {
+            expected_version: number;
+            reason: string;
+        };
+        CharityPartnerCreate: {
+            slug: string;
+            legal_name: string;
+            imprint_name?: string;
+            public_name: string;
+            short_description?: string;
+            description?: string;
+            location_name?: string;
+            postal_address?: string;
+            country_code?: string;
+            website_url?: string;
+            contact_email?: string;
+            contact_phone?: string;
+            reason: string;
+        };
+        CharityPartnerSummary: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            legal_name: string;
+            imprint_name: string;
+            public_name: string;
+            short_description: string;
+            description: string;
+            location_name: string;
+            postal_address: string;
+            country_code: string;
+            website_url: string;
+            contact_email: string;
+            contact_phone: string;
+            lifecycle: string;
+            aggregate_version: number;
+        };
+        CharitySelectionCommandRequest: components["schemas"]["CharitySelectionDecision"] | components["schemas"]["CharitySelectionComment"] | components["schemas"]["CharitySelectionPublish"];
+        CharitySelectionComment: {
+            expected_version: number;
+            private_comment: string;
+        };
+        CharitySelectionDecision: {
+            expected_version: number;
+            reason: string;
+        };
+        CharitySelectionPropose: {
+            /** Format: uuid */
+            partner_id: string;
+            /** Format: uuid */
+            responsible_department_id: string;
+            reason: string;
+        };
+        CharitySelectionPublish: {
+            expected_version: number;
+            media_ids?: string[];
+            reason: string;
+        };
+        CharitySelectionReview: {
+            summary: components["schemas"]["CharitySelectionSummary"];
+            timeline: components["schemas"]["CharityTimeline"][];
+        };
+        CharitySelectionSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            partner_id: string;
+            partner_name: string;
+            /** Format: uuid */
+            responsible_department_id: string;
+            responsible_department_name: string;
+            status: string;
+            publication_state: string;
+            aggregate_version: number;
+        };
+        CharityTimeline: {
+            sequence: number;
+            kind: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            occurred_at: string;
+            from_status: string;
+            to_status: string;
+            from_publication_state: string;
+            to_publication_state: string;
+            reason: string;
+            private_comment: string;
+        };
         CheckIn: {
             reason: string;
         };
         /**
          * @description * `C1` - Internal
          *     * `C2` - Personal
+         *     * `C3` - Restricted
+         *     * `C4` - Security critical
          * @enum {string}
          */
-        ClassificationEnum: "C1" | "C2";
+        Classification0cdEnum: "C1" | "C2" | "C3" | "C4";
+        /**
+         * @description * `C1` - C1
+         *     * `C2` - C2
+         * @enum {string}
+         */
+        Classification9baEnum: "C1" | "C2";
         /**
          * @description * `privacy` - Privacy
          *     * `finance` - Finance
@@ -1944,6 +4146,7 @@ export interface components {
             is_active: boolean;
             expected_profile_version: number;
         };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
         CreateConfigurationDraft: {
             name: string;
             reason: string;
@@ -1995,6 +4198,67 @@ export interface components {
          * @enum {string}
          */
         CredentialStatusEnum: "issued" | "replaced" | "revoked";
+        DefinitionConfigure: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "definition.configure";
+            expected_version: number;
+            name: string;
+            description: string;
+            purpose: string;
+            classification: components["schemas"]["Classification0cdEnum"];
+            eligibility_kind: components["schemas"]["EligibilityKindEnum"];
+            maximum_submissions: number;
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+            /** Format: date-time */
+            applicant_edit_until: string;
+            minimum_age: number;
+            audience_policy_code: string;
+            retention_policy_code: string;
+            age_policy_code: string;
+            owner_department_ids: string[];
+            reviewer_role_bundle_ids: string[];
+            reviewer_account_ids: string[];
+            reason: string;
+        };
+        /**
+         * @description * `definition.configure` - definition.configure
+         * @enum {string}
+         */
+        DefinitionConfigureOperationEnum: "definition.configure";
+        DefinitionLifecycle: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "definition.activate" | "definition.retire";
+            expected_version: number;
+            reason: string;
+        };
+        /**
+         * @description * `definition.activate` - definition.activate
+         *     * `definition.retire` - definition.retire
+         * @enum {string}
+         */
+        DefinitionLifecycleOperationEnum: "definition.activate" | "definition.retire";
+        DefinitionSuccessor: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "definition.successor";
+            reason: string;
+        };
+        /**
+         * @description * `definition.successor` - definition.successor
+         * @enum {string}
+         */
+        DefinitionSuccessorOperationEnum: "definition.successor";
         DeliveryFailure: {
             /** Format: uuid */
             message_id: string;
@@ -2009,6 +4273,16 @@ export interface components {
             /** Format: date-time */
             last_attempt_at: string | null;
         };
+        /**
+         * @description * `pending` - Pending
+         *     * `processing` - Processing
+         *     * `delivered` - Delivered
+         *     * `retrying` - Retrying
+         *     * `permanent_failed` - Permanent failure
+         *     * `cancelled` - Cancelled
+         * @enum {string}
+         */
+        DeliveryStateEnum: "pending" | "processing" | "delivered" | "retrying" | "permanent_failed" | "cancelled";
         DemoPayment: {
             /** Format: uuid */
             idempotency_key: string;
@@ -2190,6 +4464,31 @@ export interface components {
             currency_codes: string[];
             expected_aggregate_version: number;
         };
+        EffectiveAccessAction: {
+            capability_code: string;
+            label: string;
+            allowed: boolean;
+            permitted_fields: string[];
+            obligations: string[];
+            reason_code: string;
+            source_category: string;
+            source_label: string;
+        };
+        EffectiveAccessSummary: {
+            scope_level: string;
+            scope_label: string;
+            can_manage_access: boolean;
+            actions: components["schemas"]["EffectiveAccessAction"][];
+        };
+        /**
+         * @description * `authenticated_person` - Authenticated person
+         *     * `edition_participant` - Edition participant
+         *     * `registered_attendee` - Registered attendee
+         *     * `confirmed_attendee` - Confirmed attendee
+         *     * `active_volunteer` - Active volunteer
+         * @enum {string}
+         */
+        EligibilityKindEnum: "authenticated_person" | "edition_participant" | "registered_attendee" | "confirmed_attendee" | "active_volunteer";
         Entitlement: {
             readonly code: string;
             readonly label_snapshot: string;
@@ -2198,28 +4497,37 @@ export interface components {
             readonly granted_at: string;
         };
         /**
-         * @description * `sign_in` - Signed in
-         *     * `sign_out` - Signed out
-         *     * `credential_changed` - Credential changed
-         *     * `contact_verified` - Contact verified
-         *     * `recovery_requested` - Recovery requested
-         *     * `recovery_completed` - Recovery completed
-         *     * `session_revoked` - Session revoked
-         *     * `step_up_completed` - Extra sign-in check completed
-         *     * `data_export` - Account export
+         * @description * `receive` - Receive
+         *     * `pack` - Pack
+         *     * `unpack` - Unpack
+         *     * `move` - Move
+         *     * `load` - Load
+         *     * `unload` - Unload
+         *     * `handover` - Handover
+         *     * `count` - Count
+         *     * `condition` - Condition
+         *     * `damage` - Damage
+         *     * `return` - Return
          * @enum {string}
          */
-        EventTypeEnum: "sign_in" | "sign_out" | "credential_changed" | "contact_verified" | "recovery_requested" | "recovery_completed" | "session_revoked" | "step_up_completed" | "data_export";
+        EventTypeD11Enum: "receive" | "pack" | "unpack" | "move" | "load" | "unload" | "handover" | "count" | "condition" | "damage" | "return";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ExternalActor: {
+            /** Format: uuid */
+            account_id?: string | null;
+            /** Format: uuid */
+            party_id?: string | null;
+        };
         /**
-         * @description * `short_text` - Short text
-         *     * `long_text` - Long text
-         *     * `boolean` - Yes or no
-         *     * `single_choice` - Single choice
-         *     * `multiple_choice` - Multiple choice
-         *     * `integer` - Whole number
+         * @description * `short_text` - short_text
+         *     * `long_text` - long_text
+         *     * `boolean` - boolean
+         *     * `single_choice` - single_choice
+         *     * `multiple_choice` - multiple_choice
+         *     * `integer` - integer
          * @enum {string}
          */
-        FieldTypeEnum: "short_text" | "long_text" | "boolean" | "single_choice" | "multiple_choice" | "integer";
+        FieldType366Enum: "short_text" | "long_text" | "boolean" | "single_choice" | "multiple_choice" | "integer";
         FinancialOperation: {
             /** Format: uuid */
             readonly id: string;
@@ -2266,6 +4574,13 @@ export interface components {
          * @enum {string}
          */
         FinancialOperationStatusEnum: "proposed" | "approved" | "provider_pending" | "completed" | "rejected" | "failed";
+        /**
+         * @description * `none` - No fulfilment
+         *     * `pickup` - On-site pickup
+         *     * `shipping` - Shipping
+         * @enum {string}
+         */
+        FulfilmentModeEnum: "none" | "pickup" | "shipping";
         GuardianConsentAccept: {
             token: string;
             guardian_name: string;
@@ -2325,6 +4640,56 @@ export interface components {
             credential: components["schemas"]["Credential"];
             credential_token: string | null;
         };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        KeyholderAssign: {
+            reason: string;
+            /** Format: uuid */
+            responsible_account_id: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at?: string | null;
+            expected_version: number;
+        };
+        /**
+         * @description * `logo` - Logo
+         *     * `photo` - Photo
+         * @enum {string}
+         */
+        Kind13fEnum: "logo" | "photo";
+        /**
+         * @description * `node` - Node
+         *     * `asset` - Asset
+         *     * `stock_lot` - Stock lot
+         *     * `key` - Physical key
+         * @enum {string}
+         */
+        Kind2fcEnum: "node" | "asset" | "stock_lot" | "key";
+        /**
+         * @description * `merchandise` - Convention merchandise
+         *     * `donation` - Donation
+         *     * `supporter` - Limited supporter product
+         * @enum {string}
+         */
+        Kind3c1Enum: "merchandise" | "donation" | "supporter";
+        /**
+         * @description * `programme` - Programme
+         *     * `panel` - Panel
+         *     * `event` - Event
+         *     * `department` - Department
+         *     * `storage` - Storage
+         *     * `catering` - Catering
+         *     * `rehearsal` - Rehearsal
+         *     * `private` - Private
+         * @enum {string}
+         */
+        Kind3faEnum: "programme" | "panel" | "event" | "department" | "storage" | "catering" | "rehearsal" | "private";
+        /**
+         * @description * `person` - Person
+         *     * `platform_administrator` - Platform administrator
+         * @enum {string}
+         */
+        KindFd7Enum: "person" | "platform_administrator";
         /**
          * @description * `fyi` - fyi
          *     * `action` - action
@@ -2333,6 +4698,377 @@ export interface components {
          * @enum {string}
          */
         LevelEnum: "fyi" | "action" | "blocking" | "urgent";
+        /**
+         * @description * `draft` - Draft
+         *     * `active` - Active
+         *     * `retired` - Retired
+         * @enum {string}
+         */
+        Lifecycle634Enum: "draft" | "active" | "retired";
+        LogisticsActivityProjection: {
+            /** Format: uuid */
+            id: string;
+            sequence: number;
+            event_type: string;
+            subject_kind: string;
+            /** Format: uuid */
+            subject_id: string;
+            /** Format: uuid */
+            source_node_id: string | null;
+            /** Format: uuid */
+            destination_node_id: string | null;
+            /** Format: uuid */
+            from_custodian_account_id: string | null;
+            /** Format: uuid */
+            to_custodian_account_id: string | null;
+            quantity: number | null;
+            condition_before: string;
+            condition_after: string;
+            /** Format: date-time */
+            occurred_at: string;
+            /** Format: uuid */
+            actor_id: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        LogisticsCatalogSubjectLocator: {
+            kind: components["schemas"]["Kind2fcEnum"];
+            /** Format: uuid */
+            object_id: string;
+        };
+        LogisticsCommandResult: {
+            /** Format: uuid */
+            object_id: string;
+            /** Format: uuid */
+            receipt_id: string;
+            resulting_version: number;
+            replayed: boolean;
+        };
+        LogisticsCurrentStateProjection: {
+            subject_kind: string;
+            /** Format: uuid */
+            subject_id: string;
+            subject_label: string;
+            /** Format: uuid */
+            current_node_id: string | null;
+            current_node_name: string;
+            /** Format: uuid */
+            custodian_account_id: string | null;
+            /** Format: uuid */
+            custodian_party_id: string | null;
+            condition: string;
+            quantity: number | null;
+            last_event_sequence: number;
+            /** Format: date-time */
+            last_occurred_at: string;
+        };
+        LogisticsDiscrepancyProjection: {
+            /** Format: uuid */
+            id: string;
+            kind: string;
+            subject_kind: string;
+            /** Format: uuid */
+            subject_id: string;
+            expected_quantity: number | null;
+            observed_quantity: number | null;
+            description: string;
+            status: string;
+            aggregate_version: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        LogisticsFormChoices: {
+            departments: components["schemas"]["NamedLogisticsChoice"][];
+            parties: components["schemas"]["NamedLogisticsChoice"][];
+            addresses: components["schemas"]["NamedLogisticsChoice"][];
+            nodes: components["schemas"]["NamedLogisticsChoice"][];
+            packing_nodes: components["schemas"]["NamedLogisticsChoice"][];
+            vehicles: components["schemas"]["NamedLogisticsChoice"][];
+            venue_rooms: components["schemas"]["NamedLogisticsChoice"][];
+            venue_space_selections: components["schemas"]["NamedLogisticsChoice"][];
+            assets: components["schemas"]["NamedLogisticsChoice"][];
+            stock_lots: components["schemas"]["NamedLogisticsChoice"][];
+            physical_keys: components["schemas"]["NamedLogisticsChoice"][];
+            tracked_subjects: components["schemas"]["NamedLogisticsChoice"][];
+            people: components["schemas"]["NamedLogisticsChoice"][];
+            manifests: components["schemas"]["NamedLogisticsChoice"][];
+            labels: components["schemas"]["NamedLogisticsCodeChoice"][];
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        LogisticsLabelCreate: {
+            reason: string;
+            subject: components["schemas"]["LogisticsCatalogSubjectLocator"];
+            label_code: string;
+            qr_identifier: string;
+        };
+        LogisticsManifestLineProjection: {
+            /** Format: uuid */
+            id: string;
+            subject_kind: string;
+            /** Format: uuid */
+            subject_id: string;
+            label_snapshot: string;
+            quantity: number;
+            /** Format: uuid */
+            packed_in_node_id: string | null;
+            packed_in_label: string;
+            notes: string;
+            current_sequence: number;
+            current_state: string;
+        };
+        LogisticsManifestProjection: {
+            /** Format: uuid */
+            id: string;
+            manifest_number: string;
+            kind: string;
+            title: string;
+            status: string;
+            /** Format: uuid */
+            responsible_department_id: string;
+            /** Format: uuid */
+            source_node_id: string | null;
+            source_name: string;
+            /** Format: uuid */
+            destination_node_id: string | null;
+            destination_name: string;
+            /** Format: uuid */
+            vehicle_id: string | null;
+            vehicle_name: string;
+            /** Format: date-time */
+            loading_starts_at: string | null;
+            /** Format: date-time */
+            loading_ends_at: string | null;
+            box_count: number;
+            line_count: number;
+            aggregate_version: number;
+            lines: components["schemas"]["LogisticsManifestLineProjection"][];
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        LogisticsMovementSubjectLocator: {
+            kind: components["schemas"]["Kind2fcEnum"];
+            /** Format: uuid */
+            object_id: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        LogisticsNodeCreate: {
+            reason: string;
+            kind: components["schemas"]["LogisticsNodeCreateKindEnum"];
+            code: string;
+            name: string;
+            description?: string;
+            /** Format: uuid */
+            storage_address_id?: string | null;
+            /** Format: uuid */
+            external_owner_id?: string | null;
+            /** Format: uuid */
+            provider_id?: string | null;
+            vehicle_registration?: string;
+            /** Format: uuid */
+            venue_space_selection_id?: string | null;
+            capacity_note?: string;
+        };
+        /**
+         * @description * `storage_site` - Storage site
+         *     * `storage_area` - Storage area
+         *     * `rack` - Rack
+         *     * `container` - Container
+         *     * `box` - Box
+         *     * `vehicle` - Vehicle
+         *     * `loading_zone` - Loading zone
+         *     * `staging_area` - Staging area
+         *     * `venue_room` - Venue room
+         * @enum {string}
+         */
+        LogisticsNodeCreateKindEnum: "storage_site" | "storage_area" | "rack" | "container" | "box" | "vehicle" | "loading_zone" | "staging_area" | "venue_room";
+        LogisticsOfferItemProjection: {
+            /** Format: uuid */
+            id: string;
+            kind: string;
+            name: string;
+            description: string;
+            quantity: number;
+            manufacturer: string;
+            model_name: string;
+            serial_number: string;
+            condition: string;
+            value_class: string;
+            ownership_statement: string;
+        };
+        LogisticsOfferQueueProjection: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            offered_by_id: string;
+            title: string;
+            status: string;
+            item_count: number;
+            total_units: number;
+            /** Format: date-time */
+            available_from: string;
+            /** Format: date-time */
+            available_until: string;
+            /** Format: date-time */
+            requested_return_at: string | null;
+            /** Format: uuid */
+            responsible_department_id: string | null;
+            aggregate_version: number;
+        };
+        LogisticsOfferReviewRequest: components["schemas"]["OfferAccept"] | components["schemas"]["OfferReject"];
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        LogisticsOfflineOperation: {
+            sequence: number;
+            /** Format: uuid */
+            idempotency_key: string;
+            expected_subject_sequence: number;
+            action: components["schemas"]["ActionD11Enum"];
+            label_code: string;
+            /** Format: date-time */
+            occurred_at: string;
+            source_label_code?: string;
+            destination_label_code?: string;
+            quantity?: number | null;
+            observed_condition?: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        LogisticsPartyCreate: {
+            reason: string;
+            code: string;
+            profile: components["schemas"]["LogisticsPartyProfile"];
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        LogisticsPartyProfile: {
+            kind: components["schemas"]["LogisticsPartyProfileKindEnum"];
+            role: components["schemas"]["RoleEnum"];
+            legal_name: string;
+            public_name: string;
+            provider_reference?: string;
+            website_url?: string;
+        };
+        /**
+         * @description * `business` - Business
+         *     * `individual` - Individual
+         * @enum {string}
+         */
+        LogisticsPartyProfileKindEnum: "business" | "individual";
+        LogisticsReturnProjection: {
+            /** Format: uuid */
+            agreement_id: string;
+            kind: string;
+            subject_kind: string;
+            /** Format: uuid */
+            subject_id: string;
+            provider_kind: string;
+            /** Format: uuid */
+            provider_id: string;
+            /** Format: date-time */
+            return_due_at: string;
+            returned: boolean;
+            overdue: boolean;
+        };
+        LogisticsSelfOfferProjection: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description: string;
+            /** Format: date-time */
+            available_from: string;
+            /** Format: date-time */
+            available_until: string;
+            /** Format: date-time */
+            requested_return_at: string | null;
+            status: string;
+            review_reason: string;
+            aggregate_version: number;
+            pickup_label: string;
+            pickup_recipient_name: string;
+            pickup_postal_address: string;
+            pickup_access_instructions: string;
+            /** Format: date-time */
+            pickup_retention_until: string | null;
+            items: components["schemas"]["LogisticsOfferItemProjection"][];
+        };
+        LogisticsWorkspaceProjection: {
+            offers: components["schemas"]["LogisticsOfferQueueProjection"][];
+            manifests: components["schemas"]["LogisticsManifestProjection"][];
+            current_states: components["schemas"]["LogisticsCurrentStateProjection"][];
+            due_returns: components["schemas"]["LogisticsReturnProjection"][];
+            discrepancies: components["schemas"]["LogisticsDiscrepancyProjection"][];
+            choices: components["schemas"]["LogisticsFormChoices"];
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ManifestCreate: {
+            /** Format: uuid */
+            responsible_department_id: string;
+            manifest_number: string;
+            kind: components["schemas"]["ManifestCreateKindEnum"];
+            title: string;
+            /** Format: uuid */
+            source_node_id?: string | null;
+            /** Format: uuid */
+            destination_node_id?: string | null;
+            /** Format: uuid */
+            vehicle_id?: string | null;
+            /** Format: uuid */
+            provider_id?: string | null;
+            /** Format: date-time */
+            loading_starts_at?: string | null;
+            /** Format: date-time */
+            loading_ends_at?: string | null;
+            lines: components["schemas"]["ManifestLineInput"][];
+            reason: string;
+        };
+        /**
+         * @description * `inbound` - Inbound
+         *     * `outbound` - Outbound
+         *     * `transfer` - Transfer
+         *     * `return` - Return
+         *     * `stage_receiving` - Stage Tech receiving
+         * @enum {string}
+         */
+        ManifestCreateKindEnum: "inbound" | "outbound" | "transfer" | "return" | "stage_receiving";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ManifestLine: {
+            subject: components["schemas"]["LogisticsCatalogSubjectLocator"];
+            quantity: number;
+            /** Format: uuid */
+            packed_in_node_id?: string | null;
+            notes?: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ManifestLineAdd: {
+            reason: string;
+            expected_version: number;
+            line: components["schemas"]["ManifestLine"];
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ManifestLineInput: {
+            subject: components["schemas"]["LogisticsMovementSubjectLocator"];
+            quantity: number;
+            /** Format: uuid */
+            packed_in_node_id?: string | null;
+            notes?: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ManifestReceipt: {
+            reason: string;
+            expected_sequence: number;
+            /** Format: date-time */
+            occurred_at: string;
+            condition_after: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ManifestState: {
+            expected_version: number;
+            reason: string;
+            action: components["schemas"]["ManifestStateActionEnum"];
+        };
+        /**
+         * @description * `seal` - seal
+         *     * `complete` - complete
+         *     * `cancel_draft` - cancel_draft
+         *     * `cancel_sealed` - cancel_sealed
+         * @enum {string}
+         */
+        ManifestStateActionEnum: "seal" | "complete" | "cancel_draft" | "cancel_sealed";
         /**
          * @description * `profile_photo` - profile_photo
          *     * `fursuit_photo` - fursuit_photo
@@ -2355,6 +5091,43 @@ export interface components {
          * @enum {string}
          */
         MembershipContextStateEnum: "invited" | "active" | "suspended" | "ended";
+        /**
+         * @description * `person` - person
+         *     * `role` - role
+         * @enum {string}
+         */
+        ModeEnum: "person" | "role";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        Movement: {
+            event_type: components["schemas"]["EventTypeD11Enum"];
+            subject: components["schemas"]["LogisticsMovementSubjectLocator"];
+            /** Format: date-time */
+            occurred_at: string;
+            /** Format: uuid */
+            source_node_id?: string | null;
+            /** Format: uuid */
+            destination_node_id?: string | null;
+            /** Format: uuid */
+            to_custodian_account_id?: string | null;
+            /** Format: uuid */
+            to_custodian_party_id?: string | null;
+            quantity?: number | null;
+            condition_before?: string;
+            condition_after?: string;
+            /** Format: uuid */
+            manifest_id?: string | null;
+            evidence_reference?: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        MovementCommand: {
+            movement: components["schemas"]["Movement"];
+            expected_sequence: number;
+            reason: string;
+        };
+        MyApplicationWorkspace: {
+            available: components["schemas"]["ApplicationApplicantDefinition"][];
+            submissions: components["schemas"]["ApplicationSubmissionProjection"][];
+        };
         MyContext: {
             /** Format: uuid */
             account_id: string;
@@ -2367,10 +5140,25 @@ export interface components {
         MyRegistrationWorkspace: {
             configuration: components["schemas"]["RegistrationConfiguration"] | null;
             registration: components["schemas"]["SelfRegistration"] | null;
+            tier_replacement: components["schemas"]["AdmissionTierReplacement"] | null;
             demo_payment_enabled: boolean;
             /** Format: date-time */
             server_time: string;
         };
+        NamedLogisticsChoice: {
+            /** Format: uuid */
+            value: string;
+            label: string;
+        };
+        NamedLogisticsCodeChoice: {
+            value: string;
+            label: string;
+        };
+        /**
+         * @description * `sign_in` - sign_in
+         * @enum {string}
+         */
+        NextEnum: "sign_in";
         NotificationDelivery: {
             readonly channel: components["schemas"]["ChannelEnum"];
             readonly status: components["schemas"]["NotificationDeliveryStatusEnum"];
@@ -2397,7 +5185,7 @@ export interface components {
             /** Format: uuid */
             readonly edition_id: string | null;
             readonly message_type: string;
-            readonly purpose: components["schemas"]["PurposeEnum"];
+            readonly purpose: components["schemas"]["NotificationMessagePurposeEnum"];
             readonly locale: string;
             readonly subject: string;
             readonly body: string;
@@ -2408,6 +5196,13 @@ export interface components {
             readonly read_at: string | null;
             deliveries: components["schemas"]["NotificationDelivery"][];
         };
+        /**
+         * @description * `operational` - Operational service
+         *     * `marketing` - Optional marketing
+         *     * `emergency` - Emergency
+         * @enum {string}
+         */
+        NotificationMessagePurposeEnum: "operational" | "marketing" | "emergency";
         NotificationPreference: {
             /** Format: uuid */
             readonly organization_id: string;
@@ -2416,6 +5211,68 @@ export interface components {
             readonly marketing_consent_version: string;
             /** Format: date-time */
             readonly marketing_consented_at: string | null;
+        };
+        NullEnum: null;
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        OfferAccept: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            outcome: "accepted";
+            /** Format: uuid */
+            responsible_department_id: string;
+        };
+        /**
+         * @description * `accepted` - accepted
+         * @enum {string}
+         */
+        OfferAcceptOutcomeEnum: "accepted";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        OfferItemInput: {
+            kind: components["schemas"]["OfferItemInputKindEnum"];
+            name: string;
+            description?: string;
+            quantity: number;
+            manufacturer?: string;
+            model_name?: string;
+            serial_number?: string;
+            condition: string;
+            value_class?: string;
+            ownership_statement: string;
+        };
+        /**
+         * @description * `serialized` - Serialized item
+         *     * `bulk` - Bulk stock
+         * @enum {string}
+         */
+        OfferItemInputKindEnum: "serialized" | "bulk";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        OfferReject: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            outcome: "rejected";
+        };
+        /**
+         * @description * `rejected` - rejected
+         * @enum {string}
+         */
+        OfferRejectOutcomeEnum: "rejected";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        OfflineBatch: {
+            device_code: string;
+            snapshot_version: number;
+            policy_version: string;
+            /** Format: date-time */
+            expires_at: string;
+            operations: components["schemas"]["LogisticsOfflineOperation"][];
+            reason: string;
         };
         OfflineCheckIn: {
             /** Format: uuid */
@@ -2487,6 +5344,28 @@ export interface components {
             /** Format: uri */
             document: string;
         };
+        /**
+         * @description * `equals` - equals
+         *     * `not_equals` - not_equals
+         *     * `contains` - contains
+         * @enum {string}
+         */
+        OperatorEnum: "equals" | "not_equals" | "contains";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        Owner: {
+            kind: components["schemas"]["OwnerKindEnum"];
+            /** Format: uuid */
+            account_id?: string | null;
+            /** Format: uuid */
+            party_id?: string | null;
+        };
+        /**
+         * @description * `organization` - Organizer
+         *     * `account` - Person account
+         *     * `external_party` - External party
+         * @enum {string}
+         */
+        OwnerKindEnum: "organization" | "account" | "external_party";
         PaginatedConventionSeriesReadList: {
             /** @example 123 */
             count: number;
@@ -2578,6 +5457,42 @@ export interface components {
             expires_at?: string | null;
             reason?: string;
         };
+        PatchedCharityPartnerUpdate: {
+            expected_version: number;
+            reason: string;
+            slug?: string;
+            legal_name?: string;
+            imprint_name?: string;
+            public_name?: string;
+            short_description?: string;
+            description?: string;
+            location_name?: string;
+            postal_address?: string;
+            country_code?: string;
+            website_url?: string;
+            contact_email?: string;
+            contact_phone?: string;
+            lifecycle?: components["schemas"]["Lifecycle634Enum"];
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        PatchedVenuePropertyUpdate: {
+            expected_version: number;
+            reason: string;
+            legal_name?: string;
+            public_name?: string;
+            provider_name?: string;
+            public_description?: string;
+            internal_notes?: string;
+            location_name?: string;
+            postal_address?: string;
+            country_code?: string;
+            website_url?: string;
+            public_contact?: string;
+            contact_name?: string;
+            contact_email?: string;
+            contact_phone?: string;
+            lifecycle?: components["schemas"]["Lifecycle634Enum"];
+        };
         PaymentException: {
             /** Format: uuid */
             readonly id: string;
@@ -2617,6 +5532,8 @@ export interface components {
             readonly id: string;
             /** Format: uuid */
             readonly registration_id: string;
+            /** Format: uuid */
+            readonly tier_replacement_id: string | null;
             provider_name: string;
             readonly amount_minor: number;
             readonly currency: string;
@@ -2643,6 +5560,158 @@ export interface components {
          * @enum {string}
          */
         PaymentIntentStatusEnum: "creating" | "checkout_ready" | "succeeded" | "failed" | "abandoned" | "uncertain" | "mismatch" | "late";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        PhysicalKeyCreate: {
+            reason: string;
+            code: string;
+            label: string;
+            /** Format: uuid */
+            opens_node_id: string;
+            /** Format: uuid */
+            provider_id?: string | null;
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInventory: {
+            inventory_version: number;
+            items: components["schemas"]["PlatformAccountInventoryItem"][];
+            next_cursor: string | null;
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInventoryInvitation: {
+            /** Format: uuid */
+            id: string;
+            status: components["schemas"]["Status810Enum"];
+            aggregate_version: number;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            last_transition_at: string;
+            delivery_state: components["schemas"]["DeliveryStateEnum"] | components["schemas"]["NullEnum"];
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInventoryItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: email */
+            email: string;
+            login_handle: string;
+            display_name: string;
+            kind: components["schemas"]["KindFd7Enum"];
+            active: boolean;
+            email_verified: boolean;
+            /** Format: date-time */
+            date_joined: string;
+            invitation: components["schemas"]["PlatformAccountInventoryInvitation"] | null;
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInvitationAccount: {
+            /** Format: uuid */
+            id: string;
+            /** Format: email */
+            email: string;
+            login_handle: string;
+            display_name: string;
+            kind: components["schemas"]["KindFd7Enum"];
+            active: boolean;
+            email_verified: boolean;
+        };
+        /** @description Closed reason and expected-version input for reissue or revocation. */
+        PlatformAccountInvitationAction: {
+            expected_version: number;
+            reason: string;
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInvitationActor: {
+            /** Format: uuid */
+            id: string | null;
+            display_name: string;
+        };
+        /** @description Reserve one inactive person identity; retry metadata stays header-only. */
+        PlatformAccountInvitationCreate: {
+            email: string;
+            login_handle?: string | null;
+            display_name?: string | null;
+            preferred_language?: string;
+            reason: string;
+            expected_version: number;
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInvitationDelivery: {
+            status: components["schemas"]["Status3cfEnum"];
+            attempt_count: number;
+            max_attempts: number;
+            /** Format: date-time */
+            last_attempt_at: string | null;
+            /** Format: date-time */
+            next_retry_at: string | null;
+            /** Format: date-time */
+            delivered_at: string | null;
+            safe_error_code: string;
+            reconciliation_state: components["schemas"]["ReconciliationStateEnum"];
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInvitationDeliveryAttempt: {
+            attempt_number: number;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            finished_at: string;
+            outcome: string;
+            safe_error_code: string;
+            /** Format: date-time */
+            next_retry_at: string | null;
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInvitationDetail: {
+            inventory_version: number;
+            /** Format: uuid */
+            id: string;
+            account: components["schemas"]["PlatformAccountInvitationAccount"];
+            status: components["schemas"]["Status810Enum"];
+            aggregate_version: number;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            last_transition_at: string;
+            created_by: components["schemas"]["PlatformAccountInvitationActor"];
+            delivery: components["schemas"]["PlatformAccountInvitationDelivery"] | null;
+            transitions: components["schemas"]["PlatformAccountInvitationTransition"][];
+            delivery_attempts: components["schemas"]["PlatformAccountInvitationDeliveryAttempt"][];
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInvitationMutation: {
+            /** Format: uuid */
+            id: string;
+            status: components["schemas"]["Status810Enum"];
+            aggregate_version: number;
+            /** Format: date-time */
+            expires_at: string;
+            replayed: boolean;
+        };
+        /** @description RFC 9457 response shape for every invitation API failure. */
+        PlatformAccountInvitationProblem: {
+            /** Format: uri */
+            readonly type: string;
+            readonly title: string;
+            readonly status: number;
+            readonly detail: string;
+            readonly code: string;
+            /** Format: uuid */
+            request_id?: string;
+            errors?: unknown;
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PlatformAccountInvitationTransition: {
+            version: number;
+            operation: string;
+            actor: components["schemas"]["PlatformAccountInvitationActor"];
+            /** Format: date-time */
+            occurred_at: string;
+            reason: string;
+            source_channel: string;
+        };
         PostEditionCorrection: {
             /** Format: uuid */
             readonly id: string;
@@ -2690,16 +5759,21 @@ export interface components {
             options: string[];
             purpose: string;
             classification: string;
+            audience_policy: string;
+            /** Format: uuid */
+            audience_department_id: string | null;
             required: boolean;
             writer_policy: string;
             can_write: boolean;
             current_value: unknown | null;
+            current_sequence: number;
             /** Format: date-time */
             updated_at: string | null;
         };
         ProfileExtensionWorkspace: {
             /** Format: uuid */
             registration_id: string;
+            snapshot_digest: string;
             fields: components["schemas"]["ProfileExtensionField"][];
         };
         ProfileMediaReviewDecision: {
@@ -2784,6 +5858,24 @@ export interface components {
          * @enum {string}
          */
         ProposeFinancialOperationKindEnum: "cancel" | "refund";
+        /**
+         * @description * `hosted` - Hosted payment
+         *     * `demo` - Deterministic demo payment
+         * @enum {string}
+         */
+        ProviderEnum: "hosted" | "demo";
+        /** @description C4 input whose field errors never redisplay submitted secret values. */
+        PublicAccountInvitationAcceptance: {
+            raw_token: string;
+            new_password1: string;
+            new_password2: string;
+        };
+        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        PublicAccountInvitationAcceptanceResult: {
+            accepted: boolean;
+            next: components["schemas"]["NextEnum"];
+            replayed: boolean;
+        };
         PublicAttendee: {
             display_name: string;
             pronouns: string;
@@ -2798,6 +5890,22 @@ export interface components {
             name: string;
             species: string;
             photo_url: string | null;
+        };
+        PublicCharity: {
+            /** Format: uuid */
+            selection_id: string;
+            public_name: string;
+            imprint_name: string;
+            short_description: string;
+            location_name: string;
+            country_code: string;
+            website_url: string;
+            media: components["schemas"]["PublicCharityMedia"][];
+        };
+        PublicCharityMedia: {
+            kind: string;
+            reference: string;
+            attribution: string;
         };
         PublicClientContract: {
             api_version: string;
@@ -2891,6 +5999,25 @@ export interface components {
             attendee_api_path: string;
             attendee_web_path: string;
         };
+        PublicVenueScheduleItem: {
+            /** Format: uuid */
+            booking_id: string;
+            /** Format: uuid */
+            space_selection_id: string;
+            venue_name: string;
+            space_name: string;
+            kind: string;
+            title: string;
+            description: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            access_info: string;
+            layout_reference: string;
+            layout_title: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
         PublishTemplate: {
             /** Format: uuid */
             configuration_id: string;
@@ -2901,13 +6028,84 @@ export interface components {
             series_limited: boolean;
             reason: string;
         };
+        QuestionAdd: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "question.add";
+            expected_version: number;
+            /** Format: uuid */
+            section_id: string;
+            key: string;
+            field_type: components["schemas"]["QuestionAddFieldTypeEnum"];
+            label: string;
+            help_text: string;
+            required: boolean;
+            options?: components["schemas"]["QuestionOption"][];
+            minimum_length?: number | null;
+            maximum_length?: number | null;
+            /** Format: decimal */
+            minimum_value?: string | null;
+            /** Format: decimal */
+            maximum_value?: string | null;
+            maximum_choices?: number | null;
+            reference_kind?: string;
+            condition?: components["schemas"]["QuestionCondition"];
+            purpose: string;
+            classification: components["schemas"]["Classification0cdEnum"];
+            /** @default true */
+            applicant_visible: boolean;
+            /** @default true */
+            applicant_writable: boolean;
+            /** @default true */
+            staff_visible: boolean;
+            /** @default false */
+            staff_writable: boolean;
+            /** @default true */
+            reviewer_visible: boolean;
+            /** @default false */
+            public_after_approval: boolean;
+            /** @default true */
+            api_projection: boolean;
+            retention_policy_code?: string;
+            reason: string;
+        };
         /**
-         * @description * `operational` - Operational service
-         *     * `marketing` - Optional marketing
-         *     * `emergency` - Emergency
+         * @description * `short_text` - Short text
+         *     * `long_text` - Long text
+         *     * `integer` - Integer
+         *     * `decimal` - Decimal
+         *     * `boolean` - Boolean
+         *     * `single_choice` - Single choice
+         *     * `multiple_choice` - Multiple choice
+         *     * `date` - Date
+         *     * `time` - Time
+         *     * `instant` - Date and time
+         *     * `email` - Email
+         *     * `phone` - Phone
+         *     * `url` - URL
+         *     * `address` - Address
+         *     * `person_reference` - Person reference
+         *     * `domain_reference` - Domain reference
+         *     * `safe_file` - Safety-checked file
          * @enum {string}
          */
-        PurposeEnum: "operational" | "marketing" | "emergency";
+        QuestionAddFieldTypeEnum: "short_text" | "long_text" | "integer" | "decimal" | "boolean" | "single_choice" | "multiple_choice" | "date" | "time" | "instant" | "email" | "phone" | "url" | "address" | "person_reference" | "domain_reference" | "safe_file";
+        /**
+         * @description * `question.add` - question.add
+         * @enum {string}
+         */
+        QuestionAddOperationEnum: "question.add";
+        QuestionCondition: {
+            question_key: string;
+            operator: components["schemas"]["OperatorEnum"];
+            value: unknown;
+        };
+        QuestionOption: {
+            code: string;
+            label: string;
+        };
         ReceiptRecord: {
             /** Format: uuid */
             readonly id: string;
@@ -2942,6 +6140,13 @@ export interface components {
             ledger_entry_ids: string[];
             reason: string;
         };
+        /**
+         * @description * `not_required` - Not required
+         *     * `required` - Required
+         *     * `resolved` - Resolved
+         * @enum {string}
+         */
+        ReconciliationStateEnum: "not_required" | "required" | "resolved";
         RecoveryComplete: {
             token: string;
             new_password: string;
@@ -2950,12 +6155,57 @@ export interface components {
             /** Format: email */
             email: string;
         };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationCapacityAdjustmentCommand: {
+            /** Format: uuid */
+            product_id?: string | null;
+            new_capacity: number;
+            expected_control_version: number;
+            reason: string;
+        };
+        RegistrationCapacityAdjustmentResult: {
+            /** Format: uuid */
+            id: string;
+            scope: components["schemas"]["ScopeEnum"];
+            /** Format: uuid */
+            product_id: string | null;
+            previous_capacity: number;
+            new_capacity: number;
+            hard_ceiling: number;
+            control_version: number;
+            /** Format: date-time */
+            occurred_at: string;
+        };
+        RegistrationCommerceActivity: {
+            event_name: string;
+            action: string;
+            actor_label: string;
+            /** Format: date-time */
+            occurred_at: string;
+            target_count: number;
+        };
+        RegistrationCommerceCapacity: {
+            /** Format: uuid */
+            product_id: string | null;
+            product_name: string;
+            configured_capacity: number;
+            effective_capacity: number;
+            hard_ceiling: number;
+            occupied: number;
+            pending_target_holds: number;
+            waitlisted: number;
+        };
+        RegistrationCommerceWorkspace: {
+            control_version: number;
+            capacities: components["schemas"]["RegistrationCommerceCapacity"][];
+            activity: components["schemas"]["RegistrationCommerceActivity"][];
+        };
         RegistrationConfiguration: {
             /** Format: uuid */
             readonly id: string;
             readonly name: string;
             readonly version: number;
-            readonly status: components["schemas"]["RegistrationConfigurationStatusEnum"];
+            readonly status: components["schemas"]["Status634Enum"];
             readonly source_summary: components["schemas"]["RegistrationConfigurationSource"];
             readonly review_required: boolean;
             readonly review_note: string;
@@ -2977,6 +6227,7 @@ export interface components {
             questions: components["schemas"]["RegistrationQuestion"][];
             products: components["schemas"]["AdmissionProduct"][];
         };
+        RegistrationConfigurationDefinitionCommand: components["schemas"]["RegistrationSectionCreateCommand"] | components["schemas"]["RegistrationSectionUpdateCommand"] | components["schemas"]["RegistrationSectionMoveCommand"] | components["schemas"]["RegistrationSectionRemoveCommand"] | components["schemas"]["RegistrationQuestionCreateCommand"] | components["schemas"]["RegistrationQuestionUpdateCommand"] | components["schemas"]["RegistrationQuestionMoveCommand"] | components["schemas"]["RegistrationQuestionRemoveCommand"] | components["schemas"]["RegistrationProductCreateCommand"] | components["schemas"]["RegistrationProductUpdateCommand"] | components["schemas"]["RegistrationProductMoveCommand"] | components["schemas"]["RegistrationProductRemoveCommand"] | components["schemas"]["RegistrationMinorPolicySetCommand"] | components["schemas"]["RegistrationMinorPolicyRemoveCommand"];
         RegistrationConfigurationSource: {
             kind: components["schemas"]["RegistrationConfigurationSourceKindEnum"];
             /** Format: uuid */
@@ -2990,13 +6241,6 @@ export interface components {
          * @enum {string}
          */
         RegistrationConfigurationSourceKindEnum: "blank" | "template" | "edition";
-        /**
-         * @description * `draft` - Draft
-         *     * `active` - Active
-         *     * `retired` - Retired
-         * @enum {string}
-         */
-        RegistrationConfigurationStatusEnum: "draft" | "active" | "retired";
         RegistrationConfigurationWorkspace: {
             active_configuration: components["schemas"]["RegistrationConfiguration"] | null;
             drafts: components["schemas"]["RegistrationConfiguration"][];
@@ -3004,6 +6248,286 @@ export interface components {
             source_editions: components["schemas"]["RegistrationSourceEdition"][];
             bootstrap_editor_path: string;
         };
+        RegistrationDefinitionMutation: {
+            /** Format: uuid */
+            setup_id: string;
+            /** Format: uuid */
+            receipt_id: string;
+            /** Format: uuid */
+            target_id: string;
+            resulting_version: number;
+            action: string;
+            /** Format: uuid */
+            configuration_id: string | null;
+            configuration_content_digest: string;
+            replayed: boolean;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationMinorPolicyRemoveCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "minor_policy.remove";
+        };
+        /**
+         * @description * `minor_policy.remove` - minor_policy.remove
+         * @enum {string}
+         */
+        RegistrationMinorPolicyRemoveCommandOperationEnum: "minor_policy.remove";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationMinorPolicySetCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "minor_policy.set";
+            enabled: boolean;
+            minor_age_threshold: number;
+            /** @default  */
+            guardian_notice_version: string;
+            /** @default  */
+            jurisdiction_code: string;
+            /** @default  */
+            review_reference: string;
+        };
+        /**
+         * @description * `minor_policy.set` - minor_policy.set
+         * @enum {string}
+         */
+        RegistrationMinorPolicySetCommandOperationEnum: "minor_policy.set";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationProductCreateCommand: {
+            expected_version: number;
+            reason: string;
+            code: string;
+            name: string;
+            /** @default  */
+            description: string;
+            /** Format: int64 */
+            price_minor: number;
+            capacity: number;
+            capacity_ceiling?: number | null;
+            entitlement_code: string;
+            entitlement_name: string;
+            /** Format: date-time */
+            sales_open_at?: string | null;
+            /** Format: date-time */
+            sales_close_at?: string | null;
+            required_capacity_codes?: string[];
+            /** @default  */
+            eligibility_explanation: string;
+            waitlist_enabled: boolean;
+            payment_window_minutes?: number | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "product.create";
+            /** Format: uuid */
+            after_product_id?: string | null;
+        };
+        /**
+         * @description * `product.create` - product.create
+         * @enum {string}
+         */
+        RegistrationProductCreateCommandOperationEnum: "product.create";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationProductMoveCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "product.move";
+            /** Format: uuid */
+            product_id: string;
+            /** Format: uuid */
+            after_product_id?: string | null;
+        };
+        /**
+         * @description * `product.move` - product.move
+         * @enum {string}
+         */
+        RegistrationProductMoveCommandOperationEnum: "product.move";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationProductRemoveCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "product.remove";
+            /** Format: uuid */
+            product_id: string;
+        };
+        /**
+         * @description * `product.remove` - product.remove
+         * @enum {string}
+         */
+        RegistrationProductRemoveCommandOperationEnum: "product.remove";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationProductUpdateCommand: {
+            expected_version: number;
+            reason: string;
+            code: string;
+            name: string;
+            /** @default  */
+            description: string;
+            /** Format: int64 */
+            price_minor: number;
+            capacity: number;
+            capacity_ceiling?: number | null;
+            entitlement_code: string;
+            entitlement_name: string;
+            /** Format: date-time */
+            sales_open_at?: string | null;
+            /** Format: date-time */
+            sales_close_at?: string | null;
+            required_capacity_codes?: string[];
+            /** @default  */
+            eligibility_explanation: string;
+            waitlist_enabled: boolean;
+            payment_window_minutes?: number | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "product.update";
+            /** Format: uuid */
+            product_id: string;
+        };
+        /**
+         * @description * `product.update` - product.update
+         * @enum {string}
+         */
+        RegistrationProductUpdateCommandOperationEnum: "product.update";
+        RegistrationProfileExtensionCatalog: {
+            /** Format: uuid */
+            organization_id: string;
+            /** Format: uuid */
+            edition_id: string;
+            aggregate_version: number;
+            fields: components["schemas"]["RegistrationProfileExtensionField"][];
+        };
+        RegistrationProfileExtensionField: {
+            /** Format: uuid */
+            id: string;
+            key: string;
+            version: number;
+            label: string;
+            help_text: string;
+            field_type: string;
+            options: string[];
+            purpose: string;
+            classification: string;
+            audience_policy: string;
+            /** Format: uuid */
+            audience_department_id: string | null;
+            audience_department_name: string;
+            writer_policy: string;
+            required: boolean;
+            position: number;
+            /** Format: uuid */
+            source_template_id: string | null;
+            /** Format: uuid */
+            source_prior_edition_id: string | null;
+            review_status: string;
+            status: string;
+        };
+        RegistrationProfileFieldCommand: components["schemas"]["RegistrationProfileFieldUpdateCommand"] | components["schemas"]["RegistrationProfileFieldMoveCommand"] | components["schemas"]["RegistrationProfileFieldRetireCommand"];
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationProfileFieldCreate: {
+            expected_version: number;
+            reason: string;
+            key: string;
+            label: string;
+            /** @default  */
+            help_text: string;
+            field_type: components["schemas"]["FieldType366Enum"];
+            options?: string[];
+            purpose: string;
+            classification: components["schemas"]["Classification9baEnum"];
+            audience_policy?: components["schemas"]["AudiencePolicyEnum"];
+            /** Format: uuid */
+            audience_department_id?: string | null;
+            attendee_visible?: boolean;
+            writer_policy: components["schemas"]["WriterPolicyEnum"];
+            required: boolean;
+            /** Format: uuid */
+            source_template_id?: string | null;
+            /** Format: uuid */
+            source_prior_edition_id?: string | null;
+            /** Format: uuid */
+            after_field_id?: string | null;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationProfileFieldMoveCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "profile_field.move";
+            /** Format: uuid */
+            after_field_id?: string | null;
+        };
+        /**
+         * @description * `profile_field.move` - profile_field.move
+         * @enum {string}
+         */
+        RegistrationProfileFieldMoveCommandOperationEnum: "profile_field.move";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationProfileFieldRetireCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "profile_field.retire";
+        };
+        /**
+         * @description * `profile_field.retire` - profile_field.retire
+         * @enum {string}
+         */
+        RegistrationProfileFieldRetireCommandOperationEnum: "profile_field.retire";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationProfileFieldUpdateCommand: {
+            expected_version: number;
+            reason: string;
+            key: string;
+            label: string;
+            /** @default  */
+            help_text: string;
+            field_type: components["schemas"]["FieldType366Enum"];
+            options?: string[];
+            purpose: string;
+            classification: components["schemas"]["Classification9baEnum"];
+            audience_policy?: components["schemas"]["AudiencePolicyEnum"];
+            /** Format: uuid */
+            audience_department_id?: string | null;
+            attendee_visible?: boolean;
+            writer_policy: components["schemas"]["WriterPolicyEnum"];
+            required: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "profile_field.update";
+        };
+        /**
+         * @description * `profile_field.update` - profile_field.update
+         * @enum {string}
+         */
+        RegistrationProfileFieldUpdateCommandOperationEnum: "profile_field.update";
         RegistrationProfileMinimize: {
             /** Format: uuid */
             profile_id: string;
@@ -3017,16 +6541,140 @@ export interface components {
             readonly key: string;
             readonly label: string;
             readonly help_text: string;
-            readonly field_type: components["schemas"]["FieldTypeEnum"];
+            readonly field_type: components["schemas"]["RegistrationQuestionFieldTypeEnum"];
             readonly required: boolean;
             readonly position: number;
             readonly options: unknown;
             readonly purpose: string;
-            readonly visibility: components["schemas"]["VisibilityEnum"];
-            readonly classification: components["schemas"]["ClassificationEnum"];
+            readonly visibility: components["schemas"]["RegistrationQuestionVisibilityEnum"];
+            readonly classification: components["schemas"]["RegistrationQuestionClassificationEnum"];
             readonly condition_question_key: string;
             readonly condition_value: string;
         };
+        /**
+         * @description * `C1` - Internal
+         *     * `C2` - Personal
+         * @enum {string}
+         */
+        RegistrationQuestionClassificationEnum: "C1" | "C2";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationQuestionCreateCommand: {
+            expected_version: number;
+            reason: string;
+            key: string;
+            label: string;
+            /** @default  */
+            help_text: string;
+            field_type: components["schemas"]["FieldType366Enum"];
+            required: boolean;
+            options?: string[];
+            purpose: string;
+            visibility: components["schemas"]["Visibility7ebEnum"];
+            classification: components["schemas"]["Classification9baEnum"];
+            /** @default  */
+            condition_question_key: string;
+            /** @default  */
+            condition_value: string;
+            /** Format: uuid */
+            section_id?: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "question.create";
+            /** Format: uuid */
+            after_question_id?: string | null;
+        };
+        /**
+         * @description * `question.create` - question.create
+         * @enum {string}
+         */
+        RegistrationQuestionCreateCommandOperationEnum: "question.create";
+        /**
+         * @description * `short_text` - Short text
+         *     * `long_text` - Long text
+         *     * `boolean` - Yes or no
+         *     * `single_choice` - Single choice
+         *     * `multiple_choice` - Multiple choice
+         *     * `integer` - Whole number
+         * @enum {string}
+         */
+        RegistrationQuestionFieldTypeEnum: "short_text" | "long_text" | "boolean" | "single_choice" | "multiple_choice" | "integer";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationQuestionMoveCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "question.move";
+            /** Format: uuid */
+            question_id: string;
+            /** Format: uuid */
+            after_question_id?: string | null;
+        };
+        /**
+         * @description * `question.move` - question.move
+         * @enum {string}
+         */
+        RegistrationQuestionMoveCommandOperationEnum: "question.move";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationQuestionRemoveCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "question.remove";
+            /** Format: uuid */
+            question_id: string;
+        };
+        /**
+         * @description * `question.remove` - question.remove
+         * @enum {string}
+         */
+        RegistrationQuestionRemoveCommandOperationEnum: "question.remove";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationQuestionUpdateCommand: {
+            expected_version: number;
+            reason: string;
+            key: string;
+            label: string;
+            /** @default  */
+            help_text: string;
+            field_type: components["schemas"]["FieldType366Enum"];
+            required: boolean;
+            options?: string[];
+            purpose: string;
+            visibility: components["schemas"]["Visibility7ebEnum"];
+            classification: components["schemas"]["Classification9baEnum"];
+            /** @default  */
+            condition_question_key: string;
+            /** @default  */
+            condition_value: string;
+            /** Format: uuid */
+            section_id?: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "question.update";
+            /** Format: uuid */
+            question_id: string;
+        };
+        /**
+         * @description * `question.update` - question.update
+         * @enum {string}
+         */
+        RegistrationQuestionUpdateCommandOperationEnum: "question.update";
+        /**
+         * @description * `attendee_and_staff` - Attendee and registration staff
+         *     * `registration_staff` - Registration staff only
+         * @enum {string}
+         */
+        RegistrationQuestionVisibilityEnum: "attendee_and_staff" | "registration_staff";
         RegistrationReconciliation: {
             /** Format: date-time */
             generated_at: string;
@@ -3053,6 +6701,156 @@ export interface components {
             readonly title: string;
             readonly description: string;
             readonly position: number;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationSectionCreateCommand: {
+            expected_version: number;
+            reason: string;
+            key: string;
+            title: string;
+            /** @default  */
+            description: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "section.create";
+            /** Format: uuid */
+            after_section_id?: string | null;
+        };
+        /**
+         * @description * `section.create` - section.create
+         * @enum {string}
+         */
+        RegistrationSectionCreateCommandOperationEnum: "section.create";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationSectionMoveCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "section.move";
+            /** Format: uuid */
+            section_id: string;
+            /** Format: uuid */
+            after_section_id?: string | null;
+        };
+        /**
+         * @description * `section.move` - section.move
+         * @enum {string}
+         */
+        RegistrationSectionMoveCommandOperationEnum: "section.move";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationSectionRemoveCommand: {
+            expected_version: number;
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "section.remove";
+            /** Format: uuid */
+            section_id: string;
+        };
+        /**
+         * @description * `section.remove` - section.remove
+         * @enum {string}
+         */
+        RegistrationSectionRemoveCommandOperationEnum: "section.remove";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationSectionUpdateCommand: {
+            expected_version: number;
+            reason: string;
+            key: string;
+            title: string;
+            /** @default  */
+            description: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "section.update";
+            /** Format: uuid */
+            section_id: string;
+        };
+        /**
+         * @description * `section.update` - section.update
+         * @enum {string}
+         */
+        RegistrationSectionUpdateCommandOperationEnum: "section.update";
+        RegistrationSetupProblem: {
+            /** Format: uri */
+            type: string;
+            title: string;
+            status: number;
+            detail: string;
+            code: string;
+            /** Format: uuid */
+            request_id?: string;
+            errors?: unknown;
+        };
+        RegistrationSetupSourceOption: {
+            source_kind: string;
+            /** Format: uuid */
+            source_id: string;
+            name: string;
+            version: number;
+            content_digest: string;
+            /** Format: uuid */
+            source_edition_id: string | null;
+            source_edition_name: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RegistrationSetupStartCommand: {
+            source_kind: components["schemas"]["SourceKindEnum"];
+            /** Format: uuid */
+            source_id?: string | null;
+            name: string;
+            /** Format: date-time */
+            opens_at?: string | null;
+            /** Format: date-time */
+            closes_at?: string | null;
+            capacity?: number | null;
+            capacity_ceiling?: number | null;
+            currency?: string | null;
+            minimum_age?: number | null;
+            default_payment_window_minutes?: number | null;
+            waitlist_enabled?: boolean | null;
+            automatic_waitlist_promotion?: boolean | null;
+            expected_version: number;
+            reason: string;
+        };
+        RegistrationSetupStartResult: {
+            /** Format: uuid */
+            setup_id: string;
+            /** Format: uuid */
+            configuration_id: string;
+            /** Format: uuid */
+            receipt_id: string;
+            aggregate_version: number;
+            configuration_version: number;
+            source_kind: string;
+            content_digest: string;
+            section_count: number;
+            question_count: number;
+            product_count: number;
+            minor_policy_copied: boolean;
+            replayed: boolean;
+        };
+        RegistrationSetupStartWorkspace: {
+            /** Format: uuid */
+            organization_id: string;
+            /** Format: uuid */
+            series_id: string;
+            /** Format: uuid */
+            edition_id: string;
+            setup_state: string;
+            aggregate_version: number;
+            platform_starters: components["schemas"]["RegistrationSetupSourceOption"][];
+            published_templates: components["schemas"]["RegistrationSetupSourceOption"][];
+            prior_configurations: components["schemas"]["RegistrationSetupSourceOption"][];
         };
         RegistrationSourceEdition: {
             /** Format: uuid */
@@ -3102,8 +6900,71 @@ export interface components {
             /** Format: date-time */
             readonly occurred_at: string;
         };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ReserveAdmissionTierReplacement: {
+            /** Format: uuid */
+            target_product_id: string;
+            expected_registration_version: number;
+        };
         ResolvePaymentException: {
             reason: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RestrictedAddressCreate: {
+            reason: string;
+            purpose: components["schemas"]["RestrictedAddressCreatePurposeEnum"];
+            /** Format: uuid */
+            subject_account_id?: string | null;
+            /** Format: uuid */
+            party_id?: string | null;
+            label: string;
+            recipient_name?: string;
+            contact_email?: string;
+            contact_phone?: string;
+            postal_address: string;
+            access_instructions?: string;
+            /** Format: date-time */
+            retention_until?: string | null;
+        };
+        /**
+         * @description * `pickup` - Pickup
+         *     * `storage` - Storage
+         *     * `return` - Return
+         *     * `delivery` - Delivery
+         *     * `provider` - Provider
+         * @enum {string}
+         */
+        RestrictedAddressCreatePurposeEnum: "pickup" | "storage" | "return" | "delivery" | "provider";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        RestrictedContactRead: {
+            purpose: components["schemas"]["RestrictedContactReadPurposeEnum"];
+            access_purpose: components["schemas"]["AccessPurposeEnum"];
+        };
+        /**
+         * @description * `pickup` - pickup
+         *     * `storage` - storage
+         *     * `return` - return
+         *     * `delivery` - delivery
+         *     * `provider` - provider
+         * @enum {string}
+         */
+        RestrictedContactReadPurposeEnum: "pickup" | "storage" | "return" | "delivery" | "provider";
+        RestrictedLogisticsContactProjection: {
+            /** Format: uuid */
+            address_id: string;
+            purpose: string;
+            label: string;
+            recipient_name: string;
+            contact_email: string;
+            contact_phone: string;
+            postal_address: string;
+            access_instructions: string;
+            /** Format: date-time */
+            retention_until: string | null;
+            /** Format: uuid */
+            subject_account_id: string | null;
+            /** Format: uuid */
+            party_id: string | null;
         };
         RestrictionAppeal: {
             /** Format: uuid */
@@ -3128,6 +6989,71 @@ export interface components {
          * @enum {string}
          */
         RestrictionAppealStatusEnum: "open" | "upheld" | "resolved";
+        /**
+         * @description * `succeeded` - succeeded
+         *     * `failed` - failed
+         * @enum {string}
+         */
+        ResultEnum: "succeeded" | "failed";
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ReusableKitCreate: {
+            reason: string;
+            code: string;
+            name: string;
+            description?: string;
+            lines: components["schemas"]["ReusableKitLine"][];
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        ReusableKitLine: {
+            subject: components["schemas"]["LogisticsCatalogSubjectLocator"];
+            quantity: number;
+            notes?: string;
+        };
+        ReviewDecision: {
+            expected_version: number;
+            decision: components["schemas"]["ReviewDecisionDecisionEnum"];
+            reason: string;
+        };
+        /**
+         * @description * `start_review` - start_review
+         *     * `request_changes` - request_changes
+         *     * `accept` - accept
+         *     * `reject` - reject
+         * @enum {string}
+         */
+        ReviewDecisionDecisionEnum: "start_review" | "request_changes" | "accept" | "reject";
+        /**
+         * @description * `owner` - Owner
+         *     * `provider` - Provider
+         *     * `rental_business` - Rental business
+         *     * `borrower` - Borrower
+         *     * `mixed` - Multiple roles
+         * @enum {string}
+         */
+        RoleEnum: "owner" | "provider" | "rental_business" | "borrower" | "mixed";
+        /**
+         * @description * `overall` - overall
+         *     * `product` - product
+         * @enum {string}
+         */
+        ScopeEnum: "overall" | "product";
+        SectionAdd: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "section.add";
+            expected_version: number;
+            key: string;
+            title: string;
+            help_text: string;
+            reason: string;
+        };
+        /**
+         * @description * `section.add` - section.add
+         * @enum {string}
+         */
+        SectionAddOperationEnum: "section.add";
         SelfAttendeeFursuit: {
             /** Format: uuid */
             id: string;
@@ -3178,6 +7104,25 @@ export interface components {
             fursuits: components["schemas"]["SelfAttendeeFursuit"][];
             directory_visible: boolean;
             directory_country_code: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        SelfOfferSubmit: {
+            title: string;
+            description?: string;
+            pickup_label: string;
+            pickup_recipient_name?: string;
+            pickup_postal_address: string;
+            pickup_access_instructions?: string;
+            /** Format: date-time */
+            pickup_retention_until: string;
+            /** Format: date-time */
+            available_from: string;
+            /** Format: date-time */
+            available_until: string;
+            /** Format: date-time */
+            requested_return_at?: string | null;
+            items: components["schemas"]["OfferItemInput"][];
+            reason: string;
         };
         SelfProfileImageUpload: {
             /** Format: uri */
@@ -3252,6 +7197,19 @@ export interface components {
             entitlements: components["schemas"]["Entitlement"][];
             readonly timeline: components["schemas"]["RegistrationTimeline"][];
         };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        SerializedAssetCreate: {
+            reason: string;
+            catalog_code: string;
+            name: string;
+            asset_type: string;
+            manufacturer?: string;
+            model_name?: string;
+            serial_number?: string;
+            acquisition: components["schemas"]["AcquisitionEnum"];
+            value_class?: string;
+            owner: components["schemas"]["Owner"];
+        };
         SessionSignIn: {
             /** Format: email */
             email: string;
@@ -3283,6 +7241,29 @@ export interface components {
          * @enum {string}
          */
         SettlementBatchStatusEnum: "open" | "reconciled" | "exception";
+        /**
+         * @description * `legacy_existing` - legacy_existing
+         *     * `blank` - blank
+         *     * `platform_starter` - platform_starter
+         *     * `published_template` - published_template
+         *     * `prior_edition` - prior_edition
+         *     * `successor` - successor
+         * @enum {string}
+         */
+        SourceKindEnum: "legacy_existing" | "blank" | "platform_starter" | "published_template" | "prior_edition" | "successor";
+        /**
+         * @description * `function_room` - Function room
+         *     * `zone` - Zone
+         *     * `entrance` - Entrance
+         *     * `route` - Route
+         *     * `loading` - Loading area
+         *     * `storage` - Storage
+         *     * `green_room` - Green room
+         *     * `catering` - Catering space
+         *     * `other` - Other
+         * @enum {string}
+         */
+        SpaceKindEnum: "function_room" | "zone" | "entrance" | "route" | "loading" | "storage" | "green_room" | "catering" | "other";
         /**
          * @description * `aa` - Afar
          *     * `ab` - Abkhazian
@@ -3561,8 +7542,53 @@ export interface components {
             readonly completed_at: string | null;
             readonly safe_outcome_summary: string;
         };
+        StarterCreate: {
+            starter_code: string;
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+            /** Format: date-time */
+            applicant_edit_until: string;
+        };
+        /**
+         * @description * `pending` - Pending
+         *     * `processing` - Processing
+         *     * `delivered` - Delivered
+         *     * `retrying` - Retrying
+         *     * `permanent_failed` - Permanent failure
+         *     * `cancelled` - Cancelled
+         * @enum {string}
+         */
+        Status3cfEnum: "pending" | "processing" | "delivered" | "retrying" | "permanent_failed" | "cancelled";
+        /**
+         * @description * `draft` - Draft
+         *     * `active` - Active
+         *     * `retired` - Retired
+         * @enum {string}
+         */
+        Status634Enum: "draft" | "active" | "retired";
+        /**
+         * @description * `pending` - Pending
+         *     * `accepted` - Accepted
+         *     * `revoked` - Revoked
+         *     * `expired` - Expired
+         * @enum {string}
+         */
+        Status810Enum: "pending" | "accepted" | "revoked" | "expired";
         StepUp: {
             password: string;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        StockLotCreate: {
+            reason: string;
+            catalog_code: string;
+            name: string;
+            stock_type: string;
+            unit: string;
+            initial_quantity: number;
+            value_class?: string;
+            owner: components["schemas"]["Owner"];
         };
         SubjectRightsRequest: {
             /** Format: uuid */
@@ -3606,8 +7632,22 @@ export interface components {
          */
         SubjectRightsRequestStatusEnum: "received" | "identity_check" | "in_progress" | "completed" | "denied";
         SubjectRightsRequestTransition: {
-            action: components["schemas"]["ActionEnum"];
+            action: components["schemas"]["SubjectRightsRequestTransitionActionEnum"];
             outcome_summary?: string;
+        };
+        /**
+         * @description * `begin_identity_check` - Begin identity check
+         *     * `verify_identity` - Verify identity and begin work
+         *     * `complete` - Complete
+         *     * `deny` - Deny
+         * @enum {string}
+         */
+        SubjectRightsRequestTransitionActionEnum: "begin_identity_check" | "verify_identity" | "complete" | "deny";
+        SubmissionAnswer: {
+            /** Format: uuid */
+            question_id: string;
+            expected_version: number;
+            value: unknown | null;
         };
         /**
          * @description * `self` - Attendee self-service
@@ -3615,6 +7655,9 @@ export interface components {
          * @enum {string}
          */
         SubmissionSourceEnum: "self" | "staff_assisted";
+        SubmissionTransition: {
+            expected_version: number;
+        };
         SubmitRegistration: {
             /** Format: uuid */
             product_id: string;
@@ -3660,12 +7703,315 @@ export interface components {
             directory_visible: boolean;
             directory_country_code?: string;
         };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueAvailabilityInterval: {
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            opening_restriction?: string;
+        };
+        VenueAvailabilityProjection: {
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            opening_restriction: string;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueAvailabilitySet: {
+            expected_version: number;
+            intervals: components["schemas"]["VenueAvailabilityInterval"][];
+            reason: string;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueBookingCreate: {
+            kind: components["schemas"]["Kind3faEnum"];
+            external_reference?: string;
+            internal_title: string;
+            public_title?: string;
+            public_description?: string;
+            capacity_mode: components["schemas"]["CapacityModeEnum"];
+            expected_attendance: number;
+            /** Format: date-time */
+            setup_starts_at: string;
+            /** Format: date-time */
+            effective_starts_at: string;
+            /** Format: date-time */
+            effective_ends_at: string;
+            /** Format: date-time */
+            teardown_ends_at: string;
+            /** Format: uuid */
+            public_layout_id?: string | null;
+            reason: string;
+        };
+        VenueBookingProjection: {
+            /** Format: uuid */
+            id: string;
+            kind: string;
+            external_reference: string;
+            internal_title: string;
+            public_title: string;
+            public_description: string;
+            capacity_mode: string;
+            expected_attendance: number;
+            /** Format: date-time */
+            setup_starts_at: string;
+            /** Format: date-time */
+            effective_starts_at: string;
+            /** Format: date-time */
+            effective_ends_at: string;
+            /** Format: date-time */
+            teardown_ends_at: string;
+            review_state: string;
+            publication_state: string;
+            lifecycle: string;
+            public_layout_reference: string;
+            aggregate_version: number;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueBookingState: {
+            expected_version: number;
+            reason: string;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueBookingUpdate: {
+            kind: components["schemas"]["Kind3faEnum"];
+            external_reference?: string;
+            internal_title: string;
+            public_title?: string;
+            public_description?: string;
+            capacity_mode: components["schemas"]["CapacityModeEnum"];
+            expected_attendance: number;
+            /** Format: date-time */
+            setup_starts_at: string;
+            /** Format: date-time */
+            effective_starts_at: string;
+            /** Format: date-time */
+            effective_ends_at: string;
+            /** Format: date-time */
+            teardown_ends_at: string;
+            /** Format: uuid */
+            public_layout_id?: string | null;
+            reason: string;
+            expected_version: number;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueCapacity: {
+            configuration_name: string;
+            seated_capacity: number;
+            standing_capacity: number;
+            table_capacity: number;
+            fire_capacity: number;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueCombinationCreate: {
+            code: string;
+            name: string;
+            member_space_ids: string[];
+            reason: string;
+        };
+        VenueCommandResult: {
+            /** Format: uuid */
+            object_id: string;
+            /** Format: uuid */
+            receipt_id: string;
+            resulting_version: number;
+            replayed: boolean;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueLayoutAdd: {
+            layout_code: string;
+            version: number;
+            title: string;
+            visibility: components["schemas"]["VenueLayoutAddVisibilityEnum"];
+            source_reference: string;
+            checksum_sha256: string;
+            notes?: string;
+            reason: string;
+        };
         /**
-         * @description * `attendee_and_staff` - Attendee and registration staff
-         *     * `registration_staff` - Registration staff only
+         * @description * `public` - Public
+         *     * `internal` - Internal
+         *     * `security` - Security
          * @enum {string}
          */
-        VisibilityEnum: "attendee_and_staff" | "registration_staff";
+        VenueLayoutAddVisibilityEnum: "public" | "internal" | "security";
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueLayoutApprove: {
+            expected_version: number;
+            /** @description Required by the service when approving a public layout. */
+            approved_reference?: string;
+            reason: string;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueMediaAdd: {
+            kind: components["schemas"]["Kind13fEnum"];
+            source_reference: string;
+            owner_name: string;
+            license_basis: string;
+            usage_scope: string;
+            attribution?: string;
+            /** Format: date-time */
+            expires_at?: string | null;
+            reason: string;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueMediaApprove: {
+            expected_version: number;
+            public_reference: string;
+            reason: string;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueNightInventorySet: {
+            /** Format: date */
+            night: string;
+            room_capacity: number;
+            /** Format: date-time */
+            release_at: string;
+            provider_reference?: string;
+            expected_version?: number | null;
+            reason: string;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenuePropertyCreate: {
+            slug: string;
+            kind: components["schemas"]["VenuePropertyCreateKindEnum"];
+            legal_name: string;
+            public_name: string;
+            provider_name?: string;
+            public_description?: string;
+            internal_notes?: string;
+            location_name: string;
+            postal_address: string;
+            country_code: string;
+            website_url?: string;
+            public_contact?: string;
+            contact_name?: string;
+            contact_email?: string;
+            contact_phone?: string;
+            reason: string;
+        };
+        /**
+         * @description * `hotel` - Hotel
+         *     * `venue` - Venue
+         *     * `mixed` - Hotel and venue
+         * @enum {string}
+         */
+        VenuePropertyCreateKindEnum: "hotel" | "venue" | "mixed";
+        VenuePropertySummary: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            kind: string;
+            legal_name: string;
+            provider_name: string;
+            public_name: string;
+            public_description: string;
+            internal_notes: string;
+            location_name: string;
+            postal_address: string;
+            country_code: string;
+            website_url: string;
+            public_contact: string;
+            contact_name: string;
+            contact_email: string;
+            contact_phone: string;
+            lifecycle: string;
+            aggregate_version: number;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueRoomTypeCreate: {
+            code: string;
+            public_name: string;
+            description?: string;
+            accessible_features?: string;
+            minimum_occupants: number;
+            maximum_occupants: number;
+            provider_reference?: string;
+            reason: string;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueSelectionCreate: {
+            /** Format: uuid */
+            property_id: string;
+            /** Format: uuid */
+            responsible_department_id: string;
+            local_name: string;
+            public_description_override?: string;
+            public_contact_override?: string;
+            opening_restrictions?: string;
+            reason: string;
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueSpaceCatalogCreate: {
+            site_code: string;
+            site_name: string;
+            building_code: string;
+            building_name: string;
+            space_code: string;
+            space_name: string;
+            space_kind: components["schemas"]["SpaceKindEnum"];
+            configuration_code: string;
+            configuration_name: string;
+            seated_capacity: number;
+            standing_capacity: number;
+            table_capacity: number;
+            fire_capacity: number;
+            public_description?: string;
+            accessibility_features?: string;
+            known_barriers?: string;
+            equipment_facts?: string;
+            reason: string;
+        };
+        VenueSpaceSchedule: {
+            space: components["schemas"]["VenueWorkspaceSpace"];
+            availability: components["schemas"]["VenueAvailabilityProjection"][];
+            bookings: components["schemas"]["VenueBookingProjection"][];
+        };
+        /** @description Marker for Venue request objects that reject unknown properties. */
+        VenueSpaceSelectionCreate: {
+            /** Format: uuid */
+            venue_selection_id: string;
+            /** Format: uuid */
+            source_space_id?: string | null;
+            /** Format: uuid */
+            source_combination_id?: string | null;
+            /** Format: uuid */
+            selected_configuration_id?: string | null;
+            local_name: string;
+            capacity?: components["schemas"]["VenueCapacity"] | null;
+            public_access_info?: string;
+            opening_restrictions?: string;
+            reason: string;
+        };
+        VenueWorkspaceSpace: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            venue_selection_id: string;
+            venue_name: string;
+            local_name: string;
+            configuration_name: string;
+            seated_capacity: number;
+            standing_capacity: number;
+            table_capacity: number;
+            fire_capacity: number;
+            availability_version: number;
+            active_booking_count: number;
+            aggregate_version: number;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        VersionedReason: {
+            expected_version: number;
+            reason: string;
+        };
+        /**
+         * @description * `attendee_and_staff` - attendee_and_staff
+         *     * `registration_staff` - registration_staff
+         * @enum {string}
+         */
+        Visibility7ebEnum: "attendee_and_staff" | "registration_staff";
         VolunteerApplication: {
             /** Format: uuid */
             id: string;
@@ -3695,6 +8041,26 @@ export interface components {
             applications_open_at: string | null;
             /** Format: date-time */
             applications_close_at: string | null;
+        };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        WaitlistBatchOfferCommand: {
+            /** Format: uuid */
+            product_id: string;
+            batch_size: number;
+            expected_control_version: number;
+            reason: string;
+        };
+        WaitlistBatchOfferResult: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            product_id: string;
+            requested_size: number;
+            offered_count: number;
+            offered_registration_ids: string[];
+            control_version: number;
+            /** Format: date-time */
+            occurred_at: string;
         };
         WaivePayment: {
             reason: string;
@@ -3893,12 +8259,21 @@ export interface components {
         WorkforceStructureTemplateMutationResult: {
             aggregate_version: number;
         };
+        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
         WriteProfileExtensionValue: {
             /** Format: uuid */
             field_id: string;
-            value: unknown;
+            value: unknown | null;
+            expected_sequence: number;
             reason?: string;
         };
+        /**
+         * @description * `attendee` - attendee
+         *     * `registration_staff` - registration_staff
+         *     * `attendee_and_staff` - attendee_and_staff
+         * @enum {string}
+         */
+        WriterPolicyEnum: "attendee" | "registration_staff" | "attendee_and_staff";
     };
     responses: never;
     parameters: never;
@@ -3908,6 +8283,348 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    catalog_retrieve_edition_catalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDetail"];
+                };
+            };
+        };
+    };
+    catalog_create_edition_catalog: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact retries return HTTP 200; new resources return HTTP 201. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+        };
+    };
+    catalog_activate_edition_catalog: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact retries return HTTP 200; new resources return HTTP 201. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogActivate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+        };
+    };
+    catalog_list_activity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogActivityList"];
+                };
+            };
+        };
+    };
+    catalog_list_own_orders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogOrderList"];
+                };
+            };
+        };
+    };
+    catalog_place_order: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact retries return HTTP 200; new resources return HTTP 201. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogOrderCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+        };
+    };
+    catalog_create_payment_intent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact retries return HTTP 200; new resources return HTTP 201. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                order_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogPaymentCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+        };
+    };
+    catalog_reconcile_payment_intent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact retries return HTTP 200; new resources return HTTP 201. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                intent_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogPaymentReconcile"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+        };
+    };
+    catalog_add_product: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact retries return HTTP 200; new resources return HTTP 201. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogProductAdd"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+        };
+    };
+    catalog_add_variant: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact retries return HTTP 200; new resources return HTTP 201. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogVariantAdd"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+        };
+    };
+    catalog_adjust_variant_stock: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact retries return HTTP 200; new resources return HTTP 201. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+                variant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogStockAdjust"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogCommandResult"];
+                };
+            };
+        };
+    };
     identity_retrieve_my_context: {
         parameters: {
             query?: never;
@@ -4267,6 +8984,146 @@ export interface operations {
             };
         };
     };
+    my_organizations_editions_equipment_offers_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsSelfOfferProjection"][];
+                };
+            };
+        };
+    };
+    my_organizations_editions_equipment_offers_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelfOfferSubmit"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    my_organizations_editions_equipment_offers_withdraw_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                offer_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionedReason"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    venues_list_my_schedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicVenueScheduleItem"][];
+                };
+            };
+        };
+    };
+    venues_set_accommodation_night_inventory: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+                room_type_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueNightInventorySet"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
     audit_list_security_events: {
         parameters: {
             query: {
@@ -4303,6 +9160,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditEventSummary"][];
+                };
+            };
+        };
+    };
+    charities_list_partners: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityPartnerSummary"][];
+                };
+            };
+        };
+    };
+    charities_create_partner: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CharityPartnerCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityCommandResult"];
+                };
+            };
+        };
+    };
+    charities_update_partner: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchedCharityPartnerUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityCommandResult"];
+                };
+            };
+        };
+    };
+    charities_add_media: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CharityMediaAdd"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityCommandResult"];
+                };
+            };
+        };
+    };
+    charities_command_media: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                /** @description The closed governed-media command selected by this route. */
+                action: "approve" | "withdraw";
+                media_id: string;
+                organization_id: string;
+                partner_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CharityMediaCommandRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityCommandResult"];
                 };
             };
         };
@@ -4676,6 +9688,32 @@ export interface operations {
             };
         };
     };
+    authorization_preview_effective_access: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccessPreviewRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessPreview"];
+                };
+            };
+        };
+    };
     accreditation_list_my_credentials: {
         parameters: {
             query?: never;
@@ -4716,6 +9754,415 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActionItem"][];
+                };
+            };
+        };
+    };
+    applications_list_definitions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationDefinition"][];
+                };
+            };
+        };
+    };
+    applications_create_definition: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarterCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+        };
+    };
+    applications_command_definition: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                definition_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationDefinitionCommandRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+        };
+    };
+    applications_start_submission: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                definition_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+        };
+    };
+    applications_retrieve_my_workspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyApplicationWorkspace"];
+                };
+            };
+        };
+    };
+    applications_list_review_queue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationReviewSubmissionProjection"][];
+                };
+            };
+        };
+    };
+    applications_list_starters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationStarterSummary"][];
+                };
+            };
+        };
+    };
+    applications_append_answer: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+                submission_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionAnswer"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+        };
+    };
+    applications_record_review_decision: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+                submission_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewDecision"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+        };
+    };
+    applications_submit_submission: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+                submission_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionTransition"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCommandResult"];
+                };
+            };
+        };
+    };
+    charities_list_selections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharitySelectionSummary"][];
+                };
+            };
+        };
+    };
+    charities_propose_selection: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CharitySelectionPropose"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityCommandResult"];
+                };
+            };
+        };
+    };
+    charities_retrieve_selection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+                selection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharitySelectionReview"];
+                };
+            };
+        };
+    };
+    charities_command_selection: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. An exact same-intent retry recovers the original command result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                /** @description The closed selection command selected by this route. */
+                action: "comment" | "confirm" | "publish" | "reject" | "submit" | "withdraw";
+                edition_id: string;
+                organization_id: string;
+                selection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CharitySelectionCommandRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharityCommandResult"];
                 };
             };
         };
@@ -4842,6 +10289,598 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Credential"];
+                };
+            };
+        };
+    };
+    organizations_editions_equipment_offers_review_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                offer_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogisticsOfferReviewRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsWorkspaceProjection"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_activity_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsActivityProjection"][];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_agreements_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetAgreementCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_assets_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SerializedAssetCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_events_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MovementCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_manifests_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsManifestProjection"][];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_manifests_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManifestCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_manifests_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                manifest_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsManifestProjection"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_manifests_lines_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                manifest_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManifestLineAdd"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_manifests_lines_receive_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                line_id: string;
+                manifest_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManifestReceipt"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_manifests_state_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                manifest_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManifestState"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_nodes_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogisticsNodeCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_offline_batches_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfflineBatch"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_physical_keys_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhysicalKeyCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_restricted_addresses_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestrictedAddressCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_restricted_addresses_read_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                address_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestrictedContactRead"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestrictedLogisticsContactProjection"];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_stage_receiving_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsManifestProjection"][];
+                };
+            };
+        };
+    };
+    organizations_editions_logistics_stock_lots_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockLotCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
                 };
             };
         };
@@ -5072,6 +11111,96 @@ export interface operations {
             };
         };
     };
+    registration_retrieve_commerce_workspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationCommerceWorkspace"];
+                };
+            };
+        };
+    };
+    registration_adjust_effective_capacity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrationCapacityAdjustmentCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationCapacityAdjustmentResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationCapacityAdjustmentResult"];
+                };
+            };
+        };
+    };
+    registration_offer_next_waitlist_batch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WaitlistBatchOfferCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaitlistBatchOfferResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaitlistBatchOfferResult"];
+                };
+            };
+        };
+    };
     registration_retrieve_configuration_workspace: {
         parameters: {
             query?: never;
@@ -5090,6 +11219,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RegistrationConfigurationWorkspace"];
+                };
+            };
+        };
+    };
+    registration_apply_configuration_definition_command: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. Reuse with the same actor, exact scope, operation, version, and normalized input recovers the first result. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                configuration_id: string;
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RegistrationConfigurationDefinitionCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationDefinitionMutation"];
+                };
+            };
+            201: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationDefinitionMutation"];
+                };
+            };
+            /** @description The header, discriminator, or closed command body is invalid. */
+            400: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Exact-edition configuration authority is unavailable. */
+            403: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The exact governed definition is unavailable. */
+            404: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The version, lifecycle, dependency, or retry key conflicts. */
+            409: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Complete atomic setup evidence is temporarily unavailable. */
+            503: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
                 };
             };
         };
@@ -5330,6 +11556,41 @@ export interface operations {
             };
         };
     };
+    registration_reserve_my_admission_tier_replacement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReserveAdmissionTierReplacement"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdmissionTierReplacement"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdmissionTierReplacement"];
+                };
+            };
+        };
+    };
     registration_retrieve_self_attendee_profile: {
         parameters: {
             query?: never;
@@ -5482,6 +11743,247 @@ export interface operations {
             };
         };
     };
+    registration_list_profile_extension_fields: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationProfileExtensionCatalog"];
+                };
+            };
+            /** @description The closed list input is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Exact-edition catalog authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description A bounded coherent catalog cannot be projected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The complete audited catalog is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+        };
+    };
+    registration_create_profile_extension_field: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. Reuse with the same actor, exact scope, operation, version, and normalized input recovers the first result. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrationProfileFieldCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationDefinitionMutation"];
+                };
+            };
+            201: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationDefinitionMutation"];
+                };
+            };
+            /** @description The header or closed field definition is invalid. */
+            400: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Exact-edition catalog authority is unavailable. */
+            403: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The selected source is unavailable. */
+            404: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The version, lifecycle, limit, or retry key conflicts. */
+            409: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Complete atomic catalog evidence is temporarily unavailable. */
+            503: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+        };
+    };
+    registration_apply_profile_extension_field_command: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. Reuse with the same actor, exact scope, operation, version, and normalized input recovers the first result. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                field_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RegistrationProfileFieldCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationDefinitionMutation"];
+                };
+            };
+            /** @description The header, discriminator, or closed command body is invalid. */
+            400: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Exact-edition catalog authority is unavailable. */
+            403: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The exact profile field is unavailable. */
+            404: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The version, lifecycle, immutability, or retry key conflicts. */
+            409: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Complete atomic catalog evidence is temporarily unavailable. */
+            503: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+        };
+    };
     registration_list_profile_media_reviews: {
         parameters: {
             query?: never;
@@ -5597,6 +12099,151 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettlementBatch"];
+                };
+            };
+        };
+    };
+    registration_get_setup_start_choices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationSetupStartWorkspace"];
+                };
+            };
+            /** @description Exact-edition setup authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description A bounded coherent setup projection cannot be produced. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The audited setup projection is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+        };
+    };
+    registration_start_governed_setup: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case UUID. Reuse with the same actor, exact scope, operation, version, and normalized input recovers the first result. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrationSetupStartCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationSetupStartResult"];
+                };
+            };
+            201: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationSetupStartResult"];
+                };
+            };
+            /** @description The header or closed setup-start body is invalid. */
+            400: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Exact-edition setup authority is unavailable. */
+            403: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The exact source version is unavailable. */
+            404: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The lifecycle, version, or retry key conflicts. */
+            409: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Complete atomic setup evidence is temporarily unavailable. */
+            503: {
+                headers: {
+                    /** @description Whether this response recovered the original receipt for an exact Idempotency-Key replay. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
                 };
             };
         };
@@ -5838,12 +12485,42 @@ export interface operations {
                     "application/json": components["schemas"]["ProfileExtensionWorkspace"];
                 };
             };
+            /** @description The exact-edition registration profile is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The bounded projection limit is exceeded. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The complete audited projection is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
         };
     };
     registration_write_staff_profile_extension: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Canonical lower-case UUID. Exact retries recover the original profile-value result. A changed request requires a new key. */
+                "Idempotency-Key": string;
+            };
             path: {
                 edition_id: string;
                 organization_id: string;
@@ -5859,10 +12536,56 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileExtensionWorkspace"];
+                };
+            };
+            /** @description The closed command input is invalid. */
+            400: {
+                headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The registration profile or permitted field is unavailable. */
+            404: {
+                headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The sequence, retry key, or bounded projection conflicts. */
+            409: {
+                headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Complete atomic profile-value evidence is unavailable. */
+            503: {
+                headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
                 };
             };
         };
@@ -5914,12 +12637,42 @@ export interface operations {
                     "application/json": components["schemas"]["ProfileExtensionWorkspace"];
                 };
             };
+            /** @description The owned registration is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The bounded projection limit is exceeded. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The complete audited projection is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
         };
     };
     registration_write_my_profile_extension: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Canonical lower-case UUID. Exact retries recover the original profile-value result. A changed request requires a new key. */
+                "Idempotency-Key": string;
+            };
             path: {
                 edition_id: string;
                 organization_id: string;
@@ -5934,10 +12687,56 @@ export interface operations {
         responses: {
             200: {
                 headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileExtensionWorkspace"];
+                };
+            };
+            /** @description The closed command input is invalid. */
+            400: {
+                headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The owned registration or profile field is unavailable. */
+            404: {
+                headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description The sequence, retry key, or bounded projection conflicts. */
+            409: {
+                headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
+                };
+            };
+            /** @description Complete atomic profile-value evidence is unavailable. */
+            503: {
+                headers: {
+                    /** @description Whether the exact Idempotency-Key recovered a prior result. */
+                    "Idempotent-Replay": "false" | "true";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["RegistrationSetupProblem"];
                 };
             };
         };
@@ -6066,6 +12865,256 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EditionTransitionResult"];
+                };
+            };
+        };
+    };
+    venues_select_space_for_edition: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueSpaceSelectionCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_retrieve_space_schedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+                space_selection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueSpaceSchedule"];
+                };
+            };
+        };
+    };
+    venues_set_space_availability: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+                space_selection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueAvailabilitySet"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_create_booking: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+                space_selection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueBookingCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_reschedule_booking: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                booking_id: string;
+                edition_id: string;
+                organization_id: string;
+                space_selection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueBookingUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_apply_booking_command: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                action: "approve" | "cancel" | "publish" | "withdraw";
+                booking_id: string;
+                edition_id: string;
+                organization_id: string;
+                space_selection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueBookingState"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_list_edition_workspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueWorkspaceSpace"][];
+                };
+            };
+        };
+    };
+    venues_select_property_for_edition: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueSelectionCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
                 };
             };
         };
@@ -6647,6 +13696,359 @@ export interface operations {
             };
         };
     };
+    organizations_logistics_agreements_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetAgreementCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_logistics_assets_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SerializedAssetCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_logistics_kits_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReusableKitCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_logistics_labels_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogisticsLabelCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_logistics_nodes_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogisticsNodeCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_logistics_parties_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogisticsPartyCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_logistics_physical_keys_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhysicalKeyCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_logistics_physical_keys_keyholders_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                key_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeyholderAssign"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_logistics_restricted_addresses_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestrictedAddressCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
+    organizations_logistics_stock_lots_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. The key is not accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockLotCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsCommandResult"];
+                };
+            };
+        };
+    };
     privacy_list_staff_requests: {
         parameters: {
             query?: never;
@@ -6879,6 +14281,754 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ConventionSeriesProblem"];
+                };
+            };
+        };
+    };
+    venues_approve_space_layout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                layout_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueLayoutApprove"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_list_properties: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenuePropertySummary"][];
+                };
+            };
+        };
+    };
+    venues_create_property: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenuePropertyCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_update_property: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+                property_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchedVenuePropertyUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_add_property_media: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+                property_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueMediaAdd"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_approve_property_media: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                media_id: string;
+                organization_id: string;
+                property_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueMediaApprove"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_create_accommodation_room_type: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+                property_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueRoomTypeCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_create_space_combination: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+                property_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueCombinationCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_create_space_path: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+                property_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueSpaceCatalogCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    venues_add_space_layout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Canonical lower-case hyphenated UUID. Exact creation retries return HTTP 200; newly created resources return HTTP 201. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                organization_id: string;
+                space_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueLayoutAdd"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueCommandResult"];
+                };
+            };
+        };
+    };
+    identity_create_platform_account_invitation: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A canonical lower-case hyphenated UUID. Reuse with the same actor, operation, target, and normalized input recovers the first result; changed reuse conflicts. The key is never accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformAccountInvitationCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAccountInvitationMutation"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAccountInvitationMutation"];
+                };
+            };
+            /** @description The header or closed invitation input is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description Fresh platform administration or required step-up is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The identity, version, state, or retry key conflicts. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description A required identity dependency is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+        };
+    };
+    identity_retrieve_platform_account_invitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAccountInvitationDetail"];
+                };
+            };
+            /** @description The detail request contains unsupported input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description Fresh platform administration is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The invitation is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The bounded invitation timeline cannot be projected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The complete audited projection is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+        };
+    };
+    identity_reissue_platform_account_invitation: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A canonical lower-case hyphenated UUID. Reuse with the same actor, operation, target, and normalized input recovers the first result; changed reuse conflicts. The key is never accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformAccountInvitationAction"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAccountInvitationMutation"];
+                };
+            };
+            /** @description The header or closed reissue input is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description Fresh platform administration or required step-up is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The invitation is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The invitation version, state, or retry key conflicts. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description A required identity dependency is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+        };
+    };
+    identity_revoke_platform_account_invitation: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A canonical lower-case hyphenated UUID. Reuse with the same actor, operation, target, and normalized input recovers the first result; changed reuse conflicts. The key is never accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformAccountInvitationAction"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAccountInvitationMutation"];
+                };
+            };
+            /** @description The header or closed revocation input is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description Fresh platform administration or required step-up is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The invitation is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The invitation version, state, or retry key conflicts. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description A required identity dependency is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+        };
+    };
+    identity_list_platform_accounts: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                /**
+                 * @description * `person` - person
+                 *     * `platform_administrator` - platform_administrator
+                 */
+                kind?: "person" | "platform_administrator" | "";
+                page_size?: number;
+                search?: string;
+                /**
+                 * @description * `exact` - exact
+                 *     * `prefix` - prefix
+                 */
+                search_mode?: "exact" | "prefix";
+                /**
+                 * @description * `active` - active
+                 *     * `inactive` - inactive
+                 */
+                state?: "active" | "inactive" | "";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAccountInventory"];
+                };
+            };
+            /** @description The closed account-inventory query is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description Fresh platform administration is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The cursor is stale or the complete bounded result is unavailable. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The complete audited account inventory is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+        };
+    };
+    identity_accept_platform_account_invitation: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A canonical lower-case hyphenated UUID. Reuse with the same actor, operation, target, and normalized input recovers the first result; changed reuse conflicts. The key is never accepted in JSON. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicAccountInvitationAcceptance"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicAccountInvitationAcceptanceResult"];
+                };
+            };
+            /** @description The non-enumerating acceptance input is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The retry key was reused with a different recipient password. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description The bounded acceptance attempt limit was reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
+                };
+            };
+            /** @description A required identity dependency is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["PlatformAccountInvitationProblem"];
                 };
             };
         };
@@ -7166,6 +15316,28 @@ export interface operations {
             };
         };
     };
+    charities_list_public: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicCharity"][];
+                };
+            };
+        };
+    };
     accreditation_ingest_offline_check_in: {
         parameters: {
             query?: never;
@@ -7189,6 +15361,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OfflineOperation"];
+                };
+            };
+        };
+    };
+    venues_list_public_schedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicVenueScheduleItem"][];
                 };
             };
         };

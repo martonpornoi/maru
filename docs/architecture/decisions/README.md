@@ -52,6 +52,15 @@ the system.
 | [0045](0045-governance-anchored-copy-on-write-edition-structure.md) | Accepted | Present organization governance above an edition-owned, copy-on-write, versioned and safely editable workforce Department tree |
 | [0046](0046-nondelegable-runtime-database-login.md) | Accepted | Require a genuine non-delegable PostgreSQL runtime login, select-only cutover controls, and trigger-integrity ACL proof |
 | [0047](0047-governed-registration-setup-and-platform-account-invitations.md) | Accepted | Govern Page 10 registration setup and optional recipient-owned platform account invitations through strict shared commands and staged direct-writer retirement |
+| [0048](0048-automatic-browser-department-ordering.md) | Accepted | Keep Department sibling order automatic in the browser while preserving explicit bounded API ordering |
+| [0049](0049-coherent-navigation-personal-surface-and-access-preview.md) | Accepted | Flatten selected-edition navigation, add one searchable/pinnable registry and My Maru, and provide capped read-only access preview |
+| [0050](0050-governed-admission-upgrades-capacity-and-edition-commerce.md) | Accepted | Use held exact-delta admission replacements, append-only bounded capacity, strict FIFO offers, and a separate edition catalog |
+| [0051](0051-typed-applications-and-policy-governed-profile-extensions.md) | Accepted | Copy immutable starters into owned drafts, use closed profile audiences, and keep contribution forms in typed application workflows |
+| [0052](0052-governed-charity-partners-and-edition-publication.md) | Accepted | Keep reusable charity partners separate from tenants and govern each edition decision and public snapshot independently |
+| [0053](0053-reusable-venue-catalog-and-physical-space-occupancy.md) | Accepted | Reuse governed venue facts through edition selections and enforce physical occupancy with turnover-safe interval constraints |
+| [0054](0054-event-sourced-logistics-containment-and-custody.md) | Accepted | Track physical containment and custody through typed acyclic nodes, append-only movements, manifests, and bounded offline reconciliation |
+| [0055](0055-task-oriented-responsive-management-experience.md) | Accepted | Present task-oriented management navigation, an accessible intermediate-width drawer, and a coherent person-account to governance handoff without changing domain authority |
+| [0056](0056-private-schema-backed-api-reference.md) | Accepted | Render the canonical OpenAPI contract through private, locally served Swagger and ReDoc views without enabling per-endpoint browsable APIs |
 
 New ADRs use the next four-digit number and contain:
 

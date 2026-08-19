@@ -1,6 +1,10 @@
+import base64
+import json
 from types import MappingProxyType
 
 import pytest
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.test import override_settings
 
@@ -9,11 +13,33 @@ from maru.settings.environment import (
     POSTGRES_CONNECTION_OPTIONS,
     boolean,
     csv_value,
+    invitation_public_key_configuration_is_valid,
+    invitation_token_key_configuration_is_valid,
+    normalized_https_origin,
     postgres_database,
     required,
     required_boolean,
     validate_production,
 )
+
+_VALID_DIGEST_KEY_ID = "digest-2026-08"
+_VALID_DIGEST_KEYS_JSON = json.dumps(
+    {_VALID_DIGEST_KEY_ID: base64.b64encode(b"d" * 32).decode("ascii")},
+    separators=(",", ":"),
+)
+
+
+@pytest.fixture(scope="module")
+def invitation_public_key_configuration() -> tuple[str, str]:
+    private_key = rsa.generate_private_key(public_exponent=65_537, key_size=2_048)
+    public_key_pem = private_key.public_key().public_bytes(
+        serialization.Encoding.PEM,
+        serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    return (
+        "production-key-2026-08",
+        base64.b64encode(public_key_pem).decode("ascii"),
+    )
 
 
 def test_required_strips_a_present_value() -> None:
@@ -121,7 +147,13 @@ def test_postgres_database_rejects_unsafe_or_incomplete_url(url: str) -> None:
         postgres_database(url)
 
 
-def test_validate_production_accepts_safe_baseline() -> None:
+def _validate_safe_production(
+    *,
+    invitation_key_id: str,
+    invitation_public_key_b64: str,
+    invitation_digest_active_key_id: str = _VALID_DIGEST_KEY_ID,
+    invitation_digest_keys_json: str = _VALID_DIGEST_KEYS_JSON,
+) -> None:
     validate_production(
         secret_key="s" * 50,
         allowed_hosts=["maru.example"],
@@ -144,6 +176,10 @@ def test_validate_production_accepts_safe_baseline() -> None:
         media_scanner="clamav",
         media_scanner_host="scanner.internal",
         offline_manifest_secret="o" * 32,
+        invitation_encryption_key_id=invitation_key_id,
+        invitation_public_key_b64=invitation_public_key_b64,
+        invitation_digest_active_key_id=invitation_digest_active_key_id,
+        invitation_digest_keys_json=invitation_digest_keys_json,
         allow_provisional_registration=False,
         expose_identity_test_tokens=False,
         expose_credential_test_tokens=False,
@@ -152,7 +188,60 @@ def test_validate_production_accepts_safe_baseline() -> None:
     )
 
 
-def test_validate_production_reports_all_unsafe_values() -> None:
+def test_validate_production_accepts_safe_baseline(
+    invitation_public_key_configuration: tuple[str, str],
+) -> None:
+    invitation_key_id, invitation_public_key_b64 = invitation_public_key_configuration
+
+    _validate_safe_production(
+        invitation_key_id=invitation_key_id,
+        invitation_public_key_b64=invitation_public_key_b64,
+    )
+
+
+def test_validate_production_rejects_invitation_key_without_releasing_values() -> None:
+    unsafe_key_id = "unsafe/key-id"
+    unsafe_public_key = "sensitive-malformed-public-key"
+
+    with pytest.raises(ImproperlyConfigured) as captured:
+        _validate_safe_production(
+            invitation_key_id=unsafe_key_id,
+            invitation_public_key_b64=unsafe_public_key,
+        )
+
+    message = str(captured.value)
+    assert "MARU_IDENTITY_INVITATION_ENCRYPTION_KEY_ID" in message
+    assert "MARU_IDENTITY_INVITATION_PUBLIC_KEY_B64" in message
+    assert unsafe_key_id not in message
+    assert unsafe_public_key not in message
+
+
+def test_validate_production_rejects_digest_keys_without_releasing_values(
+    invitation_public_key_configuration: tuple[str, str],
+) -> None:
+    invitation_key_id, invitation_public_key_b64 = invitation_public_key_configuration
+    unsafe_key_id = "unsafe/digest-key"
+    unsafe_keyring = '{"unsafe/digest-key":"sensitive-material"}'
+
+    with pytest.raises(ImproperlyConfigured) as captured:
+        _validate_safe_production(
+            invitation_key_id=invitation_key_id,
+            invitation_public_key_b64=invitation_public_key_b64,
+            invitation_digest_active_key_id=unsafe_key_id,
+            invitation_digest_keys_json=unsafe_keyring,
+        )
+
+    message = str(captured.value)
+    assert "MARU_IDENTITY_INVITATION_DIGEST_ACTIVE_KEY_ID" in message
+    assert "MARU_IDENTITY_INVITATION_DIGEST_KEYS_JSON" in message
+    assert unsafe_key_id not in message
+    assert unsafe_keyring not in message
+
+
+def test_validate_production_reports_all_unsafe_values(
+    invitation_public_key_configuration: tuple[str, str],
+) -> None:
+    invitation_key_id, invitation_public_key_b64 = invitation_public_key_configuration
     with pytest.raises(ImproperlyConfigured) as captured:
         validate_production(
             secret_key="development-secret",
@@ -177,6 +266,13 @@ def test_validate_production_reports_all_unsafe_values() -> None:
             media_scanner="test_clean",
             media_scanner_host="",
             offline_manifest_secret="short",
+            invitation_encryption_key_id=invitation_key_id,
+            invitation_public_key_b64=invitation_public_key_b64,
+            invitation_digest_active_key_id="digest-2026-08",
+            invitation_digest_keys_json=json.dumps(
+                {"digest-2026-08": base64.b64encode(b"d" * 32).decode("ascii")},
+                separators=(",", ":"),
+            ),
             allow_provisional_registration=True,
             expose_identity_test_tokens=True,
             expose_credential_test_tokens=True,
@@ -206,6 +302,125 @@ def test_validate_production_reports_all_unsafe_values() -> None:
     assert "test bearer-token" in message
     assert "step-up" in message
     assert "closure gates" in message
+
+
+def test_invitation_public_key_configuration_validation_is_strict_and_value_safe(
+    invitation_public_key_configuration: tuple[str, str],
+) -> None:
+    invitation_key_id, invitation_public_key_b64 = invitation_public_key_configuration
+    assert invitation_public_key_configuration_is_valid(
+        invitation_key_id,
+        invitation_public_key_b64,
+    )
+
+    invalid_configurations = [
+        ("", invitation_public_key_b64),
+        ("invalid/key-id", invitation_public_key_b64),
+        (invitation_key_id, "not-base64"),
+        (invitation_key_id, f" {invitation_public_key_b64}"),
+    ]
+    for key_id, public_key_b64 in invalid_configurations:
+        assert not invitation_public_key_configuration_is_valid(
+            key_id,
+            public_key_b64,
+        )
+
+
+def test_invitation_token_key_configuration_validation_is_value_safe() -> None:
+    encoded_key = base64.b64encode(b"k" * 32).decode("ascii")
+    keyring_json = json.dumps({"digest-current": encoded_key}, separators=(",", ":"))
+    assert invitation_token_key_configuration_is_valid(
+        "digest-current",
+        keyring_json,
+    )
+    assert not invitation_token_key_configuration_is_valid(
+        "digest-missing",
+        keyring_json,
+    )
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "https://maru.example",
+        "https://maru.example:8443",
+        "https://127.0.0.1:8443",
+        "https://[2001:db8::1]:8443",
+        "https://xn--maru-9ta.example",
+    ],
+)
+def test_normalized_https_origin_accepts_only_canonical_origins(origin: str) -> None:
+    assert normalized_https_origin(origin) == origin
+
+
+@pytest.mark.parametrize(
+    "candidate",
+    [
+        None,
+        "",
+        " https://maru.example",
+        "HTTPS://maru.example",
+        "http://maru.example",
+        "https://operator@maru.example",
+        "https://operator:secret@maru.example",
+        "https://maru.example/",
+        "https://maru.example/invitations",
+        "https://maru.example?next=elsewhere",
+        "https://maru.example#fragment",
+        "https://MARU.example",
+        "https://maru.example:443",
+        "https://maru.example.",
+        "https://máru.example",
+        "https://bad_host.example",
+        "https://maru.example\n.evil.invalid",
+    ],
+)
+def test_normalized_https_origin_rejects_aliases_and_url_components(
+    candidate: object,
+) -> None:
+    assert normalized_https_origin(candidate) is None
+
+
+def test_validate_production_rejects_a_non_origin_public_base_url(
+    invitation_public_key_configuration: tuple[str, str],
+) -> None:
+    invitation_key_id, invitation_public_key_b64 = invitation_public_key_configuration
+    with pytest.raises(ImproperlyConfigured, match="normalized HTTPS origin"):
+        validate_production(
+            secret_key="s" * 50,
+            allowed_hosts=["maru.example"],
+            debug=False,
+            database={
+                "ENGINE": "django.db.backends.postgresql",
+                "OPTIONS": {"options": POSTGRES_CONNECTION_OPTIONS},
+            },
+            runtime_database_role="maru_runtime",
+            public_base_url="https://operator@maru.example/invitations?unsafe=1",
+            default_from_email="registration@maru.example",
+            email_backend="django.core.mail.backends.smtp.EmailBackend",
+            email_host="smtp.maru.example",
+            email_use_tls=True,
+            email_use_ssl=False,
+            payment_return_origins=["https://register.maru.example"],
+            payment_provider_hosts=["payments.example"],
+            registration_client_origins=["https://register.maru.example"],
+            csrf_trusted_origins=["https://register.maru.example"],
+            media_scanner="clamav",
+            media_scanner_host="scanner.internal",
+            offline_manifest_secret="o" * 32,
+            invitation_encryption_key_id=invitation_key_id,
+            invitation_public_key_b64=invitation_public_key_b64,
+            invitation_digest_active_key_id="digest-2026-08",
+            invitation_digest_keys_json=json.dumps(
+                {"digest-2026-08": base64.b64encode(b"d" * 32).decode("ascii")},
+                separators=(",", ":"),
+            ),
+            allow_provisional_registration=False,
+            expose_identity_test_tokens=False,
+            expose_credential_test_tokens=False,
+            require_privileged_step_up=True,
+            enforce_closure_gates=True,
+        )
 
 
 @override_settings(MARU_PAYMENT_PROVIDER_HOSTS=["api.payments.example"])

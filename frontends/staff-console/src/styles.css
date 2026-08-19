@@ -2240,6 +2240,158 @@ a.nav-item:hover {
   background: var(--maru-navy-100);
 }
 
+.access-drawer [hidden] {
+  display: none;
+}
+
+.access-preview-launcher,
+.access-effective-summary,
+.access-preview {
+  margin-top: 1rem;
+  padding: 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--white);
+}
+
+.access-preview-launcher h3,
+.access-effective-summary h3,
+.access-preview h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+}
+
+.access-preview-launcher > .muted-copy {
+  margin: 0.5rem 0 0;
+}
+
+.access-preview-forms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.access-preview-forms form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: end;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: var(--paper);
+}
+
+.access-preview-forms label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.access-preview-forms input,
+.access-preview-forms select {
+  width: 100%;
+  min-height: 2.55rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  background: var(--white);
+}
+
+.access-effective-summary > p:not(.section-kicker),
+.access-preview-heading p {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.access-effective-summary ul,
+.access-preview-capabilities {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.access-effective-summary li,
+.access-preview-capabilities li {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  background: var(--paper);
+}
+
+.access-effective-summary li strong,
+.access-effective-summary li span,
+.access-preview-capabilities li strong,
+.access-preview-capabilities li span,
+.access-preview-capabilities li small {
+  display: block;
+}
+
+.access-effective-summary li span,
+.access-preview-capabilities li span,
+.access-preview-capabilities li small {
+  margin-top: 0.15rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.access-preview-banner {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin: -1.1rem -1.1rem 1rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid #cf9f32;
+  color: var(--maru-navy-950);
+  background: var(--maru-gold-100);
+  box-shadow: 0 0.35rem 0.8rem rgb(3 13 29 / 8%);
+}
+
+.access-preview-banner strong,
+.access-preview-banner span {
+  display: block;
+}
+
+.access-preview-banner span {
+  margin-top: 0.2rem;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.access-preview-heading {
+  margin-bottom: 1rem;
+}
+
+.preview-limited {
+  color: #7d2822;
+  background: #fff0eb;
+}
+
+.access-preview-limit-note {
+  margin: 1rem 0 0;
+  padding: 0.75rem 0.85rem;
+  border-left: 3px solid var(--maru-navy-600);
+  color: var(--muted);
+  background: var(--maru-navy-100);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
 .access-share-form,
 .access-inline-form {
   display: grid;
@@ -2637,8 +2789,19 @@ a.nav-item:hover {
 
   .form-card-grid,
   .access-share-form,
-  .access-inline-form {
+  .access-inline-form,
+  .access-preview-forms {
     grid-template-columns: 1fr;
+  }
+
+  .access-preview-forms form {
+    grid-template-columns: 1fr;
+  }
+
+  .access-preview-banner,
+  .access-preview-capabilities li {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .setup-steps li,

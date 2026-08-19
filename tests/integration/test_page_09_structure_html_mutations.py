@@ -140,7 +140,6 @@ def _valid_create_data(
         "name": name,
         "description": "Synthetic operational Department.",
         "parent_department_id": parent_department_id,
-        "display_order": "20",
         "expected_version": str(form["expected_version"].value()),
         "reason": "Establish the synthetic operational structure.",
         "retry_key": str(form["retry_key"].value()),
@@ -201,7 +200,6 @@ def _valid_action_case(
                 "name": str(form["name"].value()),
                 "description": str(form["description"].value()),
                 "parent_department_id": str(form["parent_department_id"].value() or ""),
-                "display_order": str(form["display_order"].value()),
                 "expected_version": str(form["expected_version"].value()),
                 "reason": "Review this synthetic Department without changing it.",
             },
@@ -447,7 +445,6 @@ def test_department_create_update_retire_and_delete_success_locations() -> None:
             "name": "Registration & Front Desk",
             "description": "Synthetic combined intake.",
             "parent_department_id": "",
-            "display_order": "25",
             "expected_version": str(update_form["expected_version"].value()),
             "reason": "Clarify the synthetic Department scope.",
         },
@@ -501,6 +498,112 @@ def test_department_create_update_retire_and_delete_success_locations() -> None:
         "organization-structure", edition
     )
     assert not Department.objects.filter(id=temporary.id).exists()
+
+
+def test_admin_automatically_places_siblings_and_repairs_duplicate_order() -> None:
+    administrator = _administrator()
+    edition = EventEditionFactory()
+    events = create_department_for_test(
+        edition=edition,
+        actor=administrator,
+        name="Events",
+        expected_code="events",
+    )
+    ceremonies = create_department_for_test(
+        edition=edition,
+        actor=administrator,
+        parent=events,
+        name="Ceremonies",
+        expected_code="ceremonies",
+        display_order=0,
+    )
+    maid_cafe = create_department_for_test(
+        edition=edition,
+        actor=administrator,
+        parent=events,
+        name="Maid Cafe",
+        expected_code="maid-cafe",
+        display_order=0,
+    )
+    create_department_for_test(
+        edition=edition,
+        actor=administrator,
+        parent=events,
+        name="Dances",
+        expected_code="dances",
+        display_order=3,
+    )
+    client = _client(administrator)
+
+    editor = client.get(_url("organization-structure-department", edition, maid_cafe))
+    update_form = editor.context["update_form"]
+    assert "display_order" not in update_form.fields
+    assert "Display order" not in strip_tags(editor.content.decode())
+
+    repaired = client.post(
+        _url("update-organization-structure-department", edition, maid_cafe),
+        {
+            "name": str(update_form["name"].value()),
+            "description": str(update_form["description"].value()),
+            "parent_department_id": str(events.id),
+            "expected_version": str(update_form["expected_version"].value()),
+            "reason": "Keep sibling placement automatic.",
+        },
+    )
+
+    assert repaired.status_code == 302
+    ceremonies.refresh_from_db()
+    maid_cafe.refresh_from_db()
+    assert ceremonies.display_order == 0
+    assert maid_cafe.display_order == 1
+
+    create_page = client.get(_url("organization-structure-department-create", edition))
+    create_form = create_page.context["form"]
+    assert "display_order" not in create_form.fields
+    created = client.post(
+        _url("create-organization-structure-department", edition),
+        _valid_create_data(
+            create_page,
+            name="Panels",
+            parent_department_id=str(events.id),
+        ),
+    )
+
+    assert created.status_code == 302
+    panels = Department.objects.get(edition=edition, name="Panels")
+    assert panels.display_order == 4
+
+    community = create_department_for_test(
+        edition=edition,
+        actor=administrator,
+        name="Community",
+        expected_code="community",
+    )
+    create_department_for_test(
+        edition=edition,
+        actor=administrator,
+        parent=community,
+        name="Social",
+        expected_code="social",
+        display_order=5,
+    )
+    move_page = client.get(_url("organization-structure-department", edition, panels))
+    move_form = move_page.context["update_form"]
+    moved = client.post(
+        _url("update-organization-structure-department", edition, panels),
+        {
+            "name": str(move_form["name"].value()),
+            "description": str(move_form["description"].value()),
+            "parent_department_id": str(community.id),
+            "expected_version": str(move_form["expected_version"].value()),
+            "reason": "Move this Department under its new parent.",
+        },
+    )
+
+    assert moved.status_code == 302
+    panels.refresh_from_db()
+    assert panels.parent_id == community.id
+    assert panels.display_order == 6
 
 
 def test_invalid_create_is_audited_400_and_retains_retry_without_mutation() -> None:

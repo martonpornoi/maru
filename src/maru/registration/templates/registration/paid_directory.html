@@ -42,6 +42,13 @@
             {% if item.language_labels %}
               <span>Speaks {{ item.language_labels|join:", " }}</span>
             {% endif %}
+            {% if item.extension_values %}
+              <dl class="details-grid">
+                {% for field in item.extension_values %}
+                  <div><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div>
+                {% endfor %}
+              </dl>
+            {% endif %}
             {% for fursuit in profile.fursuits.all %}
               <div class="public-fursuit">
                 {% if fursuit.photo and fursuit.photo_status == "approved" %}

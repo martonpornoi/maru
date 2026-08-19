@@ -1,0 +1,36 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ edition.name }} catalog{% endblock %}
+{% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-maru-home' %}">My Maru</a> › Catalog</div>{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="baseline-page">
+    <header class="baseline-page-heading">
+      <p class="baseline-kicker">{{ edition.name }}</p>
+      <h1>Merchandise, donations, and supporter products</h1>
+      <p>Catalog prices and availability are checked again atomically when you order.</p>
+      <a class="button secondary" href="{% url 'my-catalog-orders' edition.id %}">Order history</a>
+    </header>
+    {% for card in product_cards %}
+      <section class="baseline-panel">
+        <div class="baseline-panel-heading">
+          <div><p class="baseline-kicker">{{ card.product.get_kind_display }}</p><h2>{{ card.product.name }}</h2></div>
+          <span class="baseline-count">{{ card.product.get_fulfilment_mode_display }}</span>
+        </div>
+        <p>{{ card.product.description }}</p>
+        {% if card.product.charity_selection %}<p>Supports {{ card.product.charity_selection.partner.public_name }}</p>{% endif %}
+        {% for item in card.variants %}
+          <form method="post" action="{% url 'my-catalog-order' edition.id %}" class="baseline-form" novalidate>
+            {% csrf_token %}{{ item.form.variant_id }}{{ item.form.expected_version }}{{ item.form.idempotency_key }}
+            <h3>{{ item.variant.name }} — {{ item.variant.price_minor }} {{ item.variant.currency }}</h3>
+            {% if item.available_stock != None %}<p>{{ item.available_stock }} currently available{% if card.product.preorder_allowed %}; preorder remains available{% endif %}.</p>{% endif %}
+            {% include "core/_baseline_form_field.html" with field=item.form.quantity %}
+            <button type="submit">Create order</button>
+          </form>
+        {% empty %}<p>No price options are currently available.</p>{% endfor %}
+      </section>
+    {% empty %}<section class="baseline-panel"><p>No products are on sale right now.</p></section>{% endfor %}
+  </div>
+{% endblock %}

@@ -6,15 +6,16 @@
   accessibility, owner, and deployment-recovery acceptance remains pending
 - Route: `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`
 - Current browser mutations: separate POST-only template application,
-  Department create, complete update/reparent/reorder, retire, and protected
-  delete actions reached through same-shell child GET pages
+  Department create, complete update/reparent with automatic sibling placement,
+  retire, and protected delete actions reached through same-shell child GET
+  pages
 - Current API: strict
   `/api/v1/organizations/<organization-id>/editions/<edition-id>/workforce/structure`
   GET projection plus five strict template/Department mutation operations
 - Requirements: IDN-002, IDN-004, IDN-009, IDN-011, IDN-012, EVT-002,
   EVT-003, HR-007, HR-010, HR-011, UX-019, UX-020, UX-025, AUD-001,
   AUD-005, INT-001, NFR-001 through NFR-004, NFR-008, and NFR-009
-- Decisions: ADRs 0007, 0028, 0036, 0039 through 0042, 0044, and 0045
+- Decisions: ADRs 0007, 0028, 0036, 0039 through 0042, 0044, 0045, and 0048
 
 ## Purpose and primary users
 
@@ -260,22 +261,33 @@ conflicts. A partial template is never committed.
 
 The Department editor is available only in Draft and Preparing editions under
 a non-Suspended, non-Closed organization. The page offers create, complete
-update/reparent/reorder, retire, and protected delete as separate operations.
+update/reparent with automatic sibling placement, retire, and protected delete
+as separate operations.
 
 | Field | Type and format | Bounds and blank meaning | Normalization | Classification and writer | Lifecycle and retention |
 | --- | --- | --- | --- | --- | --- |
 | `name` | Unicode text | 1–160 characters; required | Trim ends and normalize ordinary whitespace | C0/C1 operational label; structure manager | Editable before retirement; old value survives in audit/activity meaning where required |
 | `description` | Unicode text | 0–1,000 characters; blank means no description | Trim outer whitespace; preserve meaningful internal punctuation | C1 operational description; structure manager | Editable before retirement; excluded from audit/event payload |
 | `parent_department_id` | UUID or blank | Blank means top-level; otherwise required exact current Department | Canonical UUID; no alias/name lookup | C1 relationship; structure manager | Must remain in exact edition; never implies authority inheritance |
-| `display_order` | Integer | 0–65,535; required, default offered as 0 | Strict base-10 integer | C0/C1 presentation fact; structure manager | Editable before retirement; stable identifier is unchanged |
 | `expected_version` | Integer | 0 for first mutation of an absent structure, otherwise current positive value | Strict integer parsing | C1 control metadata; structure manager | Compared under structure lock; changed command advances once |
 | `reason` | Unicode text | 1–240 characters; required | Trim ends and collapse ordinary whitespace | C1 administrative rationale; structure manager | Retained with command/audit purpose; excluded from public projection |
 | `retry_key` | UUID | Required only for creation | Canonical UUID | C1 control metadata; server/browser or API header | Retained in immutable creation receipt |
 
 Department code, organization, series, edition, retirement state, aggregate
-version result, actor, and timestamps are server-owned. Code is generated as a
-stable lower-case slug of at most 80 characters with deterministic
-same-edition collision handling and cannot be edited later.
+version result, actor, timestamps, and browser display order are server-owned.
+Code is generated as a stable lower-case slug of at most 80 characters with
+deterministic same-edition collision handling and cannot be edited later.
+
+For browser commands, Maru assigns presentation order while holding the edition
+structure lock. Creation and reparenting append after all persisted siblings at
+the chosen level. An ordinary edit preserves a unique current order; if that
+Department shares a legacy or integration-supplied order with a sibling, the
+save repairs the edited Department into the nearest following free position so
+it does not jump past unrelated later siblings. Existing equal orders remain
+deterministic by normalized name and stable identifier until individually
+edited; a read never performs a hidden write. The strict API retains the
+bounded explicit `display_order` field for integrations that deliberately plan
+an ordering.
 
 The parent selector is scoped before names are loaded. It excludes the current
 Department, its descendants, retired records, and every foreign organization
@@ -312,6 +324,13 @@ Position, PositionAssignment, workforce resource binding, authority,
 cross-module reference, or operational history beyond initial creation. It
 never cascades. Failure returns a protected conflict and identifies retirement
 as an alternative only when retirement itself is safe.
+
+The database deletion contract recognizes all 13 current Department foreign
+keys, including the Applications, Charities, Logistics, Registration, and
+Venues references added after the original Page 9 cutover. Workforce `0008`
+depends on those exact FK-creator migrations. Its reverse restores the `0007`
+allowlist and therefore fails deletion closed until the successor references
+are removed by a graph-consistent downgrade.
 
 Template-created Departments are not privileged: they can be changed, moved,
 retired, or deleted under these same rules in the edition copy. The immutable
@@ -411,6 +430,11 @@ and the parent selector remains within the viewport. These are implemented
 interaction rules; the final authenticated desktop/390-pixel state matrix,
 keyboard traversal, and automated accessibility evidence remain release gates.
 
+The shared baseline form stylesheet explicitly lets native single-select
+controls grow beyond Django Admin's fixed 30-pixel height. This keeps the
+currently selected Parent Department label visible after pointer or keyboard
+selection while retaining the native control and its accessible name.
+
 ## Current implementation evidence
 
 The pre-adapter command/database graph passes 1,471 tests in 1,538.40 seconds
@@ -442,6 +466,11 @@ Names such as Executive Board or Helper Board never trigger representation,
 template, person, role, or parent inference. Empty editions remain eligible at
 version zero.
 
+Workforce `0008` changes no table or retained data. It replaces the closed
+Department-FK contract helper only after every current reference creator is
+installed, preserves its owner and ACL, and adds its recorder row and exact
+13-reference catalog to fail-closed readiness.
+
 Preflight reports count-only malformed scope, cycle, duplicate-control,
 unsupported-reference, and version blockers, with at most bounded safe edition
 labels under platform-only operation. Database guards protect immutable
@@ -468,8 +497,9 @@ invents template provenance for legacy rows.
 - strict fields, Unicode/bound/control validation, collision-safe codes,
   same-edition parents, self/descendant/cross-tenant rejection, and concurrent
   cycle prevention;
-- create/no-op/update/reparent/reorder version behavior and minimized correlated
-  audit/event/outbox evidence;
+- create/no-op/update/reparent, browser automatic placement and duplicate-order
+  repair, API reorder version behavior, and minimized correlated audit/event/
+  outbox evidence;
 - retirement dependency matrix and exact-confirmation non-cascading deletion;
 - deterministic bounded complete projection, explicit overflow, no email,
   account state, private evidence, hidden count, or rendered technical ID;

@@ -325,6 +325,12 @@ def test_registration_supports_all_configured_question_types() -> None:
             questions=configuration.questions.all(),
             answers={"unknown-question": "unexpected"},
         )
+    for out_of_range in (-(2**31) - 1, 2**31):
+        with pytest.raises(ValidationError, match="signed 32-bit"):
+            validate_registration_answers(
+                questions=configuration.questions.all(),
+                answers={**answers, "party-size": out_of_range},
+            )
 
 
 def test_registration_configuration_can_copy_another_edition() -> None:

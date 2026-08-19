@@ -1,7 +1,7 @@
 # Product requirements
 
 Status: Baseline  
-Last updated: 2026-08-02
+Last updated: 2026-08-15
 
 This document defines stable product requirements. Identifiers are used by
 architecture documents, implementation issues, tests, and release notes.
@@ -285,7 +285,12 @@ architecture documents, implementation issues, tests, and release notes.
   change must use optimistic concurrency, strict inputs, exact parent-chain
   validation, cycle prevention, and non-cascading retention rules. Maru must
   provide an immutable, versioned built-in Awoostria reference whose edition-
-  owned copy places Helper Board above the operational department taxonomy.
+  owned copy places Helper Board above the operational department taxonomy and
+  can diverge without changing its source. The browser must keep sibling
+  ordering server-owned: create and reparent append automatically, ordinary
+  edits preserve a unique current position, and an edited duplicate position
+  is repaired under the aggregate lock. Strict API integrations may continue
+  to provide an explicit bounded presentation order.
   It may be applied only to an empty Draft or Preparing edition, retains exact
   source-version and retry provenance, and creates no account, membership,
   representation, participation, Position, assignment, role, capability, or
@@ -616,6 +621,43 @@ architecture documents, implementation issues, tests, and release notes.
   command/query contracts, and platform account onboarding remains visibly
   separate from convention participation and registration.
 
+- **UX-027 — Coherent navigation and personal surface:** Once an organization,
+  series, and edition are selected, every currently authorized destination
+  must appear in one searchable, non-duplicated navigation list rather than a
+  second hierarchy of folder-like scope menus. The selected context remains
+  explicit in the header and route. An active person may pin only a stable,
+  code-owned destination; every render must resolve and authorize the pin
+  again, and a revoked, stale, malformed, deleted, or foreign target must
+  disappear without disclosure. `/my/` is the canonical authenticated personal
+  surface for registrations, payments, profile, applications, orders, and
+  other self-owned relationships. It shares Maru's identity and navigation
+  grammar without presenting an attendee as an administrator.
+- **UX-028 — Read-only access preview:** An authorized access manager may
+  evaluate one exact existing person or one immutable role-bundle version at
+  one resolved scope. Preview must not replace the request principal, create a
+  session, issue authority, bypass step-up, execute a mutation, or change audit
+  attribution. A persistent banner identifies the target, scope, mode, and
+  evaluation time; protected details remain capped by the previewing actor's
+  own disclosure authority. Starting a sensitive preview is audited, hidden or
+  foreign targets fail without disclosure, and mutation endpoints always
+  authorize the real principal independently of preview state.
+- **UX-029 — Professional responsive management experience:** The canonical
+  management shell must prioritize a small role- and context-relevant set of
+  durable tasks while retaining every authorized specialist destination behind
+  one progressively disclosed gateway and searchable registry. Search must use
+  code-owned labels, descriptions, and stable task keywords rather than hidden
+  record values. Creation commands belong beside their owning resource. Common
+  tasks must be reachable from the relevant home in no more than two navigation
+  decisions without a direct URL. The shell and converted journeys must have no
+  page-level horizontal overflow at 320, 390, 768, 958, 1,024, 1,280, or 1,920
+  CSS pixels or at 200 percent zoom; only explicitly labelled data regions may
+  scroll. Intermediate and narrow navigation must provide a labelled overlay
+  drawer with backdrop, close control, `aria-expanded` and `aria-controls`,
+  Escape-to-close, focus containment and return, and background scroll lock.
+  Empty, populated, denied, validation, stale, dependency-failure, and success
+  states require keyboard, automated-accessibility, and rendered evidence
+  before broad browser acceptance is claimed.
+
 ### Registration, orders, and attendee service
 
 - **REG-001 — Configurable registration:** Each edition must support
@@ -728,14 +770,25 @@ architecture documents, implementation issues, tests, and release notes.
 - **REG-022 — Post-submission profile extensions:** An organizer may add
   versioned, edition-owned profile fields after registrations exist without
   changing the immutable submitted form or its schema snapshot. Every field
-  defines type, purpose, classification, attendee visibility, who may write
-  it (attendee, registration staff, or both), source provenance, review state,
+  defines type, purpose, classification, one reader audience (`self`, exact
+  registration staff, one exact active Department/team, all confirmed
+  attendees, or public), a separate writer policy (attendee, registration
+  staff, or both), source provenance, review state,
   and retirement. Values are append-only revisions with actor, time, source,
   reason where staff acts, and audit evidence. Attendees can read and update
   only their visible permitted fields; authorized staff can update only fields
   permitted to staff in the exact tenant/edition scope. Staff-owned facts such
   as Infinity-ticket status remain authoritative entitlements rather than
-  profile answers.
+  profile answers. Value changes use a per-registration/stable-key expected
+  sequence and scope-bound idempotency key, append one immutable receipt with
+  minimized audit/effect evidence, and preserve exact historical replay after
+  later revisions. Current reads are bounded, policy-filtered, final-
+  reauthorized, audited snapshots; broad service-summary or on-behalf
+  authority does not imply staff access to extension values. Confirmed-attendee
+  and public projections additionally require the subject's current edition-
+  directory consent and confirmed/check-in state, expose only approved
+  minimized definitions, and disappear immediately on withdrawal. Platform-
+  administrator status alone never authorizes a profile-value read.
 - **REG-023 — One registration, separate applications:** An account may have at
   most one attendee registration in an edition. Hosting a panel, performing,
   DJing, volunteering, operating a Maid Café service, submitting conbook or Art
@@ -768,7 +821,38 @@ architecture documents, implementation issues, tests, and release notes.
   documented additive migration with legacy-origin reconciliation, readiness
   evidence, a rollback fence, and an explicit final stage that makes those
   paths read-only or removes them; their temporary presence must never be
-  described as the canonical workflow.
+  described as the canonical workflow. Maru may ship an immutable, code-owned
+  convention-registration starter catalog. An authorized organizer must
+  explicitly select one exact starter version and copy it into an edition-owned
+  draft; copied rows are independent, require review before activation, retain
+  starter version/digest provenance, and never live-update when either the
+  catalog or another organizer changes.
+
+- **REG-025 — Paid tier replacement and governed capacity:** A confirmed
+  attendee may replace their current admission product only through an
+  explicit same-account upward offer that reserves target capacity and charges
+  the exact positive difference between current configured prices. The source
+  admission and entitlement remain effective until authenticated payment
+  succeeds; success atomically swaps product, price evidence, and entitlement
+  so exactly one admission remains. Expiry releases the target hold, and this
+  path never permits transfer, downgrade, arbitrary repricing, or browser-return
+  payment proof. Overall and product capacity are effective values derived from
+  initial configuration plus append-only adjustments bounded by configured
+  hard ceilings. Wait-list review selects the next configured number in strict
+  FIFO order without operator-picked people, while every adjustment, offer,
+  expiry, payment result, and exception records actor and time.
+- **REG-026 — Edition catalog and owned orders:** Merchandise, convention
+  support, charity support, donations, and scarce supporter offers must use an
+  edition-owned catalog separate from admission products. Products and variants
+  retain sale window, price snapshot, fulfilment, beneficiary, preorder, per-
+  order limit, and finite-stock policy. A charity beneficiary must be a current
+  confirmed edition selection. Finite availability is derived from append-only
+  stock evidence and cannot exceed its hard ceiling; donation variants are
+  stockless and limited-supporter variants cannot silently become unlimited or
+  preorderable. An attendee owns one immutable order-line snapshot and locally
+  recorded payment intent; only authenticated, idempotent provider evidence may
+  mark it paid. Staff activity and attendee history expose purpose-limited
+  projections without joining catalog orders to admission entitlements.
 
 ### Programme intake and curation
 
@@ -873,6 +957,17 @@ architecture documents, implementation issues, tests, and release notes.
   them, then own local display names, blocks, availability windows, and
   operational restrictions without mutating the reusable source. Schedule
   placement outside an applicable hard availability window must fail.
+
+- **VEN-009 — Operational space intervals and public minimization:** Each
+  edition space selection must resolve to immutable physical member spaces and
+  versioned hard availability. A booking records setup, effective, and teardown
+  intervals; physical conflicts and configured/fire capacities are enforced
+  transactionally across combinations. Teardown immediately followed by a
+  later setup is allowed, but setup/effective and effective/teardown overlap is
+  not. Approval and publication require independent authorized actors. Public
+  and attendee schedule projections expose only approved effective programme
+  information and approved public layouts, never internal/security layouts or
+  setup and teardown operations.
 
 ### Accreditation and physical access
 
@@ -992,6 +1087,17 @@ architecture documents, implementation issues, tests, and release notes.
 - **FUR-010 — Mascot and media assets:** Character, logo, photo, recording, and
   biography use must record owner, license or consent, scope, expiry,
   attribution, approved rendition, and withdrawal consequences.
+
+- **FUR-011 — Governed charity partners:** An organizer may maintain reusable
+  charity partner identity, imprint, contacts, location, description, and
+  governed media without turning that partner into a Maru tenant organization.
+  Each edition owns its proposal, responsible Department, review state,
+  confirmation or rejection decision, restricted rationale/comments, and
+  publication state. Confirmation, media approval, and publication require
+  independently authorized evidence. Public projections include only active,
+  confirmed, explicitly published snapshots with current approved media;
+  rejected partners, private comments, contacts, and rejection reasons remain
+  restricted. Multiple partners may be reviewed or published for one edition.
 
 ### Knowledge, policy, forms, and support
 

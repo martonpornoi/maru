@@ -1,0 +1,182 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'core/access.css' %}">
+{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-access-workspace">
+    {% if preview %}
+      <section class="maru-access-preview-banner" role="status">
+        <div>
+          <strong>Preview only &middot; your session has not changed</strong>
+          <p>
+            You are still signed in as yourself. This explanation is capped by
+            your own disclosure authority. No write controls are available in
+            preview and no action can be taken as the person or role below.
+          </p>
+        </div>
+        <a class="button" href="{% url 'page-access-workspace' scope_token=scope_token %}">
+          Exit preview
+        </a>
+      </section>
+
+      <header class="maru-access-workspace__heading">
+        <p class="maru-access-summary__kicker">
+          {% if preview.mode == "person" %}Exact person{% else %}Hypothetical immutable role{% endif %}
+        </p>
+        <h1>{{ preview.subject_label }}</h1>
+        <p>Read-only policy explanation for {{ workspace.scope_label }}.</p>
+      </header>
+      {% if preview.capabilities %}
+        <ul class="maru-access-preview-capabilities">
+          {% for item in preview.capabilities %}
+            <li>
+              <div>
+                <strong>{{ item.label }}</strong>
+                <p>{{ item.description }}</p>
+                <small>{{ item.source_label }}</small>
+              </div>
+              <span>
+                {% if item.data_preview_available %}
+                  {% if item.visible_fields %}{{ item.visible_fields|length }} visible fields{% else %}Action visible{% endif %}
+                {% else %}
+                  Details capped
+                {% endif %}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No convention-management capability is effective at this exact scope.</p>
+      {% endif %}
+      {% if preview.disclosure_limited_count %}
+        <p>
+          {{ preview.disclosure_limited_count }} result{{ preview.disclosure_limited_count|pluralize }}
+          omit protected fields because your own authority does not allow their disclosure.
+        </p>
+      {% endif %}
+    {% else %}
+      <header class="maru-access-workspace__heading">
+        <p class="maru-access-summary__kicker">People and immutable roles</p>
+        <h1>Access to {{ workspace.scope_label }}</h1>
+        <p>
+          Assignments here grant real capabilities at the exact
+          {{ workspace.scope_level }} scope. They are not page permissions,
+          attendee audiences, or workforce appointments.
+        </p>
+      </header>
+
+      {% if action_form.errors %}<div class="errornote">{{ action_form.errors }}</div>{% endif %}
+
+      <section id="access-preview" class="maru-access-workspace__panel">
+        <h2>Preview access</h2>
+        <p>
+          Simulate one active person or immutable role version without changing
+          your login, creating an assignment, or enabling mutations.
+        </p>
+        <div class="maru-access-preview-forms">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="preview_person">
+            {{ person_preview_form.non_field_errors }}
+            {{ person_preview_form.person_email.errors }}
+            <label for="id_preview_person_email">Exact person email</label>
+            <input id="id_preview_person_email" type="email" name="person_email" required>
+            <button type="submit">Preview person</button>
+          </form>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="preview_role">
+            {{ role_preview_form.non_field_errors }}
+            {{ role_preview_form.role_version_id.errors }}
+            <label for="id_preview_role">Immutable group version</label>
+            <select id="id_preview_role" name="role_version_id" required>
+              {% for role in workspace.roles %}
+                <option value="{{ role.id }}">{{ role.name }} &middot; v{{ role.version }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit"{% if not workspace.roles %} disabled{% endif %}>Preview role</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="maru-access-workspace__panel">
+        <h2>Add a person</h2>
+        <p>Every assignment requires a different authorized approver and a reason.</p>
+        <form method="post" class="maru-access-assignment-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="assign">
+          {{ assignment_form.non_field_errors }}
+          <div>
+            {{ assignment_form.person_email.errors }}
+            <label for="id_access_person_email">Existing person email</label>
+            <input id="id_access_person_email" type="email" name="person_email" required>
+          </div>
+          <div>
+            {{ assignment_form.role_version_id.errors }}
+            <label for="id_access_role">Immutable group version</label>
+            <select id="id_access_role" name="role_version_id" required>
+              {% for role in workspace.roles %}
+                <option value="{{ role.id }}">{{ role.name }} &middot; v{{ role.version }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            {{ assignment_form.approver_email.errors }}
+            <label for="id_access_approver">Independent approver email</label>
+            <input id="id_access_approver" type="email" name="approver_email" required>
+          </div>
+          <div>
+            {{ assignment_form.expires_at.errors }}
+            <label for="id_access_expires">Expires (optional)</label>
+            <input id="id_access_expires" type="datetime-local" name="expires_at">
+          </div>
+          <div class="maru-access-assignment-form__wide">
+            {{ assignment_form.reason.errors }}
+            <label for="id_access_reason">Reason</label>
+            <input id="id_access_reason" type="text" name="reason" maxlength="240" required>
+          </div>
+          <button type="submit"{% if not workspace.roles %} disabled{% endif %}>Assign scoped access</button>
+        </form>
+      </section>
+
+      <section class="maru-access-workspace__panel">
+        <h2>Current people and groups</h2>
+        <p>
+          Names are shown through this audited relationship read. Inherited
+          assignments are visible for explanation but can only be changed at
+          the scope where they were issued.
+        </p>
+        {% if workspace.assignments %}
+          <ul class="maru-access-assignment-list">
+            {% for assignment in workspace.assignments %}
+              <li>
+                <div>
+                  <strong>{{ assignment.person_name }}</strong>
+                  <span>{{ assignment.person_email }}</span>
+                  <span>{{ assignment.role_name }} &middot; v{{ assignment.role_version }}</span>
+                  <small>{{ assignment.scope_label }}{% if not assignment.exact_scope %} &middot; inherited{% endif %}</small>
+                </div>
+                {% if assignment.exact_scope and workspace.can_revoke %}
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="revoke">
+                    <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                    <label for="id_revoke_{{ assignment.id }}">Reason for removal</label>
+                    <input id="id_revoke_{{ assignment.id }}" type="text" name="reason" maxlength="240" required>
+                    <button type="submit" class="deletelink">Remove</button>
+                  </form>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>No current role assignment applies at this scope.</p>
+        {% endif %}
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

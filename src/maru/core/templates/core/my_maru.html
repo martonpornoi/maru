@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}My Maru{% endblock %}
+{% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs" aria-current="page">My Maru</div>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-personal-home">
+    <header>
+      <p class="maru-personal-kicker">Your conventions</p>
+      <h1>My Maru</h1>
+      <p>
+        Registration, tickets, profiles, and invitations for this signed-in
+        account live here. Organizer tools appear only when you have current
+        authority for them.
+      </p>
+    </header>
+    <div class="maru-admin-workspace-grid">
+      <a href="{% url 'public-registration-index' %}">
+        <strong>Registration &amp; tickets</strong>
+        <span>Open registrations and review your existing convention profiles.</span>
+      </a>
+      <a href="{% url 'my-catalog-index' %}">
+        <strong>Shop &amp; orders</strong>
+        <span>Browse edition merchandise, donations, supporter products, and order history.</span>
+      </a>
+      <a href="{% url 'my-application-index' %}">
+        <strong>My applications</strong>
+        <span>Open edition applications, drafts, answer revisions, and decisions.</span>
+      </a>
+      <a href="{% url 'my-maru-schedule-index' %}">
+        <strong>My schedule</strong>
+        <span>Open attendee-safe schedules for conventions you are confirmed to attend.</span>
+      </a>
+      <a href="{% url 'my-logistics-offer-index' %}">
+        <strong>Equipment offers</strong>
+        <span>Offer equipment for eligible conventions and follow its review status.</span>
+      </a>
+      <a href="{% url 'my-representation-invitations' %}">
+        <strong>Governance invitations</strong>
+        <span>Review organization invitations addressed to this exact account.</span>
+      </a>
+      {% if has_management_access %}
+        <a href="{% url 'admin:index' %}">
+          <strong>Administration</strong>
+          <span>Open the convention and platform tools currently available to you.</span>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

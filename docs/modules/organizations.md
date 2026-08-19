@@ -1,15 +1,17 @@
 # Organizations module
 
 Status: Implemented tenant, brand, localization, Pages 1–5, initial Page 8
-Executive Board lifecycle, emergency containment, and Page 9 minimized
-governance-anchor query; mounted Department mutations remain workforce-owned
-Last updated: 2026-08-02
+Executive Board lifecycle, emergency containment, Page 9 minimized governance-
+anchor query, and the repository-verified User accounts-to-Board presentation;
+complete rendered owner acceptance remains open and mounted Department
+mutations remain workforce-owned
+Last updated: 2026-08-15
 
 ## Purpose and requirements
 
 `maru.organizations` owns tenant structure and recurring-series continuity for
 IDN-002, IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, EVT-001, EVT-003,
-EVT-005, HR-011, UX-014 through UX-021, UX-024, and UX-025.
+EVT-005, HR-011, UX-014 through UX-021, UX-024, UX-025, and UX-029.
 
 ## Owned data and invariants
 
@@ -150,6 +152,16 @@ Page 8 has no declared public API in M2.1. Its HTML adapters call these same
 module-owned commands. A future API must define strict projections,
 enumeration resistance, retry semantics, authentication, approval, and OpenAPI
 evidence rather than saving these models directly.
+
+ADR 0055 adds a presentation-only continuity layer to Page 8. Its persistent
+three-step progression distinguishes provisioning, exact-account invitations
+and invitee responses, and final two-controller activation. A platform
+administrator may follow a shortcut to **User accounts** to prepare people;
+other actors do not receive that platform-only link. No progress label or link
+creates a membership, accepts an appointment, grants root authority, or changes
+the existing cross-approval and quorum rules. Focused HTML coverage verifies
+this handoff; the full authenticated width/zoom, keyboard, screen-reader,
+state, and owner matrix remains open.
 
 ADR 0045's public, minimized `executive_board_governance_anchor(...)` query
 for Page 9 resolves the exact organization and returns only the

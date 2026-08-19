@@ -89,8 +89,8 @@ def test_series_record_is_scoped_reachable_and_progressive() -> None:
     assert content.count('aria-current="page"') == 1
     assert "Series record" in content
     assert "Last changed:" in content
-    assert "Effective access" in content
-    assert "does not create organization membership" in content
+    assert '<h2 id="maru-access-heading">Access</h2>' in content
+    assert "does not store its own sharing list" in content
 
 
 @override_settings(ROOT_URLCONF="maru.baseline_urls")
@@ -221,7 +221,7 @@ def test_closed_parent_and_inactive_series_states_are_truthful() -> None:
     assert "Series profile is read-only" in closed_content
     assert 'name="expected_profile_version"' not in closed_content
     assert "/editions/new/" not in closed_content
-    assert "view this retained convention-series record" in closed_content
+    assert "does not store its own sharing list" in closed_content
 
     assert inactive_response.status_code == 200
     inactive_content = inactive_response.content.decode()

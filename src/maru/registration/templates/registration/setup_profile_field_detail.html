@@ -1,0 +1,7 @@
+{% extends "registration/setup_action_base.html" %}
+
+{% block registration_action_title %}{{ profile_field.label }}{% endblock %}
+{% block registration_action_breadcrumb %}<a href="{{ definition_back_location }}">Profile extensions</a> &rsaquo; {{ profile_field.key }}{% endblock %}
+{% block registration_action_heading %}{{ profile_field.label }}{% endblock %}
+{% block registration_action_intro %}Versioned definition metadata only. Attendee values are intentionally absent from this catalog page.{% endblock %}
+{% block registration_action_content %}<section class="baseline-panel"><dl class="registration-configuration-summary"><div><dt>Stable key</dt><dd><code>{{ profile_field.key }}</code></dd></div><div><dt>Version</dt><dd>{{ profile_field.version }}</dd></div><div><dt>Type</dt><dd>{{ profile_field.field_type }}</dd></div><div><dt>Purpose</dt><dd>{{ profile_field.purpose }}</dd></div><div><dt>Classification</dt><dd>{{ profile_field.classification }}</dd></div><div><dt>Reader audience</dt><dd>{{ profile_field.audience_policy }}{% if profile_field.audience_department_name %} &mdash; {{ profile_field.audience_department_name }}{% endif %}</dd></div><div><dt>Writer policy</dt><dd>{{ profile_field.writer_policy }}</dd></div><div><dt>Review</dt><dd>{{ profile_field.review_status }}</dd></div><div><dt>Lifecycle</dt><dd>{{ profile_field.status }}</dd></div></dl><p><a href="{{ definition_back_location }}">Back to profile extensions</a></p></section>{% endblock %}

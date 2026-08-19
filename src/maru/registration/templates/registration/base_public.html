@@ -1,4 +1,4 @@
-{% load static %}
+{% load static page_access %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -12,6 +12,7 @@
     <link rel="manifest" href="{% static 'core/brand/site.webmanifest' %}">
     <link rel="stylesheet" href="{% static 'core/brand.css' %}">
     <link rel="stylesheet" href="{% static 'registration/public.css' %}">
+    <link rel="stylesheet" href="{% static 'core/access.css' %}">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -37,6 +38,8 @@
       </nav>
     </header>
     <main id="main-content" class="page-shell">
+      {% maru_page_access as maru_page_access_summary %}
+      {% include "core/_page_access_summary.html" with maru_page_access=maru_page_access_summary only %}
       {% block content %}{% endblock %}
     </main>
     <footer class="site-footer">

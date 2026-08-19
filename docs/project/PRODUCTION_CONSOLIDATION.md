@@ -1,14 +1,17 @@
 # Maru production consolidation
 
-Status: Active master checklist; M2.4 Page 9a.1 structure aggregate, command
-core, stopped-writer database cutover, and strict HTML/API mutation adapters
-implemented and definitive repository/coverage verified, with authenticated
-browser/accessibility evidence and production authority reconciliation, load,
-cutover, and recovery evidence next
-Branch: `codex/full-platform-consolidation`
-Base: `327a7d63574d0118356a0fd11ca5a316d78b2aed`  
+Status: Active master checklist. The 2026-08-11 canonical repository gate and
+the scoped authenticated read-only Logistics browser journey at 1,920 and 390
+pixels are accepted. ADR 0055's task-oriented shell/home and User accounts to
+Board first slice is repository-verified. Its complete authenticated
+reflow/zoom, keyboard, screen-reader, and owner matrix, Page 10 stopped-writer
+cutover, invitation-retention activation, downstream adapters, broader browser
+mutation-role coverage, production authority reconciliation, provider
+certification, load, restore/PITR, and governance acceptance remain open.
+Branch: `main`
+Historical consolidation base: `327a7d63574d0118356a0fd11ca5a316d78b2aed`
 Started: 2026-08-01  
-Decisions: ADRs 0037–0046
+Decisions: ADRs 0037–0056
 
 This is the crash-safe delivery map for turning the retained Maru foundation
 into one understandable convention operating platform. Update this file after
@@ -49,10 +52,8 @@ without reimplementing convention rules.
 
 | Ref | Relationship | Use |
 | --- | --- | --- |
-| `main`, `codex/production-consolidation`, and `codex/full-platform-consolidation` at `17b68a2` | Same committed tip | M0 and locally verified M1 foundation. No merge required. |
-| `origin/main` at `ca37acb` | Ancestor, ten commits behind | Stable modern foundation checkpoint. Already contained here. |
-| `codex/pre-reset-20260731` at `548f15a` | Ancestor | Preserved rich browser behavior and API workflows. Reference selectively. |
-| Page 0 through Page 4 local branches | Linear ancestors | Keep as accepted interaction landmarks. Do not merge them again. |
+| `main` and `origin/main` at `c7287ef0b81c` | Same committed tip | Current committed foundation beneath the preserved implementation working tree. |
+| Current working tree | Uncommitted production-consolidation milestone | Contains the Page 10 and bounded vertical implementation described here; preserve concurrent changes and verify as one graph before any commit. |
 | `origin/legacy/github-main-462e7ba` | Unrelated history | Early prototype archaeology only. |
 | `origin/legacy/local-final-2026-07-29` | Unrelated history | Best timetable, room, application, shift, export, and signage interaction reference. Never merge its migrations or global-project model. |
 
@@ -74,30 +75,32 @@ The state vocabulary is deliberately small:
 - **Deployment-gated** — code exists but external service or operating evidence
   blocks a production claim.
 
-| Capability | State on 2026-08-02 | Evidence / next dependency |
+| Capability | State on 2026-08-11 | Evidence / next dependency |
 | --- | --- | --- |
 | Organization and series Pages 1–5 | Mounted | Implemented under `/admin/platform/`; platform and scoped Board backend matrices pass. Browser/owner evidence remains. |
 | Convention-series record | Mounted | Page 5 domain/API behavior and canonical shell route pass backend checks. Browser/owner evidence remains. |
 | Edition lifecycle | Partial | Authorized API and Convention work are mounted; Page 7 remains record/profile/context only rather than the lifecycle command surface. |
 | Edition browser workspace | Mounted | Pages 6–7 and scoped non-staff routes pass backend checks; current browser and owner rehearsal remain. |
-| Unified administration shell | Mounted | `maru.urls`, reserved route ordering, one sidebar, Convention work, scoped non-staff access, staff-only specialist records, desktop/390-pixel smoke, and the final 792-test/90.01-percent local backend gate pass without warnings. The custom sidebar preserves Django's single `#nav-filter` contract when Specialist records are unavailable; the focused routing regression and live Board reload pass. Accessibility/state-matrix/owner gates remain. |
-| Organization representation | Mounted / partial | Page 8 implements provision, exact verified-account invitation, own response, two-person cross-approval, atomic Draft-to-Active activation, and platform emergency containment. Database guards through organizations `0012`, sensitive read/deny audit, the 106-migration fresh synthetic database/current restore drill, focused readiness/representation matrices, and the final local backend gate pass. Representative PITR, accessibility, owner evidence, and routine term management remain. |
-| Department hierarchy | Mounted Page 9a.1 / release acceptance pending | Canonical Page 9 composes the minimized Executive Board anchor with one version-fenced bounded tree and mounts same-shell template/Department forms plus five strict API mutations over the stopped-writer command core. The definitive adapter-expanded gate passes 1,693 tests in 1,653.43 seconds at 90.50 percent total branch-inclusive coverage; responsive-browser, accessibility, owner, and deployment evidence remain. Page 9b Positions remains separate. |
-| Department/resource authorization | Implemented backend / unmounted editor | ADR 0041 exact department and typed-resource policy, commands, bindings, migrations, and database guards are implemented without implicit hierarchy inheritance. ADR 0044's ledger, writers, readiness, provable backfill, completeness guards, one-way marker, exact policy switch, runtime-role proof, and synthetic activation/recovery are locally verified. No ordinary production legacy reconciliation, real cutover, representative restore/PITR drill, or unbounded candidate-cardinality load gate has completed. The contextual editor/effective-access UX remains unmounted. |
-| Effective-access explanation | Partial | Pages 3–9 distinguish platform, scoped Board, exact-edition, own-invitation, and structure view/manage access. Exact department/resource decisions now work below the UI; computed named relationship and field-purpose detail remain M2. |
-| Attendee registration | Partial | Large tested domain, headless API, and preserved HTML become reachable through the intended URL set, but coherent-shell review and deployment gates remain. |
-| Registration extension fields | Partial | Append-only, permission-aware API/workflow exists; ADR 0039 integration and current browser evidence remain. |
-| Generic application/form portfolio | Absent | KNO-009 and REG-023. |
+| Unified navigation and My Maru | Mounted / first UX slice repository-verified | One permission-filtered searchable registry, stable reauthorized pins, selected-context header, and `/my/` personal destinations remain mounted. ADR 0055 now prioritizes durable tasks, natural-language search, contextual/search-only actions, a specialist-record gateway, a task home, and an accessible drawer at intermediate/narrow widths. Focused matrices pass; full rendered-width, zoom, keyboard, screen-reader, accessibility, and owner rehearsal remains. |
+| Organization representation | Mounted / partial | Page 8 implements provision, exact verified-account invitation, own response, two-person cross-approval, atomic Draft-to-Active activation, and platform emergency containment. Its presentation now keeps a visible three-step progression and platform-admin User account preparation handoff without changing authority. Database guards, focused matrices, and the final local backend gate pass. Representative PITR, complete rendered/accessibility/owner evidence, routine term management, and safe planned replacement remain. |
+| Department hierarchy | Mounted Page 9a.1 / repository accepted | Canonical Page 9 composes the minimized Executive Board anchor with one version-fenced bounded tree and mounts same-shell template/Department forms plus five strict API mutations over the stopped-writer command core. The 4,067-test canonical repository gate passes; Page 9 responsive-browser, accessibility, owner, and deployment evidence remain. Page 9b Positions remains separate. |
+| Department/resource authorization | Mounted / deployment-gated | ADR 0041 exact Department and typed-resource policy, immutable issuance/binding evidence, migrations, database guards, and the global computed Access component are mounted without implicit hierarchy inheritance. Named relationship reads are audited and preview never impersonates. Production legacy reconciliation, policy cutover, representative restore/PITR, and unbounded candidate-load evidence remain. |
+| Effective-access explanation and preview | Mounted | Management pages resolve a typed scope into computed Access; fixed self/public/safeguarding/security policies explain why mutation is absent. Signed exact-person and immutable-role previews are capped, audited, read-only, and keep the real principal for every POST. The focused Access matrix passes; this is not arbitrary page ACL sharing. |
+| Attendee registration and admission commerce | Mounted / deployment-gated | Public/self registration, My Maru, exact-difference upward replacement, hard-ceiling capacity adjustments, strict FIFO batches, and hosted/demo payment boundaries are executable. Real provider/webhook, printer/device, load, retention, recovery, accessibility, refund/transfer, and fulfilment gates remain. |
+| Registration extension fields | Mounted / cutover incomplete | Versioned definitions, closed self/staff/exact-Department/confirmed/public audiences, append-only values, audited API/directory projections, and self/staff browser editing are mounted. Compatibility-writer retirement, stopped-writer activation, and complete browser/accessibility evidence remain. |
+| Typed application portfolio | Mounted / bounded | Ten code-owned starters, edition-owned drafts, organizer/applicant/reviewer journeys, exact named/immutable-role review provenance, and typed acceptance receipts are implemented. Real programme/workforce/SecOps/merchandise target adapters, staff answer correction, richer review rubrics, retention execution, and accessibility rehearsal remain. |
 | Programme intake/review | Absent | PRG-001–007. |
-| Venues and mergeable spaces | Absent | VEN-001, VEN-002, VEN-008. |
-| Timetable and shifts | Absent | SCH-001–010; legacy is interaction evidence only. |
-| Logistics/storage | Absent | LOG-001–008. |
+| Venues and operational space bookings | Mounted / bounded | Reusable venue facts, edition selections, immutable physical-member expansion, hard availability, two-clique occupancy, independent approval/publication, and minimized public/My schedule projections are mounted. Guest allocation, programme ownership, full timetable layers/exports, and person/equipment conflicts remain. |
+| Timetable and shifts | Partial | Venue bookings implement safe three-phase physical occupancy and public schedule projection, but shared programme releases, workforce shifts, people/equipment conflicts, operational layers, and exports remain absent. |
+| Logistics/storage | Mounted / bounded / deployment-gated | Typed containment/custody/event/manifest/offline workflows, exact capability bindings, mounted routes, retention boundaries, runtime-role profiles, and fail-closed readiness are implemented. The serialized PostgreSQL matrix passes 26/26, the canonical repository gate passes, and scoped authenticated read-only browser rehearsal passes at 1,920 and 390 pixels. LOG-003 demand/reservation, LOG-004 driver/routes, LOG-006 invoice linkage, LOG-007 low-stock/wastage, broader mutation-role/visual/accessibility, restore/PITR, and production activation remain open. |
+| Governed charity partners | Mounted / bounded | Reusable non-tenant partners, private edition review, independent media/confirmation/publication, and minimized public snapshots satisfy FUR-011. Fundraising campaigns, settlement, costs, and public financial reporting remain open. |
+| Edition catalog and owned orders | Mounted / deployment-gated | Product/variant/beneficiary policy, finite stock, attendee orders, payment intents, activity, and same-shell attendee/staff pages are mounted. Real provider certification, order expiry/cancel/refund/exchange, fulfilment/shipping, and accounting export remain. |
 | Governed document library | Absent | Workforce onboarding upload is not a knowledge library. |
 | Notifications | API-only | Canonical service notifications exist. |
 | Team conversations and on-site messaging | Absent | Needs scoped inbox/thread domain and delivery adapters. |
 | Credentials/offline check-in | API-only | Tested domain; hardware, printing, recovery, and load gates remain. |
 | Audit and activity | API-only audit / mounted record history | Append-only audit plus bounded Page 5/7 domain-fact history; cross-domain access-aware activity remains M2. |
-| Stable API/OpenAPI | Partial | Series GET/PUT, edition POST/PUT, bounded workforce-structure GET, and five Page 9 template/Department mutations are implemented. Repository-recorded deterministic schema/client verification passes; organization writes, external credentials, and new domains remain. |
+| Stable API/OpenAPI | Partial | Mounted domain APIs use strict closed contracts and exact authorization boundaries. ADR 0056 adds private, locally served Swagger and ReDoc discovery views over the unchanged canonical schema; deterministic schema/client verification passes without drift. Organization writes, external credentials, future domains, deployment, and public developer-portal policy remain. |
 | Synthetic demo governance | Mounted local-only | ADR 0042 makes `seed_demo_data` the canonical synthetic fixture and establishes two active Executive Boards through real services. The old public-roster scenario is deleted and its compatibility command fails before validation, file/network access, or database writes. |
 | Production infrastructure | Deployment-gated | Provider selection, SMTP, object storage, scanner, workers, secrets, monitoring, restore, load, and legal/security review. |
 
@@ -440,6 +443,43 @@ relationship record.
   least-privilege projection credentials and signed webhooks where push is
   needed.
 
+## Canonical repository acceptance (2026-08-11)
+
+The whole working tree has one current repository verdict, superseding earlier
+focused counts without erasing their milestone history:
+
+- Ruff formatting and lint pass over 624 files, strict mypy passes over 355
+  source files, and collection finds exactly 4,067 tests.
+- The serialized canonical PostgreSQL-backed run passes 4,067 of 4,067 tests in
+  15,558.23 seconds (4:19:18) at 90.78 percent total branch-aware coverage.
+  Registration and Identity coverage was repaired with coherent behavior and
+  security matrices, without threshold/configuration changes, exclusions, or
+  pragma omissions.
+- Two genuine defects found during that repair are fixed: Registration setup
+  dependency failures are handled before their broader command-error superclass
+  so unavailable dependencies remain `503`, and canonical UUID form validation
+  accepts the documented lower-case hyphenated version-agnostic shape while
+  rejecting aliases.
+- Installed module readiness, function/relation ACL, non-delegable runtime-role,
+  tenant/object/field denial, OpenAPI/client, frontend, and migration-drift
+  checks pass. The migration graph preserves the ordered `venues 0001 ->
+  logistics 0001 -> authorization 0016 -> logistics 0002` chain, Workforce
+  `0008` follows every exact Department-FK creator, historical Registration
+  targets select the compatible Workforce leaf, and identity delivery integrity
+  follows its reconciliation-audit fence.
+- Invitation delivery, expiry, and retention heartbeats use one materialized
+  PostgreSQL clock observation. Scheduler success, invitation transitions,
+  retention receipts, and terminal delivery/disposition evidence are append-
+  only or one-way under database guards and least-privilege ACLs. This does not
+  activate the invitation-retention candidate or a deployment scheduler.
+- The authenticated scoped read-only Logistics browser journey passes at
+  1,920- and 390-pixel widths. Broader visual states and mutation roles,
+  keyboard traversal, and automated accessibility remain unaccepted.
+
+This is repository and bounded browser evidence only. No deployment, stopped-
+writer/cutover, restore/PITR, production-data, owner, governance, or production-
+readiness claim follows from it.
+
 ## Production milestones
 
 ### M0 — Consolidation map and truthfulness
@@ -677,7 +717,9 @@ not production approval.
   - [ ] Rehearse representative deployment backup/PITR and fix-forward, then
     perform the stopped-writer production activation only after ordinary legacy
     reconciliation and named operator approval.
-- [ ] Effective-access query/header and audited contextual assignment editor.
+- [x] Mount the computed Access query/header/component and audited scoped
+  person/immutable-role assignment workspace, including capped read-only
+  exact-person and role preview that never changes the session principal.
 - [ ] Cross-domain, access-aware human activity workspace resolving safe actor
   and target labels. Pages 5/7 already provide bounded aggregate record
   history; that does not complete this item.
@@ -688,29 +730,98 @@ not production approval.
 Exit: convention authority can operate Pages 3 onward without broad
 edition-wide grants, while the platform administrator remains external.
 
+### M2.5 — Page 10 identity and Registration journey
+
+- [x] Accept ADR 0047 and the Page 10 contract: one shared administration
+  shell, a non-participating platform administrator, recipient-owned account
+  passwords, exact edition scope, synthetic-only educational data, and staged
+  writer retirement.
+- [x] Implement and independently accept the platform account inventory,
+  invitation commands, recipient acceptance, durable delivery/reconciliation,
+  and strict versioned APIs.
+- [ ] Independently accept the author-verified invitation-retention v10
+  corrective candidate for
+  immutable tombstones, provider-reference disposal, arbitrary challenge
+  history, fair bounded work, strict database time/source evidence, populated
+  upgrade, and fix-forward downgrade behavior. Do not activate a deployment
+  retention policy before this gate.
+- [x] Implement and independently accept the draft section, question, product,
+  minor-policy, and profile-definition builder commands and APIs.
+- [x] Implement and focused-verify blank/template/prior-edition setup start
+  with complete source provenance, immutable original binding, and exact
+  receipt/target/audit/event/outbox replay evidence, including the immutable
+  code-owned `convention-registration` starter.
+- [x] Repair and focused-verify configuration review/activation after the
+  authoritative-evidence, provenance, validation, review-durability, source-
+  binding, and version-anchoring findings. This is command/migration evidence,
+  not stopped-writer deployment acceptance.
+- [x] Repair and independently accept profile-definition approval, activation,
+  successor, and retirement after the source-retirement, replay-target,
+  source-generation, immutability, and populated-downgrade findings.
+- [x] Add the dedicated exact-edition `registration.view_profile_extensions`
+  and `registration.update_profile_extensions` capabilities without widening
+  existing grants or role bundles.
+- [x] Replace the legacy profile-value writer/read with sequence-fenced,
+  idempotent append commands, dedicated staff capabilities, ownership-aware
+  attendee policy, audited bounded reads, and minimized event/outbox evidence.
+- [x] Focused-verify the governed reusable-template publication/catalog
+  lifecycle and its exact receipt, target, audit, event, outbox, child stamp,
+  concurrency, rollback, and database-guard evidence from migration `0037`.
+- [x] Mount strict profile-definition and profile-value HTML/API adapters,
+  including self/staff same-shell editing, exact reader/writer policy, optional
+  typed clearing, and immediate consent-withdrawal removal.
+- [ ] Complete the final governed configuration scalar/successor adapter
+  surface, reconcile compatibility aliases and all remaining direct writers,
+  then install the stopped-writer generation with readiness and recovery
+  rehearsal.
+- [ ] Run the deterministic synthetic education journey plus tenant,
+  field-policy, stale/replay, failure-atomicity, desktop/390-pixel, keyboard,
+  WCAG 2.2 AA, load-ceiling, and representative recovery matrices.
+
+Exit: a platform operator can provision identity and observe the complete
+journey without becoming a convention subject; an authorized organizer can
+build and activate one form; a synthetic attendee can register and append only
+allowed profile facts; and direct or foreign writers fail closed.
+
 ### M3 — Venue foundation
 
-- [ ] Reusable site/building/atomic-space/configuration models.
-- [ ] Edition selections, display overrides, availability and hard blocks.
-- [ ] Composite-room atomic consumption and travel-time matrix.
-- [ ] Capacity/access/equipment validation and floor-plan document links.
-- [ ] HTML/API/admin-shell pages, audit, events, isolation/concurrency tests.
+- [x] Reusable property/site/building/atomic-space/configuration models.
+- [x] Edition selections, local display names/restrictions, versioned hard
+  availability, and current public/internal/security layout references.
+- [x] Composite-room atomic consumption with PostgreSQL physical-member
+  exclusion and safe teardown-to-setup turnover.
+- [x] Configured/fire capacity validation and independently reviewed media/
+  layout references; full access-feature/equipment/travel-time matrices remain
+  later Venue work.
+- [x] Same-shell HTML, strict API, audit, outbox, exact typed authorization,
+  public/My schedule, tenant/isolation/concurrency, and DST-focused tests.
 
 Exit: an edition has safe schedulable spaces, including mergeable rooms and
 multiple venues.
 
-### M4 — Typed applications and panel vertical
+### M4 — Typed applications and downstream adapters
 
-- [ ] Domain-neutral versioned field/form vocabulary.
-- [ ] Application type, submission, revisions, review, decision, conversation,
-  deadline, and retention kernels.
-- [ ] Applicant/staff/reviewer/public field matrices.
-- [ ] “Host a panel” template and proposal workflow.
+- [x] Closed versioned field/form vocabulary in the bounded Applications
+  context.
+- [x] Definition, submission revision, review/decision, deadline, successor,
+  and append-only provenance kernels.
+- [x] Applicant and assigned-reviewer field projections with audited sensitive
+  reads; staff/public visibility metadata is stored on definitions.
+- [ ] Add staff answer-correction commands/windows and an approved public-answer
+  projection; definition metadata alone does not complete those audiences.
+- [x] Ten code-owned non-panel starters (merchandise, DJ, dance competition,
+  Maid Cafe, adult performance, volunteer, feedback, idea, damage, and helper)
+  plus organizer, applicant, and reviewer workflows.
+- [ ] Add the host-panel starter and its real programme target adapter.
 - [ ] Acceptance creates a private programme item idempotently.
-- [ ] File safety, audit, outbox, API, isolation, and lifecycle tests.
+- [x] Safe-file receipt boundary, audit, outbox, strict API, exact reviewer/
+  tenant isolation, lifecycle, and same-shell tests. Real file storage/scanning
+  and downstream typed-object adapters remain external or later milestones.
 
-Exit: a synthetic host can submit, revise, receive a decision, and create an
-accepted private programme item without gaining unrelated access.
+Current bounded exit: a synthetic applicant can submit, revise, and receive an
+assigned-reviewer decision without gaining unrelated access. The full milestone
+exit still requires the unchecked host-panel starter and idempotent private
+programme adapter above.
 
 ### M5 — Three-phase timetable and layers
 
@@ -729,10 +840,14 @@ edition while adding furry-convention operations.
 
 ### M6 — Registration and governed documents
 
-- [ ] Mount the existing registration domain through the coherent shell.
-- [ ] Registration workspace “not configured” state and reviewed activation.
-- [ ] Staff-assisted correction and extension-field builder with precise writer
-  rules.
+- [x] Mount the existing registration domain through the coherent shell and My
+  Maru.
+- [x] Mount Registration not-configured/start, definition, review, and
+  activation journeys through the governed Page 10 command boundary.
+- [x] Mount the profile-extension definition builder and exact self/staff value
+  editors with closed reader/writer rules.
+- [ ] Complete broader staff-assisted correction beyond governed extension
+  values and finish the Page 10 compatibility-writer/stopped-writer cutover.
 - [ ] Governed document/version/rendition/acknowledgement library.
 - [ ] NDAs, policies, department and event-type document links.
 - [ ] Production payment, mail, storage, malware scan, privacy, load, and
@@ -745,12 +860,22 @@ extend information; governed documents are served by context and classification.
 
 - [ ] Shift templates, qualification, availability, demand, claims,
   confirmation, attendance, hours, rest and handover.
-- [ ] Storage/location graph, containers, boxes, assets, stock and kits.
-- [ ] Append-only movements, scans, manifests, truck loading, venue deployment
-  and return reconciliation.
+- [x] Mount the bounded storage/location graph, containers, boxes, assets,
+  stock, and kits.
+- [ ] Add demand/reservation and complete stock planning.
+- [x] Mount append-only custody/location events, manifests, vehicle loading,
+  venue deployment, return/discrepancy handling, person offers, and actionable
+  Stage Tech receiving.
+- [ ] Add route/driver optimization and supplier invoice linkage.
 - [ ] Department inboxes, threads, assignments, announcements, acknowledgement
   and delivery adapters.
-- [ ] Offline bounded manifests for check-in and logistics-critical scans.
+- [x] Bounded expiring offline Logistics batches reconcile against current
+  server state; the installed migration/auth/API/UI/readiness/runtime-role gate
+  passed in the 26/26 acceptance matrix.
+- [x] Accept the scoped authenticated read-only Logistics browser journey at
+  1,920- and 390-pixel widths.
+- [ ] Complete broader Logistics visual-state and mutation-role browser
+  rehearsal, keyboard traversal, and automated accessibility analysis.
 - [ ] Operations common picture and rehearsal mode.
 
 Exit: Awoostria can rehearse staffing, room operations, equipment movement, and
@@ -791,7 +916,7 @@ count.
 
 1. Read `docs/project/CURRENT.md`.
 2. Read this file and find the first unchecked item in the active milestone.
-3. Read ADRs 0037–0046 and the page/domain contract being changed, including
+3. Read ADRs 0037–0054 and the page/domain contract being changed, including
    Page 8 for representation work.
 4. Run `git status --short --branch`; do not discard unrelated changes.
 5. Confirm the latest local checkpoint/commit and test result in `CURRENT.md`.
@@ -801,11 +926,14 @@ count.
    cardinality load gate, and stopped-writer cutover/PITR rehearsal; only then
    consider a real production activation. Page 9a.1's aggregate, stopped-
    writer cutover, immutable template application, and shared Department
-   command core and strict HTML/API mutation adapters are implemented and pass
-   the definitive adapter-expanded repository/coverage gate; continue with
-   authenticated responsive acceptance, then the computed access explanation.
-   Keep representative deployment/PITR, accessibility, complete visual states,
-   and owner evidence open. Update this checklist before switching domains.
+   command core and strict HTML/API mutation adapters are implemented. The
+   canonical 4,067-test repository/coverage gate and scoped authenticated read-
+   only Logistics browser journey at 1,920 and 390 pixels pass; continue with
+   broader visual/mutation-role and accessibility acceptance. The computed
+   Access explanation and safe preview are mounted. Keep stopped-writer/
+   cutover, representative deployment/PITR, keyboard/automated accessibility,
+   complete visual states, and owner/governance evidence open. Update this
+   checklist before switching domains.
 
 ## Production gates outside the repository
 

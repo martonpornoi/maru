@@ -1,0 +1,148 @@
+.identity-filter-panel .baseline-form,
+.identity-lifecycle-actions .baseline-form {
+  margin: 0;
+}
+
+.identity-filter-form,
+.identity-action-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.identity-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(15rem, 2fr) repeat(3, minmax(9rem, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.identity-filter-grid .baseline-field {
+  margin-top: 0;
+}
+
+.identity-account-contact,
+.identity-secondary-state {
+  display: block;
+  margin-top: 0.22rem;
+  color: #68758a;
+  font-size: 0.84rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.identity-status {
+  display: inline-block;
+  padding: 0.22rem 0.48rem;
+  border: 1px solid #9caec4;
+  border-radius: 999px;
+  color: #183052;
+  background: #f1f4f8;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.identity-status[data-state="active"] {
+  border-color: #91ad89;
+  color: #254c20;
+  background: #edf5ea;
+}
+
+.identity-pagination {
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: 1px solid #e5e0d7;
+}
+
+.identity-state-panel {
+  margin-top: 2.25rem;
+  border: 1px solid #e0b4af;
+}
+
+.identity-state-panel h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.identity-fact-grid {
+  padding-top: 1rem;
+}
+
+.identity-lifecycle-actions > details {
+  border-bottom: 1px solid #e5e0d7;
+}
+
+.identity-lifecycle-actions > details:last-child {
+  border-bottom: 0;
+}
+
+.identity-lifecycle-actions summary {
+  padding: 1rem 1.5rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.identity-lifecycle-actions summary:focus-visible {
+  outline: 3px solid #b9822e;
+  outline-offset: -3px;
+}
+
+.identity-action-body > p {
+  max-width: 46rem;
+  margin: 0;
+  color: #45536a;
+  line-height: 1.55;
+}
+
+.identity-danger-disclosure > summary {
+  color: #76241e;
+}
+
+.identity-timeline span {
+  color: #68758a;
+}
+
+.identity-timeline p,
+.identity-account-table,
+[data-page="platform-account-inventory"] h1,
+[data-page="platform-account-invite"] h1,
+[data-page="platform-account-invitation-detail"] h1 {
+  overflow-wrap: anywhere;
+}
+
+.identity-public-body {
+  min-height: 100vh;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 15% 5%, #f3e2ba 0, transparent 35%),
+    radial-gradient(circle at 90% 90%, #dce5ef 0, transparent 32%),
+    #faf7f0;
+}
+
+.identity-acceptance-card {
+  margin-top: clamp(1.5rem, 7vh, 4rem);
+  margin-bottom: 3rem;
+  padding: clamp(1.25rem, 5vw, 2.5rem);
+  border: 1px solid #d9d3c7;
+  border-radius: 1rem;
+  background: #fffdf8;
+  box-shadow: 0 1.5rem 4rem rgb(3 13 29 / 12%);
+}
+
+.identity-public-heading {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 64rem) {
+  .identity-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .identity-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .identity-filter-form,
+  .identity-action-body {
+    padding: 1rem;
+  }
+}

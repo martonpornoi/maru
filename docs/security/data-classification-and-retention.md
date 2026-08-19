@@ -1,7 +1,7 @@
 # Data classification and retention
 
 Status: Baseline requiring jurisdiction-specific review  
-Last updated: 2026-07-28
+Last updated: 2026-08-09
 
 This is a product and engineering control model, not legal advice. Each
 deploying organization must document its roles, purposes, lawful bases,
@@ -66,10 +66,101 @@ Data supplied for one purpose is not a platform-wide profile:
 | Accessibility | access team | coordinate requested accommodation with minimum disclosure |
 | Safety case | assigned qualified team | case purpose only; no engagement analytics |
 | Public content | subject plus publisher | only exact approved rendition and term |
+| Logistics custody and restricted contact | Logistics owner for one organization/edition | release only the minimum place/contact/custodian fact needed for an authorized movement, return, discrepancy, or provider obligation |
 | Optional analytics | documented analytics owner | aggregate or de-identify wherever possible |
 
 Cross-partition reuse requires documented compatibility, notice, and policy.
 Convenience alone is not sufficient.
+
+### Logistics custody and restricted contact
+
+- Reusable external-party identity contains only legal/public operational
+  identity, role, provider reference, and an optional public URL. Private email,
+  telephone, address, recipient, and access instructions belong only in a C2 or
+  C3 `RestrictedAddress` with a closed purpose, retention trigger, owner, and
+  exact organization/edition scope.
+- Ordinary workspace, offer, manifest, activity, current-state, and Stage Tech
+  projections never include restricted address/contact values. An authorized
+  contact read requires the dedicated capability, a closed reason code, final
+  scope reauthorization, an opaque short-lived request token, a sensitive-read
+  audit, and private/no-store/no-referrer/noindex response handling.
+- A bounded idempotent disposal worker redacts expired address/contact values
+  and records only minimized execution evidence. It must honor active offer,
+  agreement, return, incident, and legal-hold horizons; it must not erase the
+  append-only movement/custody facts required to explain asset state.
+- People are custodians, offerers, borrowers, providers, or keyholders, never
+  containment nodes. Maru records declared handovers and responsibilities, not
+  continuous person or vehicle location. Physical-key responsibility never
+  grants software authority.
+- Asset, stock, manifest, discrepancy, agreement, and custody evidence is
+  business/operational history. Its person references require a separately
+  approved retention schedule and should be minimized or de-identified after
+  return, discrepancy, contractual, support, and legal periods close. QR labels
+  carry only a digest reference, not contact or address data.
+
+### Platform account invitations
+
+- The recipient email and reserved account label are C2 platform-identity data.
+  They exist only to establish the recipient-owned login and never imply an
+  organization, edition, membership, registration, or workforce relationship.
+- The raw invitation token and its encrypted delivery envelope are C4 bearer
+  material. The web process stores only envelope ciphertext; only the delivery
+  worker has private keys. Ciphertext is destroyed on confirmed delivery,
+  reissue, acceptance, revocation, or expiry, whichever occurs first.
+- The versioned HMAC digest, digest-key identifier, abuse bucket, and delivery
+  security evidence are C3. They are not account-search or analytics fields and
+  never appear in ordinary operator projections.
+- Delivery status, minimized provider reference, command receipt, lifecycle
+  transition, and reason are C2 restricted administrative evidence. Reasons
+  must describe the operation and must not contain unrelated personal facts.
+- A revoked or expired reserved identity is reviewed after its support and
+  security window. A controlled job must remove or anonymize email, login
+  handle, display label, challenge snapshots, and provider references while
+  preserving only the minimum non-identifying integrity receipt justified by
+  the approved policy. Accepted accounts follow the ordinary identity policy.
+- Local controller/legal review must set the maximum terminal-evidence window,
+  security-event hold, backup aging behavior, export/correction behavior, and
+  legal-hold procedure before production. Until that policy and its audited job
+  are configured and rehearsed, invitation production readiness stays blocked.
+
+Identity migrations `0017_invitation_retention_workflow` and corrective
+candidate `0018_invitation_retention_v8` implement this narrow disposition,
+but do not choose the legal period. Production must supply one
+closed, approved `MARU_IDENTITY_INVITATION_RETENTION_POLICY_JSON` document and
+the migration owner must activate its exact digest in the database control
+row. The bounded job considers only revoked or expired, inactive person
+accounts whose exact sole provisioning invitation is proved. Any active hold,
+accepted/current/sibling invitation, usable challenge, unresolved delivery,
+group/permission, privacy request, organizer/edition/registration/workforce
+relationship, non-invitation security event, or present or future foreign-key
+relationship blocks disposition. The database repeats the relationship test
+from its live foreign-key catalog so a newly added domain fails closed until
+reviewed.
+
+Successful disposition replaces account and challenge contact with a random
+non-routable tombstone, replaces challenge lookup digests, and blanks the
+terminal challenge's digest-key identifier only inside the receipt-bound
+transaction. It also replaces every non-empty provider reference on the parent
+delivery, attempt, and late-outcome graph with a one-way non-routable
+tombstone. It preserves invitation transitions, command receipts, security
+history, audit, a minimized policy receipt, and one current value-minimized
+assessment. Permanent receipt-aware database guards protect every retained
+tombstone, freeze the disposed assessment and complete parent delivery after
+the exact one-time provider transition, and prevent later authority membership
+or delivery evidence from being attached to the disposed identity.
+
+Candidate selection uses a persisted fair cursor, bounded challenge/delivery
+chunks, and a database advisory lock. Blocked and held rows record a safe
+result code and do not starve later eligible rows; held rows are counted and
+advance the cursor but are excluded from actionable readiness backlog. Policy
+activation, holds, receipts, assessments, and scheduler/cursor evidence are
+database-timed, accept no public backdating override, and reject future or
+incoherent control timestamps. The policy document rejects duplicate JSON
+members and the only accepted evidence sources are `operator` and `scheduler`.
+The per-transaction random key is never persisted or returned. Removing its
+Python reference is best effort; Maru does not claim guaranteed secure erasure
+of interpreter or process memory. Backup aging and physical-media disposal
+remain deployment responsibilities.
 
 ### Registration lifecycle and financial evidence
 
@@ -169,6 +260,9 @@ part of product design.
 | Pending or rejected attendee media | review resolution or abandonment | dispose promptly under reviewed media policy unless incident evidence requires a hold |
 | Approved attendee media | publication withdrawal, supersession, or last reuse | remove public rendition promptly; dispose source only after all references and holds clear |
 | Identity verification artifact | verification completion | retain verification result where justified; delete source image promptly |
+| Pending account-invitation bearer envelope | delivery, reissue, acceptance, revocation, or expiry | destroy ciphertext and wrapped key immediately; retain no bearer-link copy in logs, audit, or telemetry |
+| Revoked or expired reserved account invitation | terminal transition plus support/security review close | anonymize abandoned identity/contact and provider evidence through the audited policy job; retain only justified non-identifying integrity evidence |
+| Accepted account invitation | acceptance | discard bearer material immediately; retain minimized invitation/security provenance under the approved identity/audit schedule |
 | Payment/order evidence | settlement and statutory trigger | minimize and retain required accounting evidence; no card data |
 | Accessibility request | accommodation completion and follow-up | retain only while coordination or defined follow-up needs it |
 | Medical/conduct/safeguarding case | case closure and applicable limitation or policy | restricted retention with scheduled review or legal hold |
@@ -179,6 +273,10 @@ part of product design.
 | Export artifact | generation or last authorized access | short expiry and object deletion; retain metadata receipt |
 | Backup copy | backup creation | expire by backup lifecycle; deletion requests age out through documented rotation |
 | Participation history | edition archive | retain minimized private history; public display only by explicit choice |
+| Pending equipment offer | withdrawal, rejection, or acceptance plus support close | dispose pickup/contact details by their purpose trigger; retain only minimized decision, source, and accepted asset/agreement provenance while justified |
+| Logistics restricted address/contact | declared expiry after the operational/contractual purpose ends | bounded audited redaction of recipient, email, phone, address, and access instructions unless an active obligation or legal hold applies |
+| Asset/key custody and movement evidence | return, recovery, discrepancy, contract, and support closure | preserve append-only state provenance for the approved risk/legal period; then minimize person links without rewriting the physical event sequence |
+| Offline logistics batch | expiry and reconciliation/exception closure | expire device/operation payloads on the bounded schedule; retain only the minimized receipt and unresolved discrepancy evidence required for review |
 
 ## Historical participation
 

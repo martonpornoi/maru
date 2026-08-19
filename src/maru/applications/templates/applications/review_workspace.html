@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Application review &middot; {{ edition.name }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'application-definition-workspace' edition.organization_id edition.id %}">Applications</a>
+    &rsaquo; Review
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <header>
+      <p class="maru-personal-kicker">Assigned queue</p>
+      <h1>Application review</h1>
+      <p>Only exact named reviewers or holders of the configured immutable role version appear here.</p>
+    </header>
+    <section class="module">
+      {% if submissions %}
+        <ul>
+          {% for submission in submissions %}
+            <li>
+              <a href="{% url 'application-review-detail' edition.organization_id edition.id submission.id %}"><strong>{{ submission.definition.name }}</strong></a>
+              &middot; {{ submission.account.display_name }}
+              &middot; {{ submission.get_state_display }}
+              &middot; submitted {{ submission.submitted_at }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}<p>No application currently requires your review.</p>{% endif %}
+    </section>
+  </div>
+{% endblock %}

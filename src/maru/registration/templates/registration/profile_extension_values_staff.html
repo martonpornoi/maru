@@ -1,0 +1,100 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'registration/setup.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}Attendee profile extensions &middot; Maru{% endblock %}
+
+{% block baseline_breadcrumbs %}
+  <a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>
+  &rsaquo;
+  <a href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}">{{ convention_series.name }}</a>
+  &rsaquo;
+  <a href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}">{{ edition.name }}</a>
+  &rsaquo;
+  <a href="{% url 'registration-setup' organization.slug convention_series.slug edition.slug %}">Registration</a>
+  &rsaquo; Attendee profile extensions
+{% endblock %}
+
+{% block baseline_content %}
+  <a class="baseline-back-link" href="{% url 'registration-setup' organization.slug convention_series.slug edition.slug %}">
+    &larr; Registration
+  </a>
+
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">{{ edition.name }} &middot; Registration profile</p>
+    <h1>Current profile details for {{ registration.account.display_name }}</h1>
+    <p class="baseline-intro">
+      Only fields in your exact registration-staff or Department audience are
+      shown. Every staff change requires a reason and appends a new revision.
+    </p>
+    <p class="baseline-record-meta">
+      <span>Registration: <strong>{{ registration.reference }}</strong></span>
+      <span>Projection: <code>{{ profile_extension_workspace.snapshot_digest }}</code></span>
+    </p>
+  </header>
+
+  {% if profile_extension_editors %}
+    <ol class="registration-section-list">
+      {% for editor in profile_extension_editors %}
+        <li class="registration-section-card">
+          <article>
+            <header>
+              <div>
+                <p class="baseline-kicker">{{ editor.field.classification }} &middot; version {{ editor.field.field_version }}</p>
+                <h2>{{ editor.field.label }}</h2>
+                <p>{{ editor.field.purpose }}</p>
+              </div>
+              <span class="baseline-count">Revision {{ editor.field.current_sequence }}</span>
+            </header>
+            {% if editor.field.help_text %}<p>{{ editor.field.help_text }}</p>{% endif %}
+            <dl class="details-grid">
+              <div><dt>Reader audience</dt><dd>{{ editor.field.audience_policy }}</dd></div>
+              <div><dt>Writer policy</dt><dd>{{ editor.field.writer_policy }}</dd></div>
+              <div>
+                <dt>Current value</dt>
+                <dd>
+                  {% if editor.field.current_value is None %}Not supplied
+                  {% elif editor.field.field_type == "boolean" %}{{ editor.field.current_value|yesno:"Yes,No" }}
+                  {% elif editor.field.field_type == "multiple_choice" %}{{ editor.field.current_value|join:", " }}
+                  {% else %}{{ editor.field.current_value }}{% endif %}
+                </dd>
+              </div>
+            </dl>
+
+            {% if editor.form %}
+              <form
+                method="post"
+                action="{% url 'update-staff-profile-extension-value' organization.slug convention_series.slug edition.slug registration.id editor.field.field_id %}"
+                class="baseline-form"
+                novalidate
+              >
+                {% csrf_token %}
+                {% for hidden in editor.form.hidden_fields %}{{ hidden }}{% endfor %}
+                {{ editor.form.non_field_errors }}
+                {% include "core/_baseline_form_field.html" with field=editor.form.value %}
+                {% include "core/_baseline_form_field.html" with field=editor.form.reason %}
+                <div class="baseline-form-actions">
+                  <button type="submit">Append staff revision</button>
+                </div>
+              </form>
+            {% else %}
+              <div class="baseline-state" data-state="readonly">
+                <h3>Read only</h3>
+                <p>Your current scoped role permits this field to be read but not changed.</p>
+              </div>
+            {% endif %}
+          </article>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <div class="baseline-state" data-state="empty">
+      <h2>No staff-visible profile fields</h2>
+      <p>No active field is available in your exact current scope.</p>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -70,20 +70,114 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.django_migrations",
     "public.authorization_authorityprovenanceactivation",
     "public.authorization_provenanceactivationlatch",
+    "public.identity_platforminvitationretentionpolicycontrol",
 )
 
 # Page 9 structure evidence is append-only at runtime.  The separately
-# credentialed migration/cutover owner retains recovery authority.
+# credentialed migration/cutover owner retains recovery authority. Page 10's
+# transitions, command receipts, and reconciliation receipts use the same
+# profile. Delivery attempt/late-outcome provider references and current
+# retention assessments have narrowly trigger-guarded v9 updates and become
+# terminal when the safe result is disposed.
 RUNTIME_DATABASE_SELECT_INSERT_RELATIONS: Final[tuple[str, ...]] = (
     "public.workforce_editionstructurecommandreceipt",
+    "public.registration_registrationprofileextensionvaluerevision",
+    "public.registration_registrationprofileextensionvaluecommandreceipt",
+    "public.applications_applicationfilereceipt",
+    "public.applications_applicationanswerrevision",
+    "public.applications_applicationreviewdecision",
+    "public.applications_applicationtargetrecord",
+    "public.applications_applicationcommandreceipt",
+    "public.charities_charityselectiontimelineentry",
+    "public.charities_charitypublicationsnapshot",
+    "public.charities_charitycommandreceipt",
+    "public.catalog_catalogstockadjustment",
+    "public.catalog_catalogcommandreceipt",
+    "public.catalog_catalogpaymentevent",
+    "public.catalog_catalogordertimelineentry",
+    "public.catalog_catalogorderline",
+    "public.venues_venuespacecombinationmember",
+    "public.venues_editionspacemember",
+    "public.venues_editionspaceavailabilitywindow",
+    "public.venues_venuebookinghistory",
+    "public.venues_venuecommandreceipt",
+    "public.identity_platformaccountinvitationtransition",
+    "public.identity_platformaccountinvitationcommandreceipt",
+    "public.identity_platformidentitydeliveryreconciliationreceipt",
+    "public.identity_platforminvitationschedulerrun",
+    "public.identity_platforminvitationretentionreceipt",
+    "public.logistics_equipmentofferitem",
+    "public.logistics_equipmentofferhistory",
+    "public.logistics_equipmentofferacceptance",
+    "public.logistics_keyholderresponsibility",
+    "public.logistics_assetagreement",
+    "public.logistics_reusablekitline",
+    "public.logistics_logisticsmanifestline",
+    "public.logistics_logisticsevent",
+    "public.logistics_offlinescanoperation",
+    "public.logistics_offlineoperationreceipt",
+    "public.logistics_logisticscommandreceipt",
+    "public.logistics_logisticsparty",
+    "public.logistics_logisticsnode",
+    "public.logistics_asset",
+    "public.logistics_stocklot",
+    "public.logistics_reusablekit",
+    "public.logistics_logisticslabel",
+    "public.logistics_logisticsdiscrepancy",
 )
 
-# The Page 9 optimistic-concurrency aggregate advances in place, but runtime
-# commands never delete it.  This is deliberately not a Department-wide DML
-# restriction: Department lifecycle remains protected by its stopped-writer
-# database trigger and the owning application service.
+# Page 10 seeds its singleton account-inventory control in the migration. The
+# runtime may only read and advance it; INSERT and DELETE remain owner-only.
+RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
+    "public.identity_platformaccountinventorycontrol",
+)
+
+# The Page 9 optimistic-concurrency aggregate, Page 10 invitation/delivery
+# aggregates, and retained Applications/Charity/Catalog/Venue aggregates may
+# be created and advanced, but runtime commands never delete them.
+# IdentityChallenge is shared with recovery and verification; every current
+# writer creates or advances it and its retention remains controlled.
 RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
     "public.workforce_editionstructurecontrol",
+    "public.registration_registrationprofileextensionvaluecontrol",
+    "public.applications_applicationdefinition",
+    "public.applications_applicationsubmission",
+    "public.charities_charitypartner",
+    "public.charities_charitypartnermedia",
+    "public.charities_charityselection",
+    "public.catalog_editioncatalog",
+    "public.catalog_catalogproduct",
+    "public.catalog_catalogvariant",
+    "public.catalog_catalogorder",
+    "public.catalog_catalogpaymentintent",
+    "public.identity_identitychallenge",
+    "public.identity_platformaccountinvitation",
+    "public.identity_platformidentitydelivery",
+    "public.identity_platformidentitydeliveryattempt",
+    "public.identity_platformidentitydeliverylateoutcome",
+    "public.identity_platforminvitationretentionassessment",
+    "public.identity_platforminvitationretentionhold",
+    "public.venues_venueproperty",
+    "public.venues_venuepropertymedia",
+    "public.venues_venuesite",
+    "public.venues_venuebuilding",
+    "public.venues_venuespace",
+    "public.venues_venuespaceconfiguration",
+    "public.venues_venuespacecombination",
+    "public.venues_venuelayoutversion",
+    "public.venues_accommodationroomtype",
+    "public.venues_accommodationnightinventory",
+    "public.venues_editionvenueselection",
+    "public.venues_editionspaceselection",
+    "public.venues_venuebooking",
+    "public.venues_venuebookingoccupancy",
+    "public.logistics_restrictedlogisticsaddress",
+    "public.logistics_equipmentoffer",
+    "public.logistics_physicalkey",
+    "public.logistics_logisticsmanifest",
+    "public.logistics_logisticscurrentstate",
+    "public.logistics_logisticseditioncontrol",
+    "public.logistics_offlinescanbatch",
 )
 
 _RUNTIME_DATABASE_ROLE_RESULT_FIELD_COUNT: Final = 25
@@ -180,6 +274,15 @@ required_limited_relation(
         pg_catalog.to_regclass(required.identity),
         TRUE,
         FALSE,
+        FALSE,
+        TRUE
+      FROM pg_catalog.unnest(%s::text[]) AS required(identity)
+    UNION ALL
+    SELECT
+        required.identity,
+        pg_catalog.to_regclass(required.identity),
+        FALSE,
+        TRUE,
         FALSE,
         TRUE
       FROM pg_catalog.unnest(%s::text[]) AS required(identity)
@@ -834,6 +937,7 @@ def probe_runtime_database_role_safety(
                 role_name,
                 list(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_RELATIONS),
+                list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2),
             ],

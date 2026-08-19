@@ -16,6 +16,23 @@
       + Add
     </a>
   </div>
+  <div class="baseline-sidebar-row">
+    <a
+      class="baseline-sidebar-link"
+      href="{% url 'platform-account-inventory' %}"
+      {% if request.resolver_match.url_name == "platform-account-inventory" or request.resolver_match.url_name == "platform-account-invitation-detail" or request.resolver_match.url_name == "platform-account-invitation-reissue" or request.resolver_match.url_name == "platform-account-invitation-revoke" %}aria-current="page"{% endif %}
+    >
+      Accounts
+    </a>
+    <a
+      class="baseline-sidebar-add"
+      href="{% url 'platform-account-invite' %}"
+      aria-label="Invite person account"
+      {% if request.resolver_match.url_name == "platform-account-invite" %}aria-current="page"{% endif %}
+    >
+      + Invite
+    </a>
+  </div>
 {% endif %}
 
 {% if baseline_page_id and organization %}
@@ -158,6 +175,16 @@
               {% if baseline_structure_navigation_current or request.resolver_match.url_name == "organization-structure" %}aria-current="page"{% endif %}
             >
               Organization structure
+            </a>
+          {% endif %}
+          {% url 'registration-setup' organization.slug convention_series.slug edition.slug as registration_setup_url %}
+          {% if baseline_can_manage_registration and registration_setup_url %}
+            <a
+              class="baseline-sidebar-link baseline-sidebar-link--standalone"
+              href="{{ registration_setup_url }}"
+              {% if baseline_registration_navigation_current or request.resolver_match.url_name == "registration-setup" %}aria-current="page"{% endif %}
+            >
+              Registration
             </a>
           {% endif %}
         </section>

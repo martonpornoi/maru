@@ -236,7 +236,7 @@ def test_admin_selector_persists_and_clears_the_selected_edition() -> None:
 
     index_response = client.get(reverse("admin:index"))
     content = index_response.content.decode()
-    assert "Convention workspace" in content
+    assert "Change workspace" in content
     assert re.search(
         rf'value="{reference.current_edition.id}"\s+selected',
         content,
@@ -769,7 +769,8 @@ def test_non_staff_active_scope_can_use_selector_without_staff_promotion() -> No
     )
 
     assert index_response.status_code == 200
-    assert "Convention workspace" in index_response.content.decode()
+    assert "Change workspace" in index_response.content.decode()
+    assert _selector_edition_ids(index_response) == {edition.id}
     assert options["available"] is True
     assert {item.id for item in options["editions"]} == {edition.id}
     assert selection_response.status_code == 302

@@ -3,7 +3,7 @@
 import hashlib
 import json
 from datetime import date, datetime
-from typing import cast
+from typing import Never, cast
 from urllib.parse import urlsplit
 from uuid import UUID
 
@@ -15,12 +15,17 @@ from django.core.exceptions import (
     ValidationError as DjangoValidationError,
 )
 from django.core.files.uploadedfile import UploadedFile
+from django.db import DatabaseError, transaction
 from django.db.models import Count, Max, Model, Prefetch, Q, QuerySet, Sum
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from rest_framework import status
 from rest_framework.exceptions import (
+    APIException,
     NotFound,
     PermissionDenied,
 )
@@ -51,11 +56,26 @@ from maru.authorization.policy import (
 from maru.authorization.services import AuthorizationDenied
 from maru.communications.models import NotificationDelivery
 from maru.core.pagination import StandardPageNumberPagination
+from maru.core.problems import DependencyUnavailable
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.identity.services import require_recent_step_up
 from maru.participation.models import Participation
 from maru.registration.availability import assess_product_availability
+from maru.registration.commerce import (
+    adjust_registration_capacity,
+    authorize_owned_registration_api_scope,
+    authorize_registration_commerce_edition_api_scope,
+    authorize_tier_replacement_api_scope,
+    configuration_capacity_ceiling,
+    effective_configuration_capacity,
+    effective_product_capacity,
+    offer_next_waitlist_batch,
+    pending_target_capacity_holds,
+    product_capacity_ceiling,
+    registration_commerce_activity,
+    reserve_admission_tier_replacement,
+)
 from maru.registration.finance import (
     approve_financial_operation,
     propose_financial_operation,
@@ -64,6 +84,7 @@ from maru.registration.finance import (
 from maru.registration.guardians import accept_guardian_consent
 from maru.registration.media import media_is_safe
 from maru.registration.models import (
+    AdmissionTierReplacement,
     AttendeeFursuit,
     AttendeeRegistrationProfile,
     ConfigurationStatus,
@@ -72,13 +93,11 @@ from maru.registration.models import (
     PaymentException,
     PaymentIntent,
     PaymentProviderAccount,
-    ProfileExtensionStatus,
-    ProfileExtensionWriter,
     QuestionVisibility,
     ReceiptRecord,
     Registration,
+    RegistrationCommerceControl,
     RegistrationConfiguration,
-    RegistrationProfileExtensionField,
     RegistrationTemplate,
     RegistrationTimelineEntry,
     SettlementBatch,
@@ -100,6 +119,18 @@ from maru.registration.profile_choices import (
     OTHER_PRONOUN_CODE,
     PRONOUN_CHOICES,
 )
+from maru.registration.profile_extension_values import (
+    ProfileExtensionValueError,
+    ProfileExtensionValueEvidenceConflictError,
+    ProfileExtensionValueLimitExceededError,
+    ProfileExtensionValueRetryConflictError,
+    ProfileExtensionValueSequenceConflictError,
+    ProfileExtensionValueUnavailableError,
+    ProfileExtensionValueWorkspace,
+    append_profile_extension_value,
+    authorize_profile_extension_value_write_scope,
+    read_profile_extension_values,
+)
 from maru.registration.profile_policy import (
     COLLECTION_NOTICE_VERSION,
     DIRECTORY_CONSENT_VERSION,
@@ -117,6 +148,7 @@ from maru.registration.reporting import (
 from maru.registration.serializers import (
     ActionItemSerializer,
     ActivateConfigurationSerializer,
+    AdmissionTierReplacementSerializer,
     ApproveFinancialOperationSerializer,
     AttendeeReportQuerySerializer,
     AttendeeReportSerializer,
@@ -141,10 +173,15 @@ from maru.registration.serializers import (
     PublishTemplateSerializer,
     ReceiptRecordSerializer,
     ReconcileSettlementSerializer,
+    RegistrationCapacityAdjustmentCommandSerializer,
+    RegistrationCapacityAdjustmentResultSerializer,
+    RegistrationCommerceActivitySerializer,
+    RegistrationCommerceWorkspaceSerializer,
     RegistrationConfigurationSerializer,
     RegistrationConfigurationWorkspaceSerializer,
     RegistrationReconciliationSerializer,
     RegistrationTemplateSummarySerializer,
+    ReserveAdmissionTierReplacementSerializer,
     ResolvePaymentExceptionSerializer,
     SelfAttendeeProfileSerializer,
     SelfProfileImageUploadSerializer,
@@ -155,6 +192,8 @@ from maru.registration.serializers import (
     StaffRegistrationSerializer,
     SubmitRegistrationSerializer,
     UpdateSelfAttendeeProfileSerializer,
+    WaitlistBatchOfferCommandSerializer,
+    WaitlistBatchOfferResultSerializer,
     WaivePaymentSerializer,
     WriteProfileExtensionValueSerializer,
 )
@@ -165,7 +204,6 @@ from maru.registration.services import (
     check_in_registration,
     confirm_demo_payment,
     create_configuration_draft,
-    current_profile_extension_values,
     extend_payment_deadline,
     latest_profile_suggestion,
     profile_is_editable,
@@ -175,7 +213,9 @@ from maru.registration.services import (
     submit_registration,
     update_attendee_profile,
     waive_registration_payment,
-    write_registration_profile_extension_value,
+)
+from maru.registration.setup_definition_serializers import (
+    RegistrationSetupProblemSerializer,
 )
 
 MANAGE_CONFIGURATION = "registration.manage_configuration"
@@ -1592,56 +1632,137 @@ def _profile_extension_registration(
     return registration
 
 
+_PROFILE_EXTENSION_IDEMPOTENCY_PARAMETER = OpenApiParameter(
+    name="Idempotency-Key",
+    type=OpenApiTypes.UUID,
+    location=OpenApiParameter.HEADER,
+    required=True,
+    pattern=(
+        r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-"
+        r"[0-9a-f]{4}-[0-9a-f]{12}$"
+    ),
+    description=(
+        "Canonical lower-case UUID. Exact retries recover the original "
+        "profile-value result. A changed request requires a new key."
+    ),
+)
+_PROFILE_EXTENSION_REPLAY_PARAMETER = OpenApiParameter(
+    name="Idempotent-Replay",
+    type=OpenApiTypes.STR,
+    location=OpenApiParameter.HEADER,
+    required=True,
+    enum=("false", "true"),
+    response=(200,),
+    description="Whether the exact Idempotency-Key recovered a prior result.",
+)
+_PROFILE_EXTENSION_IDEMPOTENCY_MAX_LENGTH = 64
+_PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE = "application/problem+json"
+
+
+def _profile_extension_problem(description: str) -> OpenApiResponse:
+    return OpenApiResponse(
+        response=RegistrationSetupProblemSerializer,
+        description=description,
+    )
+
+
+class ProfileExtensionValueConflict(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "The profile-value request conflicts with current state."
+    default_code = "profile_extension_value_conflict"
+
+    def __init__(self, *, code: str) -> None:
+        super().__init__(
+            detail={"detail": self.default_detail, "code": code},
+            code=code,
+        )
+
+
+def _profile_extension_idempotency_key(request: Request) -> UUID:
+    raw_value = request.headers.get("Idempotency-Key")
+    if raw_value is None or not raw_value:
+        raise ApiValidationError(
+            {"Idempotency-Key": ["Provide one canonical lower-case UUID."]},
+            code="missing_idempotency_key",
+        )
+    if (
+        len(raw_value) > _PROFILE_EXTENSION_IDEMPOTENCY_MAX_LENGTH
+        or raw_value.strip() != raw_value
+    ):
+        value = None
+    else:
+        try:
+            value = UUID(raw_value)
+        except ValueError:
+            value = None
+    if value is None or str(value) != raw_value:
+        raise ApiValidationError(
+            {"Idempotency-Key": ["Use lower-case hexadecimal with canonical hyphens."]},
+            code="invalid_idempotency_key",
+        )
+    return value
+
+
+def _commerce_idempotency_key(request: Request) -> UUID:
+    """Commerce commands use the same canonical, header-only retry contract."""
+
+    return _profile_extension_idempotency_key(request)
+
+
+def _raise_profile_extension_error(error: Exception) -> Never:
+    if isinstance(
+        error,
+        (AuthorizationDenied, ProfileExtensionValueUnavailableError),
+    ):
+        raise NotFound(
+            "The registration profile is unavailable.",
+            code="registration_profile_unavailable",
+        ) from error
+    if isinstance(
+        error,
+        (
+            ProfileExtensionValueSequenceConflictError,
+            ProfileExtensionValueRetryConflictError,
+            ProfileExtensionValueLimitExceededError,
+        ),
+    ):
+        raise ProfileExtensionValueConflict(code=error.reason_code) from error
+    if isinstance(error, ProfileExtensionValueEvidenceConflictError):
+        raise DependencyUnavailable from error
+    if isinstance(error, ProfileExtensionValueError):
+        raise DependencyUnavailable from error
+    raise error
+
+
 def _profile_extension_workspace_payload(
     *,
-    registration: Registration,
-    staff_view: bool,
+    workspace: ProfileExtensionValueWorkspace,
 ) -> dict[str, object]:
-    fields = RegistrationProfileExtensionField.objects.filter(
-        organization_id=registration.organization_id,
-        edition_id=registration.edition_id,
-        status=ProfileExtensionStatus.ACTIVE,
-    )
-    if not staff_view:
-        fields = fields.filter(attendee_visible=True)
-    current_values = current_profile_extension_values(registration=registration)
-    payload_fields = []
-    for field in fields.order_by("position", "key", "id"):
-        revision = current_values.get(field.key)
-        can_write = (
-            field.writer_policy
-            in {
-                ProfileExtensionWriter.REGISTRATION_STAFF,
-                ProfileExtensionWriter.ATTENDEE_AND_STAFF,
-            }
-            if staff_view
-            else field.writer_policy
-            in {
-                ProfileExtensionWriter.ATTENDEE,
-                ProfileExtensionWriter.ATTENDEE_AND_STAFF,
-            }
-        )
-        payload_fields.append(
-            {
-                "id": field.id,
-                "key": field.key,
-                "version": field.version,
-                "label": field.label,
-                "help_text": field.help_text,
-                "field_type": field.field_type,
-                "options": field.options,
-                "purpose": field.purpose,
-                "classification": field.classification,
-                "required": field.required,
-                "writer_policy": field.writer_policy,
-                "can_write": can_write,
-                "current_value": revision.value if revision is not None else None,
-                "updated_at": revision.created_at if revision is not None else None,
-            }
-        )
     return {
-        "registration_id": registration.id,
-        "fields": payload_fields,
+        "registration_id": workspace.registration_id,
+        "snapshot_digest": workspace.snapshot_digest,
+        "fields": [
+            {
+                "id": item.field_id,
+                "key": item.field_key,
+                "version": item.field_version,
+                "label": item.label,
+                "help_text": item.help_text,
+                "field_type": item.field_type,
+                "options": list(item.options),
+                "purpose": item.purpose,
+                "classification": item.classification,
+                "audience_policy": item.audience_policy,
+                "audience_department_id": item.audience_department_id,
+                "required": item.required,
+                "writer_policy": item.writer_policy,
+                "can_write": item.can_write,
+                "current_value": item.current_value,
+                "current_sequence": item.current_sequence,
+                "updated_at": item.updated_at,
+            }
+            for item in workspace.fields
+        ],
     }
 
 
@@ -1650,7 +1771,20 @@ class MyRegistrationProfileExtensionsView(APIView):
 
     @extend_schema(
         operation_id="registration_retrieve_my_profile_extensions",
-        responses=ProfileExtensionWorkspaceSerializer,
+        responses={
+            200: ProfileExtensionWorkspaceSerializer,
+            (404, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem("The owned registration is unavailable.")
+            ),
+            (409, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem("The bounded projection limit is exceeded.")
+            ),
+            (503, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem(
+                    "The complete audited projection is temporarily unavailable."
+                )
+            ),
+        },
     )
     def get(
         self,
@@ -1659,34 +1793,59 @@ class MyRegistrationProfileExtensionsView(APIView):
         edition_id: UUID,
     ) -> Response:
         account = _account(request)
-        registration = _profile_extension_registration(
-            organization_id=organization_id,
-            edition_id=edition_id,
-            account=account,
-        )
-        decision = _scope_decision(
-            account=account,
-            capability_code=VIEW_SELF_PROFILE,
-            organization_id=organization_id,
-            edition_id=edition_id,
-            owned_resource=registration,
-        )
-        if not decision.allowed:
-            raise PermissionDenied(
-                "Your registration profile is unavailable.",
-                code=decision.reason_code,
+        try:
+            registration = _profile_extension_registration(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                account=account,
             )
+            workspace = read_profile_extension_values(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration.id,
+                correlation_id=_correlation_id(request),
+                source_channel="api",
+            )
+        except (AuthorizationDenied, ProfileExtensionValueError) as error:
+            _raise_profile_extension_error(error)
+        except DatabaseError as error:
+            raise DependencyUnavailable from error
         payload = _profile_extension_workspace_payload(
-            registration=registration,
-            staff_view=False,
+            workspace=workspace,
         )
         return Response(ProfileExtensionWorkspaceSerializer(payload).data)
 
     @extend_schema(
         operation_id="registration_write_my_profile_extension",
         request=WriteProfileExtensionValueSerializer,
-        responses=ProfileExtensionWorkspaceSerializer,
+        responses={
+            200: ProfileExtensionWorkspaceSerializer,
+            (400, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem("The closed command input is invalid.")
+            ),
+            (404, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem(
+                    "The owned registration or profile field is unavailable."
+                )
+            ),
+            (409, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem(
+                    "The sequence, retry key, or bounded projection conflicts."
+                )
+            ),
+            (503, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem(
+                    "Complete atomic profile-value evidence is unavailable."
+                )
+            ),
+        },
+        parameters=[
+            _PROFILE_EXTENSION_IDEMPOTENCY_PARAMETER,
+            _PROFILE_EXTENSION_REPLAY_PARAMETER,
+        ],
     )
+    @transaction.atomic
     def post(
         self,
         request: Request,
@@ -1694,80 +1853,86 @@ class MyRegistrationProfileExtensionsView(APIView):
         edition_id: UUID,
     ) -> Response:
         account = _account(request)
-        registration = _profile_extension_registration(
-            organization_id=organization_id,
-            edition_id=edition_id,
-            account=account,
-        )
-        serializer = WriteProfileExtensionValueSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        field = RegistrationProfileExtensionField.objects.filter(
-            id=serializer.validated_data["field_id"],
-            organization_id=organization_id,
-            edition_id=edition_id,
-            status=ProfileExtensionStatus.ACTIVE,
-            attendee_visible=True,
-        ).first()
-        if field is None:
-            raise NotFound(
-                "The profile field is unavailable.",
-                code="profile_extension_field_unavailable",
-            )
+        correlation_id = _correlation_id(request)
         try:
-            write_registration_profile_extension_value(
-                registration=registration,
-                field=field,
+            registration = _profile_extension_registration(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                account=account,
+            )
+            authorize_profile_extension_value_write_scope(
                 actor=account,
-                value=serializer.validated_data["value"],
-                correlation_id=_correlation_id(request),
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration.id,
+                correlation_id=correlation_id,
                 source_channel="api",
             )
-        except AuthorizationDenied as error:
-            raise PermissionDenied(str(error), code=error.reason_code) from error
+        except (AuthorizationDenied, ProfileExtensionValueError) as error:
+            _raise_profile_extension_error(error)
+        except DatabaseError as error:
+            raise DependencyUnavailable from error
+        serializer = WriteProfileExtensionValueSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        retry_key = _profile_extension_idempotency_key(request)
+        try:
+            result = append_profile_extension_value(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration.id,
+                field_id=serializer.validated_data["field_id"],
+                value=serializer.validated_data["value"],
+                expected_sequence=serializer.validated_data["expected_sequence"],
+                retry_key=retry_key,
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+            workspace = read_profile_extension_values(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration.id,
+                correlation_id=correlation_id,
+                source_channel="api",
+            )
+        except (AuthorizationDenied, ProfileExtensionValueError) as error:
+            _raise_profile_extension_error(error)
+        except DatabaseError as error:
+            raise DependencyUnavailable from error
         except DjangoValidationError as error:
             raise ApiValidationError(
                 error.message_dict if hasattr(error, "message_dict") else error.messages
             ) from error
-        payload = _profile_extension_workspace_payload(
-            registration=registration,
-            staff_view=False,
+        payload = _profile_extension_workspace_payload(workspace=workspace)
+        return Response(
+            ProfileExtensionWorkspaceSerializer(payload).data,
+            headers={"Idempotent-Replay": str(result.replayed).lower()},
         )
-        return Response(ProfileExtensionWorkspaceSerializer(payload).data)
 
 
 class StaffRegistrationProfileExtensionsView(APIView):
     """Reasoned registration-staff projection and profile-field write."""
 
-    def _registration_and_decision(
-        self,
-        *,
-        request: Request,
-        organization_id: UUID,
-        edition_id: UUID,
-        registration_id: UUID,
-    ) -> tuple[Account, Registration, PolicyDecision]:
-        account = _account(request)
-        decision = _scope_decision(
-            account=account,
-            capability_code=VIEW_SERVICE,
-            organization_id=organization_id,
-            edition_id=edition_id,
-        )
-        if not decision.allowed:
-            raise PermissionDenied(
-                "The registration profile is unavailable.",
-                code=decision.reason_code,
-            )
-        registration = _profile_extension_registration(
-            organization_id=organization_id,
-            edition_id=edition_id,
-            registration_id=registration_id,
-        )
-        return account, registration, decision
-
     @extend_schema(
         operation_id="registration_retrieve_staff_profile_extensions",
-        responses=ProfileExtensionWorkspaceSerializer,
+        responses={
+            200: ProfileExtensionWorkspaceSerializer,
+            (404, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem(
+                    "The exact-edition registration profile is unavailable."
+                )
+            ),
+            (409, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem("The bounded projection limit is exceeded.")
+            ),
+            (503, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem(
+                    "The complete audited projection is temporarily unavailable."
+                )
+            ),
+        },
     )
     def get(
         self,
@@ -1776,37 +1941,55 @@ class StaffRegistrationProfileExtensionsView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
-        account, registration, decision = self._registration_and_decision(
-            request=request,
-            organization_id=organization_id,
-            edition_id=edition_id,
-            registration_id=registration_id,
-        )
-        correlation_id = _correlation_id(request)
-        _read_audit(
-            account=account,
-            organization_id=organization_id,
-            edition_id=edition_id,
-            correlation_id=correlation_id,
-            capability_code=VIEW_SERVICE,
-            operation="registration.profile_extensions.retrieve",
-            target_type="registration.registration",
-            target_id=registration.id,
-            outcome=AuditEvent.Outcome.ALLOW,
-            reason_code=decision.reason_code,
-            obligations=decision.obligations,
-        )
+        account = _account(request)
+        try:
+            workspace = read_profile_extension_values(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+                correlation_id=_correlation_id(request),
+                source_channel="api",
+            )
+        except (AuthorizationDenied, ProfileExtensionValueError) as error:
+            _raise_profile_extension_error(error)
+        except DatabaseError as error:
+            raise DependencyUnavailable from error
         payload = _profile_extension_workspace_payload(
-            registration=registration,
-            staff_view=True,
+            workspace=workspace,
         )
         return Response(ProfileExtensionWorkspaceSerializer(payload).data)
 
     @extend_schema(
         operation_id="registration_write_staff_profile_extension",
         request=WriteProfileExtensionValueSerializer,
-        responses=ProfileExtensionWorkspaceSerializer,
+        responses={
+            200: ProfileExtensionWorkspaceSerializer,
+            (400, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem("The closed command input is invalid.")
+            ),
+            (404, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem(
+                    "The registration profile or permitted field is unavailable."
+                )
+            ),
+            (409, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem(
+                    "The sequence, retry key, or bounded projection conflicts."
+                )
+            ),
+            (503, _PROFILE_EXTENSION_PROBLEM_CONTENT_TYPE): (
+                _profile_extension_problem(
+                    "Complete atomic profile-value evidence is unavailable."
+                )
+            ),
+        },
+        parameters=[
+            _PROFILE_EXTENSION_IDEMPOTENCY_PARAMETER,
+            _PROFILE_EXTENSION_REPLAY_PARAMETER,
+        ],
     )
+    @transaction.atomic
     def post(
         self,
         request: Request,
@@ -1814,46 +1997,60 @@ class StaffRegistrationProfileExtensionsView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
-        account, registration, _ = self._registration_and_decision(
-            request=request,
-            organization_id=organization_id,
-            edition_id=edition_id,
-            registration_id=registration_id,
-        )
+        account = _account(request)
+        correlation_id = _correlation_id(request)
+        try:
+            authorize_profile_extension_value_write_scope(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+                correlation_id=correlation_id,
+                source_channel="api",
+            )
+        except (AuthorizationDenied, ProfileExtensionValueError) as error:
+            _raise_profile_extension_error(error)
+        except DatabaseError as error:
+            raise DependencyUnavailable from error
         serializer = WriteProfileExtensionValueSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        field = RegistrationProfileExtensionField.objects.filter(
-            id=serializer.validated_data["field_id"],
-            organization_id=organization_id,
-            edition_id=edition_id,
-            status=ProfileExtensionStatus.ACTIVE,
-        ).first()
-        if field is None:
-            raise NotFound(
-                "The profile field is unavailable.",
-                code="profile_extension_field_unavailable",
-            )
+        retry_key = _profile_extension_idempotency_key(request)
         try:
-            write_registration_profile_extension_value(
-                registration=registration,
-                field=field,
+            result = append_profile_extension_value(
                 actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+                field_id=serializer.validated_data["field_id"],
                 value=serializer.validated_data["value"],
-                correlation_id=_correlation_id(request),
+                expected_sequence=serializer.validated_data["expected_sequence"],
+                retry_key=retry_key,
+                correlation_id=correlation_id,
+                request_id=correlation_id,
                 source_channel="api",
                 reason=str(serializer.validated_data.get("reason", "")),
             )
-        except AuthorizationDenied as error:
-            raise PermissionDenied(str(error), code=error.reason_code) from error
+            workspace = read_profile_extension_values(
+                actor=account,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+                correlation_id=correlation_id,
+                source_channel="api",
+            )
+        except (AuthorizationDenied, ProfileExtensionValueError) as error:
+            _raise_profile_extension_error(error)
         except DjangoValidationError as error:
             raise ApiValidationError(
                 error.message_dict if hasattr(error, "message_dict") else error.messages
             ) from error
-        payload = _profile_extension_workspace_payload(
-            registration=registration,
-            staff_view=True,
+        except DatabaseError as error:
+            raise DependencyUnavailable from error
+        payload = _profile_extension_workspace_payload(workspace=workspace)
+        return Response(
+            ProfileExtensionWorkspaceSerializer(payload).data,
+            headers={"Idempotent-Replay": str(result.replayed).lower()},
         )
-        return Response(ProfileExtensionWorkspaceSerializer(payload).data)
 
 
 class MyRegistrationView(APIView):
@@ -1907,6 +2104,14 @@ class MyRegistrationView(APIView):
             .filter(account=account)
             .first()
         )
+        tier_replacement = (
+            AdmissionTierReplacement.objects.filter(
+                registration=registration,
+                status=AdmissionTierReplacement.Status.PAYMENT_PENDING,
+            ).first()
+            if registration is not None
+            else None
+        )
         return Response(
             {
                 "configuration": (
@@ -1917,6 +2122,11 @@ class MyRegistrationView(APIView):
                 "registration": (
                     SelfRegistrationSerializer(registration).data
                     if registration is not None
+                    else None
+                ),
+                "tier_replacement": (
+                    AdmissionTierReplacementSerializer(tier_replacement).data
+                    if tier_replacement is not None
                     else None
                 ),
                 "demo_payment_enabled": settings.DEMO_PAYMENT_ADAPTER_ENABLED,
@@ -1971,7 +2181,80 @@ class MyRegistrationView(APIView):
         return Response(SelfRegistrationSerializer(registration).data, status=201)
 
 
-class MyRegistrationDemoPaymentView(APIView):
+@method_decorator(never_cache, name="dispatch")
+class PrivateRegistrationCommerceAPIView(APIView):
+    """Keep self and staff commerce responses out of shared caches."""
+
+
+class MyAdmissionTierReplacementView(PrivateRegistrationCommerceAPIView):
+    @extend_schema(
+        operation_id="registration_reserve_my_admission_tier_replacement",
+        request=ReserveAdmissionTierReplacementSerializer,
+        responses={
+            200: AdmissionTierReplacementSerializer,
+            201: AdmissionTierReplacementSerializer,
+        },
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        registration_id: UUID,
+    ) -> Response:
+        actor = _account(request)
+        try:
+            authorize_tier_replacement_api_scope(
+                actor=actor,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+            )
+        except AuthorizationDenied as error:
+            raise NotFound(
+                "The admission upgrade is unavailable.",
+                code="tier_replacement_unavailable",
+            ) from error
+        serializer = ReserveAdmissionTierReplacementSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        idempotency_key = _commerce_idempotency_key(request)
+        try:
+            result = reserve_admission_tier_replacement(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+                target_product_id=cast(
+                    UUID, serializer.validated_data["target_product_id"]
+                ),
+                actor=actor,
+                expected_registration_version=cast(
+                    int,
+                    serializer.validated_data["expected_registration_version"],
+                ),
+                idempotency_key=idempotency_key,
+                correlation_id=_correlation_id(request),
+                source_channel="api",
+            )
+        except (AuthorizationDenied, ObjectDoesNotExist) as error:
+            raise NotFound(
+                "The admission upgrade is unavailable.",
+                code="tier_replacement_unavailable",
+            ) from error
+        except DjangoValidationError as error:
+            raise ApiValidationError(
+                error.message_dict if hasattr(error, "message_dict") else error.messages
+            ) from error
+        return Response(
+            AdmissionTierReplacementSerializer(result.replacement).data,
+            status=200 if result.replayed else 201,
+            headers={
+                "Idempotent-Replay": str(result.replayed).lower(),
+                "Registration-Commerce-Version": str(result.control_version),
+            },
+        )
+
+
+class MyRegistrationDemoPaymentView(PrivateRegistrationCommerceAPIView):
     @extend_schema(
         operation_id="registration_confirm_my_demo_payment",
         request=DemoPaymentSerializer,
@@ -1984,13 +2267,26 @@ class MyRegistrationDemoPaymentView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        actor = _account(request)
+        try:
+            authorize_owned_registration_api_scope(
+                actor=actor,
+                organization_id=organization_id,
+                edition_id=edition_id,
+                registration_id=registration_id,
+            )
+        except AuthorizationDenied as error:
+            raise NotFound(
+                "The registration is unavailable.",
+                code="registration_unavailable",
+            ) from error
         serializer = DemoPaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
             registration = confirm_demo_payment(
                 organization_id=organization_id,
                 edition_id=edition_id,
-                actor=_account(request),
+                actor=actor,
                 registration_id=registration_id,
                 idempotency_key=serializer.validated_data["idempotency_key"],
                 correlation_id=_correlation_id(request),
@@ -3200,6 +3496,251 @@ class StaffRegistrationWaivePaymentView(APIView):
             edition_id=edition_id,
         ).get(id=registration.id)
         return Response(StaffRegistrationSerializer(registration).data)
+
+
+class RegistrationCommerceWorkspaceView(APIView):
+    @extend_schema(
+        operation_id="registration_retrieve_commerce_workspace",
+        responses=RegistrationCommerceWorkspaceSerializer,
+    )
+    def get(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> Response:
+        actor = _account(request)
+        try:
+            activity = registration_commerce_activity(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                actor=actor,
+                correlation_id=_correlation_id(request),
+                source_channel="api",
+            )
+            configuration = RegistrationConfiguration.objects.prefetch_related(
+                "products"
+            ).get(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                status=ConfigurationStatus.ACTIVE,
+            )
+        except AuthorizationDenied as error:
+            raise PermissionDenied(
+                "Registration commerce is unavailable.",
+                code=error.reason_code,
+            ) from error
+        except ObjectDoesNotExist as error:
+            raise NotFound(
+                "Registration commerce is unavailable.",
+                code="registration_commerce_unavailable",
+            ) from error
+        occupied = Registration.objects.filter(
+            configuration=configuration,
+            state__in=(
+                Registration.State.PAYMENT_PENDING,
+                Registration.State.CONFIRMED,
+                Registration.State.CHECKED_IN,
+            ),
+        )
+        capacities: list[dict[str, object]] = [
+            {
+                "product_id": None,
+                "product_name": "",
+                "configured_capacity": configuration.capacity,
+                "effective_capacity": effective_configuration_capacity(configuration),
+                "hard_ceiling": configuration_capacity_ceiling(configuration),
+                "occupied": occupied.count(),
+                "pending_target_holds": 0,
+                "waitlisted": Registration.objects.filter(
+                    configuration=configuration,
+                    state=Registration.State.WAITLISTED,
+                ).count(),
+            }
+        ]
+        capacities.extend(
+            {
+                "product_id": product.id,
+                "product_name": product.name,
+                "configured_capacity": product.capacity,
+                "effective_capacity": effective_product_capacity(product),
+                "hard_ceiling": product_capacity_ceiling(product),
+                "occupied": occupied.filter(product=product).count(),
+                "pending_target_holds": pending_target_capacity_holds(product),
+                "waitlisted": Registration.objects.filter(
+                    product=product,
+                    state=Registration.State.WAITLISTED,
+                ).count(),
+            }
+            for product in configuration.products.all()
+        )
+        control_version = (
+            RegistrationCommerceControl.objects.filter(configuration=configuration)
+            .values_list("aggregate_version", flat=True)
+            .first()
+            or 1
+        )
+        return Response(
+            RegistrationCommerceWorkspaceSerializer(
+                {
+                    "control_version": control_version,
+                    "capacities": capacities,
+                    "activity": RegistrationCommerceActivitySerializer(
+                        activity,  # type: ignore[arg-type]
+                        many=True,
+                    ).data,
+                }
+            ).data
+        )
+
+
+class RegistrationCapacityAdjustmentView(PrivateRegistrationCommerceAPIView):
+    @extend_schema(
+        operation_id="registration_adjust_effective_capacity",
+        request=RegistrationCapacityAdjustmentCommandSerializer,
+        responses={
+            200: RegistrationCapacityAdjustmentResultSerializer,
+            201: RegistrationCapacityAdjustmentResultSerializer,
+        },
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> Response:
+        actor = _account(request)
+        try:
+            authorize_registration_commerce_edition_api_scope(
+                actor=actor,
+                organization_id=organization_id,
+                edition_id=edition_id,
+            )
+        except AuthorizationDenied as error:
+            raise PermissionDenied(
+                "Capacity adjustment is unavailable.",
+                code=error.reason_code,
+            ) from error
+        serializer = RegistrationCapacityAdjustmentCommandSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        values = serializer.validated_data
+        try:
+            result = adjust_registration_capacity(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                actor=actor,
+                product_id=cast(UUID | None, values.get("product_id")),
+                new_capacity=cast(int, values["new_capacity"]),
+                reason=cast(str, values["reason"]),
+                expected_control_version=cast(int, values["expected_control_version"]),
+                idempotency_key=_commerce_idempotency_key(request),
+                correlation_id=_correlation_id(request),
+                source_channel="api",
+            )
+        except AuthorizationDenied as error:
+            raise PermissionDenied(
+                "Capacity adjustment is unavailable.",
+                code=error.reason_code,
+            ) from error
+        except ObjectDoesNotExist as error:
+            raise NotFound(
+                "Capacity adjustment is unavailable.",
+                code="registration_capacity_unavailable",
+            ) from error
+        except DjangoValidationError as error:
+            raise ApiValidationError(
+                error.message_dict if hasattr(error, "message_dict") else error.messages
+            ) from error
+        adjustment = result.adjustment
+        payload = {
+            "id": adjustment.id,
+            "scope": adjustment.scope,
+            "product_id": adjustment.product_id,
+            "previous_capacity": adjustment.previous_capacity,
+            "new_capacity": adjustment.new_capacity,
+            "hard_ceiling": adjustment.hard_ceiling,
+            "control_version": result.control_version,
+            "occurred_at": adjustment.occurred_at,
+        }
+        return Response(
+            RegistrationCapacityAdjustmentResultSerializer(payload).data,
+            status=200 if result.replayed else 201,
+            headers={"Idempotent-Replay": str(result.replayed).lower()},
+        )
+
+
+class RegistrationWaitlistBatchOfferView(PrivateRegistrationCommerceAPIView):
+    @extend_schema(
+        operation_id="registration_offer_next_waitlist_batch",
+        request=WaitlistBatchOfferCommandSerializer,
+        responses={
+            200: WaitlistBatchOfferResultSerializer,
+            201: WaitlistBatchOfferResultSerializer,
+        },
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> Response:
+        actor = _account(request)
+        try:
+            authorize_registration_commerce_edition_api_scope(
+                actor=actor,
+                organization_id=organization_id,
+                edition_id=edition_id,
+            )
+        except AuthorizationDenied as error:
+            raise PermissionDenied(
+                "Waitlist batch offering is unavailable.",
+                code=error.reason_code,
+            ) from error
+        serializer = WaitlistBatchOfferCommandSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        values = serializer.validated_data
+        try:
+            result = offer_next_waitlist_batch(
+                organization_id=organization_id,
+                edition_id=edition_id,
+                product_id=cast(UUID, values["product_id"]),
+                actor=actor,
+                batch_size=cast(int, values["batch_size"]),
+                reason=cast(str, values["reason"]),
+                expected_control_version=cast(int, values["expected_control_version"]),
+                idempotency_key=_commerce_idempotency_key(request),
+                correlation_id=_correlation_id(request),
+                source_channel="api",
+            )
+        except AuthorizationDenied as error:
+            raise PermissionDenied(
+                "Waitlist batch offering is unavailable.",
+                code=error.reason_code,
+            ) from error
+        except ObjectDoesNotExist as error:
+            raise NotFound(
+                "Waitlist batch offering is unavailable.",
+                code="registration_waitlist_unavailable",
+            ) from error
+        except DjangoValidationError as error:
+            raise ApiValidationError(
+                error.message_dict if hasattr(error, "message_dict") else error.messages
+            ) from error
+        batch = result.batch
+        payload = {
+            "id": batch.id,
+            "product_id": batch.product_id,
+            "requested_size": batch.requested_size,
+            "offered_count": batch.offered_count,
+            "offered_registration_ids": result.offered_registration_ids,
+            "control_version": result.control_version,
+            "occurred_at": batch.occurred_at,
+        }
+        return Response(
+            WaitlistBatchOfferResultSerializer(payload).data,
+            status=200 if result.replayed else 201,
+            headers={"Idempotent-Replay": str(result.replayed).lower()},
+        )
 
 
 class RegistrationReconciliationView(APIView):

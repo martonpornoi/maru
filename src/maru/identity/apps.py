@@ -7,4 +7,5 @@ class IdentityConfig(AppConfig):
     verbose_name = "Identity"
 
     def ready(self) -> None:
+        from maru.identity import checks as identity_checks  # noqa: F401, PLC0415
         from maru.identity import signals  # noqa: F401, PLC0415

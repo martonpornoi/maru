@@ -11,6 +11,7 @@ import {
   ApiError,
   type AccessAssignment,
   type AccessGroup,
+  type AccessPreview,
   type AccessWorkspace,
   type ActionItem,
   type AssignAccessInput,
@@ -46,6 +47,7 @@ import {
   type ProfileMediaReviewItem,
   type ProfileExtensionField,
   type ProfileExtensionWorkspace,
+  type PreviewAccessInput,
   type RegistrationConfigurationWorkspace,
   type RegistrationReconciliation,
   type RegistrationQuestion,
@@ -57,6 +59,7 @@ import {
   type StaffRegistration,
   type StaffRegistrationPage,
   publishRegistrationTemplate,
+  previewAccess,
   replaceAccessAssignment,
   reviewProfileMedia,
   revokeAccessAssignment,
@@ -3544,8 +3547,83 @@ function AccessAssignmentCard({
   );
 }
 
+function AccessPreviewPanel({
+  preview,
+  onExit,
+}: {
+  preview: AccessPreview;
+  onExit: () => void;
+}) {
+  return (
+    <section className="access-preview" aria-labelledby="access-preview-heading">
+      <div className="access-preview-banner" role="status">
+        <div>
+          <strong>Preview only · your session has not changed</strong>
+          <span>
+            You are still signed in as yourself. This explanation is capped by
+            your own disclosure authority, and no action can be taken as the
+            previewed person or role.
+          </span>
+        </div>
+        <button className="secondary-button" type="button" onClick={onExit}>
+          Exit preview
+        </button>
+      </div>
+      <div className="access-preview-heading">
+        <p className="section-kicker">
+          {preview.mode === "person" ? "Exact person" : "Hypothetical role"}
+        </p>
+        <h3 id="access-preview-heading">{preview.subject_label}</h3>
+        <p>
+          Effective at {formatDateTime(preview.evaluated_at)} for {preview.scope_label}.
+          This is a policy explanation, not an impersonated page.
+        </p>
+      </div>
+      {preview.capabilities.length ? (
+        <ul className="access-preview-capabilities">
+          {preview.capabilities.map((item) => (
+            <li key={item.capability_code}>
+              <div>
+                <strong>{item.label}</strong>
+                <span>{item.description}</span>
+                <small>{item.source_label}</small>
+              </div>
+              <span
+                className={
+                  item.data_preview_available
+                    ? "quiet-badge"
+                    : "quiet-badge preview-limited"
+                }
+              >
+                {item.data_preview_available
+                  ? item.visible_fields.length
+                    ? `${item.visible_fields.length} visible fields`
+                    : "Action visible"
+                  : "Details capped"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted-copy">
+          No convention-management capability is effective at this exact scope.
+        </p>
+      )}
+      {preview.disclosure_limited_count > 0 && (
+        <p className="access-preview-limit-note">
+          {preview.disclosure_limited_count} capability
+          {preview.disclosure_limited_count === 1 ? " is" : "ies are"} shown
+          without protected record fields because your own access does not allow
+          those fields to be disclosed.
+        </p>
+      )}
+    </section>
+  );
+}
+
 function AccessDrawer({
   workspace,
+  edition,
   destination,
   busy,
   error,
@@ -3555,6 +3633,7 @@ function AccessDrawer({
   onRevoke,
 }: {
   workspace: AccessWorkspace;
+  edition: EditionContext;
   destination: Destination;
   busy: boolean;
   error?: string;
@@ -3578,6 +3657,13 @@ function AccessDrawer({
   const [approverEmail, setApproverEmail] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [reason, setReason] = useState("");
+  const [previewPersonEmail, setPreviewPersonEmail] = useState("");
+  const [previewRoleVersionId, setPreviewRoleVersionId] = useState(
+    orderedGroups[0]?.role_version_id ?? "",
+  );
+  const [preview, setPreview] = useState<AccessPreview>();
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [previewError, setPreviewError] = useState<string>();
   const [assignmentSearch, setAssignmentSearch] = useState("");
   const normalizedAssignmentSearch = assignmentSearch.trim().toLocaleLowerCase();
   const visibleAssignments = workspace.assignments.filter((assignment) =>
@@ -3606,6 +3692,38 @@ function AccessDrawer({
     } catch {
       // The drawer-level error keeps the form intact so the operator can correct it.
     }
+  }
+
+  async function runPreview(input: PreviewAccessInput): Promise<void> {
+    setPreviewBusy(true);
+    setPreviewError(undefined);
+    try {
+      setPreview(await previewAccess(edition, input));
+    } catch (previewFailure: unknown) {
+      setPreviewError(
+        previewFailure instanceof Error
+          ? previewFailure.message
+          : "Access preview could not be calculated.",
+      );
+    } finally {
+      setPreviewBusy(false);
+    }
+  }
+
+  function submitPersonPreview(event: FormEvent) {
+    event.preventDefault();
+    void runPreview({
+      mode: "person",
+      person_email: previewPersonEmail.trim(),
+    });
+  }
+
+  function submitRolePreview(event: FormEvent) {
+    event.preventDefault();
+    void runPreview({
+      mode: "role",
+      role_version_id: previewRoleVersionId,
+    });
   }
 
   return (
@@ -3645,9 +3763,86 @@ function AccessDrawer({
             capabilities.
           </span>
         </div>
-        {error && <p className="form-error" role="alert">{error}</p>}
+        {preview ? (
+          <AccessPreviewPanel preview={preview} onExit={() => setPreview(undefined)} />
+        ) : (
+          <section className="access-preview-launcher" aria-labelledby="preview-heading">
+            <div className="panel-heading">
+              <div>
+                <p className="section-kicker">Read-only policy simulation</p>
+                <h3 id="preview-heading">Preview access</h3>
+              </div>
+              <span className="quiet-badge">No impersonation</span>
+            </div>
+            <p className="muted-copy">
+              Check an exact active person or one immutable group version at this
+              convention scope. Preview never changes your login or creates access.
+            </p>
+            <div className="access-preview-forms">
+              <form onSubmit={submitPersonPreview}>
+                <label>
+                  <span>Exact person email</span>
+                  <input
+                    type="email"
+                    value={previewPersonEmail}
+                    onChange={(event) => setPreviewPersonEmail(event.target.value)}
+                    placeholder="person@example.com"
+                    required
+                  />
+                </label>
+                <button className="secondary-button" type="submit" disabled={previewBusy}>
+                  Preview person
+                </button>
+              </form>
+              <form onSubmit={submitRolePreview}>
+                <label>
+                  <span>Immutable group version</span>
+                  <select
+                    value={previewRoleVersionId}
+                    onChange={(event) => setPreviewRoleVersionId(event.target.value)}
+                    required
+                  >
+                    {orderedGroups.map((group) => (
+                      <option value={group.role_version_id} key={group.role_version_id}>
+                        {group.name} · v{group.version}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="secondary-button"
+                  type="submit"
+                  disabled={previewBusy || !previewRoleVersionId}
+                >
+                  Preview role
+                </button>
+              </form>
+            </div>
+            {previewError && <p className="form-error" role="alert">{previewError}</p>}
+          </section>
+        )}
+        {!preview && (
+          <section className="access-effective-summary" aria-labelledby="access-effective-heading">
+            <p className="section-kicker">Computed access</p>
+            <h3 id="access-effective-heading">Your effective access</h3>
+            <p>{workspace.effective_access.scope_label}</p>
+            <ul>
+              {workspace.effective_access.actions.map((action) => (
+                <li key={action.capability_code}>
+                  <strong>{action.label}</strong>
+                  <span>{action.allowed ? action.source_label : "Unavailable"}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {!preview && error && <p className="form-error" role="alert">{error}</p>}
 
-        <form className="access-share-form" onSubmit={submitAssignment}>
+        <form
+          className="access-share-form"
+          onSubmit={submitAssignment}
+          hidden={Boolean(preview)}
+        >
           <h3>Add a person</h3>
           <label className="wide-field">
             <span>Existing account email</span>
@@ -3712,7 +3907,11 @@ function AccessDrawer({
           </button>
         </form>
 
-        <section className="access-groups" aria-labelledby="groups-heading">
+        <section
+          className="access-groups"
+          aria-labelledby="groups-heading"
+          hidden={Boolean(preview)}
+        >
           <div className="panel-heading">
             <div>
               <p className="section-kicker">Reusable access groups</p>
@@ -3746,7 +3945,11 @@ function AccessDrawer({
           ))}
         </section>
 
-        <section className="access-assignments" aria-labelledby="assignments-heading">
+        <section
+          className="access-assignments"
+          aria-labelledby="assignments-heading"
+          hidden={Boolean(preview)}
+        >
           <div className="panel-heading">
             <div>
               <p className="section-kicker">Current access</p>
@@ -4082,6 +4285,7 @@ export default function App({
   const accessDrawer = accessOpen && accessWorkspace && (
     <AccessDrawer
       workspace={accessWorkspace}
+      edition={activeEdition}
       destination={destination}
       busy={accessBusy}
       error={accessError}
