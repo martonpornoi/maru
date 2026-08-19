@@ -26,6 +26,14 @@ refuses rulesets/branch protection for this private repository on the active
 plan; the payloads and application runbook are ready without making the source
 public.
 
+GitHub accepted squash-only merges, merged-branch deletion, updatable pull-
+request branches, full-SHA Actions enforcement, repository metadata/topics,
+collaboration labels, Dependabot alerts/security updates, and main-only
+candidate/gold environments with admin bypass disabled. It rejected both
+checked-in rulesets with HTTP 403. Replacement run `32254074078` then started
+no runner because GitHub reported an account payment/spending-limit block, so
+remote full acceptance remains pending without consuming a PostgreSQL job.
+
 Candidate or gold workflow success is not production approval. External
 infrastructure, provider, legal/privacy, security, accessibility, load,
 restore/PITR, owner, and go/no-go evidence remains mandatory.

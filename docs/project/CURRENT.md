@@ -9,7 +9,8 @@ contributor reference are repository-verified. ADR 0058's professional public
 Python documentation contracts and semantic-quality gate are repository-
 verified. ADR 0059's strict PyDocLint contract and bounded Ruff exemptions are
 repository-verified. ADR 0060's collaboration/release foundation is locally
-verified and awaits the replacement GitHub run. GitHub ruleset enforcement is
+verified. Replacement run `32254074078` started no runner because GitHub
+reports an account payment/spending-limit block. GitHub ruleset enforcement is
 prepared but blocked by the repository's current private-plan capability; the
 complete authenticated
 reflow, keyboard, screen-reader, owner, deployment, stopped-writer/cutover,
@@ -500,6 +501,11 @@ approval.
   recommended CodeQL default setup, but the current private plan does not
   permit ruleset enforcement or Code Security and public-only settings are
   intentionally not assumed.
+- Replacement pull-request run `32254074078` started no job step because
+  GitHub reports that recent account payments failed or the Actions spending
+  limit must be increased. No remote PostgreSQL service ran. Local acceptance
+  is complete, but the stable `PR gate` and remote full matrix remain required
+  after Actions capacity is restored.
 - The OCI image is a distributable deployment input, not proof of configured
   SMTP, payment, object storage/scanning, workers, telemetry, backups, load,
   accessibility, partner governance, recovery, or production readiness. The
@@ -509,7 +515,8 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Confirm the replacement GitHub `PR gate`, six measured shards, generated
+1. Restore GitHub Actions billing/capacity, then confirm the replacement GitHub
+   `PR gate`, six measured shards, generated
    documentation, combined coverage, and container build contract. Apply the
    checked-in main/tag rulesets when GitHub enables them for the private plan or
    during the separately reviewed public transition; then raise reviews to one
