@@ -17,6 +17,11 @@ on:
         description: Positive sequence for a candidate; leave empty for gold
         required: false
         type: number
+      release_immutability_verified:
+        description: Confirm the admin API reported release immutability enabled immediately before dispatch
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -56,9 +61,19 @@ jobs:
           RELEASE_PR: ${{ inputs.release_pr }}
           RELEASE_CHANNEL: ${{ inputs.channel }}
           CANDIDATE_NUMBER: ${{ inputs.candidate_number }}
+          RELEASE_IMMUTABILITY_VERIFIED: ${{ inputs.release_immutability_verified }}
         run: |
           if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
             echo "Releases must run from main."
+            exit 1
+          fi
+          if [[ "$RELEASE_IMMUTABILITY_VERIFIED" != "true" ]]; then
+            echo "Confirm the current immutable-release admin API readback before dispatch."
+            exit 1
+          fi
+          CURRENT_MAIN=$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')
+          if [[ "$CURRENT_MAIN" != "$GITHUB_SHA" ]]; then
+            echo "The release commit is no longer the exact current main commit."
             exit 1
           fi
           MERGED_AT=$(gh pr view "$RELEASE_PR" --json mergedAt --jq .mergedAt)
@@ -169,7 +184,7 @@ jobs:
             "$RELEASE_TITLE" "$IMAGE" "$IMAGE_DIGEST" "${{ inputs.release_pr }}" "$GITHUB_SHA" \
             > release-assets/release-notes.md
 
-      - name: Create the unique GitHub release
+      - name: Create the complete draft GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
@@ -193,9 +208,143 @@ jobs:
             --title "$RELEASE_TITLE" \
             --notes-file release-assets/release-notes.md \
             --generate-notes \
+            --draft \
             "${RELEASE_ARGS[@]}"
 
+      - name: Verify draft evidence before publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+          PRERELEASE: ${{ steps.metadata.outputs.prerelease }}
+          RELEASE_VERSION: ${{ steps.metadata.outputs.version }}
+        run: |
+          mapfile -t DRAFT_IDS < <(
+            gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+              -H "X-GitHub-Api-Version: 2026-03-10" \
+              --jq ".[] | select(.tag_name == \"$RELEASE_TAG\" and .draft == true) | .id"
+          )
+          if [[ "${#DRAFT_IDS[@]}" -ne 1 ]]; then
+            echo "Expected exactly one draft release for $RELEASE_TAG."
+            exit 1
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/${DRAFT_IDS[0]}" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            > release-assets/release-draft.json
+          ASSETS=(
+            release-assets/release-manifest.json
+            "release-assets/maru-docs-$RELEASE_VERSION.tar.gz"
+            release-assets/openapi.yaml
+            release-assets/uv.lock
+            release-assets/pnpm-lock.yaml
+            release-assets/LICENSE
+            release-assets/SHA256SUMS
+          )
+          ASSET_ARGS=()
+          for asset in "${ASSETS[@]}"; do
+            ASSET_ARGS+=(--asset "$asset")
+          done
+          python scripts/verify_release_evidence.py \
+            --release-json release-assets/release-draft.json \
+            --expected-tag "$RELEASE_TAG" \
+            --expected-commit "$GITHUB_SHA" \
+            --expected-prerelease "$PRERELEASE" \
+            --expected-state draft \
+            "${ASSET_ARGS[@]}"
+
+      - name: Publish the verified immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+        run: gh release edit "$RELEASE_TAG" --draft=false
+
+      - name: Verify immutable release, assets, image, and attestations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ steps.image.outputs.image }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
+          PRERELEASE: ${{ steps.metadata.outputs.prerelease }}
+          RELEASE_VERSION: ${{ steps.metadata.outputs.version }}
+        run: |
+          ASSETS=(
+            release-assets/release-manifest.json
+            "release-assets/maru-docs-$RELEASE_VERSION.tar.gz"
+            release-assets/openapi.yaml
+            release-assets/uv.lock
+            release-assets/pnpm-lock.yaml
+            release-assets/LICENSE
+            release-assets/SHA256SUMS
+          )
+          ASSET_ARGS=()
+          for asset in "${ASSETS[@]}"; do
+            ASSET_ARGS+=(--asset "$asset")
+          done
+
+          RELEASE_VERIFIED=false
+          for attempt in {1..12}; do
+            gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" \
+              -H "X-GitHub-Api-Version: 2026-03-10" \
+              > release-assets/release-published.json
+            if python scripts/verify_release_evidence.py \
+                --release-json release-assets/release-published.json \
+                --expected-tag "$RELEASE_TAG" \
+                --expected-commit "$GITHUB_SHA" \
+                --expected-prerelease "$PRERELEASE" \
+                --expected-state immutable \
+                "${ASSET_ARGS[@]}" \
+              && gh release verify "$RELEASE_TAG" --format json \
+                > release-assets/release-attestation.json; then
+              RELEASE_VERIFIED=true
+              break
+            fi
+            echo "Immutable release evidence is not ready (attempt $attempt/12)."
+            sleep 10
+          done
+          if [[ "$RELEASE_VERIFIED" != "true" ]]; then
+            echo "The published release did not become verifiably immutable."
+            exit 1
+          fi
+
+          REMOTE_TAG=$(git ls-remote --exit-code origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')
+          if [[ "$REMOTE_TAG" != "$GITHUB_SHA" ]]; then
+            echo "Published release tag $RELEASE_TAG does not target $GITHUB_SHA."
+            exit 1
+          fi
+
+          for asset in "${ASSETS[@]}"; do
+            asset_name=$(basename "$asset")
+            gh release verify-asset "$RELEASE_TAG" "$asset" --format json \
+              > "release-assets/release-asset-attestation-$asset_name.json"
+          done
+
+          IMAGE_MANIFEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{json .Manifest}}')
+          ACTUAL_IMAGE_DIGEST=$(python -c 'import json, sys; print(json.load(sys.stdin)["digest"])' <<< "$IMAGE_MANIFEST")
+          if [[ "$ACTUAL_IMAGE_DIGEST" != "$IMAGE_DIGEST" ]]; then
+            echo "Published image tag does not resolve to the certified digest."
+            exit 1
+          fi
+
+          IMAGE_NAME=${IMAGE%:*}
+          IMAGE_VERIFIED=false
+          for attempt in {1..12}; do
+            if gh attestation verify "oci://$IMAGE_NAME@$IMAGE_DIGEST" \
+                --repo "$GITHUB_REPOSITORY" \
+                --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+                --format json \
+                > release-assets/image-attestation.json; then
+              IMAGE_VERIFIED=true
+              break
+            fi
+            echo "Image provenance is not ready (attempt $attempt/12)."
+            sleep 10
+          done
+          if [[ "$IMAGE_VERIFIED" != "true" ]]; then
+            echo "The published image has no verifiable repository attestation."
+            exit 1
+          fi
+
       - name: Upload release evidence to the workflow
+        if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-${{ steps.metadata.outputs.tag }}

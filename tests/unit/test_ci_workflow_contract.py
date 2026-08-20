@@ -288,6 +288,8 @@ def test_release_requires_exact_source_unique_calver_and_evidence() -> None:
     for required in (
         "uses: ./.github/workflows/_full-ci.yml",
         "scripts/release_metadata.py",
+        "release_immutability_verified",
+        "CURRENT_MAIN=$(git ls-remote --exit-code origin refs/heads/main",
         'MERGE_SHA" != "$GITHUB_SHA',
         "pyproject.toml version",
         "Git tag $TAG already exists",
@@ -298,6 +300,16 @@ def test_release_requires_exact_source_unique_calver_and_evidence() -> None:
         "release-manifest.json",
         "SHA256SUMS",
         "gh release create",
+        "--draft",
+        "scripts/verify_release_evidence.py",
+        "--expected-state draft",
+        'gh release edit "$RELEASE_TAG" --draft=false',
+        "--expected-state immutable",
+        'gh release verify "$RELEASE_TAG"',
+        "gh release verify-asset",
+        "docker buildx imagetools inspect",
+        "gh attestation verify",
+        '--signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml"',
     ):
         assert required in workflow
 

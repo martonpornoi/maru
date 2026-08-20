@@ -1,6 +1,6 @@
 # GitHub repository hardening plan
 
-Status: GH-000 and GH-001 implemented; remaining milestones tracked
+Status: GH-000 and GH-001 implemented; GH-002 repository verification implemented and first candidate rehearsal pending
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -33,14 +33,15 @@ The 2026-08-20 live audit established the following starting point:
   updates, and private vulnerability reporting are enabled;
 - there was no open CodeQL, Dependabot, or secret-scanning alert on `main`;
 - candidate and gold environments accept only `main` deployments; and
-- release immutability and secret-validity checks remain disabled.
+- release immutability was disabled at the initial inspection; it was enabled
+  and read back later on 2026-08-20. Secret-validity checks remain disabled.
 
 Live values can drift. This baseline is evidence for the recorded date, not a
 substitute for the pre-change read required by a later milestone.
 
 ## Milestone GH-000 and GH-001: repository supply-chain boundary
 
-This branch completes the first focused hardening milestone. ADR 0064 records
+The first focused hardening commit completes this milestone. ADR 0064 records
 the durable decision and NFR-011 provides the stable requirement.
 
 ### GH-000: Security-only dependency automation and fail-fast inputs
@@ -101,7 +102,7 @@ Decision state: complete in the repository and reconciled live.
 
 ### Included repository changes
 
-The focused milestone contains only the coherent GH-000 and GH-001 outcome:
+The focused GH-000/GH-001 commit contains only their coherent outcome:
 
 - security-only Dependabot configuration;
 - the reusable full-acceptance lock and Actions-policy preflight;
@@ -131,20 +132,36 @@ Before this milestone is merged:
 
 ## Remaining tracked milestones
 
-Each item below is a separate future branch or explicitly recorded decision.
-Its completion criteria and any external write are scoped to that item.
+Each item below is a separate reviewed milestone or explicitly recorded
+decision. Its completion criteria and any external write are scoped to that
+item. Multiple focused commits may travel on the same hardening branch without
+combining their decision or checkpoint boundaries.
 
 ### GH-002: Immutable releases and deployment environments
 
-Enable repository release immutability before the first public release. Keep
-candidate and gold environment branch policies unchanged while Maru has one
-maintainer; add an independent gold reviewer only when a second trusted
-maintainer makes that control real. Add pre-publication immutability and
-post-publication exact-commit, asset, and attestation checks. Rehearse the first
-candidate in a dedicated release milestone because `rc.1` creates a real
-public prerelease and GHCR image.
+Repository release immutability is enabled and the administrator endpoint was
+read back as `enabled: true`, `enforced_by_owner: false`. No release or tag
+exists. Candidate and gold remain exact-`main`, disallow administrator bypass,
+have no required reviewer, secret, variable, or deployment, and stay unchanged
+while Maru has one maintainer.
 
-State: inspected; decision and external mutation remain pending.
+ADR 0065 accepts the repository verification boundary. Immediately before
+dispatch, the maintainer must re-read the administrator-only immutability
+endpoint and record confirmation in the manual workflow input. The release then
+stages every asset on a draft, verifies the exact commit, tag, asset set, upload
+state, and local/remote digest equality, and publishes only that verified draft.
+After publication it requires immutable state, GitHub release and per-asset
+attestations, the exact remote tag commit, the image tag's certified digest, and
+OCI provenance issued by Maru's exact Release workflow. It stores the available
+evidence even after a later verification failure and never introduces a long-
+lived administrator token.
+
+The first `rc.1` remains separately authorized because it creates a real public
+prerelease and GHCR image. It needs a dedicated release pull request and the
+complete release procedure after this repository candidate is merged.
+
+State: live setting reconciled and repository verification implemented; first
+candidate rehearsal pending.
 
 ### GH-003: Secret validity and one-time public-history audit
 
@@ -224,7 +241,7 @@ a focused decision before adoption.
 | Setting | Observed 2026-08-20 | Tracked outcome | Milestone |
 | --- | --- | --- | --- |
 | CodeQL merge protection | Active: `errors` and `medium_or_higher` | Accepted and reconciled | GH-001 |
-| Release immutability | Disabled; no release or tag | Decide before first candidate | GH-002 |
+| Release immutability | Enabled directly on Maru; no release or tag | Re-read before every dispatch; require immutable post-publication evidence | GH-002 |
 | Candidate environment | Exact `main`; no admin bypass or reviewer | Keep unless operational separation is needed | GH-002 |
 | Gold environment | Exact `main`; no admin bypass or reviewer | Add independent review only with a second maintainer | GH-002/GH-008 |
 | Secret-validity checks | Disabled | Review provider contact before deciding | GH-003 |

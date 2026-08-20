@@ -94,6 +94,24 @@ request is merged. A pull request can exercise its own candidate workflow, but
 documentation of the candidate does not itself mutate GitHub settings or the
 configuration currently present on `main`.
 
+## Immutable release boundary
+
+Repository release immutability is enabled and must be read back with an
+authenticated administrator session immediately before every manual Release
+dispatch. Record the workflow input confirmation only after that read. Do not
+store a repository-administrator token in `candidate` or `gold`; the release
+workflow needs only scoped content, package, identity-token, and attestation
+write permissions after complete certification.
+
+The workflow publishes only from exact current `main`. It verifies the complete
+draft asset set and digests before publication and then verifies immutable
+server state, the exact tag commit, GitHub's release and per-asset attestations,
+the OCI tag-to-digest binding, and image provenance. Candidate and gold allow
+only exact `main`, disallow administrator bypass, and have no required reviewer
+while one maintainer exists. Follow the complete procedure and irreversible
+failure rules in [the release process](../operations/release-process.md) and ADR
+0065.
+
 ## Maintainer settings
 
 Use squash merge, automatically delete merged branches, require immutable

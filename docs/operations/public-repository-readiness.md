@@ -28,6 +28,9 @@ were re-enabled only in exact-allowlist hosted mode.
 - The `candidate` and `gold` environments accept deployments only from the exact
   `main` branch, disallow administrator bypass, and currently have no required
   reviewer. Neither environment has a deployment, secret, or variable.
+- Repository release immutability is enabled directly on Maru. The 2026-08-20
+  administrator readback returned `enabled: true` and
+  `enforced_by_owner: false`. No release or tag existed at that boundary.
 - Merge commits and rebase merges are disabled; squash merge and automatic
   deletion of merged branches are enabled.
 
@@ -47,10 +50,10 @@ fresh evidence. Treat these as immediate launch tasks, not optional later work:
   synthetic non-secret test pattern without publishing credentials. Add a
   second trusted maintainer before requiring one approval, CODEOWNER review,
   or independent `gold` approval.
-- Enable and verify release immutability before the first release. Exercise the
-  `candidate` and `gold` environment policies through synthetic release work,
-  then verify deployment targets, GHCR visibility, package attestations, and
-  package cleanup.
+- Merge the ADR 0065 draft-first and post-publication verification candidate,
+  then rehearse the first explicitly authorized `rc.1`. Exercise the `candidate`
+  and `gold` environment policies, immutable release and asset attestations,
+  GHCR visibility, image provenance, deployment targets, and package cleanup.
 - Review repository description, topics, social preview, funding/sponsorship,
   issue triage labels, support expectations, and first-good-issue scope.
 - Keep the explicit pre-production maturity statement current. Do not imply

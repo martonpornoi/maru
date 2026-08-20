@@ -15,9 +15,11 @@ governs the public repository: hosted exact-commit acceptance, active no-bypass
 main/tag rulesets, exact Action allowlisting, secret scanning/push protection,
 private vulnerability reporting, and managed CodeQL. ADR 0064 accepts security-
 only dependency automation, early locked-input and Action-policy validation,
-and explicit CodeQL merge protection. The complete authenticated reflow,
-keyboard, screen-reader, owner, deployment, stopped-writer/cutover, restore/
-PITR, and production-governance gates remain open.
+and explicit CodeQL merge protection. ADR 0065 accepts administrator-confirmed
+release immutability, verified draft publication, and exact post-publication
+release, asset, tag, image, and attestation reconciliation. The complete
+authenticated reflow, keyboard, screen-reader, owner, deployment, stopped-
+writer/cutover, restore/PITR, and production-governance gates remain open.
 
 ## Current outcome
 
@@ -157,10 +159,14 @@ cross-domain-save design.
   only squash policy, resolved-conversation rule, deletion/non-fast-forward
   protection, and empty bypass list remain unchanged.
 - Candidate and gold releases are manual, exact-current-`main`, full-certified,
-  collision-refusing CalVer workflows. GHCR receives the non-root Django/
-  Gunicorn image by immutable digest with OCI SBOM and provenance. GitHub
-  receives docs, OpenAPI, locks, manifest, license, and checksums. No release,
-  tag, or package has been published.
+  collision-refusing CalVer workflows. Repository release immutability is live;
+  the administrator readback reports `enabled: true`. The ADR 0065 repository
+  candidate explicitly stages the complete GitHub asset set on a verified draft
+  before publication, then reconciles immutable state, the exact tag commit,
+  release and per-asset attestations, the OCI tag/digest, and image provenance.
+  GHCR receives the non-root Django/Gunicorn image by immutable digest with OCI
+  SBOM and provenance. GitHub receives docs, OpenAPI, locks, manifest, license,
+  and checksums. No release, tag, package, or deployment has been published.
 - Apache-2.0, contribution/conduct/security/support/governance policies,
   CODEOWNERS, issue/PR templates, Dependabot grouping, public-readiness steps,
   and active rulesets establish the public collaboration baseline without
@@ -422,6 +428,20 @@ as the repository-wide gate:
   snapshot matches the separately applied live CodeQL thresholds.
   A hosted complete full-acceptance run for the exact branch head remains the
   independent acceptance authority before merge.
+- The ADR 0065 candidate implements GH-002's repository verification boundary.
+  The live immutable-release endpoint reads `enabled: true` and
+  `enforced_by_owner: false`; releases, tags, and deployments remain empty.
+  Candidate and gold each retain exact-`main`, no-admin-bypass policy with no
+  reviewer, secret, or variable. Thirty-nine focused classifier, release-
+  metadata, release-evidence, and workflow-contract tests pass. Ruff formatting
+  and ALL-rule lint pass over 644 files, strict mypy over 356 source files,
+  `uv lock --check` over the 108-package graph, strict PyDocLint and semantic
+  validation over 365 production/tooling files, and direct allowlist validation
+  over the same eleven immutable Actions references. Workflow YAML parses,
+  documentation validation covers 274 Markdown files and 203 unique requirement
+  identifiers, whitespace validation passes, and a fresh warning-fatal
+  Sphinx/AutoAPI build succeeds. Hosted acceptance remains pending, and no end-
+  to-end release claim is made before an explicitly authorized first candidate.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source
@@ -459,13 +479,15 @@ approval.
 
 ## Decisions and migration boundary
 
-- ADRs 0049 through 0061 and ADRs 0063 through 0064 are Accepted. ADR 0062's
+- ADRs 0049 through 0061 and ADRs 0063 through 0065 are Accepted. ADR 0062's
   private self-hosted interval is superseded. ADR 0063 restores ADR 0060/0061's
   change-aware hosted topology for public collaboration. ADR 0064 makes
   dependency automation security-only, rejects stale locked/allowlisted inputs
   before costly full acceptance, and requires explicit CodeQL merge protection.
-  These decisions remove no test, security, documentation, contract, migration,
-  or authority gate.
+  ADR 0065 adds a draft verification boundary and immutable post-publication
+  reconciliation without adding a persistent administrator credential. These
+  decisions remove no test, security, documentation, contract, migration, or
+  authority gate.
 - ADR 0054 accepts the bounded architecture
   and migrated integrity boundary; it does not declare the partial
   LOG-001/002/003/004/006/007 portfolio complete or approve production rollout.
@@ -582,6 +604,12 @@ approval.
   alone. Dependabot and the default-branch full-CI preflight remain unchanged on
   `main` until merge, and the exact candidate head still requires hosted full
   acceptance.
+- ADR 0065 does not authorize a release. The administrator-only immutability
+  readback remains a mandatory maintainer pre-dispatch operation; the first
+  `rc.1` remains a dedicated release pull request and public publication
+  decision. Failure after image, draft/tag, or immutable-release creation
+  consumes that candidate identity rather than permitting overwrite or cleanup
+  for reuse.
 - The OCI image is a distributable deployment input, not proof of configured
   SMTP, payment, object storage/scanning, workers, telemetry, backups, load,
   accessibility, partner governance, recovery, or production readiness. The
@@ -591,10 +619,11 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Continue the GitHub hardening plan with GH-002's release immutability and
-   deployment-environment inspection. Exercise the strengthened active rules
-   through a harmless refusal test before final repository acceptance. Raise
-   reviews to one when a second trusted maintainer exists.
+1. Complete repository and hosted acceptance for GH-000 through GH-002, merge
+   the hardening candidate, and re-read the default-branch workflow. Then
+   prepare the separately authorized first candidate release pull request and
+   rehearse `rc.1`; raise reviews to one only when a second trusted maintainer
+   exists.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.

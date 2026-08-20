@@ -69,6 +69,7 @@ the system.
 | [0062](0062-local-exact-commit-certification.md) | Superseded | Historical private-repository local certification topology; ADR 0063 restores hosted execution after the public transition |
 | [0063](0063-public-hosted-protected-collaboration.md) | Accepted | Public hosted exact-commit acceptance, no-bypass rulesets, immutable Action allowlisting, and no persistent self-hosted pull-request runner |
 | [0064](0064-repository-supply-chain-and-code-scanning-policy.md) | Accepted | Security-only dependency automation, fail-fast lock and Actions policy checks, and reconciled CodeQL merge thresholds |
+| [0065](0065-immutable-release-publication-and-verification.md) | Accepted | Administrator-confirmed immutable-release policy, verified draft publication, and exact post-publication release and OCI evidence |
 
 New ADRs use the next four-digit number and contain:
 

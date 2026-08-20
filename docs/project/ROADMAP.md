@@ -141,11 +141,15 @@ routine updates, and a fail-fast lockfile/Action-allowlist preflight before full
 acceptance. GH-001 adds active CodeQL merge protection for errors and medium-or-
 higher security findings while retaining `PR gate` as the sole required status.
 Pull request 2's remediation of the twelve initial findings is accepted, and
-the default branch now reports zero open CodeQL alerts. Release immutability and
-rehearsal, the one-time public-history audit, public-policy reconciliation,
-post-merge CI measurement, dependency review, Pages publication, multi-
-maintainer governance, and the remaining demand-triggered-control review stay
-open under GH-002 through GH-009.
+the default branch now reports zero open CodeQL alerts. ADR 0065 records the
+enabled immutable-release setting and GH-002's repository candidate: exact
+draft asset/commit verification precedes publication, and immutable release,
+asset, tag, OCI digest, and attestation reconciliation follows it without a
+persistent administrator credential. The explicitly authorized first candidate
+rehearsal, one-time public-history audit, public-policy reconciliation, post-
+merge CI measurement, dependency review, Pages publication, multi-maintainer
+governance, and remaining demand-triggered-control review stay open under
+GH-002 through GH-009.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
