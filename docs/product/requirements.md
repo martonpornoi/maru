@@ -1308,6 +1308,19 @@ architecture documents, implementation issues, tests, and release notes.
   latch transition. Production readiness must fail closed
   without disclosing identifiers when the role, effective runtime boundary, or
   supported database-major contract is not the rehearsed one.
+- **NFR-011 — Protected repository and supply-chain integrity:** Changes must
+  enter protected branches through independently recorded exact-commit
+  acceptance without a routine bypass. Dependency manifests and lockfiles,
+  external automation references, and repository security rules must have a
+  reviewed checked-in desired state with automated drift detection. External
+  Actions must use immutable revisions and an exact minimal allowlist;
+  dependency-security automation and code scanning must use documented risk
+  thresholds. Cheap lock and automation-policy checks must fail before
+  expensive acceptance work. External repository settings require separate
+  authorization, a pre-change read, and post-change reconciliation that does
+  not silently adopt undocumented or server-managed response fields. Routine
+  maintenance, security-update handling, release evidence, and drift recovery
+  must remain documented.
 
 ## Explicit non-goals
 

@@ -8,6 +8,12 @@ SMTP, payments, object storage, workers, telemetry, backups, or production
 governance. Passing the workflow means the repository-controlled quality gates
 passed; the external gates in the deployment runbook remain separate.
 
+Repository release immutability is enabled and applies to future published
+releases. Once published, release assets and the associated tag cannot be
+modified or deleted in place, and GitHub produces a release attestation for the
+tag, commit, and attached assets. A draft remains a staging boundary until it is
+published.
+
 Maru is not currently published to PyPI. Its primary consumer runs a Django
 service, so an OCI image is more useful than a wheel. Source archives generated
 by GitHub remain available, while the attached docs, OpenAPI schema, locks,
@@ -38,17 +44,59 @@ never replace a tag, release, image, checksum, SBOM, or attestation.
 2. Let `PR gate` pass, resolve conversations, and squash-merge. Do not merge
    another pull request before starting this release: the release workflow
    requires the release PR merge commit to be the exact current `main` commit.
-3. Run **Release** from `main` with the merged PR number. Select `candidate` and
+3. Immediately before dispatch, use an authenticated administrator session to
+   read the live release policy:
+
+   ```powershell
+   gh api repos/martonpornoi/maru/immutable-releases `
+     -H "X-GitHub-Api-Version: 2026-03-10"
+   ```
+
+   Continue only when the response contains `"enabled": true`. The endpoint
+   requires administrator read access, which the deliberately narrow workflow
+   token does not receive. Do not create a persistent administrator token for
+   this check.
+4. Run **Release** from `main` with the merged PR number. Select `candidate` and
    a positive candidate number for rehearsal, or `gold` for intentional public
-   support. GitHub environment approval may pause publication.
-4. The workflow reruns full acceptance, rejects identity collisions, builds and
-   pushes the image once, records its digest and attestations, then creates the
-   GitHub Release last.
-5. Verify the release page, assets and checksums, OCI digest, SBOM/provenance,
+   support. Set **release_immutability_verified** only after step 3. The
+   workflow-dispatch record preserves this maintainer confirmation. GitHub
+   environment approval may pause publication.
+5. The workflow reruns full acceptance, rejects identity collisions, builds and
+   pushes the image once, and records its digest and attestations. It creates a
+   draft release with the complete asset set, verifies its exact commit, tag,
+   asset names, uploaded state, and SHA-256 digests, and only then publishes it.
+6. After publication, the workflow requires GitHub to report the release as
+   immutable, verifies the release and every attached asset against GitHub's
+   release attestation, confirms the tag still targets the certified commit,
+   confirms the image tag resolves to the certified digest, and verifies the
+   image provenance attestation.
+7. Verify the release page, assets and checksums, OCI digest, SBOM/provenance,
    collected private API assets, synthetic deployment, migrations, readiness,
    rollback/forward-fix procedure, and required human governance gates.
 
-If publication fails after the image was pushed, do not overwrite it. Inspect
-the workflow artifacts, correct the cause in a new pull request if source must
-change, and use a new candidate sequence or CalVer. Gold publication requires
-an explicit recovery decision; never delete evidence merely to reuse a name.
+If publication fails after the image, draft, tag, or immutable release was
+created, do not overwrite or delete it merely to reuse the identity. The
+workflow uploads the available draft, published-release, release-attestation,
+asset-attestation, image-attestation, manifest, and checksum evidence even when
+a later verification fails. Inspect that evidence, correct the cause in a new
+pull request if source must change, and use a new candidate sequence or CalVer.
+Gold publication requires an explicit recovery decision.
+
+## Consumer verification
+
+For a published tag, verify GitHub's immutable-release attestation and a
+downloaded asset with:
+
+```powershell
+gh release verify v2026.08.2-rc.1 --repo martonpornoi/maru
+gh release verify-asset v2026.08.2-rc.1 .\downloaded-asset `
+  --repo martonpornoi/maru
+```
+
+Verify the OCI image provenance by immutable digest rather than by tag alone:
+
+```powershell
+gh attestation verify `
+  oci://ghcr.io/martonpornoi/maru@sha256:<digest> `
+  --repo martonpornoi/maru
+```

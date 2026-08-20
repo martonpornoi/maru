@@ -10,10 +10,10 @@ support window before the project is used with production personal data.
 ## Reporting a vulnerability
 
 Do not open a public issue, pull request, discussion, or chat message for a
-suspected vulnerability. While the repository is private, contact the repository
-owner through GitHub using a private channel. When Maru becomes public, GitHub
-private vulnerability reporting will be the preferred intake and this document
-will link directly to it.
+suspected vulnerability. Instead, [open a private vulnerability
+report](https://github.com/martonpornoi/maru/security/advisories/new) so the
+maintainer can assess and coordinate remediation without disclosing the report
+publicly.
 
 Include the affected commit or release, reproduction conditions, impact,
 whether sensitive data may be involved, and any safe mitigation you have tested.

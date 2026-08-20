@@ -1,39 +1,37 @@
 version: 2
 updates:
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       time: "05:00"
       timezone: Europe/Budapest
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     groups:
-      python-development:
-        dependency-type: development
-      python-runtime:
-        dependency-type: production
+      python-security:
+        applies-to: security-updates
+        patterns: ["*"]
 
   - package-ecosystem: npm
     directory: /frontends/staff-console
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       time: "05:30"
       timezone: Europe/Budapest
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     groups:
-      staff-console:
+      staff-console-security:
+        applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       time: "06:00"
       timezone: Europe/Budapest
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     groups:
-      actions:
+      actions-security:
+        applies-to: security-updates
         patterns: ["*"]
