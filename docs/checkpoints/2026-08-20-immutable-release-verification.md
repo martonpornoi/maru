@@ -1,7 +1,7 @@
 # Immutable release verification
 
 Date: 2026-08-20
-Status: Live setting reconciled, repository candidate implemented, and local acceptance complete; hosted acceptance and first candidate rehearsal pending
+Status: Live setting reconciled and repository candidate accepted locally and on GitHub; first candidate rehearsal pending
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -65,10 +65,16 @@ maintainer.
 - Workflow YAML parses, documentation validation passes 274 Markdown files and
   203 unique requirement identifiers, whitespace validation passes, and a
   fresh warning-fatal parallel Sphinx/AutoAPI build completes successfully.
+- Hosted high-risk full-acceptance run `32412170009` passes for exact commit
+  `fb73613e70a236ffa7fe757a948a701e4d6af047`. Its lock/Actions preflight,
+  repository safety, dependency security, contributor documentation, Python
+  static analysis, Django/contracts/frontend, unit coverage, all eight
+  PostgreSQL shards, combined coverage, full-CI aggregate, and final `PR gate`
+  are green. Managed CodeQL run `32412168767` also passes its Actions,
+  JavaScript/TypeScript, and Python analyses for that commit.
 
-Exact candidate-head hosted acceptance remains to be recorded after the
-candidate is pushed. No publication behavior can be proven end to end without
-intentionally creating the first real candidate release.
+No publication behavior can be proven end to end without intentionally
+creating the first real candidate release.
 
 ## Known limits
 
@@ -88,12 +94,10 @@ intentionally creating the first real candidate release.
 
 ## Smallest next actions
 
-1. Require hosted full acceptance for the exact hardening branch head before
-   merge.
-2. Merge the repository-hardening candidate and confirm the default branch
+1. Merge the repository-hardening candidate and confirm the default branch
    contains the release-verification workflow.
-3. Prepare a dedicated release pull request with the derived project version,
+2. Prepare a dedicated release pull request with the derived project version,
    curated notes, migration/recovery statement, and release checkpoint.
-4. Re-read release immutability, intentionally authorize `rc.1`, run Release
+3. Re-read release immutability, intentionally authorize `rc.1`, run Release
    from exact current `main`, and inspect the immutable release, GHCR image,
    attestations, environment record, and retained evidence.

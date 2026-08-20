@@ -440,8 +440,11 @@ as the repository-wide gate:
   over the same eleven immutable Actions references. Workflow YAML parses,
   documentation validation covers 274 Markdown files and 203 unique requirement
   identifiers, whitespace validation passes, and a fresh warning-fatal
-  Sphinx/AutoAPI build succeeds. Hosted acceptance remains pending, and no end-
-  to-end release claim is made before an explicitly authorized first candidate.
+  Sphinx/AutoAPI build succeeds. Hosted high-risk full-acceptance run
+  `32412170009` and managed CodeQL run `32412168767` pass exact commit
+  `fb73613e70a236ffa7fe757a948a701e4d6af047`, including every PostgreSQL shard,
+  combined coverage, and the final `PR gate`. No end-to-end release claim is
+  made before an explicitly authorized first candidate.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source
