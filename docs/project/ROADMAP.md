@@ -123,9 +123,9 @@ parallel non-database gates, and a stable `Full CI gate`. A manual exact-source
 release workflow now publishes a CalVer-tagged immutable GHCR image with SBOM/
 provenance and GitHub evidence assets. Pull-request browser smoke, nightly
 compatibility/concurrency/visual
-matrices, public-plan CodeQL/dependency/secret policy, synthetic deployment,
-and release recovery rehearsal remain next testing-infrastructure outcomes;
-ephemeral Actions databases do not satisfy production restore/PITR.
+matrices, synthetic deployment, and release recovery rehearsal remain next
+testing-infrastructure outcomes; ephemeral Actions databases do not satisfy
+production restore/PITR.
 
 ADR 0062's private-repository self-hosted interval is superseded by ADR 0063
 after the 2026-08-20 public transition. Public pull requests now use only
@@ -134,12 +134,18 @@ no-bypass main and release-tag rulesets make the up-to-date `PR gate`, pull-
 request-only squash history, resolved conversations, deletion prevention, and
 non-fast-forward prevention server-enforced. Complete local certification
 remains required pre-review evidence but is not trusted as the GitHub result.
-Secret scanning, push protection, private vulnerability reporting, Dependabot
-security updates, and managed default CodeQL are enabled. The first public
-analysis reported twelve baseline findings. The current corrective candidate
-removes their regex, exception-detail, request-derived redirect, and dynamic
-frontend path flows with focused regression coverage; independent replacement
-CodeQL acceptance and the remainder of the public-readiness audit remain open.
+Secret scanning, push protection, private vulnerability reporting, and managed
+default CodeQL are enabled. GH-000 accepts security-only grouped Dependabot for
+the native `uv`, npm, and GitHub Actions ecosystems, quarterly maintainer-owned
+routine updates, and a fail-fast lockfile/Action-allowlist preflight before full
+acceptance. GH-001 adds active CodeQL merge protection for errors and medium-or-
+higher security findings while retaining `PR gate` as the sole required status.
+Pull request 2's remediation of the twelve initial findings is accepted, and
+the default branch now reports zero open CodeQL alerts. Release immutability and
+rehearsal, the one-time public-history audit, public-policy reconciliation,
+post-merge CI measurement, dependency review, Pages publication, multi-
+maintainer governance, and the remaining demand-triggered-control review stay
+open under GH-002 through GH-009.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative

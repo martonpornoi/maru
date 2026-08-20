@@ -17,7 +17,17 @@ were re-enabled only in exact-allowlist hosted mode.
   revisions in `.github/actions-allowlist.json`.
 - Secret scanning, push protection, Dependabot security updates, and private
   vulnerability reporting are enabled. GitHub-managed default CodeQL is
-  configured for Actions, Python, and JavaScript/TypeScript.
+  configured for Actions, Python, and JavaScript/TypeScript. The `main` ruleset
+  rejects CodeQL errors and security alerts of medium severity or higher;
+  `PR gate` remains the sole required status check. The default branch currently
+  has zero open CodeQL, Dependabot, or secret-scanning alerts.
+- The twelve findings from the first public CodeQL analysis were remediated and
+  accepted through [pull request 2](https://github.com/martonpornoi/maru/pull/2).
+- Issues and Discussions are enabled. Projects, Wiki, and GitHub Pages are
+  disabled.
+- The `candidate` and `gold` environments accept deployments only from the exact
+  `main` branch, disallow administrator bypass, and currently have no required
+  reviewer. Neither environment has a deployment, secret, or variable.
 - Merge commits and rebase merges are disabled; squash merge and automatic
   deletion of merged branches are enabled.
 
@@ -33,19 +43,18 @@ fresh evidence. Treat these as immediate launch tasks, not optional later work:
   and historical branches/tags for publishability.
 - Replace temporary owner-only conduct and security contact channels with
   durable monitored addresses. Define maintainer succession and moderation.
-- Exercise the active rules through a harmless pull request and protected-tag
-  refusal. Add a second trusted maintainer, then require one approval and
-  CODEOWNER review.
-- Secret scanning currently reports no open alert. Triage the twelve initial
-  CodeQL findings (three high and nine medium), and confirm push protection
-  blocks a synthetic non-secret test pattern without publishing credentials.
-- Configure `candidate` and `gold` environments, required reviewers where the
-  team permits them, deployment targets, GHCR visibility, and package cleanup.
+- Exercise the protected-tag refusal and confirm push protection blocks a
+  synthetic non-secret test pattern without publishing credentials. Add a
+  second trusted maintainer before requiring one approval, CODEOWNER review,
+  or independent `gold` approval.
+- Enable and verify release immutability before the first release. Exercise the
+  `candidate` and `gold` environment policies through synthetic release work,
+  then verify deployment targets, GHCR visibility, package attestations, and
+  package cleanup.
 - Review repository description, topics, social preview, funding/sponsorship,
-  discussions, issue triage labels, support expectations, and first-good-issue
-  scope.
-- Publish an explicit pre-production maturity statement. Do not imply that the
-  current repository or a candidate release is safe for production personal
+  issue triage labels, support expectations, and first-good-issue scope.
+- Keep the explicit pre-production maturity statement current. Do not imply
+  that the repository or a candidate release is safe for production personal
   data.
 
 ## Post-transition acceptance

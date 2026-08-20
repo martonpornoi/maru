@@ -13,10 +13,11 @@ accepted. ADR 0061's hosted latency correction passed remote run `32304152005`
 and ADR 0062 records the superseded private self-hosted interval. ADR 0063 now
 governs the public repository: hosted exact-commit acceptance, active no-bypass
 main/tag rulesets, exact Action allowlisting, secret scanning/push protection,
-private vulnerability reporting, and managed CodeQL. The complete authenticated
-reflow, keyboard, screen-reader, owner, deployment, stopped-writer/cutover,
-restore/PITR, and production-governance gates remain open.
-Branch: `codex/strict-python-documentation`
+private vulnerability reporting, and managed CodeQL. ADR 0064 accepts security-
+only dependency automation, early locked-input and Action-policy validation,
+and explicit CodeQL merge protection. The complete authenticated reflow,
+keyboard, screen-reader, owner, deployment, stopped-writer/cutover, restore/
+PITR, and production-governance gates remain open.
 
 ## Current outcome
 
@@ -144,7 +145,17 @@ cross-domain-save design.
   with no bypass actors.
 - Actions are enabled only in selected mode with SHA pinning and an exact
   checked-in allowlist. Secret scanning, push protection, Dependabot security
-  updates, private vulnerability reporting, and default CodeQL are enabled.
+  updates, private vulnerability reporting, and default CodeQL are live. The
+  repository candidate changes Dependabot to grouped security-only updates for
+  native `uv`, npm, and GitHub Actions ecosystems; ordinary upgrades use an at-
+  least-quarterly maintainer-owned branch. It also places a lightweight
+  `uv lock --check` and exact Actions-allowlist validation before the expensive
+  full-acceptance fan-out. Those two automation changes become the default-
+  branch policy only after merge.
+- The active `main` ruleset explicitly requires CodeQL error-level alerts and
+  medium-or-higher security alerts to clear. The strict `PR gate`, pull-request-
+  only squash policy, resolved-conversation rule, deletion/non-fast-forward
+  protection, and empty bypass list remain unchanged.
 - Candidate and gold releases are manual, exact-current-`main`, full-certified,
   collision-refusing CalVer workflows. GHCR receives the non-root Django/
   Gunicorn image by immutable digest with OCI SBOM and provenance. GitHub
@@ -394,16 +405,23 @@ as the repository-wide gate:
   actors and `current_user_can_bypass: never`; main requires a strict up-to-date
   `PR gate`. Secret scanning, push protection, Dependabot security updates,
   private vulnerability reporting, and managed default CodeQL are enabled. The
-  initial CodeQL run `32376332626` passes all three language jobs and secret
-  scanning currently reports zero alerts. Pull-request run `32379350090`
-  passes every hosted acceptance job and its required `PR gate`; CodeQL's
-  seven-alert pull-request policy check remains red because the large docstring
-  patch made existing baseline flows appear changed. The current corrective
-  candidate addresses all twelve baseline findings: linear ASCII-decimal
-  integer parsing replaces two regexes, eight exception-detail flows become
-  code-owned public responses, one request-derived redirect becomes a named
-  route, and one frontend path segment is percent-encoded. Replacement CodeQL
-  analysis remains the independent acceptance authority.
+  initial CodeQL run `32376332626` passes all three language jobs. Pull request
+  2 remediated the twelve public baseline findings and is merged on `main`;
+  current CodeQL, Dependabot, and secret-scanning alert counts are zero. On
+  2026-08-20 ruleset `21093924` was read back after update with CodeQL
+  `alerts_threshold: errors` and `security_alerts_threshold:
+  medium_or_higher`; all prior no-bypass and pull-request protections remained
+  intact.
+- The ADR 0064 candidate implements GH-000 and GH-001. Twenty-four focused
+  classifier and workflow-contract tests pass, including thirteen Dependabot,
+  allowlist, and ruleset contracts. Ruff formatting/lint over 643 files, strict
+  mypy over 356 source files, `uv lock --check`, direct validation of all eleven
+  immutable Action references, PyDocLint, the warning-fatal Sphinx/AutoAPI
+  build, validation of 272 Markdown files and 203 unique requirement
+  identifiers, and whitespace validation pass. The checked-in `main` ruleset
+  snapshot matches the separately applied live CodeQL thresholds.
+  A hosted complete full-acceptance run for the exact branch head remains the
+  independent acceptance authority before merge.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source
@@ -441,11 +459,13 @@ approval.
 
 ## Decisions and migration boundary
 
-- ADRs 0049 through 0061 and ADR 0063 are Accepted. ADR 0062's private self-
-  hosted interval is superseded. ADR 0063 restores ADR 0060/0061's change-aware
-  hosted topology for public collaboration, preserves the complete eight-shard
-  high-risk boundary and local pre-review certification, and removes no test,
-  security, documentation, contract, migration, or authority gate.
+- ADRs 0049 through 0061 and ADRs 0063 through 0064 are Accepted. ADR 0062's
+  private self-hosted interval is superseded. ADR 0063 restores ADR 0060/0061's
+  change-aware hosted topology for public collaboration. ADR 0064 makes
+  dependency automation security-only, rejects stale locked/allowlisted inputs
+  before costly full acceptance, and requires explicit CodeQL merge protection.
+  These decisions remove no test, security, documentation, contract, migration,
+  or authority gate.
 - ADR 0054 accepts the bounded architecture
   and migrated integrity boundary; it does not declare the partial
   LOG-001/002/003/004/006/007 portfolio complete or approve production rollout.
@@ -550,8 +570,7 @@ approval.
   200-percent-zoom, keyboard, automated-accessibility, screen-reader, and owner
   evidence matrix.
 - GitHub browser/accessibility, multi-Python compatibility, native dependency
-  review, nightly concurrency repetition, replacement CodeQL acceptance of the
-  twelve-finding corrective candidate, and release restore rehearsal remain
+  review, nightly concurrency repetition, and release restore rehearsal remain
   later testing layers. Managed CodeQL, secret scanning, and push protection
   are enabled; findings must be fixed or explicitly justified rather than
   dismissed by assumption.
@@ -559,6 +578,10 @@ approval.
   request permissions. A self-hosted public runner, `pull_request_target`
   execution of contribution code, or environment/secret access for fork pull
   requests requires a separately accepted security design.
+- The ADR 0064 repository candidate is not accepted by local focused evidence
+  alone. Dependabot and the default-branch full-CI preflight remain unchanged on
+  `main` until merge, and the exact candidate head still requires hosted full
+  acceptance.
 - The OCI image is a distributable deployment input, not proof of configured
   SMTP, payment, object storage/scanning, workers, telemetry, backups, load,
   accessibility, partner governance, recovery, or production readiness. The
@@ -568,10 +591,10 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Publish the CodeQL corrective candidate to pull request 2, require a clean
-   replacement analysis, then resolve only the verified GitHub review threads
-   and exercise the active rules through harmless refusal tests. Raise reviews
-   to one when a second trusted maintainer exists.
+1. Continue the GitHub hardening plan with GH-002's release immutability and
+   deployment-environment inspection. Exercise the strengthened active rules
+   through a harmless refusal test before final repository acceptance. Raise
+   reviews to one when a second trusted maintainer exists.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
@@ -584,7 +607,7 @@ approval.
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `PRODUCTION_CONSOLIDATION.md`, the
-relevant requirement IDs, ADRs 0047 through 0063, and the owning module/runbook
+relevant requirement IDs, ADRs 0047 through 0064, and the owning module/runbook
 docs. Preserve every concurrent change in the dirty working tree. Serialize all
 PostgreSQL tests that share `test_maru_test`; never infer authority from a
 selected edition or route; authorize before parsing untrusted input; retain

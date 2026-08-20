@@ -68,6 +68,7 @@ the system.
 | [0061](0061-latency-bounded-full-acceptance.md) | Accepted | Change-aware hosted acceptance with eight measured PostgreSQL shards, restored for public collaboration by ADR 0063 |
 | [0062](0062-local-exact-commit-certification.md) | Superseded | Historical private-repository local certification topology; ADR 0063 restores hosted execution after the public transition |
 | [0063](0063-public-hosted-protected-collaboration.md) | Accepted | Public hosted exact-commit acceptance, no-bypass rulesets, immutable Action allowlisting, and no persistent self-hosted pull-request runner |
+| [0064](0064-repository-supply-chain-and-code-scanning-policy.md) | Accepted | Security-only dependency automation, fail-fast lock and Actions policy checks, and reconciled CodeQL merge thresholds |
 
 New ADRs use the next four-digit number and contain:
 

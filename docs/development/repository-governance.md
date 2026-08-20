@@ -42,8 +42,14 @@ identifier when the checked-in desired state changes.
 
 The active `main` rule requires an up-to-date `PR gate`, a pull request, linear
 squash history, and resolved conversations; it rejects deletion and non-fast-
-forward updates with no bypass actors. The active `v*` tag rule rejects update,
-deletion, and non-fast-forward mutation. Verify the live rules after every
+forward updates with no bypass actors. It also requires CodeQL to report no
+error-level alerts and no security alert at medium severity or higher. The
+reviewed payload records those thresholds as `alerts_threshold: errors` and
+`security_alerts_threshold: medium_or_higher`. Ruleset `21093924` was read back
+after the 2026-08-20 update with those exact thresholds, the sole strict
+required status still set to `PR gate`, and every prior pull-request and no-
+bypass protection intact. The active `v*` tag rule rejects update, deletion,
+and non-fast-forward mutation. Verify the complete live rules after every
 visibility, ownership, or plan change rather than trusting this prose.
 
 ## Public hosted acceptance
@@ -57,10 +63,36 @@ execution or expose environments, package publication, or repository secrets.
 The hosted `PR gate` retains ADR 0060's change-aware boundary: documentation-
 only changes avoid PostgreSQL, ordinary Python work runs unit and bounded
 affected integration tests, and high-risk paths invoke the complete eight-
-shard reusable matrix. `scripts/certify.ps1` remains the required local pre-
-review command, but its unsigned receipt is contributor evidence rather than a
-server trust boundary. Details are in
-[local exact-commit certification](local-certification.md) and ADR 0063.
+shard reusable matrix. Before that matrix fans out, a lightweight preflight
+requires a current `uv.lock` and exact parity between every workflow reference
+and `.github/actions-allowlist.json`. `scripts/certify.ps1` remains the required
+local pre-review command, but its unsigned receipt is contributor evidence
+rather than a server trust boundary. Details are in
+[local exact-commit certification](local-certification.md), ADR 0063, and ADR
+0064.
+
+## Dependency update policy
+
+Dependabot is security-only for the uv, npm, and GitHub Actions ecosystems.
+Each entry uses `open-pull-requests-limit: 0` to suppress routine version-
+update pull requests while retaining one grouped security-update rule. Python
+uses the native `uv` ecosystem so a security update must keep `pyproject.toml`
+and `uv.lock` coherent.
+
+At least quarterly, and before a candidate or gold release when dependencies
+have changed materially, a maintainer creates one dependency-maintenance branch
+from current `main`. Update Python manifests and `uv.lock` together, frontend
+manifests and `pnpm-lock.yaml` together, and workflow SHAs and the exact Actions
+allowlist together. Review major runtime and toolchain updates separately when
+combining them would obscure compatibility risk. Run `scripts/certify.ps1`
+before requesting review; never weaken locked installation or the allowlist to
+make an update pass.
+
+These Dependabot and full-acceptance preflight definitions are repository files.
+They become the default-branch automation policy only when their reviewed pull
+request is merged. A pull request can exercise its own candidate workflow, but
+documentation of the candidate does not itself mutate GitHub settings or the
+configuration currently present on `main`.
 
 ## Maintainer settings
 
@@ -68,9 +100,8 @@ Use squash merge, automatically delete merged branches, require immutable
 Action SHAs, keep workflow tokens read-only by default, and grant write
 permissions only to the release job. Repository Actions run in `selected` mode;
 `.github/actions-allowlist.json` must exactly match every external immutable
-workflow reference. Dependabot groups weekly Python, frontend, and Actions
-updates. The checked-in CODEOWNERS file is ownership discovery even before its
-review rule is enabled.
+workflow reference. The checked-in CODEOWNERS file is ownership discovery even
+before its review rule is enabled.
 
 All contributors follow `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`,
 and `GOVERNANCE.md`. Architecture and requirements remain the durable decision

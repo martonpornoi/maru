@@ -4,8 +4,8 @@ Maru is under active development and is not yet offered as a hosted service or
 supported production package.
 
 - Use GitHub issues for reproducible defects and scoped feature proposals.
-- Use GitHub Discussions for setup questions and design conversation after that
-  feature is enabled for the public repository.
+- Use [GitHub Discussions](https://github.com/martonpornoi/maru/discussions) for
+  setup questions and design conversation.
 - Use the private process in [SECURITY.md](SECURITY.md) for vulnerabilities.
 - Consult [the development setup](docs/development/setup.md) and
   [operations documentation](docs/operations/deployment-and-service-objectives.md)
