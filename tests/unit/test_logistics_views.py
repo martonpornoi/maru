@@ -537,7 +537,10 @@ def test_staff_command_returns_to_workspace_on_closed_failures(
             "maru.logistics.views.execute_staff_command",
             side_effect=command_error,
         ) as execute,
-        patch("maru.logistics.views.redirect", return_value=HttpResponse(status=303)),
+        patch(
+            "maru.logistics.views.redirect",
+            return_value=HttpResponse(status=303),
+        ),
     ):
         response = views.logistics_staff_command(
             _request("post"), "org", "series", "edition", "event-record"
@@ -574,7 +577,10 @@ def test_manifest_receipt_preauthorizes_exact_line_and_records_valid_form() -> N
                 replayed=False,
             ),
         ) as record,
-        patch("maru.logistics.views.redirect", return_value=HttpResponse(status=303)),
+        patch(
+            "maru.logistics.views.redirect",
+            return_value=HttpResponse(status=303),
+        ),
     ):
         response = views.logistics_manifest_receipt(
             _request("post"),
@@ -793,7 +799,10 @@ def test_personal_offer_post_maps_closed_form_data_to_one_item() -> None:
                 replayed=False,
             ),
         ) as submit,
-        patch("maru.logistics.views.redirect", return_value=HttpResponse(status=303)),
+        patch(
+            "maru.logistics.views.redirect",
+            return_value=HttpResponse(status=303),
+        ) as redirect_to,
     ):
         response = views.my_logistics_offers(
             _request("post"), "org", "series", "edition"
@@ -803,6 +812,12 @@ def test_personal_offer_post_maps_closed_form_data_to_one_item() -> None:
     assert item.name == "XLR cable"
     assert item.quantity == 4
     assert submit.call_args.kwargs["source_channel"] == "browser"
+    redirect_to.assert_called_once_with(
+        "my-logistics-offers",
+        "org",
+        "series",
+        "edition",
+    )
 
 
 def test_contact_and_manifest_authorization_errors_are_non_disclosing() -> None:

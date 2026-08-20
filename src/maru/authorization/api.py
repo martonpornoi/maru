@@ -613,7 +613,9 @@ class EditionAccessWorkspaceView(APIView):
                 source_channel="management-console",
             )
         except DjangoPermissionDenied as error:
-            raise PermissionDenied(str(error)) from error
+            raise PermissionDenied(
+                "The access assignment could not be created."
+            ) from error
         except DjangoValidationError as error:
             raise _command_validation(error) from error
         payload = _workspace_payload(edition=edition, account=account)
@@ -724,7 +726,9 @@ class EditionAccessPreviewView(APIView):
                 reason_code="preview_authority_unavailable",
                 mode=mode,
             )
-            raise PermissionDenied(str(error)) from error
+            raise PermissionDenied(
+                "Access preview is unavailable for this workspace."
+            ) from error
 
         _audit_access_preview(
             account=account,
@@ -862,7 +866,7 @@ class EditionAccessAssignmentView(APIView):
                     source_channel="management-console",
                 )
         except DjangoPermissionDenied as error:
-            raise PermissionDenied(str(error)) from error
+            raise PermissionDenied("The access assignment is unavailable.") from error
         except DjangoValidationError as error:
             raise _command_validation(error) from error
         payload = _workspace_payload(edition=edition, account=account)
@@ -949,7 +953,7 @@ class EditionAccessAssignmentView(APIView):
                 source_channel="management-console",
             )
         except DjangoPermissionDenied as error:
-            raise PermissionDenied(str(error)) from error
+            raise PermissionDenied("The access assignment is unavailable.") from error
         except DjangoValidationError as error:
             raise _command_validation(error) from error
         payload = _workspace_payload(edition=edition, account=account)

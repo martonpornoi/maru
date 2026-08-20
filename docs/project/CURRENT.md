@@ -395,9 +395,15 @@ as the repository-wide gate:
   `PR gate`. Secret scanning, push protection, Dependabot security updates,
   private vulnerability reporting, and managed default CodeQL are enabled. The
   initial CodeQL run `32376332626` passes all three language jobs and secret
-  scanning currently reports zero alerts. CodeQL opened twelve findings on
-  existing `main`: three high-severity and nine medium findings remain to be
-  reviewed. The first hosted run of this candidate remains remote acceptance.
+  scanning currently reports zero alerts. Pull-request run `32379350090`
+  passes every hosted acceptance job and its required `PR gate`; CodeQL's
+  seven-alert pull-request policy check remains red because the large docstring
+  patch made existing baseline flows appear changed. The current corrective
+  candidate addresses all twelve baseline findings: linear ASCII-decimal
+  integer parsing replaces two regexes, eight exception-detail flows become
+  code-owned public responses, one request-derived redirect becomes a named
+  route, and one frontend path segment is percent-encoded. Replacement CodeQL
+  analysis remains the independent acceptance authority.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source
@@ -544,10 +550,11 @@ approval.
   200-percent-zoom, keyboard, automated-accessibility, screen-reader, and owner
   evidence matrix.
 - GitHub browser/accessibility, multi-Python compatibility, native dependency
-  review, nightly concurrency repetition, the twelve initial CodeQL findings,
-  and release restore rehearsal remain later testing layers. Managed CodeQL,
-  secret scanning, and push protection are enabled; the initial analysis jobs
-  pass and the findings must be triaged rather than dismissed by assumption.
+  review, nightly concurrency repetition, replacement CodeQL acceptance of the
+  twelve-finding corrective candidate, and release restore rehearsal remain
+  later testing layers. Managed CodeQL, secret scanning, and push protection
+  are enabled; findings must be fixed or explicitly justified rather than
+  dismissed by assumption.
 - Public workflows must remain on standard hosted runners with read-only pull-
   request permissions. A self-hosted public runner, `pull_request_target`
   execution of contribution code, or environment/secret access for fork pull
@@ -561,10 +568,10 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Publish the ADR 0063 candidate through pull request 2, inspect the fresh
-   hosted `PR gate` and CodeQL results, triage any secret-scanning alert, and
-   exercise the active rules through harmless refusal tests. Raise reviews to
-   one when a second trusted maintainer exists.
+1. Publish the CodeQL corrective candidate to pull request 2, require a clean
+   replacement analysis, then resolve only the verified GitHub review threads
+   and exercise the active rules through harmless refusal tests. Raise reviews
+   to one when a second trusted maintainer exists.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.

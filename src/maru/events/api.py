@@ -414,7 +414,10 @@ class EditionListView(GenericAPIView[EventEdition]):
                 source_channel="api",
             )
         except AuthorizationDenied as error:
-            raise PermissionDenied(str(error), code=error.reason_code) from error
+            raise PermissionDenied(
+                "The caller cannot create an edition in this organization.",
+                code=error.reason_code,
+            ) from error
         except (Organization.DoesNotExist, ConventionSeries.DoesNotExist) as error:
             raise NotFound(
                 "The scoped organization or convention series does not exist.",
@@ -765,7 +768,10 @@ class EditionBasicDetailView(APIView):
                 source_channel="api",
             )
         except AuthorizationDenied as error:
-            raise PermissionDenied(str(error), code=error.reason_code) from error
+            raise PermissionDenied(
+                "The caller cannot change this edition profile.",
+                code=error.reason_code,
+            ) from error
         except (
             Organization.DoesNotExist,
             ConventionSeries.DoesNotExist,
@@ -856,7 +862,7 @@ class EditionTransitionView(APIView):
             )
         except AuthorizationDenied as error:
             raise PermissionDenied(
-                str(error),
+                "The caller cannot transition this event edition.",
                 code=error.reason_code,
             ) from error
         except EventEdition.DoesNotExist as error:

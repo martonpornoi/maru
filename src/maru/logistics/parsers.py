@@ -85,7 +85,7 @@ class ClosedLogisticsJSONParser(JSONParser):
         except _DuplicateMemberError as error:
             raise ParseError("JSON parse error - duplicate object member") from error
         except ValueError as error:
-            raise ParseError(f"JSON parse error - {error}") from error
+            raise ParseError("JSON parse error - malformed document") from error
 
 
 __all__ = ["ClosedLogisticsJSONParser"]

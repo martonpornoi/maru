@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any, ClassVar
 from uuid import uuid4
 
@@ -24,7 +23,6 @@ MAX_LONG_PROFILE_VALUE_LENGTH = 4_000
 MAX_PROFILE_VALUE_CHOICES = 64
 MIN_SIGNED_32_BIT_INTEGER = -(2**31)
 MAX_SIGNED_32_BIT_INTEGER = (2**31) - 1
-_STRICT_SIGNED_BASE10 = re.compile(r"(?:0|-?[1-9][0-9]*)\Z")
 _MAX_SIGNED_BASE10_DIGITS = 11
 
 
@@ -79,10 +77,19 @@ class StrictSignedBase10IntegerField(forms.Field):
         """
         if value in self.empty_values:
             return None
+        if not isinstance(value, str) or len(value) > _MAX_SIGNED_BASE10_DIGITS:
+            raise forms.ValidationError(
+                self.error_messages["invalid"],
+                code="invalid",
+            )
+        negative = value.startswith("-")
+        digits = value[1:] if negative else value
         if (
-            not isinstance(value, str)
-            or len(value) > _MAX_SIGNED_BASE10_DIGITS
-            or _STRICT_SIGNED_BASE10.fullmatch(value) is None
+            not digits
+            or not digits.isascii()
+            or not digits.isdecimal()
+            or (len(digits) > 1 and digits.startswith("0"))
+            or (negative and digits == "0")
         ):
             raise forms.ValidationError(
                 self.error_messages["invalid"],

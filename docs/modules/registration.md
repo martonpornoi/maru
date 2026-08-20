@@ -74,6 +74,11 @@ Draft questions support:
 - attendee-and-staff or registration-staff visibility; and
 - C1 internal or C2 personal classification.
 
+Whole-number browser inputs are parsed with bounded linear ASCII-decimal
+checks. Alternate signs, leading zeros, Unicode digits, decimal notation, and
+overlong forms are rejected without evaluating user input through a
+backtracking regular expression.
+
 C3/C4 convention-defined questions are intentionally unavailable. The fixed
 registration profile is the purpose-specific exception: legal name, date of
 birth, address, and emergency contact have an explicit policy registry,

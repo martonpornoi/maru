@@ -135,8 +135,11 @@ request-only squash history, resolved conversations, deletion prevention, and
 non-fast-forward prevention server-enforced. Complete local certification
 remains required pre-review evidence but is not trusted as the GitHub result.
 Secret scanning, push protection, private vulnerability reporting, Dependabot
-security updates, and managed default CodeQL are enabled; first-alert triage and
-the remainder of the public-readiness audit remain open.
+security updates, and managed default CodeQL are enabled. The first public
+analysis reported twelve baseline findings. The current corrective candidate
+removes their regex, exception-detail, request-derived redirect, and dynamic
+frontend path flows with focused regression coverage; independent replacement
+CodeQL acceptance and the remainder of the public-readiness audit remain open.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative

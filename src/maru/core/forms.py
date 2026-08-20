@@ -15,7 +15,6 @@ CANONICAL_UUID_PATTERN = (
     r"[0-9a-f]{4}-[0-9a-f]{12}\Z"
 )
 _CANONICAL_UUID = re.compile(CANONICAL_UUID_PATTERN)
-_STRICT_BASE10_INTEGER = re.compile(r"(?:0|[1-9][0-9]*)\Z")
 _MAX_STRICT_BASE10_DIGITS = 19
 
 
@@ -73,7 +72,9 @@ class StrictBase10IntegerField(forms.Field):
         if (
             not isinstance(value, str)
             or len(value) > _MAX_STRICT_BASE10_DIGITS
-            or _STRICT_BASE10_INTEGER.fullmatch(value) is None
+            or not value.isascii()
+            or not value.isdecimal()
+            or (len(value) > 1 and value.startswith("0"))
         ):
             raise forms.ValidationError(
                 self.error_messages["invalid"],

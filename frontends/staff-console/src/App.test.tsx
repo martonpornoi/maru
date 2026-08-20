@@ -346,6 +346,8 @@ const registrationConfiguration = {
   ],
 };
 
+const unsafeRegistrationDraftId = "draft/../../?next=javascript:alert(1)";
+
 function jsonResponse(payload: object, status = 200): Promise<Response> {
   return Promise.resolve(
     new Response(JSON.stringify(payload), {
@@ -394,7 +396,13 @@ describe("Management Console", () => {
         if (url.endsWith("/registration/configuration")) {
           return jsonResponse({
             active_configuration: registrationConfiguration,
-            drafts: [],
+            drafts: [
+              {
+                ...registrationConfiguration,
+                id: unsafeRegistrationDraftId,
+                status: "draft",
+              },
+            ],
             templates: [],
             source_editions: [],
             bootstrap_editor_path: "/admin/registration/",
@@ -559,6 +567,14 @@ describe("Management Console", () => {
         "Use this page to configure registration and serve attendees through arrival.",
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: /Edit questions and products in bootstrap admin/,
+      }),
+    ).toHaveAttribute(
+      "href",
+      `/admin/registration/registrationconfiguration/${encodeURIComponent(unsafeRegistrationDraftId)}/change/`,
+    );
 
     await user.click(screen.getByRole("button", { name: "Reports & badges" }));
     expect(

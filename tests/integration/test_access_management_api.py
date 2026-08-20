@@ -2,6 +2,7 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pytest
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -239,6 +240,43 @@ def test_access_workspace_assigns_an_exact_existing_person_with_dual_control() -
         "Helpful Volunteer"
     )
     assert response.data["assignments"][0]["group_name"] == "Front Desk"
+
+
+def test_access_assignment_does_not_expose_command_denial_detail(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    edition = EventEditionFactory()
+    recipient = AccountFactory(email="recipient@example.invalid")
+    actor = AccountFactory()
+    approver = AccountFactory()
+    _grant(actor, edition.organization, "authorization.manage_roles")
+    _grant(approver, edition.organization, "authorization.manage_roles")
+    RoleBundleFactory(
+        organization=edition.organization,
+        code="front-desk",
+        name="Front Desk",
+        capability_codes=["participation.view_staff_summary"],
+    )
+
+    def deny_assignment(*args: object, **kwargs: object) -> None:
+        del args, kwargs
+        raise DjangoPermissionDenied("private command implementation detail")
+
+    monkeypatch.setattr("maru.authorization.api.assign_role", deny_assignment)
+    response = _client(actor).post(
+        _workspace_url(edition),
+        {
+            "person_email": recipient.email,
+            "group_code": "front-desk",
+            "approver_email": approver.email,
+            "reason": "Exercise the non-disclosing API boundary.",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 403
+    assert "private command" not in response.content.decode()
+    assert "could not be created" in response.content.decode()
 
 
 def test_access_workspace_rejects_unknown_people_without_creating_access() -> None:

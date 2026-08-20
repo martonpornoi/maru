@@ -131,7 +131,10 @@ UUID aliases, alternate integer spellings, and ambiguous/nonexistent
 edition-local times. Every authenticated Logistics API response and safe error
 is private and no-store. Route-scope or exact-object authorization happens
 before query/body/header parsing; services repeat authorization after parsing.
-The API and browser call the same idempotent versioned commands.
+Malformed JSON receives one code-owned generic error rather than decoder
+exception text. Successful offer submission reverses the exact named
+same-origin route rather than redirecting to a request-derived path. The API
+and browser call the same idempotent versioned commands.
 
 ## Verification and acceptance
 

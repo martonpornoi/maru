@@ -1408,7 +1408,12 @@ def my_logistics_offers(
                     form.add_error(None, str(error))
                 else:
                     messages.success(request, "Your equipment offer was submitted.")
-                    return redirect(request.path)
+                    return redirect(
+                        "my-logistics-offers",
+                        organization_slug,
+                        series_slug,
+                        edition_slug,
+                    )
         else:
             form = (
                 EquipmentOfferForm(
