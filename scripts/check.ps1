@@ -1,26 +1,120 @@
+[CmdletBinding()]
+param(
+    [switch] $SkipPythonTests
+)
+
+Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-uv run ruff format --check .
-uv run ruff check .
-uv run mypy src
-uv run python scripts/validate_docs.py
-uv run pydoclint src scripts
-uv run python scripts/validate_python_docstrings.py src scripts
-uv run sphinx-build -W --keep-going --fresh-env -j auto -b html docs docs/_build/html
-uv run python src/manage.py makemigrations --check --dry-run
-uv run python src/manage.py check
-uv run python scripts/verify_production_settings.py
-uv run python src/manage.py spectacular --file openapi.yaml --validate
-uv run pytest --cov=maru --cov-report=term-missing
+$RepositoryRoot = Split-Path -Parent $PSScriptRoot
+$env:UV_CACHE_DIR = Join-Path $RepositoryRoot ".uv-cache"
 
-Push-Location frontends/staff-console
-try {
-    pnpm install --frozen-lockfile
-    pnpm run generate:api
-    pnpm run typecheck
-    pnpm run test
-    pnpm run build
+function Resolve-RequiredCommand {
+    param(
+        [Parameter(Mandatory)]
+        [string] $Name,
+        [string[]] $FallbackPaths = @()
+    )
+
+    $Command = Get-Command $Name -ErrorAction SilentlyContinue
+    if ($null -ne $Command) {
+        return $Command.Source
+    }
+    foreach ($FallbackPath in $FallbackPaths) {
+        $Candidate = Join-Path $RepositoryRoot $FallbackPath
+        if (Test-Path -LiteralPath $Candidate -PathType Leaf) {
+            return $Candidate
+        }
+    }
+    throw "Required command '$Name' is unavailable."
 }
-finally {
-    Pop-Location
+
+function Invoke-Checked {
+    param(
+        [Parameter(Mandatory)]
+        [string] $Executable,
+        [Parameter(Mandatory)]
+        [string[]] $Arguments,
+        [string] $WorkingDirectory = $RepositoryRoot
+    )
+
+    Push-Location $WorkingDirectory
+    try {
+        & $Executable @Arguments
+        if ($LASTEXITCODE -ne 0) {
+            $RenderedArguments = $Arguments -join " "
+            throw "Command failed ($LASTEXITCODE): $Executable $RenderedArguments"
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+$Uv = Resolve-RequiredCommand -Name "uv" -FallbackPaths @(
+    ".tools/bin/uv.exe",
+    ".tools/uv.exe"
+)
+$Pnpm = Resolve-RequiredCommand -Name "pnpm"
+$Node = Resolve-RequiredCommand -Name "node"
+$Git = Resolve-RequiredCommand -Name "git"
+
+Invoke-Checked $Uv @("lock", "--check")
+Invoke-Checked $Pnpm @(
+    "--dir", "frontends/staff-console", "install", "--frozen-lockfile",
+    "--store-dir", (Join-Path $RepositoryRoot ".pnpm-store")
+)
+Invoke-Checked $Uv @(
+    "run", "pip-audit", "--cache-dir", (Join-Path $RepositoryRoot ".pip-audit-cache")
+)
+Invoke-Checked $Pnpm @(
+    "--dir", "frontends/staff-console", "audit", "--audit-level", "high"
+)
+Invoke-Checked $Uv @("run", "ruff", "format", "--check", ".")
+Invoke-Checked $Uv @("run", "ruff", "check", ".")
+Invoke-Checked $Uv @("run", "mypy", "src")
+Invoke-Checked $Uv @("run", "python", "scripts/validate_docs.py")
+Invoke-Checked $Uv @("run", "pydoclint", "src", "scripts")
+Invoke-Checked $Uv @(
+    "run", "python", "scripts/validate_python_docstrings.py", "src", "scripts"
+)
+Invoke-Checked $Uv @(
+    "run", "sphinx-build", "-W", "--keep-going", "--fresh-env", "-j", "auto",
+    "-b", "html", "docs", "docs/_build/html"
+)
+Invoke-Checked $Uv @(
+    "run", "python", "src/manage.py", "makemigrations", "--check", "--dry-run",
+    "--settings=maru.settings.local"
+)
+Invoke-Checked $Uv @(
+    "run", "python", "src/manage.py", "check", "--settings=maru.settings.local"
+)
+Invoke-Checked $Uv @("run", "python", "scripts/verify_production_settings.py")
+Invoke-Checked $Uv @(
+    "run", "python", "src/manage.py", "spectacular", "--file", "openapi.yaml",
+    "--validate", "--settings=maru.settings.local"
+)
+Invoke-Checked $Pnpm @(
+    "--dir", "frontends/staff-console", "run", "generate:api"
+)
+Invoke-Checked $Git @(
+    "diff", "--exit-code", "--", "openapi.yaml",
+    "frontends/staff-console/src/api/schema.d.ts"
+)
+Invoke-Checked $Pnpm @(
+    "--dir", "frontends/staff-console", "run", "typecheck"
+)
+Invoke-Checked $Pnpm @(
+    "--dir", "frontends/staff-console", "run", "test"
+)
+Invoke-Checked $Pnpm @(
+    "--dir", "frontends/staff-console", "run", "build"
+)
+Invoke-Checked $Git @(
+    "diff", "--exit-code", "--", "src/maru/core/static/staff-console"
+)
+if (-not $SkipPythonTests) {
+    Invoke-Checked $Uv @(
+        "run", "pytest", "--cov=maru", "--cov-report=term-missing"
+    )
 }

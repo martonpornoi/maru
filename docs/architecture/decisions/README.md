@@ -64,8 +64,10 @@ the system.
 | [0057](0057-numpy-docstrings-and-generated-contributor-reference.md) | Partially superseded | Enforce NumPy-style Python contracts and build a warning-fatal Sphinx contributor reference in CI; ADR 0058 strengthens semantic depth |
 | [0058](0058-professional-python-documentation-contracts.md) | Partially superseded | Require complete public NumPy contracts and reject generated boilerplate; ADR 0059 strengthens signature synchronization and exact raises |
 | [0059](0059-strict-pydoclint-and-bounded-ruff-exemptions.md) | Accepted | Enable the strictest useful PyDocLint contract and replace broad Ruff exemptions with eight bounded global categories |
-| [0060](0060-protected-collaboration-and-release-evidence.md) | Partially superseded | Protected GitHub flow, change-aware acceptance, CalVer, and evidence-bearing OCI releases; ADR 0061 replaces its full-acceptance concurrency shape |
-| [0061](0061-latency-bounded-full-acceptance.md) | Accepted | Parallel non-database gates and eight measured PostgreSQL shards for bounded full-acceptance latency |
+| [0060](0060-protected-collaboration-and-release-evidence.md) | Partially superseded | Protected GitHub flow, CalVer, and evidence-bearing OCI releases; ADR 0061 replaces its six-shard full-acceptance decision |
+| [0061](0061-latency-bounded-full-acceptance.md) | Accepted | Change-aware hosted acceptance with eight measured PostgreSQL shards, restored for public collaboration by ADR 0063 |
+| [0062](0062-local-exact-commit-certification.md) | Superseded | Historical private-repository local certification topology; ADR 0063 restores hosted execution after the public transition |
+| [0063](0063-public-hosted-protected-collaboration.md) | Accepted | Public hosted exact-commit acceptance, no-bypass rulesets, immutable Action allowlisting, and no persistent self-hosted pull-request runner |
 
 New ADRs use the next four-digit number and contain:
 

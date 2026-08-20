@@ -75,11 +75,30 @@ uv run python scripts/validate_python_docstrings.py src scripts
 uv run sphinx-build -W --keep-going --fresh-env -j auto -b html docs docs/_build/html
 ```
 
-Open `docs/_build/html/index.html` locally after the build. GitHub Actions runs
-the same commands and retains the generated site as the
-`contributor-documentation` artifact. See
+Open `docs/_build/html/index.html` locally after the build. Local certification
+and the GitHub-hosted acceptance workflow run the same commands; GitHub retains
+the generated site as the `contributor-documentation` artifact. See
 [`documentation-standards.md`](../quality/documentation-standards.md) for the
 section and exclusion policy.
+
+## Exact-commit acceptance
+
+Activate the repository-managed push guard once per clone and run the complete
+local certification before requesting review:
+
+```powershell
+./scripts/install_git_hooks.ps1
+./scripts/certify.ps1
+```
+
+The certifier requires a clean tree and Docker Desktop. It preserves the
+database-isolation contract by running one unit process and eight measured
+integration shards against nine separate local PostgreSQL containers, then
+combines branch coverage at the existing 90-percent floor. The public
+repository does not trust a local receipt: its stable `PR gate` independently
+runs the fail-closed selected acceptance path on isolated GitHub-hosted Linux
+runners. See [local exact-commit certification](local-certification.md) for
+local evidence and the public trust boundary.
 
 ## Bootstrap login
 

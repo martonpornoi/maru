@@ -127,6 +127,17 @@ matrices, public-plan CodeQL/dependency/secret policy, synthetic deployment,
 and release recovery rehearsal remain next testing-infrastructure outcomes;
 ephemeral Actions databases do not satisfy production restore/PITR.
 
+ADR 0062's private-repository self-hosted interval is superseded by ADR 0063
+after the 2026-08-20 public transition. Public pull requests now use only
+standard GitHub-hosted runners under an exact immutable Action allowlist. Active
+no-bypass main and release-tag rulesets make the up-to-date `PR gate`, pull-
+request-only squash history, resolved conversations, deletion prevention, and
+non-fast-forward prevention server-enforced. Complete local certification
+remains required pre-review evidence but is not trusted as the GitHub result.
+Secret scanning, push protection, private vulnerability reporting, Dependabot
+security updates, and managed default CodeQL are enabled; first-alert triage and
+the remainder of the public-readiness audit remain open.
+
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current

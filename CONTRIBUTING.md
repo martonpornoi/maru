@@ -1,6 +1,6 @@
 # Contributing to Maru
 
-Thank you for improving Maru. The project is preparing for public collaboration,
+Thank you for improving Maru. The project is open for public collaboration,
 but its security, privacy, tenant-isolation, and audit boundaries already apply
 to every change.
 
@@ -27,15 +27,25 @@ to every change.
 - Use NumPy-style Python docstrings and keep parameters, returns, yields, raises,
   notes, and examples meaningful where they help a contributor.
 
+Activate the repository-managed push guard once after cloning:
+
+```powershell
+./scripts/install_git_hooks.ps1
+```
+
 Run the local acceptance command before requesting review:
 
 ```powershell
-./scripts/check.ps1
+./scripts/certify.ps1
 ```
 
-For a focused change, run the smallest relevant tests during development, but
-the pull request must still satisfy the repository-owned `PR gate`. High-risk
-changes are automatically routed to full PostgreSQL acceptance.
+For a focused change, run the smallest relevant tests during development. The
+full local command remains the contributor's pre-review obligation, but its
+receipt is not a server trust boundary. Every ready pull request independently
+satisfies the repository-owned `PR gate` on isolated GitHub-hosted runners.
+Low-risk changes use a fail-closed affected-test plan; workflows, dependencies,
+models, migrations, settings, security boundaries, and test infrastructure run
+the complete hosted acceptance matrix.
 
 ## Pull requests
 

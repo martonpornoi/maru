@@ -12,6 +12,9 @@ PR_WORKFLOW = WORKFLOW_DIRECTORY / "ci.yml"
 FULL_WORKFLOW = WORKFLOW_DIRECTORY / "_full-ci.yml"
 RELEASE_WORKFLOW = WORKFLOW_DIRECTORY / "release.yml"
 LOCAL_CHECK_PATH = REPOSITORY_ROOT / "scripts" / "check.ps1"
+LOCAL_CERTIFICATION_PATH = REPOSITORY_ROOT / "scripts" / "certify.ps1"
+PRE_PUSH_HOOK_PATH = REPOSITORY_ROOT / ".githooks" / "pre-push"
+ACTIONS_ALLOWLIST_PATH = REPOSITORY_ROOT / ".github" / "actions-allowlist.json"
 
 
 def _workflow(path: Path) -> str:
@@ -20,18 +23,27 @@ def _workflow(path: Path) -> str:
 
 def test_every_workflow_parses_and_external_action_is_immutable() -> None:
     workflow_paths = tuple(sorted(WORKFLOW_DIRECTORY.glob("*.yml")))
+    external_references: set[str] = set()
 
     assert workflow_paths
     for path in workflow_paths:
         workflow = _workflow(path)
         assert yaml.safe_load(workflow)
-        references = re.findall(r"^\s*- uses: ([^\s#]+)", workflow, re.MULTILINE)
+        references = re.findall(
+            r"^\s*(?:-\s+)?uses:\s+([^\s#]+)", workflow, re.MULTILINE
+        )
         for reference in references:
             if reference.startswith("./"):
                 continue
+            external_references.add(reference)
             _, separator, revision = reference.rpartition("@")
             assert separator == "@", (path, reference)
             assert re.fullmatch(r"[0-9a-f]{40}", revision), (path, reference)
+
+    allowlist = json.loads(ACTIONS_ALLOWLIST_PATH.read_text(encoding="utf-8"))
+    assert allowlist["github_owned_allowed"] is False
+    assert allowlist["verified_allowed"] is False
+    assert set(allowlist["patterns_allowed"]) == external_references
 
 
 def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
@@ -54,6 +66,7 @@ def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
     assert "needs.changes.outputs.integration == 'targeted'" in workflow
     assert "uses: ./.github/workflows/_full-ci.yml" in workflow
     assert workflow.count("image: postgres:17.11-alpine@sha256:") == 2
+    assert "self-hosted" not in workflow
 
 
 def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> None:
@@ -70,25 +83,61 @@ def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> 
     assert "coverage report --fail-under=90" in workflow
     assert "name: Full CI gate" in workflow
     assert workflow.count("image: postgres:17.11-alpine@sha256:") == 2
+    assert "self-hosted" not in workflow
 
 
 def test_documentation_contract_matches_local_and_full_acceptance() -> None:
     workflow = _workflow(FULL_WORKFLOW)
     local_check = LOCAL_CHECK_PATH.read_text(encoding="utf-8")
 
-    for command in (
-        "uv run pydoclint src scripts",
-        "uv run python scripts/validate_python_docstrings.py src scripts",
+    for workflow_command, local_fragment in (
+        ("uv run pydoclint src scripts", '"run", "pydoclint", "src", "scripts"'),
+        (
+            "uv run python scripts/validate_python_docstrings.py src scripts",
+            (
+                '"run", "python", "scripts/validate_python_docstrings.py", '
+                '"src", "scripts"'
+            ),
+        ),
         (
             "uv run sphinx-build -W --keep-going --fresh-env -j auto -b html "
-            "docs docs/_build/html"
+            "docs docs/_build/html",
+            '"run", "sphinx-build", "-W", "--keep-going", "--fresh-env"',
         ),
     ):
-        assert command in workflow
-        assert command in local_check
+        assert workflow_command in workflow
+        assert local_fragment in local_check
 
     assert "name: contributor-documentation" in workflow
     assert "retention-days: 7" in workflow
+
+
+def test_local_certification_preserves_database_isolation_and_total_coverage() -> None:
+    certification = LOCAL_CERTIFICATION_PATH.read_text(encoding="utf-8")
+
+    for required in (
+        "[int] $IntegrationShards = 8",
+        "postgres:17.11-alpine@sha256:",
+        '"maru-cert-unit-$RunToken"',
+        '"maru-cert-integration-$Shard-$RunToken"',
+        '"scripts/run_ci_test_shard.py"',
+        '"coverage", "combine"',
+        '"coverage", "report", "--fail-under=90"',
+        "Certification requires a clean working tree",
+        'result = "success"',
+    ):
+        assert required in certification
+
+    assert '"--shard-count", "$IntegrationShards"' in certification
+    assert "isolated_postgres_instances = $IntegrationShards + 1" in certification
+
+
+def test_repository_push_guard_blocks_main_deletion_and_non_fast_forward() -> None:
+    hook = PRE_PUSH_HOOK_PATH.read_text(encoding="utf-8")
+
+    assert 'remote_ref" = "refs/heads/main' in hook
+    assert "blocks branch deletion" in hook
+    assert "git merge-base --is-ancestor" in hook
 
 
 def test_release_requires_exact_source_unique_calver_and_evidence() -> None:
@@ -131,6 +180,7 @@ def test_rulesets_and_public_collaboration_files_are_present() -> None:
     assert status_rule["parameters"]["required_status_checks"] == [
         {"context": "PR gate"}
     ]
+    assert status_rule["parameters"]["strict_required_status_checks_policy"] is True
     assert {rule["type"] for rule in tag_rules["rules"]} >= {
         "deletion",
         "update",

@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 Phase: Production consolidation and management-experience recovery. The
 canonical repository gate and scoped read-only Logistics browser journey remain
 accepted. ADR 0055's first task-oriented management slice is repository-
@@ -8,13 +8,12 @@ verified. ADR 0057's NumPy docstring baseline and warning-fatal generated
 contributor reference are repository-verified. ADR 0058's professional public
 Python documentation contracts and semantic-quality gate are repository-
 verified. ADR 0059's strict PyDocLint contract and bounded Ruff exemptions are
-repository-verified. ADR 0060's collaboration/release foundation is locally
-verified. ADR 0061's latency-bounded full-acceptance correction is locally
-verified after live run `32254293214` exposed a newly published Django advisory
-and the six-shard critical path; replacement remote acceptance remains pending.
-GitHub ruleset enforcement is
-prepared but blocked by the repository's current private-plan capability; the
-complete authenticated
+repository-verified. ADR 0060's collaboration/release foundation remains
+accepted. ADR 0061's hosted latency correction passed remote run `32304152005`
+and ADR 0062 records the superseded private self-hosted interval. ADR 0063 now
+governs the public repository: hosted exact-commit acceptance, active no-bypass
+main/tag rulesets, exact Action allowlisting, secret scanning/push protection,
+private vulnerability reporting, and managed CodeQL. The complete authenticated
 reflow, keyboard, screen-reader, owner, deployment, stopped-writer/cutover,
 restore/PITR, and production-governance gates remain open.
 Branch: `codex/strict-python-documentation`
@@ -114,10 +113,11 @@ cross-domain-save design.
   warning-clean HTML contributor portal without importing Django or connecting
   to PostgreSQL.
 - Tests and generated migrations retain explicit documentation exclusions.
-  GitHub validates docstrings, performs a fresh warning-fatal build, retains the
-  HTML artifact, and requires the result through the stable `CI gate`.
+  Local certification and GitHub's hosted acceptance validate docstrings and
+  perform a fresh warning-fatal build; the hosted `PR gate` retains the HTML
+  artifact when documentation is part of the selected path.
 
-### Change-aware GitHub acceptance and releases
+### Protected public acceptance and releases
 
 - The former single 45-minute GitHub job could not represent the recorded
   4:19:18 canonical suite and failed before tests because its duplicated
@@ -126,30 +126,34 @@ cross-domain-save design.
   configuration, supplies synthetic verification-only invitation material,
   excludes worker private keys, and checks both exact-provenance modes in
   isolated subprocesses. Local PowerShell and GitHub call the same verifier.
-- ADR 0060 makes pull-request acceptance change-aware behind one stable
-  `PR gate`. Documentation-only changes start no PostgreSQL service; ordinary
-  Python changes run unit plus bounded affected integration tests; migrations,
-  models, settings, dependencies, security/authority boundaries, workflows,
-  and test harnesses fail closed to full acceptance. Protected or mass
-  deletion needs the maintainer-applied `destructive-change-reviewed` label.
-- Reusable full acceptance keeps every integration file whole and serialized,
-  but uses eight isolated measured-duration shards rather than twelve source-
-  size shards. The timing map from accepted run `31964200663` covers all 157
-  current files and balances seven shards near 2,650 weighted seconds around
-  one indivisible 2,660-second file. Static analysis, documentation,
-  contracts/frontend, and dependency security run concurrently. PostgreSQL
-  unit and shard jobs start only after security passes. Their JUnit/coverage
-  artifacts feed one branch-aware 90-percent verdict through the stable
-  `Full CI gate`; matrix fail-fast remains disabled.
+- ADR 0063 moves public pull requests back to standard GitHub-hosted Linux
+  runners and removes the persistent workstation runner. The fail-closed
+  classifier retains documentation-only, ordinary affected-test, and complete
+  high-risk paths behind one stable `PR gate`. Protected or mass deletion still
+  needs the maintainer-applied `destructive-change-reviewed` label.
+- Local certification keeps every integration file whole and serialized, but
+  starts one unit process and eight measured shards concurrently against nine
+  separate digest-pinned PostgreSQL containers on the 24-core/64-GB host.
+  Its JUnit logs and partial coverage feed one branch-aware 90-percent verdict.
+  This remains required pre-review evidence but its unsigned receipt does not
+  replace GitHub's independently recorded result.
+- The tracked pre-push hook blocks ordinary direct `main` updates, branch
+  deletion, and non-fast-forward pushes as bypassable defense in depth. Active
+  server rules now require an up-to-date `PR gate`, pull-request-only squash
+  history, and resolved conversations, and reject main/release-tag mutation
+  with no bypass actors.
+- Actions are enabled only in selected mode with SHA pinning and an exact
+  checked-in allowlist. Secret scanning, push protection, Dependabot security
+  updates, private vulnerability reporting, and default CodeQL are enabled.
 - Candidate and gold releases are manual, exact-current-`main`, full-certified,
   collision-refusing CalVer workflows. GHCR receives the non-root Django/
   Gunicorn image by immutable digest with OCI SBOM and provenance. GitHub
   receives docs, OpenAPI, locks, manifest, license, and checksums. No release,
-  tag, package, or visibility change was made by this milestone.
+  tag, or package has been published.
 - Apache-2.0, contribution/conduct/security/support/governance policies,
   CODEOWNERS, issue/PR templates, Dependabot grouping, public-readiness steps,
-  and reviewed ruleset payloads prepare the private repository for later public
-  collaboration without implying production support.
+  and active rulesets establish the public collaboration baseline without
+  implying production support.
 
 ### Registration, profile, and admission commerce
 
@@ -357,8 +361,7 @@ as the repository-wide gate:
   The pinned production image builds, collects 192 static files, runs as UID
   10001 with Gunicorn 23.0.0, and includes the sidecar API-documentation
   assets. The six-shard timing inventory covers all 157 integration files with
-  approximately 3,536 weighted seconds per shard. The replacement pull-request
-  run remains the remote acceptance authority.
+  approximately 3,536 weighted seconds per shard.
 - The ADR 0061 corrective candidate locks Django 5.2.17 and passes live Python
   and complete frontend advisory audits. Actionlint passes every workflow;
   Ruff formatting/ALL-rule lint passes over 642 files; strict mypy passes over
@@ -368,8 +371,33 @@ as the repository-wide gate:
   A fresh warning-fatal parallel Sphinx/AutoAPI build and all 1,870 unit tests
   pass. The deterministic eight-shard inventory covers all 157 integration
   files exactly once at 2,650 to 2,660 weighted seconds per shard. The
-  successor pull-request run remains authoritative for the new full matrix,
-  combined coverage, artifacts, and stable `PR gate`.
+  successor pull-request run `32304152005` passed the new full matrix, combined
+  coverage, artifacts, and stable `PR gate`. Its 14 jobs consumed approximately
+  392 rounded hosted runner-minutes; together with the 379-minute preceding
+  failed attempt, that explains the observed Actions charge and motivates ADR
+  0062 without invalidating the accepted evidence.
+- The ADR 0062 repository contract passes actionlint over every workflow and
+  19 focused workflow/classifier tests. Ruff/strict mypy, Python and frontend
+  audits, strict NumPy documentation, semantic docstring validation, the fresh
+  warning-fatal Sphinx site, Django/production/OpenAPI/generated contracts, and
+  Staff Console type/build checks pass locally. The first frontend run exposed
+  one report test that asserted rows immediately after the heading; awaiting
+  the mocked country, attendee, and role data makes all 20 frontend tests pass.
+  The digest-pinned random-port PostgreSQL smoke is healthy, push-guard
+  simulations reject `main` and permit feature creation, and GitHub reports
+  `maru-local-certifier` online with all required labels. The first published
+  exact-commit `PR gate` remains authoritative for full Python coverage.
+- The ADR 0063 live transition verifies public visibility, zero registered self-
+  hosted runners, Actions enabled in selected-only SHA-pinned mode, and exact
+  parity between the configured external Action allowlist and workflow
+  references. Active main and release-tag rulesets both report no bypass
+  actors and `current_user_can_bypass: never`; main requires a strict up-to-date
+  `PR gate`. Secret scanning, push protection, Dependabot security updates,
+  private vulnerability reporting, and managed default CodeQL are enabled. The
+  initial CodeQL run `32376332626` passes all three language jobs and secret
+  scanning currently reports zero alerts. CodeQL opened twelve findings on
+  existing `main`: three high-severity and nine medium findings remain to be
+  reviewed. The first hosted run of this candidate remains remote acceptance.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source
@@ -407,11 +435,11 @@ approval.
 
 ## Decisions and migration boundary
 
-- ADRs 0049 through 0061 are Accepted. ADR 0061 narrowly supersedes ADR 0060's
-  six-shard and serial non-database full-acceptance shape with eight measured
-  shards and four parallel gates. It changes CI scheduling only; it removes no
-  test, coverage, security, documentation, contract, migration, or authority
-  evidence.
+- ADRs 0049 through 0061 and ADR 0063 are Accepted. ADR 0062's private self-
+  hosted interval is superseded. ADR 0063 restores ADR 0060/0061's change-aware
+  hosted topology for public collaboration, preserves the complete eight-shard
+  high-risk boundary and local pre-review certification, and removes no test,
+  security, documentation, contract, migration, or authority gate.
 - ADR 0054 accepts the bounded architecture
   and migrated integrity boundary; it does not declare the partial
   LOG-001/002/003/004/006/007 portfolio complete or approve production rollout.
@@ -515,20 +543,15 @@ approval.
   records still need conversion and the full 320/390/768/958/1,024/1,280/1,920,
   200-percent-zoom, keyboard, automated-accessibility, screen-reader, and owner
   evidence matrix.
-- GitHub browser/accessibility, multi-Python compatibility, scheduled CodeQL,
-  native dependency review, secret scanning/push protection, nightly
-  concurrency repetition, and release restore rehearsal remain later testing
-  layers. Release SBOM/provenance exists and public launch selects GitHub's
-  recommended CodeQL default setup, but the current private plan does not
-  permit ruleset enforcement or Code Security and public-only settings are
-  intentionally not assumed.
-- Pull-request run `32254293214` restored remote execution and passed full unit
-  coverage plus every static, documentation, contract, and frontend command in
-  the former mixed job. Its dependency audit then rejected Django 5.2.16 for
-  `PYSEC-2026-3717`, fixed by 5.2.17; the six integration shards were still in
-  progress when the correction began. A successor run must accept the patched
-  lock, parallel non-database gates, eight-shard full matrix, combined coverage,
-  and stable `PR gate`.
+- GitHub browser/accessibility, multi-Python compatibility, native dependency
+  review, nightly concurrency repetition, the twelve initial CodeQL findings,
+  and release restore rehearsal remain later testing layers. Managed CodeQL,
+  secret scanning, and push protection are enabled; the initial analysis jobs
+  pass and the findings must be triaged rather than dismissed by assumption.
+- Public workflows must remain on standard hosted runners with read-only pull-
+  request permissions. A self-hosted public runner, `pull_request_target`
+  execution of contribution code, or environment/secret access for fork pull
+  requests requires a separately accepted security design.
 - The OCI image is a distributable deployment input, not proof of configured
   SMTP, payment, object storage/scanning, workers, telemetry, backups, load,
   accessibility, partner governance, recovery, or production readiness. The
@@ -538,11 +561,10 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Confirm the replacement GitHub `PR gate`, eight measured shards, generated
-   documentation, combined coverage, and container build contract. Apply the
-   checked-in main/tag rulesets when GitHub enables them for the private plan or
-   during the separately reviewed public transition; then raise reviews to one
-   when a second maintainer exists.
+1. Publish the ADR 0063 candidate through pull request 2, inspect the fresh
+   hosted `PR gate` and CodeQL results, triage any secret-scanning alert, and
+   exercise the active rules through harmless refusal tests. Raise reviews to
+   one when a second trusted maintainer exists.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
@@ -555,7 +577,7 @@ approval.
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `PRODUCTION_CONSOLIDATION.md`, the
-relevant requirement IDs, ADRs 0047 through 0061, and the owning module/runbook
+relevant requirement IDs, ADRs 0047 through 0063, and the owning module/runbook
 docs. Preserve every concurrent change in the dirty working tree. Serialize all
 PostgreSQL tests that share `test_maru_test`; never infer authority from a
 selected edition or route; authorize before parsing untrusted input; retain

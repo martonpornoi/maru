@@ -5,7 +5,7 @@ intended to give attendees, volunteers, hosts, dealers, staff, and organizers
 one account and one coherent experience across many independently operated
 conventions.
 
-Maru is pre-production software preparing for public collaboration. It is not
+Maru is public, pre-production software open to collaboration. It is not
 yet a supported hosted service or PyPI package and must not receive production
 personal data. The primary future release artifact is an immutable Django
 application image in GitHub Container Registry with source provenance, SBOM,

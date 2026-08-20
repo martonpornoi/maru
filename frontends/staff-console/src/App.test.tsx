@@ -588,9 +588,14 @@ describe("Management Console", () => {
     expect(
       await screen.findByRole("heading", { name: "Attendees and badges" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Hungary (HU)").length).toBeGreaterThan(0);
-    expect(screen.getByText("River")).toBeInTheDocument();
-    expect(screen.getAllByText("Volunteer").length).toBeGreaterThan(0);
+    await waitFor(
+      () => {
+        expect(screen.getAllByText("Hungary (HU)").length).toBeGreaterThan(0);
+        expect(screen.getByText("River")).toBeInTheDocument();
+        expect(screen.getAllByText("Volunteer").length).toBeGreaterThan(0);
+      },
+      { timeout: 5_000 },
+    );
     expect(screen.getByRole("link", { name: "Download badge CSV" }))
       .toHaveAttribute(
         "href",

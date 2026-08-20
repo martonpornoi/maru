@@ -240,6 +240,14 @@ container bases are pinned to reviewed immutable digests. `Full CI gate`
 certifies high-risk pull requests, merge-queue candidates when that GitHub
 feature is available, manual runs, and releases.
 
+Since the 2026-08-20 public transition, every repository workflow uses standard
+GitHub-hosted runners and the repository has no registered self-hosted runner.
+Actions are limited to the exact immutable revisions in
+`.github/actions-allowlist.json`, workflow tokens default to read-only, and
+fork pull requests receive no publishing or environment authority. Contributors
+still run `scripts/certify.ps1` before review for complete local feedback, but
+the unsigned local receipt never substitutes for GitHub's exact-head result.
+
 The ephemeral Actions databases prove migrations, constraints, authorization,
 and transactional behavior; they are not production restore/PITR or runtime-
 credential evidence.
@@ -254,9 +262,9 @@ The next expansion should add:
 - nightly Python 3.12/3.13/3.14 unit and contract compatibility, migration-
   from-zero, concurrency repetition, randomized-order seed capture, and the
   broader responsive/visual-state matrix;
-- CodeQL pull-request/scheduled policy after the public plan supports it,
-  TypeScript analysis, native dependency review, and secret scanning with push
-  protection; and
+- monitor and tune the enabled GitHub-managed CodeQL default setup, add native
+  dependency review, and verify secret-scanning/push-protection alert handling;
+  and
 - synthetic previous-version restoration, production-shaped recovery rehearsal,
   and container runtime smoke in the release environment. The existing release
   workflow already supplies full source certification, an immutable OCI image,
