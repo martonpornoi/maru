@@ -1,7 +1,6 @@
 """Authorized edition API projections."""
 
-from datetime import date
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -19,6 +18,9 @@ from maru.events.models import (
     EventEdition,
 )
 
+if TYPE_CHECKING:
+    from datetime import date
+
 MAX_AUTOCOMPLETE_RESULTS = 20
 MAX_BULK_EDITION_TRANSITIONS = 25
 
@@ -34,7 +36,11 @@ def _django_validation_code(
 
 
 class EditionBasicSerializer(serializers.ModelSerializer[EventEdition]):
+    """Serialize and validate edition basic data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = EventEdition
         fields = (
             "id",
@@ -86,6 +92,23 @@ class EditionDetailsRequestSerializer(serializers.Serializer[dict[str, object]])
     )
 
     def validate_time_zone(self, value: str) -> str:
+        """Validate time zone.
+
+        Parameters
+        ----------
+        value : str
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        str
+            The normalized text for validate time zone.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         try:
             validate_time_zone(value)
         except DjangoValidationError as error:
@@ -99,6 +122,23 @@ class EditionDetailsRequestSerializer(serializers.Serializer[dict[str, object]])
         return value
 
     def validate_language_codes(self, value: list[str]) -> list[str]:
+        """Validate language codes.
+
+        Parameters
+        ----------
+        value : list[str]
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        list[str]
+            The matching validate language codes records in deterministic order.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         normalized = [code.lower() for code in value]
         try:
             validate_language_codes(normalized)
@@ -113,6 +153,23 @@ class EditionDetailsRequestSerializer(serializers.Serializer[dict[str, object]])
         return normalized
 
     def validate_currency_codes(self, value: list[str]) -> list[str]:
+        """Validate currency codes.
+
+        Parameters
+        ----------
+        value : list[str]
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        list[str]
+            The matching validate currency codes records in deterministic order.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         normalized = [code.upper() for code in value]
         try:
             validate_currency_codes(normalized)
@@ -127,8 +184,25 @@ class EditionDetailsRequestSerializer(serializers.Serializer[dict[str, object]])
         return normalized
 
     def validate(self, attrs: dict[str, object]) -> dict[str, object]:
-        starts_on = cast(date, attrs["starts_on"])
-        ends_on = cast(date, attrs["ends_on"])
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
+        starts_on = cast("date", attrs["starts_on"])
+        ends_on = cast("date", attrs["ends_on"])
         if ends_on < starts_on:
             raise serializers.ValidationError(
                 {"ends_on": "The end date cannot be before the start date."},
@@ -148,14 +222,20 @@ class EditionDetailsRequestSerializer(serializers.Serializer[dict[str, object]])
 
 
 class EditionCreateRequestSerializer(EditionDetailsRequestSerializer):
+    """Serialize and validate edition create request data."""
+
     series_id = serializers.UUIDField()
 
 
 class EditionUpdateRequestSerializer(EditionDetailsRequestSerializer):
+    """Serialize and validate edition update request data."""
+
     expected_aggregate_version = serializers.IntegerField(min_value=1)
 
 
 class EditionListQuerySerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate edition list query data."""
+
     lifecycle = serializers.ChoiceField(
         choices=EventEdition.Lifecycle.choices,
         required=False,
@@ -175,13 +255,19 @@ class EditionListQuerySerializer(serializers.Serializer[dict[str, str]]):
 
 
 class EditionAutocompleteSerializer(serializers.ModelSerializer[EventEdition]):
+    """Serialize and validate edition autocomplete data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = EventEdition
         fields = ("id", "name", "lifecycle", "starts_on")
         read_only_fields = fields
 
 
 class EditionAutocompleteQuerySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate edition autocomplete query data."""
+
     search = serializers.CharField(
         required=True,
         allow_blank=False,
@@ -198,10 +284,14 @@ class EditionAutocompleteQuerySerializer(serializers.Serializer[dict[str, object
 
 
 class EditionAutocompleteResponseSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate edition autocomplete response data."""
+
     results = EditionAutocompleteSerializer(many=True, read_only=True)
 
 
 class EditionTransitionRequestSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate edition transition request data."""
+
     to_state = serializers.ChoiceField(choices=EventEdition.Lifecycle.choices)
     reason = serializers.CharField(
         max_length=500,
@@ -211,13 +301,19 @@ class EditionTransitionRequestSerializer(serializers.Serializer[dict[str, str]])
 
 
 class EditionTransitionResultSerializer(serializers.ModelSerializer[EventEdition]):
+    """Serialize and validate edition transition result data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = EventEdition
         fields = ("id", "lifecycle", "lifecycle_version")
         read_only_fields = fields
 
 
 class EditionBulkTransitionRequestSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate edition bulk transition request data."""
+
     edition_ids = serializers.ListField(
         child=serializers.UUIDField(),
         min_length=1,
@@ -231,6 +327,23 @@ class EditionBulkTransitionRequestSerializer(serializers.Serializer[dict[str, ob
     )
 
     def validate_edition_ids(self, value: list[UUID]) -> list[UUID]:
+        """Validate edition identifiers.
+
+        Parameters
+        ----------
+        value : list[UUID]
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        list[UUID]
+            The matching validate edition ids records in deterministic order.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if len(value) != len(set(value)):
             raise serializers.ValidationError(
                 "Edition identifiers must be unique.",
@@ -242,11 +355,17 @@ class EditionBulkTransitionRequestSerializer(serializers.Serializer[dict[str, ob
 class EditionBulkTransitionResponseSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate edition bulk transition response data."""
+
     results = EditionTransitionResultSerializer(many=True, read_only=True)
 
 
 class EditionReadinessGateSerializer(serializers.ModelSerializer[EditionReadinessGate]):
+    """Serialize and validate edition readiness gate data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = EditionReadinessGate
         fields = (
             "id",
@@ -260,19 +379,27 @@ class EditionReadinessGateSerializer(serializers.ModelSerializer[EditionReadines
 
 
 class EditionReadinessGateReviewSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate edition readiness gate review data."""
+
     approve = serializers.BooleanField()
     evidence_reference = serializers.CharField(max_length=240)
     summary = serializers.CharField(max_length=500)
 
 
 class EditionClosureManifestCreateSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate edition closure manifest create data."""
+
     recovery_reference = serializers.CharField(max_length=240)
 
 
 class EditionClosureManifestSerializer(
     serializers.ModelSerializer[EditionClosureManifest]
 ):
+    """Serialize and validate edition closure manifest data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = EditionClosureManifest
         fields = (
             "id",

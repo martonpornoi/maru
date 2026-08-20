@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -36,6 +36,9 @@ from maru.registration.models import (
     Registration,
     SettlementBatch,
 )
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 REQUIRED_GATE_CODES = frozenset(EditionReadinessGate.Code.values)
 
@@ -73,6 +76,37 @@ def review_readiness_gate(
     summary: str,
     correlation_id: UUID,
 ) -> EditionReadinessGate:
+    """Verify review readiness gate.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    code : str
+        The stable machine-readable code.
+    approve : bool
+        The approve evaluated while review readiness gate.
+    evidence_reference : str
+        The provider or source evidence reference retained for reconciliation.
+    summary : str
+        The human-readable summary.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    EditionReadinessGate
+        The authorized EditionReadinessGate visible within the requested scope.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require_closure_authority(
         actor=actor,
         organization_id=organization_id,
@@ -140,6 +174,20 @@ def review_readiness_gate(
 
 
 def closure_counts(*, organization_id: UUID, edition_id: UUID) -> dict[str, int]:
+    """Return closure counts.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    dict[str, int]
+        A disclosure-safe mapping for closure counts.
+    """
     now = timezone.now()
     return {
         "guardian_pending": Registration.objects.filter(
@@ -265,6 +313,27 @@ def generate_closure_manifest(
     actor: Account,
     recovery_reference: str,
 ) -> EditionClosureManifest:
+    """Generate closure manifest.
+
+    Parameters
+    ----------
+    edition : EventEdition
+        The event edition that scopes the operation.
+    actor : Account
+        The authenticated person performing the operation.
+    recovery_reference : str
+        The provider or source recovery reference retained for reconciliation.
+
+    Returns
+    -------
+    EditionClosureManifest
+        The generated closure manifest.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     _require_closure_authority(
         actor=actor,
         organization_id=edition.organization_id,
@@ -319,6 +388,18 @@ def generate_closure_manifest(
 
 
 def assert_archive_ready(edition: EventEdition) -> None:
+    """Assert archive ready.
+
+    Parameters
+    ----------
+    edition : EventEdition
+        The event edition that scopes the operation.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not settings.ENFORCE_EDITION_CLOSURE_GATES:
         return
     _assert_gates(edition)

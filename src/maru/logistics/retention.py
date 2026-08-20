@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -17,6 +17,9 @@ from maru.effects.services import DomainEventRecord, publish_domain_event
 from .models import LogisticsNode, RestrictedLogisticsAddress
 from .writer_boundary import logistics_writer
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 MAX_RETENTION_DISPOSALS = 500
 
 
@@ -29,8 +32,32 @@ def dispose_expired_restricted_addresses(
     limit: int = 100,
     now: datetime | None = None,
 ) -> tuple[UUID, ...]:
-    """Redact one explicit tenant/edition batch; repeated runs are no-ops."""
+    """Redact one explicit tenant/edition batch; repeated runs are no-ops.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID | None
+        The event edition identifier that scopes the operation.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    limit : int, default=100
+        The maximum number of records to return.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    tuple[UUID, ...]
+        The matching dispose expired restricted addresses records in
+        deterministic order.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not isinstance(organization_id, UUID) or (
         edition_id is not None and not isinstance(edition_id, UUID)
     ):

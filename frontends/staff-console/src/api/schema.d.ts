@@ -11,10 +11,46 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description Retrieve the edition catalog.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["catalog_retrieve_edition_catalog"];
         put?: never;
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description Create the edition catalog.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["catalog_create_edition_catalog"];
         delete?: never;
         options?: never;
@@ -31,7 +67,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description Activate the edition catalog.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["catalog_activate_edition_catalog"];
         delete?: never;
         options?: never;
@@ -46,7 +100,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description List the activity.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["catalog_list_activity"];
         put?: never;
         post?: never;
@@ -63,10 +135,46 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description List the current account's orders.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["catalog_list_own_orders"];
         put?: never;
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description Place the order.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["catalog_place_order"];
         delete?: never;
         options?: never;
@@ -83,7 +191,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description Create the payment intent.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     order_id : UUID
+         *         The order identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["catalog_create_payment_intent"];
         delete?: never;
         options?: never;
@@ -100,7 +228,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description Reconcile the payment intent.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     intent_id : UUID
+         *         The intent identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["catalog_reconcile_payment_intent"];
         delete?: never;
         options?: never;
@@ -117,7 +265,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description Add the product.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["catalog_add_product"];
         delete?: never;
         options?: never;
@@ -134,7 +300,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description Add the variant.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     product_id : UUID
+         *         The product identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["catalog_add_variant"];
         delete?: never;
         options?: never;
@@ -151,7 +337,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated catalog data and safe errors out of shared caches. */
+        /**
+         * @description Adjust the variant stock.
+         *
+         *     Keep authenticated catalog data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     variant_id : UUID
+         *         The variant identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["catalog_adjust_variant_stock"];
         delete?: never;
         options?: never;
@@ -166,6 +372,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve my context.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["identity_retrieve_my_context"];
         put?: never;
         post?: never;
@@ -182,7 +406,47 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve my preference.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         get: operations["communications_retrieve_my_preference"];
+        /**
+         * @description Update my preference.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         put: operations["communications_update_my_preference"];
         post?: never;
         delete?: never;
@@ -198,6 +462,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my notifications.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["communications_list_my_notifications"];
         put?: never;
         post?: never;
@@ -216,6 +493,26 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Mark my notification read.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     message_id : UUID
+         *         The message identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["communications_mark_my_notification_read"];
         delete?: never;
         options?: never;
@@ -230,6 +527,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my history.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["participation_list_my_history"];
         put?: never;
         post?: never;
@@ -246,8 +561,41 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my corrections.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["privacy_list_my_corrections"];
         put?: never;
+        /**
+         * @description Propose my correction.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["privacy_propose_my_correction"];
         delete?: never;
         options?: never;
@@ -262,6 +610,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Generate my export.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         get: operations["privacy_generate_my_export"];
         put?: never;
         post?: never;
@@ -278,8 +644,39 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my requests.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["privacy_list_my_requests"];
         put?: never;
+        /**
+         * @description Create my request.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["privacy_create_my_request"];
         delete?: never;
         options?: never;
@@ -294,6 +691,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my restrictions.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["identity_list_my_restrictions"];
         put?: never;
         post?: never;
@@ -312,6 +727,30 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Appeal my restriction.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     restriction_id : UUID
+         *         The restriction identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["identity_appeal_my_restriction"];
         delete?: never;
         options?: never;
@@ -326,6 +765,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my security history.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["identity_list_my_security_history"];
         put?: never;
         post?: never;
@@ -342,6 +799,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my sessions.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["identity_list_my_sessions"];
         put?: never;
         post?: never;
@@ -360,6 +835,26 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Revoke my session.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     session_id : UUID
+         *         The session identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["identity_revoke_my_session"];
         delete?: never;
         options?: never;
@@ -376,6 +871,26 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Complete step-up authentication.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["identity_complete_step_up"];
         delete?: never;
         options?: never;
@@ -390,10 +905,46 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description List the current person's equipment offers.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["my_organizations_editions_equipment_offers_list"];
         put?: never;
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description Submit the equipment offer.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["my_organizations_editions_equipment_offers_create"];
         delete?: never;
         options?: never;
@@ -410,7 +961,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description Withdraw the equipment offer.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     offer_id : UUID
+         *         The offer identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["my_organizations_editions_equipment_offers_withdraw_create"];
         delete?: never;
         options?: never;
@@ -425,7 +996,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description List my schedule.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["venues_list_my_schedule"];
         put?: never;
         post?: never;
@@ -443,7 +1032,25 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Set the accommodation night inventory.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     room_type_id : UUID
+         *         The room type identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         put: operations["venues_set_accommodation_night_inventory"];
         post?: never;
         delete?: never;
@@ -459,6 +1066,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the security events.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["audit_list_security_events"];
         put?: never;
         post?: never;
@@ -475,10 +1104,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        /**
+         * @description List the partners.
+         *
+         *     Keep authenticated charity data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["charities_list_partners"];
         put?: never;
-        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        /**
+         * @description Create the partner.
+         *
+         *     Keep authenticated charity data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["charities_create_partner"];
         delete?: never;
         options?: never;
@@ -499,7 +1160,25 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        /**
+         * @description Update the partner.
+         *
+         *     Keep authenticated charity data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     partner_id : UUID
+         *         The partner identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         patch: operations["charities_update_partner"];
         trace?: never;
     };
@@ -512,7 +1191,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        /**
+         * @description Add the media.
+         *
+         *     Keep authenticated charity data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     partner_id : UUID
+         *         The partner identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["charities_add_media"];
         delete?: never;
         options?: never;
@@ -529,7 +1226,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        /**
+         * @description Approve or withdraw the partner media.
+         *
+         *     Keep authenticated charity data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     partner_id : UUID
+         *         The partner identifier within the requested scope.
+         *     media_id : UUID
+         *         The media identifier within the requested scope.
+         *     action : str
+         *         The stable action code describing the requested transition.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["charities_command_media"];
         delete?: never;
         options?: never;
@@ -544,8 +1268,60 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the basic editions.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     RuntimeError
+         *         If a required runtime invariant or dependency is unavailable.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["events_list_basic_editions"];
         put?: never;
+        /**
+         * @description Create the edition.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     EditionConflict
+         *         If the operation encounters a edition conflict condition.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["events_create_edition"];
         delete?: never;
         options?: never;
@@ -560,7 +1336,61 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the basic edition.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["events_retrieve_basic_edition"];
+        /**
+         * @description Update the edition.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     EditionConflict
+         *         If the operation encounters a edition conflict condition.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         put: operations["events_update_edition"];
         post?: never;
         delete?: never;
@@ -576,8 +1406,49 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the access workspace.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["authorization_retrieve_access_workspace"];
         put?: never;
+        /**
+         * @description Assign the access group.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     _command_validation
+         *         If the operation encounters a command validation condition.
+         */
         post: operations["authorization_assign_access_group"];
         delete?: never;
         options?: never;
@@ -595,9 +1466,61 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
+        /**
+         * @description Revoke the access assignment.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     assignment_id : UUID
+         *         The assignment identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     _command_validation
+         *         If the operation encounters a command validation condition.
+         */
         delete: operations["authorization_revoke_access_assignment"];
         options?: never;
         head?: never;
+        /**
+         * @description Replace the access assignment.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     assignment_id : UUID
+         *         The assignment identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     _command_validation
+         *         If the operation encounters a command validation condition.
+         */
         patch: operations["authorization_replace_access_assignment"];
         trace?: never;
     };
@@ -610,7 +1533,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Audited, explanatory preview without impersonation or domain mutation. */
+        /**
+         * @description Preview the effective access.
+         *
+         *     Audited, explanatory preview without impersonation or domain mutation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     ValidationError
+         *         If the submitted state or input violates a domain invariant.
+         */
         post: operations["authorization_preview_effective_access"];
         delete?: never;
         options?: never;
@@ -625,6 +1573,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my credentials.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["accreditation_list_my_credentials"];
         put?: never;
         post?: never;
@@ -641,6 +1606,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the assigned actions.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["staff_list_assigned_actions"];
         put?: never;
         post?: never;
@@ -657,10 +1644,46 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description List the definitions.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["applications_list_definitions"];
         put?: never;
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description Create the definition.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["applications_create_definition"];
         delete?: never;
         options?: never;
@@ -677,7 +1700,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description Apply the requested application-definition command.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     definition_id : UUID
+         *         The definition identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["applications_command_definition"];
         delete?: never;
         options?: never;
@@ -694,7 +1742,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description Start the submission.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     definition_id : UUID
+         *         The definition identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["applications_start_submission"];
         delete?: never;
         options?: never;
@@ -709,7 +1777,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description Retrieve my workspace.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["applications_retrieve_my_workspace"];
         put?: never;
         post?: never;
@@ -726,7 +1812,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description List the review queue.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["applications_list_review_queue"];
         put?: never;
         post?: never;
@@ -743,7 +1847,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description List the starters.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["applications_list_starters"];
         put?: never;
         post?: never;
@@ -762,7 +1884,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description Append the answer.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     submission_id : UUID
+         *         The submission identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["applications_append_answer"];
         delete?: never;
         options?: never;
@@ -779,7 +1921,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description Record the review decision.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     submission_id : UUID
+         *         The submission identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["applications_record_review_decision"];
         delete?: never;
         options?: never;
@@ -796,7 +1958,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated application data and safe errors out of shared caches. */
+        /**
+         * @description Submit the submission.
+         *
+         *     Keep authenticated application data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     submission_id : UUID
+         *         The submission identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["applications_submit_submission"];
         delete?: never;
         options?: never;
@@ -811,10 +1993,46 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        /**
+         * @description List the selections.
+         *
+         *     Keep authenticated charity data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["charities_list_selections"];
         put?: never;
-        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        /**
+         * @description Propose the selection.
+         *
+         *     Keep authenticated charity data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["charities_propose_selection"];
         delete?: never;
         options?: never;
@@ -829,7 +2047,27 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        /**
+         * @description Retrieve the selection.
+         *
+         *     Keep authenticated charity data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     selection_id : UUID
+         *         The selection identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["charities_retrieve_selection"];
         put?: never;
         post?: never;
@@ -848,7 +2086,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep authenticated charity data and safe errors out of shared caches. */
+        /**
+         * @description Apply the requested charity selection command.
+         *
+         *     Keep authenticated charity data and safe errors out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     selection_id : UUID
+         *         The selection identifier within the requested scope.
+         *     action : str
+         *         The stable action code describing the requested transition.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["charities_command_selection"];
         delete?: never;
         options?: never;
@@ -865,6 +2130,36 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Review the closure gate.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     code : str
+         *         The stable domain code to resolve or validate.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["events_review_closure_gate"];
         delete?: never;
         options?: never;
@@ -881,6 +2176,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Generate the closure manifest.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["events_generate_closure_manifest"];
         delete?: never;
         options?: never;
@@ -895,6 +2216,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the closure readiness.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["events_get_closure_readiness"];
         put?: never;
         post?: never;
@@ -911,6 +2256,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the delivery failures.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["communications_list_delivery_failures"];
         put?: never;
         post?: never;
@@ -929,6 +2296,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Revoke the credential.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     credential_id : UUID
+         *         The credential identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["accreditation_revoke_credential"];
         delete?: never;
         options?: never;
@@ -945,7 +2338,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description Review the equipment offer.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     offer_id : UUID
+         *         The offer identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_equipment_offers_review_create"];
         delete?: never;
         options?: never;
@@ -960,7 +2373,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description List the logistics workspace.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["organizations_editions_logistics_retrieve"];
         put?: never;
         post?: never;
@@ -977,7 +2408,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description List the logistics activity.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["organizations_editions_logistics_activity_list"];
         put?: never;
         post?: never;
@@ -996,7 +2445,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Record the asset agreement.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_agreements_create"];
         delete?: never;
         options?: never;
@@ -1013,7 +2480,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Register the serialized asset.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_assets_create"];
         delete?: never;
         options?: never;
@@ -1030,7 +2515,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description Record the logistics event.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_events_create"];
         delete?: never;
         options?: never;
@@ -1045,10 +2548,46 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description List the logistics workspace.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["organizations_editions_logistics_manifests_list"];
         put?: never;
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description Create the logistics manifest.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_manifests_create"];
         delete?: never;
         options?: never;
@@ -1063,7 +2602,27 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description Retrieve the workspace manifest.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     manifest_id : UUID
+         *         The manifest identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["organizations_editions_logistics_manifests_retrieve"];
         put?: never;
         post?: never;
@@ -1082,7 +2641,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Add the manifest line.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     manifest_id : UUID
+         *         The manifest identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_manifests_lines_create"];
         delete?: never;
         options?: never;
@@ -1099,7 +2678,29 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Record the manifest receipt.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     manifest_id : UUID
+         *         The manifest identifier within the requested scope.
+         *     line_id : UUID
+         *         The line identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_manifests_lines_receive_create"];
         delete?: never;
         options?: never;
@@ -1116,7 +2717,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description Change the manifest state.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     manifest_id : UUID
+         *         The manifest identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_manifests_state_create"];
         delete?: never;
         options?: never;
@@ -1133,7 +2754,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Create the logistics node.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_nodes_create"];
         delete?: never;
         options?: never;
@@ -1150,7 +2789,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description Ingest the offline scan batch.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_offline_batches_create"];
         delete?: never;
         options?: never;
@@ -1167,7 +2824,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Register the physical key.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_physical_keys_create"];
         delete?: never;
         options?: never;
@@ -1184,7 +2859,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Create the restricted logistics address.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_restricted_addresses_create"];
         delete?: never;
         options?: never;
@@ -1201,7 +2894,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description Read the restricted logistics contact.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     address_id : UUID
+         *         The address identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_restricted_addresses_read_create"];
         delete?: never;
         options?: never;
@@ -1216,7 +2929,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Every authenticated Logistics response is private and non-cacheable. */
+        /**
+         * @description List Stage Tech receiving manifests.
+         *
+         *     Every authenticated Logistics response is private and non-cacheable.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["organizations_editions_logistics_stage_receiving_list"];
         put?: never;
         post?: never;
@@ -1235,7 +2966,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Register the stock lot.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_editions_logistics_stock_lots_create"];
         delete?: never;
         options?: never;
@@ -1250,6 +2999,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the offline conflicts.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["accreditation_list_offline_conflicts"];
         put?: never;
         post?: never;
@@ -1268,6 +3039,30 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Generate the offline manifest.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["accreditation_generate_offline_manifest"];
         delete?: never;
         options?: never;
@@ -1282,6 +3077,32 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the staff summaries.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     RuntimeError
+         *         If a required runtime invariant or dependency is unavailable.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["participation_list_staff_summaries"];
         put?: never;
         post?: never;
@@ -1298,6 +3119,34 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the staff summary.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     account_id : UUID
+         *         The platform account identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["participation_retrieve_staff_summary"];
         put?: never;
         post?: never;
@@ -1316,6 +3165,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Decide the post-edition correction.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     correction_id : UUID
+         *         The correction identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["privacy_decide_post_edition_correction"];
         delete?: never;
         options?: never;
@@ -1332,6 +3209,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Minimize the registration profile.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["privacy_minimize_registration_profile"];
         delete?: never;
         options?: never;
@@ -1346,6 +3249,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the attendee report.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["registration_retrieve_attendee_report"];
         put?: never;
         post?: never;
@@ -1362,6 +3282,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Export the badge data.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     HttpResponse
+         *         The HTTP response for the requested operation.
+         */
         get: operations["registration_export_badge_data"];
         put?: never;
         post?: never;
@@ -1378,6 +3315,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the commerce workspace.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_retrieve_commerce_workspace"];
         put?: never;
         post?: never;
@@ -1396,7 +3357,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep self and staff commerce responses out of shared caches. */
+        /**
+         * @description Adjust the effective capacity.
+         *
+         *     Keep self and staff commerce responses out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_adjust_effective_capacity"];
         delete?: never;
         options?: never;
@@ -1413,7 +3401,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep self and staff commerce responses out of shared caches. */
+        /**
+         * @description Offer the next waitlist batch.
+         *
+         *     Keep self and staff commerce responses out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_offer_next_waitlist_batch"];
         delete?: never;
         options?: never;
@@ -1428,6 +3443,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the configuration workspace.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_retrieve_configuration_workspace"];
         put?: never;
         post?: never;
@@ -1446,6 +3483,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Apply the requested registration-configuration command.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     configuration_id : UUID
+         *         The configuration identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["registration_apply_configuration_definition_command"];
         delete?: never;
         options?: never;
@@ -1462,6 +3518,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Activate the configuration.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_activate_configuration"];
         delete?: never;
         options?: never;
@@ -1478,6 +3560,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Create the configuration draft.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_create_configuration_draft"];
         delete?: never;
         options?: never;
@@ -1494,6 +3602,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Approve the financial operation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     operation_id : UUID
+         *         The caller-generated identifier that makes the operation unique.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_approve_financial_operation"];
         delete?: never;
         options?: never;
@@ -1508,8 +3644,58 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve my registration.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_retrieve_my_registration"];
         put?: never;
+        /**
+         * @description Submit my registration.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_submit_my_registration"];
         delete?: never;
         options?: never;
@@ -1526,7 +3712,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep self and staff commerce responses out of shared caches. */
+        /**
+         * @description Confirm my demo payment.
+         *
+         *     Keep self and staff commerce responses out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["registration_confirm_my_demo_payment"];
         delete?: never;
         options?: never;
@@ -1543,6 +3756,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Create my payment intent.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["registration_create_my_payment_intent"];
         delete?: never;
         options?: never;
@@ -1557,6 +3796,32 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve my payment intent.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *     intent_id : UUID
+         *         The intent identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         get: operations["registration_retrieve_my_payment_intent"];
         put?: never;
         post?: never;
@@ -1573,6 +3838,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my receipts.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         get: operations["registration_list_my_receipts"];
         put?: never;
         post?: never;
@@ -1591,7 +3880,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Keep self and staff commerce responses out of shared caches. */
+        /**
+         * @description Reserve my admission tier replacement.
+         *
+         *     Keep self and staff commerce responses out of shared caches.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["registration_reserve_my_admission_tier_replacement"];
         delete?: never;
         options?: never;
@@ -1606,7 +3922,51 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the self attendee profile.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_retrieve_self_attendee_profile"];
+        /**
+         * @description Update the self attendee profile.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         put: operations["registration_update_self_attendee_profile"];
         post?: never;
         delete?: never;
@@ -1624,6 +3984,30 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Upload the self fursuit photo.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     fursuit_id : UUID
+         *         The fursuit identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["registration_upload_self_fursuit_photo"];
         delete?: never;
         options?: never;
@@ -1640,6 +4024,28 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Upload the self profile photo.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["registration_upload_self_profile_photo"];
         delete?: never;
         options?: never;
@@ -1654,6 +4060,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the payment exceptions.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_list_payment_exceptions"];
         put?: never;
         post?: never;
@@ -1672,6 +4100,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Resolve the payment exception.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     exception_id : UUID
+         *         The exception identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_resolve_payment_exception"];
         delete?: never;
         options?: never;
@@ -1686,8 +4142,49 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the profile extension fields.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     RegistrationSetupConflict
+         *         If the operation encounters a registration setup conflict condition.
+         */
         get: operations["registration_list_profile_extension_fields"];
         put?: never;
+        /**
+         * @description Create the profile extension field.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["registration_create_profile_extension_field"];
         delete?: never;
         options?: never;
@@ -1704,6 +4201,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Apply the requested profile-extension field command.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     field_id : UUID
+         *         The field identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["registration_apply_profile_extension_field_command"];
         delete?: never;
         options?: never;
@@ -1718,6 +4234,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the profile media reviews.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_list_profile_media_reviews"];
         put?: never;
         post?: never;
@@ -1736,6 +4276,30 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Review the profile media.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     media_id : UUID
+         *         The media identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["registration_review_profile_media"];
         delete?: never;
         options?: never;
@@ -1750,6 +4314,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the reconciliation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_retrieve_reconciliation"];
         put?: never;
         post?: never;
@@ -1766,8 +4352,56 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the settlements.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_list_settlements"];
         put?: never;
+        /**
+         * @description Reconcile the settlement.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_reconcile_settlement"];
         delete?: never;
         options?: never;
@@ -1782,8 +4416,49 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Get the setup start choices.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     RegistrationSetupConflict
+         *         If the operation encounters a registration setup conflict condition.
+         */
         get: operations["registration_get_setup_start_choices"];
         put?: never;
+        /**
+         * @description Start the governed setup.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["registration_start_governed_setup"];
         delete?: never;
         options?: never;
@@ -1800,6 +4475,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Publish the template.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_publish_template"];
         delete?: never;
         options?: never;
@@ -1814,6 +4515,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the service summaries.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     RuntimeError
+         *         If a required runtime invariant or dependency is unavailable.
+         */
         get: operations["registration_list_service_summaries"];
         put?: never;
         post?: never;
@@ -1830,6 +4555,32 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the service summary.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_retrieve_service_summary"];
         put?: never;
         post?: never;
@@ -1848,6 +4599,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Check in the registration.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_check_in"];
         delete?: never;
         options?: never;
@@ -1864,6 +4643,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Issue the credential.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["accreditation_issue_credential"];
         delete?: never;
         options?: never;
@@ -1878,8 +4685,60 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the financial operations.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_list_financial_operations"];
         put?: never;
+        /**
+         * @description Propose the financial operation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_propose_financial_operation"];
         delete?: never;
         options?: never;
@@ -1896,6 +4755,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Change the payment deadline.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_change_payment_deadline"];
         delete?: never;
         options?: never;
@@ -1910,10 +4797,62 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Reasoned registration-staff projection and profile-field write. */
+        /**
+         * @description Retrieve the staff profile extensions.
+         *
+         *     Reasoned registration-staff projection and profile-field write.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     DependencyUnavailable
+         *         If the scoped target does not exist or cannot be disclosed.
+         */
         get: operations["registration_retrieve_staff_profile_extensions"];
         put?: never;
-        /** @description Reasoned registration-staff projection and profile-field write. */
+        /**
+         * @description Write the staff profile extension.
+         *
+         *     Reasoned registration-staff projection and profile-field write.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     DependencyUnavailable
+         *         If the scoped target does not exist or cannot be disclosed.
+         */
         post: operations["registration_write_staff_profile_extension"];
         delete?: never;
         options?: never;
@@ -1930,6 +4869,34 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Waive the payment.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     registration_id : UUID
+         *         The attendee registration identifier within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_waive_payment"];
         delete?: never;
         options?: never;
@@ -1944,10 +4911,58 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Current post-submission profile fields visible to the registration owner. */
+        /**
+         * @description Retrieve my profile extensions.
+         *
+         *     Current post-submission profile fields visible to the registration owner.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     DependencyUnavailable
+         *         If the scoped target does not exist or cannot be disclosed.
+         */
         get: operations["registration_retrieve_my_profile_extensions"];
         put?: never;
-        /** @description Current post-submission profile fields visible to the registration owner. */
+        /**
+         * @description Write my profile extension.
+         *
+         *     Current post-submission profile fields visible to the registration owner.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     DependencyUnavailable
+         *         If the scoped target does not exist or cannot be disclosed.
+         */
         post: operations["registration_write_my_profile_extension"];
         delete?: never;
         options?: never;
@@ -1964,6 +4979,36 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Decide the restriction appeal.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     appeal_id : UUID
+         *         The appeal identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["identity_decide_restriction_appeal"];
         delete?: never;
         options?: never;
@@ -1978,8 +5023,60 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the scoped restrictions.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["identity_list_scoped_restrictions"];
         put?: never;
+        /**
+         * @description Issue the scoped restriction.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["identity_issue_scoped_restriction"];
         delete?: never;
         options?: never;
@@ -1996,6 +5093,36 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Revoke the scoped restriction.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     restriction_id : UUID
+         *         The restriction identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["identity_revoke_scoped_restriction"];
         delete?: never;
         options?: never;
@@ -2012,6 +5139,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Transition the edition.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["events_transition_edition"];
         delete?: never;
         options?: never;
@@ -2028,7 +5181,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Select the space for edition.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_select_space_for_edition"];
         delete?: never;
         options?: never;
@@ -2043,7 +5214,27 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Retrieve the space schedule.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     space_selection_id : UUID
+         *         The space selection identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["venues_retrieve_space_schedule"];
         put?: never;
         post?: never;
@@ -2061,7 +5252,27 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Set the space availability.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     space_selection_id : UUID
+         *         The space selection identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         put: operations["venues_set_space_availability"];
         post?: never;
         delete?: never;
@@ -2079,7 +5290,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Create the booking.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     space_selection_id : UUID
+         *         The space selection identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_create_booking"];
         delete?: never;
         options?: never;
@@ -2100,7 +5331,29 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Reschedule the booking.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     space_selection_id : UUID
+         *         The space selection identifier within the requested scope.
+         *     booking_id : UUID
+         *         The booking identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         patch: operations["venues_reschedule_booking"];
         trace?: never;
     };
@@ -2113,7 +5366,36 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Apply the booking command.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     space_selection_id : UUID
+         *         The space selection identifier within the requested scope.
+         *     booking_id : UUID
+         *         The booking identifier within the requested scope.
+         *     action : str
+         *         The stable action code describing the requested transition.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["venues_apply_booking_command"];
         delete?: never;
         options?: never;
@@ -2128,10 +5410,46 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description List the edition workspace.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["venues_list_edition_workspace"];
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Select the property for edition.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_select_property_for_edition"];
         delete?: never;
         options?: never;
@@ -2148,7 +5466,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        /**
+         * @description Create the department.
+         *
+         *     Reach explicit uniform denials while retaining authenticated CSRF checks.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["workforce_create_department"];
         delete?: never;
         options?: never;
@@ -2164,10 +5500,50 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        /**
+         * @description Update the department.
+         *
+         *     Reach explicit uniform denials while retaining authenticated CSRF checks.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     department_id : UUID
+         *         The department identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         put: operations["workforce_update_department"];
         post?: never;
-        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        /**
+         * @description Delete the department.
+         *
+         *     Reach explicit uniform denials while retaining authenticated CSRF checks.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     department_id : UUID
+         *         The department identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         delete: operations["workforce_delete_department"];
         options?: never;
         head?: never;
@@ -2183,7 +5559,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        /**
+         * @description Retire the department.
+         *
+         *     Reach explicit uniform denials while retaining authenticated CSRF checks.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     department_id : UUID
+         *         The department identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["workforce_retire_department"];
         delete?: never;
         options?: never;
@@ -2198,6 +5594,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List my onboarding documents.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         get: operations["workforce_list_my_onboarding_documents"];
         put?: never;
         post?: never;
@@ -2216,6 +5634,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Upload my onboarding document.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     document_request_id : UUID
+         *         The document request identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["workforce_upload_my_onboarding_document"];
         delete?: never;
         options?: never;
@@ -2232,6 +5676,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Submit my volunteer application.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     opportunity_id : UUID
+         *         The opportunity identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["workforce_submit_my_volunteer_application"];
         delete?: never;
         options?: never;
@@ -2246,7 +5716,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Return the current, human-readable edition organization hierarchy. */
+        /**
+         * @description Retrieve the structure.
+         *
+         *     Return the current, human-readable edition organization hierarchy.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["workforce_retrieve_structure"];
         put?: never;
         post?: never;
@@ -2265,7 +5758,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Reach explicit uniform denials while retaining authenticated CSRF checks. */
+        /**
+         * @description Apply the structure template.
+         *
+         *     Reach explicit uniform denials while retaining authenticated CSRF checks.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["workforce_apply_structure_template"];
         delete?: never;
         options?: never;
@@ -2280,6 +5791,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Autocomplete the basic editions.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         get: operations["events_autocomplete_basic_editions"];
         put?: never;
         post?: never;
@@ -2298,6 +5831,30 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Transition the editions.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     TypeError
+         *         If the caller supplies an object of an unsupported type.
+         */
         post: operations["events_bulk_transition_editions"];
         delete?: never;
         options?: never;
@@ -2314,7 +5871,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Record the asset agreement.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_agreements_create"];
         delete?: never;
         options?: never;
@@ -2331,7 +5906,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Register the serialized asset.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_assets_create"];
         delete?: never;
         options?: never;
@@ -2348,7 +5941,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Create the reusable kit.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_kits_create"];
         delete?: never;
         options?: never;
@@ -2365,7 +5974,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Create the logistics label.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_labels_create"];
         delete?: never;
         options?: never;
@@ -2382,7 +6007,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Create the logistics node.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_nodes_create"];
         delete?: never;
         options?: never;
@@ -2399,7 +6042,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Create the logistics party.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_parties_create"];
         delete?: never;
         options?: never;
@@ -2416,7 +6075,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Register the physical key.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_physical_keys_create"];
         delete?: never;
         options?: never;
@@ -2433,7 +6110,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Assign the keyholder responsibility.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     key_id : UUID
+         *         The key identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_physical_keys_keyholders_create"];
         delete?: never;
         options?: never;
@@ -2450,7 +6145,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Create the restricted logistics address.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_restricted_addresses_create"];
         delete?: never;
         options?: never;
@@ -2467,7 +6180,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated logistics API response boundary, including safe errors. */
+        /**
+         * @description Register the stock lot.
+         *
+         *     Authenticated logistics API response boundary, including safe errors.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID | None, default=None
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["organizations_logistics_stock_lots_create"];
         delete?: never;
         options?: never;
@@ -2482,6 +6213,26 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the staff requests.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["privacy_list_staff_requests"];
         put?: never;
         post?: never;
@@ -2500,6 +6251,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Transition the staff request.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     privacy_request_id : UUID
+         *         The privacy request identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["privacy_transition_staff_request"];
         delete?: never;
         options?: never;
@@ -2514,6 +6291,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the convention series.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     RuntimeError
+         *         If a required runtime invariant or dependency is unavailable.
+         */
         get: operations["organizations_list_convention_series"];
         put?: never;
         post?: never;
@@ -2530,7 +6329,52 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the convention series.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     series_id : UUID
+         *         The convention-series identifier within the organization scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["organizations_retrieve_convention_series"];
+        /**
+         * @description Update the convention series.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     series_id : UUID
+         *         The convention-series identifier within the organization scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     ConventionSeriesConflict
+         *         If the operation encounters a convention series conflict condition.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         put: operations["organizations_update_convention_series"];
         post?: never;
         delete?: never;
@@ -2548,7 +6392,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Approve the space layout.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     layout_id : UUID
+         *         The layout identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_approve_space_layout"];
         delete?: never;
         options?: never;
@@ -2563,10 +6425,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description List the properties.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["venues_list_properties"];
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Create the property.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_create_property"];
         delete?: never;
         options?: never;
@@ -2587,7 +6481,25 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Update the property.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     property_id : UUID
+         *         The property identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         patch: operations["venues_update_property"];
         trace?: never;
     };
@@ -2600,7 +6512,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Add the property media.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     property_id : UUID
+         *         The property identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_add_property_media"];
         delete?: never;
         options?: never;
@@ -2617,7 +6547,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Approve the property media.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     property_id : UUID
+         *         The property identifier within the requested scope.
+         *     media_id : UUID
+         *         The media identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_approve_property_media"];
         delete?: never;
         options?: never;
@@ -2634,7 +6584,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Create the accommodation room type.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     property_id : UUID
+         *         The property identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_create_accommodation_room_type"];
         delete?: never;
         options?: never;
@@ -2651,7 +6619,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Create the space combination.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     property_id : UUID
+         *         The property identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_create_space_combination"];
         delete?: never;
         options?: never;
@@ -2668,7 +6654,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Create the space path.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     property_id : UUID
+         *         The property identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_create_space_path"];
         delete?: never;
         options?: never;
@@ -2685,7 +6689,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Authenticated venue response boundary, including safe error responses. */
+        /**
+         * @description Add the space layout.
+         *
+         *     Authenticated venue response boundary, including safe error responses.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     space_id : UUID
+         *         The space identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["venues_add_space_layout"];
         delete?: never;
         options?: never;
@@ -2702,6 +6724,19 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Create the platform account invitation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["identity_create_platform_account_invitation"];
         delete?: never;
         options?: never;
@@ -2716,6 +6751,32 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the platform account invitation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     invitation_id : UUID
+         *         The invitation identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     InvitationConflict
+         *         If the operation encounters a invitation conflict condition.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["identity_retrieve_platform_account_invitation"];
         put?: never;
         post?: never;
@@ -2734,6 +6795,21 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Reissue the platform account invitation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     invitation_id : UUID
+         *         The invitation identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["identity_reissue_platform_account_invitation"];
         delete?: never;
         options?: never;
@@ -2750,6 +6826,21 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Revoke the platform account invitation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     invitation_id : UUID
+         *         The invitation identifier within the requested scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         post: operations["identity_revoke_platform_account_invitation"];
         delete?: never;
         options?: never;
@@ -2764,6 +6855,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List the platform accounts.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     InvitationConflict
+         *         If the operation encounters a invitation conflict condition.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["identity_list_platform_accounts"];
         put?: never;
         post?: never;
@@ -2782,6 +6895,29 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Accept the platform account invitation.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     InvitationAcceptanceRateLimited
+         *         If the operation encounters a invitation acceptance rate limited
+         *         condition.
+         *     InvitationConflict
+         *         If the operation encounters a invitation conflict condition.
+         */
         post: operations["identity_accept_platform_account_invitation"];
         delete?: never;
         options?: never;
@@ -2798,6 +6934,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Bootstrap the account.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["identity_bootstrap_account"];
         delete?: never;
         options?: never;
@@ -2814,6 +6968,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Request account recovery.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["identity_request_recovery"];
         delete?: never;
         options?: never;
@@ -2830,6 +7002,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Complete account recovery.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["identity_complete_recovery"];
         delete?: never;
         options?: never;
@@ -2846,6 +7036,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Verify the email.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["identity_verify_email"];
         delete?: never;
         options?: never;
@@ -2860,6 +7068,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Get the CSRF token.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["identity_get_csrf_token"];
         put?: never;
         post?: never;
@@ -2876,6 +7097,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List public editions.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["registration_list_public_editions"];
         put?: never;
         post?: never;
@@ -2892,6 +7126,26 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List public attendees.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         get: operations["registration_list_public_attendees"];
         put?: never;
         post?: never;
@@ -2908,6 +7162,26 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve public definition.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         get: operations["registration_retrieve_public_definition"];
         put?: never;
         post?: never;
@@ -2924,6 +7198,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Retrieve the self profile suggestion.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         get: operations["registration_retrieve_self_profile_suggestion"];
         put?: never;
         post?: never;
@@ -2942,7 +7238,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Complete JSON submission command for independently designed frontends. */
+        /**
+         * @description Submit a headless registration.
+         *
+         *     Complete JSON submission command for independently designed frontends.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         *     PermissionDenied
+         *         If the caller lacks permission for the requested scope.
+         */
         post: operations["registration_submit_headless"];
         delete?: never;
         options?: never;
@@ -2957,6 +7278,21 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List public volunteer opportunities.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["workforce_list_public_volunteer_opportunities"];
         put?: never;
         post?: never;
@@ -2975,6 +7311,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Accept the guardian consent.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["registration_accept_guardian_consent"];
         delete?: never;
         options?: never;
@@ -2989,6 +7343,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List public charities for the edition.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["charities_list_public"];
         put?: never;
         post?: never;
@@ -3007,6 +7378,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Ingest the offline check-in batch.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *     device_code : str
+         *         The public relay-device code within the edition scope.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["accreditation_ingest_offline_check_in"];
         delete?: never;
         options?: never;
@@ -3021,6 +7418,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description List public schedule.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     edition_id : UUID
+         *         The event edition identifier that scopes the operation.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         */
         get: operations["venues_list_public_schedule"];
         put?: never;
         post?: never;
@@ -3039,6 +7453,30 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Receive the payment webhook.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *     organization_id : UUID
+         *         The organization identifier that owns the requested resource.
+         *     provider_code : str
+         *         The stable provider code from the relevant closed catalog.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         *     NotFound
+         *         If the scoped resource is unavailable to the caller.
+         */
         post: operations["registration_receive_payment_webhook"];
         delete?: never;
         options?: never;
@@ -3055,6 +7493,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Create a public session.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request and authenticated principal context.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for the requested operation.
+         *
+         *     Raises
+         *     ------
+         *     ApiValidationError
+         *         If the request payload violates the endpoint contract.
+         */
         post: operations["identity_create_public_session"];
         delete?: never;
         options?: never;
@@ -3069,6 +7525,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Render liveness.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for this request.
+         */
         get: operations["platform_liveness"];
         put?: never;
         post?: never;
@@ -3085,6 +7554,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Render readiness.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         The incoming HTTP request.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         The HTTP response for this request.
+         */
         get: operations["platform_readiness"];
         put?: never;
         post?: never;
@@ -3098,6 +7580,7 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Serialize and validate access assignment data. */
         AccessAssignment: {
             /** Format: uuid */
             id: string;
@@ -3115,6 +7598,7 @@ export interface components {
             granted_by_name: string;
             approved_by_name: string;
         };
+        /** @description Serialize and validate access assignment create data. */
         AccessAssignmentCreate: {
             /** Format: email */
             person_email: string;
@@ -3125,11 +7609,13 @@ export interface components {
             expires_at?: string | null;
             reason: string;
         };
+        /** @description Serialize and validate access capability data. */
         AccessCapability: {
             code: string;
             label: string;
             description: string;
         };
+        /** @description Serialize and validate access group data. */
         AccessGroup: {
             /** Format: uuid */
             role_version_id: string;
@@ -3140,6 +7626,7 @@ export interface components {
             capability_count: number;
             capabilities: components["schemas"]["AccessCapability"][];
         };
+        /** @description Serialize and validate access preview data. */
         AccessPreview: {
             mode: components["schemas"]["ModeEnum"];
             /** Format: uuid */
@@ -3154,6 +7641,7 @@ export interface components {
             session_unchanged: boolean;
             mutation_allowed: boolean;
         };
+        /** @description Serialize and validate access preview capability data. */
         AccessPreviewCapability: {
             capability_code: string;
             label: string;
@@ -3165,7 +7653,7 @@ export interface components {
             data_preview_available: boolean;
             disclosure_limited: boolean;
         };
-        /** @description Reject undeclared fields instead of silently discarding them. */
+        /** @description Serialize and validate access preview request data. */
         AccessPreviewRequest: {
             mode: components["schemas"]["ModeEnum"];
             /** Format: email */
@@ -3182,6 +7670,7 @@ export interface components {
          * @enum {string}
          */
         AccessPurposeEnum: "incident_response" | "inventory_verification" | "pickup_coordination" | "provider_contact" | "return_coordination";
+        /** @description Serialize and validate access workspace data. */
         AccessWorkspace: {
             organization_name: string;
             edition_name: string;
@@ -3190,12 +7679,14 @@ export interface components {
             groups: components["schemas"]["AccessGroup"][];
             assignments: components["schemas"]["AccessAssignment"][];
         };
+        /** @description Serialize and validate account bootstrap data. */
         AccountBootstrap: {
             /** Format: email */
             email: string;
             display_name: string;
             password: string;
         };
+        /** @description Serialize and validate account restriction data. */
         AccountRestriction: {
             /** Format: uuid */
             readonly id: string;
@@ -3212,6 +7703,19 @@ export interface components {
             readonly expires_at: string | null;
             /** Format: date-time */
             readonly revoked_at: string | null;
+            /**
+             * @description Return appeal status.
+             *
+             *     Parameters
+             *     ----------
+             *     obj : AccountRestriction
+             *         The model instance being validated or presented.
+             *
+             *     Returns
+             *     -------
+             *     str | None
+             *         The resolved str | None for the requested scope.
+             */
             readonly appeal_status: string | null;
         };
         /**
@@ -3223,6 +7727,7 @@ export interface components {
          * @enum {string}
          */
         AccountRestrictionKindEnum: "registration" | "attendance" | "public_profile" | "credential" | "communication";
+        /** @description Serialize and validate account security event data. */
         AccountSecurityEvent: {
             /** Format: uuid */
             readonly id: string;
@@ -3258,6 +7763,7 @@ export interface components {
          * @enum {string}
          */
         AccountSecurityEventOutcomeEnum: "succeeded" | "failed";
+        /** @description Serialize and validate account session data. */
         AccountSession: {
             /** Format: uuid */
             readonly id: string;
@@ -3297,6 +7803,7 @@ export interface components {
          * @enum {string}
          */
         ActionD11Enum: "receive" | "pack" | "unpack" | "move" | "load" | "unload" | "handover" | "count" | "condition" | "damage" | "return";
+        /** @description Serialize and validate action item data. */
         ActionItem: {
             key: string;
             level: components["schemas"]["LevelEnum"];
@@ -3312,7 +7819,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate activate configuration data. */
         ActivateConfiguration: {
             /** Format: uuid */
             configuration_id: string;
@@ -3324,6 +7831,7 @@ export interface components {
          * @enum {string}
          */
         ActiveRevokedStatusEnum: "active" | "revoked";
+        /** @description Serialize and validate admission product data. */
         AdmissionProduct: {
             /** Format: uuid */
             readonly id: string;
@@ -3361,6 +7869,7 @@ export interface components {
          * @enum {string}
          */
         AdmissionProductStatusEnum: "available" | "hidden";
+        /** @description Serialize and validate admission tier replacement data. */
         AdmissionTierReplacement: {
             /** Format: uuid */
             readonly id: string;
@@ -3397,6 +7906,7 @@ export interface components {
          * @enum {string}
          */
         AdmissionTierReplacementStatusEnum: "payment_pending" | "completed" | "expired" | "cancelled";
+        /** @description Serialize and validate application answer projection data. */
         ApplicationAnswerProjection: {
             /** Format: uuid */
             question_id: string;
@@ -3407,6 +7917,7 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        /** @description Serialize and validate application applicant definition data. */
         ApplicationApplicantDefinition: {
             /** Format: uuid */
             id: string;
@@ -3429,6 +7940,7 @@ export interface components {
             minimum_age: number;
             sections: components["schemas"]["ApplicationApplicantSection"][];
         };
+        /** @description Serialize and validate application applicant section data. */
         ApplicationApplicantSection: {
             /** Format: uuid */
             id: string;
@@ -3437,6 +7949,7 @@ export interface components {
             help_text: string;
             questions: components["schemas"]["ApplicationQuestionProjection"][];
         };
+        /** @description Serialize and validate application command result data. */
         ApplicationCommandResult: {
             /** Format: uuid */
             receipt_id: string;
@@ -3448,6 +7961,7 @@ export interface components {
             target_id: string | null;
             resulting_version: number;
         };
+        /** @description Serialize and validate application decision projection data. */
         ApplicationDecisionProjection: {
             sequence: number;
             decision: string;
@@ -3457,6 +7971,7 @@ export interface components {
             /** Format: date-time */
             decided_at: string;
         };
+        /** @description Serialize and validate application definition data. */
         ApplicationDefinition: {
             /** Format: uuid */
             id: string;
@@ -3487,16 +8002,19 @@ export interface components {
             reviewer_people: components["schemas"]["ApplicationReviewerPerson"][];
         };
         ApplicationDefinitionCommandRequest: components["schemas"]["DefinitionConfigure"] | components["schemas"]["SectionAdd"] | components["schemas"]["QuestionAdd"] | components["schemas"]["DefinitionLifecycle"] | components["schemas"]["DefinitionSuccessor"];
+        /** @description Serialize and validate application owner department data. */
         ApplicationOwnerDepartment: {
             /** Format: uuid */
             id: string;
             name: string;
         };
+        /** @description Serialize and validate application question condition projection data. */
         ApplicationQuestionConditionProjection: {
             question_key?: string;
             operator?: string;
             value?: unknown;
         };
+        /** @description Serialize and validate application question projection data. */
         ApplicationQuestionProjection: {
             /** Format: uuid */
             id: string;
@@ -3517,6 +8035,7 @@ export interface components {
             applicant_writable: boolean;
             source_binding: string;
         };
+        /** @description Serialize and validate application review submission projection data. */
         ApplicationReviewSubmissionProjection: {
             /** Format: uuid */
             id: string;
@@ -3536,6 +8055,7 @@ export interface components {
             decisions: components["schemas"]["ApplicationDecisionProjection"][];
             applicant: components["schemas"]["ApplicationReviewerPerson"];
         };
+        /** @description Serialize and validate application reviewer answer projection data. */
         ApplicationReviewerAnswerProjection: {
             /** Format: uuid */
             question_id: string;
@@ -3548,17 +8068,20 @@ export interface components {
             classification: string;
             source: string;
         };
+        /** @description Serialize and validate application reviewer person data. */
         ApplicationReviewerPerson: {
             /** Format: uuid */
             id: string;
             display_name: string;
         };
+        /** @description Serialize and validate application reviewer role data. */
         ApplicationReviewerRole: {
             /** Format: uuid */
             id: string;
             name: string;
             version: number;
         };
+        /** @description Serialize and validate application staff question projection data. */
         ApplicationStaffQuestionProjection: {
             /** Format: uuid */
             id: string;
@@ -3588,6 +8111,7 @@ export interface components {
             api_projection: boolean;
             retention_policy_code: string;
         };
+        /** @description Serialize and validate application staff section data. */
         ApplicationStaffSection: {
             /** Format: uuid */
             id: string;
@@ -3596,6 +8120,7 @@ export interface components {
             help_text: string;
             questions: components["schemas"]["ApplicationStaffQuestionProjection"][];
         };
+        /** @description Serialize and validate application starter summary data. */
         ApplicationStarterSummary: {
             code: string;
             name: string;
@@ -3605,6 +8130,7 @@ export interface components {
             classification: string;
             requires_local_policy: boolean;
         };
+        /** @description Serialize and validate application submission projection data. */
         ApplicationSubmissionProjection: {
             /** Format: uuid */
             id: string;
@@ -3623,10 +8149,11 @@ export interface components {
             answers: components["schemas"]["ApplicationAnswerProjection"][];
             decisions: components["schemas"]["ApplicationDecisionProjection"][];
         };
+        /** @description Serialize and validate approve financial operation data. */
         ApproveFinancialOperation: {
             reason: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate asset agreement create data. */
         AssetAgreementCreate: {
             reason: string;
             subject: components["schemas"]["LogisticsCatalogSubjectLocator"];
@@ -3650,23 +8177,27 @@ export interface components {
          * @enum {string}
          */
         AssetAgreementCreateKindEnum: "loan" | "rental";
+        /** @description Serialize and validate attendance label data. */
         AttendanceLabel: {
             code: string;
             label: string;
             tone: string;
         };
+        /** @description Serialize and validate attendee country breakdown data. */
         AttendeeCountryBreakdown: {
             country_code: string;
             count: number;
             /** Format: double */
             percentage: number;
         };
+        /** @description Serialize and validate attendee level breakdown data. */
         AttendeeLevelBreakdown: {
             code: string;
             label: string;
             tone: string;
             count: number;
         };
+        /** @description Serialize and validate attendee report data. */
         AttendeeReport: {
             /** Format: date-time */
             generated_at: string;
@@ -3679,6 +8210,7 @@ export interface components {
             has_previous: boolean;
             results: components["schemas"]["AttendeeReportRow"][];
         };
+        /** @description Serialize and validate attendee report row data. */
         AttendeeReportRow: {
             /** Format: uuid */
             registration_id: string;
@@ -3695,6 +8227,7 @@ export interface components {
             attendance_labels: components["schemas"]["AttendanceLabel"][];
             profile_photo_status: string;
         };
+        /** @description Serialize and validate attendee report summary data. */
         AttendeeReportSummary: {
             coming: number;
             confirmed: number;
@@ -3714,6 +8247,7 @@ export interface components {
          * @enum {string}
          */
         AudiencePolicyEnum: "self" | "registration_staff" | "department" | "confirmed_attendees" | "public";
+        /** @description Serialize and validate audit event summary data. */
         AuditEventSummary: {
             /** Format: uuid */
             readonly id: string;
@@ -3757,6 +8291,7 @@ export interface components {
          * @enum {string}
          */
         BeneficiaryEnum: "convention" | "charity";
+        /** @description Serialize and validate capacity context data. */
         CapacityContext: {
             readonly code: string;
             readonly label_snapshot: string;
@@ -3779,11 +8314,12 @@ export interface components {
          * @enum {string}
          */
         CapacityModeEnum: "seated" | "standing" | "table";
-        /** @description Marker for Catalog request objects that reject unknown properties. */
+        /** @description Serialize and validate catalog activate data. */
         CatalogActivate: {
             expected_version: number;
             reason: string;
         };
+        /** @description Serialize and validate catalog activity item data. */
         CatalogActivityItem: {
             action: string;
             actor_label: string;
@@ -3791,36 +8327,40 @@ export interface components {
             occurred_at: string;
             target_count: number;
         };
+        /** @description Serialize and validate catalog activity list data. */
         CatalogActivityList: {
             activity: components["schemas"]["CatalogActivityItem"][];
         };
+        /** @description Serialize and validate catalog command result data. */
         CatalogCommandResult: {
             /** Format: uuid */
             target_id: string;
             resulting_version: number;
             replayed: boolean;
         };
-        /** @description Marker for Catalog request objects that reject unknown properties. */
+        /** @description Serialize and validate catalog create data. */
         CatalogCreate: {
             currency: string;
             reason: string;
         };
+        /** @description Serialize and validate catalog detail data. */
         CatalogDetail: {
             catalog_version: number;
             currency: string;
             products: components["schemas"]["CatalogProductProjection"][];
         };
-        /** @description Marker for Catalog request objects that reject unknown properties. */
+        /** @description Serialize and validate catalog order create data. */
         CatalogOrderCreate: {
             expected_version: number;
             lines: components["schemas"]["CatalogOrderLine"][];
         };
-        /** @description Marker for Catalog request objects that reject unknown properties. */
+        /** @description Serialize and validate catalog order line data. */
         CatalogOrderLine: {
             /** Format: uuid */
             variant_id: string;
             quantity: number;
         };
+        /** @description Serialize and validate catalog order line projection data. */
         CatalogOrderLineProjection: {
             product_name: string;
             variant_name: string;
@@ -3833,9 +8373,11 @@ export interface components {
             charity_selection_id: string | null;
             fulfilment_mode: components["schemas"]["FulfilmentModeEnum"];
         };
+        /** @description Serialize and validate catalog order list data. */
         CatalogOrderList: {
             orders: components["schemas"]["CatalogOrderProjection"][];
         };
+        /** @description Serialize and validate catalog order projection data. */
         CatalogOrderProjection: {
             /** Format: uuid */
             id: string;
@@ -3852,12 +8394,13 @@ export interface components {
             lines: components["schemas"]["CatalogOrderLineProjection"][];
             payments: components["schemas"]["CatalogPaymentProjection"][];
         };
-        /** @description Marker for Catalog request objects that reject unknown properties. */
+        /** @description Serialize and validate catalog payment create data. */
         CatalogPaymentCreate: {
             expected_catalog_version: number;
             expected_order_version: number;
             provider: components["schemas"]["ProviderEnum"];
         };
+        /** @description Serialize and validate catalog payment projection data. */
         CatalogPaymentProjection: {
             /** Format: uuid */
             id: string;
@@ -3865,7 +8408,7 @@ export interface components {
             status: string;
             checkout_url: string;
         };
-        /** @description Marker for Catalog request objects that reject unknown properties. */
+        /** @description Serialize and validate catalog payment reconcile data. */
         CatalogPaymentReconcile: {
             expected_catalog_version: number;
             expected_order_version: number;
@@ -3873,7 +8416,7 @@ export interface components {
             result: components["schemas"]["ResultEnum"];
             reason: string;
         };
-        /** @description Marker for Catalog request objects that reject unknown properties. */
+        /** @description Serialize and validate catalog product add data. */
         CatalogProductAdd: {
             expected_version: number;
             reason: string;
@@ -3897,6 +8440,7 @@ export interface components {
             /** @default 10 */
             per_order_limit: number;
         };
+        /** @description Serialize and validate catalog product projection data. */
         CatalogProductProjection: {
             /** Format: uuid */
             id: string;
@@ -3915,13 +8459,13 @@ export interface components {
             per_order_limit: number;
             variants: components["schemas"]["CatalogVariantProjection"][];
         };
-        /** @description Marker for Catalog request objects that reject unknown properties. */
+        /** @description Serialize and validate catalog stock adjust data. */
         CatalogStockAdjust: {
             expected_version: number;
             reason: string;
             new_stock: number;
         };
-        /** @description Marker for Catalog request objects that reject unknown properties. */
+        /** @description Serialize and validate catalog variant add data. */
         CatalogVariantAdd: {
             expected_version: number;
             reason: string;
@@ -3933,6 +8477,7 @@ export interface components {
             /** @description Supply together with initial_stock, or omit both fields. */
             stock_ceiling?: number;
         };
+        /** @description Serialize and validate catalog variant projection data. */
         CatalogVariantProjection: {
             /** Format: uuid */
             id: string;
@@ -3944,6 +8489,7 @@ export interface components {
             available_stock: number | null;
             preorder_allowed: boolean;
         };
+        /** @description Serialize and validate change payment deadline data. */
         ChangePaymentDeadline: {
             /** Format: date-time */
             new_deadline: string;
@@ -3954,6 +8500,7 @@ export interface components {
          * @enum {string}
          */
         ChannelEnum: "email";
+        /** @description Serialize and validate charity command result data. */
         CharityCommandResult: {
             /** Format: uuid */
             object_id: string;
@@ -3962,6 +8509,7 @@ export interface components {
             resulting_version: number;
             replayed: boolean;
         };
+        /** @description Serialize and validate charity media add data. */
         CharityMediaAdd: {
             kind: components["schemas"]["Kind13fEnum"];
             source_reference: string;
@@ -3973,16 +8521,19 @@ export interface components {
             expires_at?: string | null;
             reason: string;
         };
+        /** @description Serialize and validate charity media approve data. */
         CharityMediaApprove: {
             expected_version: number;
             public_reference: string;
             reason: string;
         };
         CharityMediaCommandRequest: components["schemas"]["CharityMediaApprove"] | components["schemas"]["CharityMediaWithdraw"];
+        /** @description Serialize and validate charity media withdraw data. */
         CharityMediaWithdraw: {
             expected_version: number;
             reason: string;
         };
+        /** @description Serialize and validate charity partner create data. */
         CharityPartnerCreate: {
             slug: string;
             legal_name: string;
@@ -3998,6 +8549,7 @@ export interface components {
             contact_phone?: string;
             reason: string;
         };
+        /** @description Serialize and validate charity partner summary data. */
         CharityPartnerSummary: {
             /** Format: uuid */
             id: string;
@@ -4017,14 +8569,17 @@ export interface components {
             aggregate_version: number;
         };
         CharitySelectionCommandRequest: components["schemas"]["CharitySelectionDecision"] | components["schemas"]["CharitySelectionComment"] | components["schemas"]["CharitySelectionPublish"];
+        /** @description Serialize and validate charity selection comment data. */
         CharitySelectionComment: {
             expected_version: number;
             private_comment: string;
         };
+        /** @description Serialize and validate charity selection decision data. */
         CharitySelectionDecision: {
             expected_version: number;
             reason: string;
         };
+        /** @description Serialize and validate charity selection propose data. */
         CharitySelectionPropose: {
             /** Format: uuid */
             partner_id: string;
@@ -4032,15 +8587,18 @@ export interface components {
             responsible_department_id: string;
             reason: string;
         };
+        /** @description Serialize and validate charity selection publish data. */
         CharitySelectionPublish: {
             expected_version: number;
             media_ids?: string[];
             reason: string;
         };
+        /** @description Serialize and validate charity selection review data. */
         CharitySelectionReview: {
             summary: components["schemas"]["CharitySelectionSummary"];
             timeline: components["schemas"]["CharityTimeline"][];
         };
+        /** @description Serialize and validate charity selection summary data. */
         CharitySelectionSummary: {
             /** Format: uuid */
             id: string;
@@ -4054,6 +8612,7 @@ export interface components {
             publication_state: string;
             aggregate_version: number;
         };
+        /** @description Serialize and validate charity timeline data. */
         CharityTimeline: {
             sequence: number;
             kind: string;
@@ -4068,6 +8627,7 @@ export interface components {
             reason: string;
             private_comment: string;
         };
+        /** @description Serialize and validate check in data. */
         CheckIn: {
             reason: string;
         };
@@ -4146,7 +8706,7 @@ export interface components {
             is_active: boolean;
             expected_profile_version: number;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate create configuration draft data. */
         CreateConfigurationDraft: {
             name: string;
             reason: string;
@@ -4165,6 +8725,7 @@ export interface components {
             waitlist_enabled?: boolean;
             automatic_waitlist_promotion?: boolean;
         };
+        /** @description Serialize and validate create payment intent data. */
         CreatePaymentIntent: {
             /** Format: uuid */
             provider_account_id: string;
@@ -4173,6 +8734,7 @@ export interface components {
             /** Format: uri */
             return_url: string;
         };
+        /** @description Serialize and validate credential data. */
         Credential: {
             /** Format: uuid */
             readonly id: string;
@@ -4188,6 +8750,7 @@ export interface components {
             readonly revoked_at: string | null;
             readonly revocation_reason: string;
         };
+        /** @description Serialize and validate credential command data. */
         CredentialCommand: {
             reason: string;
         };
@@ -4198,6 +8761,7 @@ export interface components {
          * @enum {string}
          */
         CredentialStatusEnum: "issued" | "replaced" | "revoked";
+        /** @description Serialize and validate definition configure data. */
         DefinitionConfigure: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -4231,6 +8795,7 @@ export interface components {
          * @enum {string}
          */
         DefinitionConfigureOperationEnum: "definition.configure";
+        /** @description Serialize and validate definition lifecycle data. */
         DefinitionLifecycle: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -4246,6 +8811,7 @@ export interface components {
          * @enum {string}
          */
         DefinitionLifecycleOperationEnum: "definition.activate" | "definition.retire";
+        /** @description Serialize and validate definition successor data. */
         DefinitionSuccessor: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -4259,6 +8825,7 @@ export interface components {
          * @enum {string}
          */
         DefinitionSuccessorOperationEnum: "definition.successor";
+        /** @description Serialize and validate delivery failure data. */
         DeliveryFailure: {
             /** Format: uuid */
             message_id: string;
@@ -4283,10 +8850,12 @@ export interface components {
          * @enum {string}
          */
         DeliveryStateEnum: "pending" | "processing" | "delivered" | "retrying" | "permanent_failed" | "cancelled";
+        /** @description Serialize and validate demo payment data. */
         DemoPayment: {
             /** Format: uuid */
             idempotency_key: string;
         };
+        /** @description Serialize and validate disposal receipt data. */
         DisposalReceipt: {
             /** Format: uuid */
             readonly id: string;
@@ -4310,6 +8879,7 @@ export interface components {
          * @enum {string}
          */
         DispositionEnum: "delete" | "minimize" | "retain";
+        /** @description Serialize and validate edition autocomplete data. */
         EditionAutocomplete: {
             /** Format: uuid */
             readonly id: string;
@@ -4318,9 +8888,11 @@ export interface components {
             /** Format: date */
             readonly starts_on: string;
         };
+        /** @description Serialize and validate edition autocomplete response data. */
         EditionAutocompleteResponse: {
             readonly results: components["schemas"]["EditionAutocomplete"][];
         };
+        /** @description Serialize and validate edition basic data. */
         EditionBasic: {
             /** Format: uuid */
             readonly id: string;
@@ -4340,14 +8912,17 @@ export interface components {
             /** Format: date */
             readonly ends_on: string;
         };
+        /** @description Serialize and validate edition bulk transition request data. */
         EditionBulkTransitionRequest: {
             edition_ids: string[];
             to_state: components["schemas"]["EditionLifecycleEnum"];
             reason: string;
         };
+        /** @description Serialize and validate edition bulk transition response data. */
         EditionBulkTransitionResponse: {
             readonly results: components["schemas"]["EditionTransitionResult"][];
         };
+        /** @description Serialize and validate edition closure manifest data. */
         EditionClosureManifest: {
             /** Format: uuid */
             readonly id: string;
@@ -4357,9 +8932,11 @@ export interface components {
             readonly manifest_digest: string;
             readonly recovery_reference: string;
         };
+        /** @description Serialize and validate edition closure manifest create data. */
         EditionClosureManifestCreate: {
             recovery_reference: string;
         };
+        /** @description Serialize and validate edition context data. */
         EditionContext: {
             /** Format: uuid */
             organization_id: string;
@@ -4382,9 +8959,22 @@ export interface components {
             ends_on: string;
             participation_status: string;
             capacities: components["schemas"]["CapacityContext"][];
+            /**
+             * @description Return can transition.
+             *
+             *     Parameters
+             *     ----------
+             *     obj : Participation
+             *         The model instance being validated or presented.
+             *
+             *     Returns
+             *     -------
+             *     bool
+             *         `True` when Return can transition; otherwise `False`.
+             */
             readonly can_transition: boolean;
         };
-        /** @description Complete bounded edition-profile input shared by create and update. */
+        /** @description Serialize and validate edition create request data. */
         EditionCreateRequest: {
             name: string;
             /** Format: date */
@@ -4420,6 +9010,7 @@ export interface components {
             request_id?: string;
             errors?: unknown;
         };
+        /** @description Serialize and validate edition readiness gate data. */
         EditionReadinessGate: {
             /** Format: uuid */
             readonly id: string;
@@ -4430,6 +9021,7 @@ export interface components {
             /** Format: date-time */
             readonly reviewed_at: string | null;
         };
+        /** @description Serialize and validate edition readiness gate review data. */
         EditionReadinessGateReview: {
             approve: boolean;
             evidence_reference: string;
@@ -4442,17 +9034,19 @@ export interface components {
          * @enum {string}
          */
         EditionReadinessGateStatusEnum: "pending" | "approved" | "rejected";
+        /** @description Serialize and validate edition transition request data. */
         EditionTransitionRequest: {
             to_state: components["schemas"]["EditionLifecycleEnum"];
             reason: string;
         };
+        /** @description Serialize and validate edition transition result data. */
         EditionTransitionResult: {
             /** Format: uuid */
             readonly id: string;
             readonly lifecycle: components["schemas"]["EditionLifecycleEnum"];
             readonly lifecycle_version: number;
         };
-        /** @description Complete bounded edition-profile input shared by create and update. */
+        /** @description Serialize and validate edition update request data. */
         EditionUpdateRequest: {
             name: string;
             /** Format: date */
@@ -4464,6 +9058,7 @@ export interface components {
             currency_codes: string[];
             expected_aggregate_version: number;
         };
+        /** @description Serialize and validate effective access action data. */
         EffectiveAccessAction: {
             capability_code: string;
             label: string;
@@ -4474,6 +9069,7 @@ export interface components {
             source_category: string;
             source_label: string;
         };
+        /** @description Serialize and validate effective access summary data. */
         EffectiveAccessSummary: {
             scope_level: string;
             scope_label: string;
@@ -4489,6 +9085,7 @@ export interface components {
          * @enum {string}
          */
         EligibilityKindEnum: "authenticated_person" | "edition_participant" | "registered_attendee" | "confirmed_attendee" | "active_volunteer";
+        /** @description Serialize and validate entitlement data. */
         Entitlement: {
             readonly code: string;
             readonly label_snapshot: string;
@@ -4528,6 +9125,7 @@ export interface components {
          * @enum {string}
          */
         FieldType366Enum: "short_text" | "long_text" | "boolean" | "single_choice" | "multiple_choice" | "integer";
+        /** @description Serialize and validate financial operation data. */
         FinancialOperation: {
             /** Format: uuid */
             readonly id: string;
@@ -4581,10 +9179,12 @@ export interface components {
          * @enum {string}
          */
         FulfilmentModeEnum: "none" | "pickup" | "shipping";
+        /** @description Serialize and validate guardian consent accept data. */
         GuardianConsentAccept: {
             token: string;
             guardian_name: string;
         };
+        /** @description Serialize and validate guardian details data. */
         GuardianDetails: {
             name: string;
             /** Format: email */
@@ -4592,12 +9192,14 @@ export interface components {
             relationship: string;
             notice_version: string;
         };
+        /** @description Serialize and validate headless fursuit data. */
         HeadlessFursuit: {
             name: string;
             species?: string;
             /** Format: uuid */
             reuse_from_id?: string | null;
         };
+        /** @description Serialize and validate headless profile data. */
         HeadlessProfile: {
             real_name: string;
             /** Format: date */
@@ -4625,6 +9227,7 @@ export interface components {
             directory_country_code?: string;
             guardian?: components["schemas"]["GuardianDetails"];
         };
+        /** @description Serialize and validate headless registration submission data. */
         HeadlessRegistrationSubmission: {
             /** Format: uuid */
             idempotency_key: string;
@@ -4636,11 +9239,12 @@ export interface components {
             collection_notice_version: string;
             directory_consent_version?: string;
         };
+        /** @description Serialize and validate issued credential data. */
         IssuedCredential: {
             credential: components["schemas"]["Credential"];
             credential_token: string | null;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate keyholder assign data. */
         KeyholderAssign: {
             reason: string;
             /** Format: uuid */
@@ -4705,6 +9309,7 @@ export interface components {
          * @enum {string}
          */
         Lifecycle634Enum: "draft" | "active" | "retired";
+        /** @description Serialize and validate logistics activity projection data. */
         LogisticsActivityProjection: {
             /** Format: uuid */
             id: string;
@@ -4735,6 +9340,7 @@ export interface components {
             /** Format: uuid */
             object_id: string;
         };
+        /** @description Serialize and validate logistics command result data. */
         LogisticsCommandResult: {
             /** Format: uuid */
             object_id: string;
@@ -4743,6 +9349,7 @@ export interface components {
             resulting_version: number;
             replayed: boolean;
         };
+        /** @description Serialize and validate logistics current state projection data. */
         LogisticsCurrentStateProjection: {
             subject_kind: string;
             /** Format: uuid */
@@ -4761,6 +9368,7 @@ export interface components {
             /** Format: date-time */
             last_occurred_at: string;
         };
+        /** @description Serialize and validate logistics discrepancy projection data. */
         LogisticsDiscrepancyProjection: {
             /** Format: uuid */
             id: string;
@@ -4776,6 +9384,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
+        /** @description Serialize and validate logistics form choices data. */
         LogisticsFormChoices: {
             departments: components["schemas"]["NamedLogisticsChoice"][];
             parties: components["schemas"]["NamedLogisticsChoice"][];
@@ -4793,13 +9402,14 @@ export interface components {
             manifests: components["schemas"]["NamedLogisticsChoice"][];
             labels: components["schemas"]["NamedLogisticsCodeChoice"][];
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate logistics label create data. */
         LogisticsLabelCreate: {
             reason: string;
             subject: components["schemas"]["LogisticsCatalogSubjectLocator"];
             label_code: string;
             qr_identifier: string;
         };
+        /** @description Serialize and validate logistics manifest line projection data. */
         LogisticsManifestLineProjection: {
             /** Format: uuid */
             id: string;
@@ -4815,6 +9425,7 @@ export interface components {
             current_sequence: number;
             current_state: string;
         };
+        /** @description Serialize and validate logistics manifest projection data. */
         LogisticsManifestProjection: {
             /** Format: uuid */
             id: string;
@@ -4842,13 +9453,13 @@ export interface components {
             aggregate_version: number;
             lines: components["schemas"]["LogisticsManifestLineProjection"][];
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate subject locator data. */
         LogisticsMovementSubjectLocator: {
             kind: components["schemas"]["Kind2fcEnum"];
             /** Format: uuid */
             object_id: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate logistics node create data. */
         LogisticsNodeCreate: {
             reason: string;
             kind: components["schemas"]["LogisticsNodeCreateKindEnum"];
@@ -4879,6 +9490,7 @@ export interface components {
          * @enum {string}
          */
         LogisticsNodeCreateKindEnum: "storage_site" | "storage_area" | "rack" | "container" | "box" | "vehicle" | "loading_zone" | "staging_area" | "venue_room";
+        /** @description Serialize and validate logistics offer item projection data. */
         LogisticsOfferItemProjection: {
             /** Format: uuid */
             id: string;
@@ -4893,6 +9505,7 @@ export interface components {
             value_class: string;
             ownership_statement: string;
         };
+        /** @description Serialize and validate logistics offer queue projection data. */
         LogisticsOfferQueueProjection: {
             /** Format: uuid */
             id: string;
@@ -4913,7 +9526,7 @@ export interface components {
             aggregate_version: number;
         };
         LogisticsOfferReviewRequest: components["schemas"]["OfferAccept"] | components["schemas"]["OfferReject"];
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate offline operation data. */
         LogisticsOfflineOperation: {
             sequence: number;
             /** Format: uuid */
@@ -4928,7 +9541,7 @@ export interface components {
             quantity?: number | null;
             observed_condition?: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate logistics party create data. */
         LogisticsPartyCreate: {
             reason: string;
             code: string;
@@ -4949,6 +9562,7 @@ export interface components {
          * @enum {string}
          */
         LogisticsPartyProfileKindEnum: "business" | "individual";
+        /** @description Serialize and validate logistics return projection data. */
         LogisticsReturnProjection: {
             /** Format: uuid */
             agreement_id: string;
@@ -4964,6 +9578,7 @@ export interface components {
             returned: boolean;
             overdue: boolean;
         };
+        /** @description Serialize and validate logistics self offer projection data. */
         LogisticsSelfOfferProjection: {
             /** Format: uuid */
             id: string;
@@ -4986,6 +9601,7 @@ export interface components {
             pickup_retention_until: string | null;
             items: components["schemas"]["LogisticsOfferItemProjection"][];
         };
+        /** @description Serialize and validate logistics workspace projection data. */
         LogisticsWorkspaceProjection: {
             offers: components["schemas"]["LogisticsOfferQueueProjection"][];
             manifests: components["schemas"]["LogisticsManifestProjection"][];
@@ -4994,7 +9610,7 @@ export interface components {
             discrepancies: components["schemas"]["LogisticsDiscrepancyProjection"][];
             choices: components["schemas"]["LogisticsFormChoices"];
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate manifest create data. */
         ManifestCreate: {
             /** Format: uuid */
             responsible_department_id: string;
@@ -5033,13 +9649,13 @@ export interface components {
             packed_in_node_id?: string | null;
             notes?: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate manifest line add data. */
         ManifestLineAdd: {
             reason: string;
             expected_version: number;
             line: components["schemas"]["ManifestLine"];
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate manifest line input data. */
         ManifestLineInput: {
             subject: components["schemas"]["LogisticsMovementSubjectLocator"];
             quantity: number;
@@ -5047,7 +9663,7 @@ export interface components {
             packed_in_node_id?: string | null;
             notes?: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate manifest receipt data. */
         ManifestReceipt: {
             reason: string;
             expected_sequence: number;
@@ -5055,7 +9671,7 @@ export interface components {
             occurred_at: string;
             condition_after: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate manifest state data. */
         ManifestState: {
             expected_version: number;
             reason: string;
@@ -5075,6 +9691,7 @@ export interface components {
          * @enum {string}
          */
         MediaKindEnum: "profile_photo" | "fursuit_photo";
+        /** @description Serialize and validate membership context data. */
         MembershipContext: {
             /** Format: uuid */
             organization_id: string;
@@ -5097,7 +9714,7 @@ export interface components {
          * @enum {string}
          */
         ModeEnum: "person" | "role";
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate movement data. */
         Movement: {
             event_type: components["schemas"]["EventTypeD11Enum"];
             subject: components["schemas"]["LogisticsMovementSubjectLocator"];
@@ -5118,16 +9735,18 @@ export interface components {
             manifest_id?: string | null;
             evidence_reference?: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate movement command data. */
         MovementCommand: {
             movement: components["schemas"]["Movement"];
             expected_sequence: number;
             reason: string;
         };
+        /** @description Serialize and validate my application workspace data. */
         MyApplicationWorkspace: {
             available: components["schemas"]["ApplicationApplicantDefinition"][];
             submissions: components["schemas"]["ApplicationSubmissionProjection"][];
         };
+        /** @description Serialize and validate my context data. */
         MyContext: {
             /** Format: uuid */
             account_id: string;
@@ -5137,6 +9756,7 @@ export interface components {
             memberships: components["schemas"]["MembershipContext"][];
             editions: components["schemas"]["EditionContext"][];
         };
+        /** @description Serialize and validate my registration workspace data. */
         MyRegistrationWorkspace: {
             configuration: components["schemas"]["RegistrationConfiguration"] | null;
             registration: components["schemas"]["SelfRegistration"] | null;
@@ -5145,11 +9765,13 @@ export interface components {
             /** Format: date-time */
             server_time: string;
         };
+        /** @description Serialize and validate named logistics choice data. */
         NamedLogisticsChoice: {
             /** Format: uuid */
             value: string;
             label: string;
         };
+        /** @description Serialize and validate named logistics code choice data. */
         NamedLogisticsCodeChoice: {
             value: string;
             label: string;
@@ -5159,6 +9781,7 @@ export interface components {
          * @enum {string}
          */
         NextEnum: "sign_in";
+        /** @description Serialize and validate notification delivery data. */
         NotificationDelivery: {
             readonly channel: components["schemas"]["ChannelEnum"];
             readonly status: components["schemas"]["NotificationDeliveryStatusEnum"];
@@ -5177,6 +9800,7 @@ export interface components {
          * @enum {string}
          */
         NotificationDeliveryStatusEnum: "pending" | "succeeded" | "suppressed" | "permanent_failed";
+        /** @description Serialize and validate notification message data. */
         NotificationMessage: {
             /** Format: uuid */
             readonly id: string;
@@ -5203,6 +9827,7 @@ export interface components {
          * @enum {string}
          */
         NotificationMessagePurposeEnum: "operational" | "marketing" | "emergency";
+        /** @description Serialize and validate notification preference data. */
         NotificationPreference: {
             /** Format: uuid */
             readonly organization_id: string;
@@ -5213,7 +9838,7 @@ export interface components {
             readonly marketing_consented_at: string | null;
         };
         NullEnum: null;
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate offer accept data. */
         OfferAccept: {
             expected_version: number;
             reason: string;
@@ -5230,7 +9855,7 @@ export interface components {
          * @enum {string}
          */
         OfferAcceptOutcomeEnum: "accepted";
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate offer item input data. */
         OfferItemInput: {
             kind: components["schemas"]["OfferItemInputKindEnum"];
             name: string;
@@ -5249,7 +9874,7 @@ export interface components {
          * @enum {string}
          */
         OfferItemInputKindEnum: "serialized" | "bulk";
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate offer reject data. */
         OfferReject: {
             expected_version: number;
             reason: string;
@@ -5264,7 +9889,7 @@ export interface components {
          * @enum {string}
          */
         OfferRejectOutcomeEnum: "rejected";
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate offline batch data. */
         OfflineBatch: {
             device_code: string;
             snapshot_version: number;
@@ -5274,6 +9899,7 @@ export interface components {
             operations: components["schemas"]["LogisticsOfflineOperation"][];
             reason: string;
         };
+        /** @description Serialize and validate offline check in data. */
         OfflineCheckIn: {
             /** Format: uuid */
             operation_id: string;
@@ -5284,6 +9910,7 @@ export interface components {
             occurred_at: string;
             signature: string;
         };
+        /** @description Serialize and validate offline manifest data. */
         OfflineManifest: {
             /** Format: uuid */
             readonly id: string;
@@ -5299,6 +9926,7 @@ export interface components {
             readonly payload_digest: string;
             readonly signature: string;
         };
+        /** @description Serialize and validate offline operation data. */
         OfflineOperation: {
             /** Format: uuid */
             readonly operation_id: string;
@@ -5320,6 +9948,7 @@ export interface components {
          * @enum {string}
          */
         OfflineOperationOutcomeEnum: "applied" | "duplicate" | "conflict" | "rejected";
+        /** @description Serialize and validate onboarding document request data. */
         OnboardingDocumentRequest: {
             /** Format: uuid */
             id: string;
@@ -5340,6 +9969,7 @@ export interface components {
             original_filename: string;
             upload_available: boolean;
         };
+        /** @description Serialize and validate onboarding document upload data. */
         OnboardingDocumentUpload: {
             /** Format: uri */
             document: string;
@@ -5426,6 +10056,7 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["StaffRegistration"][];
         };
+        /** @description Serialize and validate participation history data. */
         ParticipationHistory: {
             /** Format: uuid */
             edition_id: string;
@@ -5449,6 +10080,7 @@ export interface components {
          * @enum {string}
          */
         ParticipationHistoryStatusEnum: "interested" | "pending" | "confirmed" | "active" | "completed" | "cancelled";
+        /** @description Serialize and validate access assignment replace data. */
         PatchedAccessAssignmentReplace: {
             group_code?: string;
             /** Format: email */
@@ -5457,6 +10089,7 @@ export interface components {
             expires_at?: string | null;
             reason?: string;
         };
+        /** @description Serialize and validate charity partner update data. */
         PatchedCharityPartnerUpdate: {
             expected_version: number;
             reason: string;
@@ -5474,7 +10107,7 @@ export interface components {
             contact_phone?: string;
             lifecycle?: components["schemas"]["Lifecycle634Enum"];
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue property update data. */
         PatchedVenuePropertyUpdate: {
             expected_version: number;
             reason: string;
@@ -5493,6 +10126,7 @@ export interface components {
             contact_phone?: string;
             lifecycle?: components["schemas"]["Lifecycle634Enum"];
         };
+        /** @description Serialize and validate payment exception data. */
         PaymentException: {
             /** Format: uuid */
             readonly id: string;
@@ -5527,6 +10161,7 @@ export interface components {
          * @enum {string}
          */
         PaymentExceptionStatusEnum: "open" | "resolved";
+        /** @description Serialize and validate payment intent data. */
         PaymentIntent: {
             /** Format: uuid */
             readonly id: string;
@@ -5560,7 +10195,7 @@ export interface components {
          * @enum {string}
          */
         PaymentIntentStatusEnum: "creating" | "checkout_ready" | "succeeded" | "failed" | "abandoned" | "uncertain" | "mismatch" | "late";
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate physical key create data. */
         PhysicalKeyCreate: {
             reason: string;
             code: string;
@@ -5570,7 +10205,7 @@ export interface components {
             /** Format: uuid */
             provider_id?: string | null;
         };
-        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        /** @description Serialize and validate platform account inventory data. */
         PlatformAccountInventory: {
             inventory_version: number;
             items: components["schemas"]["PlatformAccountInventoryItem"][];
@@ -5661,7 +10296,7 @@ export interface components {
             /** Format: date-time */
             next_retry_at: string | null;
         };
-        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        /** @description Serialize and validate platform account invitation detail data. */
         PlatformAccountInvitationDetail: {
             inventory_version: number;
             /** Format: uuid */
@@ -5680,7 +10315,7 @@ export interface components {
             transitions: components["schemas"]["PlatformAccountInvitationTransition"][];
             delivery_attempts: components["schemas"]["PlatformAccountInvitationDeliveryAttempt"][];
         };
-        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        /** @description Serialize and validate platform account invitation mutation data. */
         PlatformAccountInvitationMutation: {
             /** Format: uuid */
             id: string;
@@ -5712,6 +10347,7 @@ export interface components {
             reason: string;
             source_channel: string;
         };
+        /** @description Serialize and validate post edition correction data. */
         PostEditionCorrection: {
             /** Format: uuid */
             readonly id: string;
@@ -5731,12 +10367,14 @@ export interface components {
             readonly decided_at: string | null;
             readonly decision_reason: string;
         };
+        /** @description Serialize and validate post edition correction create data. */
         PostEditionCorrectionCreate: {
             /** Format: uuid */
             profile_id: string;
             changed_fields: unknown;
             reason: string;
         };
+        /** @description Serialize and validate post edition correction decision data. */
         PostEditionCorrectionDecision: {
             approve: boolean;
             reason: string;
@@ -5748,6 +10386,7 @@ export interface components {
          * @enum {string}
          */
         PostEditionCorrectionStatusEnum: "proposed" | "approved" | "rejected";
+        /** @description Serialize and validate profile extension field data. */
         ProfileExtensionField: {
             /** Format: uuid */
             id: string;
@@ -5770,12 +10409,14 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** @description Serialize and validate profile extension workspace data. */
         ProfileExtensionWorkspace: {
             /** Format: uuid */
             registration_id: string;
             snapshot_digest: string;
             fields: components["schemas"]["ProfileExtensionField"][];
         };
+        /** @description Serialize and validate profile media review decision data. */
         ProfileMediaReviewDecision: {
             media_kind: components["schemas"]["MediaKindEnum"];
             decision: components["schemas"]["ProfileMediaReviewDecisionDecisionEnum"];
@@ -5787,6 +10428,7 @@ export interface components {
          * @enum {string}
          */
         ProfileMediaReviewDecisionDecisionEnum: "approved" | "rejected";
+        /** @description Serialize and validate profile media review item data. */
         ProfileMediaReviewItem: {
             /** Format: uuid */
             id: string;
@@ -5842,6 +10484,7 @@ export interface components {
          * @enum {string}
          */
         PronounCodeEnum: "she_her" | "he_him" | "they_them" | "it_its" | "one_ones" | "ae_aer" | "ey_em" | "fae_faer" | "xe_xem" | "ze_hir" | "ze_zir" | "co_cos" | "e_em_eir" | "e_em_es" | "hu_hum" | "ne_nem" | "ne_nir" | "per_per" | "s_he_hir" | "thon_thons" | "ve_ver" | "vi_vir" | "vi_vim" | "zhe_zher" | "ki_kin" | "any" | "name_only" | "ask_me" | "other";
+        /** @description Serialize and validate propose financial operation data. */
         ProposeFinancialOperation: {
             kind: components["schemas"]["ProposeFinancialOperationKindEnum"];
             /** @default 0 */
@@ -5870,12 +10513,13 @@ export interface components {
             new_password1: string;
             new_password2: string;
         };
-        /** @description Mark the fixed Page 10 response envelope as closed in OpenAPI. */
+        /** @description Serialize and validate public account invitation acceptance result data. */
         PublicAccountInvitationAcceptanceResult: {
             accepted: boolean;
             next: components["schemas"]["NextEnum"];
             replayed: boolean;
         };
+        /** @description Serialize and validate public attendee data. */
         PublicAttendee: {
             display_name: string;
             pronouns: string;
@@ -5886,11 +10530,13 @@ export interface components {
             attendance_labels: components["schemas"]["AttendanceLabel"][];
             fursuits: components["schemas"]["PublicAttendeeFursuit"][];
         };
+        /** @description Serialize and validate public attendee fursuit data. */
         PublicAttendeeFursuit: {
             name: string;
             species: string;
             photo_url: string | null;
         };
+        /** @description Serialize and validate public charity data. */
         PublicCharity: {
             /** Format: uuid */
             selection_id: string;
@@ -5902,11 +10548,13 @@ export interface components {
             website_url: string;
             media: components["schemas"]["PublicCharityMedia"][];
         };
+        /** @description Serialize and validate public charity media data. */
         PublicCharityMedia: {
             kind: string;
             reference: string;
             attribution: string;
         };
+        /** @description Serialize and validate public client contract data. */
         PublicClientContract: {
             api_version: string;
             csrf_api: string;
@@ -5917,10 +10565,12 @@ export interface components {
             browser_origin_policy: string;
             payment_return_is_proof: boolean;
         };
+        /** @description Serialize and validate public code label data. */
         PublicCodeLabel: {
             code: string;
             label: string;
         };
+        /** @description Serialize and validate public product availability data. */
         PublicProductAvailability: {
             /** Format: uuid */
             id: string;
@@ -5937,6 +10587,7 @@ export interface components {
             availability_explanation: string;
             waitlist: boolean;
         };
+        /** @description Serialize and validate public profile contract data. */
         PublicProfileContract: {
             snapshot_scope: string;
             suggestion_mode: string;
@@ -5958,6 +10609,7 @@ export interface components {
             guardian_age_threshold: number | null;
             guardian_notice_version: string;
         };
+        /** @description Serialize and validate public registration definition data. */
         PublicRegistrationDefinition: {
             /** Format: uuid */
             edition_id: string;
@@ -5983,6 +10635,7 @@ export interface components {
             questions: components["schemas"]["RegistrationQuestion"][];
             products: components["schemas"]["PublicProductAvailability"][];
         };
+        /** @description Serialize and validate public registration edition data. */
         PublicRegistrationEdition: {
             /** Format: uuid */
             edition_id: string;
@@ -5999,6 +10652,7 @@ export interface components {
             attendee_api_path: string;
             attendee_web_path: string;
         };
+        /** @description Serialize and validate public venue schedule item data. */
         PublicVenueScheduleItem: {
             /** Format: uuid */
             booking_id: string;
@@ -6017,7 +10671,7 @@ export interface components {
             layout_reference: string;
             layout_title: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate publish template data. */
         PublishTemplate: {
             /** Format: uuid */
             configuration_id: string;
@@ -6028,6 +10682,7 @@ export interface components {
             series_limited: boolean;
             reason: string;
         };
+        /** @description Serialize and validate question add data. */
         QuestionAdd: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -6097,15 +10752,18 @@ export interface components {
          * @enum {string}
          */
         QuestionAddOperationEnum: "question.add";
+        /** @description Serialize and validate question condition data. */
         QuestionCondition: {
             question_key: string;
             operator: components["schemas"]["OperatorEnum"];
             value: unknown;
         };
+        /** @description Serialize and validate question option data. */
         QuestionOption: {
             code: string;
             label: string;
         };
+        /** @description Serialize and validate receipt record data. */
         ReceiptRecord: {
             /** Format: uuid */
             readonly id: string;
@@ -6125,6 +10783,7 @@ export interface components {
          * @enum {string}
          */
         ReceiptRecordKindEnum: "receipt" | "credit_note";
+        /** @description Serialize and validate reconcile settlement data. */
         ReconcileSettlement: {
             /** Format: uuid */
             provider_account_id: string;
@@ -6147,15 +10806,17 @@ export interface components {
          * @enum {string}
          */
         ReconciliationStateEnum: "not_required" | "required" | "resolved";
+        /** @description Serialize and validate recovery complete data. */
         RecoveryComplete: {
             token: string;
             new_password: string;
         };
+        /** @description Serialize and validate recovery request data. */
         RecoveryRequest: {
             /** Format: email */
             email: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate registration capacity adjustment command data. */
         RegistrationCapacityAdjustmentCommand: {
             /** Format: uuid */
             product_id?: string | null;
@@ -6163,6 +10824,7 @@ export interface components {
             expected_control_version: number;
             reason: string;
         };
+        /** @description Serialize and validate registration capacity adjustment result data. */
         RegistrationCapacityAdjustmentResult: {
             /** Format: uuid */
             id: string;
@@ -6176,6 +10838,7 @@ export interface components {
             /** Format: date-time */
             occurred_at: string;
         };
+        /** @description Serialize and validate registration commerce activity data. */
         RegistrationCommerceActivity: {
             event_name: string;
             action: string;
@@ -6184,6 +10847,7 @@ export interface components {
             occurred_at: string;
             target_count: number;
         };
+        /** @description Serialize and validate registration commerce capacity data. */
         RegistrationCommerceCapacity: {
             /** Format: uuid */
             product_id: string | null;
@@ -6195,11 +10859,13 @@ export interface components {
             pending_target_holds: number;
             waitlisted: number;
         };
+        /** @description Serialize and validate registration commerce workspace data. */
         RegistrationCommerceWorkspace: {
             control_version: number;
             capacities: components["schemas"]["RegistrationCommerceCapacity"][];
             activity: components["schemas"]["RegistrationCommerceActivity"][];
         };
+        /** @description Serialize and validate registration configuration data. */
         RegistrationConfiguration: {
             /** Format: uuid */
             readonly id: string;
@@ -6228,6 +10894,7 @@ export interface components {
             products: components["schemas"]["AdmissionProduct"][];
         };
         RegistrationConfigurationDefinitionCommand: components["schemas"]["RegistrationSectionCreateCommand"] | components["schemas"]["RegistrationSectionUpdateCommand"] | components["schemas"]["RegistrationSectionMoveCommand"] | components["schemas"]["RegistrationSectionRemoveCommand"] | components["schemas"]["RegistrationQuestionCreateCommand"] | components["schemas"]["RegistrationQuestionUpdateCommand"] | components["schemas"]["RegistrationQuestionMoveCommand"] | components["schemas"]["RegistrationQuestionRemoveCommand"] | components["schemas"]["RegistrationProductCreateCommand"] | components["schemas"]["RegistrationProductUpdateCommand"] | components["schemas"]["RegistrationProductMoveCommand"] | components["schemas"]["RegistrationProductRemoveCommand"] | components["schemas"]["RegistrationMinorPolicySetCommand"] | components["schemas"]["RegistrationMinorPolicyRemoveCommand"];
+        /** @description Serialize and validate registration configuration source data. */
         RegistrationConfigurationSource: {
             kind: components["schemas"]["RegistrationConfigurationSourceKindEnum"];
             /** Format: uuid */
@@ -6241,6 +10908,7 @@ export interface components {
          * @enum {string}
          */
         RegistrationConfigurationSourceKindEnum: "blank" | "template" | "edition";
+        /** @description Serialize and validate registration configuration workspace data. */
         RegistrationConfigurationWorkspace: {
             active_configuration: components["schemas"]["RegistrationConfiguration"] | null;
             drafts: components["schemas"]["RegistrationConfiguration"][];
@@ -6248,6 +10916,7 @@ export interface components {
             source_editions: components["schemas"]["RegistrationSourceEdition"][];
             bootstrap_editor_path: string;
         };
+        /** @description Serialize and validate registration definition mutation data. */
         RegistrationDefinitionMutation: {
             /** Format: uuid */
             setup_id: string;
@@ -6408,6 +11077,7 @@ export interface components {
          * @enum {string}
          */
         RegistrationProductUpdateCommandOperationEnum: "product.update";
+        /** @description Serialize and validate registration profile extension catalog data. */
         RegistrationProfileExtensionCatalog: {
             /** Format: uuid */
             organization_id: string;
@@ -6442,7 +11112,7 @@ export interface components {
             status: string;
         };
         RegistrationProfileFieldCommand: components["schemas"]["RegistrationProfileFieldUpdateCommand"] | components["schemas"]["RegistrationProfileFieldMoveCommand"] | components["schemas"]["RegistrationProfileFieldRetireCommand"];
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate registration profile field create data. */
         RegistrationProfileFieldCreate: {
             expected_version: number;
             reason: string;
@@ -6528,12 +11198,14 @@ export interface components {
          * @enum {string}
          */
         RegistrationProfileFieldUpdateCommandOperationEnum: "profile_field.update";
+        /** @description Serialize and validate registration profile minimize data. */
         RegistrationProfileMinimize: {
             /** Format: uuid */
             profile_id: string;
             /** Format: uuid */
             policy_id: string;
         };
+        /** @description Serialize and validate registration question data. */
         RegistrationQuestion: {
             /** Format: uuid */
             readonly id: string;
@@ -6675,11 +11347,13 @@ export interface components {
          * @enum {string}
          */
         RegistrationQuestionVisibilityEnum: "attendee_and_staff" | "registration_staff";
+        /** @description Serialize and validate registration reconciliation data. */
         RegistrationReconciliation: {
             /** Format: date-time */
             generated_at: string;
             products: components["schemas"]["RegistrationReconciliationProduct"][];
         };
+        /** @description Serialize and validate registration reconciliation product data. */
         RegistrationReconciliationProduct: {
             product_name: string;
             currency: string;
@@ -6694,6 +11368,7 @@ export interface components {
             expired: number;
             cancelled: number;
         };
+        /** @description Serialize and validate registration section data. */
         RegistrationSection: {
             /** Format: uuid */
             readonly id: string;
@@ -6780,6 +11455,7 @@ export interface components {
          * @enum {string}
          */
         RegistrationSectionUpdateCommandOperationEnum: "section.update";
+        /** @description Serialize and validate registration setup problem data. */
         RegistrationSetupProblem: {
             /** Format: uri */
             type: string;
@@ -6802,7 +11478,7 @@ export interface components {
             source_edition_id: string | null;
             source_edition_name: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate registration setup start command data. */
         RegistrationSetupStartCommand: {
             source_kind: components["schemas"]["SourceKindEnum"];
             /** Format: uuid */
@@ -6822,6 +11498,7 @@ export interface components {
             expected_version: number;
             reason: string;
         };
+        /** @description Serialize and validate registration setup start result data. */
         RegistrationSetupStartResult: {
             /** Format: uuid */
             setup_id: string;
@@ -6839,6 +11516,7 @@ export interface components {
             minor_policy_copied: boolean;
             replayed: boolean;
         };
+        /** @description Serialize and validate registration setup start workspace data. */
         RegistrationSetupStartWorkspace: {
             /** Format: uuid */
             organization_id: string;
@@ -6852,6 +11530,7 @@ export interface components {
             published_templates: components["schemas"]["RegistrationSetupSourceOption"][];
             prior_configurations: components["schemas"]["RegistrationSetupSourceOption"][];
         };
+        /** @description Serialize and validate registration source edition data. */
         RegistrationSourceEdition: {
             /** Format: uuid */
             edition_id: string;
@@ -6869,6 +11548,7 @@ export interface components {
          * @enum {string}
          */
         RegistrationStateEnum: "guardian_pending" | "waitlisted" | "payment_pending" | "confirmed" | "checked_in" | "expired" | "cancelled";
+        /** @description Serialize and validate registration template summary data. */
         RegistrationTemplateSummary: {
             /** Format: uuid */
             readonly id: string;
@@ -6890,6 +11570,7 @@ export interface components {
          * @enum {string}
          */
         RegistrationTemplateSummaryStatusEnum: "draft" | "published" | "retired";
+        /** @description Serialize and validate registration timeline data. */
         RegistrationTimeline: {
             /** Format: uuid */
             readonly id: string;
@@ -6900,16 +11581,17 @@ export interface components {
             /** Format: date-time */
             readonly occurred_at: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate reserve admission tier replacement data. */
         ReserveAdmissionTierReplacement: {
             /** Format: uuid */
             target_product_id: string;
             expected_registration_version: number;
         };
+        /** @description Serialize and validate resolve payment exception data. */
         ResolvePaymentException: {
             reason: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate restricted address create data. */
         RestrictedAddressCreate: {
             reason: string;
             purpose: components["schemas"]["RestrictedAddressCreatePurposeEnum"];
@@ -6935,7 +11617,7 @@ export interface components {
          * @enum {string}
          */
         RestrictedAddressCreatePurposeEnum: "pickup" | "storage" | "return" | "delivery" | "provider";
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate restricted contact read data. */
         RestrictedContactRead: {
             purpose: components["schemas"]["RestrictedContactReadPurposeEnum"];
             access_purpose: components["schemas"]["AccessPurposeEnum"];
@@ -6949,6 +11631,7 @@ export interface components {
          * @enum {string}
          */
         RestrictedContactReadPurposeEnum: "pickup" | "storage" | "return" | "delivery" | "provider";
+        /** @description Serialize and validate restricted logistics contact projection data. */
         RestrictedLogisticsContactProjection: {
             /** Format: uuid */
             address_id: string;
@@ -6966,6 +11649,7 @@ export interface components {
             /** Format: uuid */
             party_id: string | null;
         };
+        /** @description Serialize and validate restriction appeal data. */
         RestrictionAppeal: {
             /** Format: uuid */
             readonly id: string;
@@ -6979,6 +11663,7 @@ export interface components {
             readonly decided_at: string | null;
             readonly decision_summary: string;
         };
+        /** @description Serialize and validate restriction appeal create data. */
         RestrictionAppealCreate: {
             statement: string;
         };
@@ -6995,7 +11680,7 @@ export interface components {
          * @enum {string}
          */
         ResultEnum: "succeeded" | "failed";
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate reusable kit create data. */
         ReusableKitCreate: {
             reason: string;
             code: string;
@@ -7009,6 +11694,7 @@ export interface components {
             quantity: number;
             notes?: string;
         };
+        /** @description Serialize and validate review decision data. */
         ReviewDecision: {
             expected_version: number;
             decision: components["schemas"]["ReviewDecisionDecisionEnum"];
@@ -7037,6 +11723,7 @@ export interface components {
          * @enum {string}
          */
         ScopeEnum: "overall" | "product";
+        /** @description Serialize and validate section add data. */
         SectionAdd: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -7054,6 +11741,7 @@ export interface components {
          * @enum {string}
          */
         SectionAddOperationEnum: "section.add";
+        /** @description Serialize and validate self attendee fursuit data. */
         SelfAttendeeFursuit: {
             /** Format: uuid */
             id: string;
@@ -7063,6 +11751,7 @@ export interface components {
             photo_review_note: string;
             photo_url: string | null;
         };
+        /** @description Serialize and validate self attendee fursuit update data. */
         SelfAttendeeFursuitUpdate: {
             /** Format: uuid */
             id?: string;
@@ -7073,6 +11762,7 @@ export interface components {
             /** @default true */
             keep_photo: boolean;
         };
+        /** @description Serialize and validate self attendee profile data. */
         SelfAttendeeProfile: {
             /** Format: uuid */
             id: string;
@@ -7105,7 +11795,7 @@ export interface components {
             directory_visible: boolean;
             directory_country_code: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate self offer submit data. */
         SelfOfferSubmit: {
             title: string;
             description?: string;
@@ -7124,10 +11814,12 @@ export interface components {
             items: components["schemas"]["OfferItemInput"][];
             reason: string;
         };
+        /** @description Serialize and validate self profile image upload data. */
         SelfProfileImageUpload: {
             /** Format: uri */
             image: string;
         };
+        /** @description Serialize and validate self profile suggestion data. */
         SelfProfileSuggestion: {
             /** Format: uuid */
             source_profile_id: string;
@@ -7161,6 +11853,7 @@ export interface components {
             directory_visible: boolean;
             directory_country_code: string;
         };
+        /** @description Serialize and validate self profile suggestion fursuit data. */
         SelfProfileSuggestionFursuit: {
             /** Format: uuid */
             reuse_from_id: string | null;
@@ -7169,6 +11862,7 @@ export interface components {
             photo_review_status: string;
             photo_url: string | null;
         };
+        /** @description Serialize and validate self registration data. */
         SelfRegistration: {
             /** Format: uuid */
             readonly id: string;
@@ -7197,7 +11891,7 @@ export interface components {
             entitlements: components["schemas"]["Entitlement"][];
             readonly timeline: components["schemas"]["RegistrationTimeline"][];
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate serialized asset create data. */
         SerializedAssetCreate: {
             reason: string;
             catalog_code: string;
@@ -7210,11 +11904,13 @@ export interface components {
             value_class?: string;
             owner: components["schemas"]["Owner"];
         };
+        /** @description Serialize and validate session sign in data. */
         SessionSignIn: {
             /** Format: email */
             email: string;
             password: string;
         };
+        /** @description Serialize and validate settlement batch data. */
         SettlementBatch: {
             /** Format: uuid */
             readonly id: string;
@@ -7452,13 +12148,28 @@ export interface components {
          * @enum {string}
          */
         SpokenLanguageCodesEnum: "aa" | "ab" | "ae" | "af" | "ak" | "am" | "an" | "ar" | "as" | "av" | "ay" | "az" | "ba" | "be" | "bg" | "bh" | "bi" | "bm" | "bn" | "bo" | "br" | "bs" | "ca" | "ce" | "ch" | "co" | "cr" | "cs" | "cu" | "cv" | "cy" | "da" | "de" | "dv" | "dz" | "ee" | "el" | "en" | "eo" | "es" | "et" | "eu" | "fa" | "ff" | "fi" | "fj" | "fo" | "fr" | "fy" | "ga" | "gd" | "gl" | "gn" | "gu" | "gv" | "ha" | "he" | "hi" | "ho" | "hr" | "ht" | "hu" | "hy" | "hz" | "ia" | "id" | "ie" | "ig" | "ii" | "ik" | "io" | "is" | "it" | "iu" | "ja" | "jv" | "ka" | "kg" | "ki" | "kj" | "kk" | "kl" | "km" | "kn" | "ko" | "kr" | "ks" | "ku" | "kv" | "kw" | "ky" | "la" | "lb" | "lg" | "li" | "ln" | "lo" | "lt" | "lu" | "lv" | "mg" | "mh" | "mi" | "mk" | "ml" | "mn" | "mr" | "ms" | "mt" | "my" | "na" | "nb" | "nd" | "ne" | "ng" | "nl" | "nn" | "no" | "nr" | "nv" | "ny" | "oc" | "oj" | "om" | "or" | "os" | "pa" | "pi" | "pl" | "ps" | "pt" | "qu" | "rm" | "rn" | "ro" | "ru" | "rw" | "sa" | "sc" | "sd" | "se" | "sg" | "si" | "sk" | "sl" | "sm" | "sn" | "so" | "sq" | "sr" | "ss" | "st" | "su" | "sv" | "sw" | "ta" | "te" | "tg" | "th" | "ti" | "tk" | "tl" | "tn" | "to" | "tr" | "ts" | "tt" | "tw" | "ty" | "ug" | "uk" | "ur" | "uz" | "ve" | "vi" | "vo" | "wa" | "wo" | "xh" | "yi" | "yo" | "za" | "zh" | "zu";
+        /** @description Serialize and validate staff participation summary data. */
         StaffParticipationSummary: {
             /** Format: uuid */
             account_id: string;
             display_name: string;
             participation_status: string;
+            /**
+             * @description Return capacity labels.
+             *
+             *     Parameters
+             *     ----------
+             *     obj : Participation
+             *         The model instance being validated or presented.
+             *
+             *     Returns
+             *     -------
+             *     list[str]
+             *         The matching get capacity labels records in deterministic order.
+             */
             readonly capacity_labels: string[];
         };
+        /** @description Serialize and validate staff registration data. */
         StaffRegistration: {
             /** Format: uuid */
             readonly id: string;
@@ -7494,6 +12205,7 @@ export interface components {
             entitlements: components["schemas"]["Entitlement"][];
             timeline: components["schemas"]["RegistrationTimeline"][];
         };
+        /** @description Serialize and validate staff restriction appeal decision data. */
         StaffRestrictionAppealDecision: {
             decision: components["schemas"]["StaffRestrictionAppealDecisionDecisionEnum"];
             summary: string;
@@ -7504,6 +12216,7 @@ export interface components {
          * @enum {string}
          */
         StaffRestrictionAppealDecisionDecisionEnum: "uphold" | "revoke";
+        /** @description Serialize and validate staff restriction create data. */
         StaffRestrictionCreate: {
             /** Format: uuid */
             account_id: string;
@@ -7518,9 +12231,11 @@ export interface components {
             /** @default true */
             notify_account: boolean;
         };
+        /** @description Serialize and validate staff restriction revoke data. */
         StaffRestrictionRevoke: {
             reason: string;
         };
+        /** @description Serialize and validate staff subject rights request data. */
         StaffSubjectRightsRequest: {
             /** Format: uuid */
             readonly id: string;
@@ -7542,6 +12257,7 @@ export interface components {
             readonly completed_at: string | null;
             readonly safe_outcome_summary: string;
         };
+        /** @description Serialize and validate starter create data. */
         StarterCreate: {
             starter_code: string;
             /** Format: date-time */
@@ -7576,10 +12292,11 @@ export interface components {
          * @enum {string}
          */
         Status810Enum: "pending" | "accepted" | "revoked" | "expired";
+        /** @description Serialize and validate step up data. */
         StepUp: {
             password: string;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate stock lot create data. */
         StockLotCreate: {
             reason: string;
             catalog_code: string;
@@ -7590,6 +12307,7 @@ export interface components {
             value_class?: string;
             owner: components["schemas"]["Owner"];
         };
+        /** @description Serialize and validate subject rights request data. */
         SubjectRightsRequest: {
             /** Format: uuid */
             readonly id: string;
@@ -7606,6 +12324,7 @@ export interface components {
             readonly completed_at: string | null;
             readonly safe_outcome_summary: string;
         };
+        /** @description Serialize and validate subject rights request create data. */
         SubjectRightsRequestCreate: {
             /** Format: uuid */
             organization_id?: string | null;
@@ -7631,6 +12350,7 @@ export interface components {
          * @enum {string}
          */
         SubjectRightsRequestStatusEnum: "received" | "identity_check" | "in_progress" | "completed" | "denied";
+        /** @description Serialize and validate subject rights request transition data. */
         SubjectRightsRequestTransition: {
             action: components["schemas"]["SubjectRightsRequestTransitionActionEnum"];
             outcome_summary?: string;
@@ -7643,6 +12363,7 @@ export interface components {
          * @enum {string}
          */
         SubjectRightsRequestTransitionActionEnum: "begin_identity_check" | "verify_identity" | "complete" | "deny";
+        /** @description Serialize and validate submission answer data. */
         SubmissionAnswer: {
             /** Format: uuid */
             question_id: string;
@@ -7655,9 +12376,11 @@ export interface components {
          * @enum {string}
          */
         SubmissionSourceEnum: "self" | "staff_assisted";
+        /** @description Serialize and validate submission transition data. */
         SubmissionTransition: {
             expected_version: number;
         };
+        /** @description Serialize and validate submit registration data. */
         SubmitRegistration: {
             /** Format: uuid */
             product_id: string;
@@ -7668,14 +12391,17 @@ export interface components {
          * @enum {string}
          */
         TemplateEnum: "awoostria-reference@1";
+        /** @description Serialize and validate token data. */
         Token: {
             token: string;
         };
+        /** @description Serialize and validate update notification preference data. */
         UpdateNotificationPreference: {
             operational_email_enabled: boolean;
             marketing_email_consent: boolean;
             marketing_consent_version?: string;
         };
+        /** @description Serialize and validate update self attendee profile data. */
         UpdateSelfAttendeeProfile: {
             real_name: string;
             /** Format: date */
@@ -7703,7 +12429,7 @@ export interface components {
             directory_visible: boolean;
             directory_country_code?: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue availability interval data. */
         VenueAvailabilityInterval: {
             /** Format: date-time */
             starts_at: string;
@@ -7711,6 +12437,7 @@ export interface components {
             ends_at: string;
             opening_restriction?: string;
         };
+        /** @description Serialize and validate venue availability projection data. */
         VenueAvailabilityProjection: {
             /** Format: date-time */
             starts_at: string;
@@ -7718,13 +12445,13 @@ export interface components {
             ends_at: string;
             opening_restriction: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue availability set data. */
         VenueAvailabilitySet: {
             expected_version: number;
             intervals: components["schemas"]["VenueAvailabilityInterval"][];
             reason: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue booking create data. */
         VenueBookingCreate: {
             kind: components["schemas"]["Kind3faEnum"];
             external_reference?: string;
@@ -7745,6 +12472,7 @@ export interface components {
             public_layout_id?: string | null;
             reason: string;
         };
+        /** @description Serialize and validate venue booking projection data. */
         VenueBookingProjection: {
             /** Format: uuid */
             id: string;
@@ -7769,12 +12497,12 @@ export interface components {
             public_layout_reference: string;
             aggregate_version: number;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue booking state data. */
         VenueBookingState: {
             expected_version: number;
             reason: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue booking update data. */
         VenueBookingUpdate: {
             kind: components["schemas"]["Kind3faEnum"];
             external_reference?: string;
@@ -7796,7 +12524,7 @@ export interface components {
             reason: string;
             expected_version: number;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue capacity data. */
         VenueCapacity: {
             configuration_name: string;
             seated_capacity: number;
@@ -7804,13 +12532,14 @@ export interface components {
             table_capacity: number;
             fire_capacity: number;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue combination create data. */
         VenueCombinationCreate: {
             code: string;
             name: string;
             member_space_ids: string[];
             reason: string;
         };
+        /** @description Serialize and validate venue command result data. */
         VenueCommandResult: {
             /** Format: uuid */
             object_id: string;
@@ -7819,7 +12548,7 @@ export interface components {
             resulting_version: number;
             replayed: boolean;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue layout add data. */
         VenueLayoutAdd: {
             layout_code: string;
             version: number;
@@ -7837,14 +12566,14 @@ export interface components {
          * @enum {string}
          */
         VenueLayoutAddVisibilityEnum: "public" | "internal" | "security";
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue layout approve data. */
         VenueLayoutApprove: {
             expected_version: number;
             /** @description Required by the service when approving a public layout. */
             approved_reference?: string;
             reason: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue media add data. */
         VenueMediaAdd: {
             kind: components["schemas"]["Kind13fEnum"];
             source_reference: string;
@@ -7856,13 +12585,13 @@ export interface components {
             expires_at?: string | null;
             reason: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue media approve data. */
         VenueMediaApprove: {
             expected_version: number;
             public_reference: string;
             reason: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue night inventory set data. */
         VenueNightInventorySet: {
             /** Format: date */
             night: string;
@@ -7873,7 +12602,7 @@ export interface components {
             expected_version?: number | null;
             reason: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue property create data. */
         VenuePropertyCreate: {
             slug: string;
             kind: components["schemas"]["VenuePropertyCreateKindEnum"];
@@ -7899,6 +12628,7 @@ export interface components {
          * @enum {string}
          */
         VenuePropertyCreateKindEnum: "hotel" | "venue" | "mixed";
+        /** @description Serialize and validate venue property summary data. */
         VenuePropertySummary: {
             /** Format: uuid */
             id: string;
@@ -7920,7 +12650,7 @@ export interface components {
             lifecycle: string;
             aggregate_version: number;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue room type create data. */
         VenueRoomTypeCreate: {
             code: string;
             public_name: string;
@@ -7931,7 +12661,7 @@ export interface components {
             provider_reference?: string;
             reason: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue selection create data. */
         VenueSelectionCreate: {
             /** Format: uuid */
             property_id: string;
@@ -7943,7 +12673,7 @@ export interface components {
             opening_restrictions?: string;
             reason: string;
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue space catalog create data. */
         VenueSpaceCatalogCreate: {
             site_code: string;
             site_name: string;
@@ -7964,12 +12694,13 @@ export interface components {
             equipment_facts?: string;
             reason: string;
         };
+        /** @description Serialize and validate venue space schedule data. */
         VenueSpaceSchedule: {
             space: components["schemas"]["VenueWorkspaceSpace"];
             availability: components["schemas"]["VenueAvailabilityProjection"][];
             bookings: components["schemas"]["VenueBookingProjection"][];
         };
-        /** @description Marker for Venue request objects that reject unknown properties. */
+        /** @description Serialize and validate venue space selection create data. */
         VenueSpaceSelectionCreate: {
             /** Format: uuid */
             venue_selection_id: string;
@@ -7985,6 +12716,7 @@ export interface components {
             opening_restrictions?: string;
             reason: string;
         };
+        /** @description Serialize and validate venue workspace space data. */
         VenueWorkspaceSpace: {
             /** Format: uuid */
             id: string;
@@ -8001,7 +12733,7 @@ export interface components {
             active_booking_count: number;
             aggregate_version: number;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate versioned reason data. */
         VersionedReason: {
             expected_version: number;
             reason: string;
@@ -8012,6 +12744,7 @@ export interface components {
          * @enum {string}
          */
         Visibility7ebEnum: "attendee_and_staff" | "registration_staff";
+        /** @description Serialize and validate volunteer application data. */
         VolunteerApplication: {
             /** Format: uuid */
             id: string;
@@ -8021,9 +12754,11 @@ export interface components {
             /** Format: date-time */
             submitted_at: string;
         };
+        /** @description Serialize and validate volunteer application submit data. */
         VolunteerApplicationSubmit: {
             motivation: string;
         };
+        /** @description Serialize and validate volunteer opportunity data. */
         VolunteerOpportunity: {
             /** Format: uuid */
             id: string;
@@ -8042,7 +12777,7 @@ export interface components {
             /** Format: date-time */
             applications_close_at: string | null;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate waitlist batch offer command data. */
         WaitlistBatchOfferCommand: {
             /** Format: uuid */
             product_id: string;
@@ -8050,6 +12785,7 @@ export interface components {
             expected_control_version: number;
             reason: string;
         };
+        /** @description Serialize and validate waitlist batch offer result data. */
         WaitlistBatchOfferResult: {
             /** Format: uuid */
             id: string;
@@ -8062,6 +12798,7 @@ export interface components {
             /** Format: date-time */
             occurred_at: string;
         };
+        /** @description Serialize and validate waive payment data. */
         WaivePayment: {
             reason: string;
         };
@@ -8081,6 +12818,7 @@ export interface components {
             reason: string;
             confirmation_name: string;
         };
+        /** @description Serialize and validate workforce department mutation result data. */
         WorkforceDepartmentMutationResult: {
             /** Format: uuid */
             department_id: string;
@@ -8113,6 +12851,7 @@ export interface components {
             request_id?: string;
             errors?: unknown;
         };
+        /** @description Serialize and validate workforce structure data. */
         WorkforceStructure: {
             organization_name: string;
             series_name: string;
@@ -8120,6 +12859,7 @@ export interface components {
             governance: components["schemas"]["WorkforceStructureGovernance"];
             structure: components["schemas"]["WorkforceStructureProjection"];
         };
+        /** @description Serialize and validate workforce structure builtin template source data. */
         WorkforceStructureBuiltinTemplateSource: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -8134,6 +12874,7 @@ export interface components {
          * @enum {string}
          */
         WorkforceStructureBuiltinTemplateSourceKindEnum: "builtin_template";
+        /** @description Serialize and validate workforce structure department data. */
         WorkforceStructureDepartment: {
             /** Format: uuid */
             id: string;
@@ -8153,6 +12894,7 @@ export interface components {
          * @enum {string}
          */
         WorkforceStructureDepartmentStateEnum: "active" | "retired";
+        /** @description Serialize and validate workforce structure empty source data. */
         WorkforceStructureEmptySource: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -8165,6 +12907,7 @@ export interface components {
          * @enum {string}
          */
         WorkforceStructureEmptySourceKindEnum: "empty";
+        /** @description Serialize and validate workforce structure governance data. */
         WorkforceStructureGovernance: {
             kind: components["schemas"]["WorkforceStructureGovernanceKindEnum"];
             label: string;
@@ -8183,10 +12926,12 @@ export interface components {
          * @enum {string}
          */
         WorkforceStructureGovernanceStateEnum: "absent" | "provisioning" | "active" | "suspended";
+        /** @description Serialize and validate workforce structure holder data. */
         WorkforceStructureHolder: {
             display_name: string;
             other_roles: components["schemas"]["WorkforceStructureRole"][];
         };
+        /** @description Serialize and validate workforce structure legacy source data. */
         WorkforceStructureLegacySource: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -8199,6 +12944,7 @@ export interface components {
          * @enum {string}
          */
         WorkforceStructureLegacySourceKindEnum: "legacy_existing";
+        /** @description Serialize and validate workforce structure manual source data. */
         WorkforceStructureManualSource: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -8211,6 +12957,7 @@ export interface components {
          * @enum {string}
          */
         WorkforceStructureManualSourceKindEnum: "manual";
+        /** @description Serialize and validate workforce structure position data. */
         WorkforceStructurePosition: {
             /** Format: uuid */
             id: string;
@@ -8232,6 +12979,7 @@ export interface components {
          * @enum {string}
          */
         WorkforceStructurePositionStatusEnum: "planned" | "open" | "filled" | "closed";
+        /** @description Serialize and validate workforce structure projection data. */
         WorkforceStructureProjection: {
             state: components["schemas"]["WorkforceStructureProjectionStateEnum"];
             aggregate_version: number;
@@ -8244,6 +12992,7 @@ export interface components {
          * @enum {string}
          */
         WorkforceStructureProjectionStateEnum: "complete" | "structure_limit_exceeded";
+        /** @description Serialize and validate workforce structure role data. */
         WorkforceStructureRole: {
             department_name: string;
             position_title: string;
@@ -8256,10 +13005,11 @@ export interface components {
             confirmation_name: string;
             reason: string;
         };
+        /** @description Serialize and validate workforce structure template mutation result data. */
         WorkforceStructureTemplateMutationResult: {
             aggregate_version: number;
         };
-        /** @description Reject undeclared JSON and query properties instead of ignoring them. */
+        /** @description Serialize and validate write profile extension value data. */
         WriteProfileExtensionValue: {
             /** Format: uuid */
             field_id: string;

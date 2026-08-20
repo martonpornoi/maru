@@ -10,8 +10,13 @@ RETIRED_DEPARTMENT_AUTHORITY_LOCK_KEY = 4_400_450_010
 
 
 def lock_retired_department_authority_writer() -> None:
-    """Serialize authority issuance with Department retirement before row locks."""
+    """Serialize authority issuance with Department retirement before row locks.
 
+    Raises
+    ------
+    TransactionManagementError
+        If the operation encounters a transaction management condition.
+    """
     if connection.get_autocommit() or not connection.in_atomic_block:
         raise TransactionManagementError(
             "The retired-Department authority lock requires an atomic transaction."
@@ -25,7 +30,6 @@ def lock_retired_department_authority_writer() -> None:
 
 def lock_retired_department_authority_boundaries() -> None:
     """Join structure, provenance, and retirement fences in canonical order."""
-
     lock_page_9_structure_writer_boundary()
     lock_authority_provenance_writer_boundary()
     lock_retired_department_authority_writer()

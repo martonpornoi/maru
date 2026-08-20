@@ -5,9 +5,8 @@ import io
 import json
 import re
 import smtplib
-from collections.abc import Callable
 from datetime import timedelta
-from typing import Final
+from typing import TYPE_CHECKING, Final
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -52,6 +51,9 @@ from maru.identity.services import (
     deliver_identity_challenge,
     deliver_pending_identity_challenges,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 

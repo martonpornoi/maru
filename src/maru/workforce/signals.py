@@ -13,8 +13,19 @@ def ensure_position_opportunity(
     created: bool,  # noqa: FBT001
     **kwargs: object,
 ) -> None:
-    """Every position owns a separately publishable application opportunity."""
+    """Every position owns a separately publishable application opportunity.
 
+    Parameters
+    ----------
+    sender : type[Position]
+        The delivery adapter responsible for the external send attempt.
+    instance : Position
+        The instance evaluated while ensure position opportunity.
+    created : bool
+        The created evaluated while ensure position opportunity.
+    **kwargs : object
+        Dispatch metadata supplied by Django's signal framework.
+    """
     _ = sender, kwargs
     if created:
         VolunteerOpportunity.objects.create(

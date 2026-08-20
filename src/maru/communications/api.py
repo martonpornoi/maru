@@ -42,11 +42,25 @@ def _account(request: Request) -> Account:
 
 
 class MyNotificationListView(APIView):
+    """Expose my notification list through the HTTP API."""
+
     @extend_schema(
         operation_id="communications_list_my_notifications",
         responses=NotificationMessageSerializer(many=True),
     )
     def get(self, request: Request) -> Response:
+        """List my notifications.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         items = (
             NotificationMessage.objects.filter(account=_account(request))
             .prefetch_related("deliveries")
@@ -56,12 +70,33 @@ class MyNotificationListView(APIView):
 
 
 class MyNotificationReadView(APIView):
+    """Expose my notification read through the HTTP API."""
+
     @extend_schema(
         operation_id="communications_mark_my_notification_read",
         request=None,
         responses=NotificationMessageSerializer,
     )
     def post(self, request: Request, message_id: UUID) -> Response:
+        """Mark my notification read.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        message_id : UUID
+            The message identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         try:
             item = mark_message_read(
                 account=_account(request),
@@ -79,11 +114,32 @@ class MyNotificationReadView(APIView):
 
 
 class MyNotificationPreferenceView(APIView):
+    """Expose my notification preference through the HTTP API."""
+
     @extend_schema(
         operation_id="communications_retrieve_my_preference",
         responses=NotificationPreferenceSerializer,
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
+        """Retrieve my preference.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         account = _account(request)
         if not Organization.objects.filter(id=organization_id).exists():
             raise NotFound("Notification preferences are unavailable.")
@@ -99,6 +155,25 @@ class MyNotificationPreferenceView(APIView):
         responses=NotificationPreferenceSerializer,
     )
     def put(self, request: Request, organization_id: UUID) -> Response:
+        """Update my preference.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         account = _account(request)
         serializer = UpdateNotificationPreferenceSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -126,6 +201,8 @@ class MyNotificationPreferenceView(APIView):
 
 
 class StaffDeliveryFailureListView(APIView):
+    """Expose staff delivery failure list through the HTTP API."""
+
     @extend_schema(
         operation_id="communications_list_delivery_failures",
         responses=DeliveryFailureSerializer(many=True),
@@ -136,6 +213,27 @@ class StaffDeliveryFailureListView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the delivery failures.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         decision = decide(
             principal=account,

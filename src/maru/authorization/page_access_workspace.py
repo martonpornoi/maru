@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
-from uuid import UUID
+from typing import TYPE_CHECKING, cast
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
@@ -26,9 +25,28 @@ from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.workforce.models import Department
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 
 @dataclass(frozen=True, slots=True)
 class PageAccessRole:
+    """Describe page access role.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    code
+        The stable domain code to resolve or validate.
+    name
+        The human-readable name to normalize or persist.
+    version
+        The version number associated with the supplied record or contract.
+    capabilities
+        The capabilities retained in this immutable projection.
+    """
+
     id: UUID
     code: str
     name: str
@@ -38,6 +56,28 @@ class PageAccessRole:
 
 @dataclass(frozen=True, slots=True)
 class PageAccessAssignment:
+    """Describe page access assignment.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    person_name
+        The human-readable person name shown to authorized readers.
+    person_email
+        The normalized person email used for delivery or identity matching.
+    role_name
+        The human-readable role name shown to authorized readers.
+    role_version
+        The expected role version used to reject stale updates.
+    scope_label
+        The disclosure-safe label for the resolved authorization scope.
+    exact_scope
+        The exact scope retained in this immutable projection.
+    expires_at
+        The timezone-aware timestamp for expires.
+    """
+
     id: UUID
     person_name: str
     person_email: str
@@ -50,6 +90,22 @@ class PageAccessAssignment:
 
 @dataclass(frozen=True, slots=True)
 class PageAccessWorkspace:
+    """Describe page access workspace.
+
+    Attributes
+    ----------
+    scope_label
+        The disclosure-safe label for the resolved authorization scope.
+    scope_level
+        The scope level retained in this immutable projection.
+    roles
+        The roles retained in this immutable projection.
+    assignments
+        The assignments retained in this immutable projection.
+    can_revoke
+        The can revoke retained in this immutable projection.
+    """
+
     scope_label: str
     scope_level: str
     roles: tuple[PageAccessRole, ...]
@@ -70,6 +126,20 @@ def require_page_access_authority(
     actor: Account,
     target: ResolvedAuthorizationTarget,
 ) -> None:
+    """Require page access authority.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    target : ResolvedAuthorizationTarget
+        The exact tenant-scoped resource targeted by the operation.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     decision = decide(
         principal=actor,
         capability_code=MANAGE_ACCESS_CAPABILITY,
@@ -85,6 +155,17 @@ def audit_page_access_relationship_denial(
     target: ResolvedAuthorizationTarget,
     correlation_id: UUID,
 ) -> None:
+    """Return audit page access relationship denial.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    target : ResolvedAuthorizationTarget
+        The exact tenant-scoped resource targeted by the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    """
     decision = decide(
         principal=actor,
         capability_code=MANAGE_ACCESS_CAPABILITY,
@@ -116,6 +197,23 @@ def audit_page_access_relationship_denial(
 
 
 def page_access_scope_label(target: ResolvedAuthorizationTarget) -> str:
+    """Return page access scope label.
+
+    Parameters
+    ----------
+    target : ResolvedAuthorizationTarget
+        The exact tenant-scoped resource targeted by the operation.
+
+    Returns
+    -------
+    str
+        The normalized text for page access scope label.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     organization = Organization.objects.filter(pk=target.organization_id).first()
     if organization is None:
         raise PermissionDenied("Access management is unavailable.")
@@ -263,10 +361,10 @@ def _assignment_scope_label(assignment: RoleAssignment) -> str:
     if assignment.resource_binding_id is not None:
         return "Exact typed resource"
     if assignment.department_id is not None:
-        department = cast(Department, assignment.department)
+        department = cast("Department", assignment.department)
         return f"Department: {department.name}"
     if assignment.edition_id is not None:
-        edition = cast(EventEdition, assignment.edition)
+        edition = cast("EventEdition", assignment.edition)
         return f"Edition: {edition.name}"
     return "All organizer editions"
 
@@ -315,8 +413,22 @@ def load_page_access_workspace(
     target: ResolvedAuthorizationTarget,
     correlation_id: UUID,
 ) -> PageAccessWorkspace:
-    """Read relationship names only after authority and append an audit row."""
+    """Read relationship names only after authority and append an audit row.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+
+    Returns
+    -------
+    PageAccessWorkspace
+        The resolved PageAccessWorkspace for the requested scope.
+    """
     require_page_access_authority(actor=actor, target=target)
     assignments = _assignments_for_target(target)
     append_audit(
@@ -357,6 +469,23 @@ def load_page_access_workspace(
 
 
 def exact_active_person(email: str) -> Account:
+    """Return exact active person.
+
+    Parameters
+    ----------
+    email : str
+        The normalized email address used for delivery or identity matching.
+
+    Returns
+    -------
+    Account
+        The authorized Account visible within the requested scope.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     account = Account.objects.filter(
         email__iexact=email.strip(),
         is_active=True,
@@ -374,6 +503,25 @@ def exact_role_version(
     target: ResolvedAuthorizationTarget,
     role_version_id: UUID,
 ) -> RoleBundle:
+    """Return exact role version.
+
+    Parameters
+    ----------
+    target : ResolvedAuthorizationTarget
+        The exact tenant-scoped resource targeted by the operation.
+    role_version_id : UUID
+        The identifier of the role version.
+
+    Returns
+    -------
+    RoleBundle
+        The authorized RoleBundle visible within the requested scope.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     role = (
         RoleBundle.objects.filter(
             pk=role_version_id,
@@ -390,6 +538,23 @@ def exact_role_version(
 
 
 def exact_active_approver(email: str) -> Account:
+    """Return exact active approver.
+
+    Parameters
+    ----------
+    email : str
+        The normalized email address used for delivery or identity matching.
+
+    Returns
+    -------
+    Account
+        The authorized Account visible within the requested scope.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     account = Account.objects.filter(
         email__iexact=email.strip(),
         is_active=True,
@@ -406,6 +571,25 @@ def exact_assignment_for_target(
     target: ResolvedAuthorizationTarget,
     assignment_id: UUID,
 ) -> RoleAssignment:
+    """Return exact assignment for target.
+
+    Parameters
+    ----------
+    target : ResolvedAuthorizationTarget
+        The exact tenant-scoped resource targeted by the operation.
+    assignment_id : UUID
+        The identifier of the assignment.
+
+    Returns
+    -------
+    RoleAssignment
+        The authorized RoleAssignment visible within the requested scope.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     assignments = RoleAssignment.objects.filter(
         pk=assignment_id,
         organization_id=target.organization_id,
@@ -436,6 +620,27 @@ def audit_page_access_preview(
     subject_id: UUID | None = None,
     target_count: int | None = None,
 ) -> None:
+    """Return audit page access preview.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    target : ResolvedAuthorizationTarget
+        The exact tenant-scoped resource targeted by the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    outcome : str
+        The outcome evaluated while audit page access preview.
+    reason_code : str
+        The stable reason code from the relevant closed catalog.
+    mode : str
+        The mode evaluated while audit page access preview.
+    subject_id : UUID | None, default=None
+        The identifier of the subject.
+    target_count : int | None, default=None
+        The bounded number of target records.
+    """
     metadata: dict[str, object] = {
         "policy_version": POLICY_VERSION,
         "contract_version": "access-preview.v1",

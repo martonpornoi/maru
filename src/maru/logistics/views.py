@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import asdict, dataclass
-from datetime import datetime
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from urllib.parse import urlencode
 from uuid import UUID, uuid4
 
@@ -80,6 +78,10 @@ from .services import (
 )
 from .staff_forms import ManifestReceiptForm, RestrictedContactReadForm
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from datetime import datetime
+
 
 def _actor(request: HttpRequest) -> Account:
     if not isinstance(request.user, Account) or not request.user.is_active:
@@ -108,7 +110,7 @@ def _edition_route_scope(
         .first()
     )
     if row is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     return _EditionRouteScope(
         organization_id=row["organization_id"],
         edition_id=row["id"],
@@ -135,7 +137,7 @@ def _edition_route(
         .first()
     )
     if edition is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     return edition
 
 
@@ -394,7 +396,7 @@ def _preauthorize_staff_action(
         )
         return
     if object_id is not None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     if action in _CATALOG_STAFF_ACTIONS:
         try:
             authorize_logistics_api_scope(
@@ -416,7 +418,7 @@ def _preauthorize_staff_action(
         "offline-reconcile": OFFLINE_RECONCILE_CAPABILITY,
     }.get(action)
     if capability is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     authorize_logistics_api_scope(
         actor=actor,
         organization_id=scope.organization_id,
@@ -434,6 +436,29 @@ def logistics_workspace(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render logistics workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor = _actor(request)
         scope = _edition_route_scope(
@@ -562,6 +587,33 @@ def logistics_manifest_detail(
     edition_slug: str,
     manifest_id: UUID,
 ) -> HttpResponse:
+    """Render logistics manifest detail.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    manifest_id : UUID
+        The identifier of the manifest.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor = _actor(request)
         scope = _edition_route_scope(
@@ -633,6 +685,35 @@ def logistics_staff_command(
     action: str,
     object_id: UUID | None = None,
 ) -> HttpResponse:
+    """Render logistics staff command.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    action : str
+        The requested lifecycle action.
+    object_id : UUID | None, default=None
+        The identifier of the object.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     definition = STAFF_COMMAND_BY_ACTION.get(action)
     if definition is None:
         raise Http404
@@ -724,6 +805,33 @@ def logistics_manifest_receipt(
     manifest_id: UUID,
     line_id: UUID,
 ) -> HttpResponse:
+    """Render logistics manifest receipt.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    manifest_id : UUID
+        The identifier of the manifest.
+    line_id : UUID
+        The identifier of the line.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _actor(request)
     try:
         scope = _edition_route_scope(
@@ -758,11 +866,11 @@ def logistics_manifest_receipt(
                 edition_id=edition.id,
                 manifest_id=manifest_id,
                 line_id=line_id,
-                expected_sequence=cast(int, form.cleaned_data["expected_sequence"]),
-                occurred_at=cast(datetime, form.cleaned_data["occurred_at"]),
-                condition_after=cast(str, form.cleaned_data["condition_after"]),
-                reason=cast(str, form.cleaned_data["reason"]),
-                idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+                expected_sequence=cast("int", form.cleaned_data["expected_sequence"]),
+                occurred_at=cast("datetime", form.cleaned_data["occurred_at"]),
+                condition_after=cast("str", form.cleaned_data["condition_after"]),
+                reason=cast("str", form.cleaned_data["reason"]),
+                idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
                 correlation_id=uuid4(),
                 source_channel="browser",
             )
@@ -793,6 +901,29 @@ def stage_tech_receiving_page(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render stage tech receiving page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor = _actor(request)
         scope = _edition_route_scope(
@@ -880,6 +1011,31 @@ def restricted_contact_request(
     edition_slug: str,
     address_id: UUID,
 ) -> HttpResponse:
+    """Render restricted contact request.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    address_id : UUID
+        The identifier of the address.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _actor(request)
     try:
         scope = _edition_route_scope(
@@ -958,6 +1114,31 @@ def restricted_contact_result(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render restricted contact result.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _actor(request)
     try:
         scope = _edition_route_scope(
@@ -1077,6 +1258,23 @@ def restricted_contact_result(
 @login_required(login_url="staff-login")
 @require_http_methods(("GET",))
 def my_logistics_offers_index(request: HttpRequest) -> HttpResponse:
+    """Render my logistics offers index.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor = _actor(request)
         authorize_personal_logistics_index_scope(actor=actor)
@@ -1109,6 +1307,29 @@ def my_logistics_offers(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render my logistics offers.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor = _actor(request)
         scope = _edition_route_scope(
@@ -1146,13 +1367,17 @@ def my_logistics_offers(
                         actor=actor,
                         organization_id=edition.organization_id,
                         edition_id=edition.id,
-                        title=cast(str, data["title"]),
-                        description=cast(str, data["description"]),
-                        pickup_label=cast(str, data["pickup_label"]),
-                        pickup_recipient_name=cast(str, data["pickup_recipient_name"]),
-                        pickup_postal_address=cast(str, data["pickup_postal_address"]),
+                        title=cast("str", data["title"]),
+                        description=cast("str", data["description"]),
+                        pickup_label=cast("str", data["pickup_label"]),
+                        pickup_recipient_name=cast(
+                            "str", data["pickup_recipient_name"]
+                        ),
+                        pickup_postal_address=cast(
+                            "str", data["pickup_postal_address"]
+                        ),
                         pickup_access_instructions=cast(
-                            str, data["pickup_access_instructions"]
+                            "str", data["pickup_access_instructions"]
                         ),
                         pickup_retention_until=data["pickup_retention_until"],
                         available_from=data["available_from"],
@@ -1160,22 +1385,22 @@ def my_logistics_offers(
                         requested_return_at=data["requested_return_at"],
                         items=(
                             OfferItemInput(
-                                kind=cast(str, data["item_kind"]),
-                                name=cast(str, data["item_name"]),
-                                description=cast(str, data["item_description"]),
-                                quantity=cast(int, data["item_quantity"]),
-                                manufacturer=cast(str, data["manufacturer"]),
-                                model_name=cast(str, data["model_name"]),
-                                serial_number=cast(str, data["serial_number"]),
-                                condition=cast(str, data["condition"]),
-                                value_class=cast(str, data["value_class"]),
+                                kind=cast("str", data["item_kind"]),
+                                name=cast("str", data["item_name"]),
+                                description=cast("str", data["item_description"]),
+                                quantity=cast("int", data["item_quantity"]),
+                                manufacturer=cast("str", data["manufacturer"]),
+                                model_name=cast("str", data["model_name"]),
+                                serial_number=cast("str", data["serial_number"]),
+                                condition=cast("str", data["condition"]),
+                                value_class=cast("str", data["value_class"]),
                                 ownership_statement=cast(
-                                    str, data["ownership_statement"]
+                                    "str", data["ownership_statement"]
                                 ),
                             ),
                         ),
-                        reason=cast(str, data["reason"]),
-                        idempotency_key=cast(UUID, data["idempotency_key"]),
+                        reason=cast("str", data["reason"]),
+                        idempotency_key=cast("UUID", data["idempotency_key"]),
                         correlation_id=uuid4(),
                         source_channel="browser",
                     )
@@ -1183,7 +1408,12 @@ def my_logistics_offers(
                     form.add_error(None, str(error))
                 else:
                     messages.success(request, "Your equipment offer was submitted.")
-                    return redirect(request.path)
+                    return redirect(
+                        "my-logistics-offers",
+                        organization_slug,
+                        series_slug,
+                        edition_slug,
+                    )
         else:
             form = (
                 EquipmentOfferForm(

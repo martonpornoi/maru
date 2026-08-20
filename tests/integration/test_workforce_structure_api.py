@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-from contextlib import AbstractContextManager
 from dataclasses import asdict
 from datetime import timedelta
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
@@ -52,6 +51,10 @@ from tests.workforce_helpers import (
     save_position_for_test,
     update_position_for_test,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from contextlib import AbstractContextManager
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 

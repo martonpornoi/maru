@@ -237,7 +237,7 @@ def test_staff_action_preauthorization_binds_capabilities_and_route_objects() ->
     object_id = uuid4()
     calls: list[dict[str, object]] = []
 
-    def authorize(**kwargs):
+    def authorize(**kwargs) -> None:
         calls.append(kwargs)
 
     with patch(
@@ -302,10 +302,10 @@ def test_staff_action_preauthorization_binds_capabilities_and_route_objects() ->
 def test_catalog_preauthorization_falls_back_only_to_organization_scope() -> None:
     calls: list[dict[str, object]] = []
 
-    def authorize(**kwargs):
+    def authorize(**kwargs) -> None:
         calls.append(kwargs)
         if kwargs.get("edition_id") is not None:
-            raise LogisticsAuthorizationDeniedError()
+            raise LogisticsAuthorizationDeniedError
 
     with patch(
         "maru.logistics.views.authorize_logistics_api_scope", side_effect=authorize
@@ -329,7 +329,7 @@ def test_workspace_authorizes_before_query_or_query_parameter_parsing() -> None:
     edition = _edition(scope)
     order: list[str] = []
 
-    def authorize(**_kwargs):
+    def authorize(**_kwargs) -> None:
         order.append("authorize")
 
     def query(**_kwargs):
@@ -415,7 +415,7 @@ def test_manifest_and_stage_pages_project_only_preauthorized_rows() -> None:
 
 
 class _SyntheticForm:
-    def __init__(self, cleaned_data: dict[str, object], *, valid: bool = True):
+    def __init__(self, cleaned_data: dict[str, object], *, valid: bool = True) -> None:
         self.cleaned_data = cleaned_data
         self._valid = valid
         self.errors: list[tuple[object, str]] = []
@@ -537,7 +537,10 @@ def test_staff_command_returns_to_workspace_on_closed_failures(
             "maru.logistics.views.execute_staff_command",
             side_effect=command_error,
         ) as execute,
-        patch("maru.logistics.views.redirect", return_value=HttpResponse(status=303)),
+        patch(
+            "maru.logistics.views.redirect",
+            return_value=HttpResponse(status=303),
+        ),
     ):
         response = views.logistics_staff_command(
             _request("post"), "org", "series", "edition", "event-record"
@@ -574,7 +577,10 @@ def test_manifest_receipt_preauthorizes_exact_line_and_records_valid_form() -> N
                 replayed=False,
             ),
         ) as record,
-        patch("maru.logistics.views.redirect", return_value=HttpResponse(status=303)),
+        patch(
+            "maru.logistics.views.redirect",
+            return_value=HttpResponse(status=303),
+        ),
     ):
         response = views.logistics_manifest_receipt(
             _request("post"),
@@ -793,7 +799,10 @@ def test_personal_offer_post_maps_closed_form_data_to_one_item() -> None:
                 replayed=False,
             ),
         ) as submit,
-        patch("maru.logistics.views.redirect", return_value=HttpResponse(status=303)),
+        patch(
+            "maru.logistics.views.redirect",
+            return_value=HttpResponse(status=303),
+        ) as redirect_to,
     ):
         response = views.my_logistics_offers(
             _request("post"), "org", "series", "edition"
@@ -803,6 +812,12 @@ def test_personal_offer_post_maps_closed_form_data_to_one_item() -> None:
     assert item.name == "XLR cable"
     assert item.quantity == 4
     assert submit.call_args.kwargs["source_channel"] == "browser"
+    redirect_to.assert_called_once_with(
+        "my-logistics-offers",
+        "org",
+        "series",
+        "edition",
+    )
 
 
 def test_contact_and_manifest_authorization_errors_are_non_disclosing() -> None:

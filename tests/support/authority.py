@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from django.utils import timezone
@@ -10,13 +11,10 @@ from maru.authorization.commands import (
     create_role_bundle_version,
     grant_capability_direct,
 )
-from maru.authorization.models import RoleBundle
 from maru.authorization.policy import (
     resolve_edition_target,
     resolve_organization_target,
 )
-from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.organizations.models import (
     Organization,
     OrganizationRepresentation,
@@ -29,6 +27,11 @@ from maru.organizations.representation import (
     respond_to_representation_invitation,
 )
 from tests.factories import AccountFactory
+
+if TYPE_CHECKING:
+    from maru.authorization.models import RoleBundle
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
 
 
 def activate_synthetic_board(

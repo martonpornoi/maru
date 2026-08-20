@@ -232,3 +232,13 @@ def test_logistics_json_parser_rejects_duplicate_members() -> None:
 
     with pytest.raises(ParseError, match="duplicate object member"):
         parser.parse(BytesIO(b'{"reason":"first","reason":"second"}'))
+
+
+def test_logistics_json_parser_does_not_expose_decoder_details() -> None:
+    parser = ClosedLogisticsJSONParser()
+
+    with pytest.raises(ParseError) as caught:
+        parser.parse(BytesIO(b'{"private-field":"unfinished"'))
+
+    assert str(caught.value.detail) == "JSON parse error - malformed document"
+    assert "private-field" not in str(caught.value.detail)

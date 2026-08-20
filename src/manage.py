@@ -6,6 +6,13 @@ import sys
 
 
 def main() -> None:
+    """Run the command-line entry point.
+
+    Raises
+    ------
+    ImportError
+        If Django cannot be imported in the active environment.
+    """
     os.environ.setdefault(
         "DJANGO_SETTINGS_MODULE",
         os.environ.get("MARU_SETTINGS_MODULE", "maru.settings.local"),

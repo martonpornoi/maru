@@ -1,5 +1,6 @@
 import smtplib
 from datetime import date, timedelta
+from typing import Never
 from uuid import uuid4
 
 import pytest
@@ -261,14 +262,14 @@ def test_notification_suppression_transient_and_permanent_failures(
         event_name="registration.submitted.v1",
     )
 
-    def transient(*args, **kwargs):
+    def transient(*args, **kwargs) -> Never:
         raise OSError("provider unavailable")
 
     monkeypatch.setattr("maru.communications.services.send_mail", transient)
     with pytest.raises(TransientEffectError):
         deliver_registration_notification(second_event, _effect_context(second_event))
 
-    def permanent(*args, **kwargs):
+    def permanent(*args, **kwargs) -> Never:
         raise smtplib.SMTPRecipientsRefused({})
 
     monkeypatch.setattr("maru.communications.services.send_mail", permanent)

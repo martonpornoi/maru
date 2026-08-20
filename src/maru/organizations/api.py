@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 from uuid import UUID
 
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
@@ -14,7 +14,6 @@ from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
 from rest_framework.generics import GenericAPIView
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -34,10 +33,15 @@ from maru.organizations.services import (
     update_convention_series,
 )
 
+if TYPE_CHECKING:
+    from rest_framework.request import Request
+
 logger = logging.getLogger(__name__)
 
 
 class ConventionSeriesConflict(APIException):
+    """Signal convention series conflict."""
+
     status_code = status.HTTP_409_CONFLICT
     default_detail = "The convention series conflicts with current state."
     default_code = "convention_series_conflict"
@@ -48,12 +52,21 @@ class ConventionSeriesConflict(APIException):
         detail: dict[str, list[str]] | list[str],
         code: str,
     ) -> None:
+        """Initialize the ConventionSeriesConflict instance.
+
+        Parameters
+        ----------
+        detail : dict[str, list[str]] | list[str]
+            The detail resolved from the authorized request.
+        code : str
+            The stable domain code to resolve or validate.
+        """
         structured_detail: dict[str, object] = {
             "detail": self.default_detail,
             "code": code,
             "errors": detail,
         }
-        super().__init__(detail=cast(Any, structured_detail), code=code)
+        super().__init__(detail=cast("Any", structured_detail), code=code)
 
 
 PROBLEM_CONTENT_TYPE = "application/problem+json"
@@ -124,6 +137,8 @@ def _scoped_series_or_not_found(
 
 
 class ConventionSeriesListView(GenericAPIView[ConventionSeries]):
+    """Expose convention series list through the HTTP API."""
+
     serializer_class = ConventionSeriesReadSerializer
     pagination_class = StandardPageNumberPagination
 
@@ -147,6 +162,27 @@ class ConventionSeriesListView(GenericAPIView[ConventionSeries]):
         },
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
+        """List the convention series.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        RuntimeError
+            If a required runtime invariant or dependency is unavailable.
+        """
         _require_platform_administrator(request)
         query = ConventionSeriesListQuerySerializer(data=request.query_params)
         reject_unknown_fields(
@@ -179,6 +215,8 @@ class ConventionSeriesListView(GenericAPIView[ConventionSeries]):
 
 
 class ConventionSeriesDetailView(APIView):
+    """Expose convention series detail through the HTTP API."""
+
     @extend_schema(
         operation_id="organizations_retrieve_convention_series",
         responses={
@@ -203,6 +241,22 @@ class ConventionSeriesDetailView(APIView):
         organization_id: UUID,
         series_id: UUID,
     ) -> Response:
+        """Retrieve the convention series.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        series_id : UUID
+            The convention-series identifier within the organization scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _require_platform_administrator(request)
         reject_unknown_fields(
             request.query_params,
@@ -242,6 +296,33 @@ class ConventionSeriesDetailView(APIView):
         organization_id: UUID,
         series_id: UUID,
     ) -> Response:
+        """Update the convention series.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        series_id : UUID
+            The convention-series identifier within the organization scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        ConventionSeriesConflict
+            If the operation encounters a convention series conflict condition.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _require_platform_administrator(request)
         _scoped_series_or_not_found(
             organization_id=organization_id,
@@ -261,15 +342,15 @@ class ConventionSeriesDetailView(APIView):
                 organization_id=organization_id,
                 series_id=series_id,
                 expected_profile_version=cast(
-                    int,
+                    "int",
                     values["expected_profile_version"],
                 ),
                 details=ConventionSeriesCreationDetails(
-                    name=cast(str, values["name"]),
-                    description=cast(str, values["description"]),
-                    website_url=cast(str, values["website_url"]),
-                    contact_email=cast(str, values["contact_email"]),
-                    is_active=cast(bool, values["is_active"]),
+                    name=cast("str", values["name"]),
+                    description=cast("str", values["description"]),
+                    website_url=cast("str", values["website_url"]),
+                    contact_email=cast("str", values["contact_email"]),
+                    is_active=cast("bool", values["is_active"]),
                 ),
                 correlation_id=correlation_id,
                 source_channel="api",
@@ -291,7 +372,7 @@ class ConventionSeriesDetailView(APIView):
                 raise ConventionSeriesConflict(detail=detail, code=code) from error
             raise ApiValidationError(
                 cast(
-                    Any,
+                    "Any",
                     {
                         "detail": "The convention-series profile is invalid.",
                         "code": code,

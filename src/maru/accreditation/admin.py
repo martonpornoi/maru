@@ -1,3 +1,5 @@
+"""Provide admin support for the accreditation module."""
+
 from django.contrib import admin
 
 from maru.accreditation.models import (
@@ -15,6 +17,8 @@ class CredentialAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for credential."""
+
     list_display = (
         "public_id",
         "registration",
@@ -30,12 +34,16 @@ class CredentialAdmin(
 
 @admin.register(CredentialEvent)
 class CredentialEventAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):  # type: ignore[type-arg]
+    """Configure Django administration for credential event."""
+
     list_display = ("credential", "kind", "occurred_at", "reason_code")
     list_filter = ("organization_id", "edition_id", "kind", "occurred_at")
 
 
 @admin.register(RelayDevice)
 class RelayDeviceAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
+    """Configure Django administration for relay device."""
+
     list_display = ("code", "label", "edition_id", "enabled", "last_sequence")
     list_filter = ("organization_id", "edition_id", "enabled")
     exclude = ("signing_secret_env_var",)
@@ -46,6 +54,8 @@ class OfflineCredentialManifestAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for offline credential manifest."""
+
     list_display = (
         "edition_id",
         "sequence",
@@ -62,6 +72,8 @@ class OfflineCheckInOperationAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for offline check in operation."""
+
     list_display = (
         "device",
         "device_sequence",

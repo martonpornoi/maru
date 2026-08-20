@@ -14,12 +14,21 @@ from maru.authorization.provenance_backfill import (
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Dry-run the provable-only authority-provenance reconciliation, or append "
         "it atomically during an acknowledged stopped-writer window."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--apply",
             action="store_true",
@@ -40,6 +49,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *_args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *_args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         try:
             report = reconcile_provable_authority_provenance(
                 apply=bool(options["apply"]),

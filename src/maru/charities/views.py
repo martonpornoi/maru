@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import asdict
-from datetime import datetime
 from functools import partial
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 from django.contrib import admin, messages
@@ -75,6 +73,10 @@ from .services import (
     withdraw_charity_partner_media,
     withdraw_charity_selection_publication,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
 
 
 def _actor(request: HttpRequest) -> Account:
@@ -264,6 +266,29 @@ def charity_workspace(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render charity workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     if request.GET:
         return HttpResponse("Unsupported query parameters.", status=400)
     try:
@@ -308,7 +333,9 @@ def charity_workspace(
     partner_rows: list[dict[str, object]] = []
     for partner in partners:
         partner_values = asdict(partner)
-        media_values = cast(tuple[dict[str, object], ...], partner_values.pop("media"))
+        media_values = cast(
+            "tuple[dict[str, object], ...]", partner_values.pop("media")
+        )
         initial = {
             field_name: partner_values[field_name]
             for field_name in ("slug", *_PARTNER_PROFILE_FIELDS, "lifecycle")
@@ -372,6 +399,33 @@ def charity_selection_review_page(
     edition_slug: str,
     selection_id: UUID,
 ) -> HttpResponse:
+    """Render charity selection review page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    selection_id : UUID
+        The identifier of the selection.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     if request.GET:
         return HttpResponse("Unsupported query parameters.", status=400)
     try:
@@ -473,6 +527,24 @@ def create_charity_partner_page(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Create charity partner page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     actor = _actor(request)
     edition = _command_edition(
         organization_slug=organization_slug,
@@ -502,7 +574,7 @@ def create_charity_partner_page(
             slug=str(form.cleaned_data["slug"]),
             profile=profile,
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -521,6 +593,26 @@ def update_charity_partner_page(
     edition_slug: str,
     partner_id: UUID,
 ) -> HttpResponse:
+    """Update charity partner page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    partner_id : UUID
+        The identifier of the partner.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     actor = _actor(request)
     edition = _command_edition(
         organization_slug=organization_slug,
@@ -546,10 +638,10 @@ def update_charity_partner_page(
             actor=actor,
             organization_id=edition.organization_id,
             partner_id=partner_id,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
             changes=changes,
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -568,6 +660,26 @@ def add_charity_media_page(
     edition_slug: str,
     partner_id: UUID,
 ) -> HttpResponse:
+    """Add charity media page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    partner_id : UUID
+        The identifier of the partner.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _command_edition(
         organization_slug=organization_slug,
@@ -598,9 +710,9 @@ def add_charity_media_page(
             license_basis=str(form.cleaned_data["license_basis"]),
             usage_scope=str(form.cleaned_data["usage_scope"]),
             attribution=str(form.cleaned_data["attribution"]),
-            expires_at=cast(datetime | None, form.cleaned_data["expires_at"]),
+            expires_at=cast("datetime | None", form.cleaned_data["expires_at"]),
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -621,6 +733,35 @@ def review_charity_media_page(
     media_id: UUID,
     action: str,
 ) -> HttpResponse:
+    """Render review charity media page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    partner_id : UUID
+        The identifier of the partner.
+    media_id : UUID
+        The identifier of the media.
+    action : str
+        The requested lifecycle action.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     if action not in {"approve", "withdraw"}:
         raise Http404
     actor = _actor(request)
@@ -638,9 +779,9 @@ def review_charity_media_page(
     form = CharityMediaReviewForm(request.POST)
     if request.GET or not form.is_valid():
         return _invalid_form(request, location)
-    expected_version = cast(int, form.cleaned_data["expected_version"])
+    expected_version = cast("int", form.cleaned_data["expected_version"])
     reason = str(form.cleaned_data["reason"])
-    idempotency_key = cast(UUID, form.cleaned_data["idempotency_key"])
+    idempotency_key = cast("UUID", form.cleaned_data["idempotency_key"])
     correlation_id = _correlation_id(request)
     if action == "approve":
         command = partial(
@@ -688,6 +829,24 @@ def propose_charity_selection_page(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Propose charity selection page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _command_edition(
         organization_slug=organization_slug,
@@ -710,8 +869,8 @@ def propose_charity_selection_page(
     )
     if request.GET or not form.is_valid():
         return _invalid_form(request, location)
-    partner = cast(CharityPartner, form.cleaned_data["partner_id"])
-    department = cast(Department, form.cleaned_data["responsible_department_id"])
+    partner = cast("CharityPartner", form.cleaned_data["partner_id"])
+    department = cast("Department", form.cleaned_data["responsible_department_id"])
     return _execute_command(
         request,
         command=lambda: propose_charity_selection(
@@ -721,7 +880,7 @@ def propose_charity_selection_page(
             partner_id=partner.id,
             responsible_department_id=department.id,
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -751,6 +910,33 @@ def charity_selection_command_page(  # noqa: PLR0912
     selection_id: UUID,
     action: str,
 ) -> HttpResponse:
+    """Render charity selection command page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    selection_id : UUID
+        The identifier of the selection.
+    action : str
+        The requested lifecycle action.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     capability_code = _SELECTION_COMMAND_CAPABILITIES.get(action)
     if capability_code is None:
         raise Http404
@@ -789,11 +975,11 @@ def charity_selection_command_page(  # noqa: PLR0912
                 edition_id=edition.id,
                 selection_id=selection_id,
                 expected_version=cast(
-                    int, comment_form.cleaned_data["expected_version"]
+                    "int", comment_form.cleaned_data["expected_version"]
                 ),
                 private_comment=str(comment_form.cleaned_data["private_comment"]),
                 idempotency_key=cast(
-                    UUID, comment_form.cleaned_data["idempotency_key"]
+                    "UUID", comment_form.cleaned_data["idempotency_key"]
                 ),
                 correlation_id=_correlation_id(request),
                 source_channel="browser",
@@ -819,7 +1005,7 @@ def charity_selection_command_page(  # noqa: PLR0912
         if request.GET or not publish_form.is_valid():
             return _invalid_form(request, location)
         media = cast(
-            QuerySet[CharityPartnerMedia],
+            "QuerySet[CharityPartnerMedia]",
             publish_form.cleaned_data["media_ids"],
         )
         return _execute_command(
@@ -830,12 +1016,12 @@ def charity_selection_command_page(  # noqa: PLR0912
                 edition_id=edition.id,
                 selection_id=selection_id,
                 expected_version=cast(
-                    int, publish_form.cleaned_data["expected_version"]
+                    "int", publish_form.cleaned_data["expected_version"]
                 ),
                 media_ids=tuple(item.id for item in media),
                 reason=str(publish_form.cleaned_data["reason"]),
                 idempotency_key=cast(
-                    UUID, publish_form.cleaned_data["idempotency_key"]
+                    "UUID", publish_form.cleaned_data["idempotency_key"]
                 ),
                 correlation_id=_correlation_id(request),
                 source_channel="browser",
@@ -848,9 +1034,9 @@ def charity_selection_command_page(  # noqa: PLR0912
     decision_form = CharitySelectionDecisionForm(request.POST)
     if request.GET or not decision_form.is_valid():
         return _invalid_form(request, location)
-    expected_version = cast(int, decision_form.cleaned_data["expected_version"])
+    expected_version = cast("int", decision_form.cleaned_data["expected_version"])
     reason = str(decision_form.cleaned_data["reason"])
-    idempotency_key = cast(UUID, decision_form.cleaned_data["idempotency_key"])
+    idempotency_key = cast("UUID", decision_form.cleaned_data["idempotency_key"])
     correlation_id = _correlation_id(request)
     if action == "submit":
         command = partial(

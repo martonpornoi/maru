@@ -181,8 +181,13 @@ def _flag(region_code: str) -> str:
 
 @lru_cache(maxsize=1)
 def language_labels() -> dict[str, str]:
-    """Return ISO 639-1 codes with stable English labels."""
+    """Return ISO 639-1 codes with stable English labels.
 
+    Returns
+    -------
+    dict[str, str]
+        A mapping containing the resolved language labels data.
+    """
     return {
         str(language.alpha_2).lower(): str(language.name)
         for language in pycountry.languages
@@ -192,8 +197,13 @@ def language_labels() -> dict[str, str]:
 
 @lru_cache(maxsize=1)
 def grouped_language_choices() -> tuple[tuple[str, tuple[tuple[str, str], ...]], ...]:
-    """Group language suggestions for discovery without changing ISO meaning."""
+    """Group language suggestions for discovery without changing ISO meaning.
 
+    Returns
+    -------
+    tuple[tuple[str, tuple[tuple[str, str], ...]], ...]
+        The matching grouped language choices records in deterministic order.
+    """
     labels = language_labels()
     groups: list[tuple[str, tuple[tuple[str, str], ...]]] = [
         (
@@ -225,6 +235,18 @@ def grouped_language_choices() -> tuple[tuple[str, tuple[tuple[str, str], ...]],
 
 
 def validate_language_code_list(value: object) -> None:
+    """Validate language code list.
+
+    Parameters
+    ----------
+    value : object
+        The untrusted value to normalize against the documented contract.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not isinstance(value, list) or not value:
         raise ValidationError(
             "Choose at least one default language.",
@@ -245,6 +267,13 @@ def validate_language_code_list(value: object) -> None:
 
 
 def country_choices() -> tuple[tuple[str, str], ...]:
+    """Return localized country choices in stable display order.
+
+    Returns
+    -------
+    tuple[tuple[str, str], ...]
+        ISO country codes paired with localized display labels.
+    """
     return tuple(
         (
             str(country.alpha_2),
@@ -255,6 +284,18 @@ def country_choices() -> tuple[tuple[str, str], ...]:
 
 
 def validate_country_code(value: str) -> None:
+    """Validate country code.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if value and pycountry.countries.get(alpha_2=value.upper()) is None:
         raise ValidationError(
             "Choose a valid ISO 3166-1 country.",
@@ -288,6 +329,13 @@ def grouped_time_zone_choices() -> tuple[
     tuple[str, tuple[tuple[str, str], ...]],
     ...,
 ]:
+    """Return grouped time zone choices.
+
+    Returns
+    -------
+    tuple[tuple[str, tuple[tuple[str, str], ...]], ...]
+        Time-zone choices grouped by region and ordered by UTC offset.
+    """
     groups: list[tuple[str, tuple[tuple[str, str], ...]]] = [
         ("Universal", (("UTC", "(UTC+00:00) Coordinated Universal Time — UTC"),))
     ]
@@ -316,6 +364,13 @@ def grouped_time_zone_choices() -> tuple[
 
 @lru_cache(maxsize=1)
 def phone_region_choices() -> tuple[tuple[str, str], ...]:
+    """Return phone region choices.
+
+    Returns
+    -------
+    tuple[tuple[str, str], ...]
+        Supported calling regions paired with localized display labels.
+    """
     choices = []
     countries = {
         str(country.alpha_2): str(country.name) for country in pycountry.countries
@@ -336,6 +391,30 @@ def phone_region_choices() -> tuple[tuple[str, str], ...]:
 
 
 def parse_phone_number(*, region_code: str, national_number: str) -> str:
+    """Normalize a regional telephone number to E.164.
+
+    Parameters
+    ----------
+    region_code : str
+        The stable region code from the relevant closed catalog.
+    national_number : str
+        The subscriber number as entered for the selected region.
+
+    Returns
+    -------
+    str
+        The canonical telephone number in E.164 format.
+
+    Raises
+    ------
+    ValidationError
+        If the number cannot be parsed or is impossible for ``region_code``.
+
+    Examples
+    --------
+    >>> parse_phone_number(region_code="GB", national_number="020 7946 0958")
+    '+442079460958'
+    """
     try:
         parsed = phonenumbers.parse(national_number, region_code)
     except phonenumbers.NumberParseException as error:
@@ -352,6 +431,29 @@ def parse_phone_number(*, region_code: str, national_number: str) -> str:
 
 
 def split_phone_number(value: str) -> tuple[str, str]:
+    """Split an E.164 number into region and national components.
+
+    Parameters
+    ----------
+    value : str
+        The stored E.164 number, or a legacy value that needs correction.
+
+    Returns
+    -------
+    tuple[str, str]
+        The inferred region code and national subscriber number.
+
+    Notes
+    -----
+    An invalid legacy value is returned unchanged with the default region. A
+    bound form can therefore show the original input for correction instead of
+    silently discarding it.
+
+    Examples
+    --------
+    >>> split_phone_number("+442079460958")
+    ('GB', '2079460958')
+    """
     if not value:
         return DEFAULT_PHONE_REGION, ""
     try:

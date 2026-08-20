@@ -7,6 +7,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -40,8 +41,10 @@ from maru.catalog.models import (
 from maru.effects.models import DomainEvent
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.identity.queries import account_display_labels
+
+if TYPE_CHECKING:
+    from maru.identity.models import Account
 
 MANAGE_CATALOG = "catalog.manage"
 MANAGE_STOCK = "catalog.manage_stock"
@@ -58,6 +61,18 @@ PAYMENT_WINDOW = timedelta(minutes=30)
 
 @dataclass(frozen=True, slots=True)
 class CatalogCommandResult:
+    """Describe catalog command result.
+
+    Attributes
+    ----------
+    target_id
+        The target identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     target_id: UUID
     resulting_version: int
     replayed: bool
@@ -65,12 +80,36 @@ class CatalogCommandResult:
 
 @dataclass(frozen=True, slots=True)
 class OrderLineRequest:
+    """Describe order line request.
+
+    Attributes
+    ----------
+    variant_id
+        The variant identifier within the requested scope.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    """
+
     variant_id: UUID
     quantity: int
 
 
 @dataclass(frozen=True, slots=True)
 class CatalogActivity:
+    """Describe catalog activity.
+
+    Attributes
+    ----------
+    action
+        The stable action code describing the requested transition.
+    actor_label
+        The human-readable actor label shown to authorized readers.
+    occurred_at
+        The timezone-aware timestamp for occurred.
+    target_count
+        The bounded number of target records.
+    """
+
     action: str
     actor_label: str
     occurred_at: datetime
@@ -119,8 +158,19 @@ def _authorize(
 def authorize_catalog_edition_api_scope(
     *, actor: Account, organization_id: UUID, edition_id: UUID, capability_code: str
 ) -> None:
-    """Authorize an exact edition route before an API adapter parses input."""
+    """Authorize an exact edition route before an API adapter parses input.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    capability_code : str
+        The stable capability code required by the operation.
+    """
     _authorize(
         actor=actor,
         capability_code=capability_code,
@@ -134,8 +184,17 @@ def authorize_catalog_edition_api_scope(
 def authorize_catalog_self_api_scope(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> None:
-    """Authorize an exact attendee catalog route before parsing input."""
+    """Authorize an exact attendee catalog route before parsing input.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    """
     _authorize(
         actor=actor,
         capability_code=ORDER_SELF,
@@ -150,8 +209,19 @@ def authorize_catalog_self_api_scope(
 def authorize_catalog_order_api_scope(
     *, actor: Account, organization_id: UUID, edition_id: UUID, order_id: UUID
 ) -> None:
-    """Authorize exact order ownership without loading order line projections."""
+    """Authorize exact order ownership without loading order line projections.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    order_id : UUID
+        The order identifier within the requested scope.
+    """
     order = CatalogOrder.objects.filter(
         id=order_id,
         organization_id=organization_id,
@@ -310,6 +380,37 @@ def create_catalog(
     correlation_id: UUID,
     source_channel: str = "api",
 ) -> CatalogCommandResult:
+    """Create catalog.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    currency : str
+        The ISO currency code.
+    actor : Account
+        The authenticated person performing the operation.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CatalogCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _authorize(
         actor=actor,
         capability_code=MANAGE_CATALOG,
@@ -420,6 +521,59 @@ def add_product(
     per_order_limit: int = 10,
     source_channel: str = "api",
 ) -> CatalogCommandResult:
+    """Add product.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    actor : Account
+        The authenticated person performing the operation.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    reason : str
+        The operator-supplied reason for the operation.
+    code : str
+        The stable machine-readable code.
+    kind : str
+        The closed kind code.
+    name : str
+        The human-readable name.
+    description : str, default=''
+        The human-readable description.
+    beneficiary : str, default=CatalogProduct.Beneficiary.CONVENTION
+        The beneficiary applied within the audited domain transition.
+    charity_selection_id : UUID | None, default=None
+        The identifier of the charity selection.
+    sale_opens_at : datetime | None, default=None
+        The timezone-aware timestamp for sale opens.
+    sale_closes_at : datetime | None, default=None
+        The timezone-aware timestamp for sale closes.
+    preorder_allowed : bool, default=False
+        The preorder allowed applied within the audited domain transition.
+    fulfilment_mode : str, default=CatalogProduct.Fulfilment.PICKUP
+        The closed fulfilment mode discriminator defined by the domain catalog.
+    per_order_limit : int, default=10
+        The per order limit applied within the audited domain transition.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CatalogCommandResult
+        The catalog command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     target = resolve_edition_target(
         organization_id=organization_id, edition_id=edition_id
     )
@@ -532,6 +686,49 @@ def add_variant(
     stock_ceiling: int | None = None,
     source_channel: str = "api",
 ) -> CatalogCommandResult:
+    """Add variant.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    product_id : UUID
+        The identifier of the product.
+    actor : Account
+        The authenticated person performing the operation.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    reason : str
+        The operator-supplied reason for the operation.
+    sku : str
+        The sku applied within the audited domain transition.
+    name : str
+        The human-readable name.
+    price_minor : int
+        The price in minor currency units.
+    initial_stock : int | None, default=None
+        The initial stock applied within the audited domain transition.
+    stock_ceiling : int | None, default=None
+        The non-negative hard limit or requested amount for stock ceiling.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CatalogCommandResult
+        The catalog command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _authorize(
         actor=actor,
         capability_code=MANAGE_CATALOG,
@@ -632,6 +829,37 @@ def activate_catalog(
     reason: str,
     source_channel: str = "api",
 ) -> CatalogCommandResult:
+    """Activate catalog.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    actor : Account
+        The authenticated person performing the operation.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    reason : str
+        The operator-supplied reason for the operation.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CatalogCommandResult
+        The catalog command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _authorize(
         actor=actor,
         capability_code=MANAGE_CATALOG,
@@ -713,8 +941,18 @@ def activate_catalog(
 
 
 def effective_stock(variant: CatalogVariant) -> int | None:
-    """Return governed physical stock, or ``None`` for unlimited variants."""
+    """Return governed physical stock, or ``None`` for unlimited variants.
 
+    Parameters
+    ----------
+    variant : CatalogVariant
+        The variant applied within the audited domain transition.
+
+    Returns
+    -------
+    int | None
+        The resolved int | None for effective stock.
+    """
     if variant.initial_stock is None:
         return None
     latest = (
@@ -727,6 +965,18 @@ def effective_stock(variant: CatalogVariant) -> int | None:
 
 
 def committed_quantity(variant: CatalogVariant) -> int:
+    """Return committed quantity.
+
+    Parameters
+    ----------
+    variant : CatalogVariant
+        The variant applied within the audited domain transition.
+
+    Returns
+    -------
+    int
+        The effective numeric value for committed quantity.
+    """
     value = CatalogOrderLine.objects.filter(
         variant=variant,
         order__status__in=(
@@ -738,6 +988,18 @@ def committed_quantity(variant: CatalogVariant) -> int:
 
 
 def available_stock(variant: CatalogVariant) -> int | None:
+    """Return available stock.
+
+    Parameters
+    ----------
+    variant : CatalogVariant
+        The variant applied within the audited domain transition.
+
+    Returns
+    -------
+    int | None
+        The available stock.
+    """
     stock = effective_stock(variant)
     return None if stock is None else max(0, stock - committed_quantity(variant))
 
@@ -755,6 +1017,41 @@ def adjust_stock(
     reason: str,
     source_channel: str = "api",
 ) -> CatalogCommandResult:
+    """Adjust stock.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    variant_id : UUID
+        The identifier of the variant.
+    new_stock : int
+        The new stock applied within the audited domain transition.
+    actor : Account
+        The authenticated person performing the operation.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    reason : str
+        The operator-supplied reason for the operation.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CatalogCommandResult
+        The catalog command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _authorize(
         actor=actor,
         capability_code=MANAGE_STOCK,
@@ -888,6 +1185,39 @@ def place_order(
     source_channel: str = "api",
     now: datetime | None = None,
 ) -> CatalogCommandResult:
+    """Place order.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    actor : Account
+        The authenticated person performing the operation.
+    lines : tuple[OrderLineRequest, ...]
+        The ordered line items to process.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    CatalogCommandResult
+        The catalog command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _authorize(
         actor=actor,
         capability_code=ORDER_SELF,
@@ -1072,6 +1402,41 @@ def create_payment_intent(
     correlation_id: UUID,
     source_channel: str = "api",
 ) -> CatalogCommandResult:
+    """Create payment intent.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    order_id : UUID
+        The identifier of the order.
+    provider : str
+        The external-service adapter used without making it authoritative.
+    actor : Account
+        The authenticated person performing the operation.
+    expected_catalog_version : int
+        The catalog version required for optimistic concurrency.
+    expected_order_version : int
+        The order version required for optimistic concurrency.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CatalogCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     owned = CatalogOrder.objects.filter(
         id=order_id,
         organization_id=organization_id,
@@ -1208,8 +1573,24 @@ def _payment_authorization(
 def authorize_catalog_payment_api_scope(
     *, actor: Account, organization_id: UUID, edition_id: UUID, intent_id: UUID
 ) -> None:
-    """Authorize an exact payment intent without exposing order or payment data."""
+    """Authorize an exact payment intent without exposing order or payment data.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    intent_id : UUID
+        The intent identifier within the requested scope.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     intent = (
         CatalogPaymentIntent.objects.select_related("order")
         .filter(
@@ -1243,6 +1624,49 @@ def reconcile_payment(
     source_channel: str = "api",
     now: datetime | None = None,
 ) -> CatalogCommandResult:
+    """Reconcile payment.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    intent_id : UUID
+        The identifier of the intent.
+    provider_event_id : str
+        The identifier of the provider event.
+    result : str
+        The result applied within the audited domain transition.
+    actor : Account
+        The authenticated person performing the operation.
+    expected_catalog_version : int
+        The catalog version required for optimistic concurrency.
+    expected_order_version : int
+        The order version required for optimistic concurrency.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    reason : str, default='provider reconciliation'
+        The operator-supplied reason for the operation.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    CatalogCommandResult
+        The catalog command result.
+
+    Raises
+    ------
+    ObjectDoesNotExist
+        If a required scoped record does not exist.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     unresolved = (
         CatalogPaymentIntent.objects.select_related("order")
         .filter(
@@ -1401,6 +1825,34 @@ def complete_demo_payment(
     correlation_id: UUID,
     source_channel: str = "web",
 ) -> CatalogCommandResult:
+    """Complete demo payment.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    order_id : UUID
+        The identifier of the order.
+    actor : Account
+        The authenticated person performing the operation.
+    expected_catalog_version : int
+        The catalog version required for optimistic concurrency.
+    expected_order_version : int
+        The order version required for optimistic concurrency.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CatalogCommandResult
+        The catalog command result.
+    """
     create_key = uuid5(NAMESPACE_URL, f"maru:catalog:demo:create:{idempotency_key}")
     reconcile_key = uuid5(
         NAMESPACE_URL, f"maru:catalog:demo:reconcile:{idempotency_key}"
@@ -1461,6 +1913,28 @@ def catalog_activity(
     source_channel: str = "api",
     limit: int = 50,
 ) -> tuple[CatalogActivity, ...]:
+    """Return catalog activity.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    actor : Account
+        The authenticated person performing the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    source_channel : str, default='api'
+        The trusted channel that initiated the operation.
+    limit : int, default=50
+        The maximum number of records to process.
+
+    Returns
+    -------
+    tuple[CatalogActivity, ...]
+        The authorized catalog activity records in deterministic order.
+    """
     target = resolve_edition_target(
         organization_id=organization_id, edition_id=edition_id
     )
@@ -1514,6 +1988,24 @@ def available_products_for_actor(
     actor: Account,
     now: datetime | None = None,
 ) -> tuple[CatalogProduct, ...]:
+    """Return available products for actor.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    actor : Account
+        The authenticated person performing the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    tuple[CatalogProduct, ...]
+        The available products for actor.
+    """
     _authorize(
         actor=actor,
         capability_code=ORDER_SELF,
@@ -1547,8 +2039,21 @@ def available_products_for_actor(
 def available_catalogs_for_actor(
     *, actor: Account, limit: int = 50
 ) -> tuple[EditionCatalog, ...]:
-    """Return a bounded attendee-facing index of active edition catalogs."""
+    """Return a bounded attendee-facing index of active edition catalogs.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    limit : int, default=50
+        The maximum number of records to return.
+
+    Returns
+    -------
+    tuple[EditionCatalog, ...]
+        The matching available catalogs for actor records in deterministic
+        order.
+    """
     bounded_limit = min(max(int(limit), 1), 100)
     scope_rows = (
         EditionCatalog.objects.filter(status=EditionCatalog.Status.ACTIVE)
@@ -1581,6 +2086,22 @@ def available_catalogs_for_actor(
 def own_orders(
     *, organization_id: UUID, edition_id: UUID, actor: Account
 ) -> tuple[CatalogOrder, ...]:
+    """Return own orders.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    actor : Account
+        The authenticated person performing the operation.
+
+    Returns
+    -------
+    tuple[CatalogOrder, ...]
+        The authorized own orders records in deterministic order.
+    """
     _authorize(
         actor=actor,
         capability_code=VIEW_SELF,

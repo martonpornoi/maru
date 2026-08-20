@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import NoReturn
-from uuid import UUID
+from typing import TYPE_CHECKING, NoReturn
 
 from django.core.exceptions import ValidationError
 
@@ -16,10 +15,23 @@ from maru.organizations.models import ConventionSeries, Organization
 from maru.workforce.models import Department
 from maru.workforce.writer_boundary import lock_edition_structure_mutex
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 
 @dataclass(frozen=True, slots=True)
 class LockedWorkforceEditionWriteScope:
-    """Identifier-only proof of one locked organization/series/edition chain."""
+    """Identifier-only proof of one locked organization/series/edition chain.
+
+    Attributes
+    ----------
+    organization_id
+        The organization identifier that owns the requested resource.
+    series_id
+        The convention-series identifier within the organization scope.
+    edition_id
+        The event edition identifier that scopes the operation.
+    """
 
     organization_id: UUID
     series_id: UUID
@@ -46,8 +58,22 @@ def lock_workforce_edition_write_scope(
     PositionAssignment row lock or performing any corresponding write.  The
     returned proof contains no labels and is valid only for the surrounding
     transaction.
-    """
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    LockedWorkforceEditionWriteScope
+        The LockedWorkforceEditionWriteScope produced by lock workforce edition
+        write scope.
+    """
     lock_retired_department_authority_boundaries()
 
     locked_organization_id = (
@@ -100,8 +126,20 @@ def lock_active_department_write_target(
     scope: LockedWorkforceEditionWriteScope,
     department_id: UUID,
 ) -> None:
-    """Lock and recheck a current Department before a narrower workforce row."""
+    """Lock and recheck a current Department before a narrower workforce row.
 
+    Parameters
+    ----------
+    scope : LockedWorkforceEditionWriteScope
+        The exact tenant and resource scope of the operation.
+    department_id : UUID
+        The department identifier within the requested scope.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     department_row = (
         Department.objects.select_for_update()
         .filter(id=department_id)

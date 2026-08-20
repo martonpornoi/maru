@@ -12,9 +12,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from django.db import transaction
 from django.utils import timezone
@@ -39,6 +37,10 @@ from maru.organizations.representation import (
     EXECUTIVE_BOARD_ROLE_CODE,
     MINIMUM_EXECUTIVE_BOARD_CONTROLLERS,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
 
 BACKFILL_REPORT_SCHEMA_VERSION = 1
 
@@ -138,8 +140,18 @@ def _values(
 
 
 def _load_state(*, lock: bool) -> _State:
-    """Load one identifier-bearing snapshot; identifiers never leave this module."""
+    """Load one identifier-bearing snapshot; identifiers never leave this module.
 
+    Parameters
+    ----------
+    lock : bool
+        The database lock or mutex protecting this transition.
+
+    Returns
+    -------
+    _State
+        The resolved _State for load state.
+    """
     # Apply mode acknowledges stopped writers and takes locks in this fixed order.
     # The broad locks are deliberate: reconciliation must not mix two authority
     # graph versions, and this command is not a live-traffic operation.
@@ -826,8 +838,23 @@ def _existing_matches_board_write(
     ordinal: int,
     state: _State,
 ) -> bool:
-    """Require the stored special controls to match the deterministic plan."""
+    """Require the stored special controls to match the deterministic plan.
 
+    Parameters
+    ----------
+    write : _BoardWrite
+        The write evaluated while existing matches board write.
+    ordinal : int
+        The deterministic display position within the owning collection.
+    state : _State
+        The lifecycle state to evaluate or expose.
+
+    Returns
+    -------
+    bool
+        `True` when Require the stored special controls to match the
+        deterministic plan; otherwise `False`.
+    """
     issuance = state.issuances.get(ordinal)
     if issuance is None or issuance["evaluated_at"] != write.evaluated_at:
         return False
@@ -1084,8 +1111,18 @@ def _build_plan(*, state: _State, mode: str, at: datetime) -> _Plan:
 
 
 def _append_board_write(board_write: _BoardWrite) -> AuthorityIssuance:
-    """Append one already-validated current or historical Board target."""
+    """Append one already-validated current or historical Board target.
 
+    Parameters
+    ----------
+    board_write : _BoardWrite
+        The board write evaluated while append board write.
+
+    Returns
+    -------
+    AuthorityIssuance
+        The resolved AuthorityIssuance for append board write.
+    """
     target: RoleBundle | RoleAssignment
     if board_write.target_kind == "executive_board_bundle":
         target = RoleBundle.objects.get(pk=board_write.target_id)
@@ -1154,8 +1191,30 @@ def reconcile_provable_authority_provenance(
     The returned structure contains only stable category counts.  Target and
     evidence identifiers remain request-local and are never included in the
     report or in command errors.
-    """
 
+    Parameters
+    ----------
+    apply : bool, default=False
+        The apply evaluated while reconcile provable authority provenance.
+    acknowledge_writers_stopped : bool, default=False
+        Whether the operator confirmed that every legacy writer is stopped.
+
+    Returns
+    -------
+    dict[str, object]
+        A mapping containing the resolved reconcile provable authority
+        provenance data.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    TypeError
+        If the caller supplies an object of an unsupported type.
+    WritersStoppedAcknowledgementRequiredError
+        If the operation encounters a writers stopped acknowledgement required
+        condition.
+    """
     if apply and not acknowledge_writers_stopped:
         raise WritersStoppedAcknowledgementRequiredError(
             "Applying provenance reconciliation requires explicit stopped-writer "

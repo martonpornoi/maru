@@ -132,11 +132,29 @@ def test_optional_closed_types_use_none_as_the_clear_value(field_type: str) -> N
     assert form.cleaned_data["value"] is None
 
 
-def test_signed_integer_and_multiple_choices_reject_aliases_and_duplicates() -> None:
-    integer = ProfileExtensionValueForm(
-        _data(value="-0"),
+@pytest.mark.parametrize(
+    "alias",
+    [
+        "-0",
+        "+1",
+        "01",
+        "-01",
+        "1.0",
+        "1111111111x",
+        "\N{ARABIC-INDIC DIGIT ONE}",
+    ],
+)
+def test_signed_integer_rejects_noncanonical_input_without_regex(alias: str) -> None:
+    form = ProfileExtensionValueForm(
+        _data(value=alias),
         profile_field=_field(field_type=QuestionFieldType.INTEGER),
     )
+
+    assert not form.is_valid()
+    assert form.errors.as_data()["value"][0].code == "invalid"
+
+
+def test_multiple_choices_reject_duplicate_values() -> None:
     multiple = ProfileExtensionValueForm(
         _data(value=["alpha", "alpha"]),
         profile_field=_field(
@@ -145,7 +163,5 @@ def test_signed_integer_and_multiple_choices_reject_aliases_and_duplicates() -> 
         ),
     )
 
-    assert not integer.is_valid()
-    assert "value" in integer.errors
     assert not multiple.is_valid()
     assert "value" in multiple.errors

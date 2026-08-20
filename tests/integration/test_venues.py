@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta
+from typing import TYPE_CHECKING
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -20,8 +21,6 @@ from maru.authorization.provenance_readiness import (
     _function_definition_fingerprint,
 )
 from maru.effects.models import DomainEvent, OutboxMessage
-from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.venues import queries as venue_queries
 from maru.venues.authorization import resolve_edition_space_target
 from maru.venues.bindings import edition_space_binding_id
@@ -55,7 +54,6 @@ from maru.venues.services import (
     set_edition_space_availability,
     update_venue_property,
 )
-from maru.workforce.models import Department
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
@@ -63,6 +61,11 @@ from tests.factories import (
     ParticipationFactory,
 )
 from tests.workforce_helpers import create_department_for_test
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
+    from maru.workforce.models import Department
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

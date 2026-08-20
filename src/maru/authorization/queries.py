@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from typing import cast
-from uuid import UUID
+from typing import TYPE_CHECKING, cast
 
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -16,6 +14,10 @@ from maru.authorization.models import (
     ScopedResourceBinding,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
+
 
 @dataclass(frozen=True, slots=True)
 class DepartmentAuthorityDependencies:
@@ -25,6 +27,23 @@ class DepartmentAuthorityDependencies:
     checks. Effective counts describe access at one instant; current-or-future
     counts additionally include scheduled, unclosed authority and support the
     stricter retirement check.
+
+    Attributes
+    ----------
+    resource_binding_count
+        The bounded number of resource binding records.
+    capability_grant_reference_count
+        The bounded number of capability grant reference records.
+    effective_capability_grant_count
+        The bounded number of effective capability grant records.
+    current_or_future_capability_grant_count
+        The bounded number of current or future capability grant records.
+    role_assignment_reference_count
+        The bounded number of role assignment reference records.
+    effective_role_assignment_count
+        The bounded number of effective role assignment records.
+    current_or_future_role_assignment_count
+        The bounded number of current or future role assignment records.
     """
 
     resource_binding_count: int
@@ -37,26 +56,68 @@ class DepartmentAuthorityDependencies:
 
     @property
     def has_resource_binding_history(self) -> bool:
+        """Return whether resource binding history.
+
+        Returns
+        -------
+        bool
+            `True` when resource binding history; otherwise `False`.
+        """
         return self.resource_binding_count > 0
 
     @property
     def has_effective_capability_grant(self) -> bool:
+        """Return whether effective capability grant.
+
+        Returns
+        -------
+        bool
+            `True` when effective capability grant; otherwise `False`.
+        """
         return self.effective_capability_grant_count > 0
 
     @property
     def has_effective_role_assignment(self) -> bool:
+        """Return whether effective role assignment.
+
+        Returns
+        -------
+        bool
+            `True` when effective role assignment; otherwise `False`.
+        """
         return self.effective_role_assignment_count > 0
 
     @property
     def has_current_or_future_capability_grant(self) -> bool:
+        """Return whether current or future capability grant.
+
+        Returns
+        -------
+        bool
+            `True` when current or future capability grant; otherwise `False`.
+        """
         return self.current_or_future_capability_grant_count > 0
 
     @property
     def has_current_or_future_role_assignment(self) -> bool:
+        """Return whether current or future role assignment.
+
+        Returns
+        -------
+        bool
+            `True` when current or future role assignment; otherwise `False`.
+        """
         return self.current_or_future_role_assignment_count > 0
 
     @property
     def has_historical_authority_reference(self) -> bool:
+        """Return whether historical authority reference.
+
+        Returns
+        -------
+        bool
+            `True` when historical authority reference; otherwise `False`.
+        """
         return (
             self.capability_grant_reference_count > 0
             or self.role_assignment_reference_count > 0
@@ -72,8 +133,18 @@ def _effective_at(at: datetime) -> Q:
 
 
 def _current_or_future_at(at: datetime) -> Q:
-    """Select unclosed authority that is effective now or scheduled later."""
+    """Select unclosed authority that is effective now or scheduled later.
 
+    Parameters
+    ----------
+    at : datetime
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    Q
+        A Django query predicate for current or future at.
+    """
     return (Q(expires_at__isnull=True) | Q(expires_at__gt=at)) & Q(
         revoked_at__isnull=True
     )
@@ -92,8 +163,29 @@ def department_authority_dependencies(
     intentionally queries authorization-owned foreign-key identifiers only;
     it neither imports workforce models nor returns labels, people, reasons,
     capability codes, or authority provenance.
-    """
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    department_id : UUID
+        The department identifier within the requested scope.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    DepartmentAuthorityDependencies
+        The DepartmentAuthorityDependencies produced by department authority
+        dependencies.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     evaluation_time = at if at is not None else timezone.now()
     if not timezone.is_aware(evaluation_time):
         raise ValueError("The authority dependency evaluation time must be aware.")
@@ -125,25 +217,25 @@ def department_authority_dependencies(
 
     return DepartmentAuthorityDependencies(
         resource_binding_count=resource_binding_count,
-        capability_grant_reference_count=cast(int, grant_counts["reference_count"]),
+        capability_grant_reference_count=cast("int", grant_counts["reference_count"]),
         effective_capability_grant_count=cast(
-            int,
+            "int",
             grant_counts["effective_count"],
         ),
         current_or_future_capability_grant_count=cast(
-            int,
+            "int",
             grant_counts["current_or_future_count"],
         ),
         role_assignment_reference_count=cast(
-            int,
+            "int",
             assignment_counts["reference_count"],
         ),
         effective_role_assignment_count=cast(
-            int,
+            "int",
             assignment_counts["effective_count"],
         ),
         current_or_future_role_assignment_count=cast(
-            int,
+            "int",
             assignment_counts["current_or_future_count"],
         ),
     )
@@ -160,8 +252,19 @@ def edition_resource_binding_count(
     that an edition has no workforce authority targets before its first
     structure aggregate is established.  It returns no resource identifiers,
     labels, principals, or authority detail.
-    """
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    int
+        The computed number of edition resource binding records.
+    """
     return ScopedResourceBinding.objects.filter(
         organization_id=organization_id,
         edition_id=edition_id,

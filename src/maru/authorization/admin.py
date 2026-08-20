@@ -25,6 +25,20 @@ class EditionApplicableAuthorityAdmin(EditionContextAdmin):
         request: HttpRequest,
         edition: EventEdition,
     ) -> Q:
+        """Return edition context q.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        edition : EventEdition
+            The event edition that scopes the operation.
+
+        Returns
+        -------
+        Q
+            A Django query predicate for edition context q.
+        """
         del request
         return Q(organization_id=edition.organization_id) & (
             Q(edition_id=edition.id) | Q(edition__isnull=True)
@@ -66,6 +80,8 @@ class CapabilityGrantAdmin(
     ReadOnlyAdminMixin,
     EditionApplicableAuthorityAdmin,
 ):
+    """Configure Django administration for capability grant."""
+
     list_display = (
         "principal",
         "capability_code",
@@ -168,12 +184,36 @@ class CapabilityGrantAdmin(
 
     @admin.display(description="Scope", ordering="edition__name")
     def scope(self, obj: CapabilityGrant) -> str:
+        """Return scope.
+
+        Parameters
+        ----------
+        obj : CapabilityGrant
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for scope.
+        """
         if obj.edition is not None:
             return obj.edition.name
         return f"{obj.organization.name} (organization-wide)"
 
     @admin.display(description="State", ordering="revoked_at")
     def state(self, obj: CapabilityGrant) -> str:
+        """Return state.
+
+        Parameters
+        ----------
+        obj : CapabilityGrant
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for state.
+        """
         return _authority_state(
             effective_from=obj.effective_from,
             expires_at=obj.expires_at,
@@ -182,6 +222,18 @@ class CapabilityGrantAdmin(
 
     @admin.display(description="Term", ordering="effective_from")
     def term(self, obj: CapabilityGrant) -> str:
+        """Return term.
+
+        Parameters
+        ----------
+        obj : CapabilityGrant
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for term.
+        """
         return format_html(
             '<span title="{}">{}</span>',
             _full_term_label(
@@ -196,6 +248,18 @@ class CapabilityGrantAdmin(
 
     @admin.display(boolean=True, description="Delegated")
     def is_delegated(self, obj: CapabilityGrant) -> bool:
+        """Return whether delegated.
+
+        Parameters
+        ----------
+        obj : CapabilityGrant
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when delegated; otherwise `False`.
+        """
         return obj.delegated_from_id is not None
 
 
@@ -204,6 +268,8 @@ class RoleBundleAdmin(
     ReadOnlyAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for role bundle."""
+
     edition_context_lookup = "organization_id"
     edition_context_value_attribute = "organization_id"
     list_display = (
@@ -262,8 +328,20 @@ class RoleBundleAdmin(
     )
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[RoleBundle]:
+        """Return the permission-scoped queryset.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        QuerySet[RoleBundle]
+            The matching get queryset records in deterministic order.
+        """
         queryset = cast(
-            QuerySet[RoleBundle],
+            "QuerySet[RoleBundle]",
             super().get_queryset(request),
         )
         return queryset.select_related(
@@ -274,6 +352,18 @@ class RoleBundleAdmin(
 
     @admin.display(description="Capabilities")
     def capabilities(self, obj: RoleBundle) -> str:
+        """Return capabilities.
+
+        Parameters
+        ----------
+        obj : RoleBundle
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for capabilities.
+        """
         full_label = ", ".join(obj.capability_codes)
         visible_codes = obj.capability_codes[:VISIBLE_CAPABILITY_COUNT]
         compact_label = ", ".join(visible_codes)
@@ -288,6 +378,18 @@ class RoleBundleAdmin(
 
     @admin.display(ordering="_assignment_count", description="Assignments")
     def assignment_count(self, obj: RoleBundle) -> int:
+        """Return assignment count.
+
+        Parameters
+        ----------
+        obj : RoleBundle
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        int
+            The computed number of assignment records.
+        """
         return int(getattr(obj, "_assignment_count", 0))
 
 
@@ -296,6 +398,8 @@ class RoleAssignmentAdmin(
     ReadOnlyAdminMixin,
     EditionApplicableAuthorityAdmin,
 ):
+    """Configure Django administration for role assignment."""
+
     list_display = (
         "principal",
         "role",
@@ -396,16 +500,52 @@ class RoleAssignmentAdmin(
 
     @admin.display(description="Scope", ordering="edition__name")
     def scope(self, obj: RoleAssignment) -> str:
+        """Return scope.
+
+        Parameters
+        ----------
+        obj : RoleAssignment
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for scope.
+        """
         if obj.edition is not None:
             return obj.edition.name
         return f"{obj.organization.name} (organization-wide)"
 
     @admin.display(description="Role", ordering="role_bundle__name")
     def role(self, obj: RoleAssignment) -> str:
+        """Return role.
+
+        Parameters
+        ----------
+        obj : RoleAssignment
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for role.
+        """
         return f"{obj.role_bundle.name} v{obj.role_bundle.version}"
 
     @admin.display(description="State", ordering="revoked_at")
     def state(self, obj: RoleAssignment) -> str:
+        """Return state.
+
+        Parameters
+        ----------
+        obj : RoleAssignment
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for state.
+        """
         return _authority_state(
             effective_from=obj.effective_from,
             expires_at=obj.expires_at,
@@ -414,6 +554,18 @@ class RoleAssignmentAdmin(
 
     @admin.display(description="Term", ordering="effective_from")
     def term(self, obj: RoleAssignment) -> str:
+        """Return term.
+
+        Parameters
+        ----------
+        obj : RoleAssignment
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for term.
+        """
         return format_html(
             '<span title="{}">{}</span>',
             _full_term_label(

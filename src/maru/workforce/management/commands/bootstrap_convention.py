@@ -14,6 +14,8 @@ from maru.workforce.bootstrap import bootstrap_organization_workforce
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Recovery-only one-time bootstrap for an empty active organization's "
         "Draft or Preparing edition, convention chair, Page 9 leadership "
@@ -21,6 +23,13 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument("--organization", required=True, help="Organization slug.")
         parser.add_argument(
             "--edition",
@@ -45,6 +54,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         _ = args
         slug = str(options["organization"]).strip().lower()
         if str(options["confirm_organization"]).strip().lower() != slug:

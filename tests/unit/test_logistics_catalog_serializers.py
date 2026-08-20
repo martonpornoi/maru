@@ -32,7 +32,7 @@ def test_party_serializer_rejects_unknown_nested_profile_field() -> None:
 
 def test_party_serializer_matches_model_website_length_bound() -> None:
     serializer = LogisticsPartyCreateSerializer()
-    profile = cast(Any, serializer.fields["profile"])
+    profile = cast("Any", serializer.fields["profile"])
 
     assert profile.fields["website_url"].max_length == 2_000
 
@@ -53,7 +53,7 @@ def test_restricted_contact_serializer_matches_minimized_contact_bounds() -> Non
     assert "contact_email" in serializer.errors
     assert "contact_phone" in serializer.errors
 
-    field = cast(Any, RestrictedAddressCreateSerializer().fields["contact_email"])
+    field = cast("Any", RestrictedAddressCreateSerializer().fields["contact_email"])
     assert field.max_length == 254
 
 

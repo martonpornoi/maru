@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from uuid import UUID, uuid4
 
 from django.db import transaction
@@ -20,7 +19,6 @@ from maru.authorization.policy import (
     resolve_organization_target,
 )
 from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.participation.queries import participations_for_account
 
 from .authorization import resolve_edition_space_target
@@ -40,6 +38,11 @@ from .services import (
     VenueResourceUnavailableError,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from maru.identity.models import Account
+
 MAX_PUBLIC_SCHEDULE_ITEMS = 2_000
 MAX_PERSONAL_SCHEDULE_EDITIONS = 500
 _ATTENDEE_PARTICIPATION_STATUSES = ("confirmed", "active", "completed")
@@ -47,6 +50,48 @@ _ATTENDEE_PARTICIPATION_STATUSES = ("confirmed", "active", "completed")
 
 @dataclass(frozen=True, slots=True)
 class VenuePropertySummary:
+    """Describe venue property summary.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    slug
+        The stable URL slug identifying the slug.
+    kind
+        The closed discriminator selecting the requested behavior.
+    legal_name
+        The human-readable legal name shown to authorized readers.
+    provider_name
+        The human-readable provider name shown to authorized readers.
+    public_name
+        The human-readable public name shown to authorized readers.
+    public_description
+        The bounded public description retained for authorized readers.
+    internal_notes
+        The bounded internal notes retained for authorized readers.
+    location_name
+        The human-readable location name shown to authorized readers.
+    postal_address
+        The postal address retained in this immutable projection.
+    country_code
+        The stable country code from the relevant closed catalog.
+    website_url
+        The validated absolute HTTPS website url.
+    public_contact
+        The public contact retained in this immutable projection.
+    contact_name
+        The human-readable contact name shown to authorized readers.
+    contact_email
+        The normalized contact email used for delivery or identity matching.
+    contact_phone
+        The normalized international contact phone, when provided.
+    lifecycle
+        The lifecycle retained in this immutable projection.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    """
+
     id: UUID
     slug: str
     kind: str
@@ -69,6 +114,36 @@ class VenuePropertySummary:
 
 @dataclass(frozen=True, slots=True)
 class VenueWorkspaceSpace:
+    """Describe venue workspace space.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    venue_selection_id
+        The venue selection identifier within the requested scope.
+    venue_name
+        The human-readable venue name shown to authorized readers.
+    local_name
+        The human-readable local name shown to authorized readers.
+    configuration_name
+        The human-readable configuration name shown to authorized readers.
+    seated_capacity
+        The non-negative hard limit or requested amount for seated capacity.
+    standing_capacity
+        The non-negative hard limit or requested amount for standing capacity.
+    table_capacity
+        The non-negative hard limit or requested amount for table capacity.
+    fire_capacity
+        The non-negative hard limit or requested amount for fire capacity.
+    availability_version
+        The expected availability version used to reject stale updates.
+    active_booking_count
+        The bounded number of active booking records.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    """
+
     id: UUID
     venue_selection_id: UUID
     venue_name: str
@@ -85,6 +160,18 @@ class VenueWorkspaceSpace:
 
 @dataclass(frozen=True, slots=True)
 class VenueAvailabilityProjection:
+    """Describe venue availability projection.
+
+    Attributes
+    ----------
+    starts_at
+        The timezone-aware timestamp for starts.
+    ends_at
+        The timezone-aware timestamp for ends.
+    opening_restriction
+        The opening restriction retained in this immutable projection.
+    """
+
     starts_at: datetime
     ends_at: datetime
     opening_restriction: str
@@ -92,6 +179,46 @@ class VenueAvailabilityProjection:
 
 @dataclass(frozen=True, slots=True)
 class VenueBookingProjection:
+    """Describe venue booking projection.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    kind
+        The closed discriminator selecting the requested behavior.
+    external_reference
+        The provider or source external reference retained for reconciliation.
+    internal_title
+        The human-readable internal title shown to authorized readers.
+    public_title
+        The human-readable public title shown to authorized readers.
+    public_description
+        The bounded public description retained for authorized readers.
+    capacity_mode
+        The closed capacity mode discriminator defined by the domain catalog.
+    expected_attendance
+        The expected attendance retained in this immutable projection.
+    setup_starts_at
+        The timezone-aware timestamp for setup starts.
+    effective_starts_at
+        The timezone-aware timestamp for effective starts.
+    effective_ends_at
+        The timezone-aware timestamp for effective ends.
+    teardown_ends_at
+        The timezone-aware timestamp for teardown ends.
+    review_state
+        The closed review state discriminator defined by the domain catalog.
+    publication_state
+        The closed publication state discriminator defined by the domain catalog.
+    lifecycle
+        The lifecycle retained in this immutable projection.
+    public_layout_reference
+        The provider or source public layout reference retained for reconciliation.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    """
+
     id: UUID
     kind: str
     external_reference: str
@@ -113,6 +240,18 @@ class VenueBookingProjection:
 
 @dataclass(frozen=True, slots=True)
 class VenueSpaceSchedule:
+    """Describe venue space schedule.
+
+    Attributes
+    ----------
+    space
+        The space retained in this immutable projection.
+    availability
+        The availability retained in this immutable projection.
+    bookings
+        The bookings retained in this immutable projection.
+    """
+
     space: VenueWorkspaceSpace
     availability: tuple[VenueAvailabilityProjection, ...]
     bookings: tuple[VenueBookingProjection, ...]
@@ -120,6 +259,36 @@ class VenueSpaceSchedule:
 
 @dataclass(frozen=True, slots=True)
 class PublicVenueScheduleItem:
+    """Describe public venue schedule item.
+
+    Attributes
+    ----------
+    booking_id
+        The booking identifier within the requested scope.
+    space_selection_id
+        The space selection identifier within the requested scope.
+    venue_name
+        The human-readable venue name shown to authorized readers.
+    space_name
+        The human-readable space name shown to authorized readers.
+    kind
+        The closed discriminator selecting the requested behavior.
+    title
+        The human-readable title shown to authorized readers.
+    description
+        The human-readable description shown to authorized readers.
+    starts_at
+        The timezone-aware timestamp for starts.
+    ends_at
+        The timezone-aware timestamp for ends.
+    access_info
+        The access info retained in this immutable projection.
+    layout_reference
+        The provider or source layout reference retained for reconciliation.
+    layout_title
+        The human-readable layout title shown to authorized readers.
+    """
+
     booking_id: UUID
     space_selection_id: UUID
     venue_name: str
@@ -136,7 +305,7 @@ class PublicVenueScheduleItem:
 
 def _active_account(actor: Account) -> None:
     if actor.pk is None or not actor.is_active:
-        raise VenueAuthorizationDeniedError()
+        raise VenueAuthorizationDeniedError
 
 
 def _audit_restricted_read(
@@ -191,8 +360,29 @@ def public_schedule_for_edition(
     starts_before: datetime | None = None,
     ends_after: datetime | None = None,
 ) -> tuple[PublicVenueScheduleItem, ...]:
-    """Project only approved effective intervals and public-safe renditions."""
+    """Project only approved effective intervals and public-safe renditions.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    starts_before : datetime | None, default=None
+        The timezone-aware boundary for starts before.
+    ends_after : datetime | None, default=None
+        The timezone-aware boundary for ends after.
+
+    Returns
+    -------
+    tuple[PublicVenueScheduleItem, ...]
+        The matching public schedule for edition records in deterministic order.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     if starts_before is not None and not timezone.is_aware(starts_before):
         raise ValueError("starts_before must be timezone-aware")
     if ends_after is not None and not timezone.is_aware(ends_after):
@@ -256,8 +446,22 @@ def public_schedule_for_edition(
 def authorize_my_maru_schedule_scope(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> None:
-    """Require one exact active attendee relationship without loading schedule data."""
+    """Require one exact active attendee relationship without loading schedule data.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Raises
+    ------
+    VenueAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    """
     _active_account(actor)
     if (
         not participations_for_account(actor)
@@ -268,14 +472,29 @@ def authorize_my_maru_schedule_scope(
         )
         .exists()
     ):
-        raise VenueAuthorizationDeniedError()
+        raise VenueAuthorizationDeniedError
 
 
 def my_maru_schedule_for_edition(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[PublicVenueScheduleItem, ...]:
-    """Expose the same minimized schedule inside the authenticated attendee shell."""
+    """Expose the same minimized schedule inside the authenticated attendee shell.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    tuple[PublicVenueScheduleItem, ...]
+        The matching my maru schedule for edition records in deterministic
+        order.
+    """
     authorize_my_maru_schedule_scope(
         actor=actor,
         organization_id=organization_id,
@@ -288,8 +507,18 @@ def my_maru_schedule_for_edition(
 
 
 def my_maru_schedule_editions(*, actor: Account) -> tuple[EventEdition, ...]:
-    """Discover editions with attendee-safe published schedule content."""
+    """Discover editions with attendee-safe published schedule content.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+
+    Returns
+    -------
+    tuple[EventEdition, ...]
+        The matching my maru schedule editions records in deterministic order.
+    """
     _active_account(actor)
     attendee_edition_ids = (
         participations_for_account(actor)
@@ -317,7 +546,7 @@ def my_maru_schedule_editions(*, actor: Account) -> tuple[EventEdition, ...]:
             :MAX_PERSONAL_SCHEDULE_EDITIONS
         ]
     )
-    edition_ids = tuple(cast(UUID, scope["edition_id"]) for scope in scopes)
+    edition_ids = tuple(cast("UUID", scope["edition_id"]) for scope in scopes)
     return tuple(
         EventEdition.objects.filter(id__in=edition_ids)
         .select_related("organization", "series")
@@ -335,6 +564,33 @@ def list_venue_properties(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> tuple[VenuePropertySummary, ...]:
+    """List venue properties.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    purpose : str, default='venue_property_management'
+        The documented purpose of the operation.
+    correlation_id : UUID | None, default=None
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    tuple[VenuePropertySummary, ...]
+        The ordered venue properties collection.
+
+    Raises
+    ------
+    VenueAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    """
     _active_account(actor)
     target = resolve_organization_target(organization_id=organization_id)
     decision = decide(
@@ -343,7 +599,7 @@ def list_venue_properties(
         resource=target,
     )
     if not decision.allowed:
-        raise VenueAuthorizationDeniedError()
+        raise VenueAuthorizationDeniedError
     projection = tuple(
         VenuePropertySummary(
             id=record.id,
@@ -390,6 +646,27 @@ def list_venue_properties(
 def list_venue_workspace(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> tuple[VenueWorkspaceSpace, ...]:
+    """List venue workspace.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    tuple[VenueWorkspaceSpace, ...]
+        The ordered venue workspace collection.
+
+    Raises
+    ------
+    VenueAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    """
     _active_account(actor)
     target = resolve_edition_target(
         organization_id=organization_id,
@@ -401,7 +678,7 @@ def list_venue_workspace(
         resource=target,
     )
     if not decision.allowed:
-        raise VenueAuthorizationDeniedError()
+        raise VenueAuthorizationDeniedError
     rows = (
         EditionSpaceSelection.objects.filter(
             organization_id=organization_id,
@@ -449,6 +726,39 @@ def load_space_schedule(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueSpaceSchedule:
+    """Load space schedule.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    purpose : str
+        The documented purpose of the operation.
+    correlation_id : UUID | None, default=None
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueSpaceSchedule
+        The loaded space schedule.
+
+    Raises
+    ------
+    VenueAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     _active_account(actor)
     target = resolve_edition_space_target(
         organization_id=organization_id,
@@ -461,7 +771,7 @@ def load_space_schedule(
         resource=target,
     )
     if not decision.allowed:
-        raise VenueAuthorizationDeniedError()
+        raise VenueAuthorizationDeniedError
     space = (
         EditionSpaceSelection.objects.filter(
             id=space_selection_id,
@@ -478,7 +788,7 @@ def load_space_schedule(
         .first()
     )
     if space is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     availability = tuple(
         VenueAvailabilityProjection(
             starts_at=window.starts_at,

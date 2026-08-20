@@ -13,15 +13,33 @@ from maru.effects.worker import run_claimed_effect
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Run at most one tenant-bounded effect."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument("--organization", required=True, type=UUID)
         parser.add_argument("--pool", default="default")
         parser.add_argument("--lease-seconds", type=int, default=60)
         parser.add_argument("--execution-timeout-seconds", type=int, default=30)
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+        """
         del args
         organization_id: UUID = options["organization"]
         workload_pool: str = options["pool"]

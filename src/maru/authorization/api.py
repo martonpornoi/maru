@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from dataclasses import asdict
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
@@ -14,7 +13,6 @@ from django.db.models import Q
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -52,6 +50,11 @@ from maru.authorization.serializers import (
 )
 from maru.events.models import EventEdition
 from maru.identity.models import Account
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from rest_framework.request import Request
 
 ACCESS_GROUP_LABELS = {
     "board-member": "Board",
@@ -476,6 +479,8 @@ def _command_validation(error: DjangoValidationError) -> ValidationError:
 
 
 class EditionAccessWorkspaceView(APIView):
+    """Expose edition access workspace through the HTTP API."""
+
     @extend_schema(
         operation_id="authorization_retrieve_access_workspace",
         responses=AccessWorkspaceSerializer,
@@ -486,6 +491,22 @@ class EditionAccessWorkspaceView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve the access workspace.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         _authorize_access(
@@ -500,7 +521,7 @@ class EditionAccessWorkspaceView(APIView):
             edition_id=edition_id,
         )
         payload = _workspace_payload(edition=edition, account=account)
-        assignment_count = len(cast(list[object], payload["assignments"]))
+        assignment_count = len(cast("list[object]", payload["assignments"]))
         _audit_access_workspace(
             account=account,
             organization_id=organization_id,
@@ -523,6 +544,29 @@ class EditionAccessWorkspaceView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Assign the access group.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        _command_validation
+            If the operation encounters a command validation condition.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         _authorize_access(
@@ -538,7 +582,7 @@ class EditionAccessWorkspaceView(APIView):
         )
         serializer = AccessAssignmentCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        values = cast(dict[str, Any], serializer.validated_data)
+        values = cast("dict[str, Any]", serializer.validated_data)
         recipient = _exact_active_account(
             str(values["person_email"]),
             field="person_email",
@@ -569,7 +613,9 @@ class EditionAccessWorkspaceView(APIView):
                 source_channel="management-console",
             )
         except DjangoPermissionDenied as error:
-            raise PermissionDenied(str(error)) from error
+            raise PermissionDenied(
+                "The access assignment could not be created."
+            ) from error
         except DjangoValidationError as error:
             raise _command_validation(error) from error
         payload = _workspace_payload(edition=edition, account=account)
@@ -590,6 +636,31 @@ class EditionAccessPreviewView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Preview the effective access.
+
+        Audited, explanatory preview without impersonation or domain mutation.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         target = _authorize_preview(
@@ -614,7 +685,7 @@ class EditionAccessPreviewView(APIView):
                 mode="unknown",
             )
             raise ValidationError(serializer.errors)
-        values = cast(dict[str, Any], serializer.validated_data)
+        values = cast("dict[str, Any]", serializer.validated_data)
         mode = str(values["mode"])
         try:
             if mode == "person":
@@ -627,7 +698,7 @@ class EditionAccessPreviewView(APIView):
             else:
                 role = _exact_role_version(
                     organization_id=organization_id,
-                    role_version_id=cast(UUID, values["role_version_id"]),
+                    role_version_id=cast("UUID", values["role_version_id"]),
                 )
                 result = preview_role_bundle_access(
                     viewer=account,
@@ -655,7 +726,9 @@ class EditionAccessPreviewView(APIView):
                 reason_code="preview_authority_unavailable",
                 mode=mode,
             )
-            raise PermissionDenied(str(error)) from error
+            raise PermissionDenied(
+                "Access preview is unavailable for this workspace."
+            ) from error
 
         _audit_access_preview(
             account=account,
@@ -679,6 +752,8 @@ class EditionAccessPreviewView(APIView):
 
 
 class EditionAccessAssignmentView(APIView):
+    """Expose edition access assignment through the HTTP API."""
+
     @extend_schema(
         operation_id="authorization_replace_access_assignment",
         request=AccessAssignmentReplaceSerializer,
@@ -691,6 +766,31 @@ class EditionAccessAssignmentView(APIView):
         edition_id: UUID,
         assignment_id: UUID,
     ) -> Response:
+        """Replace the access assignment.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        assignment_id : UUID
+            The assignment identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        _command_validation
+            If the operation encounters a command validation condition.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         _authorize_access(
@@ -706,7 +806,7 @@ class EditionAccessAssignmentView(APIView):
         )
         serializer = AccessAssignmentReplaceSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        values = cast(dict[str, Any], serializer.validated_data)
+        values = cast("dict[str, Any]", serializer.validated_data)
         approver = _exact_active_account(
             str(values["approver_email"]),
             field="approver_email",
@@ -766,7 +866,7 @@ class EditionAccessAssignmentView(APIView):
                     source_channel="management-console",
                 )
         except DjangoPermissionDenied as error:
-            raise PermissionDenied(str(error)) from error
+            raise PermissionDenied("The access assignment is unavailable.") from error
         except DjangoValidationError as error:
             raise _command_validation(error) from error
         payload = _workspace_payload(edition=edition, account=account)
@@ -784,6 +884,31 @@ class EditionAccessAssignmentView(APIView):
         edition_id: UUID,
         assignment_id: UUID,
     ) -> Response:
+        """Revoke the access assignment.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        assignment_id : UUID
+            The assignment identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        _command_validation
+            If the operation encounters a command validation condition.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         _authorize_access(
@@ -828,7 +953,7 @@ class EditionAccessAssignmentView(APIView):
                 source_channel="management-console",
             )
         except DjangoPermissionDenied as error:
-            raise PermissionDenied(str(error)) from error
+            raise PermissionDenied("The access assignment is unavailable.") from error
         except DjangoValidationError as error:
             raise _command_validation(error) from error
         payload = _workspace_payload(edition=edition, account=account)

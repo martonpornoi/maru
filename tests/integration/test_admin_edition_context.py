@@ -1,6 +1,6 @@
 import re
-from collections.abc import Iterable
 from datetime import timedelta
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
@@ -52,6 +52,9 @@ from tests.factories import (
     RoleBundleFactory,
     create_reference_convention,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 

@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import asdict
-from datetime import datetime
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 from uuid import UUID, uuid4
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -17,7 +15,6 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -71,6 +68,12 @@ from .services import (
     register_stock_lot,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from rest_framework.request import Request
+
 IDEMPOTENCY_HEADER = "Idempotency-Key"
 MAX_IDEMPOTENCY_HEADER_LENGTH = 64
 CANONICAL_UUID_PATTERN = (
@@ -100,8 +103,15 @@ class LogisticsCatalogConflict(APIException):
     default_code = "logistics_conflict"
 
     def __init__(self, *, code: str) -> None:
+        """Initialize the LogisticsCatalogConflict instance.
+
+        Parameters
+        ----------
+        code : str
+            The machine-readable reason for the catalog conflict.
+        """
         super().__init__(
-            detail=cast(Any, {"detail": self.default_detail, "code": code}),
+            detail=cast("Any", {"detail": self.default_detail, "code": code}),
             code=code,
         )
 
@@ -133,8 +143,35 @@ def _authorize(
     manifest_line_id: UUID | None = None,
     key_id: UUID | None = None,
 ) -> Account:
-    """Authorize the exact route target before parsing query, body, or headers."""
+    """Authorize the exact route target before parsing query, body, or headers.
 
+    Parameters
+    ----------
+    request : Request
+        The incoming HTTP request and authenticated principal context.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    capability_code : str
+        The stable capability code required by the operation.
+    edition_id : UUID | None, default=None
+        The event edition identifier that scopes the operation.
+    manifest_id : UUID | None, default=None
+        The manifest identifier within the requested scope.
+    manifest_line_id : UUID | None, default=None
+        The manifest line identifier within the requested scope.
+    key_id : UUID | None, default=None
+        The key identifier within the requested scope.
+
+    Returns
+    -------
+    Account
+        The resolved Account for authorize.
+
+    Raises
+    ------
+    DependencyUnavailable
+        If the scoped target does not exist or cannot be disclosed.
+    """
     actor = _account(request)
     try:
         if manifest_line_id is not None:
@@ -215,7 +252,7 @@ def _validated[Payload: dict[str, object]](
     reject_unknown_fields(request.query_params, allowed_fields=frozenset())
     serializer = serializer_class(data=request.data)
     serializer.is_valid(raise_exception=True)
-    return cast(Payload, serializer.validated_data)
+    return cast("Payload", serializer.validated_data)
 
 
 def _django_validation(error: DjangoValidationError) -> Never:
@@ -269,12 +306,12 @@ def _result_response(
 def _subject(values: dict[str, object]) -> SubjectLocator:
     return SubjectLocator(
         kind=str(values["kind"]),
-        object_id=cast(UUID, values["object_id"]),
+        object_id=cast("UUID", values["object_id"]),
     )
 
 
 def _optional_uuid(values: dict[str, object], field: str) -> UUID | None:
-    return cast(UUID | None, values.get(field))
+    return cast("UUID | None", values.get(field))
 
 
 def _optional_text(values: dict[str, object], field: str) -> str:
@@ -297,19 +334,37 @@ class PrivateLogisticsCatalogAPIView(APIView):
 
 
 class LogisticsPartyCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose logistics party collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=LogisticsPartyCreateSerializer,
         responses=_CREATE_RESPONSES,
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
+        """Create the logistics party.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
             capability_code=CATALOG_MANAGE_CAPABILITY,
         )
         values = _validated(request, LogisticsPartyCreateSerializer)
-        profile_values = cast(dict[str, object], values["profile"])
+        profile_values = cast("dict[str, object]", values["profile"])
         result = _execute(
             lambda: create_logistics_party(
                 actor=actor,
@@ -335,6 +390,8 @@ class LogisticsPartyCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class RestrictedAddressCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose restricted address collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=RestrictedAddressCreateSerializer,
@@ -346,6 +403,24 @@ class RestrictedAddressCollectionView(PrivateLogisticsCatalogAPIView):
         organization_id: UUID,
         edition_id: UUID | None = None,
     ) -> Response:
+        """Create the restricted logistics address.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID | None, default=None
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -367,7 +442,7 @@ class RestrictedAddressCollectionView(PrivateLogisticsCatalogAPIView):
                 contact_phone=_optional_text(values, "contact_phone"),
                 postal_address=str(values["postal_address"]),
                 access_instructions=_optional_text(values, "access_instructions"),
-                retention_until=cast(Any, values.get("retention_until")),
+                retention_until=cast("Any", values.get("retention_until")),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),
@@ -378,6 +453,8 @@ class RestrictedAddressCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class LogisticsNodeCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose logistics node collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=LogisticsNodeCreateSerializer,
@@ -389,6 +466,24 @@ class LogisticsNodeCollectionView(PrivateLogisticsCatalogAPIView):
         organization_id: UUID,
         edition_id: UUID | None = None,
     ) -> Response:
+        """Create the logistics node.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID | None, default=None
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -423,6 +518,8 @@ class LogisticsNodeCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class SerializedAssetCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose serialized asset collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=SerializedAssetCreateSerializer,
@@ -434,6 +531,24 @@ class SerializedAssetCollectionView(PrivateLogisticsCatalogAPIView):
         organization_id: UUID,
         edition_id: UUID | None = None,
     ) -> Response:
+        """Register the serialized asset.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID | None, default=None
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -441,7 +556,7 @@ class SerializedAssetCollectionView(PrivateLogisticsCatalogAPIView):
             capability_code=CATALOG_MANAGE_CAPABILITY,
         )
         values = _validated(request, SerializedAssetCreateSerializer)
-        owner_values = cast(dict[str, object], values["owner"])
+        owner_values = cast("dict[str, object]", values["owner"])
         owner_kind, owner_account_id, owner_party_id = _owner(owner_values)
         result = _execute(
             lambda: register_serialized_asset(
@@ -469,6 +584,8 @@ class SerializedAssetCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class StockLotCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose stock lot collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=StockLotCreateSerializer,
@@ -480,6 +597,24 @@ class StockLotCollectionView(PrivateLogisticsCatalogAPIView):
         organization_id: UUID,
         edition_id: UUID | None = None,
     ) -> Response:
+        """Register the stock lot.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID | None, default=None
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -487,7 +622,7 @@ class StockLotCollectionView(PrivateLogisticsCatalogAPIView):
             capability_code=CATALOG_MANAGE_CAPABILITY,
         )
         values = _validated(request, StockLotCreateSerializer)
-        owner_values = cast(dict[str, object], values["owner"])
+        owner_values = cast("dict[str, object]", values["owner"])
         owner_kind, owner_account_id, owner_party_id = _owner(owner_values)
         result = _execute(
             lambda: register_stock_lot(
@@ -498,7 +633,7 @@ class StockLotCollectionView(PrivateLogisticsCatalogAPIView):
                 name=str(values["name"]),
                 stock_type=str(values["stock_type"]),
                 unit=str(values["unit"]),
-                initial_quantity=cast(int, values["initial_quantity"]),
+                initial_quantity=cast("int", values["initial_quantity"]),
                 value_class=_optional_text(values, "value_class"),
                 owner_kind=owner_kind,
                 owner_account_id=owner_account_id,
@@ -513,6 +648,8 @@ class StockLotCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class PhysicalKeyCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose physical key collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=PhysicalKeyCreateSerializer,
@@ -524,6 +661,24 @@ class PhysicalKeyCollectionView(PrivateLogisticsCatalogAPIView):
         organization_id: UUID,
         edition_id: UUID | None = None,
     ) -> Response:
+        """Register the physical key.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID | None, default=None
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -538,7 +693,7 @@ class PhysicalKeyCollectionView(PrivateLogisticsCatalogAPIView):
                 edition_id=edition_id,
                 code=str(values["code"]),
                 label=str(values["label"]),
-                opens_node_id=cast(UUID, values["opens_node_id"]),
+                opens_node_id=cast("UUID", values["opens_node_id"]),
                 provider_id=_optional_uuid(values, "provider_id"),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
@@ -550,6 +705,8 @@ class PhysicalKeyCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class KeyholderAssignmentView(PrivateLogisticsCatalogAPIView):
+    """Expose keyholder assignment through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=KeyholderAssignSerializer,
@@ -561,6 +718,24 @@ class KeyholderAssignmentView(PrivateLogisticsCatalogAPIView):
         organization_id: UUID,
         key_id: UUID,
     ) -> Response:
+        """Assign the keyholder responsibility.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        key_id : UUID
+            The key identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -573,10 +748,10 @@ class KeyholderAssignmentView(PrivateLogisticsCatalogAPIView):
                 actor=actor,
                 organization_id=organization_id,
                 key_id=key_id,
-                responsible_account_id=cast(UUID, values["responsible_account_id"]),
-                starts_at=cast(Any, values["starts_at"]),
-                ends_at=cast(Any, values.get("ends_at")),
-                expected_version=cast(int, values["expected_version"]),
+                responsible_account_id=cast("UUID", values["responsible_account_id"]),
+                starts_at=cast("Any", values["starts_at"]),
+                ends_at=cast("Any", values.get("ends_at")),
+                expected_version=cast("int", values["expected_version"]),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),
@@ -587,12 +762,30 @@ class KeyholderAssignmentView(PrivateLogisticsCatalogAPIView):
 
 
 class LogisticsLabelCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose logistics label collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=LogisticsLabelCreateSerializer,
         responses=_CREATE_RESPONSES,
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
+        """Create the logistics label.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -603,7 +796,7 @@ class LogisticsLabelCollectionView(PrivateLogisticsCatalogAPIView):
             lambda: create_logistics_label(
                 actor=actor,
                 organization_id=organization_id,
-                subject=_subject(cast(dict[str, object], values["subject"])),
+                subject=_subject(cast("dict[str, object]", values["subject"])),
                 label_code=str(values["label_code"]),
                 qr_identifier=str(values["qr_identifier"]),
                 reason=str(values["reason"]),
@@ -616,6 +809,8 @@ class LogisticsLabelCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class AssetAgreementCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose asset agreement collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=AssetAgreementCreateSerializer,
@@ -627,6 +822,24 @@ class AssetAgreementCollectionView(PrivateLogisticsCatalogAPIView):
         organization_id: UUID,
         edition_id: UUID | None = None,
     ) -> Response:
+        """Record the asset agreement.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID | None, default=None
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -634,22 +847,22 @@ class AssetAgreementCollectionView(PrivateLogisticsCatalogAPIView):
             capability_code=CATALOG_MANAGE_CAPABILITY,
         )
         values = _validated(request, AssetAgreementCreateSerializer)
-        provider = cast(dict[str, object], values["provider"])
-        borrower = cast(dict[str, object], values.get("borrower", {}))
+        provider = cast("dict[str, object]", values["provider"])
+        borrower = cast("dict[str, object]", values.get("borrower", {}))
         result = _execute(
             lambda: record_asset_agreement(
                 actor=actor,
                 organization_id=organization_id,
                 edition_id=edition_id,
-                subject=_subject(cast(dict[str, object], values["subject"])),
+                subject=_subject(cast("dict[str, object]", values["subject"])),
                 kind=str(values["kind"]),
                 provider_account_id=_optional_uuid(provider, "account_id"),
                 provider_party_id=_optional_uuid(provider, "party_id"),
                 borrower_account_id=_optional_uuid(borrower, "account_id"),
                 borrower_party_id=_optional_uuid(borrower, "party_id"),
-                starts_at=cast(Any, values["starts_at"]),
-                ends_at=cast(Any, values["ends_at"]),
-                return_due_at=cast(Any, values["return_due_at"]),
+                starts_at=cast("Any", values["starts_at"]),
+                ends_at=cast("Any", values["ends_at"]),
+                return_due_at=cast("Any", values["return_due_at"]),
                 return_address_id=_optional_uuid(values, "return_address_id"),
                 provider_reference=_optional_text(values, "provider_reference"),
                 terms_reference=_optional_text(values, "terms_reference"),
@@ -663,19 +876,37 @@ class AssetAgreementCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class ReusableKitCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose reusable kit collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=ReusableKitCreateSerializer,
         responses=_CREATE_RESPONSES,
     )
     def post(self, request: Request, organization_id: UUID) -> Response:
+        """Create the reusable kit.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
             capability_code=CATALOG_MANAGE_CAPABILITY,
         )
         values = _validated(request, ReusableKitCreateSerializer)
-        lines = cast(list[dict[str, object]], values["lines"])
+        lines = cast("list[dict[str, object]]", values["lines"])
         result = _execute(
             lambda: create_reusable_kit(
                 actor=actor,
@@ -686,9 +917,9 @@ class ReusableKitCollectionView(PrivateLogisticsCatalogAPIView):
                 lines=tuple(
                     KitLineInput(
                         subject=_subject(
-                            cast(dict[str, object], line_values["subject"])
+                            cast("dict[str, object]", line_values["subject"])
                         ),
-                        quantity=cast(int, line_values["quantity"]),
+                        quantity=cast("int", line_values["quantity"]),
                         notes=_optional_text(line_values, "notes"),
                     )
                     for line_values in lines
@@ -703,6 +934,8 @@ class ReusableKitCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class ManifestLineCollectionView(PrivateLogisticsCatalogAPIView):
+    """Expose manifest line collection through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=ManifestLineAddSerializer,
@@ -715,6 +948,26 @@ class ManifestLineCollectionView(PrivateLogisticsCatalogAPIView):
         edition_id: UUID,
         manifest_id: UUID,
     ) -> Response:
+        """Add the manifest line.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        manifest_id : UUID
+            The manifest identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -723,17 +976,17 @@ class ManifestLineCollectionView(PrivateLogisticsCatalogAPIView):
             capability_code=MANIFEST_MANAGE_CAPABILITY,
         )
         values = _validated(request, ManifestLineAddSerializer)
-        line_values = cast(dict[str, object], values["line"])
+        line_values = cast("dict[str, object]", values["line"])
         result = _execute(
             lambda: add_manifest_line(
                 actor=actor,
                 organization_id=organization_id,
                 edition_id=edition_id,
                 manifest_id=manifest_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 line=ManifestLineInput(
-                    subject=_subject(cast(dict[str, object], line_values["subject"])),
-                    quantity=cast(int, line_values["quantity"]),
+                    subject=_subject(cast("dict[str, object]", line_values["subject"])),
+                    quantity=cast("int", line_values["quantity"]),
                     packed_in_node_id=_optional_uuid(line_values, "packed_in_node_id"),
                     notes=_optional_text(line_values, "notes"),
                 ),
@@ -747,6 +1000,8 @@ class ManifestLineCollectionView(PrivateLogisticsCatalogAPIView):
 
 
 class ManifestReceiptView(PrivateLogisticsCatalogAPIView):
+    """Expose manifest receipt through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=ManifestReceiptSerializer,
@@ -760,6 +1015,28 @@ class ManifestReceiptView(PrivateLogisticsCatalogAPIView):
         manifest_id: UUID,
         line_id: UUID,
     ) -> Response:
+        """Record the manifest receipt.
+
+        Authenticated logistics API response boundary, including safe errors.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        manifest_id : UUID
+            The manifest identifier within the requested scope.
+        line_id : UUID
+            The line identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _authorize(
             request,
             organization_id=organization_id,
@@ -776,8 +1053,8 @@ class ManifestReceiptView(PrivateLogisticsCatalogAPIView):
                 edition_id=edition_id,
                 manifest_id=manifest_id,
                 line_id=line_id,
-                expected_sequence=cast(int, values["expected_sequence"]),
-                occurred_at=cast(datetime, values["occurred_at"]),
+                expected_sequence=cast("int", values["expected_sequence"]),
+                occurred_at=cast("datetime", values["occurred_at"]),
                 condition_after=str(values["condition_after"]),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),

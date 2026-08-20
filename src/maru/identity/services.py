@@ -7,7 +7,7 @@ import hmac
 import smtplib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Final
+from typing import TYPE_CHECKING, Final
 from uuid import UUID, uuid4
 
 from django.conf import settings
@@ -16,7 +16,6 @@ from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.db import IntegrityError, models, transaction
-from django.http import HttpRequest
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
@@ -44,6 +43,9 @@ from maru.identity.models import (
     RestrictionAppeal,
 )
 
+if TYPE_CHECKING:
+    from django.http import HttpRequest
+
 CHALLENGE_LIFETIME: Final = timedelta(minutes=30)
 RECOVERY_LIFETIME: Final = timedelta(minutes=20)
 ABUSE_WINDOW: Final = timedelta(minutes=15)
@@ -56,7 +58,15 @@ MAX_EMERGENCY_REASON_LENGTH: Final = 240
 
 @dataclass(frozen=True, slots=True)
 class ChallengeDispatch:
-    """Safe result; raw_token is populated only by an explicit test setting."""
+    """Safe result; raw_token is populated only by an explicit test setting.
+
+    Attributes
+    ----------
+    accepted
+        The accepted retained in this immutable projection.
+    raw_token
+        The opaque raw token supplied by the caller.
+    """
 
     accepted: bool
     raw_token: str | None = None
@@ -64,7 +74,15 @@ class ChallengeDispatch:
 
 @dataclass(frozen=True, slots=True)
 class EmergencyAccountDeactivation:
-    """Minimized result for a platform-operated emergency deactivation."""
+    """Minimized result for a platform-operated emergency deactivation.
+
+    Attributes
+    ----------
+    account
+        The platform account whose state or access is being evaluated.
+    revoked_session_count
+        The bounded number of revoked session records.
+    """
 
     account: Account
     revoked_session_count: int
@@ -80,8 +98,20 @@ def _digest(value: str, *, purpose: str) -> str:
 
 
 def request_fingerprint(request: HttpRequest, *, contact: str = "") -> str:
-    """Key abuse controls without retaining raw addresses or network identifiers."""
+    """Key abuse controls without retaining raw addresses or network identifiers.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    contact : str, default=''
+        The contact applied within the audited domain transition.
+
+    Returns
+    -------
+    str
+        The normalized text for request fingerprint.
+    """
     remote = request.META.get("REMOTE_ADDR", "")
     agent = request.META.get("HTTP_USER_AGENT", "")[:120]
     normalized_contact = contact.strip().casefold()
@@ -92,8 +122,20 @@ def request_fingerprint(request: HttpRequest, *, contact: str = "") -> str:
 
 
 def enforce_abuse_limit(*, flow: str, subject_digest: str) -> None:
-    """Consume one attempt from a fixed window under a database lock."""
+    """Consume one attempt from a fixed window under a database lock.
 
+    Parameters
+    ----------
+    flow : str
+        The flow applied within the audited domain transition.
+    subject_digest : str
+        The canonical digest used to verify subject.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     now = timezone.now()
     window_seconds = int(ABUSE_WINDOW.total_seconds())
     epoch = int(now.timestamp())
@@ -183,8 +225,23 @@ def _raw_challenge_token(*, challenge_id: UUID, purpose: str) -> str:
 
 
 def deliver_identity_challenge(challenge_id: UUID) -> str:
-    """Attempt one durable delivery without losing the issued challenge."""
+    """Attempt one durable delivery without losing the issued challenge.
 
+    Parameters
+    ----------
+    challenge_id : UUID
+        The challenge identifier within the requested scope.
+
+    Returns
+    -------
+    str
+        The normalized text for deliver identity challenge.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     with transaction.atomic():
         challenge = (
             IdentityChallenge.objects.select_for_update()
@@ -260,8 +317,19 @@ def deliver_identity_challenge(challenge_id: UUID) -> str:
 
 
 def deliver_pending_identity_challenges(*, limit: int = 100) -> tuple[int, int]:
-    """Retry unexpired identity mail; return attempted and still-pending counts."""
+    """Retry unexpired identity mail; return attempted and still-pending counts.
 
+    Parameters
+    ----------
+    limit : int, default=100
+        The maximum number of records to return.
+
+    Returns
+    -------
+    tuple[int, int]
+        The matching deliver pending identity challenges records in
+        deterministic order.
+    """
     now = timezone.now()
     challenge_ids = list(
         IdentityChallenge.objects.filter(
@@ -296,6 +364,24 @@ def issue_identity_challenge(
     fingerprint: str,
     source_channel: str,
 ) -> ChallengeDispatch:
+    """Issue identity challenge.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    purpose : str
+        The documented purpose of the operation.
+    fingerprint : str
+        The fingerprint applied within the audited domain transition.
+    source_channel : str
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    ChallengeDispatch
+        The issued identity challenge.
+    """
     enforce_abuse_limit(flow=purpose, subject_digest=fingerprint)
     challenge_id = uuid4()
     raw_token = _raw_challenge_token(
@@ -343,8 +429,33 @@ def bootstrap_account(
     fingerprint: str,
     source_channel: str = "public_api",
 ) -> tuple[Account | None, ChallengeDispatch]:
-    """Create an unverified account without exposing whether a contact exists."""
+    """Create an unverified account without exposing whether a contact exists.
 
+    Parameters
+    ----------
+    email : str
+        The normalized email address used for delivery or identity matching.
+    display_name : str
+        The human-readable display name shown to authorized readers.
+    password : str
+        The plaintext secret to verify without logging or retaining it.
+    fingerprint : str
+        The fingerprint applied within the audited domain transition.
+    source_channel : str, default='public_api'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    tuple[Account | None, ChallengeDispatch]
+        The matching bootstrap account records in deterministic order.
+
+    Raises
+    ------
+    IntegrityError
+        If a concurrent write violates a durable database invariant.
+    ValidationError
+        If the requested state violates a domain invariant.
+    """
     normalized_email = AccountManager.normalize_login_email(email)
     enforce_abuse_limit(flow="account_bootstrap", subject_digest=fingerprint)
     password_validation.validate_password(password)
@@ -379,8 +490,22 @@ def request_account_recovery(
     fingerprint: str,
     source_channel: str = "public_api",
 ) -> ChallengeDispatch:
-    """Always return the same accepted result to resist account enumeration."""
+    """Return the same accepted result to resist account enumeration.
 
+    Parameters
+    ----------
+    email : str
+        The normalized email address used for delivery or identity matching.
+    fingerprint : str
+        The fingerprint applied within the audited domain transition.
+    source_channel : str, default='public_api'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    ChallengeDispatch
+        The resolved ChallengeDispatch for request account recovery.
+    """
     enforce_abuse_limit(flow="account_recovery", subject_digest=fingerprint)
     account = Account.objects.filter(email__iexact=email.strip()).first()
     if account is None or not account.is_active:
@@ -400,6 +525,29 @@ def consume_identity_challenge(
     new_password: str = "",
     source_channel: str = "public_api",
 ) -> Account:
+    """Consume identity challenge.
+
+    Parameters
+    ----------
+    raw_token : str
+        The untrusted token supplied by the caller.
+    purpose : str
+        The documented purpose of the operation.
+    new_password : str, default=''
+        The new password applied within the audited domain transition.
+    source_channel : str, default='public_api'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    Account
+        The Account established after consume identity challenge completes.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     token_digest = _digest(raw_token, purpose="identity-challenge")
     now = timezone.now()
     with transaction.atomic():
@@ -454,6 +602,18 @@ def consume_identity_challenge(
 
 
 def session_key_digest(session_key: str) -> str:
+    """Return session key digest.
+
+    Parameters
+    ----------
+    session_key : str
+        The stable session key used to authenticate or deduplicate the operation.
+
+    Returns
+    -------
+    str
+        The normalized text for session key digest.
+    """
     return _digest(session_key, purpose="account-session")
 
 
@@ -463,6 +623,22 @@ def inventory_session(
     request: HttpRequest,
     source_channel: str = "web",
 ) -> AccountSession | None:
+    """Return inventory session.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    request : HttpRequest
+        The incoming HTTP request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    AccountSession | None
+        The matching AccountSession, or `None` when no authorized record exists.
+    """
     if request.session.session_key is None:
         request.session.save()
     key = request.session.session_key
@@ -494,6 +670,22 @@ def revoke_session(
     session_id: UUID,
     reason: str = "user_requested",
 ) -> AccountSession:
+    """Revoke session.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    session_id : UUID
+        The identifier of the session.
+    reason : str, default='user_requested'
+        The operator-supplied reason for the operation.
+
+    Returns
+    -------
+    AccountSession
+        The updated AccountSession after the transition commits.
+    """
     with transaction.atomic():
         item = AccountSession.objects.select_for_update().get(
             id=session_id,
@@ -529,6 +721,22 @@ def revoke_all_sessions(
     reason: str,
     exclude_session_id: UUID | None,
 ) -> int:
+    """Revoke all sessions.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    reason : str
+        The operator-supplied reason for the operation.
+    exclude_session_id : UUID | None
+        The identifier of the exclude session.
+
+    Returns
+    -------
+    int
+        The number of records affected by the completed operation.
+    """
     items = list(
         AccountSession.objects.select_for_update().filter(
             account=account,
@@ -570,8 +778,33 @@ def deactivate_person_account_for_platform_emergency(
     The caller owns the domain-specific relationship transition in the same
     outer transaction.  This identity command owns the account/session write
     and its minimized security audit without importing organizer models.
-    """
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    account_id : UUID
+        The platform account identifier within the requested scope.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    EmergencyAccountDeactivation
+        The EmergencyAccountDeactivation produced by deactivate person account
+        for platform emergency.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not actor.is_active or not actor.is_platform_administrator:
         raise PermissionDenied("Platform administration is required.")
     normalized_reason = " ".join(reason.split())
@@ -645,6 +878,27 @@ def complete_step_up(
     request: HttpRequest,
     password: str,
 ) -> AccountSession:
+    """Complete step up.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    request : HttpRequest
+        The incoming HTTP request.
+    password : str
+        The plaintext secret to verify without logging or retaining it.
+
+    Returns
+    -------
+    AccountSession
+        The AccountSession established after complete step up completes.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not account.check_password(password):
         raise ValidationError(
             "The extra sign-in check failed.",
@@ -668,6 +922,20 @@ def complete_step_up(
 
 
 def require_recent_step_up(*, account: Account, request: HttpRequest) -> None:
+    """Require recent step up.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     key = request.session.session_key
     if not key:
         raise ValidationError(
@@ -694,6 +962,24 @@ def active_restrictions(
     edition_id: UUID | None,
     kind: str,
 ) -> models.QuerySet[AccountRestriction]:
+    """Return active restrictions.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID | None
+        The identifier of the event edition that scopes the operation.
+    kind : str
+        The closed kind code.
+
+    Returns
+    -------
+    models.QuerySet[AccountRestriction]
+        The authorized active restrictions records in deterministic order.
+    """
     now = timezone.now()
     scope = AccountRestriction.objects.filter(
         account=account,
@@ -716,6 +1002,24 @@ def enforce_not_restricted(
     edition_id: UUID | None,
     kind: str,
 ) -> None:
+    """Return enforce not restricted.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID | None
+        The identifier of the event edition that scopes the operation.
+    kind : str
+        The closed kind code.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     restriction = active_restrictions(
         account=account,
         organization_id=organization_id,
@@ -736,6 +1040,27 @@ def submit_restriction_appeal(
     restriction_id: UUID,
     statement: str,
 ) -> RestrictionAppeal:
+    """Submit restriction appeal.
+
+    Parameters
+    ----------
+    account : Account
+        The account applied within the audited domain transition.
+    restriction_id : UUID
+        The identifier of the restriction.
+    statement : str
+        The statement applied within the audited domain transition.
+
+    Returns
+    -------
+    RestrictionAppeal
+        The newly persisted RestrictionAppeal with its durable command evidence.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     restriction = AccountRestriction.objects.get(
         id=restriction_id,
         account=account,
@@ -796,6 +1121,45 @@ def issue_account_restriction(
     notify_account: bool,
     correlation_id: UUID,
 ) -> AccountRestriction:
+    """Issue account restriction.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    account : Account
+        The account applied within the audited domain transition.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID | None
+        The identifier of the event edition that scopes the operation.
+    kind : str
+        The closed kind code.
+    reason_code : str
+        The stable reason code from the relevant closed catalog.
+    attendee_message : str
+        The attendee message applied within the audited domain transition.
+    internal_reference : str
+        The provider or source internal reference retained for reconciliation.
+    effective_at : object
+        The timezone-aware timestamp for effective.
+    expires_at : object | None
+        The time at which the value expires.
+    notify_account : bool
+        The notify account applied within the audited domain transition.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    AccountRestriction
+        The issued account restriction.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require_restriction_authority(
         actor=actor,
         organization_id=organization_id,
@@ -912,8 +1276,20 @@ def apply_due_account_restrictions(
     edition_id: UUID | None = None,
     now: datetime | None = None,
 ) -> int:
-    """Apply effective scheduled restrictions exactly once."""
+    """Apply effective scheduled restrictions exactly once.
 
+    Parameters
+    ----------
+    edition_id : UUID | None, default=None
+        The event edition identifier that scopes the operation.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    int
+        The resolved int for apply due account restrictions.
+    """
     effective_at = now or timezone.now()
     applied = 0
     scope = AccountRestriction.objects.filter(
@@ -959,6 +1335,33 @@ def revoke_account_restriction(
     reason: str,
     correlation_id: UUID,
 ) -> AccountRestriction:
+    """Revoke account restriction.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID | None
+        The identifier of the event edition that scopes the operation.
+    restriction_id : UUID
+        The identifier of the restriction.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    AccountRestriction
+        The updated AccountRestriction after the transition commits.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require_restriction_authority(
         actor=actor,
         organization_id=organization_id,
@@ -1026,6 +1429,35 @@ def decide_restriction_appeal(
     summary: str,
     correlation_id: UUID,
 ) -> RestrictionAppeal:
+    """Decide restriction appeal.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    appeal_id : UUID
+        The identifier of the appeal.
+    decision : str
+        The requested governed decision.
+    summary : str
+        The human-readable summary.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    RestrictionAppeal
+        The RestrictionAppeal established after decide restriction appeal completes.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require_restriction_authority(
         actor=actor,
         organization_id=organization_id,

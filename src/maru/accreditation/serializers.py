@@ -1,3 +1,5 @@
+"""Provide serializers support for the accreditation module."""
+
 from rest_framework import serializers
 
 from maru.accreditation.models import (
@@ -8,7 +10,11 @@ from maru.accreditation.models import (
 
 
 class CredentialSerializer(serializers.ModelSerializer[Credential]):
+    """Serialize and validate credential data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = Credential
         fields = (
             "id",
@@ -25,16 +31,24 @@ class CredentialSerializer(serializers.ModelSerializer[Credential]):
 
 
 class CredentialCommandSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate credential command data."""
+
     reason = serializers.CharField(max_length=500)
 
 
 class IssuedCredentialSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate issued credential data."""
+
     credential = CredentialSerializer()
     credential_token = serializers.CharField(allow_null=True)
 
 
 class OfflineManifestSerializer(serializers.ModelSerializer[OfflineCredentialManifest]):
+    """Serialize and validate offline manifest data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = OfflineCredentialManifest
         fields = (
             "id",
@@ -51,6 +65,8 @@ class OfflineManifestSerializer(serializers.ModelSerializer[OfflineCredentialMan
 
 
 class OfflineCheckInSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate offline check in data."""
+
     operation_id = serializers.UUIDField()
     device_sequence = serializers.IntegerField(min_value=1)
     manifest_sequence = serializers.IntegerField(min_value=1)
@@ -60,7 +76,11 @@ class OfflineCheckInSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class OfflineOperationSerializer(serializers.ModelSerializer[OfflineCheckInOperation]):
+    """Serialize and validate offline operation data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = OfflineCheckInOperation
         fields = (
             "operation_id",

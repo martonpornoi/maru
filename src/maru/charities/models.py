@@ -36,6 +36,8 @@ class _ClosedCharityModel(UUIDTimeStampedModel):
     """Reject ORM writes that bypass the charity application service."""
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -55,6 +57,8 @@ class _AppendOnlyCharityModel(_ClosedCharityModel):
     """Create-only evidence retained with its aggregate."""
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -70,6 +74,8 @@ class CharityPartner(_ClosedCharityModel):
     """Reusable beneficiary profile owned by one organizer, never a tenant."""
 
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         DRAFT = "draft", "Draft"
         ACTIVE = "active", "Active"
         RETIRED = "retired", "Retired"
@@ -117,6 +123,8 @@ class CharityPartner(_ClosedCharityModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "public_name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -131,11 +139,27 @@ class CharityPartner(_ClosedCharityModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.slug = self.slug.lower()
         self.country_code = self.country_code.upper()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable CharityPartner label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return self.public_name
 
 
@@ -143,10 +167,14 @@ class CharityPartnerMedia(_ClosedCharityModel):
     """Governed source and approved rendition references for one partner."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         LOGO = "logo", "Logo"
         PHOTO = "photo", "Photo"
 
     class ReviewStatus(models.TextChoices):
+        """Enumerate supported review status values."""
+
         PENDING = "pending", "Pending"
         APPROVED = "approved", "Approved"
         WITHDRAWN = "withdrawn", "Withdrawn"
@@ -190,6 +218,8 @@ class CharityPartnerMedia(_ClosedCharityModel):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("partner_id", "kind", "created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -214,6 +244,13 @@ class CharityPartnerMedia(_ClosedCharityModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.partner_id and self.partner.organization_id != self.organization_id:
             raise ValidationError(
@@ -233,12 +270,16 @@ class CharitySelection(_ClosedCharityModel):
     """One beneficiary proposed for one edition and responsible department."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PROPOSED = "proposed", "Proposed"
         SUBMITTED = "submitted", "Submitted"
         CONFIRMED = "confirmed", "Confirmed"
         REJECTED = "rejected", "Rejected"
 
     class PublicationState(models.TextChoices):
+        """Enumerate supported publication state values."""
+
         UNPUBLISHED = "unpublished", "Unpublished"
         PUBLISHED = "published", "Published"
 
@@ -284,6 +325,8 @@ class CharitySelection(_ClosedCharityModel):
     published_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "partner__public_name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -304,6 +347,13 @@ class CharitySelection(_ClosedCharityModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         edition = self.edition if self.edition_id else None
         partner = self.partner if self.partner_id else None
@@ -332,6 +382,8 @@ class CharitySelectionTimelineEntry(_AppendOnlyCharityModel):
     """Purpose-scoped append-only review, comment, and publication history."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         PROPOSED = "proposed", "Proposed"
         STATUS = "status", "Status decision"
         PRIVATE_COMMENT = "private_comment", "Private comment"
@@ -386,6 +438,8 @@ class CharitySelectionTimelineEntry(_AppendOnlyCharityModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("selection_id", "sequence", "id")
         constraints = [
             models.UniqueConstraint(
@@ -399,6 +453,13 @@ class CharitySelectionTimelineEntry(_AppendOnlyCharityModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         selection = self.selection if self.selection_id else None
         if selection is not None and (
@@ -453,6 +514,8 @@ class CharityPublicationSnapshot(_AppendOnlyCharityModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("selection_id", "publication_number", "id")
         constraints = [
             models.UniqueConstraint(
@@ -470,6 +533,13 @@ class CharityPublicationSnapshot(_AppendOnlyCharityModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.selection_id and (
             self.selection.organization_id != self.organization_id
@@ -485,6 +555,8 @@ class CharityCommandReceipt(_AppendOnlyCharityModel):
     """Immutable, minimized idempotency evidence for successful commands."""
 
     class Operation(models.TextChoices):
+        """Enumerate supported operation values."""
+
         PARTNER_CREATE = "partner_create", "Create partner"
         PARTNER_UPDATE = "partner_update", "Update partner"
         MEDIA_ADD = "media_add", "Add media"
@@ -538,6 +610,8 @@ class CharityCommandReceipt(_AppendOnlyCharityModel):
     source_channel = models.CharField(max_length=32)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -551,6 +625,13 @@ class CharityCommandReceipt(_AppendOnlyCharityModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         edition = self.edition if self.edition_id else None
         partner = self.partner if self.partner_id else None

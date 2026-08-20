@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
-from typing import Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db.models import QuerySet
 
 from maru.catalog.models import CatalogProduct
 from maru.charities.models import CharitySelection
@@ -19,6 +18,9 @@ from maru.core.forms import (
     StrictBase10IntegerField,
     StrictInputForm,
 )
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
 
 _DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M"
 _LOCAL_DATE_TIME = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}\Z")
@@ -35,6 +37,17 @@ class CatalogEditionLocalDateTimeField(forms.Field):
     }
 
     def __init__(self, *args: Any, zone_name: str = "UTC", **kwargs: Any) -> None:
+        """Initialize the CatalogEditionLocalDateTimeField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        zone_name : str, default='UTC'
+            The human-readable zone name shown to authorized readers.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault(
             "widget",
             forms.DateTimeInput(
@@ -46,9 +59,33 @@ class CatalogEditionLocalDateTimeField(forms.Field):
         self.zone = ZoneInfo(zone_name)
 
     def set_zone(self, zone_name: str) -> None:
+        """Set zone.
+
+        Parameters
+        ----------
+        zone_name : str
+            The human-readable zone name shown to authorized readers.
+        """
         self.zone = ZoneInfo(zone_name)
 
     def to_python(self, value: object) -> datetime | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        datetime | None
+            The canonical Python representation, or `None` for empty input.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if value in self.empty_values:
             return None
         if not isinstance(value, str) or _LOCAL_DATE_TIME.fullmatch(value) is None:
@@ -79,6 +116,18 @@ class CatalogEditionLocalDateTimeField(forms.Field):
         return first
 
     def prepare_value(self, value: object) -> object:
+        """Prepare value.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        object
+            A widget-ready representation of the stored value.
+        """
         if isinstance(value, datetime):
             local = value.astimezone(self.zone) if value.tzinfo else value
             return local.strftime(_DATE_TIME_FORMAT)
@@ -89,10 +138,24 @@ class CharitySelectionChoiceField(forms.ModelChoiceField):  # type: ignore[type-
     """Expose only the confirmed partner's public label in staff HTML."""
 
     def label_from_instance(self, obj: CharitySelection) -> str:
+        """Return label from instance.
+
+        Parameters
+        ----------
+        obj : CharitySelection
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for label from instance.
+        """
         return obj.partner.public_name
 
 
 class IdempotentCatalogForm(StrictInputForm):
+    """Collect and validate idempotent catalog input."""
+
     idempotency_key = CanonicalUUIDField(widget=forms.HiddenInput)
 
     def __init__(
@@ -101,6 +164,17 @@ class IdempotentCatalogForm(StrictInputForm):
         idempotency_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the IdempotentCatalogForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        idempotency_key : UUID | None, default=None
+            The stable key that makes an exact retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("idempotency_key", idempotency_key or uuid4())
         kwargs["initial"] = initial
@@ -108,6 +182,8 @@ class IdempotentCatalogForm(StrictInputForm):
 
 
 class ReasonedCatalogForm(IdempotentCatalogForm):
+    """Collect and validate reasoned catalog input."""
+
     reason = forms.CharField(
         min_length=1,
         max_length=500,
@@ -116,6 +192,8 @@ class ReasonedCatalogForm(IdempotentCatalogForm):
 
 
 class VersionedReasonedCatalogForm(ReasonedCatalogForm):
+    """Collect and validate versioned reasoned catalog input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -123,6 +201,8 @@ class VersionedReasonedCatalogForm(ReasonedCatalogForm):
 
 
 class CatalogCreateForm(ReasonedCatalogForm):
+    """Collect and validate catalog create input."""
+
     currency = forms.RegexField(
         regex=r"[A-Z]{3}\Z",
         max_length=3,
@@ -132,6 +212,8 @@ class CatalogCreateForm(ReasonedCatalogForm):
 
 
 class CatalogProductAddForm(VersionedReasonedCatalogForm):
+    """Collect and validate catalog product add input."""
+
     code = forms.RegexField(
         regex=r"[a-z0-9]+(?:-[a-z0-9]+)*\Z",
         max_length=80,
@@ -164,23 +246,43 @@ class CatalogProductAddForm(VersionedReasonedCatalogForm):
         charity_selections: QuerySet[CharitySelection] | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the CatalogProductAddForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        edition_time_zone : str
+            The IANA time-zone name used for localization and validation.
+        charity_selections : QuerySet[CharitySelection] | None, default=None
+            The charity selections used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("beneficiary", CatalogProduct.Beneficiary.CONVENTION)
         initial.setdefault("fulfilment_mode", CatalogProduct.Fulfilment.PICKUP)
         initial.setdefault("per_order_limit", 10)
         kwargs["initial"] = initial
         super().__init__(*args, **kwargs)
-        cast(Any, self.fields["charity_selection_id"]).queryset = (
+        cast("Any", self.fields["charity_selection_id"]).queryset = (
             charity_selections
             if charity_selections is not None
             else CharitySelection.objects.none()
         )
         for name in ("sale_opens_at", "sale_closes_at"):
-            cast(CatalogEditionLocalDateTimeField, self.fields[name]).set_zone(
+            cast("CatalogEditionLocalDateTimeField", self.fields[name]).set_zone(
                 edition_time_zone
             )
 
     def clean(self) -> dict[str, Any] | None:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean()
         if not cleaned:
             return cleaned
@@ -219,6 +321,8 @@ class CatalogProductAddForm(VersionedReasonedCatalogForm):
 
 
 class CatalogVariantAddForm(VersionedReasonedCatalogForm):
+    """Collect and validate catalog variant add input."""
+
     sku = forms.CharField(min_length=1, max_length=80)
     name = forms.CharField(min_length=1, max_length=120)
     price_minor = StrictBase10IntegerField(
@@ -244,10 +348,28 @@ class CatalogVariantAddForm(VersionedReasonedCatalogForm):
         product_kind: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the CatalogVariantAddForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        product_kind : str
+            The closed product kind discriminator defined by the domain catalog.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.product_kind = product_kind
 
     def clean(self) -> dict[str, Any] | None:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean()
         if not cleaned:
             return cleaned
@@ -274,16 +396,20 @@ class CatalogVariantAddForm(VersionedReasonedCatalogForm):
 
 
 class CatalogActivateForm(VersionedReasonedCatalogForm):
-    pass
+    """Collect and validate catalog activate input."""
 
 
 class CatalogOrderForm(IdempotentCatalogForm):
+    """Collect and validate catalog order input."""
+
     variant_id = CanonicalUUIDField(widget=forms.HiddenInput)
     quantity = StrictBase10IntegerField(min_value=1, max_value=1_000)
     expected_version = StrictBase10IntegerField(min_value=1, widget=forms.HiddenInput)
 
 
 class CatalogPaymentForm(IdempotentCatalogForm):
+    """Collect and validate catalog payment input."""
+
     expected_catalog_version = StrictBase10IntegerField(
         min_value=1, widget=forms.HiddenInput
     )
@@ -293,6 +419,8 @@ class CatalogPaymentForm(IdempotentCatalogForm):
 
 
 class CatalogStockForm(IdempotentCatalogForm):
+    """Collect and validate catalog stock input."""
+
     variant_id = CanonicalUUIDField(widget=forms.HiddenInput)
     expected_version = StrictBase10IntegerField(min_value=1, widget=forms.HiddenInput)
     new_stock = StrictBase10IntegerField(

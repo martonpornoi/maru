@@ -6,8 +6,7 @@ import hashlib
 import io
 import socket
 from dataclasses import dataclass
-from typing import Protocol
-from uuid import UUID
+from typing import TYPE_CHECKING, Protocol
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -24,6 +23,9 @@ from maru.registration.models import (
 )
 from maru.registration.profile_policy import MAX_FURSUIT_PHOTO_BYTES
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 MAX_IMAGE_PIXELS = 20_000_000
 MAX_RENDER_DIMENSION = 2048
 CLAMAV_CHUNK_SIZE = 64 * 1024
@@ -31,11 +33,48 @@ Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
 
 
 class ReadableUpload(Protocol):
-    def read(self, size: int = -1) -> bytes: ...
+    """Describe readable upload."""
+
+    def read(self, size: int = -1) -> bytes:
+        """Read.
+
+        Parameters
+        ----------
+        size : int, default=-1
+            The size evaluated while read.
+
+        Returns
+        -------
+        bytes
+            The canonical byte representation for read.
+        """
+        ...
 
 
 @dataclass(frozen=True, slots=True)
 class ProcessedImage:
+    """Describe processed image.
+
+    Attributes
+    ----------
+    content
+        The untrusted content bytes to validate or persist.
+    original_sha256
+        The canonical digest used to verify original.
+    sanitized_sha256
+        The canonical digest used to verify sanitized.
+    scanner_code
+        The stable scanner code from the relevant closed catalog.
+    content_type
+        The closed content type discriminator defined by the domain catalog.
+    width
+        The width retained in this immutable projection.
+    height
+        The height retained in this immutable projection.
+    byte_count
+        The bounded number of byte records.
+    """
+
     content: ContentFile[bytes]
     original_sha256: str
     sanitized_sha256: str
@@ -98,6 +137,23 @@ def _scan(data: bytes) -> str:
 
 
 def process_image(upload: ReadableUpload) -> ProcessedImage:
+    """Process image.
+
+    Parameters
+    ----------
+    upload : ReadableUpload
+        The upload evaluated while process image.
+
+    Returns
+    -------
+    ProcessedImage
+        The processed image.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     data = upload.read(MAX_FURSUIT_PHOTO_BYTES + 1)
     if len(data) > MAX_FURSUIT_PHOTO_BYTES:
         raise ValidationError(
@@ -165,6 +221,30 @@ def record_media_safety(
     media_id: UUID,
     storage_name: str,
 ) -> MediaSafetyReceipt:
+    """Record media safety.
+
+    Parameters
+    ----------
+    processed : ProcessedImage
+        The processed evaluated while record media safety.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    account_id : UUID
+        The identifier of the account.
+    media_kind : str
+        The closed media kind discriminator defined by the domain catalog.
+    media_id : UUID
+        The identifier of the media.
+    storage_name : str
+        The human-readable storage name shown to authorized readers.
+
+    Returns
+    -------
+    MediaSafetyReceipt
+        The media safety receipt.
+    """
     return MediaSafetyReceipt.objects.create(
         organization_id=organization_id,
         edition_id=edition_id,
@@ -196,6 +276,34 @@ def copy_media_safety(
     edition_id: UUID,
     account_id: UUID,
 ) -> MediaSafetyReceipt | None:
+    """Copy media safety.
+
+    Parameters
+    ----------
+    source_kind : str
+        The closed source kind discriminator defined by the domain catalog.
+    source_id : UUID
+        The identifier of the source.
+    source_storage_name : str
+        The human-readable source storage name shown to authorized readers.
+    target_kind : str
+        The closed target kind discriminator defined by the domain catalog.
+    target_id : UUID
+        The identifier of the target.
+    target_storage_name : str
+        The human-readable target storage name shown to authorized readers.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    account_id : UUID
+        The identifier of the account.
+
+    Returns
+    -------
+    MediaSafetyReceipt | None
+        The media safety receipt.
+    """
     source = (
         MediaSafetyReceipt.objects.filter(
             media_kind=source_kind,
@@ -227,6 +335,22 @@ def copy_media_safety(
 
 
 def media_is_safe(*, media_kind: str, media_id: UUID, storage_name: str) -> bool:
+    """Return whether media is safe.
+
+    Parameters
+    ----------
+    media_kind : str
+        The closed media kind discriminator defined by the domain catalog.
+    media_id : UUID
+        The identifier of the media.
+    storage_name : str
+        The human-readable storage name shown to authorized readers.
+
+    Returns
+    -------
+    bool
+        Whether the requested condition is satisfied.
+    """
     if not settings.MEDIA_REQUIRE_SAFETY_RECEIPT:
         return True
     return MediaSafetyReceipt.objects.filter(
@@ -237,8 +361,19 @@ def media_is_safe(*, media_kind: str, media_id: UUID, storage_name: str) -> bool
 
 
 def dispose_storage_if_unreferenced(storage_name: str) -> bool:
-    """Delete a media object only after every profile/fursuit reference is gone."""
+    """Delete a media object only after every profile/fursuit reference is gone.
 
+    Parameters
+    ----------
+    storage_name : str
+        The human-readable storage name shown to authorized readers.
+
+    Returns
+    -------
+    bool
+        `True` when Delete a media object only after every profile/fursuit
+        reference is gone; otherwise `False`.
+    """
     if not storage_name:
         return False
     referenced = (

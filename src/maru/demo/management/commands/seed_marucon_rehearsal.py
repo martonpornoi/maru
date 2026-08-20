@@ -18,9 +18,18 @@ _RETIRED_ROSTER_URL = "https://awoostria.at/about-us/our-volunteers"
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Retired: use seed_demo_data and Page 8 instead."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--roster-file",
             type=Path,
@@ -42,5 +51,19 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args, options
         raise CommandError(RETIRED_COMMAND_MESSAGE)

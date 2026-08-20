@@ -61,6 +61,13 @@ the system.
 | [0054](0054-event-sourced-logistics-containment-and-custody.md) | Accepted | Track physical containment and custody through typed acyclic nodes, append-only movements, manifests, and bounded offline reconciliation |
 | [0055](0055-task-oriented-responsive-management-experience.md) | Accepted | Present task-oriented management navigation, an accessible intermediate-width drawer, and a coherent person-account to governance handoff without changing domain authority |
 | [0056](0056-private-schema-backed-api-reference.md) | Accepted | Render the canonical OpenAPI contract through private, locally served Swagger and ReDoc views without enabling per-endpoint browsable APIs |
+| [0057](0057-numpy-docstrings-and-generated-contributor-reference.md) | Partially superseded | Enforce NumPy-style Python contracts and build a warning-fatal Sphinx contributor reference in CI; ADR 0058 strengthens semantic depth |
+| [0058](0058-professional-python-documentation-contracts.md) | Partially superseded | Require complete public NumPy contracts and reject generated boilerplate; ADR 0059 strengthens signature synchronization and exact raises |
+| [0059](0059-strict-pydoclint-and-bounded-ruff-exemptions.md) | Accepted | Enable the strictest useful PyDocLint contract and replace broad Ruff exemptions with eight bounded global categories |
+| [0060](0060-protected-collaboration-and-release-evidence.md) | Partially superseded | Protected GitHub flow, CalVer, and evidence-bearing OCI releases; ADR 0061 replaces its six-shard full-acceptance decision |
+| [0061](0061-latency-bounded-full-acceptance.md) | Accepted | Change-aware hosted acceptance with eight measured PostgreSQL shards, restored for public collaboration by ADR 0063 |
+| [0062](0062-local-exact-commit-certification.md) | Superseded | Historical private-repository local certification topology; ADR 0063 restores hosted execution after the public transition |
+| [0063](0063-public-hosted-protected-collaboration.md) | Accepted | Public hosted exact-commit acceptance, no-bypass rulesets, immutable Action allowlisting, and no persistent self-hosted pull-request runner |
 
 New ADRs use the next four-digit number and contain:
 

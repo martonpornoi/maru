@@ -15,10 +15,33 @@ from maru.core.validators import validate_lowercase_slug
 
 
 class ProtectedCatalogModel(UUIDTimeStampedModel):
+    """Store protected catalog records."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "Catalog records require a governed lifecycle command.",
@@ -27,10 +50,28 @@ class ProtectedCatalogModel(UUIDTimeStampedModel):
 
 
 class AppendOnlyCatalogModel(ProtectedCatalogModel):
+    """Store append only catalog records."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Catalog evidence is append-only.",
@@ -41,7 +82,11 @@ class AppendOnlyCatalogModel(ProtectedCatalogModel):
 
 
 class EditionCatalog(ProtectedCatalogModel):
+    """Store edition catalog records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         DRAFT = "draft", "Draft"
         ACTIVE = "active", "Active"
         CLOSED = "closed", "Closed"
@@ -66,6 +111,8 @@ class EditionCatalog(ProtectedCatalogModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "edition_id")
         constraints = [
             models.CheckConstraint(
@@ -75,6 +122,13 @@ class EditionCatalog(ProtectedCatalogModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         self.currency = self.currency.upper()
         if self.edition_id and self.edition.organization_id != self.organization_id:
@@ -84,26 +138,45 @@ class EditionCatalog(ProtectedCatalogModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
 
 class CatalogProduct(ProtectedCatalogModel):
+    """Store catalog product records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         MERCHANDISE = "merchandise", "Convention merchandise"
         DONATION = "donation", "Donation"
         SUPPORTER = "supporter", "Limited supporter product"
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         DRAFT = "draft", "Draft"
         ACTIVE = "active", "Active"
         RETIRED = "retired", "Retired"
 
     class Beneficiary(models.TextChoices):
+        """Enumerate supported beneficiary values."""
+
         CONVENTION = "convention", "Convention"
         CHARITY = "charity", "Charity"
 
     class Fulfilment(models.TextChoices):
+        """Enumerate supported fulfilment values."""
+
         NONE = "none", "No fulfilment"
         PICKUP = "pickup", "On-site pickup"
         SHIPPING = "shipping", "Shipping"
@@ -145,6 +218,8 @@ class CatalogProduct(ProtectedCatalogModel):
     position = models.PositiveIntegerField(default=0)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position", "name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -172,6 +247,13 @@ class CatalogProduct(ProtectedCatalogModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         self.code = self.code.lower()
         if self.kind == self.Kind.DONATION and (
@@ -191,11 +273,22 @@ class CatalogProduct(ProtectedCatalogModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
 
 class CatalogVariant(ProtectedCatalogModel):
+    """Store catalog variant records."""
+
     product = models.ForeignKey(
         CatalogProduct, on_delete=models.PROTECT, related_name="variants"
     )
@@ -209,6 +302,8 @@ class CatalogVariant(ProtectedCatalogModel):
     position = models.PositiveIntegerField(default=0)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("position", "name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -229,9 +324,23 @@ class CatalogVariant(ProtectedCatalogModel):
 
     @property
     def is_stock_limited(self) -> bool:
+        """Return whether stock limited.
+
+        Returns
+        -------
+        bool
+            `True` when stock limited; otherwise `False`.
+        """
         return self.initial_stock is not None
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         self.currency = self.currency.upper()
         if self.currency != self.product.catalog.currency:
@@ -246,12 +355,25 @@ class CatalogVariant(ProtectedCatalogModel):
             raise ValidationError("Limited supporter variants require finite stock.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
 
 class CatalogOrder(ProtectedCatalogModel):
+    """Store catalog order records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PAYMENT_PENDING = "payment_pending", "Payment pending"
         PAID = "paid", "Paid"
         CANCELLED = "cancelled", "Cancelled"
@@ -287,6 +409,8 @@ class CatalogOrder(ProtectedCatalogModel):
     fulfilment_status = models.CharField(max_length=24, default="not_started")
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-created_at", "reference")
         constraints = [
             models.UniqueConstraint(
@@ -310,6 +434,13 @@ class CatalogOrder(ProtectedCatalogModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.catalog_id and (
             self.catalog.organization_id != self.organization_id
@@ -318,11 +449,22 @@ class CatalogOrder(ProtectedCatalogModel):
             raise ValidationError("Order scope must match its edition catalog.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
 
 class CatalogOrderLine(ProtectedCatalogModel):
+    """Store catalog order line records."""
+
     order = models.ForeignKey(
         CatalogOrder, on_delete=models.PROTECT, related_name="lines"
     )
@@ -344,6 +486,8 @@ class CatalogOrderLine(ProtectedCatalogModel):
     fulfilment_mode_snapshot = models.CharField(max_length=16)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -357,6 +501,13 @@ class CatalogOrderLine(ProtectedCatalogModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.variant_id and self.variant.product_id != self.product_id:
             raise ValidationError("Order-line variant and product must match.")
@@ -366,6 +517,20 @@ class CatalogOrderLine(ProtectedCatalogModel):
             raise ValidationError("Order-line total does not match its snapshot.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError("Order lines are immutable snapshots.")
         self.full_clean()
@@ -373,6 +538,8 @@ class CatalogOrderLine(ProtectedCatalogModel):
 
 
 class CatalogStockAdjustment(AppendOnlyCatalogModel):
+    """Store catalog stock adjustment records."""
+
     catalog = models.ForeignKey(
         EditionCatalog,
         on_delete=models.PROTECT,
@@ -395,6 +562,8 @@ class CatalogStockAdjustment(AppendOnlyCatalogModel):
     correlation_id = models.UUIDField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("catalog_id", "control_version")
         constraints = [
             models.UniqueConstraint(
@@ -408,11 +577,17 @@ class CatalogStockAdjustment(AppendOnlyCatalogModel):
 
 
 class CatalogPaymentIntent(ProtectedCatalogModel):
+    """Store catalog payment intent records."""
+
     class Provider(models.TextChoices):
+        """Enumerate supported provider values."""
+
         HOSTED = "hosted", "Hosted payment"
         DEMO = "demo", "Deterministic demo payment"
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PENDING = "pending", "Pending"
         SUCCEEDED = "succeeded", "Succeeded"
         FAILED = "failed", "Failed"
@@ -431,9 +606,18 @@ class CatalogPaymentIntent(ProtectedCatalogModel):
     succeeded_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-created_at", "id")
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.order_id and (
             self.amount_minor != self.order.total_minor
@@ -442,11 +626,22 @@ class CatalogPaymentIntent(ProtectedCatalogModel):
             raise ValidationError("Payment intent must equal its order balance.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
 
 class CatalogPaymentEvent(AppendOnlyCatalogModel):
+    """Store catalog payment event records."""
+
     intent = models.ForeignKey(
         CatalogPaymentIntent,
         on_delete=models.PROTECT,
@@ -459,6 +654,8 @@ class CatalogPaymentEvent(AppendOnlyCatalogModel):
     correlation_id = models.UUIDField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("occurred_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -469,6 +666,8 @@ class CatalogPaymentEvent(AppendOnlyCatalogModel):
 
 
 class CatalogOrderTimelineEntry(AppendOnlyCatalogModel):
+    """Store catalog order timeline entry records."""
+
     order = models.ForeignKey(
         CatalogOrder, on_delete=models.PROTECT, related_name="timeline_entries"
     )
@@ -485,11 +684,17 @@ class CatalogOrderTimelineEntry(AppendOnlyCatalogModel):
     occurred_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("occurred_at", "id")
 
 
 class CatalogCommandReceipt(AppendOnlyCatalogModel):
+    """Store catalog command receipt records."""
+
     class Operation(models.TextChoices):
+        """Enumerate supported operation values."""
+
         CATALOG_CREATED = "catalog_created", "Catalog created"
         PRODUCT_ADDED = "product_added", "Product added"
         VARIANT_ADDED = "variant_added", "Variant added"
@@ -519,6 +724,8 @@ class CatalogCommandReceipt(AppendOnlyCatalogModel):
     source_channel = models.CharField(max_length=32)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("catalog_id", "resulting_version", "id")
         constraints = [
             models.UniqueConstraint(

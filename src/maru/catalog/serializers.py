@@ -30,7 +30,7 @@ class _CatalogClosedInputSchema(OpenApiSerializerExtension):
         auto_schema: "AutoSchema",
         direction: "Direction",
     ) -> dict[str, Any]:
-        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]
+        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]  # noqa: SLF001
             self.target,
             direction,
             bypass_extensions=True,
@@ -41,15 +41,19 @@ class _CatalogClosedInputSchema(OpenApiSerializerExtension):
                 "initial_stock": ["stock_ceiling"],
                 "stock_ceiling": ["initial_stock"],
             }
-        return cast(dict[str, Any], schema)
+        return cast("dict[str, Any]", schema)
 
 
 class CatalogCreateSerializer(_CatalogClosedInputSerializer):
+    """Serialize and validate catalog create data."""
+
     currency = serializers.CharField(min_length=3, max_length=3)
     reason = serializers.CharField(min_length=1, max_length=500)
 
 
 class CatalogProductAddSerializer(_CatalogClosedInputSerializer):
+    """Serialize and validate catalog product add data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     reason = serializers.CharField(min_length=1, max_length=500)
     code = serializers.SlugField(max_length=80)
@@ -76,6 +80,8 @@ class CatalogProductAddSerializer(_CatalogClosedInputSerializer):
 
 
 class CatalogVariantAddSerializer(_CatalogClosedInputSerializer):
+    """Serialize and validate catalog variant add data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     reason = serializers.CharField(min_length=1, max_length=500)
     sku = serializers.CharField(min_length=1, max_length=80)
@@ -93,6 +99,23 @@ class CatalogVariantAddSerializer(_CatalogClosedInputSerializer):
     )
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, Any]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if ("initial_stock" in attrs) != ("stock_ceiling" in attrs):
             raise serializers.ValidationError(
                 {
@@ -105,38 +128,67 @@ class CatalogVariantAddSerializer(_CatalogClosedInputSerializer):
 
 
 class CatalogActivateSerializer(_CatalogClosedInputSerializer):
+    """Serialize and validate catalog activate data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     reason = serializers.CharField(min_length=1, max_length=500)
 
 
 class CatalogStockAdjustSerializer(_CatalogClosedInputSerializer):
+    """Serialize and validate catalog stock adjust data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     reason = serializers.CharField(min_length=1, max_length=500)
     new_stock = serializers.IntegerField(min_value=0)
 
 
 class CatalogOrderLineSerializer(_CatalogClosedInputSerializer):
+    """Serialize and validate catalog order line data."""
+
     variant_id = serializers.UUIDField()
     quantity = serializers.IntegerField(min_value=1)
 
 
 class CatalogOrderCreateSerializer(_CatalogClosedInputSerializer):
+    """Serialize and validate catalog order create data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     lines = CatalogOrderLineSerializer(many=True)
 
     def validate_lines(self, value: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Validate lines.
+
+        Parameters
+        ----------
+        value : list[dict[str, Any]]
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            The matching validate lines records in deterministic order.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not 1 <= len(value) <= MAX_ORDER_LINES:
             raise serializers.ValidationError("Choose between 1 and 50 variants.")
         return value
 
 
 class CatalogPaymentCreateSerializer(_CatalogClosedInputSerializer):
+    """Serialize and validate catalog payment create data."""
+
     expected_catalog_version = serializers.IntegerField(min_value=1)
     expected_order_version = serializers.IntegerField(min_value=1)
     provider = serializers.ChoiceField(choices=CatalogPaymentIntent.Provider.choices)
 
 
 class CatalogPaymentReconcileSerializer(_CatalogClosedInputSerializer):
+    """Serialize and validate catalog payment reconcile data."""
+
     expected_catalog_version = serializers.IntegerField(min_value=1)
     expected_order_version = serializers.IntegerField(min_value=1)
     provider_event_id = serializers.CharField(min_length=1, max_length=160)
@@ -150,12 +202,16 @@ class CatalogPaymentReconcileSerializer(_CatalogClosedInputSerializer):
 
 
 class CatalogCommandResultSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog command result data."""
+
     target_id = serializers.UUIDField()
     resulting_version = serializers.IntegerField(min_value=1)
     replayed = serializers.BooleanField()
 
 
 class CatalogVariantProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog variant projection data."""
+
     id = serializers.UUIDField()
     sku = serializers.CharField()
     name = serializers.CharField()
@@ -167,6 +223,8 @@ class CatalogVariantProjectionSerializer(serializers.Serializer[dict[str, Any]])
 
 
 class CatalogProductProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog product projection data."""
+
     id = serializers.UUIDField()
     code = serializers.CharField()
     kind = serializers.ChoiceField(choices=CatalogProduct.Kind.choices)
@@ -183,12 +241,16 @@ class CatalogProductProjectionSerializer(serializers.Serializer[dict[str, Any]])
 
 
 class CatalogDetailSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog detail data."""
+
     catalog_version = serializers.IntegerField(min_value=1)
     currency = serializers.CharField()
     products = CatalogProductProjectionSerializer(many=True)
 
 
 class CatalogOrderLineProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog order line projection data."""
+
     product_name = serializers.CharField()
     variant_name = serializers.CharField()
     sku = serializers.CharField()
@@ -201,6 +263,8 @@ class CatalogOrderLineProjectionSerializer(serializers.Serializer[dict[str, Any]
 
 
 class CatalogPaymentProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog payment projection data."""
+
     id = serializers.UUIDField()
     provider = serializers.ChoiceField(choices=CatalogPaymentIntent.Provider.choices)
     status = serializers.CharField()
@@ -208,6 +272,8 @@ class CatalogPaymentProjectionSerializer(serializers.Serializer[dict[str, Any]])
 
 
 class CatalogOrderProjectionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog order projection data."""
+
     id = serializers.UUIDField()
     reference = serializers.CharField()
     status = serializers.CharField()
@@ -222,10 +288,14 @@ class CatalogOrderProjectionSerializer(serializers.Serializer[dict[str, Any]]):
 
 
 class CatalogOrderListSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog order list data."""
+
     orders = CatalogOrderProjectionSerializer(many=True)
 
 
 class CatalogActivityItemSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog activity item data."""
+
     action = serializers.CharField()
     actor_label = serializers.CharField()
     occurred_at = serializers.DateTimeField()
@@ -233,4 +303,6 @@ class CatalogActivityItemSerializer(serializers.Serializer[dict[str, Any]]):
 
 
 class CatalogActivityListSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate catalog activity list data."""
+
     activity = CatalogActivityItemSerializer(many=True)

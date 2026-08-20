@@ -12,9 +12,12 @@ import hashlib
 import json
 import re
 import unicodedata
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _CODE_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 _MAX_CODE_LENGTH = 80
@@ -25,7 +28,21 @@ _MAX_DISPLAY_ORDER = 65_535
 
 @dataclass(frozen=True, slots=True)
 class StructureDepartmentDefinition:
-    """One immutable Department definition inside a built-in template."""
+    """One immutable Department definition inside a built-in template.
+
+    Attributes
+    ----------
+    code
+        The stable domain code to resolve or validate.
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    parent_code
+        The stable parent code from the relevant closed catalog.
+    display_order
+        The deterministic display position within the owning collection.
+    """
 
     code: str
     name: str
@@ -36,7 +53,21 @@ class StructureDepartmentDefinition:
 
 @dataclass(frozen=True, slots=True)
 class BuiltinStructureTemplate:
-    """A validated immutable template with pinned canonical content evidence."""
+    """A validated immutable template with pinned canonical content evidence.
+
+    Attributes
+    ----------
+    code
+        The stable domain code to resolve or validate.
+    version
+        The version number associated with the supplied record or contract.
+    departments
+        The departments retained in this immutable projection.
+    canonical_json
+        The canonical json retained in this immutable projection.
+    sha256_digest
+        The canonical digest used to verify sha256.
+    """
 
     code: str
     version: int
@@ -45,6 +76,7 @@ class BuiltinStructureTemplate:
     sha256_digest: str = field(init=False)
 
     def __post_init__(self) -> None:
+        """Implement `__post_init__` for BuiltinStructureTemplate."""
         _validate_template(self)
         canonical_json = _canonical_json(self)
         object.__setattr__(self, "canonical_json", canonical_json)
@@ -56,8 +88,13 @@ class BuiltinStructureTemplate:
 
     @property
     def identifier(self) -> str:
-        """Return the closed external template identifier."""
+        """Return the closed external template identifier.
 
+        Returns
+        -------
+        str
+            The normalized text for identifier.
+        """
         return f"{self.code}@{self.version}"
 
 
@@ -270,8 +307,24 @@ BUILTIN_STRUCTURE_TEMPLATES: Mapping[str, BuiltinStructureTemplate] = MappingPro
 
 
 def get_builtin_structure_template(identifier: str) -> BuiltinStructureTemplate:
-    """Resolve one exact code-owned template identifier without aliases."""
+    """Resolve one exact code-owned template identifier without aliases.
 
+    Parameters
+    ----------
+    identifier : str
+        The identifier evaluated while get builtin structure template.
+
+    Returns
+    -------
+    BuiltinStructureTemplate
+        The resolved BuiltinStructureTemplate for the requested scope.
+
+    Raises
+    ------
+    UnknownBuiltinStructureTemplateError
+        If the operation encounters a unknown builtin structure template
+        condition.
+    """
     try:
         return BUILTIN_STRUCTURE_TEMPLATES[identifier]
     except KeyError as error:

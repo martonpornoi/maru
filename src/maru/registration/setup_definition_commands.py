@@ -12,8 +12,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, cast
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, cast
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
@@ -23,7 +22,6 @@ from django.utils import timezone
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
-from maru.authorization.policy import PolicyDecision
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
 from maru.identity.models import Account
@@ -89,6 +87,11 @@ from maru.registration.setup_section_commands import (
     _strict_uuid,
 )
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from maru.authorization.policy import PolicyDecision
+
 MAX_QUESTION_LABEL_LENGTH = 200
 MAX_QUESTION_HELP_LENGTH = 2_000
 MAX_QUESTION_PURPOSE_LENGTH = 240
@@ -131,53 +134,97 @@ _RESERVED_PROFILE_PREFIXES = (
 
 
 class RegistrationSetupQuestionUnavailableError(RegistrationSetupCommandError):
+    """Signal registration setup question unavailable."""
+
     reason_code = "registration_setup_question_unavailable"
 
 
 class RegistrationSetupQuestionDependencyError(RegistrationSetupCommandError):
+    """Signal registration setup question dependency."""
+
     reason_code = "registration_setup_question_has_dependencies"
 
 
 class RegistrationSetupProductUnavailableError(RegistrationSetupCommandError):
+    """Signal registration setup product unavailable."""
+
     reason_code = "registration_setup_product_unavailable"
 
 
 class RegistrationSetupProductDependencyError(RegistrationSetupCommandError):
+    """Signal registration setup product dependency."""
+
     reason_code = "registration_setup_product_has_dependencies"
 
 
 class RegistrationSetupMinorPolicyUnavailableError(RegistrationSetupCommandError):
+    """Signal registration setup minor policy unavailable."""
+
     reason_code = "registration_setup_minor_policy_unavailable"
 
 
 class RegistrationSetupMinorPolicyDependencyError(RegistrationSetupCommandError):
+    """Signal registration setup minor policy dependency."""
+
     reason_code = "registration_setup_minor_policy_has_dependencies"
 
 
 class RegistrationSetupProfileFieldUnavailableError(RegistrationSetupCommandError):
+    """Signal registration setup profile field unavailable."""
+
     reason_code = "registration_setup_profile_field_unavailable"
 
 
 class RegistrationSetupProfileFieldImmutableError(RegistrationSetupCommandError):
+    """Signal registration setup profile field immutable."""
+
     reason_code = "registration_setup_profile_field_immutable"
 
 
 class RegistrationSetupProfileFieldDependencyError(RegistrationSetupCommandError):
+    """Signal registration setup profile field dependency."""
+
     reason_code = "registration_setup_profile_field_has_successor"
 
 
 class RegistrationSetupProfileFieldReviewRequiredError(RegistrationSetupCommandError):
+    """Signal registration setup profile field review required."""
+
     reason_code = "registration_setup_profile_field_review_required"
 
 
 class RegistrationSetupProfileFieldSuccessorConflictError(
     RegistrationSetupCommandError
 ):
+    """Signal registration setup profile field successor conflict."""
+
     reason_code = "registration_setup_profile_field_successor_conflict"
 
 
 @dataclass(frozen=True, slots=True)
 class RegistrationDefinitionCommandResult:
+    """Describe registration definition command result.
+
+    Attributes
+    ----------
+    setup_id
+        The setup identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    target_id
+        The target identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    action
+        The stable action code describing the requested transition.
+    configuration_id
+        The configuration identifier within the requested scope.
+    configuration_content_digest
+        The canonical digest used to verify configuration content.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     setup_id: UUID
     receipt_id: UUID
     target_id: UUID
@@ -286,7 +333,7 @@ def _normalized_options(value: object) -> list[str]:
             "registration_setup_question_options_invalid",
         )
     if len(value) > MAX_QUESTION_OPTIONS:
-        raise RegistrationSetupLimitExceededError()
+        raise RegistrationSetupLimitExceededError
     normalized = [
         _normalized_required_text(
             option,
@@ -523,7 +570,7 @@ def _result_from_receipt(
     target_id: UUID | None,
 ) -> RegistrationDefinitionCommandResult:
     if receipt.action != action or receipt.request_digest != request_digest:
-        raise RegistrationSetupRetryConflictError()
+        raise RegistrationSetupRetryConflictError
     candidates = receipt.targets.filter(target_kind=target_kind)
     target = (
         candidates.filter(target_id=target_id).first()
@@ -533,7 +580,7 @@ def _result_from_receipt(
         ).first()
     )
     if target is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     if target_kind == RegistrationSetupCommandTarget.TargetKind.PROFILE_FIELD:
         _require_profile_command_evidence(
             scope=scope,
@@ -589,11 +636,11 @@ def _target_digest(kind: str, value: Any, *, section_key: str | None = None) -> 
     elif kind == RegistrationSetupCommandTarget.TargetKind.MINOR_POLICY:
         payload = minor_policy_payload(value)
         if payload is None:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
     elif kind == RegistrationSetupCommandTarget.TargetKind.PROFILE_FIELD:
         payload = profile_extension_payload(value)
     else:  # pragma: no cover - guarded by every caller's closed discriminator.
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     return target_content_digest(kind=kind, payload=payload)
 
 
@@ -603,8 +650,27 @@ def _require_profile_command_evidence(  # noqa: PLR0912
     receipt: RegistrationSetupCommandReceipt,
     primary_target_id: UUID,
 ) -> AuditEvent:
-    """Prove exact profile targets and their canonical effect chain."""
+    """Prove exact profile targets and their canonical effect chain.
 
+    Parameters
+    ----------
+    scope : _LockedProfileScope
+        The exact tenant and resource scope of the operation.
+    receipt : RegistrationSetupCommandReceipt
+        The immutable command receipt proving the accepted transition.
+    primary_target_id : UUID
+        The primary target identifier within the requested scope.
+
+    Returns
+    -------
+    AuditEvent
+        The resolved AuditEvent for require profile command evidence.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     targets = tuple(
         receipt.targets.select_for_update().order_by(
             "target_kind",
@@ -616,7 +682,7 @@ def _require_profile_command_evidence(  # noqa: PLR0912
         target.target_kind != RegistrationSetupCommandTarget.TargetKind.PROFILE_FIELD
         for target in targets
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
 
     action = receipt.action
     primary_change_kind_by_action: dict[str, str] = {
@@ -644,7 +710,7 @@ def _require_profile_command_evidence(  # noqa: PLR0912
     }
     primary_change_kind = primary_change_kind_by_action.get(action)
     if primary_change_kind is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     primary_matches = tuple(
         target
         for target in targets
@@ -652,7 +718,7 @@ def _require_profile_command_evidence(  # noqa: PLR0912
         and target.change_kind == primary_change_kind
     )
     if len(primary_matches) != 1:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
 
     allowed_secondary_by_action: dict[str, set[str]] = {
         RegistrationSetupCommandReceipt.Action.PROFILE_FIELD_CREATED: {
@@ -674,7 +740,7 @@ def _require_profile_command_evidence(  # noqa: PLR0912
     secondary = tuple(target for target in targets if target != primary_matches[0])
     allowed_secondary = allowed_secondary_by_action[action]
     if any(target.change_kind not in allowed_secondary for target in secondary):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     if (
         action
         in {
@@ -684,17 +750,17 @@ def _require_profile_command_evidence(  # noqa: PLR0912
         }
         and len(targets) != 1
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     if action == RegistrationSetupCommandReceipt.Action.PROFILE_FIELD_ACTIVATED and len(
         targets
     ) not in {1, MAX_PROFILE_ACTIVATION_TARGETS}:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
 
     fields_by_id = {field.id: field for field in scope.fields}
     for target in targets:
         field = fields_by_id.get(target.target_id)
         if field is None or target.target_schema_version != field.version:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         has_later_target = RegistrationSetupCommandTarget.objects.filter(
             receipt__setup=scope.control,
             receipt__resulting_version__gt=receipt.resulting_version,
@@ -705,7 +771,7 @@ def _require_profile_command_evidence(  # noqa: PLR0912
             RegistrationSetupCommandTarget.TargetKind.PROFILE_FIELD,
             field,
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
 
     expected_approval_time = None
     if action == RegistrationSetupCommandReceipt.Action.PROFILE_FIELD_REVIEWED:
@@ -722,7 +788,7 @@ def _require_profile_command_evidence(  # noqa: PLR0912
         if not has_later_review:
             expected_approval_time = fields_by_id[primary_target_id].approved_at
             if expected_approval_time is None:
-                raise RegistrationSetupStateConflictError()
+                raise RegistrationSetupStateConflictError
 
     fixed_changed_fields: dict[str, tuple[str, ...]] = {
         RegistrationSetupCommandReceipt.Action.PROFILE_FIELD_CREATED: (
@@ -785,7 +851,7 @@ def _require_profile_command_evidence(  # noqa: PLR0912
             or not audits[0].changed_fields
             or any(field not in allowed_fields for field in audits[0].changed_fields)
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         expected_changed_fields = tuple(audits[0].changed_fields)
     else:
         expected_changed_fields = fixed_changed_fields[action]
@@ -822,8 +888,8 @@ def _delete_without_cascade(value: Any, *, dependency_error: type[Exception]) ->
 def _question_by_id(scope: Any, question_id: UUID) -> RegistrationQuestion:
     question = next((item for item in scope.questions if item.id == question_id), None)
     if question is None:
-        raise RegistrationSetupQuestionUnavailableError()
-    return cast(RegistrationQuestion, question)
+        raise RegistrationSetupQuestionUnavailableError
+    return cast("RegistrationQuestion", question)
 
 
 def _question_section(
@@ -839,7 +905,7 @@ def _question_section(
             "Choose a section from this exact configuration.",
             "registration_setup_question_section_invalid",
         )
-    return cast(RegistrationSection, section)
+    return cast("RegistrationSection", section)
 
 
 def _ordered_questions(
@@ -867,7 +933,7 @@ def _ordered_questions(
             None,
         )
         if anchor_index is None:
-            raise RegistrationSetupQuestionUnavailableError()
+            raise RegistrationSetupQuestionUnavailableError
         insertion_index = anchor_index + 1
     remaining.insert(insertion_index, question)
     return tuple(remaining)
@@ -887,7 +953,7 @@ def _renumber_questions(
         question.position = position
         question.last_changed_in_setup_version = resulting_version
         question.updated_at = changed_at
-        if not question._state.adding:
+        if not question._state.adding:  # noqa: SLF001
             changed.append(question)
     return tuple(changed)
 
@@ -1091,8 +1157,73 @@ def create_registration_question(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
-    """Create one typed question in a bounded, dependency-valid order."""
+    """Create one typed question in a bounded, dependency-valid order.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    key : str
+        The lookup, signing, or idempotency key selected by the contract.
+    label : str
+        The human-readable label shown to authorized readers.
+    help_text : str
+        The help text applied within the audited domain transition.
+    field_type : str
+        The closed field type discriminator defined by the domain catalog.
+    required : bool
+        The required applied within the audited domain transition.
+    options : list[str]
+        The configured option codes valid for the source question.
+    purpose : str
+        The documented purpose constraining collection and processing.
+    visibility : str
+        The closed disclosure audience applied to the projection.
+    classification : str
+        The closed sensitivity classification governing disclosure.
+    condition_question_key : str
+        The stable condition question key used to authenticate or deduplicate
+        the operation.
+    condition_value : str
+        The condition value applied within the audited domain transition.
+    section_id : UUID | None
+        The section identifier within the requested scope.
+    after_question_id : UUID | None
+        The after question identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The newly created RegistrationDefinitionCommandResult.
+
+    Raises
+    ------
+    RegistrationSetupLimitExceededError
+        If the operation encounters a registration setup limit exceeded
+        condition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -1163,7 +1294,7 @@ def create_registration_question(
         current_version = _require_current_version(scope, expected_version)
         _require_current_digest(scope)
         if len(scope.questions) >= MAX_SETUP_QUESTIONS:
-            raise RegistrationSetupLimitExceededError()
+            raise RegistrationSetupLimitExceededError
         if any(item.key == values["key"] for item in scope.questions):
             raise _field_error(
                 "key",
@@ -1274,8 +1405,76 @@ def update_registration_question(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
-    """Completely replace one draft question's editable definition."""
+    """Completely replace one draft question's editable definition.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    question_id : UUID
+        The question identifier within the requested scope.
+    key : str
+        The lookup, signing, or idempotency key selected by the contract.
+    label : str
+        The human-readable label shown to authorized readers.
+    help_text : str
+        The help text applied within the audited domain transition.
+    field_type : str
+        The closed field type discriminator defined by the domain catalog.
+    required : bool
+        The required applied within the audited domain transition.
+    options : list[str]
+        The configured option codes valid for the source question.
+    purpose : str
+        The documented purpose constraining collection and processing.
+    visibility : str
+        The closed disclosure audience applied to the projection.
+    classification : str
+        The closed sensitivity classification governing disclosure.
+    condition_question_key : str
+        The stable condition question key used to authenticate or deduplicate
+        the operation.
+    condition_value : str
+        The condition value applied within the audited domain transition.
+    section_id : UUID | None
+        The section identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The updated RegistrationDefinitionCommandResult after the transition is
+        committed.
+
+    Raises
+    ------
+    RegistrationSetupQuestionDependencyError
+        If the operation encounters a registration setup question dependency
+        condition.
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -1356,7 +1555,7 @@ def update_registration_question(
         if question.key != values["key"] and any(
             item.condition_question_key == question.key for item in scope.questions
         ):
-            raise RegistrationSetupQuestionDependencyError()
+            raise RegistrationSetupQuestionDependencyError
         changed_fields = tuple(
             field
             for field, changed in (
@@ -1369,7 +1568,7 @@ def update_registration_question(
             if changed
         )
         if not changed_fields:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         resulting_version = current_version + 1
         for name, value in values.items():
             setattr(question, name, value)
@@ -1469,6 +1668,47 @@ def move_registration_question(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Move registration question.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    configuration_id : UUID
+        The identifier of the configuration.
+    question_id : UUID
+        The identifier of the question.
+    after_question_id : UUID | None
+        The identifier of the after question.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The registration definition command result.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -1532,7 +1772,7 @@ def move_registration_question(
         if tuple(item.id for item in ordered) == tuple(
             item.id for item in scope.questions
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         _validate_question_graph(ordered)
         resulting_version = current_version + 1
         changed = _renumber_questions(
@@ -1607,6 +1847,46 @@ def delete_registration_question(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Delete registration question.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    configuration_id : UUID
+        The identifier of the configuration.
+    question_id : UUID
+        The identifier of the question.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The registration definition command result.
+
+    Raises
+    ------
+    RegistrationSetupQuestionDependencyError
+        If the operation encounters a registration setup question dependency
+        condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -1667,13 +1947,13 @@ def delete_registration_question(
             )
             .exists()
         ):
-            raise RegistrationSetupQuestionDependencyError()
+            raise RegistrationSetupQuestionDependencyError
         if any(
             item.condition_question_key == question.key
             for item in scope.questions
             if item.id != question.id
         ):
-            raise RegistrationSetupQuestionDependencyError()
+            raise RegistrationSetupQuestionDependencyError
         resulting_version = current_version + 1
         section_key = next(
             (
@@ -1757,8 +2037,8 @@ def delete_registration_question(
 def _product_by_id(scope: Any, product_id: UUID) -> AdmissionProduct:
     product = next((item for item in scope.products if item.id == product_id), None)
     if product is None:
-        raise RegistrationSetupProductUnavailableError()
-    return cast(AdmissionProduct, product)
+        raise RegistrationSetupProductUnavailableError
+    return cast("AdmissionProduct", product)
 
 
 def _normalized_capacity_codes(value: object) -> list[str]:
@@ -1815,7 +2095,7 @@ def _product_values(
     payment_window_minutes: object,
 ) -> dict[str, object]:
     normalized_capacity = cast(
-        int,
+        "int",
         _strict_integer(
             capacity,
             field="capacity",
@@ -1912,7 +2192,7 @@ def _validate_product_scope(scope: Any, values: dict[str, object]) -> None:
             "A product cannot enable waiting when the registration wait-list is off.",
             "registration_setup_product_waitlist_parent_disabled",
         )
-    codes = cast(list[str], values["required_capacity_codes"])
+    codes = cast("list[str]", values["required_capacity_codes"])
     if not codes:
         return
     available = {
@@ -1957,7 +2237,7 @@ def _ordered_products(
             None,
         )
         if anchor is None:
-            raise RegistrationSetupProductUnavailableError()
+            raise RegistrationSetupProductUnavailableError
         index = anchor + 1
     remaining.insert(index, product)
     return tuple(remaining)
@@ -1977,7 +2257,7 @@ def _renumber_products(
         product.position = position
         product.last_changed_in_setup_version = resulting_version
         product.updated_at = changed_at
-        if not product._state.adding:
+        if not product._state.adding:  # noqa: SLF001
             changed.append(product)
     return tuple(changed)
 
@@ -2050,6 +2330,76 @@ def create_admission_product(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Create admission product.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    configuration_id : UUID
+        The identifier of the configuration.
+    code : str
+        The stable machine-readable code.
+    name : str
+        The human-readable name.
+    description : str
+        The human-readable description.
+    price_minor : int
+        The price in minor currency units.
+    capacity : int
+        The capacity applied by the operation.
+    capacity_ceiling : int | None, default=None
+        The hard upper capacity bound.
+    entitlement_code : str
+        The stable entitlement code from the relevant closed catalog.
+    entitlement_name : str
+        The human-readable entitlement name shown to authorized readers.
+    sales_open_at : datetime | None
+        The timezone-aware timestamp for sales open.
+    sales_close_at : datetime | None
+        The timezone-aware timestamp for sales close.
+    required_capacity_codes : list[str]
+        The required capacity codes applied within the audited domain transition.
+    eligibility_explanation : str
+        The bounded eligibility explanation retained for authorized readers.
+    waitlist_enabled : bool
+        Whether wait-list enrollment is enabled.
+    payment_window_minutes : int | None
+        The payment window minutes applied within the audited domain transition.
+    after_product_id : UUID | None
+        The identifier of the after product.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    RegistrationSetupLimitExceededError
+        If the operation encounters a registration setup limit exceeded
+        condition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -2123,7 +2473,7 @@ def create_admission_product(
         current_version = _require_current_version(scope, expected_version)
         _require_current_digest(scope)
         if len(scope.products) >= MAX_SETUP_PRODUCTS:
-            raise RegistrationSetupLimitExceededError()
+            raise RegistrationSetupLimitExceededError
         if any(item.code == values["code"] for item in scope.products):
             raise _field_error(
                 "code",
@@ -2233,6 +2583,75 @@ def update_admission_product(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Update admission product.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    configuration_id : UUID
+        The identifier of the configuration.
+    product_id : UUID
+        The identifier of the product.
+    code : str
+        The stable machine-readable code.
+    name : str
+        The human-readable name.
+    description : str
+        The human-readable description.
+    price_minor : int
+        The price in minor currency units.
+    capacity : int
+        The capacity applied by the operation.
+    capacity_ceiling : int | None, default=None
+        The hard upper capacity bound.
+    entitlement_code : str
+        The stable entitlement code from the relevant closed catalog.
+    entitlement_name : str
+        The human-readable entitlement name shown to authorized readers.
+    sales_open_at : datetime | None
+        The timezone-aware timestamp for sales open.
+    sales_close_at : datetime | None
+        The timezone-aware timestamp for sales close.
+    required_capacity_codes : list[str]
+        The required capacity codes applied within the audited domain transition.
+    eligibility_explanation : str
+        The bounded eligibility explanation retained for authorized readers.
+    waitlist_enabled : bool
+        Whether wait-list enrollment is enabled.
+    payment_window_minutes : int | None
+        The payment window minutes applied within the audited domain transition.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -2317,7 +2736,7 @@ def update_admission_product(
             name for name, value in values.items() if getattr(product, name) != value
         )
         if not changed_fields:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         resulting_version = current_version + 1
         for attribute_name, value in values.items():
             setattr(product, attribute_name, value)
@@ -2411,6 +2830,47 @@ def move_admission_product(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Move admission product.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    configuration_id : UUID
+        The identifier of the configuration.
+    product_id : UUID
+        The identifier of the product.
+    after_product_id : UUID | None
+        The identifier of the after product.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The registration definition command result.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -2474,7 +2934,7 @@ def move_admission_product(
         if tuple(item.id for item in ordered) == tuple(
             item.id for item in scope.products
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         resulting_version = current_version + 1
         changed = _renumber_products(
             ordered,
@@ -2542,6 +3002,40 @@ def delete_admission_product(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Delete admission product.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    configuration_id : UUID
+        The identifier of the configuration.
+    product_id : UUID
+        The identifier of the product.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The registration definition command result.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -2747,7 +3241,7 @@ def _minor_policy_receipt_target(
         )[:2]
     )
     if len(targets) != 1:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     return targets[0]
 
 
@@ -2774,7 +3268,7 @@ def _replay_minor_policy_set(
     }
     change_kind = allowed_actions.get(receipt.action)
     if change_kind is None:
-        raise RegistrationSetupRetryConflictError()
+        raise RegistrationSetupRetryConflictError
     target = _minor_policy_receipt_target(
         receipt=receipt,
         change_kinds=frozenset({change_kind}),
@@ -2820,7 +3314,7 @@ def _replay_minor_policy_remove(
 ) -> RegistrationDefinitionCommandResult:
     action = RegistrationSetupCommandReceipt.Action.MINOR_POLICY_REMOVED
     if receipt.action != action:
-        raise RegistrationSetupRetryConflictError()
+        raise RegistrationSetupRetryConflictError
     target = _minor_policy_receipt_target(
         receipt=receipt,
         change_kinds=frozenset({RegistrationCommandChangeKind.DELETED}),
@@ -2866,8 +3360,56 @@ def set_minor_registration_policy(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
-    """Create or completely update the configuration's one minor policy."""
+    """Create or completely update the configuration's one minor policy.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    enabled : bool
+        The enabled applied within the audited domain transition.
+    minor_age_threshold : int
+        The minor age threshold applied within the audited domain transition.
+    guardian_notice_version : str
+        The expected guardian notice version used to reject stale updates.
+    jurisdiction_code : str
+        The stable jurisdiction code from the relevant closed catalog.
+    review_reference : str
+        The provider or source review reference retained for reconciliation.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The updated RegistrationDefinitionCommandResult after the transition is
+        committed.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -2933,7 +3475,10 @@ def set_minor_registration_policy(
         _require_editable_draft(scope)
         current_version = _require_current_version(scope, expected_version)
         _require_current_digest(scope)
-        if cast(int, values["minor_age_threshold"]) <= scope.configuration.minimum_age:
+        if (
+            cast("int", values["minor_age_threshold"])
+            <= scope.configuration.minimum_age
+        ):
             raise _field_error(
                 "minor_age_threshold",
                 "The guardian threshold must exceed the absolute minimum age.",
@@ -2949,7 +3494,7 @@ def set_minor_registration_policy(
             )
         )
         if existing is not None and not changed_fields:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         resulting_version = current_version + 1
         if existing is None:
             policy = MinorRegistrationPolicy(
@@ -3032,6 +3577,43 @@ def remove_minor_registration_policy(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Remove minor registration policy.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    configuration_id : UUID
+        The identifier of the configuration.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The registration definition command result.
+
+    Raises
+    ------
+    RegistrationSetupMinorPolicyUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -3086,7 +3668,7 @@ def remove_minor_registration_policy(
         current_version = _require_current_version(scope, expected_version)
         _require_current_digest(scope)
         if policy is None:
-            raise RegistrationSetupMinorPolicyUnavailableError()
+            raise RegistrationSetupMinorPolicyUnavailableError
         resulting_version = current_version + 1
         deleted_digest = _target_digest(
             RegistrationSetupCommandTarget.TargetKind.MINOR_POLICY,
@@ -3142,14 +3724,14 @@ def _lock_profile_scope(
         Organization.objects.select_for_update().filter(pk=organization_id).first()
     )
     if organization is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     series = (
         ConventionSeries.objects.select_for_update()
         .filter(pk=series_id, organization_id=organization.id)
         .first()
     )
     if series is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     edition = (
         EventEdition.objects.select_for_update()
         .filter(
@@ -3160,17 +3742,17 @@ def _lock_profile_scope(
         .first()
     )
     if edition is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     control = (
         RegistrationSetupControl.objects.select_for_update()
         .filter(organization=organization, edition=edition)
         .first()
     )
     if control is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     persisted_actor = Account.objects.select_for_update().filter(pk=actor.pk).first()
     if persisted_actor is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     with connection.cursor() as cursor:
         cursor.execute("SELECT statement_timestamp()")
         evaluated_at = cursor.fetchone()[0]
@@ -3187,7 +3769,7 @@ def _lock_profile_scope(
         .order_by("position", "key", "-version", "id")[: MAX_PROFILE_FIELDS + 1]
     )
     if len(fields) > MAX_PROFILE_FIELDS:
-        raise RegistrationSetupLimitExceededError()
+        raise RegistrationSetupLimitExceededError
     return _LockedProfileScope(
         organization=organization,
         series=series,
@@ -3208,7 +3790,7 @@ def _require_profile_lifecycle(scope: _LockedProfileScope) -> None:
         EventEdition.Lifecycle.DRAFT,
         EventEdition.Lifecycle.PREPARING,
     }:
-        raise RegistrationSetupLifecycleConflictError()
+        raise RegistrationSetupLifecycleConflictError
 
 
 def _profile_field_by_id(
@@ -3217,7 +3799,7 @@ def _profile_field_by_id(
 ) -> RegistrationProfileExtensionField:
     field = next((item for item in scope.fields if item.id == field_id), None)
     if field is None:
-        raise RegistrationSetupProfileFieldUnavailableError()
+        raise RegistrationSetupProfileFieldUnavailableError
     return field
 
 
@@ -3398,7 +3980,7 @@ def _ordered_profile_fields(
             None,
         )
         if anchor is None:
-            raise RegistrationSetupProfileFieldUnavailableError()
+            raise RegistrationSetupProfileFieldUnavailableError
         index = anchor + 1
     remaining.insert(index, field)
     return tuple(remaining)
@@ -3431,7 +4013,7 @@ def _renumber_profile_fields(
             field.approved_at = None
         field.last_changed_in_setup_version = resulting_version
         field.updated_at = changed_at
-        if not field._state.adding:
+        if not field._state.adding:  # noqa: SLF001
             changed.append(field)
     return tuple(changed)
 
@@ -3504,8 +4086,27 @@ def _current_profile_review_receipt(
     scope: _LockedProfileScope,
     field: RegistrationProfileExtensionField,
 ) -> RegistrationSetupCommandReceipt:
-    """Return the one current receipt proving review of this exact definition."""
+    """Return the one current receipt proving review of this exact definition.
 
+    Parameters
+    ----------
+    scope : _LockedProfileScope
+        The exact tenant and resource scope of the operation.
+    field : RegistrationProfileExtensionField
+        The field applied within the audited domain transition.
+
+    Returns
+    -------
+    RegistrationSetupCommandReceipt
+        The RegistrationSetupCommandReceipt produced by current profile review
+        receipt.
+
+    Raises
+    ------
+    RegistrationSetupProfileFieldReviewRequiredError
+        If the operation encounters a registration setup profile field review
+        required condition.
+    """
     review_version = field.last_changed_in_setup_version
     if (
         field.status != ProfileExtensionStatus.DRAFT
@@ -3515,7 +4116,7 @@ def _current_profile_review_receipt(
         or field.approved_at > scope.evaluated_at
         or review_version is None
     ):
-        raise RegistrationSetupProfileFieldReviewRequiredError()
+        raise RegistrationSetupProfileFieldReviewRequiredError
     receipt = (
         RegistrationSetupCommandReceipt.objects.select_for_update()
         .filter(
@@ -3527,7 +4128,7 @@ def _current_profile_review_receipt(
         .first()
     )
     if receipt is None:
-        raise RegistrationSetupProfileFieldReviewRequiredError()
+        raise RegistrationSetupProfileFieldReviewRequiredError
     approved_digest = _target_digest(
         RegistrationSetupCommandTarget.TargetKind.PROFILE_FIELD,
         field,
@@ -3542,7 +4143,7 @@ def _current_profile_review_receipt(
         )[:2]
     )
     if len(targets) != 1 or receipt.targets.count() != 1:
-        raise RegistrationSetupProfileFieldReviewRequiredError()
+        raise RegistrationSetupProfileFieldReviewRequiredError
     try:
         audit = _require_profile_command_evidence(
             scope=scope,
@@ -3550,7 +4151,7 @@ def _current_profile_review_receipt(
             primary_target_id=field.id,
         )
     except RegistrationSetupStateConflictError as error:
-        raise RegistrationSetupProfileFieldReviewRequiredError() from error
+        raise RegistrationSetupProfileFieldReviewRequiredError from error
     expected_request_digest = _profile_request_digest(
         action=RegistrationSetupCommandReceipt.Action.PROFILE_FIELD_REVIEWED,
         actor=receipt.actor,
@@ -3571,7 +4172,7 @@ def _current_profile_review_receipt(
         or audit.occurred_at != field.approved_at
         or audit.changed_fields != ["review_status", "approved_by", "approved_at"]
     ):
-        raise RegistrationSetupProfileFieldReviewRequiredError()
+        raise RegistrationSetupProfileFieldReviewRequiredError
     return receipt
 
 
@@ -3580,13 +4181,26 @@ def _require_profile_successor_origin(
     scope: _LockedProfileScope,
     field: RegistrationProfileExtensionField,
 ) -> None:
-    """Require the canonical command graph for a successor definition."""
+    """Require the canonical command graph for a successor definition.
 
+    Parameters
+    ----------
+    scope : _LockedProfileScope
+        The exact tenant and resource scope of the operation.
+    field : RegistrationProfileExtensionField
+        The field applied within the audited domain transition.
+
+    Raises
+    ------
+    RegistrationSetupProfileFieldSuccessorConflictError
+        If the operation encounters a registration setup profile field successor
+        conflict condition.
+    """
     if field.supersedes_id is None:
         return
     creation_version = field.created_in_setup_version
     if creation_version is None or creation_version <= 1:
-        raise RegistrationSetupProfileFieldSuccessorConflictError()
+        raise RegistrationSetupProfileFieldSuccessorConflictError
     receipts = tuple(
         RegistrationSetupCommandReceipt.objects.select_for_update().filter(
             setup=scope.control,
@@ -3597,7 +4211,7 @@ def _require_profile_successor_origin(
         )[:2]
     )
     if len(receipts) != 1 or receipts[0].actor_id != field.created_by_id:
-        raise RegistrationSetupProfileFieldSuccessorConflictError()
+        raise RegistrationSetupProfileFieldSuccessorConflictError
     receipt = receipts[0]
     try:
         _require_profile_command_evidence(
@@ -3606,7 +4220,7 @@ def _require_profile_successor_origin(
             primary_target_id=field.id,
         )
     except RegistrationSetupStateConflictError as error:
-        raise RegistrationSetupProfileFieldSuccessorConflictError() from error
+        raise RegistrationSetupProfileFieldSuccessorConflictError from error
     expected_request_digest = _profile_request_digest(
         action=RegistrationSetupCommandReceipt.Action.PROFILE_FIELD_SUCCESSOR_STARTED,
         actor=receipt.actor,
@@ -3622,7 +4236,7 @@ def _require_profile_successor_origin(
         reason=receipt.reason,
     )
     if receipt.request_digest != expected_request_digest:
-        raise RegistrationSetupProfileFieldSuccessorConflictError()
+        raise RegistrationSetupProfileFieldSuccessorConflictError
 
 
 def create_registration_profile_extension_field(
@@ -3653,6 +4267,74 @@ def create_registration_profile_extension_field(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Create registration profile extension field.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    key : str
+        The stable lookup key.
+    label : str
+        The human-readable label.
+    help_text : str
+        The explanatory text shown to the user.
+    field_type : str
+        The closed field-type code.
+    options : list[str]
+        The permitted operation options.
+    purpose : str
+        The documented purpose of the operation.
+    classification : str
+        The closed data-classification code.
+    audience_policy : str | None, default=None
+        The closed audience policy governing validation or disclosure.
+    audience_department_id : UUID | None, default=None
+        The identifier of the audience department.
+    attendee_visible : bool | None, default=None
+        The attendee visible applied within the audited domain transition.
+    writer_policy : str
+        The closed writer policy governing validation or disclosure.
+    required : bool
+        Whether the input is required.
+    source_template_id : UUID | None
+        The identifier of the source template.
+    source_prior_edition_id : UUID | None
+        The identifier of the source prior edition.
+    after_field_id : UUID | None
+        The identifier of the after field.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    RegistrationSetupLimitExceededError
+        If the operation encounters a registration setup limit exceeded
+        condition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -3725,7 +4407,7 @@ def create_registration_profile_extension_field(
         _require_profile_lifecycle(scope)
         current_version = _require_current_version(scope, expected_version)
         if len(scope.fields) >= MAX_PROFILE_FIELDS:
-            raise RegistrationSetupLimitExceededError()
+            raise RegistrationSetupLimitExceededError
         if any(item.key == values["key"] for item in scope.fields):
             raise _field_error(
                 "key",
@@ -3842,6 +4524,72 @@ def update_registration_profile_extension_field(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Update registration profile extension field.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    field_id : UUID
+        The identifier of the field.
+    key : str
+        The stable lookup key.
+    label : str
+        The human-readable label.
+    help_text : str
+        The explanatory text shown to the user.
+    field_type : str
+        The closed field-type code.
+    options : list[str]
+        The permitted operation options.
+    purpose : str
+        The documented purpose of the operation.
+    classification : str
+        The closed data-classification code.
+    audience_policy : str | None, default=None
+        The closed audience policy governing validation or disclosure.
+    audience_department_id : UUID | None, default=None
+        The identifier of the audience department.
+    attendee_visible : bool | None, default=None
+        The attendee visible applied within the audited domain transition.
+    writer_policy : str
+        The closed writer policy governing validation or disclosure.
+    required : bool
+        Whether the input is required.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    RegistrationSetupProfileFieldImmutableError
+        If the operation encounters a registration setup profile field immutable
+        condition.
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -3907,7 +4655,7 @@ def update_registration_profile_extension_field(
         current_version = _require_current_version(scope, expected_version)
         field = _profile_field_by_id(scope, field_id)
         if field.status != ProfileExtensionStatus.DRAFT:
-            raise RegistrationSetupProfileFieldImmutableError()
+            raise RegistrationSetupProfileFieldImmutableError
         if field.supersedes_id is not None and values["key"] != field.key:
             raise _field_error(
                 "key",
@@ -3931,7 +4679,7 @@ def update_registration_profile_extension_field(
             or field.approved_at is not None
         )
         if not changed_fields and not review_reset:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         resulting_version = current_version + 1
         for name, value in values.items():
             setattr(field, name, value)
@@ -4001,6 +4749,48 @@ def move_registration_profile_extension_field(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Move registration profile extension field.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    field_id : UUID
+        The identifier of the field.
+    after_field_id : UUID | None
+        The identifier of the after field.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The registration definition command result.
+
+    Raises
+    ------
+    RegistrationSetupProfileFieldImmutableError
+        If the operation encounters a registration setup profile field immutable
+        condition.
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -4053,7 +4843,7 @@ def move_registration_profile_extension_field(
         current_version = _require_current_version(scope, expected_version)
         field = _profile_field_by_id(scope, field_id)
         if field.status != ProfileExtensionStatus.DRAFT:
-            raise RegistrationSetupProfileFieldImmutableError()
+            raise RegistrationSetupProfileFieldImmutableError
         drafts = _draft_profile_fields(scope.fields)
         ordered = _ordered_profile_fields(
             fields=drafts,
@@ -4061,7 +4851,7 @@ def move_registration_profile_extension_field(
             after_field_id=after_field_id,
         )
         if tuple(item.id for item in ordered) == tuple(item.id for item in drafts):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         resulting_version = current_version + 1
         changed = _renumber_profile_fields(
             all_fields=scope.fields,
@@ -4126,8 +4916,47 @@ def approve_registration_profile_extension_field(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
-    """Approve one exact draft generation with server-derived reviewer evidence."""
+    """Approve one exact draft generation with server-derived reviewer evidence.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    field_id : UUID
+        The field identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The RegistrationDefinitionCommandResult produced by approve registration
+        profile extension field.
+
+    Raises
+    ------
+    RegistrationSetupProfileFieldImmutableError
+        If the operation encounters a registration setup profile field immutable
+        condition.
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -4179,13 +5008,13 @@ def approve_registration_profile_extension_field(
         current_version = _require_current_version(scope, expected_version)
         field = _profile_field_by_id(scope, field_id)
         if field.status != ProfileExtensionStatus.DRAFT:
-            raise RegistrationSetupProfileFieldImmutableError()
+            raise RegistrationSetupProfileFieldImmutableError
         if (
             field.review_status == ProfileExtensionReviewStatus.APPROVED
             or field.approved_by_id is not None
             or field.approved_at is not None
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         field.full_clean()
         resulting_version = current_version + 1
         field.review_status = ProfileExtensionReviewStatus.APPROVED
@@ -4249,8 +5078,45 @@ def start_registration_profile_extension_field_successor(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
-    """Copy one active definition into its explicit next-version draft."""
+    """Copy one active definition into its explicit next-version draft.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    field_id : UUID
+        The field identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The RegistrationDefinitionCommandResult produced by start registration
+        profile extension field successor.
+
+    Raises
+    ------
+    RegistrationSetupProfileFieldSuccessorConflictError
+        If the operation encounters a registration setup profile field successor
+        conflict condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -4302,14 +5168,14 @@ def start_registration_profile_extension_field_successor(
         current_version = _require_current_version(scope, expected_version)
         active = _profile_field_by_id(scope, field_id)
         if active.status != ProfileExtensionStatus.ACTIVE:
-            raise RegistrationSetupProfileFieldSuccessorConflictError()
+            raise RegistrationSetupProfileFieldSuccessorConflictError
         same_key_versions = tuple(
             item for item in scope.fields if item.key == active.key
         )
         if len(scope.fields) >= MAX_PROFILE_FIELDS or any(
             item.status == ProfileExtensionStatus.DRAFT for item in same_key_versions
         ):
-            raise RegistrationSetupProfileFieldSuccessorConflictError()
+            raise RegistrationSetupProfileFieldSuccessorConflictError
         next_definition_version = max(item.version for item in same_key_versions) + 1
         resulting_version = current_version + 1
         successor = RegistrationProfileExtensionField(
@@ -4387,8 +5253,48 @@ def activate_registration_profile_extension_field(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
-    """Activate an exactly reviewed draft and retire only its superseded version."""
+    """Activate an exactly reviewed draft and retire only its superseded version.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    field_id : UUID
+        The field identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The RegistrationDefinitionCommandResult produced by activate
+        registration profile extension field.
+
+    Raises
+    ------
+    RegistrationSetupProfileFieldImmutableError
+        If the operation encounters a registration setup profile field immutable
+        condition.
+    RegistrationSetupProfileFieldSuccessorConflictError
+        If the operation encounters a registration setup profile field successor
+        conflict condition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -4440,7 +5346,7 @@ def activate_registration_profile_extension_field(
         current_version = _require_current_version(scope, expected_version)
         field = _profile_field_by_id(scope, field_id)
         if field.status != ProfileExtensionStatus.DRAFT:
-            raise RegistrationSetupProfileFieldImmutableError()
+            raise RegistrationSetupProfileFieldImmutableError
         _require_profile_successor_origin(scope=scope, field=field)
         _current_profile_review_receipt(scope=scope, field=field)
         active_versions = tuple(
@@ -4451,7 +5357,7 @@ def activate_registration_profile_extension_field(
         superseded = None
         if field.supersedes_id is None:
             if active_versions:
-                raise RegistrationSetupProfileFieldSuccessorConflictError()
+                raise RegistrationSetupProfileFieldSuccessorConflictError
         else:
             superseded = next(
                 (item for item in scope.fields if item.id == field.supersedes_id),
@@ -4473,7 +5379,7 @@ def activate_registration_profile_extension_field(
                     for item in scope.fields
                 )
             ):
-                raise RegistrationSetupProfileFieldSuccessorConflictError()
+                raise RegistrationSetupProfileFieldSuccessorConflictError
         resulting_version = current_version + 1
         if superseded is not None:
             superseded.status = ProfileExtensionStatus.RETIRED
@@ -4566,6 +5472,46 @@ def retire_registration_profile_extension_field(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationDefinitionCommandResult:
+    """Retire registration profile extension field.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    series_id : UUID
+        The identifier of the series.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    field_id : UUID
+        The identifier of the field.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    retry_key : UUID
+        The stable key used to retry the operation safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    RegistrationDefinitionCommandResult
+        The registration definition command result.
+
+    Raises
+    ------
+    RegistrationSetupProfileFieldDependencyError
+        If the operation encounters a registration setup profile field
+        dependency condition.
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     _authorize_before_input_parsing(
         actor=actor,
         organization_id=organization_id,
@@ -4617,13 +5563,13 @@ def retire_registration_profile_extension_field(
         current_version = _require_current_version(scope, expected_version)
         field = _profile_field_by_id(scope, field_id)
         if field.status == ProfileExtensionStatus.RETIRED:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         if field.status == ProfileExtensionStatus.ACTIVE and any(
             item.status == ProfileExtensionStatus.DRAFT
             and item.supersedes_id == field.id
             for item in scope.fields
         ):
-            raise RegistrationSetupProfileFieldDependencyError()
+            raise RegistrationSetupProfileFieldDependencyError
         resulting_version = current_version + 1
         field.status = ProfileExtensionStatus.RETIRED
         field.last_changed_in_setup_version = resulting_version

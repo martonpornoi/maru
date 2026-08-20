@@ -51,9 +51,33 @@ class AccountAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):  # type: ignore[type-a
 
     @admin.display(description="Person", ordering="display_name")
     def person(self, obj: Account) -> str:
+        """Return a disclosure-safe label for the referenced person.
+
+        Parameters
+        ----------
+        obj : Account
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            A display-safe person label using the configured fallback.
+        """
         return obj.display_name or obj.email
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Account]:
+        """Return the permission-scoped queryset.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        QuerySet[Account]
+            The matching get queryset records in deterministic order.
+        """
         queryset = super().get_queryset(request)
         edition = selected_admin_edition(request)
         if edition is None or request.path == "/admin/autocomplete/":
@@ -66,6 +90,8 @@ class AccountSecurityEventAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for account security event."""
+
     list_display = (
         "account",
         "event_type",
@@ -126,6 +152,18 @@ class IdentityChallengeAdmin(
 
     @admin.display(description="Delivery ownership")
     def delivery_boundary(self, obj: IdentityChallenge) -> str:
+        """Return delivery boundary.
+
+        Parameters
+        ----------
+        obj : IdentityChallenge
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for delivery boundary.
+        """
         if obj.purpose == IdentityChallenge.Purpose.ACCOUNT_INVITATION:
             return (
                 "Invitation delivery is governed by the purpose-built Accounts "
@@ -139,6 +177,8 @@ class IdentityChallengeAdmin(
 
 @admin.register(AccountSession)
 class AccountSessionAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):  # type: ignore[type-arg]
+    """Configure Django administration for account session."""
+
     list_display = (
         "account",
         "label",
@@ -156,6 +196,8 @@ class IdentityAbuseBucketAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for identity abuse bucket."""
+
     list_display = (
         "flow",
         "window_started_at",
@@ -199,6 +241,8 @@ class PlatformInvitationSchedulerRunAdmin(
 
 
 class RestrictionAppealInline(admin.TabularInline):  # type: ignore[type-arg]
+    """Configure the restriction appeal inline in Django administration."""
+
     model = RestrictionAppeal
     extra = 0
     can_delete = False
@@ -218,6 +262,8 @@ class AccountRestrictionAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for account restriction."""
+
     list_display = (
         "account",
         "organization",

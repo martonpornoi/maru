@@ -9,7 +9,7 @@ import os
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -29,18 +29,32 @@ from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import decide, resolve_edition_target
 from maru.authorization.services import AuthorizationDenied
-from maru.identity.models import Account
 from maru.registration.models import CheckInRecord, Registration
 from maru.registration.services import (
     _append_timeline,
     _publish_registration_transition,
 )
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from maru.identity.models import Account
+
 MANIFEST_LIFETIME = timedelta(hours=12)
 
 
 @dataclass(frozen=True, slots=True)
 class IssuedCredential:
+    """Describe issued credential.
+
+    Attributes
+    ----------
+    credential
+        The credential retained in this immutable projection.
+    raw_token
+        The opaque raw token supplied by the caller.
+    """
+
     credential: Credential
     raw_token: str | None
 
@@ -123,6 +137,46 @@ def issue_credential(
     reason: str,
     correlation_id: UUID,
 ) -> IssuedCredential:
+    """Issue or replace an attendee credential within one edition.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    registration_id : UUID
+        The identifier of the registration.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    IssuedCredential
+        The persisted credential and, only when explicitly enabled for tests,
+        its one-time plaintext token.
+
+    Raises
+    ------
+    ValidationError
+        If the reason is empty or the registration lacks an effective active
+        admission entitlement.
+
+    Notes
+    -----
+    The registration and current credential are locked in one transaction. A
+    reissue first marks the current credential as replaced, then appends the
+    credential event and audit evidence for the successor.
+
+    Warnings
+    --------
+    The plaintext credential token is one-time sensitive material. Production
+    callers receive ``None`` unless the test-only exposure setting is enabled.
+    """
     obligations = _require(
         actor=actor,
         capability_code="accreditation.issue",
@@ -243,6 +297,33 @@ def revoke_credential(
     reason: str,
     correlation_id: UUID,
 ) -> Credential:
+    """Revoke credential.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    credential_id : UUID
+        The identifier of the credential.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    Credential
+        The updated Credential after the transition commits.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require(
         actor=actor,
         capability_code="accreditation.revoke",
@@ -310,6 +391,29 @@ def generate_offline_manifest(
     edition_id: UUID,
     correlation_id: UUID,
 ) -> OfflineCredentialManifest:
+    """Generate offline manifest.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    OfflineCredentialManifest
+        The generated offline manifest.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     obligations = _require(
         actor=actor,
         capability_code="accreditation.manage_offline",
@@ -394,6 +498,39 @@ def reconcile_offline_check_in(
     occurred_at: datetime,
     signature: str,
 ) -> OfflineCheckInOperation:
+    """Reconcile offline check in.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    device_code : str
+        The public relay-device code within the edition scope.
+    operation_id : UUID
+        The identifier of the operation.
+    device_sequence : int
+        The expected device sequence used to reject stale updates.
+    manifest_sequence : int
+        The expected manifest sequence used to reject stale updates.
+    raw_credential_token : str
+        The opaque raw credential token supplied by the caller.
+    occurred_at : datetime
+        The time at which the event occurred.
+    signature : str
+        The detached signature to authenticate before accepting the payload.
+
+    Returns
+    -------
+    OfflineCheckInOperation
+        The persisted result of offline check-in reconciliation.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     received_at = timezone.now()
     with transaction.atomic():
         device = RelayDevice.objects.select_for_update().get(

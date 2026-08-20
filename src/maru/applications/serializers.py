@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, ClassVar, Literal, cast
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
-from django_stubs_ext import StrOrPromise
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -17,6 +15,11 @@ from maru.applications.models import (
     ApplicationSubmission,
 )
 from maru.core.openapi import CANONICAL_UUID_SCHEMA
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from django_stubs_ext import StrOrPromise
 
 MAX_REPORTED_NESTED_UNKNOWN_FIELDS = 5
 
@@ -46,18 +49,34 @@ def _reject_unknown_nested_fields(
 
 @extend_schema_field(CANONICAL_UUID_SCHEMA)
 class CanonicalUUIDField(serializers.UUIDField):
+    """Describe canonical uuidfield."""
+
     default_error_messages: ClassVar[dict[str, StrOrPromise]] = {
         "invalid": "Enter a canonical lower-case hyphenated UUID."
     }
 
     def to_internal_value(self, data: object) -> UUID:
-        value = super().to_internal_value(cast(UUID | str | int, data))
+        """Parse and validate API input.
+
+        Parameters
+        ----------
+        data : object
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        UUID
+            The canonical value accepted by the serializer.
+        """
+        value = super().to_internal_value(cast("UUID | str | int", data))
         if not isinstance(data, str) or str(value) != data:
             self.fail("invalid")
         return value
 
 
 class StarterCreateSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate starter create data."""
+
     starter_code = serializers.SlugField(max_length=80)
     opens_at = serializers.DateTimeField()
     closes_at = serializers.DateTimeField()
@@ -65,6 +84,8 @@ class StarterCreateSerializer(serializers.Serializer[dict[str, Any]]):
 
 
 class DefinitionConfigureSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate definition configure data."""
+
     operation = serializers.ChoiceField(choices=("definition.configure",))
     expected_version = serializers.IntegerField(min_value=1)
     name = serializers.CharField(max_length=160)
@@ -101,54 +122,86 @@ class DefinitionConfigureSerializer(serializers.Serializer[dict[str, Any]]):
 
 
 class SectionAddSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate section add data."""
+
     operation = serializers.ChoiceField(choices=("section.add",))
     expected_version = serializers.IntegerField(min_value=1)
     key = serializers.SlugField(max_length=80)
     title = serializers.CharField(max_length=160)
     help_text = cast(
-        StrOrPromise | None,
+        "StrOrPromise | None",
         serializers.CharField(max_length=2_000, allow_blank=True),
     )
     reason = serializers.CharField(max_length=240)
 
 
 class QuestionOptionSerializer(serializers.Serializer[dict[str, str]]):
+    """Serialize and validate question option data."""
+
     code = serializers.RegexField(r"^[a-z][a-z0-9_-]{0,79}$")
-    label = cast(StrOrPromise | None, serializers.CharField(max_length=160))
+    label = cast("StrOrPromise | None", serializers.CharField(max_length=160))
 
     def to_internal_value(self, data: object) -> dict[str, str]:
+        """Parse and validate API input.
+
+        Parameters
+        ----------
+        data : object
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        dict[str, str]
+            A mapping containing the resolved to internal value data.
+        """
         _reject_unknown_nested_fields(
             data,
             allowed_fields=frozenset(self.fields),
         )
-        return cast(dict[str, str], super().to_internal_value(data))
+        return cast("dict[str, str]", super().to_internal_value(data))
 
 
 class QuestionConditionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate question condition data."""
+
     question_key = serializers.SlugField(max_length=80)
     operator = serializers.ChoiceField(choices=("equals", "not_equals", "contains"))
     value = serializers.JSONField()
 
     def to_internal_value(self, data: object) -> dict[str, Any]:
+        """Parse and validate API input.
+
+        Parameters
+        ----------
+        data : object
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved to internal value data.
+        """
         _reject_unknown_nested_fields(
             data,
             allowed_fields=frozenset(self.fields),
         )
-        return cast(dict[str, Any], super().to_internal_value(data))
+        return cast("dict[str, Any]", super().to_internal_value(data))
 
 
 class QuestionAddSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate question add data."""
+
     operation = serializers.ChoiceField(choices=("question.add",))
     expected_version = serializers.IntegerField(min_value=1)
     section_id = CanonicalUUIDField()
     key = serializers.SlugField(max_length=80)
     field_type = serializers.ChoiceField(choices=ApplicationQuestionType.choices)
-    label = cast(StrOrPromise | None, serializers.CharField(max_length=200))
+    label = cast("StrOrPromise | None", serializers.CharField(max_length=200))
     help_text = cast(
-        StrOrPromise | None,
+        "StrOrPromise | None",
         serializers.CharField(max_length=2_000, allow_blank=True),
     )
-    required = cast(bool, serializers.BooleanField())
+    required = cast("bool", serializers.BooleanField())
     options = QuestionOptionSerializer(many=True, required=False, default=list)
     minimum_length = serializers.IntegerField(
         min_value=0, allow_null=True, required=False, default=None
@@ -187,6 +240,8 @@ class QuestionAddSerializer(serializers.Serializer[dict[str, Any]]):
 
 
 class DefinitionLifecycleSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate definition lifecycle data."""
+
     operation = serializers.ChoiceField(
         choices=("definition.activate", "definition.retire")
     )
@@ -195,6 +250,8 @@ class DefinitionLifecycleSerializer(serializers.Serializer[dict[str, Any]]):
 
 
 class DefinitionSuccessorSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate definition successor data."""
+
     operation = serializers.ChoiceField(choices=("definition.successor",))
     reason = serializers.CharField(max_length=240)
 
@@ -210,16 +267,22 @@ DEFINITION_COMMAND_SERIALIZERS = {
 
 
 class SubmissionAnswerSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate submission answer data."""
+
     question_id = CanonicalUUIDField()
     expected_version = serializers.IntegerField(min_value=1)
     value = serializers.JSONField(allow_null=True)
 
 
 class SubmissionTransitionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate submission transition data."""
+
     expected_version = serializers.IntegerField(min_value=1)
 
 
 class ReviewDecisionSerializer(serializers.Serializer[dict[str, Any]]):
+    """Serialize and validate review decision data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     decision = serializers.ChoiceField(
         choices=("start_review", "request_changes", "accept", "reject")
@@ -228,6 +291,8 @@ class ReviewDecisionSerializer(serializers.Serializer[dict[str, Any]]):
 
 
 class ApplicationCommandResultSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate application command result data."""
+
     receipt_id = serializers.UUIDField()
     definition_id = serializers.UUIDField(allow_null=True)
     submission_id = serializers.UUIDField(allow_null=True)
@@ -236,6 +301,8 @@ class ApplicationCommandResultSerializer(serializers.Serializer[dict[str, object
 
 
 class ApplicationStarterSummarySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate application starter summary data."""
+
     code = serializers.SlugField()
     name = serializers.CharField()
     description = serializers.CharField()
@@ -248,6 +315,8 @@ class ApplicationStarterSummarySerializer(serializers.Serializer[dict[str, objec
 class ApplicationQuestionConditionProjectionSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate application question condition projection data."""
+
     question_key = serializers.SlugField(required=False)
     operator = serializers.CharField(required=False)
     value = serializers.JSONField(required=False)
@@ -256,15 +325,17 @@ class ApplicationQuestionConditionProjectionSerializer(
 class ApplicationQuestionProjectionSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate application question projection data."""
+
     id = serializers.UUIDField()
     key = serializers.SlugField()
     field_type = serializers.CharField()
-    label = cast(StrOrPromise | None, serializers.CharField())
+    label = cast("StrOrPromise | None", serializers.CharField())
     help_text = cast(
-        StrOrPromise | None,
+        "StrOrPromise | None",
         serializers.CharField(allow_blank=True),
     )
-    required = cast(bool, serializers.BooleanField())
+    required = cast("bool", serializers.BooleanField())
     options = QuestionOptionSerializer(many=True)
     minimum_length = serializers.IntegerField(allow_null=True)
     maximum_length = serializers.IntegerField(allow_null=True)
@@ -287,6 +358,8 @@ class ApplicationQuestionProjectionSerializer(
 class ApplicationStaffQuestionProjectionSerializer(
     ApplicationQuestionProjectionSerializer
 ):
+    """Serialize and validate application staff question projection data."""
+
     purpose = serializers.CharField()
     classification = serializers.CharField()
     applicant_visible = serializers.BooleanField()
@@ -299,39 +372,49 @@ class ApplicationStaffQuestionProjectionSerializer(
 
 
 class ApplicationApplicantSectionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate application applicant section data."""
+
     id = serializers.UUIDField()
     key = serializers.SlugField()
     title = serializers.CharField()
     help_text = cast(
-        StrOrPromise | None,
+        "StrOrPromise | None",
         serializers.CharField(allow_blank=True),
     )
     questions = ApplicationQuestionProjectionSerializer(many=True)
 
 
 class ApplicationStaffSectionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate application staff section data."""
+
     id = serializers.UUIDField()
     key = serializers.SlugField()
     title = serializers.CharField()
     help_text = cast(
-        StrOrPromise | None,
+        "StrOrPromise | None",
         serializers.CharField(allow_blank=True),
     )
     questions = ApplicationStaffQuestionProjectionSerializer(many=True)
 
 
 class ApplicationOwnerDepartmentSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate application owner department data."""
+
     id = serializers.UUIDField()
     name = serializers.CharField()
 
 
 class ApplicationReviewerRoleSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate application reviewer role data."""
+
     id = serializers.UUIDField()
     name = serializers.CharField()
     version = serializers.IntegerField(min_value=1)
 
 
 class ApplicationReviewerPersonSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate application reviewer person data."""
+
     id = serializers.UUIDField()
     display_name = serializers.CharField()
 
@@ -339,6 +422,8 @@ class ApplicationReviewerPersonSerializer(serializers.Serializer[dict[str, objec
 class ApplicationApplicantDefinitionSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate application applicant definition data."""
+
     id = serializers.UUIDField()
     code = serializers.SlugField()
     version = serializers.IntegerField(min_value=1)
@@ -358,6 +443,8 @@ class ApplicationApplicantDefinitionSerializer(
 
 
 class ApplicationDefinitionSerializer(ApplicationApplicantDefinitionSerializer):
+    """Serialize and validate application definition data."""
+
     classification = serializers.CharField()
     audience_policy_code = serializers.CharField(allow_blank=True)
     retention_policy_code = serializers.CharField(allow_blank=True)
@@ -369,6 +456,8 @@ class ApplicationDefinitionSerializer(ApplicationApplicantDefinitionSerializer):
 
 
 class ApplicationAnswerProjectionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate application answer projection data."""
+
     question_id = serializers.UUIDField()
     key = serializers.SlugField()
     question_type = serializers.CharField()
@@ -380,6 +469,8 @@ class ApplicationAnswerProjectionSerializer(serializers.Serializer[dict[str, obj
 class ApplicationReviewerAnswerProjectionSerializer(
     ApplicationAnswerProjectionSerializer
 ):
+    """Serialize and validate application reviewer answer projection data."""
+
     classification = serializers.CharField()
     source = serializers.CharField()  # type: ignore[assignment]
 
@@ -387,6 +478,8 @@ class ApplicationReviewerAnswerProjectionSerializer(
 class ApplicationDecisionProjectionSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate application decision projection data."""
+
     sequence = serializers.IntegerField(min_value=1)
     decision = serializers.CharField()
     from_state = serializers.CharField()
@@ -398,6 +491,8 @@ class ApplicationDecisionProjectionSerializer(
 class ApplicationSubmissionProjectionSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate application submission projection data."""
+
     id = serializers.UUIDField()
     definition_id = serializers.UUIDField()
     definition_name = serializers.CharField()
@@ -415,11 +510,15 @@ class ApplicationSubmissionProjectionSerializer(
 class ApplicationReviewSubmissionProjectionSerializer(
     ApplicationSubmissionProjectionSerializer
 ):
+    """Serialize and validate application review submission projection data."""
+
     applicant = ApplicationReviewerPersonSerializer()
     answers = ApplicationReviewerAnswerProjectionSerializer(many=True)
 
 
 class MyApplicationWorkspaceSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate my application workspace data."""
+
     available = ApplicationApplicantDefinitionSerializer(many=True)
     submissions = ApplicationSubmissionProjectionSerializer(many=True)
 
@@ -429,6 +528,20 @@ def latest_answers(
     *,
     audience: Literal["applicant", "reviewer"],
 ) -> list[dict[str, object]]:
+    """Return the latest visible revision of each submitted answer.
+
+    Parameters
+    ----------
+    submission : ApplicationSubmission
+        The versioned application submission being evaluated.
+    audience : Literal['applicant', 'reviewer']
+        The closed audience whose disclosure rules must be applied.
+
+    Returns
+    -------
+    list[dict[str, object]]
+        A disclosure-safe mapping for latest answers.
+    """
     values: dict[str, dict[str, object]] = {}
     for revision in submission.answer_revisions.all():
         question = revision.question
@@ -439,7 +552,7 @@ def latest_answers(
         ):
             continue
         current = values.get(revision.question_key)
-        if current is None or cast(int, current["sequence"]) < revision.sequence:
+        if current is None or cast("int", current["sequence"]) < revision.sequence:
             item: dict[str, object] = {
                 "question_id": str(revision.question_id),
                 "key": revision.question_key,
@@ -458,6 +571,18 @@ def latest_answers(
 
 
 def decision_history(submission: ApplicationSubmission) -> list[dict[str, object]]:
+    """Return the submission's visible review-decision history.
+
+    Parameters
+    ----------
+    submission : ApplicationSubmission
+        The versioned application submission being evaluated.
+
+    Returns
+    -------
+    list[dict[str, object]]
+        A disclosure-safe mapping for decision history.
+    """
     return [
         {
             "sequence": decision.sequence,

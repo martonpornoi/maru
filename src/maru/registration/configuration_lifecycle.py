@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass, replace
-from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -84,6 +84,9 @@ from maru.registration.template_lifecycle import (
     require_published_template_evidence,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 MAX_REVIEW_NOTE_LENGTH = 2_000
 MAX_REASON_LENGTH = 240
 MAX_EDITION_NAME_LENGTH = 160
@@ -108,21 +111,44 @@ class RegistrationConfigurationValidationError(RegistrationSetupCommandError):
 
     reason_code = "registration_setup_validation_failed"
 
-    def __init__(self, issues: tuple[RegistrationConfigurationIssue, ...]):
+    def __init__(self, issues: tuple[RegistrationConfigurationIssue, ...]) -> None:
+        """Initialize the RegistrationConfigurationValidationError instance.
+
+        Parameters
+        ----------
+        issues : tuple[RegistrationConfigurationIssue, ...]
+            The issues evaluated while registration configuration validation error.
+        """
         self.issues = issues
         super().__init__("Registration configuration validation failed.")
 
 
 class RegistrationConfigurationReviewRequiredError(RegistrationSetupCommandError):
+    """Signal registration configuration review required."""
+
     reason_code = "registration_setup_review_required"
 
 
 class RegistrationConfigurationActiveConflictError(RegistrationSetupCommandError):
+    """Signal registration configuration active conflict."""
+
     reason_code = "registration_setup_active_configuration_conflict"
 
 
 @dataclass(frozen=True, slots=True, order=True)
 class RegistrationConfigurationIssue:
+    """Describe registration configuration issue.
+
+    Attributes
+    ----------
+    code
+        The stable domain code to resolve or validate.
+    target_kind
+        The closed target kind discriminator defined by the domain catalog.
+    target_key
+        The stable target key used to authenticate or deduplicate the operation.
+    """
+
     code: str
     target_kind: str
     target_key: str
@@ -130,6 +156,20 @@ class RegistrationConfigurationIssue:
 
 @dataclass(frozen=True, slots=True)
 class RegistrationPreviewSection:
+    """Describe registration preview section.
+
+    Attributes
+    ----------
+    key
+        The lookup, signing, or idempotency key selected by the contract.
+    title
+        The human-readable title shown to authorized readers.
+    description
+        The human-readable description shown to authorized readers.
+    position
+        The workforce position within the exact edition structure.
+    """
+
     key: str
     title: str
     description: str
@@ -138,6 +178,42 @@ class RegistrationPreviewSection:
 
 @dataclass(frozen=True, slots=True)
 class RegistrationPreviewQuestion:
+    """Describe registration preview question.
+
+    Attributes
+    ----------
+    key
+        The lookup, signing, or idempotency key selected by the contract.
+    label
+        The human-readable label shown to authorized readers.
+    help_text
+        The help text retained in this immutable projection.
+    field_type
+        The closed field type discriminator defined by the domain catalog.
+    required
+        The required retained in this immutable projection.
+    options
+        The configured option codes valid for the source question.
+    purpose
+        The documented purpose constraining collection and processing.
+    visibility
+        The closed disclosure audience applied to the projection.
+    classification
+        The closed sensitivity classification governing disclosure.
+    condition_question_key
+        The stable condition question key used to authenticate or deduplicate
+        the operation.
+    condition_value
+        The condition value retained in this immutable projection.
+    section_key
+        The stable section key used to authenticate or deduplicate the
+        operation.
+    attendee_input
+        The attendee input retained in this immutable projection.
+    staff_input
+        The staff input retained in this immutable projection.
+    """
+
     key: str
     label: str
     help_text: str
@@ -156,6 +232,40 @@ class RegistrationPreviewQuestion:
 
 @dataclass(frozen=True, slots=True)
 class RegistrationPreviewProduct:
+    """Describe registration preview product.
+
+    Attributes
+    ----------
+    code
+        The stable domain code to resolve or validate.
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    price_minor
+        The price minor retained in this immutable projection.
+    capacity
+        The capacity retained in this immutable projection.
+    entitlement_code
+        The stable entitlement code from the relevant closed catalog.
+    entitlement_name
+        The human-readable entitlement name shown to authorized readers.
+    sales_open_at
+        The timezone-aware timestamp for sales open.
+    sales_close_at
+        The timezone-aware timestamp for sales close.
+    required_capacity_codes
+        The required capacity codes retained in this immutable projection.
+    eligibility_explanation
+        The bounded eligibility explanation retained for authorized readers.
+    waitlist_enabled
+        The waitlist enabled retained in this immutable projection.
+    payment_window_minutes
+        The payment window minutes retained in this immutable projection.
+    status
+        The closed status value to evaluate or expose.
+    """
+
     code: str
     name: str
     description: str
@@ -174,6 +284,24 @@ class RegistrationPreviewProduct:
 
 @dataclass(frozen=True, slots=True)
 class RegistrationPreviewAnswerValidation:
+    """Describe registration preview answer validation.
+
+    Attributes
+    ----------
+    requested
+        The requested retained in this immutable projection.
+    valid
+        The valid retained in this immutable projection.
+    schema_keys
+        The schema keys retained in this immutable projection.
+    normalized_answer_keys
+        The normalized answer keys retained in this immutable projection.
+    error_fields
+        The canonical error fields included in the projection or mutation.
+    error_codes
+        The error codes retained in this immutable projection.
+    """
+
     requested: bool
     valid: bool | None
     schema_keys: tuple[str, ...]
@@ -184,6 +312,30 @@ class RegistrationPreviewAnswerValidation:
 
 @dataclass(frozen=True, slots=True)
 class RegistrationPreviewForbiddenEffects:
+    """Describe registration preview forbidden effects.
+
+    Attributes
+    ----------
+    account_created
+        The account created retained in this immutable projection.
+    registration_created
+        The registration created retained in this immutable projection.
+    submission_created
+        The submission created retained in this immutable projection.
+    reservation_created
+        The reservation created retained in this immutable projection.
+    waitlist_entry_created
+        The waitlist entry created retained in this immutable projection.
+    payment_created
+        The payment created retained in this immutable projection.
+    entitlement_created
+        The entitlement created retained in this immutable projection.
+    consent_created
+        The consent created retained in this immutable projection.
+    configuration_changed
+        The configuration changed retained in this immutable projection.
+    """
+
     account_created: bool = False
     registration_created: bool = False
     submission_created: bool = False
@@ -197,6 +349,64 @@ class RegistrationPreviewForbiddenEffects:
 
 @dataclass(frozen=True, slots=True)
 class RegistrationConfigurationPreview:
+    """Describe registration configuration preview.
+
+    Attributes
+    ----------
+    setup_id
+        The setup identifier within the requested scope.
+    configuration_id
+        The configuration identifier within the requested scope.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    configuration_version
+        The expected configuration version used to reject stale updates.
+    status
+        The closed status value to evaluate or expose.
+    origin
+        The origin retained in this immutable projection.
+    content_digest
+        The canonical digest used to verify content.
+    source_content_digest
+        The canonical digest used to verify source content.
+    review_resolved
+        The review resolved retained in this immutable projection.
+    name
+        The human-readable name to normalize or persist.
+    edition_name
+        The human-readable edition name shown to authorized readers.
+    opens_at
+        The timezone-aware timestamp for opens.
+    closes_at
+        The timezone-aware timestamp for closes.
+    capacity
+        The capacity retained in this immutable projection.
+    currency
+        The supported ISO 4217 currency code for monetary values.
+    minimum_age
+        The minimum age retained in this immutable projection.
+    default_payment_window_minutes
+        The default payment window minutes retained in this immutable projection.
+    waitlist_enabled
+        The waitlist enabled retained in this immutable projection.
+    automatic_waitlist_promotion
+        The automatic waitlist promotion retained in this immutable projection.
+    sections
+        The sections retained in this immutable projection.
+    questions
+        The questions retained in this immutable projection.
+    products
+        The products retained in this immutable projection.
+    validation_issues
+        The validation issues retained in this immutable projection.
+    attendee_answers
+        The attendee answers retained in this immutable projection.
+    staff_answers
+        The staff answers retained in this immutable projection.
+    forbidden_effects
+        The forbidden effects retained in this immutable projection.
+    """
+
     setup_id: UUID
     configuration_id: UUID
     aggregate_version: int
@@ -227,6 +437,30 @@ class RegistrationConfigurationPreview:
 
 @dataclass(frozen=True, slots=True)
 class RegistrationConfigurationLifecycleResult:
+    """Describe registration configuration lifecycle result.
+
+    Attributes
+    ----------
+    setup_id
+        The setup identifier within the requested scope.
+    configuration_id
+        The configuration identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    configuration_version
+        The expected configuration version used to reject stale updates.
+    status
+        The closed status value to evaluate or expose.
+    content_digest
+        The canonical digest used to verify content.
+    review_resolved
+        The review resolved retained in this immutable projection.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     setup_id: UUID
     configuration_id: UUID
     receipt_id: UUID
@@ -296,13 +530,13 @@ def _authorize_scope(
             series__organization_id=organization_id,
         ).exists()
     ):
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     target = resolve_edition_target(
         organization_id=organization_id,
         edition_id=edition_id,
     )
     if target is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     decision = decide(
         principal=actor,
         capability_code="registration.manage_configuration",
@@ -310,7 +544,7 @@ def _authorize_scope(
         at=at,
     )
     if not decision.allowed:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     return decision
 
 
@@ -414,7 +648,7 @@ def _bounded[ItemT: Model](
 ) -> tuple[ItemT, ...]:
     rows = tuple(queryset[: limit + 1])
     if len(rows) > limit:
-        raise RegistrationSetupLimitExceededError()
+        raise RegistrationSetupLimitExceededError
     return rows
 
 
@@ -430,14 +664,14 @@ def _lock_scope(
         Organization.objects.select_for_update().filter(pk=organization_id).first()
     )
     if organization is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     series = (
         ConventionSeries.objects.select_for_update()
         .filter(pk=series_id, organization_id=organization.id)
         .first()
     )
     if series is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     edition = (
         EventEdition.objects.select_for_update()
         .filter(
@@ -448,17 +682,17 @@ def _lock_scope(
         .first()
     )
     if edition is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     control = (
         RegistrationSetupControl.objects.select_for_update()
         .filter(organization=organization, edition=edition)
         .first()
     )
     if control is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     persisted_actor = Account.objects.select_for_update().filter(pk=actor.pk).first()
     if persisted_actor is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     evaluated_at = timezone.now()
     decision = _authorize_scope(
         actor=persisted_actor,
@@ -477,7 +711,7 @@ def _lock_scope(
         .first()
     )
     if configuration is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     sections = _bounded(
         RegistrationSection.objects.select_for_update()
         .filter(configuration=configuration)
@@ -495,7 +729,7 @@ def _lock_scope(
         if question.section_id is not None:
             section = sections_by_id.get(question.section_id)
             if section is None:
-                raise RegistrationSetupDependencyError()
+                raise RegistrationSetupDependencyError
             question.section = section
     products = _bounded(
         AdmissionProduct.objects.select_for_update()
@@ -520,7 +754,7 @@ def _lock_scope(
         .distinct()[: MAX_CAPACITY_CODES + 1]
     )
     if len(capacity_codes) > MAX_CAPACITY_CODES:
-        raise RegistrationSetupLimitExceededError()
+        raise RegistrationSetupLimitExceededError
     return _LockedConfigurationScope(
         organization=organization,
         series=series,
@@ -571,9 +805,9 @@ def _require_exact_configuration_digest(
         not scope.configuration.content_digest
         or scope.configuration.content_digest != fresh
     ):
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     if submitted_digest is not None and submitted_digest != fresh:
-        raise RegistrationSetupVersionConflictError()
+        raise RegistrationSetupVersionConflictError
     return fresh
 
 
@@ -659,14 +893,14 @@ def _require_original_source_binding(
     )
     created_in_setup_version = configuration.created_in_setup_version
     if created_in_setup_version is None:
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     receipt = RegistrationSetupCommandReceipt.objects.filter(
         setup=control,
         resulting_version=created_in_setup_version,
         action=expected_action,
     ).first()
     if receipt is None:
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     targets = tuple(
         receipt.targets.filter(
             target_kind=RegistrationSetupCommandTarget.TargetKind.CONFIGURATION,
@@ -680,12 +914,12 @@ def _require_original_source_binding(
         or targets[0].content_digest
         != configuration_source_binding_digest(configuration)
     ):
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     if (
         configuration.origin != RegistrationSetupOrigin.BLANK
         and receipt.actor_id != configuration.source_imported_by_id
     ):
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     try:
         _require_setup_start_evidence(
             scope=_SetupEvidenceScope(
@@ -697,7 +931,7 @@ def _require_original_source_binding(
             configuration=configuration,
         )
     except RegistrationSetupStateConflictError as error:
-        raise RegistrationSetupDependencyError() from error
+        raise RegistrationSetupDependencyError from error
     return receipt
 
 
@@ -710,7 +944,7 @@ def _require_exact_source_digest(  # noqa: PLR0912
         or scope.control.provenance_status != RegistrationProvenanceStatus.COMPLETE
         or configuration.provenance_status != RegistrationProvenanceStatus.COMPLETE
     ):
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     _require_original_source_binding(
         configuration=configuration,
         control=scope.control,
@@ -729,7 +963,7 @@ def _require_exact_source_digest(  # noqa: PLR0912
                 configuration.source_imported_by_id,
             )
         ):
-            raise RegistrationSetupDependencyError()
+            raise RegistrationSetupDependencyError
         return
     if (
         configuration.source_version is None
@@ -737,7 +971,7 @@ def _require_exact_source_digest(  # noqa: PLR0912
         or configuration.source_imported_at is None
         or configuration.source_imported_by_id is None
     ):
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     if configuration.origin == RegistrationSetupOrigin.PUBLISHED_TEMPLATE:
         source_template_id = configuration.source_template_id
         if (
@@ -745,7 +979,7 @@ def _require_exact_source_digest(  # noqa: PLR0912
             or configuration.source_edition_id is not None
             or configuration.source_configuration_id is not None
         ):
-            raise RegistrationSetupDependencyError()
+            raise RegistrationSetupDependencyError
         template = (
             RegistrationTemplate.objects.filter(
                 pk=source_template_id,
@@ -763,7 +997,7 @@ def _require_exact_source_digest(  # noqa: PLR0912
                 status__in=(TemplateStatus.PUBLISHED, TemplateStatus.RETIRED),
             ).first()
         if template is None:
-            raise RegistrationSetupDependencyError()
+            raise RegistrationSetupDependencyError
         fresh = _template_source_digest(template)
         if (
             template.provenance_status != RegistrationProvenanceStatus.COMPLETE
@@ -773,17 +1007,17 @@ def _require_exact_source_digest(  # noqa: PLR0912
             or template.content_digest != fresh
             or configuration.source_content_digest != fresh
         ):
-            raise RegistrationSetupDependencyError()
+            raise RegistrationSetupDependencyError
         try:
             require_published_template_evidence(template)
         except RegistrationTemplateStateConflictError as error:
-            raise RegistrationSetupDependencyError() from error
+            raise RegistrationSetupDependencyError from error
         return
     if configuration.origin not in {
         RegistrationSetupOrigin.PRIOR_EDITION,
         RegistrationSetupOrigin.SUCCESSOR,
     }:
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     source_configuration_id = configuration.source_configuration_id
     source_edition_id = configuration.source_edition_id
     if (
@@ -791,7 +1025,7 @@ def _require_exact_source_digest(  # noqa: PLR0912
         or source_configuration_id is None
         or source_edition_id is None
     ):
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     source = (
         RegistrationConfiguration.objects.select_related("edition")
         .filter(
@@ -803,15 +1037,15 @@ def _require_exact_source_digest(  # noqa: PLR0912
         .first()
     )
     if source is None:
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     if configuration.origin == RegistrationSetupOrigin.PRIOR_EDITION:
         # Eligibility was checked by the immutable setup-start command graph.
         # Edition dates remain legitimately editable later and must not strand
         # an already imported copy-on-write configuration.
         if source.edition_id == scope.edition.id:
-            raise RegistrationSetupDependencyError()
+            raise RegistrationSetupDependencyError
     elif source.edition_id != scope.edition.id:
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     source_control = RegistrationSetupControl.objects.filter(
         organization=scope.organization,
         edition=source.edition,
@@ -824,7 +1058,7 @@ def _require_exact_source_digest(  # noqa: PLR0912
         or source.last_changed_in_setup_version is None
         or source_control is None
     ):
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     _require_original_source_binding(
         configuration=source,
         control=source_control,
@@ -837,7 +1071,7 @@ def _require_exact_source_digest(  # noqa: PLR0912
         or source.content_digest != fresh
         or configuration.source_content_digest != fresh
     ):
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     try:
         _require_active_configuration_lifecycle_evidence(
             scope=replace(
@@ -850,7 +1084,7 @@ def _require_exact_source_digest(  # noqa: PLR0912
             content_digest=fresh,
         )
     except RegistrationSetupStateConflictError as error:
-        raise RegistrationSetupDependencyError() from error
+        raise RegistrationSetupDependencyError from error
 
 
 def _validation_codes(error: ValidationError) -> tuple[str, ...]:
@@ -880,7 +1114,7 @@ def _model_issues(
 def _minor_policy_target_digest(policy: MinorRegistrationPolicy) -> str:
     payload = minor_policy_payload(policy)
     if payload is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     return target_content_digest(kind="minor_policy", payload=payload)
 
 
@@ -895,7 +1129,7 @@ def _minor_policy_request_digest(
         RegistrationSetupCommandReceipt.Action.MINOR_POLICY_CREATED,
         RegistrationSetupCommandReceipt.Action.MINOR_POLICY_UPDATED,
     }:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     return canonical_digest(
         {
             "action": action,
@@ -926,8 +1160,27 @@ def _require_minor_policy_review_evidence(
     policy: MinorRegistrationPolicy,
     visited_configuration_ids: frozenset[UUID] = frozenset(),
 ) -> AuditEvent:
-    """Prove reviewer identity/time from an immutable command graph."""
+    """Prove reviewer identity/time from an immutable command graph.
 
+    Parameters
+    ----------
+    scope : _LockedConfigurationScope | _MinorPolicyEvidenceScope
+        The exact tenant and resource scope of the operation.
+    policy : MinorRegistrationPolicy
+        The closed policy definition governing the requested decision.
+    visited_configuration_ids : frozenset[UUID], default=frozenset()
+        The selected visited configuration identifiers.
+
+    Returns
+    -------
+    AuditEvent
+        The resolved AuditEvent for require minor policy review evidence.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     configuration = scope.configuration
     if (
         configuration.id in visited_configuration_ids
@@ -939,7 +1192,7 @@ def _require_minor_policy_review_evidence(
         or policy.last_changed_in_setup_version <= 0
         or policy.last_changed_in_setup_version > scope.control.aggregate_version
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     receipt = (
         RegistrationSetupCommandReceipt.objects.select_for_update()
         .filter(
@@ -949,14 +1202,14 @@ def _require_minor_policy_review_evidence(
         .first()
     )
     if receipt is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     if receipt.action == RegistrationSetupCommandReceipt.Action.SETUP_STARTED:
         if (
             configuration.origin != RegistrationSetupOrigin.PRIOR_EDITION
             or policy.created_in_setup_version != receipt.resulting_version
             or receipt.resulting_version != configuration.created_in_setup_version
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         setup_audit = _require_setup_start_evidence(
             scope=_SetupEvidenceScope(
                 organization=scope.organization,
@@ -980,7 +1233,7 @@ def _require_minor_policy_review_evidence(
             or configuration.source_configuration_id is None
             or configuration.source_edition_id is None
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         source = (
             RegistrationConfiguration.objects.select_for_update()
             .select_related("edition", "edition__series")
@@ -993,7 +1246,7 @@ def _require_minor_policy_review_evidence(
             .first()
         )
         if source is None:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         source_control = (
             RegistrationSetupControl.objects.select_for_update()
             .filter(
@@ -1014,7 +1267,7 @@ def _require_minor_policy_review_evidence(
             or source_policy is None
             or minor_policy_payload(source_policy) != minor_policy_payload(policy)
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         _require_original_source_binding(
             configuration=source,
             control=source_control,
@@ -1047,7 +1300,7 @@ def _require_minor_policy_review_evidence(
         or receipt.request_digest
         != _minor_policy_request_digest(scope=scope, receipt=receipt, policy=policy)
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     targets = tuple(
         receipt.targets.select_for_update().order_by("target_kind", "target_id", "id")
     )
@@ -1078,7 +1331,7 @@ def _require_minor_policy_review_evidence(
         or len(configuration_targets) != 1
         or len(policy_targets) != 1
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     allowed_changed_fields = {
         "enabled",
         "minor_age_threshold",
@@ -1114,7 +1367,7 @@ def _require_minor_policy_review_evidence(
                 for field in audits[0].changed_fields
             )
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         changed_fields = tuple(audits[0].changed_fields)
     return require_setup_command_evidence_graph(
         scope=scope,
@@ -1413,7 +1666,7 @@ def _configuration_command_request_digest(
     ):
         payload["edition_name_confirmation"] = scope.edition.name
     else:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     payload["expected_version"] = int(receipt.resulting_version) - 1
     payload["reason"] = receipt.reason
     return canonical_digest(payload)
@@ -1436,7 +1689,7 @@ def _require_configuration_command_evidence(
             content_digest=content_digest,
         )
     ) or _SHA256_PATTERN.fullmatch(receipt.request_digest) is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     if action == RegistrationSetupCommandReceipt.Action.CONFIGURATION_REVIEWED:
         change_kind = RegistrationCommandChangeKind.REVIEWED
         changed_fields = ("review_state",)
@@ -1456,7 +1709,7 @@ def _require_configuration_command_evidence(
         }
         expected_occurred_at = scope.configuration.activated_at
     else:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     audit = require_setup_command_evidence_graph(
         scope=scope,
         receipt=receipt,
@@ -1483,7 +1736,7 @@ def _require_configuration_command_evidence(
         action == RegistrationSetupCommandReceipt.Action.CONFIGURATION_ACTIVATED
         and scope.configuration.activated_at != audit.occurred_at
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     return audit
 
 
@@ -1622,7 +1875,7 @@ def _result_from_receipt(
     content_digest: str,
 ) -> RegistrationConfigurationLifecycleResult:
     if receipt.action != action or receipt.request_digest != request_digest:
-        raise RegistrationSetupRetryConflictError()
+        raise RegistrationSetupRetryConflictError
     try:
         digest = _require_exact_configuration_digest(
             scope,
@@ -1635,9 +1888,9 @@ def _result_from_receipt(
             content_digest=digest,
         )
     except RegistrationSetupVersionConflictError as error:
-        raise RegistrationSetupStateConflictError() from error
+        raise RegistrationSetupStateConflictError from error
     if not _review_resolved(scope, digest):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     configuration_version = int(scope.configuration.last_changed_in_setup_version or 0)
     if action == RegistrationSetupCommandReceipt.Action.CONFIGURATION_REVIEWED:
         persisted = (
@@ -1654,7 +1907,7 @@ def _result_from_receipt(
             and scope.configuration.activated_at is not None
         )
     if not persisted:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     return RegistrationConfigurationLifecycleResult(
         setup_id=scope.control.id,
         configuration_id=scope.configuration.id,
@@ -1779,7 +2032,7 @@ def _require_editable_draft(scope: _LockedConfigurationScope) -> None:
         or scope.edition.lifecycle not in _EDITABLE_EDITION_LIFECYCLES
         or scope.configuration.status != ConfigurationStatus.DRAFT
     ):
-        raise RegistrationSetupLifecycleConflictError()
+        raise RegistrationSetupLifecycleConflictError
 
 
 def _require_current_version(
@@ -1788,7 +2041,7 @@ def _require_current_version(
 ) -> int:
     current = int(scope.control.aggregate_version)
     if current != expected_version:
-        raise RegistrationSetupVersionConflictError()
+        raise RegistrationSetupVersionConflictError
     return current
 
 
@@ -1805,8 +2058,37 @@ def preview_registration_configuration(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationConfigurationPreview:
-    """Return a coherent, audited preview without creating domain records."""
+    """Return a coherent, audited preview without creating domain records.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    attendee_answers : object | None, default=None
+        The attendee answers evaluated while preview registration configuration.
+    staff_answers : object | None, default=None
+        The staff answers evaluated while preview registration configuration.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationConfigurationPreview
+        The RegistrationConfigurationPreview produced by preview registration
+        configuration.
+    """
     _authorize_scope(
         actor=actor,
         organization_id=organization_id,
@@ -1979,8 +2261,53 @@ def review_registration_configuration(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationConfigurationLifecycleResult:
-    """Resolve review for exactly one valid draft content generation."""
+    """Resolve review for exactly one valid draft content generation.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    content_digest : str
+        The canonical digest used to verify content.
+    review_note : str
+        The review note evaluated while review registration configuration.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationConfigurationLifecycleResult
+        The RegistrationConfigurationLifecycleResult produced by review
+        registration configuration.
+
+    Raises
+    ------
+    RegistrationConfigurationValidationError
+        If the operation encounters a registration configuration validation
+        condition.
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_scope(
         actor=actor,
         organization_id=organization_id,
@@ -2057,7 +2384,7 @@ def review_registration_configuration(
                 "registration_setup_review_note_required",
             )
         if _review_resolved(scope, digest):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         issues = _configuration_issues(scope)
         if issues:
             raise RegistrationConfigurationValidationError(issues)
@@ -2094,7 +2421,7 @@ def review_registration_configuration(
             content_digest=digest,
         )
         if not _review_resolved(scope, digest):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         return RegistrationConfigurationLifecycleResult(
             setup_id=scope.control.id,
             configuration_id=scope.configuration.id,
@@ -2124,8 +2451,59 @@ def activate_registration_configuration(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> RegistrationConfigurationLifecycleResult:
-    """Activate one reviewed draft without silently retiring another version."""
+    """Activate one reviewed draft without silently retiring another version.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    configuration_id : UUID
+        The configuration identifier within the requested scope.
+    content_digest : str
+        The canonical digest used to verify content.
+    edition_name_confirmation : str
+        The exact edition name required to confirm activation intent.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    RegistrationConfigurationLifecycleResult
+        The RegistrationConfigurationLifecycleResult produced by activate
+        registration configuration.
+
+    Raises
+    ------
+    RegistrationConfigurationActiveConflictError
+        If the operation encounters a registration configuration active conflict
+        condition.
+    RegistrationConfigurationReviewRequiredError
+        If the operation encounters a registration configuration review required
+        condition.
+    RegistrationConfigurationValidationError
+        If the operation encounters a registration configuration validation
+        condition.
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    _field_error
+        If the operation encounters a field error condition.
+    """
     _authorize_scope(
         actor=actor,
         organization_id=organization_id,
@@ -2194,7 +2572,7 @@ def activate_registration_configuration(
                 "registration_setup_edition_confirmation_mismatch",
             )
         if not _review_resolved(scope, digest):
-            raise RegistrationConfigurationReviewRequiredError()
+            raise RegistrationConfigurationReviewRequiredError
         issues = _configuration_issues(scope)
         if issues:
             raise RegistrationConfigurationValidationError(issues)
@@ -2203,7 +2581,7 @@ def activate_registration_configuration(
             status=ConfigurationStatus.ACTIVE,
         )
         if active_conflict.exclude(pk=scope.configuration.id).exists():
-            raise RegistrationConfigurationActiveConflictError()
+            raise RegistrationConfigurationActiveConflictError
         resulting_version = current_version + 1
         scope.configuration.status = ConfigurationStatus.ACTIVE
         scope.configuration.activated_at = scope.evaluated_at
@@ -2237,7 +2615,7 @@ def activate_registration_configuration(
             content_digest=digest,
         )
         if not _review_resolved(scope, digest):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         return RegistrationConfigurationLifecycleResult(
             setup_id=scope.control.id,
             configuration_id=scope.configuration.id,

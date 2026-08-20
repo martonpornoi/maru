@@ -29,6 +29,17 @@ class CanonicalLocalDateTimeField(forms.Field):
     }
 
     def __init__(self, *args: Any, zone_name: str = "UTC", **kwargs: Any) -> None:
+        """Initialize the CanonicalLocalDateTimeField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        zone_name : str, default='UTC'
+            The human-readable zone name shown to authorized readers.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault(
             "widget",
             forms.DateTimeInput(
@@ -40,9 +51,33 @@ class CanonicalLocalDateTimeField(forms.Field):
         self.zone = ZoneInfo(zone_name)
 
     def set_zone(self, zone_name: str) -> None:
+        """Set zone.
+
+        Parameters
+        ----------
+        zone_name : str
+            The human-readable zone name shown to authorized readers.
+        """
         self.zone = ZoneInfo(zone_name)
 
     def to_python(self, value: object) -> datetime | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        datetime | None
+            The canonical Python representation, or `None` for empty input.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if value in self.empty_values:
             return None
         if not isinstance(value, str) or _LOCAL_DATE_TIME.fullmatch(value) is None:
@@ -80,6 +115,18 @@ class CanonicalLocalDateTimeField(forms.Field):
         return first if first_valid else second
 
     def prepare_value(self, value: object) -> object:
+        """Prepare value.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        object
+            A widget-ready representation of the stored value.
+        """
         if isinstance(value, datetime):
             local = value.astimezone(self.zone) if value.tzinfo else value
             return local.strftime("%Y-%m-%dT%H:%M")
@@ -90,6 +137,18 @@ class CanonicalUUIDChoiceField(forms.ChoiceField):
     """A bounded named choice that returns one canonical lower-case UUID."""
 
     def to_python(self, value: object) -> UUID | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        UUID | None
+            The canonical Python representation, or `None` for empty input.
+        """
         if value in self.empty_values:
             return None
         parsed = CanonicalUUIDField().to_python(value)
@@ -99,7 +158,20 @@ class CanonicalUUIDChoiceField(forms.ChoiceField):
 
 
 class LogisticsStrictForm(StrictInputForm):
+    """Collect and validate logistics strict input."""
+
     def __init__(self, *args: Any, zone_name: str = "UTC", **kwargs: Any) -> None:
+        """Initialize the LogisticsStrictForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        zone_name : str, default='UTC'
+            The human-readable zone name shown to authorized readers.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             if isinstance(field, CanonicalLocalDateTimeField):
@@ -107,6 +179,8 @@ class LogisticsStrictForm(StrictInputForm):
 
 
 class EquipmentOfferForm(LogisticsStrictForm):
+    """Collect and validate equipment offer input."""
+
     idempotency_key = CanonicalUUIDField(widget=forms.HiddenInput)
     title = forms.CharField(max_length=200)
     description = forms.CharField(
@@ -155,6 +229,13 @@ class EquipmentOfferForm(LogisticsStrictForm):
     )
 
     def clean(self) -> dict[str, object] | None:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, object] | None
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean()
         if not cleaned:
             return cleaned

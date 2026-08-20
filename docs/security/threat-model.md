@@ -147,6 +147,14 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 
 - Output encoding, CSRF protection for cookie sessions, CSP, secure cookies,
   origin controls, parameterized ORM use, and strict redirect/URL handling.
+- External authorization and JSON-decoder errors use code-owned public
+  messages; their caught exception text remains an internal diagnostic and
+  never becomes an HTTP response. Post/redirect/get flows reverse a named route
+  instead of trusting a request-derived target, and frontend path segments are
+  percent-encoded.
+- Canonical integer inputs use bounded linear ASCII-decimal checks rather than
+  backtracking regular expressions. Alias, Unicode-digit, sign, leading-zero,
+  and overlong forms are rejected before integer conversion.
 - Separate service and migration database roles; no application superuser.
 - Pin runtime PostgreSQL resolution to code-owned `public,pg_temp` (with
   `pg_catalog` implicitly first), reject caller DSN options, revoke effective

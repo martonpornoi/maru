@@ -33,16 +33,24 @@ from maru.registration.profile_choices import (
 
 
 class RegistrationSectionSerializer(serializers.ModelSerializer[RegistrationSection]):
+    """Serialize and validate registration section data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = RegistrationSection
         fields = ("id", "key", "title", "description", "position")
         read_only_fields = fields
 
 
 class RegistrationQuestionSerializer(serializers.ModelSerializer[RegistrationQuestion]):
+    """Serialize and validate registration question data."""
+
     section = RegistrationSectionSerializer(allow_null=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = RegistrationQuestion
         fields = (
             "id",
@@ -64,6 +72,8 @@ class RegistrationQuestionSerializer(serializers.ModelSerializer[RegistrationQue
 
 
 class ProfileExtensionFieldSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate profile extension field data."""
+
     id = serializers.UUIDField()
     key = serializers.CharField()
     version = serializers.IntegerField()
@@ -84,6 +94,8 @@ class ProfileExtensionFieldSerializer(serializers.Serializer[dict[str, object]])
 
 
 class ProfileExtensionWorkspaceSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate profile extension workspace data."""
+
     registration_id = serializers.UUIDField()
     snapshot_digest = serializers.RegexField(r"^[0-9a-f]{64}$")
     fields = ProfileExtensionFieldSerializer(many=True)  # type: ignore[assignment]
@@ -108,6 +120,8 @@ class ProfileExtensionValueCommandResultSerializer(
 
 
 class WriteProfileExtensionValueSerializer(StrictInputSerializer):
+    """Serialize and validate write profile extension value data."""
+
     field_id = serializers.UUIDField()
     value = serializers.JSONField(allow_null=True)
     expected_sequence = serializers.IntegerField(min_value=0, max_value=2_147_483_647)
@@ -120,7 +134,11 @@ class WriteProfileExtensionValueSerializer(StrictInputSerializer):
 
 
 class AdmissionProductSerializer(serializers.ModelSerializer[AdmissionProduct]):
+    """Serialize and validate admission product data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = AdmissionProduct
         fields = (
             "id",
@@ -146,11 +164,15 @@ class AdmissionProductSerializer(serializers.ModelSerializer[AdmissionProduct]):
 class RegistrationTemplateSummarySerializer(
     serializers.ModelSerializer[RegistrationTemplate]
 ):
+    """Serialize and validate registration template summary data."""
+
     series_name = serializers.CharField(source="series.name", allow_null=True)
     question_count = serializers.IntegerField()
     product_count = serializers.IntegerField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = RegistrationTemplate
         fields = (
             "id",
@@ -170,6 +192,8 @@ class RegistrationTemplateSummarySerializer(
 class RegistrationConfigurationSourceSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate registration configuration source data."""
+
     kind = serializers.ChoiceField(choices=("blank", "template", "edition"))
     id = serializers.UUIDField(allow_null=True)
     label = serializers.CharField()  # type: ignore[assignment]
@@ -178,12 +202,16 @@ class RegistrationConfigurationSourceSerializer(
 class RegistrationConfigurationSerializer(
     serializers.ModelSerializer[RegistrationConfiguration]
 ):
+    """Serialize and validate registration configuration data."""
+
     source_summary = serializers.SerializerMethodField()
     sections = RegistrationSectionSerializer(many=True)
     questions = RegistrationQuestionSerializer(many=True)
     products = AdmissionProductSerializer(many=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = RegistrationConfiguration
         fields = (
             "id",
@@ -212,6 +240,18 @@ class RegistrationConfigurationSerializer(
         self,
         obj: RegistrationConfiguration,
     ) -> dict[str, object]:
+        """Return source summary.
+
+        Parameters
+        ----------
+        obj : RegistrationConfiguration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved get source summary data.
+        """
         if obj.source_template_id is not None:
             return {
                 "kind": "template",
@@ -228,6 +268,8 @@ class RegistrationConfigurationSerializer(
 
 
 class RegistrationSourceEditionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate registration source edition data."""
+
     edition_id = serializers.UUIDField()
     edition__name = serializers.CharField()
     latest_version = serializers.IntegerField()
@@ -236,7 +278,11 @@ class RegistrationSourceEditionSerializer(serializers.Serializer[dict[str, objec
 class RegistrationTimelineSerializer(
     serializers.ModelSerializer[RegistrationTimelineEntry]
 ):
+    """Serialize and validate registration timeline data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = RegistrationTimelineEntry
         fields = (
             "id",
@@ -250,13 +296,19 @@ class RegistrationTimelineSerializer(
 
 
 class EntitlementSerializer(serializers.ModelSerializer[Entitlement]):
+    """Serialize and validate entitlement data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = Entitlement
         fields = ("code", "label_snapshot", "status", "granted_at")
         read_only_fields = fields
 
 
 class SelfRegistrationSerializer(serializers.ModelSerializer[Registration]):
+    """Serialize and validate self registration data."""
+
     product_name = serializers.CharField(source="product_name_snapshot")
     amount_minor = serializers.IntegerField(source="price_minor_snapshot")
     currency = serializers.CharField(source="currency_snapshot")
@@ -264,6 +316,8 @@ class SelfRegistrationSerializer(serializers.ModelSerializer[Registration]):
     timeline = serializers.SerializerMethodField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = Registration
         fields = (
             "id",
@@ -288,6 +342,18 @@ class SelfRegistrationSerializer(serializers.ModelSerializer[Registration]):
 
     @extend_schema_field(RegistrationTimelineSerializer(many=True))
     def get_timeline(self, obj: Registration) -> list[dict[str, object]]:
+        """Return timeline.
+
+        Parameters
+        ----------
+        obj : Registration
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        list[dict[str, object]]
+            The matching get timeline records in deterministic order.
+        """
         entries = obj.timeline.filter(
             audience=RegistrationTimelineEntry.Audience.ATTENDEE_AND_STAFF
         )
@@ -295,6 +361,8 @@ class SelfRegistrationSerializer(serializers.ModelSerializer[Registration]):
 
 
 class StaffRegistrationSerializer(serializers.ModelSerializer[Registration]):
+    """Serialize and validate staff registration data."""
+
     account_id = serializers.UUIDField(source="account.id")
     submitted_by_id = serializers.UUIDField(allow_null=True)
     display_name = serializers.CharField(source="account.display_name")
@@ -305,6 +373,8 @@ class StaffRegistrationSerializer(serializers.ModelSerializer[Registration]):
     timeline = RegistrationTimelineSerializer(many=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = Registration
         fields = (
             "id",
@@ -336,6 +406,8 @@ class StaffRegistrationSerializer(serializers.ModelSerializer[Registration]):
 class RegistrationConfigurationWorkspaceSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate registration configuration workspace data."""
+
     active_configuration = RegistrationConfigurationSerializer(allow_null=True)
     drafts = RegistrationConfigurationSerializer(many=True)
     templates = RegistrationTemplateSummarySerializer(many=True)
@@ -346,7 +418,11 @@ class RegistrationConfigurationWorkspaceSerializer(
 class AdmissionTierReplacementSerializer(
     serializers.ModelSerializer[AdmissionTierReplacement]
 ):
+    """Serialize and validate admission tier replacement data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = AdmissionTierReplacement
         fields = (
             "id",
@@ -371,6 +447,8 @@ class AdmissionTierReplacementSerializer(
 
 
 class MyRegistrationWorkspaceSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate my registration workspace data."""
+
     configuration = RegistrationConfigurationSerializer(allow_null=True)
     registration = SelfRegistrationSerializer(allow_null=True)
     tier_replacement = AdmissionTierReplacementSerializer(allow_null=True)
@@ -379,6 +457,8 @@ class MyRegistrationWorkspaceSerializer(serializers.Serializer[dict[str, object]
 
 
 class CreateConfigurationDraftSerializer(StrictInputSerializer):
+    """Serialize and validate create configuration draft data."""
+
     name = serializers.CharField(max_length=160)
     reason = serializers.CharField(max_length=500)
     source_template_id = serializers.UUIDField(required=False)
@@ -401,6 +481,23 @@ class CreateConfigurationDraftSerializer(StrictInputSerializer):
     automatic_waitlist_promotion = serializers.BooleanField(required=False)
 
     def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if attrs.get("source_template_id") and attrs.get("source_edition_id"):
             raise serializers.ValidationError(
                 "Choose either a template or an edition source."
@@ -417,11 +514,15 @@ class CreateConfigurationDraftSerializer(StrictInputSerializer):
 
 
 class ActivateConfigurationSerializer(StrictInputSerializer):
+    """Serialize and validate activate configuration data."""
+
     configuration_id = serializers.UUIDField()
     reason = serializers.CharField(max_length=500)
 
 
 class PublishTemplateSerializer(StrictInputSerializer):
+    """Serialize and validate publish template data."""
+
     configuration_id = serializers.UUIDField()
     code = serializers.SlugField(max_length=80)
     name = serializers.CharField(max_length=160)
@@ -435,17 +536,23 @@ class PublishTemplateSerializer(StrictInputSerializer):
 
 
 class SubmitRegistrationSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate submit registration data."""
+
     product_id = serializers.UUIDField()
     answers = serializers.JSONField()
 
 
 class HeadlessFursuitSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate headless fursuit data."""
+
     name = serializers.CharField(max_length=120)
     species = serializers.CharField(required=False, allow_blank=True, max_length=120)
     reuse_from_id = serializers.UUIDField(required=False, allow_null=True)
 
 
 class GuardianDetailsSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate guardian details data."""
+
     name = serializers.CharField(max_length=200)
     email = serializers.EmailField()
     relationship = serializers.CharField(max_length=80)
@@ -453,6 +560,8 @@ class GuardianDetailsSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class HeadlessProfileSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate headless profile data."""
+
     real_name = serializers.CharField(max_length=200)
     date_of_birth = serializers.DateField()
     address_line_1 = serializers.CharField(max_length=200)
@@ -511,6 +620,23 @@ class HeadlessProfileSerializer(serializers.Serializer[dict[str, object]]):
     guardian = GuardianDetailsSerializer(required=False)
 
     def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         fursuits = attrs.get("fursuits", [])
         if isinstance(fursuits, list) and len(fursuits) > MAX_FURSUITS:
             raise serializers.ValidationError(
@@ -553,6 +679,8 @@ class HeadlessProfileSerializer(serializers.Serializer[dict[str, object]]):
 class HeadlessRegistrationSubmissionSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate headless registration submission data."""
+
     idempotency_key = serializers.UUIDField()
     configuration_version = serializers.IntegerField(min_value=1)
     product_id = serializers.UUIDField()
@@ -567,24 +695,34 @@ class HeadlessRegistrationSubmissionSerializer(
 
 
 class GuardianConsentAcceptSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate guardian consent accept data."""
+
     token = serializers.CharField(max_length=200)
     guardian_name = serializers.CharField(max_length=200)
 
 
 class DemoPaymentSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate demo payment data."""
+
     idempotency_key = serializers.UUIDField()
 
 
 class CreatePaymentIntentSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate create payment intent data."""
+
     provider_account_id = serializers.UUIDField()
     idempotency_key = serializers.UUIDField()
     return_url = serializers.URLField(max_length=500)
 
 
 class PaymentIntentSerializer(serializers.ModelSerializer[PaymentIntent]):
+    """Serialize and validate payment intent data."""
+
     provider_name = serializers.CharField(source="provider_account.display_name")
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = PaymentIntent
         fields = (
             "id",
@@ -604,11 +742,15 @@ class PaymentIntentSerializer(serializers.ModelSerializer[PaymentIntent]):
 
 
 class ReserveAdmissionTierReplacementSerializer(StrictInputSerializer):
+    """Serialize and validate reserve admission tier replacement data."""
+
     target_product_id = serializers.UUIDField()
     expected_registration_version = serializers.IntegerField(min_value=1)
 
 
 class RegistrationCapacityAdjustmentCommandSerializer(StrictInputSerializer):
+    """Serialize and validate registration capacity adjustment command data."""
+
     product_id = serializers.UUIDField(required=False, allow_null=True)
     new_capacity = serializers.IntegerField(min_value=1, max_value=1_000_000)
     expected_control_version = serializers.IntegerField(min_value=1)
@@ -618,6 +760,8 @@ class RegistrationCapacityAdjustmentCommandSerializer(StrictInputSerializer):
 class RegistrationCapacityAdjustmentResultSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate registration capacity adjustment result data."""
+
     id = serializers.UUIDField()
     scope = serializers.ChoiceField(choices=("overall", "product"))
     product_id = serializers.UUIDField(allow_null=True)
@@ -629,6 +773,8 @@ class RegistrationCapacityAdjustmentResultSerializer(
 
 
 class WaitlistBatchOfferCommandSerializer(StrictInputSerializer):
+    """Serialize and validate waitlist batch offer command data."""
+
     product_id = serializers.UUIDField()
     batch_size = serializers.IntegerField(min_value=1, max_value=100)
     expected_control_version = serializers.IntegerField(min_value=1)
@@ -636,6 +782,8 @@ class WaitlistBatchOfferCommandSerializer(StrictInputSerializer):
 
 
 class WaitlistBatchOfferResultSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate waitlist batch offer result data."""
+
     id = serializers.UUIDField()
     product_id = serializers.UUIDField()
     requested_size = serializers.IntegerField()
@@ -646,6 +794,8 @@ class WaitlistBatchOfferResultSerializer(serializers.Serializer[dict[str, object
 
 
 class RegistrationCommerceActivitySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate registration commerce activity data."""
+
     event_name = serializers.CharField()
     action = serializers.CharField()
     actor_label = serializers.CharField()
@@ -654,6 +804,8 @@ class RegistrationCommerceActivitySerializer(serializers.Serializer[dict[str, ob
 
 
 class RegistrationCommerceCapacitySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate registration commerce capacity data."""
+
     product_id = serializers.UUIDField(allow_null=True)
     product_name = serializers.CharField(allow_blank=True)
     configured_capacity = serializers.IntegerField()
@@ -667,15 +819,21 @@ class RegistrationCommerceCapacitySerializer(serializers.Serializer[dict[str, ob
 class RegistrationCommerceWorkspaceSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate registration commerce workspace data."""
+
     control_version = serializers.IntegerField()
     capacities = RegistrationCommerceCapacitySerializer(many=True)
     activity = RegistrationCommerceActivitySerializer(many=True)
 
 
 class PaymentExceptionSerializer(serializers.ModelSerializer[PaymentException]):
+    """Serialize and validate payment exception data."""
+
     provider_name = serializers.CharField(source="provider_account.display_name")
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = PaymentException
         fields = (
             "id",
@@ -693,10 +851,14 @@ class PaymentExceptionSerializer(serializers.ModelSerializer[PaymentException]):
 
 
 class ResolvePaymentExceptionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate resolve payment exception data."""
+
     reason = serializers.CharField(max_length=500)
 
 
 class ProposeFinancialOperationSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate propose financial operation data."""
+
     kind = serializers.ChoiceField(
         choices=tuple(
             (kind, FinancialOperation.Kind(kind).label)
@@ -710,11 +872,17 @@ class ProposeFinancialOperationSerializer(serializers.Serializer[dict[str, objec
 
 
 class ApproveFinancialOperationSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate approve financial operation data."""
+
     reason = serializers.CharField(max_length=500)
 
 
 class FinancialOperationSerializer(serializers.ModelSerializer[FinancialOperation]):
+    """Serialize and validate financial operation data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = FinancialOperation
         fields = (
             "id",
@@ -738,7 +906,11 @@ class FinancialOperationSerializer(serializers.ModelSerializer[FinancialOperatio
 
 
 class FinancialLedgerEntrySerializer(serializers.ModelSerializer[FinancialLedgerEntry]):
+    """Serialize and validate financial ledger entry data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = FinancialLedgerEntry
         fields = (
             "id",
@@ -757,7 +929,11 @@ class FinancialLedgerEntrySerializer(serializers.ModelSerializer[FinancialLedger
 
 
 class ReceiptRecordSerializer(serializers.ModelSerializer[ReceiptRecord]):
+    """Serialize and validate receipt record data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = ReceiptRecord
         fields = (
             "id",
@@ -773,6 +949,8 @@ class ReceiptRecordSerializer(serializers.ModelSerializer[ReceiptRecord]):
 
 
 class ReconcileSettlementSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate reconcile settlement data."""
+
     provider_account_id = serializers.UUIDField()
     provider_reference = serializers.CharField(max_length=160)
     currency = serializers.CharField(min_length=3, max_length=3)
@@ -791,7 +969,11 @@ class ReconcileSettlementSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class SettlementBatchSerializer(serializers.ModelSerializer[SettlementBatch]):
+    """Serialize and validate settlement batch data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = SettlementBatch
         fields = (
             "id",
@@ -812,19 +994,27 @@ class SettlementBatchSerializer(serializers.ModelSerializer[SettlementBatch]):
 
 
 class CheckInSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate check in data."""
+
     reason = serializers.CharField(max_length=500)
 
 
 class ChangePaymentDeadlineSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate change payment deadline data."""
+
     new_deadline = serializers.DateTimeField()
     reason = serializers.CharField(max_length=500)
 
 
 class WaivePaymentSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate waive payment data."""
+
     reason = serializers.CharField(max_length=500)
 
 
 class PublicProductAvailabilitySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate public product availability data."""
+
     id = serializers.UUIDField()
     name = serializers.CharField()
     description = serializers.CharField()
@@ -839,11 +1029,15 @@ class PublicProductAvailabilitySerializer(serializers.Serializer[dict[str, objec
 
 
 class PublicCodeLabelSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate public code label data."""
+
     code = serializers.CharField()
     label = serializers.CharField()  # type: ignore[assignment]
 
 
 class PublicProfileContractSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate public profile contract data."""
+
     snapshot_scope = serializers.CharField()
     suggestion_mode = serializers.CharField()
     pronoun_choices = PublicCodeLabelSerializer(many=True)
@@ -866,6 +1060,8 @@ class PublicProfileContractSerializer(serializers.Serializer[dict[str, object]])
 
 
 class PublicClientContractSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate public client contract data."""
+
     api_version = serializers.CharField()
     csrf_api = serializers.CharField()
     account_bootstrap_api = serializers.CharField()
@@ -877,6 +1073,8 @@ class PublicClientContractSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class PublicRegistrationDefinitionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate public registration definition data."""
+
     edition_id = serializers.UUIDField()
     organization_name = serializers.CharField()
     series_name = serializers.CharField()
@@ -898,6 +1096,8 @@ class PublicRegistrationDefinitionSerializer(serializers.Serializer[dict[str, ob
 
 
 class PublicRegistrationEditionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate public registration edition data."""
+
     edition_id = serializers.UUIDField()
     organization_name = serializers.CharField()
     series_name = serializers.CharField()
@@ -912,18 +1112,24 @@ class PublicRegistrationEditionSerializer(serializers.Serializer[dict[str, objec
 
 
 class PublicAttendeeFursuitSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate public attendee fursuit data."""
+
     name = serializers.CharField()
     species = serializers.CharField()
     photo_url = serializers.CharField(allow_null=True)
 
 
 class AttendanceLabelSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate attendance label data."""
+
     code = serializers.CharField()
     label = serializers.CharField()  # type: ignore[assignment]
     tone = serializers.CharField()
 
 
 class PublicAttendeeSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate public attendee data."""
+
     display_name = serializers.CharField()
     pronouns = serializers.CharField()
     bio = serializers.CharField()
@@ -935,6 +1141,8 @@ class PublicAttendeeSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class SelfProfileSuggestionFursuitSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate self profile suggestion fursuit data."""
+
     reuse_from_id = serializers.UUIDField(allow_null=True)
     name = serializers.CharField()
     species = serializers.CharField()
@@ -943,6 +1151,8 @@ class SelfProfileSuggestionFursuitSerializer(serializers.Serializer[dict[str, ob
 
 
 class SelfProfileSuggestionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate self profile suggestion data."""
+
     source_profile_id = serializers.UUIDField()
     source_edition_id = serializers.UUIDField()
     source_edition_name = serializers.CharField()
@@ -973,6 +1183,8 @@ class SelfProfileSuggestionSerializer(serializers.Serializer[dict[str, object]])
 
 
 class SelfAttendeeFursuitSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate self attendee fursuit data."""
+
     id = serializers.UUIDField()
     name = serializers.CharField()
     species = serializers.CharField()
@@ -982,6 +1194,8 @@ class SelfAttendeeFursuitSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class SelfAttendeeProfileSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate self attendee profile data."""
+
     id = serializers.UUIDField()
     edition_id = serializers.UUIDField()
     editable = serializers.BooleanField()
@@ -1012,6 +1226,8 @@ class SelfAttendeeProfileSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class SelfAttendeeFursuitUpdateSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate self attendee fursuit update data."""
+
     id = serializers.UUIDField(required=False)
     reuse_from_id = serializers.UUIDField(required=False)
     name = serializers.CharField(max_length=120)
@@ -1020,6 +1236,8 @@ class SelfAttendeeFursuitUpdateSerializer(serializers.Serializer[dict[str, objec
 
 
 class UpdateSelfAttendeeProfileSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate update self attendee profile data."""
+
     real_name = serializers.CharField(max_length=200)
     date_of_birth = serializers.DateField()
     address_line_1 = serializers.CharField(max_length=200)
@@ -1074,6 +1292,23 @@ class UpdateSelfAttendeeProfileSerializer(serializers.Serializer[dict[str, objec
     )
 
     def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         action = attrs.get("profile_photo_action")
         reuse_id = attrs.get("reuse_profile_photo_id")
         if action == "reuse" and reuse_id is None:
@@ -1123,9 +1358,28 @@ class UpdateSelfAttendeeProfileSerializer(serializers.Serializer[dict[str, objec
 
 
 class SelfProfileImageUploadSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate self profile image upload data."""
+
     image = serializers.FileField()
 
     def validate_image(self, image: object) -> object:
+        """Validate image.
+
+        Parameters
+        ----------
+        image : object
+            The image used to validate or render the API representation.
+
+        Returns
+        -------
+        object
+            The normalized value for validate image.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         from maru.registration.profile_policy import (  # noqa: PLC0415
             ALLOWED_FURSUIT_PHOTO_CONTENT_TYPES,
             MAX_FURSUIT_PHOTO_BYTES,
@@ -1139,6 +1393,8 @@ class SelfProfileImageUploadSerializer(serializers.Serializer[dict[str, object]]
 
 
 class ProfileMediaReviewItemSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate profile media review item data."""
+
     id = serializers.UUIDField()
     profile_id = serializers.UUIDField()
     account_id = serializers.UUIDField()
@@ -1151,6 +1407,8 @@ class ProfileMediaReviewItemSerializer(serializers.Serializer[dict[str, object]]
 
 
 class ProfileMediaReviewDecisionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate profile media review decision data."""
+
     media_kind = serializers.ChoiceField(choices=("profile_photo", "fursuit_photo"))
     decision = serializers.ChoiceField(choices=("approved", "rejected"))
     reason = serializers.CharField(max_length=500)
@@ -1159,6 +1417,8 @@ class ProfileMediaReviewDecisionSerializer(serializers.Serializer[dict[str, obje
 class RegistrationReconciliationProductSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate registration reconciliation product data."""
+
     product_name = serializers.CharField()
     currency = serializers.CharField()
     registrations = serializers.IntegerField()
@@ -1174,17 +1434,23 @@ class RegistrationReconciliationProductSerializer(
 
 
 class RegistrationReconciliationSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate registration reconciliation data."""
+
     generated_at = serializers.DateTimeField()
     products = RegistrationReconciliationProductSerializer(many=True)
 
 
 class AttendeeCountryBreakdownSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate attendee country breakdown data."""
+
     country_code = serializers.CharField()
     count = serializers.IntegerField()
     percentage = serializers.FloatField()
 
 
 class AttendeeLevelBreakdownSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate attendee level breakdown data."""
+
     code = serializers.CharField()
     label = serializers.CharField()  # type: ignore[assignment]
     tone = serializers.CharField()
@@ -1192,6 +1458,8 @@ class AttendeeLevelBreakdownSerializer(serializers.Serializer[dict[str, object]]
 
 
 class AttendeeReportSummarySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate attendee report summary data."""
+
     coming = serializers.IntegerField()
     confirmed = serializers.IntegerField()
     checked_in = serializers.IntegerField()
@@ -1203,6 +1471,8 @@ class AttendeeReportSummarySerializer(serializers.Serializer[dict[str, object]])
 
 
 class AttendeeReportRowSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate attendee report row data."""
+
     registration_id = serializers.UUIDField()
     reference = serializers.CharField()
     badge_name = serializers.CharField()
@@ -1221,6 +1491,8 @@ class AttendeeReportRowSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class AttendeeReportSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate attendee report data."""
+
     generated_at = serializers.DateTimeField()
     status_scope = serializers.ListField(child=serializers.CharField())
     summary = AttendeeReportSummarySerializer()
@@ -1233,6 +1505,8 @@ class AttendeeReportSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class AttendeeReportQuerySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate attendee report query data."""
+
     search = serializers.CharField(
         required=False,
         allow_blank=False,
@@ -1264,6 +1538,8 @@ class AttendeeReportQuerySerializer(serializers.Serializer[dict[str, object]]):
 
 
 class StaffRegistrationListQuerySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate staff registration list query data."""
+
     search = serializers.CharField(
         required=False,
         allow_blank=False,
@@ -1279,6 +1555,8 @@ class StaffRegistrationListQuerySerializer(serializers.Serializer[dict[str, obje
 
 
 class ActionItemSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate action item data."""
+
     key = serializers.CharField()
     level = serializers.ChoiceField(choices=("fyi", "action", "blocking", "urgent"))
     title = serializers.CharField()

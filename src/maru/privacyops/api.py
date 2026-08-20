@@ -49,11 +49,25 @@ def _account(request: Request) -> Account:
 
 
 class MySubjectRightsRequestListCreateView(APIView):
+    """Expose my subject rights request list create through the HTTP API."""
+
     @extend_schema(
         operation_id="privacy_list_my_requests",
         responses=SubjectRightsRequestSerializer(many=True),
     )
     def get(self, request: Request) -> Response:
+        """List my requests.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         items = SubjectRightsRequest.objects.filter(account=_account(request)).order_by(
             "-requested_at", "-id"
         )
@@ -65,6 +79,23 @@ class MySubjectRightsRequestListCreateView(APIView):
         responses={201: SubjectRightsRequestSerializer},
     )
     def post(self, request: Request) -> Response:
+        """Create my request.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = SubjectRightsRequestCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
@@ -86,8 +117,27 @@ class MySubjectRightsRequestListCreateView(APIView):
 
 
 class MySubjectExportView(APIView):
+    """Expose my subject export through the HTTP API."""
+
     @extend_schema(operation_id="privacy_generate_my_export", responses=dict)
     def get(self, request: Request) -> Response:
+        """Generate my export.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         raw_organization = request.query_params.get("organization_id")
         try:
             organization_id = UUID(raw_organization) if raw_organization else None
@@ -107,11 +157,32 @@ class MySubjectExportView(APIView):
 
 
 class StaffSubjectRightsRequestListView(APIView):
+    """Expose staff subject rights request list through the HTTP API."""
+
     @extend_schema(
         operation_id="privacy_list_staff_requests",
         responses=StaffSubjectRightsRequestSerializer(many=True),
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
+        """List the staff requests.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         from maru.authorization.policy import (  # noqa: PLC0415
             decide,
@@ -137,6 +208,8 @@ class StaffSubjectRightsRequestListView(APIView):
 
 
 class StaffSubjectRightsRequestTransitionView(APIView):
+    """Expose staff subject rights request transition through the HTTP API."""
+
     @extend_schema(
         operation_id="privacy_transition_staff_request",
         request=SubjectRightsRequestTransitionSerializer,
@@ -148,13 +221,38 @@ class StaffSubjectRightsRequestTransitionView(APIView):
         organization_id: UUID,
         privacy_request_id: UUID,
     ) -> Response:
+        """Transition the staff request.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        privacy_request_id : UUID
+            The privacy request identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = SubjectRightsRequestTransitionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
         account = _account(request)
         try:
             if settings.REQUIRE_PRIVILEGED_STEP_UP:
-                require_recent_step_up(account=account, request=request._request)
+                require_recent_step_up(account=account, request=request._request)  # noqa: SLF001
             item = transition_subject_rights_request(
                 actor=account,
                 organization_id=organization_id,
@@ -181,11 +279,25 @@ class StaffSubjectRightsRequestTransitionView(APIView):
 
 
 class MyPostEditionCorrectionListCreateView(APIView):
+    """Expose my post edition correction list create through the HTTP API."""
+
     @extend_schema(
         operation_id="privacy_list_my_corrections",
         responses=PostEditionCorrectionSerializer(many=True),
     )
     def get(self, request: Request) -> Response:
+        """List my corrections.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         items = PostEditionCorrection.objects.filter(
             account_id=_account(request).id
         ).order_by("-requested_at", "-id")
@@ -197,6 +309,25 @@ class MyPostEditionCorrectionListCreateView(APIView):
         responses={201: PostEditionCorrectionSerializer},
     )
     def post(self, request: Request) -> Response:
+        """Propose my correction.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         serializer = PostEditionCorrectionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
@@ -220,6 +351,8 @@ class MyPostEditionCorrectionListCreateView(APIView):
 
 
 class StaffPostEditionCorrectionDecisionView(APIView):
+    """Expose staff post edition correction decision through the HTTP API."""
+
     @extend_schema(
         operation_id="privacy_decide_post_edition_correction",
         request=PostEditionCorrectionDecisionSerializer,
@@ -232,6 +365,33 @@ class StaffPostEditionCorrectionDecisionView(APIView):
         edition_id: UUID,
         correction_id: UUID,
     ) -> Response:
+        """Decide the post-edition correction.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        correction_id : UUID
+            The correction identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = PostEditionCorrectionDecisionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
@@ -262,6 +422,8 @@ class StaffPostEditionCorrectionDecisionView(APIView):
 
 
 class StaffRegistrationProfileMinimizeView(APIView):
+    """Expose staff registration profile minimize through the HTTP API."""
+
     @extend_schema(
         operation_id="privacy_minimize_registration_profile",
         request=RegistrationProfileMinimizeSerializer,
@@ -273,13 +435,38 @@ class StaffRegistrationProfileMinimizeView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Minimize the registration profile.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = RegistrationProfileMinimizeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
         account = _account(request)
         try:
             if settings.REQUIRE_PRIVILEGED_STEP_UP:
-                require_recent_step_up(account=account, request=request._request)
+                require_recent_step_up(account=account, request=request._request)  # noqa: SLF001
             receipt = minimize_registration_profile(
                 actor=account,
                 organization_id=organization_id,

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from collections.abc import Iterable
 from datetime import UTC, datetime
-from typing import Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
@@ -55,6 +54,9 @@ from maru.registration.setup_section_commands import (
     MAX_SECTION_REASON_LENGTH,
     MAX_SECTION_TITLE_LENGTH,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 SetupSourceChoices = tuple[tuple[str, str], ...]
 SectionPlacementChoices = tuple[tuple[str, str], ...]
@@ -105,6 +107,17 @@ class EditionLocalDateTimeField(forms.Field):
     }
 
     def __init__(self, *args: Any, zone_name: str = "UTC", **kwargs: Any) -> None:
+        """Initialize the EditionLocalDateTimeField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        zone_name : str, default='UTC'
+            The human-readable zone name shown to authorized readers.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault(
             "widget",
             forms.DateTimeInput(
@@ -172,6 +185,17 @@ class CanonicalUUIDChoiceField(CanonicalUUIDField):
         choices: Iterable[tuple[str, str]] = (),
         **kwargs: Any,
     ) -> None:
+        """Initialize the CanonicalUUIDChoiceField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        choices : Iterable[tuple[str, str]], default=()
+            The choices evaluated while canonical uuidchoice field.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.choices = tuple(choices)
         kwargs.setdefault("widget", self.widget(choices=self.choices))
         super().__init__(*args, **kwargs)
@@ -343,6 +367,27 @@ class RegistrationSetupStartForm(StrictInputForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationSetupStartForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        source_choices : SetupSourceChoices
+            The authorized source choices presented for validated selection.
+        source_kinds_by_id : dict[UUID, str]
+            The source kinds by identifier within the requested scope.
+        currency_codes : Iterable[str]
+            The closed set of currency codes accepted by the domain catalog.
+        edition_time_zone : str
+            The IANA time-zone name used for localization and validation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", "id_registration_setup_start_%s")
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("source_kind", RegistrationSetupOrigin.BLANK)
@@ -351,22 +396,29 @@ class RegistrationSetupStartForm(StrictInputForm):
         kwargs["initial"] = initial
         super().__init__(*args, **kwargs)
         self.source_kinds_by_id = source_kinds_by_id
-        source_field = cast(CanonicalUUIDChoiceField, self.fields["source_id"])
+        source_field = cast("CanonicalUUIDChoiceField", self.fields["source_id"])
         source_field.set_choices(
             (("", "No source record — start blank"), *source_choices)
         )
-        cast(forms.ChoiceField, self.fields["currency"]).choices = (
+        cast("forms.ChoiceField", self.fields["currency"]).choices = (
             ("", "Use the prior edition value"),
             *((str(code).upper(), str(code).upper()) for code in currency_codes),
         )
-        cast(EditionLocalDateTimeField, self.fields["opens_at"]).set_zone(
+        cast("EditionLocalDateTimeField", self.fields["opens_at"]).set_zone(
             edition_time_zone
         )
-        cast(EditionLocalDateTimeField, self.fields["closes_at"]).set_zone(
+        cast("EditionLocalDateTimeField", self.fields["closes_at"]).set_zone(
             edition_time_zone
         )
 
     def clean_name(self) -> str:
+        """Validate and normalize the name field.
+
+        Returns
+        -------
+        str
+            The validated and normalized name.
+        """
         return _clean_with(
             str(self.cleaned_data["name"]),
             maximum=MAX_SETUP_NAME_LENGTH,
@@ -374,6 +426,13 @@ class RegistrationSetupStartForm(StrictInputForm):
         )
 
     def clean_reason(self) -> str:
+        """Validate and normalize the reason field.
+
+        Returns
+        -------
+        str
+            The validated and normalized reason.
+        """
         return _clean_with(
             str(self.cleaned_data["reason"]),
             maximum=MAX_SETUP_REASON_LENGTH,
@@ -381,6 +440,13 @@ class RegistrationSetupStartForm(StrictInputForm):
         )
 
     def clean_currency(self) -> str | None:
+        """Validate and normalize the currency field.
+
+        Returns
+        -------
+        str | None
+            The validated and normalized currency.
+        """
         value = str(self.cleaned_data.get("currency", ""))
         return value.upper() if value else None
 
@@ -391,12 +457,33 @@ class RegistrationSetupStartForm(StrictInputForm):
         return value == "true"
 
     def clean_waitlist_enabled(self) -> bool | None:
+        """Validate and normalize the waitlist enabled field.
+
+        Returns
+        -------
+        bool | None
+            The validated and normalized waitlist enabled.
+        """
         return self._clean_optional_boolean("waitlist_enabled")
 
     def clean_automatic_waitlist_promotion(self) -> bool | None:
+        """Validate and normalize the automatic waitlist promotion field.
+
+        Returns
+        -------
+        bool | None
+            The validated and normalized automatic waitlist promotion.
+        """
         return self._clean_optional_boolean("automatic_waitlist_promotion")
 
     def clean(self) -> dict[str, Any] | None:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean()
         if cleaned is None:
             return None
@@ -490,6 +577,21 @@ class _RegistrationSectionReasonForm(StrictInputForm):
         auto_id: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the _RegistrationSectionReasonForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The setup version used for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The key used to deduplicate a retried command.
+        auto_id : str
+            The form identifier used by the dynamic setup page.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", auto_id)
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("expected_version", expected_version)
@@ -565,6 +667,8 @@ class _RegistrationSectionDetailsForm(_RegistrationSectionReasonForm):
 
 
 class RegistrationSectionCreateForm(_RegistrationSectionDetailsForm):
+    """Collect and validate registration section create input."""
+
     after_section_id = CanonicalUUIDChoiceField(
         label="Placement",
         required=False,
@@ -583,6 +687,21 @@ class RegistrationSectionCreateForm(_RegistrationSectionDetailsForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationSectionCreateForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        placement_choices : SectionPlacementChoices
+            The authorized placement choices presented for validated selection.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -593,11 +712,20 @@ class RegistrationSectionCreateForm(_RegistrationSectionDetailsForm):
         self.set_placement_choices(placement_choices)
 
     def set_placement_choices(self, choices: SectionPlacementChoices) -> None:
-        field = cast(CanonicalUUIDChoiceField, self.fields["after_section_id"])
+        """Set placement choices.
+
+        Parameters
+        ----------
+        choices : SectionPlacementChoices
+            The authorized choices available for validated selection.
+        """
+        field = cast("CanonicalUUIDChoiceField", self.fields["after_section_id"])
         field.set_choices((("", "First section"), *choices))
 
 
 class RegistrationSectionUpdateForm(_RegistrationSectionDetailsForm):
+    """Collect and validate registration section update input."""
+
     def __init__(
         self,
         *args: Any,
@@ -606,6 +734,21 @@ class RegistrationSectionUpdateForm(_RegistrationSectionDetailsForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationSectionUpdateForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -616,6 +759,8 @@ class RegistrationSectionUpdateForm(_RegistrationSectionDetailsForm):
 
 
 class RegistrationSectionMoveForm(_RegistrationSectionReasonForm):
+    """Collect and validate registration section move input."""
+
     after_section_id = CanonicalUUIDChoiceField(
         label="New placement",
         required=False,
@@ -635,6 +780,23 @@ class RegistrationSectionMoveForm(_RegistrationSectionReasonForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationSectionMoveForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        placement_choices : SectionPlacementChoices
+            The authorized placement choices presented for validated selection.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -645,11 +807,20 @@ class RegistrationSectionMoveForm(_RegistrationSectionReasonForm):
         self.set_placement_choices(placement_choices)
 
     def set_placement_choices(self, choices: SectionPlacementChoices) -> None:
-        field = cast(CanonicalUUIDChoiceField, self.fields["after_section_id"])
+        """Set placement choices.
+
+        Parameters
+        ----------
+        choices : SectionPlacementChoices
+            The authorized choices available for validated selection.
+        """
+        field = cast("CanonicalUUIDChoiceField", self.fields["after_section_id"])
         field.set_choices((("", "First section"), *choices))
 
 
 class RegistrationSectionDeleteForm(_RegistrationSectionReasonForm):
+    """Collect and validate registration section delete input."""
+
     def __init__(
         self,
         *args: Any,
@@ -658,6 +829,21 @@ class RegistrationSectionDeleteForm(_RegistrationSectionReasonForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationSectionDeleteForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -694,6 +880,21 @@ class _RegistrationDefinitionReasonForm(StrictInputForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the _RegistrationDefinitionReasonForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The setup version used for optimistic concurrency control.
+        auto_id : str
+            The form identifier used by the dynamic setup page.
+        retry_key : UUID | None, default=None
+            The key used to deduplicate a retried command.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", auto_id)
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("expected_version", expected_version)
@@ -847,10 +1048,10 @@ class _RegistrationQuestionDetailsForm(_TypedDefinitionForm):
         section_choices: DefinitionPlacementChoices,
         condition_choices: Iterable[tuple[str, str]],
     ) -> None:
-        cast(CanonicalUUIDChoiceField, self.fields["section_id"]).set_choices(
+        cast("CanonicalUUIDChoiceField", self.fields["section_id"]).set_choices(
             (("", "No section"), *section_choices)
         )
-        cast(forms.ChoiceField, self.fields["condition_question_key"]).choices = (
+        cast("forms.ChoiceField", self.fields["condition_question_key"]).choices = (
             ("", "Always show"),
             *condition_choices,
         )
@@ -864,6 +1065,8 @@ class _RegistrationQuestionDetailsForm(_TypedDefinitionForm):
 
 
 class RegistrationQuestionCreateForm(_RegistrationQuestionDetailsForm):
+    """Collect and validate registration question create input."""
+
     after_question_id = CanonicalUUIDChoiceField(
         label="Placement",
         required=False,
@@ -880,6 +1083,25 @@ class RegistrationQuestionCreateForm(_RegistrationQuestionDetailsForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationQuestionCreateForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        section_choices : DefinitionPlacementChoices
+            The authorized section choices presented for validated selection.
+        question_choices : DefinitionPlacementChoices
+            The authorized question choices presented for validated selection.
+        condition_choices : Iterable[tuple[str, str]]
+            The authorized condition choices available for validated selection.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -891,12 +1113,14 @@ class RegistrationQuestionCreateForm(_RegistrationQuestionDetailsForm):
             section_choices=section_choices,
             condition_choices=condition_choices,
         )
-        cast(CanonicalUUIDChoiceField, self.fields["after_question_id"]).set_choices(
+        cast("CanonicalUUIDChoiceField", self.fields["after_question_id"]).set_choices(
             (("", "First question"), *question_choices)
         )
 
 
 class RegistrationQuestionUpdateForm(_RegistrationQuestionDetailsForm):
+    """Collect and validate registration question update input."""
+
     def __init__(
         self,
         *args: Any,
@@ -907,6 +1131,25 @@ class RegistrationQuestionUpdateForm(_RegistrationQuestionDetailsForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationQuestionUpdateForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        section_choices : DefinitionPlacementChoices
+            The authorized section choices presented for validated selection.
+        condition_choices : Iterable[tuple[str, str]]
+            The authorized condition choices available for validated selection.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -921,6 +1164,8 @@ class RegistrationQuestionUpdateForm(_RegistrationQuestionDetailsForm):
 
 
 class RegistrationQuestionMoveForm(_RegistrationDefinitionReasonForm):
+    """Collect and validate registration question move input."""
+
     after_question_id = CanonicalUUIDChoiceField(
         label="New placement",
         required=False,
@@ -936,6 +1181,23 @@ class RegistrationQuestionMoveForm(_RegistrationDefinitionReasonForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationQuestionMoveForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        placement_choices : DefinitionPlacementChoices
+            The authorized placement choices presented for validated selection.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -943,12 +1205,14 @@ class RegistrationQuestionMoveForm(_RegistrationDefinitionReasonForm):
             auto_id=f"id_registration_question_{ordinal}_move_%s",
             **kwargs,
         )
-        cast(CanonicalUUIDChoiceField, self.fields["after_question_id"]).set_choices(
+        cast("CanonicalUUIDChoiceField", self.fields["after_question_id"]).set_choices(
             (("", "First question"), *placement_choices)
         )
 
 
 class RegistrationDefinitionDeleteForm(_RegistrationDefinitionReasonForm):
+    """Collect and validate registration definition delete input."""
+
     def __init__(
         self,
         *args: Any,
@@ -958,6 +1222,23 @@ class RegistrationDefinitionDeleteForm(_RegistrationDefinitionReasonForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationDefinitionDeleteForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        kind : str
+            The closed discriminator selecting the requested behavior.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -1053,15 +1334,28 @@ class _RegistrationProductDetailsForm(_RegistrationDefinitionReasonForm):
         edition_time_zone: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the _RegistrationProductDetailsForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        capacity_code_choices : Iterable[tuple[str, str]]
+            The capacity codes that may be required by the product.
+        edition_time_zone : str
+            The IANA time zone used to interpret local sales timestamps.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         cast(
-            forms.MultipleChoiceField,
+            "forms.MultipleChoiceField",
             self.fields["required_capacity_codes"],
         ).choices = tuple(capacity_code_choices)
-        cast(EditionLocalDateTimeField, self.fields["sales_open_at"]).set_zone(
+        cast("EditionLocalDateTimeField", self.fields["sales_open_at"]).set_zone(
             edition_time_zone
         )
-        cast(EditionLocalDateTimeField, self.fields["sales_close_at"]).set_zone(
+        cast("EditionLocalDateTimeField", self.fields["sales_close_at"]).set_zone(
             edition_time_zone
         )
 
@@ -1120,6 +1414,8 @@ class _RegistrationProductDetailsForm(_RegistrationDefinitionReasonForm):
 
 
 class RegistrationProductCreateForm(_RegistrationProductDetailsForm):
+    """Collect and validate registration product create input."""
+
     after_product_id = CanonicalUUIDChoiceField(
         label="Placement",
         required=False,
@@ -1134,6 +1430,21 @@ class RegistrationProductCreateForm(_RegistrationProductDetailsForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationProductCreateForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        placement_choices : DefinitionPlacementChoices
+            The authorized placement choices presented for validated selection.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -1141,12 +1452,14 @@ class RegistrationProductCreateForm(_RegistrationProductDetailsForm):
             auto_id="id_registration_product_create_%s",
             **kwargs,
         )
-        cast(CanonicalUUIDChoiceField, self.fields["after_product_id"]).set_choices(
+        cast("CanonicalUUIDChoiceField", self.fields["after_product_id"]).set_choices(
             (("", "First product"), *placement_choices)
         )
 
 
 class RegistrationProductUpdateForm(_RegistrationProductDetailsForm):
+    """Collect and validate registration product update input."""
+
     def __init__(
         self,
         *args: Any,
@@ -1155,6 +1468,21 @@ class RegistrationProductUpdateForm(_RegistrationProductDetailsForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationProductUpdateForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -1165,6 +1493,8 @@ class RegistrationProductUpdateForm(_RegistrationProductDetailsForm):
 
 
 class RegistrationProductMoveForm(_RegistrationDefinitionReasonForm):
+    """Collect and validate registration product move input."""
+
     after_product_id = CanonicalUUIDChoiceField(
         label="New placement",
         required=False,
@@ -1180,6 +1510,23 @@ class RegistrationProductMoveForm(_RegistrationDefinitionReasonForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationProductMoveForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        placement_choices : DefinitionPlacementChoices
+            The authorized placement choices presented for validated selection.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -1187,12 +1534,14 @@ class RegistrationProductMoveForm(_RegistrationDefinitionReasonForm):
             auto_id=f"id_registration_product_{ordinal}_move_%s",
             **kwargs,
         )
-        cast(CanonicalUUIDChoiceField, self.fields["after_product_id"]).set_choices(
+        cast("CanonicalUUIDChoiceField", self.fields["after_product_id"]).set_choices(
             (("", "First product"), *placement_choices)
         )
 
 
 class RegistrationMinorPolicyForm(_RegistrationDefinitionReasonForm):
+    """Collect and validate registration minor policy input."""
+
     enabled = forms.TypedChoiceField(
         label="Minor registration",
         choices=(("false", "Disabled"), ("true", "Enabled")),
@@ -1229,6 +1578,19 @@ class RegistrationMinorPolicyForm(_RegistrationDefinitionReasonForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationMinorPolicyForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -1245,14 +1607,35 @@ class RegistrationMinorPolicyForm(_RegistrationDefinitionReasonForm):
         )
 
     def clean_guardian_notice_version(self) -> str:
+        """Validate and normalize the guardian notice version field.
+
+        Returns
+        -------
+        str
+            The validated and normalized guardian notice version.
+        """
         return self._clean_optional(
             "guardian_notice_version", MAX_MINOR_NOTICE_VERSION_LENGTH
         )
 
     def clean_jurisdiction_code(self) -> str:
+        """Validate and normalize the jurisdiction code field.
+
+        Returns
+        -------
+        str
+            The validated and normalized jurisdiction code.
+        """
         return self._clean_optional("jurisdiction_code", MAX_MINOR_JURISDICTION_LENGTH)
 
     def clean_review_reference(self) -> str:
+        """Validate and normalize the review reference field.
+
+        Returns
+        -------
+        str
+            The validated and normalized review reference.
+        """
         return self._clean_optional(
             "review_reference", MAX_MINOR_REVIEW_REFERENCE_LENGTH
         )
@@ -1289,9 +1672,20 @@ class _RegistrationProfileFieldDetailsForm(_TypedDefinitionForm):
         department_choices: DefinitionPlacementChoices,
         **kwargs: Any,
     ) -> None:
+        """Initialize the _RegistrationProfileFieldDetailsForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        department_choices : DefinitionPlacementChoices
+            The departments that may own the profile field audience.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         cast(
-            CanonicalUUIDChoiceField, self.fields["audience_department_id"]
+            "CanonicalUUIDChoiceField", self.fields["audience_department_id"]
         ).set_choices(
             (("", "No department — not a department audience"), *department_choices)
         )
@@ -1346,6 +1740,8 @@ class _RegistrationProfileFieldDetailsForm(_TypedDefinitionForm):
 
 
 class RegistrationProfileFieldCreateForm(_RegistrationProfileFieldDetailsForm):
+    """Collect and validate registration profile field create input."""
+
     source_template_id = CanonicalUUIDChoiceField(
         label="Published-template provenance",
         required=False,
@@ -1373,6 +1769,27 @@ class RegistrationProfileFieldCreateForm(_RegistrationProfileFieldDetailsForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationProfileFieldCreateForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        template_choices : DefinitionPlacementChoices
+            The authorized template choices presented for validated selection.
+        prior_edition_choices : DefinitionPlacementChoices
+            The authorized prior edition choices presented for validated selection.
+        placement_choices : DefinitionPlacementChoices
+            The authorized placement choices presented for validated selection.
+        department_choices : DefinitionPlacementChoices
+            The authorized department choices presented for validated selection.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -1381,17 +1798,24 @@ class RegistrationProfileFieldCreateForm(_RegistrationProfileFieldDetailsForm):
             department_choices=department_choices,
             **kwargs,
         )
-        cast(CanonicalUUIDChoiceField, self.fields["source_template_id"]).set_choices(
+        cast("CanonicalUUIDChoiceField", self.fields["source_template_id"]).set_choices(
             (("", "No template source"), *template_choices)
         )
         cast(
-            CanonicalUUIDChoiceField, self.fields["source_prior_edition_id"]
+            "CanonicalUUIDChoiceField", self.fields["source_prior_edition_id"]
         ).set_choices((("", "No prior-edition source"), *prior_edition_choices))
-        cast(CanonicalUUIDChoiceField, self.fields["after_field_id"]).set_choices(
+        cast("CanonicalUUIDChoiceField", self.fields["after_field_id"]).set_choices(
             (("", "First draft field"), *placement_choices)
         )
 
     def clean(self) -> dict[str, Any] | None:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean()
         if (
             cleaned
@@ -1406,6 +1830,8 @@ class RegistrationProfileFieldCreateForm(_RegistrationProfileFieldDetailsForm):
 
 
 class RegistrationProfileFieldUpdateForm(_RegistrationProfileFieldDetailsForm):
+    """Collect and validate registration profile field update input."""
+
     def __init__(
         self,
         *args: Any,
@@ -1415,6 +1841,23 @@ class RegistrationProfileFieldUpdateForm(_RegistrationProfileFieldDetailsForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationProfileFieldUpdateForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        department_choices : DefinitionPlacementChoices
+            The authorized department choices presented for validated selection.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -1426,6 +1869,8 @@ class RegistrationProfileFieldUpdateForm(_RegistrationProfileFieldDetailsForm):
 
 
 class RegistrationProfileFieldMoveForm(_RegistrationDefinitionReasonForm):
+    """Collect and validate registration profile field move input."""
+
     after_field_id = CanonicalUUIDChoiceField(
         label="New placement among draft fields",
         required=False,
@@ -1441,6 +1886,23 @@ class RegistrationProfileFieldMoveForm(_RegistrationDefinitionReasonForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RegistrationProfileFieldMoveForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        placement_choices : DefinitionPlacementChoices
+            The authorized placement choices presented for validated selection.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        ordinal : int
+            The deterministic display position within the owning collection.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             expected_version=expected_version,
@@ -1448,7 +1910,7 @@ class RegistrationProfileFieldMoveForm(_RegistrationDefinitionReasonForm):
             auto_id=f"id_registration_profile_field_{ordinal}_move_%s",
             **kwargs,
         )
-        cast(CanonicalUUIDChoiceField, self.fields["after_field_id"]).set_choices(
+        cast("CanonicalUUIDChoiceField", self.fields["after_field_id"]).set_choices(
             (("", "First draft field"), *placement_choices)
         )
 

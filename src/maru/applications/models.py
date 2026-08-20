@@ -34,12 +34,16 @@ REFERENCE_KIND_VALIDATOR = RegexValidator(
 
 
 class ApplicationDefinitionStatus(models.TextChoices):
+    """Enumerate supported application definition status values."""
+
     DRAFT = "draft", "Draft"
     ACTIVE = "active", "Active"
     RETIRED = "retired", "Retired"
 
 
 class ApplicationTargetKind(models.TextChoices):
+    """Enumerate supported application target kind values."""
+
     MERCH_SUBMISSION = "merch_submission", "Merchandise submission"
     DJ_SET = "dj_set", "DJ set"
     FURSUIT_DANCE_COMPETITION = "fursuit_dance_competition", "Fursuit Dance Competition"
@@ -53,6 +57,8 @@ class ApplicationTargetKind(models.TextChoices):
 
 
 class ApplicationClassification(models.TextChoices):
+    """Enumerate supported application classification values."""
+
     INTERNAL = "C1", "Internal"
     PERSONAL = "C2", "Personal"
     RESTRICTED = "C3", "Restricted"
@@ -60,6 +66,8 @@ class ApplicationClassification(models.TextChoices):
 
 
 class ApplicationEligibilityKind(models.TextChoices):
+    """Enumerate supported application eligibility kind values."""
+
     AUTHENTICATED_PERSON = "authenticated_person", "Authenticated person"
     EDITION_PARTICIPANT = "edition_participant", "Edition participant"
     REGISTERED_ATTENDEE = "registered_attendee", "Registered attendee"
@@ -68,6 +76,8 @@ class ApplicationEligibilityKind(models.TextChoices):
 
 
 class ApplicationQuestionType(models.TextChoices):
+    """Enumerate supported application question type values."""
+
     SHORT_TEXT = "short_text", "Short text"
     LONG_TEXT = "long_text", "Long text"
     INTEGER = "integer", "Integer"
@@ -88,12 +98,16 @@ class ApplicationQuestionType(models.TextChoices):
 
 
 class ApplicationSourceBinding(models.TextChoices):
+    """Enumerate supported application source binding values."""
+
     NONE = "", "No automatic source"
     ACCOUNT_DISPLAY_NAME = "account.display_name", "Account display name"
     REGISTRATION_TELEGRAM = "registration.telegram", "Registration Telegram contact"
 
 
 class ApplicationState(models.TextChoices):
+    """Enumerate supported application state values."""
+
     DRAFT = "draft", "Draft"
     SUBMITTED = "submitted", "Submitted"
     UNDER_REVIEW = "under_review", "Under review"
@@ -104,12 +118,16 @@ class ApplicationState(models.TextChoices):
 
 
 class AnswerSource(models.TextChoices):
+    """Enumerate supported answer source values."""
+
     APPLICANT = "applicant", "Applicant"
     STAFF_CORRECTION = "staff_correction", "Staff correction"
     SYSTEM_SOURCE = "system_source", "Authoritative source binding"
 
 
 class ReviewDecisionKind(models.TextChoices):
+    """Enumerate supported review decision kind values."""
+
     START_REVIEW = "start_review", "Start review"
     REQUEST_CHANGES = "request_changes", "Request changes"
     ACCEPT = "accept", "Accept"
@@ -117,6 +135,8 @@ class ReviewDecisionKind(models.TextChoices):
 
 
 class ReviewerBasis(models.TextChoices):
+    """Enumerate supported reviewer basis values."""
+
     IMMUTABLE_ROLE = "immutable_role", "Immutable role version"
     NAMED_PERSON = "named_person", "Named person"
 
@@ -203,6 +223,8 @@ class ApplicationDefinition(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "code", "-version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -268,6 +290,13 @@ class ApplicationDefinition(UUIDTimeStampedModel):
 
     @property
     def is_sensitive(self) -> bool:
+        """Return whether sensitive.
+
+        Returns
+        -------
+        bool
+            `True` when sensitive; otherwise `False`.
+        """
         return self.classification in {
             ApplicationClassification.RESTRICTED,
             ApplicationClassification.SECURITY_CRITICAL,
@@ -278,11 +307,26 @@ class ApplicationDefinition(UUIDTimeStampedModel):
 
     @property
     def requires_explicit_age_policy(self) -> bool:
+        """Return whether the definition requires an explicit age policy.
+
+        Returns
+        -------
+        bool
+            `True` when the definition requires an explicit age policy; otherwise
+            `False`.
+        """
         return (
             self.target_adapter_kind == ApplicationTargetKind.ADULT_FURSUIT_STRIPTEASE
         )
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError("The application definition must match its edition.")
@@ -335,6 +379,20 @@ class ApplicationDefinition(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         self.code = self.code.lower()
         if self.pk and not self._state.adding:
             previous = type(self).objects.filter(pk=self.pk).first()
@@ -367,6 +425,8 @@ class ApplicationDefinition(UUIDTimeStampedModel):
 
 
 class ApplicationOwnerDepartment(UUIDTimeStampedModel):
+    """Store application owner department records."""
+
     definition = models.ForeignKey(
         ApplicationDefinition,
         on_delete=models.PROTECT,
@@ -379,6 +439,8 @@ class ApplicationOwnerDepartment(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=("definition", "department"),
@@ -387,6 +449,13 @@ class ApplicationOwnerDepartment(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.definition_id
@@ -407,11 +476,22 @@ class ApplicationOwnerDepartment(UUIDTimeStampedModel):
             raise ValidationError("Owner Departments are frozen on activation.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
 
 class ApplicationReviewerRole(UUIDTimeStampedModel):
+    """Store application reviewer role records."""
+
     definition = models.ForeignKey(
         ApplicationDefinition, on_delete=models.PROTECT, related_name="reviewer_roles"
     )
@@ -422,6 +502,8 @@ class ApplicationReviewerRole(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=("definition", "role_bundle"),
@@ -430,6 +512,13 @@ class ApplicationReviewerRole(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.definition_id and self.role_bundle_id:
             if self.definition.status != ApplicationDefinitionStatus.DRAFT:
@@ -449,11 +538,22 @@ class ApplicationReviewerRole(UUIDTimeStampedModel):
                 )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
 
 class ApplicationReviewerPerson(UUIDTimeStampedModel):
+    """Store application reviewer person records."""
+
     definition = models.ForeignKey(
         ApplicationDefinition, on_delete=models.PROTECT, related_name="reviewer_people"
     )
@@ -464,6 +564,8 @@ class ApplicationReviewerPerson(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=("definition", "account"),
@@ -472,6 +574,13 @@ class ApplicationReviewerPerson(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.definition_id
@@ -482,11 +591,22 @@ class ApplicationReviewerPerson(UUIDTimeStampedModel):
             validate_convention_subject(self.account, field_name="account")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
 
 class ApplicationSection(UUIDTimeStampedModel):
+    """Store application section records."""
+
     definition = models.ForeignKey(
         ApplicationDefinition, on_delete=models.PROTECT, related_name="sections"
     )
@@ -496,6 +616,8 @@ class ApplicationSection(UUIDTimeStampedModel):
     position = models.PositiveSmallIntegerField(validators=(MaxValueValidator(65_535),))
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("definition_id", "position", "id")
         constraints = [
             models.UniqueConstraint(
@@ -508,6 +630,13 @@ class ApplicationSection(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.definition_id
@@ -516,6 +645,15 @@ class ApplicationSection(UUIDTimeStampedModel):
             raise ValidationError("Sections are immutable after activation.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.key = self.key.lower()
         self.full_clean()
         super().save(*args, **kwargs)
@@ -558,6 +696,8 @@ def _validate_options(field_type: str, options: object) -> None:
 
 
 class ApplicationQuestion(UUIDTimeStampedModel):
+    """Store application question records."""
+
     definition = models.ForeignKey(
         ApplicationDefinition, on_delete=models.PROTECT, related_name="questions"
     )
@@ -601,6 +741,8 @@ class ApplicationQuestion(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("definition_id", "section__position", "position", "id")
         constraints = [
             models.UniqueConstraint(
@@ -625,6 +767,13 @@ class ApplicationQuestion(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.definition_id
@@ -719,12 +868,23 @@ class ApplicationQuestion(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.key = self.key.lower()
         self.full_clean()
         super().save(*args, **kwargs)
 
 
 class ApplicationSubmission(UUIDTimeStampedModel):
+    """Store application submission records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -753,6 +913,8 @@ class ApplicationSubmission(UUIDTimeStampedModel):
     withdrawn_at = models.DateTimeField(null=True, blank=True, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -807,6 +969,13 @@ class ApplicationSubmission(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.definition_id and (
             self.definition.organization_id != self.organization_id
@@ -819,6 +988,15 @@ class ApplicationSubmission(UUIDTimeStampedModel):
             validate_convention_subject(self.account, field_name="account")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -827,6 +1005,8 @@ class ApplicationFileReceipt(UUIDTimeStampedModel):
     """Trusted evidence for an object-storage upload that passed safety checks."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         CLEAN = "clean", "Clean"
         REJECTED = "rejected", "Rejected"
 
@@ -853,6 +1033,8 @@ class ApplicationFileReceipt(UUIDTimeStampedModel):
     scanner_receipt = models.CharField(max_length=240)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=("organization", "storage_key"),
@@ -867,6 +1049,13 @@ class ApplicationFileReceipt(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError("The file receipt must match its edition scope.")
@@ -878,17 +1067,52 @@ class ApplicationFileReceipt(UUIDTimeStampedModel):
             raise ValidationError({"sha256": "Use a lower-case SHA-256 digest."})
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError("File safety receipts are immutable.")
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError("File receipts require the retention workflow.")
 
 
 class ApplicationAnswerRevision(UUIDTimeStampedModel):
+    """Store application answer revision records."""
+
     submission = models.ForeignKey(
         ApplicationSubmission, on_delete=models.PROTECT, related_name="answer_revisions"
     )
@@ -913,6 +1137,8 @@ class ApplicationAnswerRevision(UUIDTimeStampedModel):
     reason = models.CharField(max_length=240, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("submission_id", "question_key", "sequence", "id")
         constraints = [
             models.UniqueConstraint(
@@ -934,6 +1160,13 @@ class ApplicationAnswerRevision(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.submission_id
@@ -951,6 +1184,20 @@ class ApplicationAnswerRevision(UUIDTimeStampedModel):
             raise ValidationError("Answer question snapshots must be authoritative.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Answer revisions are append-only.", code="immutable_application_answer"
@@ -959,6 +1206,25 @@ class ApplicationAnswerRevision(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "Answer revisions are append-only.", code="protected_application_answer"
@@ -966,6 +1232,8 @@ class ApplicationAnswerRevision(UUIDTimeStampedModel):
 
 
 class ApplicationReviewDecision(UUIDTimeStampedModel):
+    """Store application review decision records."""
+
     submission = models.ForeignKey(
         ApplicationSubmission, on_delete=models.PROTECT, related_name="review_decisions"
     )
@@ -989,6 +1257,8 @@ class ApplicationReviewDecision(UUIDTimeStampedModel):
     reason = models.CharField(max_length=500)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("submission_id", "sequence", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1013,6 +1283,20 @@ class ApplicationReviewDecision(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Review decisions are append-only.", code="immutable_application_review"
@@ -1021,6 +1305,25 @@ class ApplicationReviewDecision(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "Review decisions are append-only.", code="protected_application_review"
@@ -1041,6 +1344,13 @@ class ApplicationTargetRecord(UUIDTimeStampedModel):
     )
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.submission_id and (
             self.submission.state != ApplicationState.ACCEPTED
@@ -1051,18 +1361,55 @@ class ApplicationTargetRecord(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError("Typed target receipts are immutable.")
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError("Typed target receipts are retained.")
 
 
 class ApplicationCommandReceipt(UUIDTimeStampedModel):
+    """Store application command receipt records."""
+
     class Action(models.TextChoices):
+        """Enumerate supported action values."""
+
         DEFINITION_CREATED = "definition_created", "Definition created"
         SUCCESSOR_CREATED = "successor_created", "Successor created"
         DEFINITION_CONFIGURED = "definition_configured", "Definition configured"
@@ -1113,6 +1460,8 @@ class ApplicationCommandReceipt(UUIDTimeStampedModel):
     resulting_version = models.PositiveBigIntegerField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1126,11 +1475,44 @@ class ApplicationCommandReceipt(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError("Application command receipts are append-only.")
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError("Application command receipts are retained.")

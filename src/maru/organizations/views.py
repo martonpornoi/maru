@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -38,6 +38,9 @@ from maru.organizations.representation import (
     provision_executive_board,
     respond_to_representation_invitation,
 )
+
+if TYPE_CHECKING:
+    from django import forms
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +110,33 @@ def _append_page_access_audit(
     obligations: tuple[str, ...] = (),
     target_count: int | None = None,
 ) -> None:
-    """Retain value-minimized evidence for sensitive reads and denials."""
+    """Retain value-minimized evidence for sensitive reads and denials.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID | None
+        The organization identifier that owns the requested resource.
+    capability_code : str
+        The stable capability code required by the operation.
+    operation : str
+        The stable operation code recorded in audit evidence.
+    target_type : str
+        The closed target type discriminator defined by the domain catalog.
+    target_id : UUID | None
+        The target identifier within the requested scope.
+    outcome : str
+        The outcome resolved from the authorized request.
+    reason_code : str
+        The stable reason code from the relevant closed catalog.
+    obligations : tuple[str, ...], default=()
+        The obligations resolved from the authorized request.
+    target_count : int | None, default=None
+        The bounded number of target records.
+    """
     route_name = (
         request.resolver_match.url_name
         if request.resolver_match is not None
@@ -246,8 +274,29 @@ def _authorized_organization_for_route(
     organization_slug: str,
     capability_codes: tuple[str, ...],
 ) -> Organization:
-    """Resolve a tenant only inside authority already scoped to the actor."""
+    """Resolve a tenant only inside authority already scoped to the actor.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    capability_codes : tuple[str, ...]
+        The capability codes resolved from the authorized request.
+
+    Returns
+    -------
+    Organization
+        The resolved Organization for authorized organization for route.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     if actor.is_platform_administrator:
         return get_object_or_404(Organization, slug__iexact=organization_slug)
 
@@ -548,8 +597,18 @@ def _my_invitations_page(
 
 @login_required(login_url="staff-login")
 def my_representation_invitations(request: HttpRequest) -> HttpResponse:
-    """List the authenticated person's own open representation terms."""
+    """List the authenticated person's own open representation terms.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     return _my_invitations_page(request)
 
 
@@ -558,6 +617,20 @@ def organization_representation(
     request: HttpRequest,
     organization_slug: str,
 ) -> HttpResponse:
+    """Render organization representation.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _account(request)
     try:
         own_appointment = None
@@ -598,6 +671,25 @@ def provision_organization_representation(
     request: HttpRequest,
     organization_slug: str,
 ) -> HttpResponse:
+    """Render provision organization representation.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _account(request)
     if not actor.is_platform_administrator:
         _audit_denied_route(
@@ -661,6 +753,20 @@ def invite_organization_controller(
     request: HttpRequest,
     organization_slug: str,
 ) -> HttpResponse:
+    """Render invite organization controller.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _account(request)
     try:
         organization = _authorized_organization_for_route(
@@ -738,6 +844,27 @@ def respond_organization_controller_invitation(
     organization_slug: str,
     appointment_id: UUID,
 ) -> HttpResponse:
+    """Render respond organization controller invitation.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    appointment_id : UUID
+        The identifier of the appointment.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     actor = _account(request)
     try:
         appointment = RepresentationAppointment.objects.select_related(
@@ -815,6 +942,25 @@ def activate_organization_representation(
     request: HttpRequest,
     organization_slug: str,
 ) -> HttpResponse:
+    """Activate organization representation.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _account(request)
     if not actor.is_platform_administrator:
         _audit_denied_route(

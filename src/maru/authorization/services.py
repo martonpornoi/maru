@@ -39,7 +39,18 @@ from maru.workforce.models import Department
 
 
 class AuthorizationDenied(PermissionDenied):
+    """Signal authorization denied."""
+
     def __init__(self, message: str, *, reason_code: str) -> None:
+        """Initialize the AuthorizationDenied instance.
+
+        Parameters
+        ----------
+        message : str
+            The disclosure-safe message associated with the outcome.
+        reason_code : str
+            The stable reason code from the relevant closed catalog.
+        """
         self.reason_code = reason_code
         super().__init__(message)
 
@@ -301,8 +312,31 @@ def _require_current_parent_issuance(
     expires_at: datetime | None,
     evaluated_at: datetime,
 ) -> AuthorityIssuance:
-    """Validate only the named delegated parent; never select a replacement."""
+    """Validate only the named delegated parent; never select a replacement.
 
+    Parameters
+    ----------
+    parent : CapabilityGrant
+        The parent applied within the audited domain transition.
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+    effective_from : datetime
+        The timezone-aware boundary for effective from.
+    expires_at : datetime | None
+        The timezone-aware timestamp for expires.
+    evaluated_at : datetime
+        The timezone-aware timestamp for evaluated.
+
+    Returns
+    -------
+    AuthorityIssuance
+        The resolved AuthorityIssuance for require current parent issuance.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     issuance = (
         AuthorityIssuance.objects.select_for_update()
         .only("ordinal")
@@ -332,7 +366,7 @@ def _require_current_parent_issuance(
     return issuance
 
 
-def delegate_capability(
+def delegate_capability(  # noqa: DOC503, PLR0915 - bare re-raise preserves original error
     *,
     actor: Account,
     recipient: Account,
@@ -345,6 +379,43 @@ def delegate_capability(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CapabilityGrant:
+    """Return delegate capability.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    recipient : Account
+        The recipient applied within the audited domain transition.
+    parent_grant_id : UUID
+        The identifier of the parent grant.
+    target : ResolvedAuthorizationTarget
+        The target applied within the audited domain transition.
+    effective_from : datetime
+        The timezone-aware boundary for effective from.
+    expires_at : datetime | None
+        The time at which the value expires.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CapabilityGrant
+        The CapabilityGrant established after delegate capability completes.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the caller lacks the authority required by the operation.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     parent = (
         CapabilityGrant.objects.filter(
             pk=parent_grant_id,

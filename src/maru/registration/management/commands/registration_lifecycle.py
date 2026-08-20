@@ -14,12 +14,21 @@ from maru.registration.services import (
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Expire overdue registration reservations, cancel open registrations for "
         "inactive accounts, and promote eligible waitlist entries."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--edition",
             type=UUID,
@@ -32,6 +41,15 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: object, **options: object) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : object
+            Positional arguments forwarded to the framework implementation.
+        **options : object
+            Management-command options supplied by Django.
+        """
         del args
         edition_id = options.get("edition")
         if bool(options.get("dry_run")):

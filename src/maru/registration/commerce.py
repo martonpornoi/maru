@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import QuerySet
 from django.utils import timezone
 
 from maru.audit.models import AuditEvent
@@ -21,7 +19,6 @@ from maru.authorization.policy import (
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.models import DomainEvent
 from maru.effects.services import DomainEventRecord, publish_domain_event
-from maru.identity.models import Account
 from maru.identity.queries import account_display_labels
 from maru.registration.availability import (
     OCCUPIED_REGISTRATION_STATES,
@@ -42,6 +39,14 @@ from maru.registration.models import (
 )
 from maru.registration.setup_content import canonical_digest
 
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
+
+    from django.db.models import QuerySet
+
+    from maru.identity.models import Account
+
 MANAGE_EXCEPTIONS = "registration.manage_exceptions"
 REGISTER_SELF = "registration.register_self"
 MAX_WAITLIST_BATCH_SIZE = 100
@@ -51,6 +56,18 @@ MAX_COMMERCE_REASON_LENGTH = 500
 
 @dataclass(frozen=True, slots=True)
 class TierReplacementCommandResult:
+    """Describe tier replacement command result.
+
+    Attributes
+    ----------
+    replacement
+        The replacement retained in this immutable projection.
+    control_version
+        The expected control version used to reject stale updates.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     replacement: AdmissionTierReplacement
     control_version: int
     replayed: bool
@@ -58,6 +75,18 @@ class TierReplacementCommandResult:
 
 @dataclass(frozen=True, slots=True)
 class CapacityAdjustmentCommandResult:
+    """Describe capacity adjustment command result.
+
+    Attributes
+    ----------
+    adjustment
+        The adjustment retained in this immutable projection.
+    control_version
+        The expected control version used to reject stale updates.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     adjustment: RegistrationCapacityAdjustment
     control_version: int
     replayed: bool
@@ -65,6 +94,20 @@ class CapacityAdjustmentCommandResult:
 
 @dataclass(frozen=True, slots=True)
 class WaitlistBatchCommandResult:
+    """Describe waitlist batch command result.
+
+    Attributes
+    ----------
+    batch
+        The batch retained in this immutable projection.
+    offered_registration_ids
+        The selected offered registration identifiers.
+    control_version
+        The expected control version used to reject stale updates.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     batch: WaitlistBatchOffer
     offered_registration_ids: tuple[UUID, ...]
     control_version: int
@@ -73,6 +116,22 @@ class WaitlistBatchCommandResult:
 
 @dataclass(frozen=True, slots=True)
 class RegistrationCommerceActivity:
+    """Describe registration commerce activity.
+
+    Attributes
+    ----------
+    event_name
+        The human-readable event name shown to authorized readers.
+    action
+        The stable action code describing the requested transition.
+    actor_label
+        The human-readable actor label shown to authorized readers.
+    occurred_at
+        The timezone-aware timestamp for occurred.
+    target_count
+        The bounded number of target records.
+    """
+
     event_name: str
     action: str
     actor_label: str
@@ -102,8 +161,24 @@ def authorize_owned_registration_api_scope(
     edition_id: UUID,
     registration_id: UUID,
 ) -> None:
-    """Authorize exact self-registration ownership before parsing API input."""
+    """Authorize exact self-registration ownership before parsing API input.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    registration_id : UUID
+        The attendee registration identifier within the edition scope.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     owned = Registration.objects.filter(
         id=registration_id,
         organization_id=organization_id,
@@ -129,8 +204,19 @@ def authorize_tier_replacement_api_scope(
     edition_id: UUID,
     registration_id: UUID,
 ) -> None:
-    """Compatibility-named exact preflight for admission-tier replacement."""
+    """Compatibility-named exact preflight for admission-tier replacement.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    registration_id : UUID
+        The attendee registration identifier within the edition scope.
+    """
     authorize_owned_registration_api_scope(
         actor=actor,
         organization_id=organization_id,
@@ -142,8 +228,22 @@ def authorize_tier_replacement_api_scope(
 def authorize_registration_commerce_edition_api_scope(
     *, actor: Account, organization_id: UUID, edition_id: UUID
 ) -> None:
-    """Authorize edition commerce operations before parsing API input."""
+    """Authorize edition commerce operations before parsing API input.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    """
     decision = decide(
         principal=actor,
         capability_code=MANAGE_EXCEPTIONS,
@@ -160,16 +260,52 @@ def authorize_registration_commerce_edition_api_scope(
 
 
 def configuration_capacity_ceiling(configuration: RegistrationConfiguration) -> int:
+    """Return configuration capacity ceiling.
+
+    Parameters
+    ----------
+    configuration : RegistrationConfiguration
+        The versioned configuration governing validation and behavior.
+
+    Returns
+    -------
+    int
+        The effective numeric value for configuration capacity ceiling.
+    """
     return int(configuration.capacity_ceiling or configuration.capacity)
 
 
 def product_capacity_ceiling(product: AdmissionProduct) -> int:
+    """Return product capacity ceiling.
+
+    Parameters
+    ----------
+    product : AdmissionProduct
+        The edition-owned product whose policy or capacity is evaluated.
+
+    Returns
+    -------
+    int
+        The effective numeric value for product capacity ceiling.
+    """
     return int(product.capacity_ceiling or product.capacity)
 
 
 def effective_configuration_capacity(
     configuration: RegistrationConfiguration,
 ) -> int:
+    """Return effective configuration capacity.
+
+    Parameters
+    ----------
+    configuration : RegistrationConfiguration
+        The versioned configuration governing validation and behavior.
+
+    Returns
+    -------
+    int
+        The effective numeric value for effective configuration capacity.
+    """
     latest = (
         RegistrationCapacityAdjustment.objects.filter(
             configuration=configuration,
@@ -184,6 +320,18 @@ def effective_configuration_capacity(
 
 
 def effective_product_capacity(product: AdmissionProduct) -> int:
+    """Return effective product capacity.
+
+    Parameters
+    ----------
+    product : AdmissionProduct
+        The edition-owned product whose policy or capacity is evaluated.
+
+    Returns
+    -------
+    int
+        The effective numeric value for effective product capacity.
+    """
     latest = (
         RegistrationCapacityAdjustment.objects.filter(
             configuration=product.configuration,
@@ -202,6 +350,20 @@ def pending_target_capacity_holds(
     *,
     at: datetime | None = None,
 ) -> int:
+    """Return pending target capacity holds.
+
+    Parameters
+    ----------
+    product : AdmissionProduct
+        The edition-owned product whose policy or capacity is evaluated.
+    at : datetime | None, default=None
+        The point in time used for the operation.
+
+    Returns
+    -------
+    int
+        The effective numeric value for pending target capacity holds.
+    """
     evaluated_at = at or timezone.now()
     return AdmissionTierReplacement.objects.filter(
         target_product=product,
@@ -330,8 +492,42 @@ def reserve_admission_tier_replacement(
     source_channel: str = "api",
     now: datetime | None = None,
 ) -> TierReplacementCommandResult:
-    """Hold the target tier while retaining the paid source admission."""
+    """Hold the target tier while retaining the paid source admission.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    registration_id : UUID
+        The attendee registration identifier within the edition scope.
+    target_product_id : UUID
+        The target product identifier within the requested scope.
+    actor : Account
+        The authenticated account authorizing the operation.
+    expected_registration_version : int
+        The expected expected registration version used to reject stale updates.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='api'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    TierReplacementCommandResult
+        The TierReplacementCommandResult produced by reserve admission tier
+        replacement.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     from maru.registration.services import (  # noqa: PLC0415
         _append_timeline,
         _audit_record,
@@ -576,8 +772,44 @@ def adjust_registration_capacity(
     source_channel: str = "api",
     now: datetime | None = None,
 ) -> CapacityAdjustmentCommandResult:
-    """Append one effective capacity value without editing active definitions."""
+    """Append one effective capacity value without editing active definitions.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    actor : Account
+        The authenticated account authorizing the operation.
+    new_capacity : int
+        The non-negative hard limit or requested amount for new capacity.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    expected_control_version : int
+        The expected expected control version used to reject stale updates.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    product_id : UUID | None, default=None
+        The product identifier within the requested scope.
+    source_channel : str, default='api'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    CapacityAdjustmentCommandResult
+        The CapacityAdjustmentCommandResult produced by adjust registration
+        capacity.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     from maru.registration.services import (  # noqa: PLC0415
         _audit_record,
         _require_decision,
@@ -867,8 +1099,43 @@ def offer_next_waitlist_batch(
     source_channel: str = "api",
     now: datetime | None = None,
 ) -> WaitlistBatchCommandResult:
-    """Offer capacity to the first N eligible rows; callers cannot select people."""
+    """Offer capacity to the first N eligible rows; callers cannot select people.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    product_id : UUID
+        The product identifier within the requested scope.
+    actor : Account
+        The authenticated account authorizing the operation.
+    batch_size : int
+        The batch size evaluated while offer next waitlist batch.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    expected_control_version : int
+        The expected expected control version used to reject stale updates.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='api'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    WaitlistBatchCommandResult
+        The resolved WaitlistBatchCommandResult for offer next waitlist batch.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     from maru.registration.services import (  # noqa: PLC0415
         _audit_record,
         _require_decision,
@@ -1077,8 +1344,28 @@ def complete_admission_tier_replacement(
     correlation_id: UUID,
     completed_at: datetime,
 ) -> AdmissionTierReplacement:
-    """Atomically replace the product after verified price-difference payment."""
+    """Atomically replace the product after verified price-difference payment.
 
+    Parameters
+    ----------
+    replacement_id : UUID
+        The replacement identifier within the requested scope.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    completed_at : datetime
+        The timezone-aware timestamp for completed.
+
+    Returns
+    -------
+    AdmissionTierReplacement
+        The AdmissionTierReplacement produced by complete admission tier
+        replacement.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     from maru.registration.services import (  # noqa: PLC0415
         _append_timeline,
         _system_audit,
@@ -1221,8 +1508,20 @@ def expire_admission_tier_replacements(
     edition_id: UUID | None = None,
     now: datetime | None = None,
 ) -> int:
-    """Release expired target holds while retaining every source admission."""
+    """Release expired target holds while retaining every source admission.
 
+    Parameters
+    ----------
+    edition_id : UUID | None, default=None
+        The event edition identifier that scopes the operation.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    int
+        The resolved int for expire admission tier replacements.
+    """
     from maru.registration.services import (  # noqa: PLC0415
         _append_timeline,
         _system_audit,
@@ -1316,8 +1615,29 @@ def registration_commerce_activity(
     source_channel: str = "api",
     limit: int = 50,
 ) -> tuple[RegistrationCommerceActivity, ...]:
-    """Return an allowlisted operational projection, never the security audit log."""
+    """Return an allowlisted operational projection, never the security audit log.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    actor : Account
+        The authenticated account authorizing the operation.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='api'
+        The closed channel code identifying where the request originated.
+    limit : int, default=50
+        The maximum number of records to return.
+
+    Returns
+    -------
+    tuple[RegistrationCommerceActivity, ...]
+        The matching registration commerce activity records in deterministic
+        order.
+    """
     from maru.registration.services import (  # noqa: PLC0415
         _audit_record,
         _require_decision,

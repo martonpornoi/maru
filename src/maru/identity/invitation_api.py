@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 from uuid import UUID, uuid4
 
 from django.conf import settings
@@ -18,7 +17,6 @@ from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
 from rest_framework.permissions import AllowAny
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -66,6 +64,11 @@ from maru.identity.invitation_serializers import (
 )
 from maru.identity.models import Account
 from maru.identity.services import request_fingerprint, require_recent_step_up
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from rest_framework.request import Request
 
 logger = logging.getLogger(__name__)
 
@@ -136,9 +139,18 @@ class InvitationConflict(APIException):
         code: str,
         errors: Mapping[str, list[str]],
     ) -> None:
+        """Initialize the InvitationConflict instance.
+
+        Parameters
+        ----------
+        code : str
+            The stable domain code to resolve or validate.
+        errors : Mapping[str, list[str]]
+            The errors evaluated while invitation conflict.
+        """
         super().__init__(
             detail=cast(
-                Any,
+                "Any",
                 {
                     "detail": self.default_detail,
                     "code": code,
@@ -190,8 +202,25 @@ def _active_platform_administrator(
     *,
     require_step_up: bool,
 ) -> Account:
-    """Resolve fresh platform authority before reading headers or JSON."""
+    """Resolve fresh platform authority before reading headers or JSON.
 
+    Parameters
+    ----------
+    request : Request
+        The incoming HTTP request and authenticated principal context.
+    require_step_up : bool
+        Whether to require step up.
+
+    Returns
+    -------
+    Account
+        The resolved Account for active platform administrator.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     principal = request.user
     if not isinstance(principal, Account) or not principal.is_authenticated:
         raise PermissionDenied(
@@ -223,7 +252,7 @@ def _active_platform_administrator(
         )
     if require_step_up and settings.REQUIRE_PRIVILEGED_STEP_UP:
         try:
-            require_recent_step_up(account=actor, request=request._request)
+            require_recent_step_up(account=actor, request=request._request)  # noqa: SLF001
         except DjangoValidationError as error:
             raise PermissionDenied(
                 _PROTECTED_UNAVAILABLE_DETAIL,
@@ -235,7 +264,7 @@ def _active_platform_administrator(
 def _raise_idempotency_error(*, detail: str, code: str) -> Never:
     raise ApiValidationError(
         cast(
-            Any,
+            "Any",
             {
                 "detail": detail,
                 "code": code,
@@ -290,13 +319,13 @@ def _validated_payload(
 ) -> dict[str, object]:
     serializer = serializer_class(data=request.data)
     serializer.is_valid(raise_exception=True)
-    return cast(dict[str, object], serializer.validated_data)
+    return cast("dict[str, object]", serializer.validated_data)
 
 
 def _validated_inventory_query(request: Request) -> dict[str, object]:
     serializer = PlatformAccountInventoryQuerySerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
-    return cast(dict[str, object], serializer.validated_data)
+    return cast("dict[str, object]", serializer.validated_data)
 
 
 def _first_django_error_code(
@@ -330,7 +359,7 @@ def _raise_safe_django_validation(
     )
     raise ApiValidationError(
         cast(
-            Any,
+            "Any",
             {
                 "detail": detail,
                 "code": code,
@@ -386,7 +415,7 @@ def _raise_command_error(
         },
     }
     if type(error) in conflict_errors:
-        command_error = cast(InvitationCommandError, error)
+        command_error = cast("InvitationCommandError", error)
         raise InvitationConflict(
             code=command_error.reason_code,
             errors=conflict_errors[type(error)],
@@ -529,6 +558,8 @@ def _detail_payload(detail: AccountInvitationDetail) -> dict[str, object]:
 
 @method_decorator(never_cache, name="dispatch")
 class PlatformAccountInventoryView(APIView):
+    """Expose platform account inventory through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_list_platform_accounts",
         parameters=[PlatformAccountInventoryQuerySerializer],
@@ -549,6 +580,27 @@ class PlatformAccountInventoryView(APIView):
         },
     )
     def get(self, request: Request) -> Response:
+        """List the platform accounts.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        InvitationConflict
+            If the operation encounters a invitation conflict condition.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         actor = _active_platform_administrator(request, require_step_up=False)
         query = _validated_inventory_query(request)
         try:
@@ -572,7 +624,7 @@ class PlatformAccountInventoryView(APIView):
         except PlatformAccountInventoryInputError as error:
             raise ApiValidationError(
                 cast(
-                    Any,
+                    "Any",
                     {
                         "detail": "The account inventory request is invalid.",
                         "code": error.detail_code,
@@ -608,6 +660,8 @@ class PlatformAccountInventoryView(APIView):
 
 @method_decorator(never_cache, name="dispatch")
 class PlatformAccountInvitationCreateView(APIView):
+    """Expose platform account invitation create through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_create_platform_account_invitation",
         parameters=[_IDEMPOTENCY_PARAMETER],
@@ -630,6 +684,18 @@ class PlatformAccountInvitationCreateView(APIView):
         },
     )
     def post(self, request: Request) -> Response:
+        """Create the platform account invitation.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _active_platform_administrator(request, require_step_up=True)
         reject_unknown_fields(request.query_params, allowed_fields=frozenset())
         retry_key = _idempotency_key(request)
@@ -673,6 +739,8 @@ class PlatformAccountInvitationCreateView(APIView):
 
 @method_decorator(never_cache, name="dispatch")
 class PlatformAccountInvitationDetailView(APIView):
+    """Expose platform account invitation detail through the HTTP API."""
+
     @extend_schema(
         operation_id="identity_retrieve_platform_account_invitation",
         responses={
@@ -695,6 +763,31 @@ class PlatformAccountInvitationDetailView(APIView):
         },
     )
     def get(self, request: Request, invitation_id: UUID) -> Response:
+        """Retrieve the platform account invitation.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        invitation_id : UUID
+            The invitation identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        InvitationConflict
+            If the operation encounters a invitation conflict condition.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         actor = _active_platform_administrator(request, require_step_up=False)
         reject_unknown_fields(request.query_params, allowed_fields=frozenset())
         try:
@@ -718,7 +811,7 @@ class PlatformAccountInvitationDetailView(APIView):
         except PlatformAccountInventoryInputError as error:
             raise ApiValidationError(
                 cast(
-                    Any,
+                    "Any",
                     {
                         "detail": "The invitation request is invalid.",
                         "code": error.detail_code,
@@ -802,6 +895,8 @@ class _PlatformAccountInvitationActionView(APIView):
 
 @method_decorator(never_cache, name="dispatch")
 class PlatformAccountInvitationReissueView(_PlatformAccountInvitationActionView):
+    """Expose platform account invitation reissue through the HTTP API."""
+
     operation = "reissue"
 
     @extend_schema(
@@ -828,11 +923,27 @@ class PlatformAccountInvitationReissueView(_PlatformAccountInvitationActionView)
         },
     )
     def post(self, request: Request, invitation_id: UUID) -> Response:
+        """Reissue the platform account invitation.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        invitation_id : UUID
+            The invitation identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         return super().post(request, invitation_id)
 
 
 @method_decorator(never_cache, name="dispatch")
 class PlatformAccountInvitationRevokeView(_PlatformAccountInvitationActionView):
+    """Expose platform account invitation revoke through the HTTP API."""
+
     operation = "revoke"
 
     @extend_schema(
@@ -859,6 +970,20 @@ class PlatformAccountInvitationRevokeView(_PlatformAccountInvitationActionView):
         },
     )
     def post(self, request: Request, invitation_id: UUID) -> Response:
+        """Revoke the platform account invitation.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        invitation_id : UUID
+            The invitation identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         return super().post(request, invitation_id)
 
 
@@ -868,6 +993,8 @@ class PublicAccountInvitationAcceptanceView(APIView):
     # unrelated Django session. Ignoring ambient session authentication keeps
     # the public JSON flow CSRF-independent without turning a session into
     # invitation authority.
+    """Expose public account invitation acceptance through the HTTP API."""
+
     authentication_classes = ()
     permission_classes = (AllowAny,)
 
@@ -895,10 +1022,32 @@ class PublicAccountInvitationAcceptanceView(APIView):
     def post(self, request: Request) -> Response:
         # Reject every query parameter without reflecting attacker-controlled
         # names. The invitation secret belongs in one JSON property, never a URL.
+        """Accept the platform account invitation.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        InvitationAcceptanceRateLimited
+            If the operation encounters a invitation acceptance rate limited
+            condition.
+        InvitationConflict
+            If the operation encounters a invitation conflict condition.
+        """
         if request.query_params:
             raise ApiValidationError(
                 cast(
-                    Any,
+                    "Any",
                     {
                         "detail": _PUBLIC_INVALID_DETAIL,
                         "code": "unknown_input_field",
@@ -921,11 +1070,11 @@ class PublicAccountInvitationAcceptanceView(APIView):
         correlation_id = _request_id(request)
         try:
             result = accept_platform_account_invitation(
-                raw_token=cast(str, payload["raw_token"]),
-                new_password=cast(str, payload["new_password1"]),
+                raw_token=cast("str", payload["raw_token"]),
+                new_password=cast("str", payload["new_password1"]),
                 retry_key=retry_key,
                 correlation_id=correlation_id,
-                request_fingerprint=request_fingerprint(request._request),
+                request_fingerprint=request_fingerprint(request._request),  # noqa: SLF001
                 request_id=correlation_id,
                 source_channel="api",
             )
@@ -936,7 +1085,7 @@ class PublicAccountInvitationAcceptanceView(APIView):
         ) as error:
             raise ApiValidationError(
                 cast(
-                    Any,
+                    "Any",
                     {
                         "detail": _PUBLIC_INVALID_DETAIL,
                         "code": InvitationChallengeInvalidError.reason_code,
@@ -972,7 +1121,7 @@ class PublicAccountInvitationAcceptanceView(APIView):
             )
             raise ApiValidationError(
                 cast(
-                    Any,
+                    "Any",
                     {
                         "detail": _PUBLIC_INVALID_DETAIL,
                         "code": code,

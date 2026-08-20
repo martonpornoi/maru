@@ -62,12 +62,35 @@ def _audit_query_access(
 
 
 class AuditEventListView(APIView):
+    """Expose audit event list through the HTTP API."""
+
     @extend_schema(
         operation_id="audit_list_security_events",
         parameters=[AuditQuerySerializer],
         responses=AuditEventSummarySerializer(many=True),
     )
     def get(self, request: Request, organization_id: UUID) -> Response:
+        """List the security events.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        TypeError
+            If the caller supplies an object of an unsupported type.
+        """
         account = request.user
         if not isinstance(account, Account):
             raise TypeError("Authenticated principal is not a platform account")

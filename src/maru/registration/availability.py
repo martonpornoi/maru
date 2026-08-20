@@ -2,17 +2,34 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from django.db.models import QuerySet
 from django.utils import timezone
 
 from maru.identity.models import Account
 from maru.participation.models import ParticipationCapacity
 from maru.registration.models import AdmissionProduct, Registration
 
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
+
 
 @dataclass(frozen=True, slots=True)
 class ProductAvailability:
+    """Describe product availability.
+
+    Attributes
+    ----------
+    selectable
+        The selectable retained in this immutable projection.
+    code
+        The stable domain code to resolve or validate.
+    explanation
+        The disclosure-safe explanation presented to the caller.
+    waitlist
+        The waitlist retained in this immutable projection.
+    """
+
     selectable: bool
     code: str
     explanation: str
@@ -33,8 +50,24 @@ def assess_product_availability(  # noqa: PLR0911 - each denial stays explicit
     at: datetime | None = None,
     ignore_sale_window: bool = False,
 ) -> ProductAvailability:
-    """Return one attendee-safe, server-authoritative availability decision."""
+    """Return one attendee-safe, server-authoritative availability decision.
 
+    Parameters
+    ----------
+    product : AdmissionProduct
+        The edition-owned product whose policy or capacity is evaluated.
+    account : Account | None
+        The platform account whose state or access is being evaluated.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+    ignore_sale_window : bool, default=False
+        The ignore sale window evaluated while assess product availability.
+
+    Returns
+    -------
+    ProductAvailability
+        The resolved ProductAvailability for assess product availability.
+    """
     current_time = at or timezone.now()
     configuration = product.configuration
     if product.status != AdmissionProduct.Status.AVAILABLE:

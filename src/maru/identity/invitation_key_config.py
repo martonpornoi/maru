@@ -12,8 +12,7 @@ import base64
 import binascii
 import json
 import os
-from collections.abc import Mapping
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from django.conf import settings
 
@@ -23,6 +22,9 @@ from maru.identity.invitation_crypto import (
     InvitationEncryptionKey,
     InvitationPrivateKeyring,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 PUBLIC_KEY_ID_SETTING: Final = "MARU_IDENTITY_INVITATION_ENCRYPTION_KEY_ID"
 PUBLIC_KEY_SETTING: Final = "MARU_IDENTITY_INVITATION_PUBLIC_KEY_B64"
@@ -53,8 +55,19 @@ def _decode_base64_pem(value: object) -> bytes:
 
 
 def active_invitation_encryption_key() -> InvitationEncryptionKey:
-    """Load the public key that the current web release may use."""
+    """Load the public key that the current web release may use.
 
+    Returns
+    -------
+    InvitationEncryptionKey
+        The InvitationEncryptionKey produced by active invitation encryption
+        key.
+
+    Raises
+    ------
+    _configuration_error
+        If the operation encounters a configuration error condition.
+    """
     key_id = getattr(settings, PUBLIC_KEY_ID_SETTING, "")
     public_key_b64 = getattr(settings, PUBLIC_KEY_SETTING, "")
     if not isinstance(key_id, str):
@@ -68,8 +81,24 @@ def active_invitation_encryption_key() -> InvitationEncryptionKey:
 def worker_invitation_private_keyring(
     environment: Mapping[str, str] | None = None,
 ) -> InvitationPrivateKeyring:
-    """Load worker-only private keys without copying them into settings."""
+    """Load worker-only private keys without copying them into settings.
 
+    Parameters
+    ----------
+    environment : Mapping[str, str] | None, default=None
+        The environment mapping to validate or transform.
+
+    Returns
+    -------
+    InvitationPrivateKeyring
+        The InvitationPrivateKeyring produced by worker invitation private
+        keyring.
+
+    Raises
+    ------
+    _configuration_error
+        If the operation encounters a configuration error condition.
+    """
     source = os.environ if environment is None else environment
     raw = source.get(PRIVATE_KEYRING_ENVIRONMENT, "")
     if not isinstance(raw, str) or not (
@@ -93,8 +122,14 @@ def worker_invitation_private_keyring(
 
 
 def invitation_encryption_is_ready() -> bool:
-    """Return a value-safe readiness signal for the request process."""
+    """Return a value-safe readiness signal for the request process.
 
+    Returns
+    -------
+    bool
+        `True` when Return a value-safe readiness signal for the request
+        process; otherwise `False`.
+    """
     try:
         active_invitation_encryption_key()
     except InvitationCryptoConfigurationError:

@@ -205,10 +205,10 @@ class _InvitationClosedSerializer(serializers.Serializer[dict[str, object]]):
                     # be submitted as the key itself and copied into a response.
                     errors = {"non_field_errors": ["Remove unsupported input fields."]}
                 raise serializers.ValidationError(
-                    cast(Any, errors),
+                    cast("Any", errors),
                     code="unknown_input_field",
                 )
-        return cast(dict[str, object], super().to_internal_value(data))
+        return cast("dict[str, object]", super().to_internal_value(data))
 
 
 class _InvitationClosedRequestSchema(OpenApiSerializerExtension):
@@ -222,13 +222,13 @@ class _InvitationClosedRequestSchema(OpenApiSerializerExtension):
         auto_schema: AutoSchema,
         direction: Direction,
     ) -> dict[str, Any]:
-        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]
+        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]  # noqa: SLF001
             self.target,
             direction,
             bypass_extensions=True,
         )
         schema["additionalProperties"] = False
-        return cast(dict[str, Any], schema)
+        return cast("dict[str, Any]", schema)
 
 
 class _InvitationClosedResponseSerializer(serializers.Serializer[dict[str, object]]):
@@ -246,13 +246,13 @@ class _InvitationClosedResponseSchema(OpenApiSerializerExtension):
         auto_schema: AutoSchema,
         direction: Direction,
     ) -> dict[str, Any]:
-        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]
+        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]  # noqa: SLF001
             self.target,
             direction,
             bypass_extensions=True,
         )
         schema["additionalProperties"] = False
-        return cast(dict[str, Any], schema)
+        return cast("dict[str, Any]", schema)
 
 
 class PlatformAccountInventoryQuerySerializer(_InvitationClosedSerializer):
@@ -294,6 +294,23 @@ class PlatformAccountInventoryQuerySerializer(_InvitationClosedSerializer):
     )
 
     def to_internal_value(self, data: Any) -> dict[str, object]:
+        """Parse and validate API input.
+
+        Parameters
+        ----------
+        data : Any
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved to internal value data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         lists = getattr(data, "lists", None)
         if callable(lists):
             repeated = sorted(
@@ -347,6 +364,18 @@ class PlatformAccountInvitationCreateSerializer(_InvitationClosedSerializer):
     expected_version = _StrictInvitationIntegerField(min_value=0, max_value=0)
 
     def validate_preferred_language(self, value: str | None) -> str:
+        """Validate preferred language.
+
+        Parameters
+        ----------
+        value : str | None
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        str
+            The normalized text for validate preferred language.
+        """
         try:
             return normalize_invitation_preferred_language(value)
         except DjangoValidationError as error:
@@ -390,6 +419,23 @@ class PublicAccountInvitationAcceptanceSerializer(_InvitationClosedSerializer):
     )
 
     def validate_raw_token(self, value: str) -> str:
+        """Validate raw token.
+
+        Parameters
+        ----------
+        value : str
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        str
+            The normalized text for validate raw token.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if _INVITATION_TOKEN_PATTERN.fullmatch(value) is None:
             raise serializers.ValidationError(
                 "Enter the complete invitation code.",
@@ -398,6 +444,23 @@ class PublicAccountInvitationAcceptanceSerializer(_InvitationClosedSerializer):
         return value
 
     def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if attrs["new_password1"] != attrs["new_password2"]:
             raise serializers.ValidationError(
                 {"new_password2": ["The passwords do not match."]},
@@ -407,6 +470,8 @@ class PublicAccountInvitationAcceptanceSerializer(_InvitationClosedSerializer):
 
 
 class PlatformAccountInvitationMutationSerializer(_InvitationClosedResponseSerializer):
+    """Serialize and validate platform account invitation mutation data."""
+
     id = serializers.UUIDField()
     status = serializers.ChoiceField(choices=PlatformAccountInvitation.Status.choices)
     aggregate_version = serializers.IntegerField(min_value=1)
@@ -417,6 +482,8 @@ class PlatformAccountInvitationMutationSerializer(_InvitationClosedResponseSeria
 class PublicAccountInvitationAcceptanceResultSerializer(
     _InvitationClosedResponseSerializer
 ):
+    """Serialize and validate public account invitation acceptance result data."""
+
     accepted = serializers.BooleanField()
     next = serializers.ChoiceField(choices=("sign_in",))
     replayed = serializers.BooleanField()
@@ -447,6 +514,8 @@ class PlatformAccountInventoryItemSerializer(_InvitationClosedResponseSerializer
 
 
 class PlatformAccountInventorySerializer(_InvitationClosedResponseSerializer):
+    """Serialize and validate platform account inventory data."""
+
     inventory_version = serializers.IntegerField(min_value=0)
     items = PlatformAccountInventoryItemSerializer(many=True)
     next_cursor = serializers.CharField(allow_null=True)
@@ -503,6 +572,8 @@ class PlatformAccountInvitationDeliveryAttemptSerializer(
 
 
 class PlatformAccountInvitationDetailSerializer(_InvitationClosedResponseSerializer):
+    """Serialize and validate platform account invitation detail data."""
+
     inventory_version = serializers.IntegerField(min_value=0)
     id = serializers.UUIDField()
     account = PlatformAccountInvitationAccountSerializer()

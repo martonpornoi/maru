@@ -35,16 +35,18 @@ class _VenueClosedInputSchema(OpenApiSerializerExtension):
         auto_schema: "AutoSchema",
         direction: "Direction",
     ) -> dict[str, Any]:
-        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]
+        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]  # noqa: SLF001
             self.target,
             direction,
             bypass_extensions=True,
         )
         schema["additionalProperties"] = False
-        return cast(dict[str, Any], schema)
+        return cast("dict[str, Any]", schema)
 
 
 class VenueCommandResultSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate venue command result data."""
+
     object_id = serializers.UUIDField()
     receipt_id = serializers.UUIDField()
     resulting_version = serializers.IntegerField(min_value=1)
@@ -52,6 +54,8 @@ class VenueCommandResultSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class VenuePropertyCreateSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue property create data."""
+
     slug = serializers.SlugField(max_length=80)
     kind = serializers.ChoiceField(choices=VenueProperty.Kind.choices)
     legal_name = serializers.CharField(max_length=240)
@@ -83,6 +87,8 @@ class VenuePropertyCreateSerializer(_VenueClosedInputSerializer):
 
 
 class VenuePropertyUpdateSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue property update data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     reason = serializers.CharField(max_length=1_000)
     legal_name = serializers.CharField(max_length=240, required=False)
@@ -116,6 +122,23 @@ class VenuePropertyUpdateSerializer(_VenueClosedInputSerializer):
     )
 
     def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if set(attrs) <= {"expected_version", "reason"}:
             raise serializers.ValidationError(
                 {"changes": ["Change at least one supported field."]}
@@ -124,6 +147,8 @@ class VenuePropertyUpdateSerializer(_VenueClosedInputSerializer):
 
 
 class VenueSpaceCatalogCreateSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue space catalog create data."""
+
     site_code = serializers.SlugField(max_length=80)
     site_name = serializers.CharField(max_length=200)
     building_code = serializers.SlugField(max_length=80)
@@ -153,6 +178,8 @@ class VenueSpaceCatalogCreateSerializer(_VenueClosedInputSerializer):
 
 
 class VenueCombinationCreateSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue combination create data."""
+
     code = serializers.SlugField(max_length=80)
     name = serializers.CharField(max_length=200)
     member_space_ids = serializers.ListField(
@@ -164,6 +191,8 @@ class VenueCombinationCreateSerializer(_VenueClosedInputSerializer):
 
 
 class VenueMediaAddSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue media add data."""
+
     kind = serializers.ChoiceField(choices=VenuePropertyMedia.Kind.choices)
     source_reference = serializers.CharField(max_length=1_000)
     owner_name = serializers.CharField(max_length=240)
@@ -177,12 +206,16 @@ class VenueMediaAddSerializer(_VenueClosedInputSerializer):
 
 
 class VenueMediaApproveSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue media approve data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     public_reference = serializers.CharField(max_length=1_000)
     reason = serializers.CharField(max_length=1_000)
 
 
 class VenueLayoutApproveSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue layout approve data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     approved_reference = serializers.CharField(
         max_length=1_000,
@@ -194,6 +227,8 @@ class VenueLayoutApproveSerializer(_VenueClosedInputSerializer):
 
 
 class VenueLayoutAddSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue layout add data."""
+
     layout_code = serializers.SlugField(max_length=80)
     version = serializers.IntegerField(min_value=1)
     title = serializers.CharField(max_length=200)
@@ -205,6 +240,8 @@ class VenueLayoutAddSerializer(_VenueClosedInputSerializer):
 
 
 class VenueRoomTypeCreateSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue room type create data."""
+
     code = serializers.SlugField(max_length=80)
     public_name = serializers.CharField(max_length=200)
     description = serializers.CharField(
@@ -222,6 +259,8 @@ class VenueRoomTypeCreateSerializer(_VenueClosedInputSerializer):
 
 
 class VenueNightInventorySetSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue night inventory set data."""
+
     night = serializers.DateField()
     room_capacity = serializers.IntegerField(min_value=0)
     release_at = serializers.DateTimeField()
@@ -235,6 +274,8 @@ class VenueNightInventorySetSerializer(_VenueClosedInputSerializer):
 
 
 class VenueSelectionCreateSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue selection create data."""
+
     property_id = serializers.UUIDField()
     responsible_department_id = serializers.UUIDField()
     local_name = serializers.CharField(max_length=200)
@@ -251,6 +292,8 @@ class VenueSelectionCreateSerializer(_VenueClosedInputSerializer):
 
 
 class VenueCapacitySerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue capacity data."""
+
     configuration_name = serializers.CharField(max_length=200)
     seated_capacity = serializers.IntegerField(min_value=0)
     standing_capacity = serializers.IntegerField(min_value=0)
@@ -259,6 +302,8 @@ class VenueCapacitySerializer(_VenueClosedInputSerializer):
 
 
 class VenueSpaceSelectionCreateSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue space selection create data."""
+
     venue_selection_id = serializers.UUIDField()
     source_space_id = serializers.UUIDField(allow_null=True, required=False)
     source_combination_id = serializers.UUIDField(allow_null=True, required=False)
@@ -274,6 +319,23 @@ class VenueSpaceSelectionCreateSerializer(_VenueClosedInputSerializer):
     reason = serializers.CharField(max_length=1_000)
 
     def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            The attrs mapping to validate or transform.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved validate data.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if (attrs.get("source_space_id") is None) == (
             attrs.get("source_combination_id") is None
         ):
@@ -284,6 +346,8 @@ class VenueSpaceSelectionCreateSerializer(_VenueClosedInputSerializer):
 
 
 class VenueAvailabilityIntervalSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue availability interval data."""
+
     starts_at = serializers.DateTimeField()
     ends_at = serializers.DateTimeField()
     opening_restriction = serializers.CharField(
@@ -292,6 +356,8 @@ class VenueAvailabilityIntervalSerializer(_VenueClosedInputSerializer):
 
 
 class VenueAvailabilitySetSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue availability set data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     intervals = VenueAvailabilityIntervalSerializer(many=True, allow_empty=False)
     reason = serializers.CharField(max_length=1_000)
@@ -320,19 +386,25 @@ class _VenueBookingWriteSerializer(_VenueClosedInputSerializer):
 
 
 class VenueBookingCreateSerializer(_VenueBookingWriteSerializer):
-    pass
+    """Serialize and validate venue booking create data."""
 
 
 class VenueBookingUpdateSerializer(_VenueBookingWriteSerializer):
+    """Serialize and validate venue booking update data."""
+
     expected_version = serializers.IntegerField(min_value=1)
 
 
 class VenueBookingStateSerializer(_VenueClosedInputSerializer):
+    """Serialize and validate venue booking state data."""
+
     expected_version = serializers.IntegerField(min_value=1)
     reason = serializers.CharField(max_length=1_000)
 
 
 class VenuePropertySummarySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate venue property summary data."""
+
     id = serializers.UUIDField()
     slug = serializers.CharField()
     kind = serializers.CharField()
@@ -354,6 +426,8 @@ class VenuePropertySummarySerializer(serializers.Serializer[dict[str, object]]):
 
 
 class VenueWorkspaceSpaceSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate venue workspace space data."""
+
     id = serializers.UUIDField()
     venue_selection_id = serializers.UUIDField()
     venue_name = serializers.CharField()
@@ -369,12 +443,16 @@ class VenueWorkspaceSpaceSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class VenueAvailabilityProjectionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate venue availability projection data."""
+
     starts_at = serializers.DateTimeField()
     ends_at = serializers.DateTimeField()
     opening_restriction = serializers.CharField()
 
 
 class VenueBookingProjectionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate venue booking projection data."""
+
     id = serializers.UUIDField()
     kind = serializers.CharField()
     external_reference = serializers.CharField()
@@ -395,12 +473,16 @@ class VenueBookingProjectionSerializer(serializers.Serializer[dict[str, object]]
 
 
 class VenueSpaceScheduleSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate venue space schedule data."""
+
     space = VenueWorkspaceSpaceSerializer()
     availability = VenueAvailabilityProjectionSerializer(many=True)
     bookings = VenueBookingProjectionSerializer(many=True)
 
 
 class PublicVenueScheduleItemSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate public venue schedule item data."""
+
     booking_id = serializers.UUIDField()
     space_selection_id = serializers.UUIDField()
     venue_name = serializers.CharField()

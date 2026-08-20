@@ -10,11 +10,15 @@ from maru.participation.models import Participation, ParticipationCapacity
 
 
 class MembershipContextSerializer(serializers.ModelSerializer[OrganizationMembership]):
+    """Serialize and validate membership context data."""
+
     organization_id = serializers.UUIDField(source="organization.id")
     organization_slug = serializers.CharField(source="organization.slug")
     organization_name = serializers.CharField(source="organization.name")
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = OrganizationMembership
         fields = (
             "organization_id",
@@ -27,7 +31,11 @@ class MembershipContextSerializer(serializers.ModelSerializer[OrganizationMember
 
 
 class CapacityContextSerializer(serializers.ModelSerializer[ParticipationCapacity]):
+    """Serialize and validate capacity context data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = ParticipationCapacity
         fields = (
             "code",
@@ -40,6 +48,8 @@ class CapacityContextSerializer(serializers.ModelSerializer[ParticipationCapacit
 
 
 class EditionContextSerializer(serializers.ModelSerializer[Participation]):
+    """Serialize and validate edition context data."""
+
     organization_id = serializers.UUIDField(source="organization.id")
     organization_slug = serializers.CharField(source="organization.slug")
     series_id = serializers.UUIDField(source="edition.series.id")
@@ -68,6 +78,8 @@ class EditionContextSerializer(serializers.ModelSerializer[Participation]):
     can_transition = serializers.SerializerMethodField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = Participation
         fields = (
             "organization_id",
@@ -91,6 +103,18 @@ class EditionContextSerializer(serializers.ModelSerializer[Participation]):
         read_only_fields = fields
 
     def get_can_transition(self, obj: Participation) -> bool:
+        """Return can transition.
+
+        Parameters
+        ----------
+        obj : Participation
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when Return can transition; otherwise `False`.
+        """
         account = self.context.get("account")
         if not isinstance(account, Account):
             return False
@@ -105,12 +129,16 @@ class EditionContextSerializer(serializers.ModelSerializer[Participation]):
 
 
 class ParticipationHistorySerializer(serializers.ModelSerializer[Participation]):
+    """Serialize and validate participation history data."""
+
     edition_id = serializers.UUIDField(source="edition.id")
     starts_on = serializers.DateField(source="edition.starts_on")
     ends_on = serializers.DateField(source="edition.ends_on")
     capacities = CapacityContextSerializer(many=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = Participation
         fields = (
             "edition_id",
@@ -126,6 +154,8 @@ class ParticipationHistorySerializer(serializers.ModelSerializer[Participation])
 
 
 class MyContextSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate my context data."""
+
     account_id = serializers.UUIDField()
     display_name = serializers.CharField()
     preferred_language = serializers.CharField()
@@ -135,12 +165,16 @@ class MyContextSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class StaffParticipationSummarySerializer(serializers.ModelSerializer[Participation]):
+    """Serialize and validate staff participation summary data."""
+
     account_id = serializers.UUIDField(source="account.id")
     display_name = serializers.CharField(source="account.display_name")
     participation_status = serializers.CharField(source="status")
     capacity_labels = serializers.SerializerMethodField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = Participation
         fields = (
             "account_id",
@@ -151,6 +185,18 @@ class StaffParticipationSummarySerializer(serializers.ModelSerializer[Participat
         read_only_fields = fields
 
     def get_capacity_labels(self, obj: Participation) -> list[str]:
+        """Return capacity labels.
+
+        Parameters
+        ----------
+        obj : Participation
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        list[str]
+            The matching get capacity labels records in deterministic order.
+        """
         return [
             capacity.label_snapshot
             for capacity in obj.capacities.all()
@@ -163,6 +209,8 @@ class StaffParticipationSummarySerializer(serializers.ModelSerializer[Participat
 
 
 class StaffParticipationListQuerySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate staff participation list query data."""
+
     search = serializers.CharField(
         required=False,
         allow_blank=False,

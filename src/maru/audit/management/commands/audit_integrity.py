@@ -10,9 +10,18 @@ from maru.audit.services import seal_pending_audit_events, verify_audit_integrit
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Optionally seal pending audit events, then verify all integrity batches."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--seal",
             action="store_true",
@@ -26,6 +35,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         _ = args
         sealed = None
         if options["seal"]:

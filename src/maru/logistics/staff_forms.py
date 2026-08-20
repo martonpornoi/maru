@@ -27,11 +27,15 @@ def _datetime_field(*, required: bool = True) -> CanonicalLocalDateTimeField:
 
 
 class CommandForm(LogisticsStrictForm):
+    """Collect and validate command input."""
+
     idempotency_key = CanonicalUUIDField(widget=forms.HiddenInput)
     reason = forms.CharField(max_length=MAX_LOGISTICS_REASON_LENGTH)
 
 
 class OfferReviewForm(CommandForm):
+    """Collect and validate offer review input."""
+
     offer_id = CanonicalUUIDField(widget=forms.HiddenInput)
     expected_version = StrictBase10IntegerField(min_value=1, widget=forms.HiddenInput)
     outcome = forms.ChoiceField(
@@ -51,6 +55,8 @@ class OfferReviewForm(CommandForm):
 
 
 class PartyCreateForm(CommandForm):
+    """Collect and validate party create input."""
+
     kind = forms.ChoiceField(choices=LogisticsParty.Kind.choices)
     role = forms.ChoiceField(choices=LogisticsParty.Role.choices)
     code = forms.SlugField(max_length=96)
@@ -65,6 +71,8 @@ class PartyCreateForm(CommandForm):
 
 
 class RestrictedAddressCreateForm(CommandForm):
+    """Collect and validate restricted address create input."""
+
     purpose = forms.ChoiceField(choices=RestrictedLogisticsAddress.Purpose.choices)
     subject_account_id = CanonicalUUIDChoiceField(required=False)
     party_id = CanonicalUUIDChoiceField(required=False)
@@ -85,6 +93,8 @@ class RestrictedAddressCreateForm(CommandForm):
 
 
 class NodeCreateForm(CommandForm):
+    """Collect and validate node create input."""
+
     kind = forms.ChoiceField(choices=LogisticsNode.Kind.choices)
     code = forms.SlugField(max_length=96)
     name = forms.CharField(max_length=200)
@@ -103,6 +113,8 @@ class NodeCreateForm(CommandForm):
 
 
 class OwnedItemForm(CommandForm):
+    """Collect and validate owned item input."""
+
     edition_specific = forms.BooleanField(required=False, initial=True)
     owner_kind = forms.ChoiceField(choices=Asset.OwnerKind.choices)
     owner_account_id = CanonicalUUIDChoiceField(required=False)
@@ -113,6 +125,8 @@ class OwnedItemForm(CommandForm):
 
 
 class AssetCreateForm(OwnedItemForm):
+    """Collect and validate asset create input."""
+
     asset_type = forms.CharField(max_length=120)
     manufacturer = forms.CharField(max_length=160, required=False)
     model_name = forms.CharField(max_length=160, required=False)
@@ -121,6 +135,8 @@ class AssetCreateForm(OwnedItemForm):
 
 
 class StockLotCreateForm(OwnedItemForm):
+    """Collect and validate stock lot create input."""
+
     stock_type = forms.CharField(max_length=120)
     unit = forms.CharField(max_length=40)
     initial_quantity = StrictBase10IntegerField(
@@ -130,6 +146,8 @@ class StockLotCreateForm(OwnedItemForm):
 
 
 class PhysicalKeyCreateForm(CommandForm):
+    """Collect and validate physical key create input."""
+
     edition_specific = forms.BooleanField(required=False, initial=True)
     code = forms.SlugField(max_length=96)
     label = forms.CharField(max_length=200)
@@ -138,6 +156,8 @@ class PhysicalKeyCreateForm(CommandForm):
 
 
 class KeyholderAssignForm(CommandForm):
+    """Collect and validate keyholder assign input."""
+
     key_id = CanonicalUUIDChoiceField()
     responsible_account_id = CanonicalUUIDChoiceField()
     starts_at = _datetime_field()
@@ -146,6 +166,8 @@ class KeyholderAssignForm(CommandForm):
 
 
 class LabelCreateForm(CommandForm):
+    """Collect and validate label create input."""
+
     subject_kind = forms.ChoiceField(choices=LogisticsEvent.SubjectKind.choices)
     subject_id = CanonicalUUIDChoiceField()
     label_code = forms.CharField(max_length=96)
@@ -157,6 +179,8 @@ class LabelCreateForm(CommandForm):
 
 
 class AgreementCreateForm(CommandForm):
+    """Collect and validate agreement create input."""
+
     kind = forms.ChoiceField(choices=AssetAgreement.Kind.choices)
     subject_kind = forms.ChoiceField(choices=LogisticsEvent.SubjectKind.choices)
     subject_id = CanonicalUUIDChoiceField()
@@ -173,6 +197,8 @@ class AgreementCreateForm(CommandForm):
 
 
 class KitCreateForm(CommandForm):
+    """Collect and validate kit create input."""
+
     code = forms.SlugField(max_length=96)
     name = forms.CharField(max_length=200)
     description = forms.CharField(
@@ -202,6 +228,8 @@ class KitCreateForm(CommandForm):
 
 
 class ManifestCreateForm(CommandForm):
+    """Collect and validate manifest create input."""
+
     responsible_department_id = CanonicalUUIDChoiceField()
     manifest_number = forms.CharField(max_length=96)
     kind = forms.ChoiceField(choices=LogisticsManifest.Kind.choices)
@@ -223,6 +251,8 @@ class ManifestCreateForm(CommandForm):
 
 
 class ManifestStateForm(CommandForm):
+    """Collect and validate manifest state input."""
+
     manifest_id = CanonicalUUIDField(widget=forms.HiddenInput)
     expected_version = StrictBase10IntegerField(
         min_value=1,
@@ -240,6 +270,8 @@ class ManifestStateForm(CommandForm):
 
 
 class ManifestLineAddForm(CommandForm):
+    """Collect and validate manifest line add input."""
+
     manifest_id = CanonicalUUIDField(widget=forms.HiddenInput)
     expected_version = StrictBase10IntegerField(
         min_value=1,
@@ -256,6 +288,8 @@ class ManifestLineAddForm(CommandForm):
 
 
 class ManifestReceiptForm(CommandForm):
+    """Collect and validate manifest receipt input."""
+
     expected_sequence = StrictBase10IntegerField(
         min_value=0,
         widget=forms.HiddenInput,
@@ -265,6 +299,8 @@ class ManifestReceiptForm(CommandForm):
 
 
 class MovementEventForm(CommandForm):
+    """Collect and validate movement event input."""
+
     event_type = forms.ChoiceField(choices=LogisticsEvent.EventType.choices)
     subject_kind = forms.ChoiceField(choices=LogisticsEvent.SubjectKind.choices)
     subject_id = CanonicalUUIDChoiceField()
@@ -286,6 +322,8 @@ class MovementEventForm(CommandForm):
 
 
 class OfflineBatchForm(CommandForm):
+    """Collect and validate offline batch input."""
+
     device_code = forms.CharField(max_length=96)
     snapshot_version = StrictBase10IntegerField(min_value=0)
     policy_version = forms.CharField(max_length=64)
@@ -306,6 +344,8 @@ class OfflineBatchForm(CommandForm):
 
 
 class RestrictedContactReadForm(LogisticsStrictForm):
+    """Collect and validate restricted contact read input."""
+
     address_id = CanonicalUUIDChoiceField(widget=forms.HiddenInput)
     purpose = forms.ChoiceField(choices=RestrictedLogisticsAddress.Purpose.choices)
     access_purpose = forms.ChoiceField(

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -18,6 +17,9 @@ from django.views.decorators.http import require_http_methods
 from maru.identity.models import Account
 from maru.identity.services import complete_step_up
 from maru.identity.step_up_forms import AccountStepUpForm
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest, HttpResponse
 
 
 def _active_account(request: HttpRequest) -> Account:
@@ -73,6 +75,18 @@ def _response(
 @login_required(login_url="staff-login")
 @require_http_methods(["GET", "POST"])
 def account_step_up(request: HttpRequest) -> HttpResponse:
+    """Return account step up.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     account = _active_account(request)
     if request.method == "GET":
         if set(request.GET) - {"next"}:

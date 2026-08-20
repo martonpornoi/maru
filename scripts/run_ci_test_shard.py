@@ -1,32 +1,52 @@
 """Run one deterministic, file-level shard of the integration test suite.
 
 Integration test files stay whole because several Maru tests intentionally alter
-database state.  Until measured test durations are available, source-file byte
-size is the repository-owned weight proxy: larger files are assigned first to
-the currently lightest shard, with stable path and shard-index tie-breaks.
+database state. Accepted JUnit durations are the repository-owned scheduling
+weights. New files use a conservative median duration until the map is refreshed.
 """
 
 from __future__ import annotations
 
 import argparse
-from collections.abc import Sequence
+import json
+import statistics
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 INTEGRATION_TEST_DIRECTORY = REPOSITORY_ROOT / "tests" / "integration"
+TIMING_FILE = REPOSITORY_ROOT / "scripts" / "ci_integration_timings.json"
 
 
 @dataclass(frozen=True, slots=True)
 class WeightedTestFile:
-    """An integration test file and its positive scheduling weight."""
+    """An integration test file and its positive scheduling weight.
+
+    Attributes
+    ----------
+    path
+        The filesystem path to read, validate, or write.
+    weight
+        The weight retained in this immutable projection.
+    """
 
     path: Path
     weight: int
 
     def __post_init__(self) -> None:
+        """Implement `__post_init__` for WeightedTestFile.
+
+        Raises
+        ------
+        ValueError
+            If the requested operation violates this domain contract.
+        """
         if self.weight < 1:
             raise ValueError("test-file weight must be positive")
 
@@ -36,8 +56,18 @@ def _path_key(path: Path) -> str:
 
 
 def discover_integration_tests(directory: Path) -> tuple[Path, ...]:
-    """Return every direct ``test_*.py`` integration file in stable order."""
+    """Return every direct ``test_*.py`` integration file in stable order.
 
+    Parameters
+    ----------
+    directory : Path
+        The filesystem path for directory.
+
+    Returns
+    -------
+    tuple[Path, ...]
+        The matching discover integration tests records in deterministic order.
+    """
     return tuple(
         sorted(
             (path for path in directory.glob("test_*.py") if path.is_file()),
@@ -46,20 +76,110 @@ def discover_integration_tests(directory: Path) -> tuple[Path, ...]:
     )
 
 
-def weigh_test_files(test_files: Sequence[Path]) -> tuple[WeightedTestFile, ...]:
-    """Weigh files by byte size, using one byte for a possible empty file."""
+def weigh_test_files(
+    test_files: Sequence[Path], timing_file: Path = TIMING_FILE
+) -> tuple[WeightedTestFile, ...]:
+    """Weigh files with measured milliseconds and a median fallback.
 
+    Parameters
+    ----------
+    test_files : Sequence[Path]
+        The selected test files to validate in deterministic order.
+    timing_file : Path, default=TIMING_FILE
+        JSON map of repository-relative paths to measured seconds.
+
+    Returns
+    -------
+    tuple[WeightedTestFile, ...]
+        The matching weigh test files records in deterministic order.
+    """
+    measured = load_timing_weights(timing_file)
+    default_weight = max(
+        round(statistics.median(measured.values())) if measured else 1_000,
+        1,
+    )
     return tuple(
-        WeightedTestFile(path=path, weight=max(path.stat().st_size, 1))
+        WeightedTestFile(
+            path=path,
+            weight=measured.get(_repository_relative_path(path), default_weight),
+        )
         for path in test_files
     )
+
+
+def load_timing_weights(timing_file: Path) -> dict[str, int]:
+    """Load positive measured durations as integer milliseconds.
+
+    Parameters
+    ----------
+    timing_file : Path
+        JSON file mapping repository test paths to duration seconds.
+
+    Returns
+    -------
+    dict[str, int]
+        Normalized repository paths and positive millisecond weights.
+
+    Raises
+    ------
+    TypeError
+        If the JSON root or a timing entry has an invalid type.
+    ValueError
+        If a timing duration is not positive.
+    """
+    if not timing_file.is_file():
+        return {}
+    value = json.loads(timing_file.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise TypeError("integration timing map must be a JSON object")
+    weights: dict[str, int] = {}
+    for path, seconds in value.items():
+        if not isinstance(path, str) or not isinstance(seconds, int | float):
+            raise TypeError("integration timing entries need string paths and numbers")
+        if seconds <= 0:
+            raise ValueError("integration timing durations must be positive")
+        weights[Path(path).as_posix()] = max(round(seconds * 1_000), 1)
+    return weights
+
+
+def _repository_relative_path(path: Path) -> str:
+    """Return a stable repository-relative key when possible.
+
+    Parameters
+    ----------
+    path : Path
+        Test file path to normalize.
+
+    Returns
+    -------
+    str
+        POSIX path relative to the repository, or the supplied POSIX path.
+    """
+    try:
+        return path.resolve().relative_to(REPOSITORY_ROOT).as_posix()
+    except ValueError:
+        return path.as_posix()
 
 
 def validate_shard_inputs(
     *, shard_index: int, shard_count: int, test_count: int
 ) -> None:
-    """Reject shard selections that could skip or accidentally broaden tests."""
+    """Reject shard selections that could skip or accidentally broaden tests.
 
+    Parameters
+    ----------
+    shard_index : int
+        The shard index evaluated while validate shard inputs.
+    shard_count : int
+        The bounded number of shard records.
+    test_count : int
+        The bounded number of test records.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     if test_count < 1:
         raise ValueError("no integration test files were discovered")
     if shard_count < 1:
@@ -73,8 +193,25 @@ def validate_shard_inputs(
 def partition_test_files(
     test_files: Sequence[WeightedTestFile], shard_count: int
 ) -> tuple[tuple[Path, ...], ...]:
-    """Greedily partition weighted files with deterministic stable tie-breaks."""
+    """Greedily partition weighted files with deterministic stable tie-breaks.
 
+    Parameters
+    ----------
+    test_files : Sequence[WeightedTestFile]
+        The selected test files to validate in deterministic order.
+    shard_count : int
+        The bounded number of shard records.
+
+    Returns
+    -------
+    tuple[tuple[Path, ...], ...]
+        The matching partition test files records in deterministic order.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     validate_shard_inputs(
         shard_index=1,
         shard_count=shard_count,
@@ -128,14 +265,34 @@ def _argument_parser() -> argparse.ArgumentParser:
 
 
 def invoke_pytest(arguments: Sequence[str]) -> int:
-    """Invoke pytest in-process and normalize its exit status to an integer."""
+    """Invoke pytest in-process and normalize its exit status to an integer.
 
+    Parameters
+    ----------
+    arguments : Sequence[str]
+        The arguments evaluated while invoke pytest.
+
+    Returns
+    -------
+    int
+        The resolved int for invoke pytest.
+    """
     return int(pytest.main(list(arguments)))
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Select one shard and invoke pytest in this Python process."""
+    """Select one shard and invoke pytest in this Python process.
 
+    Parameters
+    ----------
+    argv : Sequence[str] | None, default=None
+        The argv evaluated while main.
+
+    Returns
+    -------
+    int
+        The process exit status; zero indicates success.
+    """
     parser = _argument_parser()
     namespace, pytest_arguments = parser.parse_known_args(
         list(argv) if argv is not None else None
@@ -162,7 +319,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     selected_weight = sum(weights_by_path[path] for path in selected_files)
     print(
         f"Integration shard {shard_index}/{shard_count}: "
-        f"{len(selected_files)} files, {selected_weight} weighted bytes."
+        f"{len(selected_files)} files, {selected_weight / 1_000:.1f} weighted seconds."
     )
 
     return invoke_pytest(

@@ -19,11 +19,22 @@ from maru.identity.policies import validate_convention_subject
 
 
 def default_organization_languages() -> list[str]:
+    """Return default organization languages.
+
+    Returns
+    -------
+    list[str]
+        The authorized default organization languages records in deterministic order.
+    """
     return ["en"]
 
 
 class Organization(UUIDTimeStampedModel):
+    """Store organization records."""
+
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         DRAFT = "draft", "Draft"
         ACTIVE = "active", "Active"
         SUSPENDED = "suspended", "Suspended"
@@ -115,6 +126,8 @@ class Organization(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("name", "id")
         constraints = [
             models.UniqueConstraint(
@@ -124,6 +137,15 @@ class Organization(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.slug = self.slug.lower()
         self.country_code = self.country_code.upper()
         self.default_language_codes = [
@@ -133,10 +155,19 @@ class Organization(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable Organization label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return self.name
 
 
 class ConventionSeries(UUIDTimeStampedModel):
+    """Store convention series records."""
+
     organization = models.ForeignKey(
         Organization,
         on_delete=models.PROTECT,
@@ -158,6 +189,8 @@ class ConventionSeries(UUIDTimeStampedModel):
     profile_version = models.PositiveIntegerField(default=1, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name_plural = "convention series"
         ordering = ("organization_id", "name", "id")
         constraints = [
@@ -169,16 +202,36 @@ class ConventionSeries(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.slug = self.slug.lower()
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable ConventionSeries label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.name} — {self.organization.name}"
 
 
 class OrganizationMembership(UUIDTimeStampedModel):
+    """Store organization membership records."""
+
     class State(models.TextChoices):
+        """Enumerate supported state values."""
+
         INVITED = "invited", "Invited"
         ACTIVE = "active", "Active"
         SUSPENDED = "suspended", "Suspended"
@@ -200,6 +253,8 @@ class OrganizationMembership(UUIDTimeStampedModel):
     ended_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -209,16 +264,33 @@ class OrganizationMembership(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record."""
         super().clean()
         if self.account_id:
             validate_convention_subject(self.account)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         if self.account_id:
             validate_convention_subject(self.account)
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable OrganizationMembership label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         relationship = self.relationship_label or self.get_state_display()
         return f"{self.account} — {relationship} at {self.organization}"
 
@@ -236,6 +308,8 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
     EXECUTIVE_BOARD_NAME = "Executive Board"
 
     class State(models.TextChoices):
+        """Enumerate supported state values."""
+
         PROVISIONING = "provisioning", "Provisioning"
         ACTIVE = "active", "Active"
         SUSPENDED = "suspended", "Suspended"
@@ -274,6 +348,8 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
     activated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization__name", "id")
         constraints = [
             models.CheckConstraint(
@@ -314,6 +390,13 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.provisioned_by_id and not self.provisioned_by.is_platform_administrator:
             raise ValidationError(
@@ -340,12 +423,28 @@ class OrganizationRepresentation(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.code = self.EXECUTIVE_BOARD_CODE
         self.name = self.EXECUTIVE_BOARD_NAME
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable OrganizationRepresentation label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.name} — {self.organization.name}"
 
 
@@ -353,9 +452,13 @@ class RepresentationAppointment(UUIDTimeStampedModel):
     """One invitation and accepted term in an organization representation."""
 
     class Role(models.TextChoices):
+        """Enumerate supported role values."""
+
         CONTROLLER = "controller", "Controller"
 
     class State(models.TextChoices):
+        """Enumerate supported state values."""
+
         INVITED = "invited", "Invited"
         ACCEPTED = "accepted", "Accepted"
         ACTIVE = "active", "Active"
@@ -402,6 +505,8 @@ class RepresentationAppointment(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("representation_id", "invited_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -474,6 +579,13 @@ class RepresentationAppointment(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.account_id:
             validate_convention_subject(self.account)
@@ -496,6 +608,15 @@ class RepresentationAppointment(UUIDTimeStampedModel):
                 )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.role = self.Role.CONTROLLER
         if self.account_id:
             validate_convention_subject(self.account)
@@ -503,4 +624,11 @@ class RepresentationAppointment(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable RepresentationAppointment label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.account} — {self.get_role_display()} at {self.representation}"

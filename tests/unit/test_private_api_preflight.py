@@ -59,7 +59,7 @@ def _malformed_post(path: str, *, actor: Account) -> WSGIRequest:
         HTTP_IDEMPOTENCY_KEY="not-a-uuid",
     )
     force_authenticate(request, user=actor)
-    return cast(WSGIRequest, request)
+    return cast("WSGIRequest", request)
 
 
 def _assert_private_no_store(response: Response) -> None:

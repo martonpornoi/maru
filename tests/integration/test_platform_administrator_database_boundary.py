@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from threading import Event
+from typing import TYPE_CHECKING
 
 import pytest
 from django.db import (
@@ -15,7 +15,6 @@ from django.db import (
 )
 from django.utils import timezone
 
-from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import (
     OrganizationMembership,
@@ -50,6 +49,11 @@ from tests.factories import (
     RoleBundleFactory,
 )
 from tests.workforce_helpers import create_department_for_test, save_position_for_test
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from maru.events.models import EventEdition
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

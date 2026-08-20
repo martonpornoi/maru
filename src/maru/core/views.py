@@ -191,8 +191,20 @@ def _require_possible_organization_authority(
     request: HttpRequest,
     actor: Account,
 ) -> None:
-    """Fail before tenant lookup when an account has no active scoped authority."""
+    """Fail before tenant lookup when an account has no active scoped authority.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     if actor.is_platform_administrator:
         return
     if has_active_admin_scope(request):
@@ -244,8 +256,24 @@ def _baseline_page_response(
     *,
     status: int = 200,
 ) -> TemplateResponse:
-    """Render a workflow in the canonical admin shell or isolated test shell."""
+    """Render a workflow in the canonical admin shell or isolated test shell.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    template_name : str
+        The human-readable template name shown to authorized readers.
+    context : dict[str, Any] | None, default=None
+        The request context supplied by the calling framework.
+    status : int, default=200
+        The closed status value to evaluate or expose.
+
+    Returns
+    -------
+    TemplateResponse
+        The HTTP response for the requested operation.
+    """
     use_admin_shell = request.path_info.startswith("/admin/platform/")
     page_id, page_class = _BASELINE_PAGE_PRESENTATION[template_name]
     template_context = admin.site.each_context(request) if use_admin_shell else {}
@@ -346,16 +374,36 @@ def _baseline_page_response(
 
 
 def baseline_root(request: HttpRequest) -> HttpResponse:
-    """Send the deliberately empty browser experience to its only home."""
+    """Send the deliberately empty browser experience to its only home.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     del request
     return redirect("baseline-admin-home")
 
 
 @login_required(login_url="staff-login")
 def baseline_administration_home(request: HttpRequest) -> HttpResponse:
-    """Render the platform-wide organization inventory for its administrators."""
+    """Render the platform-wide organization inventory for its administrators.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     _require_platform_administrator(request)
 
     load_failed = False
@@ -381,8 +429,18 @@ def baseline_administration_home(request: HttpRequest) -> HttpResponse:
 
 @login_required(login_url="staff-login")
 def baseline_create_organization(request: HttpRequest) -> HttpResponse:
-    """Create the minimum draft organization record for later completion."""
+    """Create the minimum draft organization record for later completion.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     actor = _require_platform_administrator(request)
     form = OrganizationCreationForm(request.POST or None)
     status = 200
@@ -439,8 +497,29 @@ def _organization_for_authorized_route(
     slug: str,
     capability_code: str,
 ) -> Organization:
-    """Resolve non-platform routes only inside the actor's possible scope."""
+    """Resolve non-platform routes only inside the actor's possible scope.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+    slug : str
+        The stable URL slug identifying the slug.
+    capability_code : str
+        The stable capability code required by the operation.
+
+    Returns
+    -------
+    Organization
+        The resolved Organization for organization for authorized route.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     if actor.is_platform_administrator:
         return _organization_for_record(slug)
     candidate_ids = authorized_admin_organization_ids(
@@ -531,8 +610,25 @@ def baseline_organization_record(
     request: HttpRequest,
     organization_slug: str,
 ) -> HttpResponse:
-    """Render and update one organization profile without changing its identity."""
+    """Render and update one organization profile without changing its identity.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_account(request)
     _require_possible_organization_authority(request, actor)
     try:
@@ -637,8 +733,20 @@ def baseline_delete_organization(
     request: HttpRequest,
     organization_slug: str,
 ) -> HttpResponse:
-    """Delete one confirmed, empty Draft organization."""
+    """Delete one confirmed, empty Draft organization.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     actor = _require_platform_administrator(request)
     try:
         organization = _organization_for_record(organization_slug)
@@ -701,8 +809,20 @@ def baseline_create_convention_series(
     request: HttpRequest,
     organization_slug: str,
 ) -> HttpResponse:
-    """Create one recurring convention identity beneath an organization."""
+    """Create one recurring convention identity beneath an organization.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     actor = _active_account(request)
     _require_possible_organization_authority(request, actor)
     try:
@@ -788,8 +908,29 @@ def baseline_convention_series_record(
     organization_slug: str,
     series_slug: str,
 ) -> HttpResponse:
-    """Render and update one scoped recurring convention brand."""
+    """Render and update one scoped recurring convention brand.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_account(request)
     _require_possible_organization_authority(request, actor)
     try:
@@ -913,8 +1054,29 @@ def baseline_create_event_edition(
     organization_slug: str,
     series_slug: str,
 ) -> HttpResponse:
-    """Create one Draft edition beneath an exact organization-owned series."""
+    """Create one Draft edition beneath an exact organization-owned series.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_account(request)
     _require_possible_organization_authority(request, actor)
     try:
@@ -1031,8 +1193,31 @@ def baseline_event_edition_record(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
-    """Render and update one exact edition record and its human activity."""
+    """Render and update one exact edition record and its human activity.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_account(request)
     _require_possible_organization_authority(request, actor)
     try:
@@ -1181,8 +1366,24 @@ def _context_action_input_error_response(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse | None:
-    """Reject undeclared context-action input without changing the session."""
+    """Reject undeclared context-action input without changing the session.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+
+    Returns
+    -------
+    HttpResponse | None
+        The HTTP response for the requested operation.
+    """
     form = StrictInputForm(request.POST)
     if form.is_valid():
         return None
@@ -1203,8 +1404,24 @@ def baseline_select_event_edition(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
-    """Persist one already authorized exact route chain as display context."""
+    """Persist one already authorized exact route chain as display context.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     actor = _active_account(request)
     _require_possible_organization_authority(request, actor)
     input_error = _context_action_input_error_response(
@@ -1256,8 +1473,24 @@ def baseline_clear_event_edition(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
-    """Clear display context without changing edition records or authority."""
+    """Clear display context without changing edition records or authority.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     actor = _active_account(request)
     _require_possible_organization_authority(request, actor)
     input_error = _context_action_input_error_response(
@@ -1302,6 +1535,18 @@ def baseline_clear_event_edition(
 
 
 def platform_home(request: HttpRequest) -> TemplateResponse:
+    """Render platform home.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Returns
+    -------
+    TemplateResponse
+        The HTTP response for this request.
+    """
     return TemplateResponse(
         request,
         "core/home.html",
@@ -1314,8 +1559,18 @@ def platform_home(request: HttpRequest) -> TemplateResponse:
 @login_required(login_url="staff-login")
 @ensure_csrf_cookie
 def my_maru_home(request: HttpRequest) -> TemplateResponse:
-    """Serve the focused personal surface inside Maru's shared visual shell."""
+    """Serve the focused personal surface inside Maru's shared visual shell.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    TemplateResponse
+        The HTTP response for the requested operation.
+    """
     actor = _active_account(request)
     context = admin.site.each_context(request)
     context.update(
@@ -1346,8 +1601,23 @@ def _safe_navigation_return_path(request: HttpRequest) -> str:
 @login_required(login_url="staff-login")
 @require_POST
 def update_navigation_pin(request: HttpRequest) -> HttpResponse:
-    """Change only the caller's preference; destinations remain policy-owned."""
+    """Change only the caller's preference; destinations remain policy-owned.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     actor = _active_account(request)
     if set(request.POST) - {
         "csrfmiddlewaretoken",
@@ -1384,8 +1654,18 @@ def update_navigation_pin(request: HttpRequest) -> HttpResponse:
 @login_required(login_url="staff-login")
 @ensure_csrf_cookie
 def administration_index(request: HttpRequest) -> HttpResponse:
-    """Serve a policy-filtered home without granting Django staff status."""
+    """Serve a policy-filtered home without granting Django staff status.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     actor = _active_account(request)
     extra_context: dict[str, Any] = {
         "has_permission": True,
@@ -1402,8 +1682,23 @@ def administration_index(request: HttpRequest) -> HttpResponse:
 @login_required(login_url="staff-login")
 @ensure_csrf_cookie
 def administration_workspace(request: HttpRequest) -> HttpResponse:
-    """Serve API-backed workflows inside the Django administration shell."""
+    """Serve API-backed workflows inside the Django administration shell.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     _active_account(request)
     if not has_active_admin_scope(request):
         raise PermissionDenied
@@ -1425,8 +1720,23 @@ def administration_workspace(request: HttpRequest) -> HttpResponse:
 
 
 def removed_administration_route(request: HttpRequest) -> HttpResponse:
-    """Keep retired administration entry points from becoming login redirects."""
+    """Keep retired administration entry points from becoming login redirects.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     del request
     raise Http404
 
@@ -1439,13 +1749,36 @@ def removed_administration_route(request: HttpRequest) -> HttpResponse:
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def liveness(request: Request) -> Response:
+    """Render liveness.
+
+    Parameters
+    ----------
+    request : Request
+        The incoming HTTP request.
+
+    Returns
+    -------
+    Response
+        The HTTP response for this request.
+    """
     del request
     return Response({"status": "ok"})
 
 
 def _append_invitation_runtime_readiness(dependencies: dict[str, str]) -> bool:
-    """Append one value-safe Page 10 dependency when production requires it."""
+    """Append one value-safe Page 10 dependency when production requires it.
 
+    Parameters
+    ----------
+    dependencies : dict[str, str]
+        The dependencies mapping to validate or transform.
+
+    Returns
+    -------
+    bool
+        `True` when Append one value-safe Page 10 dependency when production
+        requires it; otherwise `False`.
+    """
     if not bool(getattr(settings, "IDENTITY_INVITATION_ENCRYPTION_REQUIRED", False)):
         return True
     try:
@@ -1457,8 +1790,19 @@ def _append_invitation_runtime_readiness(dependencies: dict[str, str]) -> bool:
 
 
 def _append_logistics_runtime_readiness(dependencies: dict[str, str]) -> bool:
-    """Append the fail-closed Logistics catalog and current-session gate."""
+    """Append the fail-closed Logistics catalog and current-session gate.
 
+    Parameters
+    ----------
+    dependencies : dict[str, str]
+        The dependencies mapping to validate or transform.
+
+    Returns
+    -------
+    bool
+        `True` when Append the fail-closed Logistics catalog and current-session
+        gate; otherwise `False`.
+    """
     try:
         ready = logistics_current_session_is_ready()
     except (
@@ -1477,8 +1821,19 @@ def _append_logistics_runtime_readiness(dependencies: dict[str, str]) -> bool:
 def _append_bounded_domain_integrity_readiness(
     dependencies: dict[str, str],
 ) -> bool:
-    """Append value-safe integrity gates for the four mounted bounded contexts."""
+    """Append value-safe integrity gates for the four mounted bounded contexts.
 
+    Parameters
+    ----------
+    dependencies : dict[str, str]
+        The dependencies mapping to validate or transform.
+
+    Returns
+    -------
+    bool
+        `True` when Append value-safe integrity gates for the four mounted
+        bounded contexts; otherwise `False`.
+    """
     probes = (
         ("applications_integrity", applications_database_integrity_is_ready),
         ("charities_integrity", charities_database_integrity_is_ready),
@@ -1513,6 +1868,18 @@ def _append_bounded_domain_integrity_readiness(
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def readiness(request: Request) -> Response:
+    """Render readiness.
+
+    Parameters
+    ----------
+    request : Request
+        The incoming HTTP request.
+
+    Returns
+    -------
+    Response
+        The HTTP response for this request.
+    """
     del request
     require_exact_provenance = settings.REQUIRE_EXACT_AUTHORITY_PROVENANCE
     try:
@@ -1600,6 +1967,18 @@ def readiness(request: Request) -> Response:
 
 
 def build_info(request: HttpRequest) -> JsonResponse:
+    """Build info.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Returns
+    -------
+    JsonResponse
+        The HTTP response for this request.
+    """
     del request
     payload: dict[str, Any] = {
         "service": "maru",

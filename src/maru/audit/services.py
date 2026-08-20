@@ -20,6 +20,58 @@ MAX_BATCH_SIZE = 10_000
 
 @dataclass(frozen=True, slots=True)
 class AuditRecord:
+    """Describe audit record.
+
+    Attributes
+    ----------
+    principal_kind
+        The closed principal kind discriminator defined by the domain catalog.
+    principal_id
+        The principal identifier within the requested scope.
+    principal_context_id
+        The principal context identifier within the requested scope.
+    organization_id
+        The organization identifier that owns the requested resource.
+    event_edition_id
+        The event edition identifier within the requested scope.
+    capability_code
+        The stable capability code required by the operation.
+    operation
+        The stable operation code recorded in audit evidence.
+    target_type
+        The closed target type discriminator defined by the domain catalog.
+    target_id
+        The target identifier within the requested scope.
+    outcome
+        The outcome retained in this immutable projection.
+    reason_code
+        The stable reason code from the relevant closed catalog.
+    correlation_id
+        The request correlation identifier used for audit tracing.
+    source_channel
+        The closed channel code identifying where the request originated.
+    obligations
+        The obligations retained in this immutable projection.
+    changed_fields
+        The canonical field names changed by the operation.
+    causation_id
+        The causation identifier within the requested scope.
+    request_id
+        The correlation identifier attached to the incoming request.
+    idempotency_key_hash
+        The idempotency key hash retained in this immutable projection.
+    delegated
+        The delegated retained in this immutable projection.
+    elevated
+        The elevated retained in this immutable projection.
+    break_glass
+        The break glass retained in this immutable projection.
+    safe_metadata
+        The safe metadata mapping to validate or transform.
+    retention_class
+        The retention class retained in this immutable projection.
+    """
+
     principal_kind: str
     principal_id: UUID | None
     principal_context_id: UUID | None
@@ -50,6 +102,20 @@ def append_audit(
     *,
     occurred_at: datetime | None = None,
 ) -> AuditEvent:
+    """Append audit.
+
+    Parameters
+    ----------
+    record : AuditRecord
+        The domain record to validate, persist, or project.
+    occurred_at : datetime | None, default=None
+        The time at which the event occurred.
+
+    Returns
+    -------
+    AuditEvent
+        The AuditEvent established after append audit completes.
+    """
     values = asdict(record)
     values["obligations"] = list(record.obligations)
     values["changed_fields"] = list(record.changed_fields)
@@ -113,6 +179,23 @@ def _digest(previous_digest: str, events: Iterable[AuditEvent]) -> str:
 
 @transaction.atomic
 def seal_pending_audit_events(*, limit: int = 1_000) -> AuditIntegrityBatch | None:
+    """Seal pending audit events.
+
+    Parameters
+    ----------
+    limit : int, default=1000
+        The maximum number of records to process.
+
+    Returns
+    -------
+    AuditIntegrityBatch | None
+        The matching AuditIntegrityBatch, or `None` when no authorized record exists.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if limit < 1 or limit > MAX_BATCH_SIZE:
         raise ValidationError(
             f"Audit batch size must be between 1 and {MAX_BATCH_SIZE}.",
@@ -146,6 +229,13 @@ def seal_pending_audit_events(*, limit: int = 1_000) -> AuditIntegrityBatch | No
 
 
 def verify_audit_integrity() -> bool:
+    """Verify audit integrity.
+
+    Returns
+    -------
+    bool
+        Whether the requested condition is satisfied.
+    """
     expected_previous = GENESIS_DIGEST
     expected_sequence = 1
     for batch in AuditIntegrityBatch.objects.order_by("sequence"):

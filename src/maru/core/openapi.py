@@ -218,8 +218,32 @@ def require_explicit_domain_request_bodies(
     request: object,
     public: bool,
 ) -> dict[str, Any]:
-    """Expose runtime-true strict request contracts and reject schema drift."""
+    """Expose runtime-true strict request contracts and reject schema drift.
 
+    Parameters
+    ----------
+    result : dict[str, Any]
+        The result mapping to validate or transform.
+    generator : object
+        The generator evaluated while require explicit domain request bodies.
+    request : object
+        The incoming HTTP request and authenticated principal context.
+    public : bool
+        The public evaluated while require explicit domain request bodies.
+
+    Returns
+    -------
+    dict[str, Any]
+        A mapping containing the resolved require explicit domain request bodies
+        data.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    TypeError
+        If the caller supplies an object of an unsupported type.
+    """
     del request, public
     matched: dict[str, tuple[str, str]] = {}
     paths = result.get("paths")

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any, ClassVar
 from uuid import uuid4
 
@@ -24,7 +23,6 @@ MAX_LONG_PROFILE_VALUE_LENGTH = 4_000
 MAX_PROFILE_VALUE_CHOICES = 64
 MIN_SIGNED_32_BIT_INTEGER = -(2**31)
 MAX_SIGNED_32_BIT_INTEGER = (2**31) - 1
-_STRICT_SIGNED_BASE10 = re.compile(r"(?:0|-?[1-9][0-9]*)\Z")
 _MAX_SIGNED_BASE10_DIGITS = 11
 
 
@@ -42,17 +40,56 @@ class StrictSignedBase10IntegerField(forms.Field):
         max_value: int = MAX_SIGNED_32_BIT_INTEGER,
         **kwargs: Any,
     ) -> None:
+        """Initialize the StrictSignedBase10IntegerField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        min_value : int, default=MIN_SIGNED_32_BIT_INTEGER
+            The min value evaluated while strict signed base10 integer field.
+        max_value : int, default=MAX_SIGNED_32_BIT_INTEGER
+            The max value evaluated while strict signed base10 integer field.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.min_value = min_value
         self.max_value = max_value
 
     def to_python(self, value: object) -> int | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        int | None
+            The canonical Python representation, or `None` for empty input.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if value in self.empty_values:
             return None
+        if not isinstance(value, str) or len(value) > _MAX_SIGNED_BASE10_DIGITS:
+            raise forms.ValidationError(
+                self.error_messages["invalid"],
+                code="invalid",
+            )
+        negative = value.startswith("-")
+        digits = value[1:] if negative else value
         if (
-            not isinstance(value, str)
-            or len(value) > _MAX_SIGNED_BASE10_DIGITS
-            or _STRICT_SIGNED_BASE10.fullmatch(value) is None
+            not digits
+            or not digits.isascii()
+            or not digits.isdecimal()
+            or (len(digits) > 1 and digits.startswith("0"))
+            or (negative and digits == "0")
         ):
             raise forms.ValidationError(
                 self.error_messages["invalid"],
@@ -158,6 +195,17 @@ class ProfileExtensionValueForm(StrictInputForm):
         profile_field: ProfileExtensionValueFieldProjection,
         **kwargs: Any,
     ) -> None:
+        """Initialize the ProfileExtensionValueForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        profile_field : ProfileExtensionValueFieldProjection
+            The profile field evaluated while profile extension value form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.profile_field = profile_field
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("value", _value_initial(profile_field))
@@ -169,6 +217,18 @@ class ProfileExtensionValueForm(StrictInputForm):
         self.order_fields(("value", "expected_sequence", "retry_key"))
 
     def clean_value(self) -> object:
+        """Validate and normalize the value field.
+
+        Returns
+        -------
+        object
+            The validated and normalized value.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = self.cleaned_data["value"]
         if (
             self.profile_field.field_type == QuestionFieldType.MULTIPLE_CHOICE
@@ -195,6 +255,15 @@ class StaffProfileExtensionValueForm(ProfileExtensionValueForm):
     )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the StaffProfileExtensionValueForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.order_fields(("value", "reason", "expected_sequence", "retry_key"))
 

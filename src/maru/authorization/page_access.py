@@ -32,6 +32,11 @@ from maru.identity.models import Account
 PAGE_ACCESS_CONTRACT_VERSION = "page-access.v1"
 PAGE_ACCESS_SIGNING_SALT = "maru.authorization.page-access.v1"
 MAX_PAGE_ACCESS_TOKEN_LENGTH = 2_048
+DEFAULT_SCOPED_ACCESS_EXPLANATION = (
+    "Access is computed from current scoped capabilities, exact Department "
+    "scope, and immutable role assignments. This page does not store its "
+    "own sharing list."
+)
 
 PageAccessPolicy = Literal[
     "scoped",
@@ -48,7 +53,25 @@ PageAccessPolicy = Literal[
 
 @dataclass(frozen=True, slots=True)
 class PageAccessSpec:
-    """Code-owned description of how one rendered page is governed."""
+    """Code-owned description of how one rendered page is governed.
+
+    Attributes
+    ----------
+    policy
+        The closed policy definition governing the requested decision.
+    scope_label
+        The disclosure-safe label for the resolved authorization scope.
+    explanation
+        The disclosure-safe explanation presented to the caller.
+    target
+        The exact domain resource targeted by the operation.
+    intents
+        The intents retained in this immutable projection.
+    audience_labels
+        The audience labels retained in this immutable projection.
+    mutation_supported
+        The mutation supported retained in this immutable projection.
+    """
 
     policy: PageAccessPolicy
     scope_label: str
@@ -61,7 +84,31 @@ class PageAccessSpec:
 
 @dataclass(frozen=True, slots=True)
 class PageAccessSummary:
-    """Disclosure-safe component context shared by every HTML surface."""
+    """Disclosure-safe component context shared by every HTML surface.
+
+    Attributes
+    ----------
+    available
+        The available retained in this immutable projection.
+    policy
+        The closed policy definition governing the requested decision.
+    policy_label
+        The human-readable policy label shown to authorized readers.
+    scope_label
+        The disclosure-safe label for the resolved authorization scope.
+    explanation
+        The disclosure-safe explanation presented to the caller.
+    audience_labels
+        The audience labels retained in this immutable projection.
+    actions
+        The actions retained in this immutable projection.
+    can_manage
+        The can manage retained in this immutable projection.
+    manage_url
+        The validated absolute HTTPS manage url.
+    preview_url
+        The validated absolute HTTPS preview url.
+    """
 
     available: bool
     policy: PageAccessPolicy
@@ -93,14 +140,26 @@ def scoped_page_access(
     target: ResolvedAuthorizationTarget | None,
     scope_label: str,
     intents: tuple[AccessIntent, ...],
-    explanation: str = (
-        "Access is computed from current scoped capabilities, exact Department "
-        "scope, and immutable role assignments. This page does not store its "
-        "own sharing list."
-    ),
+    explanation: str = DEFAULT_SCOPED_ACCESS_EXPLANATION,
 ) -> PageAccessSpec:
-    """Describe one mutable organizer target without granting authority."""
+    """Describe one mutable organizer target without granting authority.
 
+    Parameters
+    ----------
+    target : ResolvedAuthorizationTarget | None
+        The exact domain resource targeted by the operation.
+    scope_label : str
+        The disclosure-safe label for the resolved authorization scope.
+    intents : tuple[AccessIntent, ...]
+        The intents evaluated while scoped page access.
+    explanation : str, default=DEFAULT_SCOPED_ACCESS_EXPLANATION
+        The disclosure-safe explanation presented to the caller.
+
+    Returns
+    -------
+    PageAccessSpec
+        The resolved PageAccessSpec for scoped page access.
+    """
     return PageAccessSpec(
         policy="scoped",
         scope_label=scope_label,
@@ -118,8 +177,29 @@ def fixed_page_access(
     explanation: str,
     audience_labels: tuple[str, ...] = (),
 ) -> PageAccessSpec:
-    """Describe a code-owned audience or relationship policy."""
+    """Describe a code-owned audience or relationship policy.
 
+    Parameters
+    ----------
+    policy : PageAccessPolicy
+        The closed policy definition governing the requested decision.
+    scope_label : str
+        The disclosure-safe label for the resolved authorization scope.
+    explanation : str
+        The disclosure-safe explanation presented to the caller.
+    audience_labels : tuple[str, ...], default=()
+        The audience labels evaluated while fixed page access.
+
+    Returns
+    -------
+    PageAccessSpec
+        The resolved PageAccessSpec for fixed page access.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     if policy == "scoped":
         raise ValueError("Use scoped_page_access for mutable scoped authority.")
     return PageAccessSpec(
@@ -132,8 +212,13 @@ def fixed_page_access(
 
 
 def unavailable_page_access() -> PageAccessSummary:
-    """Return a stable empty value for pages without a resolvable target."""
+    """Return a stable empty value for pages without a resolvable target.
 
+    Returns
+    -------
+    PageAccessSummary
+        The resolved PageAccessSummary for unavailable page access.
+    """
     return PageAccessSummary(
         available=False,
         policy="fixed",
@@ -153,8 +238,20 @@ def build_page_access_summary(
     principal: object,
     spec: PageAccessSpec,
 ) -> PageAccessSummary:
-    """Compute one component without trusting selected navigation context."""
+    """Build page access summary.
 
+    Parameters
+    ----------
+    principal : object
+        The authenticated principal whose authority is evaluated.
+    spec : PageAccessSpec
+        The spec evaluated while build page access summary.
+
+    Returns
+    -------
+    PageAccessSummary
+        The resolved PageAccessSummary for build page access summary.
+    """
     if spec.policy != "scoped":
         return PageAccessSummary(
             available=True,
@@ -221,8 +318,18 @@ def _target_payload(target: ResolvedAuthorizationTarget) -> dict[str, object]:
 
 
 def encode_page_access_target(target: ResolvedAuthorizationTarget) -> str:
-    """Sign a server-resolved scope for a contextual workspace link."""
+    """Sign a server-resolved scope for a contextual workspace link.
 
+    Parameters
+    ----------
+    target : ResolvedAuthorizationTarget
+        The exact domain resource targeted by the operation.
+
+    Returns
+    -------
+    str
+        The normalized text for encode page access target.
+    """
     return signing.dumps(
         _target_payload(target),
         salt=PAGE_ACCESS_SIGNING_SALT,
@@ -241,8 +348,19 @@ def _optional_uuid(value: object) -> UUID | None:
 def decode_page_access_target(  # noqa: PLR0911
     token: str,
 ) -> ResolvedAuthorizationTarget | None:
-    """Verify, close, and re-resolve a signed target against persisted scope."""
+    """Verify, close, and re-resolve a signed target against persisted scope.
 
+    Parameters
+    ----------
+    token : str
+        The untrusted opaque token to authenticate or digest.
+
+    Returns
+    -------
+    ResolvedAuthorizationTarget | None
+        The ResolvedAuthorizationTarget | None produced by decode page access
+        target.
+    """
     if not token or len(token) > MAX_PAGE_ACCESS_TOKEN_LENGTH:
         return None
     try:
@@ -257,7 +375,7 @@ def decode_page_access_target(  # noqa: PLR0911
         "resource_binding_id",
     }:
         return None
-    values = cast(dict[str, Any], raw)
+    values = cast("dict[str, Any]", raw)
     if values["contract"] != PAGE_ACCESS_CONTRACT_VERSION:
         return None
     try:

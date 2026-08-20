@@ -6,6 +6,7 @@ import json
 import logging
 import re
 from io import StringIO
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
@@ -40,13 +41,15 @@ from maru.authorization.policy import decide, resolve_organization_target
 from maru.authorization.provenance_readiness import (
     build_authority_provenance_readiness_report,
 )
-from maru.identity.models import Account
-from maru.organizations.models import Organization
 from tests.factories import AccountFactory, CapabilityGrantFactory, OrganizationFactory
 from tests.support.authority import (
     activate_synthetic_board,
     create_provenance_backed_role_bundle,
 )
+
+if TYPE_CHECKING:
+    from maru.identity.models import Account
+    from maru.organizations.models import Organization
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

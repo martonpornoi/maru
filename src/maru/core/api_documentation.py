@@ -23,6 +23,20 @@ class IsCurrentPlatformAdministrator(BasePermission):
     message = "An active platform administrator is required."
 
     def has_permission(self, request: Request, view: Any) -> bool:
+        """Return whether the request may access the resource.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        view : Any
+            The view evaluated while has permission.
+
+        Returns
+        -------
+        bool
+            `True` when the request may access the resource; otherwise `False`.
+        """
         del view
         actor = request.user
         if not isinstance(actor, Account) or not actor.is_authenticated:
@@ -69,6 +83,24 @@ class PlatformApiSchemaView(SpectacularAPIView):
         *args: Any,
         **kwargs: Any,
     ) -> Response:
+        """Apply the private documentation response headers.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        response : Response
+            The HTTP response before policy headers or content are finalized.
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         return _harden_documentation_response(
             super().finalize_response(request, response, *args, **kwargs)
         )
@@ -91,6 +123,24 @@ class PlatformApiSwaggerView(SpectacularSwaggerView):
         *args: Any,
         **kwargs: Any,
     ) -> Response:
+        """Apply the private documentation response headers.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        response : Response
+            The HTTP response before policy headers or content are finalized.
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         return _harden_documentation_response(
             super().finalize_response(request, response, *args, **kwargs)
         )
@@ -113,6 +163,24 @@ class PlatformApiRedocView(SpectacularRedocView):
         *args: Any,
         **kwargs: Any,
     ) -> Response:
+        """Apply the private documentation response headers.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        response : Response
+            The HTTP response before policy headers or content are finalized.
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         return _harden_documentation_response(
             super().finalize_response(request, response, *args, **kwargs)
         )

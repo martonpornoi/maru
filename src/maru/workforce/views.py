@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
-from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -89,6 +88,9 @@ from maru.workforce.structure_snapshot import (
     StructureSnapshotRead,
     load_version_fenced_snapshot,
 )
+
+if TYPE_CHECKING:
+    from django import forms
 
 logger = logging.getLogger(__name__)
 
@@ -180,8 +182,32 @@ def _load_organization_structure_snapshot(
     series_slug: str,
     edition_slug: str,
 ) -> StructureSnapshotRead[_OrganizationStructureSnapshot]:
-    """Compose every Page 9 label and relationship in one MVCC snapshot."""
+    """Compose every Page 9 label and relationship in one MVCC snapshot.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+
+    Returns
+    -------
+    StructureSnapshotRead[_OrganizationStructureSnapshot]
+        The StructureSnapshotRead[_OrganizationStructureSnapshot] produced by
+        load organization structure snapshot.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     evaluated_at = timezone_now()
     organization, series, edition = authorized_admin_edition_for_route(
         request=request,
@@ -324,8 +350,18 @@ def _organization_structure_dependency_failure(
 
 
 def _organization_structure_bad_request(request: HttpRequest) -> TemplateResponse:
-    """Return a name-free response for unsupported URL input."""
+    """Return a name-free response for unsupported URL input.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    TemplateResponse
+        The HTTP response for the requested operation.
+    """
     context = admin.site.each_context(request)
     context.update(
         {
@@ -365,8 +401,33 @@ def _authorize_structure_route(
     edition_slug: str,
     require_manage: bool,
 ) -> tuple[Organization, ConventionSeries, EventEdition]:
-    """Authorize exact route scope before parsing an action's submitted body."""
+    """Authorize exact route scope before parsing an action's submitted body.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+    require_manage : bool
+        Whether to require manage.
+
+    Returns
+    -------
+    tuple[Organization, ConventionSeries, EventEdition]
+        The matching authorize structure route records in deterministic order.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     organization, series, edition = authorized_admin_edition_for_route(
         request=request,
         actor=actor,
@@ -416,8 +477,27 @@ def _load_structure_snapshot_without_disclosure(
     series_slug: str,
     edition_slug: str,
 ) -> _OrganizationStructureSnapshot:
-    """Load bounded choices after authorization but before parsing a POST."""
+    """Load bounded choices after authorization but before parsing a POST.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+
+    Returns
+    -------
+    _OrganizationStructureSnapshot
+        The _OrganizationStructureSnapshot produced by load structure snapshot
+        without disclosure.
+    """
     return load_version_fenced_snapshot(
         load=lambda: _load_organization_structure_snapshot(
             request=request,
@@ -439,8 +519,38 @@ def _load_audited_structure_page(
     route_name: str,
     require_manage: bool,
 ) -> _OrganizationStructurePageRead:
-    """Repeat current policy and audit before releasing any structure labels."""
+    """Repeat current policy and audit before releasing any structure labels.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+    route_name : str
+        The human-readable route name shown to authorized readers.
+    require_manage : bool
+        Whether to require manage.
+
+    Returns
+    -------
+    _OrganizationStructurePageRead
+        The _OrganizationStructurePageRead produced by load audited structure
+        page.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    """
     snapshot = _load_structure_snapshot_without_disclosure(
         request=request,
         actor=actor,
@@ -721,8 +831,13 @@ def _add_structure_validation_errors(
 
 
 def _log_internal_structure_validation_key(action: str) -> None:
-    """Log an invariant breach without serializing the private exception detail."""
+    """Log an invariant breach without serializing the private exception detail.
 
+    Parameters
+    ----------
+    action : str
+        The stable action code describing the requested transition.
+    """
     logger.error("%s command returned an internal validation key", action)
 
 
@@ -822,8 +937,24 @@ def organization_structure(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
-    """Render one complete bounded edition structure in the shared shell."""
+    """Render one complete bounded edition structure in the shared shell.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     actor = _active_admin_account(request)
     try:
         _authorize_structure_route(
@@ -1128,8 +1259,45 @@ def _render_structure_action_failure(
     form: forms.Form,
     active_action: str = "",
 ) -> HttpResponse:
-    """Audit one name-bearing validation/conflict rerender or fail name-free."""
+    """Audit one name-bearing validation/conflict rerender or fail name-free.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    renderer : str
+        The renderer resolved from the authorized request.
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_slug : str
+        The stable URL slug identifying the organization.
+    series_slug : str
+        The stable URL slug identifying the series.
+    edition_slug : str
+        The stable URL slug identifying the edition.
+    status : int
+        The closed status value to evaluate or expose.
+    action_error : str
+        The action error resolved from the authorized request.
+    reload_required : bool, default=False
+        The reload required resolved from the authorized request.
+    department_id : UUID | None, default=None
+        The department identifier within the requested scope.
+    form : forms.Form
+        The form resolved from the authorized request.
+    active_action : str, default=''
+        The active action resolved from the authorized request.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    TypeError
+        If the caller supplies an object of an unsupported type.
+    """
     try:
         if renderer == "template":
             if not isinstance(form, StructureTemplateApplicationForm):
@@ -1193,6 +1361,24 @@ def organization_structure_template_application(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render organization structure template application.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _active_admin_account(request)
     try:
         _authorize_structure_route(
@@ -1226,6 +1412,24 @@ def organization_structure_department_create(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render organization structure department create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _active_admin_account(request)
     try:
         _authorize_structure_route(
@@ -1260,6 +1464,26 @@ def organization_structure_department(
     edition_slug: str,
     department_id: UUID,
 ) -> HttpResponse:
+    """Render organization structure department.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    department_id : UUID
+        The identifier of the department.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _active_admin_account(request)
     try:
         _authorize_structure_route(
@@ -1294,6 +1518,31 @@ def apply_organization_structure_template(  # noqa: PLR0911
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Apply organization structure template.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, snapshot = _preflight_structure_post(
             request,
@@ -1333,7 +1582,7 @@ def apply_organization_structure_template(  # noqa: PLR0911
             expected_version=int(form.cleaned_data["expected_version"]),
             confirmation_name=str(form.cleaned_data["confirmation_name"]),
             reason=str(form.cleaned_data["reason"]),
-            retry_key=cast(UUID, form.cleaned_data["retry_key"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             source_channel="web",
@@ -1400,6 +1649,29 @@ def create_organization_structure_department(  # noqa: PLR0911
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Create organization structure department.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, snapshot = _preflight_structure_post(
             request,
@@ -1438,13 +1710,13 @@ def create_organization_structure_department(  # noqa: PLR0911
             name=str(form.cleaned_data["name"]),
             description=str(form.cleaned_data["description"]),
             parent_department_id=cast(
-                UUID | None,
+                "UUID | None",
                 form.cleaned_data["parent_department_id"],
             ),
             display_order=None,
             expected_version=int(form.cleaned_data["expected_version"]),
             reason=str(form.cleaned_data["reason"]),
-            retry_key=cast(UUID, form.cleaned_data["retry_key"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             source_channel="web",
@@ -1529,6 +1801,31 @@ def update_organization_structure_department(  # noqa: PLR0911
     edition_slug: str,
     department_id: UUID,
 ) -> HttpResponse:
+    """Update organization structure department.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    department_id : UUID
+        The identifier of the department.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, snapshot = _preflight_structure_post(
             request,
@@ -1574,7 +1871,7 @@ def update_organization_structure_department(  # noqa: PLR0911
             name=str(form.cleaned_data["name"]),
             description=str(form.cleaned_data["description"]),
             parent_department_id=cast(
-                UUID | None,
+                "UUID | None",
                 form.cleaned_data["parent_department_id"],
             ),
             display_order=None,
@@ -1668,6 +1965,33 @@ def retire_organization_structure_department(  # noqa: PLR0911
     edition_slug: str,
     department_id: UUID,
 ) -> HttpResponse:
+    """Retire organization structure department.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    department_id : UUID
+        The identifier of the department.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, snapshot = _preflight_structure_post(
             request,
@@ -1781,6 +2105,33 @@ def delete_organization_structure_department(  # noqa: PLR0911
     edition_slug: str,
     department_id: UUID,
 ) -> HttpResponse:
+    """Delete organization structure department.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    department_id : UUID
+        The identifier of the department.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     try:
         actor, snapshot = _preflight_structure_post(
             request,
@@ -1881,6 +2232,20 @@ def volunteer_opportunities(
     request: HttpRequest,
     edition_id: UUID,
 ) -> TemplateResponse:
+    """Render volunteer opportunities.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    TemplateResponse
+        The HTTP response for this request.
+    """
     edition = get_object_or_404(
         EventEdition.objects.exclude(lifecycle__in=("archived", "cancelled")),
         id=edition_id,
@@ -1932,6 +2297,27 @@ def apply_for_opportunity(
     edition_id: UUID,
     opportunity_id: UUID,
 ) -> HttpResponse:
+    """Apply for opportunity.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    opportunity_id : UUID
+        The identifier of the opportunity.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     account = _account(request)
     if account is None:
         raise Http404
@@ -1951,7 +2337,7 @@ def apply_for_opportunity(
             submit_volunteer_application(
                 actor=account,
                 opportunity_id=opportunity.id,
-                motivation=cast(str, form.cleaned_data["motivation"]),
+                motivation=cast("str", form.cleaned_data["motivation"]),
                 correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             )
         except ValidationError as error:
@@ -1970,6 +2356,25 @@ def my_onboarding_documents(
     request: HttpRequest,
     edition_id: UUID,
 ) -> HttpResponse:
+    """Render my onboarding documents.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     account = _account(request)
     if account is None:
         raise Http404
@@ -1995,6 +2400,27 @@ def upload_onboarding_document_view(
     edition_id: UUID,
     document_request_id: UUID,
 ) -> HttpResponse:
+    """Render upload onboarding document view.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    document_request_id : UUID
+        The identifier of the document request.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     account = _account(request)
     if account is None:
         raise Http404
@@ -2032,6 +2458,25 @@ def download_onboarding_document(
     request: HttpRequest,
     document_request_id: UUID,
 ) -> FileResponse:
+    """Download onboarding document.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    document_request_id : UUID
+        The identifier of the document request.
+
+    Returns
+    -------
+    FileResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     actor = _account(request)
     if actor is None:
         raise Http404

@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from uuid import UUID, uuid4
 
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.forms import Form
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -71,6 +70,9 @@ from maru.authorization.models import RoleBundle
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.workforce.models import Department
+
+if TYPE_CHECKING:
+    from django.forms import Form
 
 
 def _actor(request: HttpRequest) -> Account:
@@ -331,6 +333,27 @@ def application_definition_workspace(
     organization_id: UUID,
     edition_id: UUID,
 ) -> HttpResponse:
+    """Render application definition workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -365,6 +388,29 @@ def application_starter_copy_page(
     edition_id: UUID,
     starter_code: str,
 ) -> HttpResponse:
+    """Render application starter copy page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    starter_code : str
+        The immutable starter-catalog code.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -409,6 +455,29 @@ def application_starter_copy(
     edition_id: UUID,
     starter_code: str,
 ) -> HttpResponse:
+    """Render application starter copy.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    starter_code : str
+        The immutable starter-catalog code.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     actor = _actor(request)
     definition_workspace(
         actor=actor,
@@ -468,6 +537,29 @@ def application_definition_detail(
     edition_id: UUID,
     definition_id: UUID,
 ) -> HttpResponse:
+    """Render application definition detail.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -514,6 +606,24 @@ def application_definition_configure(
     edition_id: UUID,
     definition_id: UUID,
 ) -> HttpResponse:
+    """Render application definition configure.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor, edition, definition = _definition_for_post(
         request, organization_id, edition_id, definition_id
     )
@@ -581,6 +691,24 @@ def application_section_add(
     edition_id: UUID,
     definition_id: UUID,
 ) -> HttpResponse:
+    """Render application section add.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor, edition, definition = _definition_for_post(
         request, organization_id, edition_id, definition_id
     )
@@ -630,6 +758,24 @@ def application_question_add(
     edition_id: UUID,
     definition_id: UUID,
 ) -> HttpResponse:
+    """Render application question add.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor, edition, definition = _definition_for_post(
         request, organization_id, edition_id, definition_id
     )
@@ -747,6 +893,24 @@ def application_definition_activate(
     edition_id: UUID,
     definition_id: UUID,
 ) -> HttpResponse:
+    """Render application definition activate.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _lifecycle_command(
         request,
         organization_id=organization_id,
@@ -764,6 +928,24 @@ def application_definition_retire(
     edition_id: UUID,
     definition_id: UUID,
 ) -> HttpResponse:
+    """Render application definition retire.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _lifecycle_command(
         request,
         organization_id=organization_id,
@@ -781,6 +963,24 @@ def application_definition_successor(
     edition_id: UUID,
     definition_id: UUID,
 ) -> HttpResponse:
+    """Render application definition successor.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor, edition, definition = _definition_for_post(
         request, organization_id, edition_id, definition_id
     )
@@ -825,6 +1025,23 @@ def _start_form() -> StartSubmissionForm:
 @login_required(login_url="staff-login")
 @require_GET
 def my_application_index(request: HttpRequest) -> HttpResponse:
+    """Render my application index.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -880,6 +1097,27 @@ def my_application_workspace(
     organization_id: UUID,
     edition_id: UUID,
 ) -> HttpResponse:
+    """Render my application workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -931,6 +1169,24 @@ def application_submission_start(
     edition_id: UUID,
     definition_id: UUID,
 ) -> HttpResponse:
+    """Render application submission start.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    definition_id : UUID
+        The identifier of the definition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     form = StartSubmissionForm(request.POST)
     if not form.is_valid():
@@ -1012,7 +1268,7 @@ def _submission_response(
     rows = list(_submission_answer_rows(actor=actor, submission=submission))
     if active_question_id is not None and isinstance(active_form, ApplicantAnswerForm):
         for row in rows:
-            question = cast(ApplicationQuestion, row["question"])
+            question = cast("ApplicationQuestion", row["question"])
             if question.id == active_question_id:
                 row["form"] = active_form
                 break
@@ -1058,6 +1314,29 @@ def my_application_detail(
     edition_id: UUID,
     submission_id: UUID,
 ) -> HttpResponse:
+    """Render my application detail.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -1116,6 +1395,29 @@ def application_answer_append(
     edition_id: UUID,
     submission_id: UUID,
 ) -> HttpResponse:
+    """Render application answer append.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     actor = _actor(request)
     submission = _owned_submission_for_post(
         actor=actor,
@@ -1181,6 +1483,24 @@ def application_submit(
     edition_id: UUID,
     submission_id: UUID,
 ) -> HttpResponse:
+    """Render application submit.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     submission = _owned_submission_for_post(
         actor=actor,
@@ -1229,6 +1549,27 @@ def application_review_workspace(
     organization_id: UUID,
     edition_id: UUID,
 ) -> HttpResponse:
+    """Render application review workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -1332,6 +1673,29 @@ def application_review_detail(
     edition_id: UUID,
     submission_id: UUID,
 ) -> HttpResponse:
+    """Render application review detail.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -1371,6 +1735,29 @@ def application_review_decision(
     edition_id: UUID,
     submission_id: UUID,
 ) -> HttpResponse:
+    """Render application review decision.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    submission_id : UUID
+        The identifier of the submission.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _actor(request)
     try:
         submission = review_submission_detail(

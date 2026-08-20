@@ -1,5 +1,6 @@
 from datetime import timedelta
 from io import StringIO
+from typing import Never
 from uuid import uuid4
 
 import pytest
@@ -225,7 +226,7 @@ def test_identity_services_are_enumeration_safe_rate_limited_and_revoke_sessions
 
 
 def test_identity_delivery_failure_is_durable_and_retryable(monkeypatch) -> None:
-    def unavailable(*args, **kwargs):
+    def unavailable(*args, **kwargs) -> Never:
         raise OSError("synthetic mail outage")
 
     monkeypatch.setattr(
@@ -246,7 +247,7 @@ def test_identity_delivery_failure_is_durable_and_retryable(monkeypatch) -> None
 
     delivered: list[str] = []
 
-    def available(*, account, purpose, raw_token):
+    def available(*, account, purpose, raw_token) -> None:
         del account, purpose
         delivered.append(raw_token)
 

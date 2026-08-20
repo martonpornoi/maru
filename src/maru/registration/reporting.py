@@ -6,8 +6,7 @@ import csv
 from collections import Counter
 from dataclasses import dataclass
 from io import StringIO
-from typing import cast
-from uuid import UUID
+from typing import TYPE_CHECKING, cast
 
 from django.db.models import Prefetch, QuerySet
 
@@ -22,6 +21,9 @@ from maru.registration.models import (
 from maru.registration.presentation import attendance_labels
 from maru.registration.profile_choices import LANGUAGE_LABELS
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 COMING_STATES = (
     Registration.State.CONFIRMED,
     Registration.State.CHECKED_IN,
@@ -31,6 +33,18 @@ MAX_SYNCHRONOUS_REPORT_ROWS = 5_000
 
 @dataclass(frozen=True, slots=True)
 class AttendeeReportFilters:
+    """Describe attendee report filters.
+
+    Attributes
+    ----------
+    search
+        The search retained in this immutable projection.
+    country_code
+        The stable country code from the relevant closed catalog.
+    level
+        The level retained in this immutable projection.
+    """
+
     search: str = ""
     country_code: str = ""
     level: str = ""
@@ -41,8 +55,20 @@ def attendee_report_queryset(
     organization_id: UUID,
     edition_id: UUID,
 ) -> QuerySet[Registration]:
-    """Return the trusted, edition-scoped source for attendee reporting."""
+    """Return the trusted, edition-scoped source for attendee reporting.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    QuerySet[Registration]
+        The matching attendee report queryset records in deterministic order.
+    """
     return (
         Registration.objects.filter(
             organization_id=organization_id,
@@ -80,7 +106,7 @@ def attendee_report_queryset(
 
 def _badge_name(registration: Registration) -> tuple[str, str]:
     submission = cast(
-        RegistrationSubmission | None,
+        "RegistrationSubmission | None",
         getattr(registration, "submission", None),
     )
     if submission is not None:
@@ -108,14 +134,24 @@ def _badge_name(registration: Registration) -> tuple[str, str]:
 
 def _profile(registration: Registration) -> AttendeeRegistrationProfile | None:
     return cast(
-        AttendeeRegistrationProfile | None,
+        "AttendeeRegistrationProfile | None",
         getattr(registration, "attendee_profile", None),
     )
 
 
 def attendee_report_rows(registrations: list[Registration]) -> list[dict[str, object]]:
-    """Create the minimized row projection shared by the page and CSV export."""
+    """Create the minimized row projection shared by the page and CSV export.
 
+    Parameters
+    ----------
+    registrations : list[Registration]
+        The registrations evaluated while attendee report rows.
+
+    Returns
+    -------
+    list[dict[str, object]]
+        The matching attendee report rows records in deterministic order.
+    """
     rows: list[dict[str, object]] = []
     for registration in registrations:
         profile = _profile(registration)
@@ -154,6 +190,20 @@ def filter_attendee_report_rows(
     rows: list[dict[str, object]],
     filters: AttendeeReportFilters,
 ) -> list[dict[str, object]]:
+    """Return filter attendee report rows.
+
+    Parameters
+    ----------
+    rows : list[dict[str, object]]
+        The database rows included in the integrity evaluation.
+    filters : AttendeeReportFilters
+        The filters evaluated while filter attendee report rows.
+
+    Returns
+    -------
+    list[dict[str, object]]
+        A disclosure-safe mapping for filter attendee report rows.
+    """
     search = filters.search.strip().casefold()
     country_filter = filters.country_code.strip()
     country_code = (
@@ -166,7 +216,7 @@ def filter_attendee_report_rows(
             continue
         if country_code not in ("", "unknown") and row["country_code"] != country_code:
             continue
-        labels = cast(list[dict[str, str]], row["attendance_labels"])
+        labels = cast("list[dict[str, str]]", row["attendance_labels"])
         if level and all(label["code"] != level for label in labels):
             continue
         if search:
@@ -186,10 +236,22 @@ def filter_attendee_report_rows(
 def attendee_report_summary(
     rows: list[dict[str, object]],
 ) -> dict[str, object]:
+    """Return attendee report summary.
+
+    Parameters
+    ----------
+    rows : list[dict[str, object]]
+        The database rows included in the integrity evaluation.
+
+    Returns
+    -------
+    dict[str, object]
+        A disclosure-safe mapping for attendee report summary.
+    """
     country_counts = Counter(str(row["country_code"]) or "unknown" for row in rows)
     level_counts: Counter[tuple[str, str, str]] = Counter()
     for row in rows:
-        for label in cast(list[dict[str, str]], row["attendance_labels"]):
+        for label in cast("list[dict[str, str]]", row["attendance_labels"]):
             level_counts[(label["code"], label["label"], label["tone"])] += 1
     return {
         "coming": len(rows),
@@ -203,7 +265,7 @@ def attendee_report_summary(
         "volunteers": sum(
             any(
                 label["code"] == "volunteer"
-                for label in cast(list[dict[str, str]], row["attendance_labels"])
+                for label in cast("list[dict[str, str]]", row["attendance_labels"])
             )
             for row in rows
         ),
@@ -250,8 +312,24 @@ def badge_export_csv(
     edition_id: UUID,
     generated_at: str,
 ) -> str:
-    """Render an Excel-compatible, formula-neutralized UTF-8 CSV."""
+    """Render an Excel-compatible, formula-neutralized UTF-8 CSV.
 
+    Parameters
+    ----------
+    rows : list[dict[str, object]]
+        The database rows included in the integrity evaluation.
+    edition_name : str
+        The human-readable edition name shown to authorized readers.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    generated_at : str
+        The timezone-aware timestamp for generated.
+
+    Returns
+    -------
+    str
+        The normalized text for badge export csv.
+    """
     output = StringIO(newline="")
     writer = csv.writer(output)
     writer.writerow(
@@ -273,7 +351,7 @@ def badge_export_csv(
         )
     )
     for row in rows:
-        labels = cast(list[dict[str, str]], row["attendance_labels"])
+        labels = cast("list[dict[str, str]]", row["attendance_labels"])
         writer.writerow(
             tuple(
                 _safe_csv_value(value)
@@ -286,8 +364,8 @@ def badge_export_csv(
                     row["badge_name_source"],
                     row["display_name"],
                     row["pronouns"],
-                    "|".join(cast(list[str], row["spoken_language_codes"])),
-                    "|".join(cast(list[str], row["spoken_languages"])),
+                    "|".join(cast("list[str]", row["spoken_language_codes"])),
+                    "|".join(cast("list[str]", row["spoken_languages"])),
                     row["country_code"],
                     "|".join(label["label"] for label in labels),
                     row["registration_state"],

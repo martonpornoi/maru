@@ -53,7 +53,7 @@ def _schema() -> dict[str, Any]:
         pattern for pattern in logistics_urlpatterns if "api/" in str(pattern.pattern)
     ]
     return cast(
-        dict[str, Any],
+        "dict[str, Any]",
         SchemaGenerator(patterns=patterns).get_schema(request=None, public=True),
     )
 
@@ -62,17 +62,17 @@ def _operations() -> list[tuple[str, str, dict[str, Any]]]:
     operations: list[tuple[str, str, dict[str, Any]]] = []
     for path, path_operations in _schema()["paths"].items():
         for method, operation in path_operations.items():
-            operations.append((path, method, cast(dict[str, Any], operation)))
+            operations.append((path, method, cast("dict[str, Any]", operation)))
     return operations
 
 
 def _operation(path: str, method: str) -> dict[str, Any]:
-    return cast(dict[str, Any], _schema()["paths"][path][method])
+    return cast("dict[str, Any]", _schema()["paths"][path][method])
 
 
 def _resolve_component(reference: dict[str, Any]) -> dict[str, Any]:
-    name = cast(str, reference["$ref"]).rsplit("/", maxsplit=1)[-1]
-    return cast(dict[str, Any], _schema()["components"]["schemas"][name])
+    name = cast("str", reference["$ref"]).rsplit("/", maxsplit=1)[-1]
+    return cast("dict[str, Any]", _schema()["components"]["schemas"][name])
 
 
 def _assert_typed_schema(schema: dict[str, Any]) -> None:
@@ -98,7 +98,7 @@ def test_logistics_openapi_types_all_thirty_two_authenticated_operations() -> No
         for status_code, response in operation["responses"].items():
             if str(status_code).startswith("2"):
                 schema = response["content"]["application/json"]["schema"]
-                _assert_typed_schema(cast(dict[str, Any], schema))
+                _assert_typed_schema(cast("dict[str, Any]", schema))
 
 
 def test_logistics_openapi_types_exact_request_and_retry_boundaries() -> None:
@@ -146,7 +146,7 @@ def test_logistics_offer_review_is_action_discriminated() -> None:
     request_reference = _operation(OFFER_REVIEW_PATH, "post")["requestBody"]["content"][
         "application/json"
     ]["schema"]
-    request_schema = _resolve_component(cast(dict[str, Any], request_reference))
+    request_schema = _resolve_component(cast("dict[str, Any]", request_reference))
 
     assert len(request_schema["oneOf"]) == 2
     assert set(request_schema["discriminator"]["mapping"]) == {
@@ -155,7 +155,7 @@ def test_logistics_offer_review_is_action_discriminated() -> None:
     }
 
     variants = {
-        name: _resolve_component(cast(dict[str, Any], reference))
+        name: _resolve_component(cast("dict[str, Any]", reference))
         for name, reference in zip(
             ("accepted", "rejected"),
             request_schema["oneOf"],

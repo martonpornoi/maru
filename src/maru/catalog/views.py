@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from django.contrib import admin, messages
@@ -59,6 +58,11 @@ from maru.charities.models import CharitySelection
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from django.db.models import QuerySet
+
 
 def _actor(request: HttpRequest) -> Account:
     if not isinstance(request.user, Account) or not request.user.is_active:
@@ -99,6 +103,18 @@ def _owned_order(*, order_id: UUID, edition_id: UUID, actor: Account) -> Catalog
 @never_cache
 @require_GET
 def my_catalog_index_page(request: HttpRequest) -> HttpResponse:
+    """Render my catalog index page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     catalogs = available_catalogs_for_actor(actor=actor)
     return TemplateResponse(
@@ -117,6 +133,25 @@ def my_catalog_index_page(request: HttpRequest) -> HttpResponse:
 @never_cache
 @require_GET
 def my_catalog_page(request: HttpRequest, edition_id: UUID) -> HttpResponse:
+    """Render my catalog page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     actor = _actor(request)
     catalog = get_object_or_404(
         EditionCatalog.objects.select_related("edition"),
@@ -167,6 +202,20 @@ def my_catalog_page(request: HttpRequest, edition_id: UUID) -> HttpResponse:
 @login_required(login_url="staff-login")
 @require_POST
 def place_catalog_order_page(request: HttpRequest, edition_id: UUID) -> HttpResponse:
+    """Place catalog order page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     form = CatalogOrderForm(request.POST)
     if not form.is_valid():
@@ -180,12 +229,12 @@ def place_catalog_order_page(request: HttpRequest, edition_id: UUID) -> HttpResp
             actor=actor,
             lines=(
                 OrderLineRequest(
-                    variant_id=cast(UUID, form.cleaned_data["variant_id"]),
-                    quantity=cast(int, form.cleaned_data["quantity"]),
+                    variant_id=cast("UUID", form.cleaned_data["variant_id"]),
+                    quantity=cast("int", form.cleaned_data["quantity"]),
                 ),
             ),
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
             source_channel="web",
         )
@@ -202,6 +251,25 @@ def place_catalog_order_page(request: HttpRequest, edition_id: UUID) -> HttpResp
 @never_cache
 @require_GET
 def my_catalog_orders_page(request: HttpRequest, edition_id: UUID) -> HttpResponse:
+    """Render my catalog orders page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     actor = _actor(request)
     catalog = get_object_or_404(
         EditionCatalog.objects.select_related("edition"), edition_id=edition_id
@@ -233,6 +301,22 @@ def my_catalog_orders_page(request: HttpRequest, edition_id: UUID) -> HttpRespon
 def catalog_checkout_page(
     request: HttpRequest, edition_id: UUID, order_id: UUID
 ) -> HttpResponse:
+    """Render catalog checkout page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    order_id : UUID
+        The identifier of the order.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     order = _owned_order(order_id=order_id, edition_id=edition_id, actor=actor)
     catalog = order.catalog
@@ -261,6 +345,22 @@ def catalog_checkout_page(
 def start_catalog_hosted_payment_page(
     request: HttpRequest, edition_id: UUID, order_id: UUID
 ) -> HttpResponse:
+    """Start catalog hosted payment page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    order_id : UUID
+        The identifier of the order.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     order = _owned_order(order_id=order_id, edition_id=edition_id, actor=actor)
     form = CatalogPaymentForm(request.POST)
@@ -275,12 +375,12 @@ def start_catalog_hosted_payment_page(
             provider=CatalogPaymentIntent.Provider.HOSTED,
             actor=actor,
             expected_catalog_version=cast(
-                int, form.cleaned_data["expected_catalog_version"]
+                "int", form.cleaned_data["expected_catalog_version"]
             ),
             expected_order_version=cast(
-                int, form.cleaned_data["expected_order_version"]
+                "int", form.cleaned_data["expected_order_version"]
             ),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
             source_channel="web",
         )
@@ -302,6 +402,22 @@ def start_catalog_hosted_payment_page(
 def complete_catalog_demo_payment_page(
     request: HttpRequest, edition_id: UUID, order_id: UUID
 ) -> HttpResponse:
+    """Complete catalog demo payment page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    order_id : UUID
+        The identifier of the order.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     order = _owned_order(order_id=order_id, edition_id=edition_id, actor=actor)
     form = CatalogPaymentForm(request.POST)
@@ -315,12 +431,12 @@ def complete_catalog_demo_payment_page(
             order_id=order.id,
             actor=actor,
             expected_catalog_version=cast(
-                int, form.cleaned_data["expected_catalog_version"]
+                "int", form.cleaned_data["expected_catalog_version"]
             ),
             expected_order_version=cast(
-                int, form.cleaned_data["expected_order_version"]
+                "int", form.cleaned_data["expected_order_version"]
             ),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
             source_channel="web",
         )
@@ -367,7 +483,7 @@ def _require_capability(
         raise Http404
 
 
-def _confirmed_charities(edition: EventEdition):  # type: ignore[no-untyped-def]
+def _confirmed_charities(edition: EventEdition) -> QuerySet[CharitySelection]:
     return (
         CharitySelection.objects.select_related("partner")
         .filter(
@@ -418,6 +534,29 @@ def catalog_staff_workspace(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render catalog staff workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     actor = _actor(request)
     edition = _edition_route(
         organization_slug=organization_slug,
@@ -562,6 +701,24 @@ def create_catalog_page(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Create catalog page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The persisted record after validation and transaction commit.
+    """
     actor = _actor(request)
     edition = _edition_route(
         organization_slug=organization_slug,
@@ -577,10 +734,10 @@ def create_catalog_page(
         command=lambda: create_catalog(
             organization_id=edition.organization_id,
             edition_id=edition.id,
-            currency=cast(str, form.cleaned_data["currency"]),
+            currency=cast("str", form.cleaned_data["currency"]),
             actor=actor,
-            reason=cast(str, form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
             source_channel="web",
         ),
@@ -597,6 +754,24 @@ def add_catalog_product_page(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Add catalog product page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _edition_route(
         organization_slug=organization_slug,
@@ -611,28 +786,30 @@ def add_catalog_product_page(
     )
     if not form.is_valid():
         return _invalid_staff_form(request, edition)
-    selection = cast(CharitySelection | None, form.cleaned_data["charity_selection_id"])
+    selection = cast(
+        "CharitySelection | None", form.cleaned_data["charity_selection_id"]
+    )
     return _execute_staff_command(
         request,
         command=lambda: add_product(
             organization_id=edition.organization_id,
             edition_id=edition.id,
             actor=actor,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
-            reason=cast(str, form.cleaned_data["reason"]),
-            code=cast(str, form.cleaned_data["code"]),
-            kind=cast(str, form.cleaned_data["kind"]),
-            name=cast(str, form.cleaned_data["name"]),
-            description=cast(str, form.cleaned_data["description"]),
-            beneficiary=cast(str, form.cleaned_data["beneficiary"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            code=cast("str", form.cleaned_data["code"]),
+            kind=cast("str", form.cleaned_data["kind"]),
+            name=cast("str", form.cleaned_data["name"]),
+            description=cast("str", form.cleaned_data["description"]),
+            beneficiary=cast("str", form.cleaned_data["beneficiary"]),
             charity_selection_id=selection.id if selection is not None else None,
             sale_opens_at=form.cleaned_data["sale_opens_at"],
             sale_closes_at=form.cleaned_data["sale_closes_at"],
-            preorder_allowed=cast(bool, form.cleaned_data["preorder_allowed"]),
-            fulfilment_mode=cast(str, form.cleaned_data["fulfilment_mode"]),
-            per_order_limit=cast(int, form.cleaned_data["per_order_limit"]),
+            preorder_allowed=cast("bool", form.cleaned_data["preorder_allowed"]),
+            fulfilment_mode=cast("str", form.cleaned_data["fulfilment_mode"]),
+            per_order_limit=cast("int", form.cleaned_data["per_order_limit"]),
             source_channel="web",
         ),
         success_message="The draft product configuration was added.",
@@ -649,6 +826,26 @@ def add_catalog_variant_page(
     edition_slug: str,
     product_id: UUID,
 ) -> HttpResponse:
+    """Add catalog variant page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    product_id : UUID
+        The identifier of the product.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _edition_route(
         organization_slug=organization_slug,
@@ -672,15 +869,15 @@ def add_catalog_variant_page(
             edition_id=edition.id,
             product_id=product.id,
             actor=actor,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
-            reason=cast(str, form.cleaned_data["reason"]),
-            sku=cast(str, form.cleaned_data["sku"]),
-            name=cast(str, form.cleaned_data["name"]),
-            price_minor=cast(int, form.cleaned_data["price_minor"]),
-            initial_stock=cast(int | None, form.cleaned_data["initial_stock"]),
-            stock_ceiling=cast(int | None, form.cleaned_data["stock_ceiling"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            sku=cast("str", form.cleaned_data["sku"]),
+            name=cast("str", form.cleaned_data["name"]),
+            price_minor=cast("int", form.cleaned_data["price_minor"]),
+            initial_stock=cast("int | None", form.cleaned_data["initial_stock"]),
+            stock_ceiling=cast("int | None", form.cleaned_data["stock_ceiling"]),
             source_channel="web",
         ),
         success_message="The draft price and stock variant was added.",
@@ -696,6 +893,24 @@ def activate_catalog_page(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Activate catalog page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _edition_route(
         organization_slug=organization_slug,
@@ -712,10 +927,10 @@ def activate_catalog_page(
             organization_id=edition.organization_id,
             edition_id=edition.id,
             actor=actor,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
-            reason=cast(str, form.cleaned_data["reason"]),
+            reason=cast("str", form.cleaned_data["reason"]),
             source_channel="web",
         ),
         success_message="The catalog was activated for attendee ordering.",
@@ -732,6 +947,26 @@ def adjust_catalog_stock_page(
     edition_slug: str,
     variant_id: UUID,
 ) -> HttpResponse:
+    """Render adjust catalog stock page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    variant_id : UUID
+        The identifier of the variant.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _edition_route(
         organization_slug=organization_slug,
@@ -755,12 +990,12 @@ def adjust_catalog_stock_page(
             organization_id=edition.organization_id,
             edition_id=edition.id,
             variant_id=variant_id,
-            new_stock=cast(int, form.cleaned_data["new_stock"]),
+            new_stock=cast("int", form.cleaned_data["new_stock"]),
             actor=actor,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
-            idempotency_key=cast(UUID, form.cleaned_data["idempotency_key"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            idempotency_key=cast("UUID", form.cleaned_data["idempotency_key"]),
             correlation_id=_correlation_id(request),
-            reason=cast(str, form.cleaned_data["reason"]),
+            reason=cast("str", form.cleaned_data["reason"]),
             source_channel="web",
         ),
         success_message="The append-only stock adjustment was recorded.",

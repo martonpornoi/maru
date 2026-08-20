@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
-from typing import Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -21,14 +20,18 @@ from maru.applications.models import (
     ApplicationQuestionType,
     ReviewDecisionKind,
 )
-from maru.authorization.models import RoleBundle
 from maru.core.forms import (
     CanonicalUUIDField,
     StrictBase10IntegerField,
     StrictInputForm,
 )
 from maru.identity.models import Account
-from maru.workforce.models import Department
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from maru.authorization.models import RoleBundle
+    from maru.workforce.models import Department
 
 _SLUG_PATTERN = re.compile(r"^[a-z][a-z0-9_-]{0,79}$")
 _POLICY_PATTERN = r"^[a-z][a-z0-9_.:-]{2,119}$"
@@ -41,6 +44,8 @@ _LOCAL_DATE_TIME = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}\Z")
 
 
 class RetryForm(StrictInputForm):
+    """Collect and validate retry input."""
+
     retry_key = CanonicalUUIDField(widget=forms.HiddenInput)
 
 
@@ -55,6 +60,17 @@ class EditionLocalDateTimeField(forms.Field):
     }
 
     def __init__(self, *args: Any, zone_name: str = "UTC", **kwargs: Any) -> None:
+        """Initialize the EditionLocalDateTimeField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        zone_name : str, default='UTC'
+            The human-readable zone name shown to authorized readers.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault(
             "widget",
             forms.DateTimeInput(
@@ -66,9 +82,33 @@ class EditionLocalDateTimeField(forms.Field):
         self.zone = ZoneInfo(zone_name)
 
     def set_zone(self, zone_name: str) -> None:
+        """Set zone.
+
+        Parameters
+        ----------
+        zone_name : str
+            The human-readable zone name shown to authorized readers.
+        """
         self.zone = ZoneInfo(zone_name)
 
     def to_python(self, value: object) -> datetime | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        datetime | None
+            The canonical Python representation, or `None` for empty input.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if value in self.empty_values:
             return None
         if not isinstance(value, str) or _LOCAL_DATE_TIME.fullmatch(value) is None:
@@ -106,6 +146,18 @@ class EditionLocalDateTimeField(forms.Field):
         return first if first_valid else second
 
     def prepare_value(self, value: object) -> object:
+        """Prepare value.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        object
+            A widget-ready representation of the stored value.
+        """
         if isinstance(value, datetime):
             local = value.astimezone(self.zone) if value.tzinfo else value
             return local.strftime(_DATE_TIME_FORMAT)
@@ -117,6 +169,8 @@ def _date_time_field(label: str) -> EditionLocalDateTimeField:
 
 
 class StarterCopyForm(RetryForm):
+    """Collect and validate starter copy input."""
+
     opens_at = _date_time_field("Opens")
     closes_at = _date_time_field("Closes")
     applicant_edit_until = _date_time_field("Applicant edit deadline")
@@ -127,13 +181,31 @@ class StarterCopyForm(RetryForm):
         edition_time_zone: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the StarterCopyForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        edition_time_zone : str
+            The IANA time-zone name used for localization and validation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         for name in ("opens_at", "closes_at", "applicant_edit_until"):
-            cast(EditionLocalDateTimeField, self.fields[name]).set_zone(
+            cast("EditionLocalDateTimeField", self.fields[name]).set_zone(
                 edition_time_zone
             )
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         opens_at = cleaned.get("opens_at")
         closes_at = cleaned.get("closes_at")
@@ -149,6 +221,8 @@ class StarterCopyForm(RetryForm):
 
 
 class DefinitionConfigureForm(RetryForm):
+    """Collect and validate definition configure input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -207,27 +281,54 @@ class DefinitionConfigureForm(RetryForm):
         edition_time_zone: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the DefinitionConfigureForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        departments : Iterable[Department]
+            The departments used to configure and validate this form.
+        roles : Iterable[RoleBundle]
+            The roles used to configure and validate this form.
+        edition_time_zone : str
+            The IANA time-zone name used for localization and validation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         owner_department_field = cast(
-            forms.MultipleChoiceField,
+            "forms.MultipleChoiceField",
             self.fields["owner_department_ids"],
         )
         owner_department_field.choices = tuple(
             (str(item.id), item.name) for item in departments
         )
         cast(
-            forms.MultipleChoiceField,
+            "forms.MultipleChoiceField",
             self.fields["reviewer_role_bundle_ids"],
         ).choices = tuple(
             (str(item.id), f"{item.name} v{item.version}") for item in roles
         )
         for name in ("opens_at", "closes_at", "applicant_edit_until"):
-            cast(EditionLocalDateTimeField, self.fields[name]).set_zone(
+            cast("EditionLocalDateTimeField", self.fields[name]).set_zone(
                 edition_time_zone
             )
         self.reviewer_account_ids: tuple[UUID, ...] = ()
 
     def clean_reviewer_emails(self) -> str:
+        """Validate and normalize the reviewer emails field.
+
+        Returns
+        -------
+        str
+            The validated and normalized reviewer emails.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         raw = str(self.cleaned_data.get("reviewer_emails", ""))
         emails = tuple(
             dict.fromkeys(
@@ -254,15 +355,37 @@ class DefinitionConfigureForm(RetryForm):
         return "\n".join(emails)
 
     def clean_owner_department_ids(self) -> tuple[UUID, ...]:
+        """Validate and normalize the owner department identifiers field.
+
+        Returns
+        -------
+        tuple[UUID, ...]
+            The matching clean owner department ids records in deterministic order.
+        """
         return tuple(UUID(value) for value in self.cleaned_data["owner_department_ids"])
 
     def clean_reviewer_role_bundle_ids(self) -> tuple[UUID, ...]:
+        """Validate and normalize the reviewer role bundle identifiers field.
+
+        Returns
+        -------
+        tuple[UUID, ...]
+            The matching clean reviewer role bundle ids records in deterministic
+            order.
+        """
         return tuple(
             UUID(value)
             for value in self.cleaned_data.get("reviewer_role_bundle_ids", ())
         )
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         opens_at = cleaned.get("opens_at")
         closes_at = cleaned.get("closes_at")
@@ -278,6 +401,8 @@ class DefinitionConfigureForm(RetryForm):
 
 
 class SectionAddForm(RetryForm):
+    """Collect and validate section add input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -293,6 +418,8 @@ class SectionAddForm(RetryForm):
 
 
 class QuestionAddForm(RetryForm):
+    """Collect and validate question add input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -375,16 +502,46 @@ class QuestionAddForm(RetryForm):
         definition: ApplicationDefinition,
         **kwargs: Any,
     ) -> None:
+        """Initialize the QuestionAddForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        definition : ApplicationDefinition
+            The versioned definition governing the requested behavior.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
-        cast(forms.ChoiceField, self.fields["section_id"]).choices = tuple(
+        cast("forms.ChoiceField", self.fields["section_id"]).choices = tuple(
             (str(item.id), item.title)
             for item in definition.sections.order_by("position", "id")
         )
 
     def clean_section_id(self) -> UUID:
+        """Validate and normalize the section identifier field.
+
+        Returns
+        -------
+        UUID
+            The validated and normalized section id.
+        """
         return UUID(self.cleaned_data["section_id"])
 
     def clean_options_text(self) -> list[dict[str, str]]:
+        """Validate and normalize the options text field.
+
+        Returns
+        -------
+        list[dict[str, str]]
+            The matching clean options text records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         raw = str(self.cleaned_data.get("options_text", ""))
         options: list[dict[str, str]] = []
         seen: set[str] = set()
@@ -411,6 +568,13 @@ class QuestionAddForm(RetryForm):
         return options
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         condition_fields = (
             cleaned.get("condition_question_key"),
@@ -428,6 +592,13 @@ class QuestionAddForm(RetryForm):
 
     @property
     def condition(self) -> dict[str, object]:
+        """Return the normalized condition used for answer evaluation.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved condition data.
+        """
         if not self.cleaned_data.get("condition_question_key"):
             return {}
         return {
@@ -438,6 +609,8 @@ class QuestionAddForm(RetryForm):
 
 
 class DefinitionLifecycleForm(RetryForm):
+    """Collect and validate definition lifecycle input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -446,14 +619,18 @@ class DefinitionLifecycleForm(RetryForm):
 
 
 class DefinitionSuccessorForm(RetryForm):
+    """Collect and validate definition successor input."""
+
     reason = forms.CharField(max_length=240)
 
 
 class StartSubmissionForm(RetryForm):
-    pass
+    """Collect and validate start submission input."""
 
 
 class SubmitApplicationForm(RetryForm):
+    """Collect and validate submit application input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -461,6 +638,8 @@ class SubmitApplicationForm(RetryForm):
 
 
 class ReviewDecisionForm(RetryForm):
+    """Collect and validate review decision input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -553,6 +732,8 @@ def _answer_field(  # noqa: PLR0911, PLR0912
 
 
 class ApplicantAnswerForm(RetryForm):
+    """Collect and validate applicant answer input."""
+
     question_id = CanonicalUUIDField(widget=forms.HiddenInput)
     expected_version = StrictBase10IntegerField(
         min_value=1,
@@ -565,17 +746,47 @@ class ApplicantAnswerForm(RetryForm):
         question: ApplicationQuestion,
         **kwargs: Any,
     ) -> None:
+        """Initialize the ApplicantAnswerForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        question : ApplicationQuestion
+            The question used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.question = question
         self.fields["value"] = _answer_field(question)
 
     def clean_question_id(self) -> UUID:
-        question_id = cast(UUID, self.cleaned_data["question_id"])
+        """Validate and normalize the question identifier field.
+
+        Returns
+        -------
+        UUID
+            The validated and normalized question id.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
+        question_id = cast("UUID", self.cleaned_data["question_id"])
         if question_id != self.question.id:
             raise ValidationError("The application question is unavailable.")
         return question_id
 
     def clean_value(self) -> object:
+        """Validate and normalize the value field.
+
+        Returns
+        -------
+        object
+            The validated and normalized value.
+        """
         value = self.cleaned_data.get("value")
         if isinstance(value, (Decimal, UUID)):
             return str(value)
@@ -585,8 +796,18 @@ class ApplicantAnswerForm(RetryForm):
 
 
 def answer_initial_value(value: object) -> object:
-    """Format one normalized current answer for its bound Django field."""
+    """Format one normalized current answer for its bound Django field.
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    object
+        The normalized value for answer initial value.
+    """
     if isinstance(value, bool):
         return "true" if value else "false"
     return value

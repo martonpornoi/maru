@@ -21,6 +21,30 @@ from maru.applications.models import (
 
 @dataclass(frozen=True, slots=True)
 class StarterQuestion:
+    """Describe starter question.
+
+    Attributes
+    ----------
+    key
+        The lookup, signing, or idempotency key selected by the contract.
+    label
+        The human-readable label shown to authorized readers.
+    field_type
+        The closed field type discriminator defined by the domain catalog.
+    purpose
+        The documented purpose constraining collection and processing.
+    required
+        The required retained in this immutable projection.
+    classification
+        The closed sensitivity classification governing disclosure.
+    options
+        The configured option codes valid for the source question.
+    source_binding
+        The source binding retained in this immutable projection.
+    applicant_writable
+        The applicant writable retained in this immutable projection.
+    """
+
     key: str
     label: str
     field_type: str
@@ -34,6 +58,40 @@ class StarterQuestion:
 
 @dataclass(frozen=True, slots=True)
 class ApplicationStarter:
+    """Describe application starter.
+
+    Attributes
+    ----------
+    code
+        The stable domain code to resolve or validate.
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    purpose
+        The documented purpose constraining collection and processing.
+    owner_module
+        The owner module retained in this immutable projection.
+    target_adapter_kind
+        The closed target adapter kind discriminator defined by the domain catalog.
+    classification
+        The closed sensitivity classification governing disclosure.
+    eligibility_kind
+        The closed eligibility kind discriminator defined by the domain catalog.
+    minimum_age
+        The minimum age retained in this immutable projection.
+    maximum_submissions
+        The maximum submissions retained in this immutable projection.
+    audience_policy_code
+        The stable audience policy code from the relevant closed catalog.
+    retention_policy_code
+        The stable retention policy code from the relevant closed catalog.
+    age_policy_code
+        The stable age policy code from the relevant closed catalog.
+    questions
+        The questions retained in this immutable projection.
+    """
+
     code: str
     name: str
     description: str
@@ -51,6 +109,13 @@ class ApplicationStarter:
 
     @property
     def is_external(self) -> bool:
+        """Return whether external.
+
+        Returns
+        -------
+        bool
+            `True` when external; otherwise `False`.
+        """
         return self.target_adapter_kind is None
 
 
@@ -462,8 +527,27 @@ STARTERS_BY_CODE = {starter.code: starter for starter in STARTERS}
 
 
 def application_starter(code: str) -> ApplicationStarter | None:
+    """Return application starter.
+
+    Parameters
+    ----------
+    code : str
+        The stable machine-readable code.
+
+    Returns
+    -------
+    ApplicationStarter | None
+        The matching ApplicationStarter, or `None` when no authorized record exists.
+    """
     return STARTERS_BY_CODE.get(code)
 
 
 def starter_catalog() -> tuple[ApplicationStarter, ...]:
+    """Return starter catalog.
+
+    Returns
+    -------
+    tuple[ApplicationStarter, ...]
+        The authorized starter catalog records in deterministic order.
+    """
     return STARTERS

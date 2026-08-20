@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
-from decimal import Decimal
-from typing import Any, Never, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Never, TypedDict, cast
 from uuid import UUID
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -20,7 +18,6 @@ from drf_spectacular.utils import (
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -41,11 +38,6 @@ from maru.applications.commands import (
     retire_definition,
     start_submission,
     submit_application,
-)
-from maru.applications.models import (
-    ApplicationDefinition,
-    ApplicationQuestion,
-    ApplicationSubmission,
 )
 from maru.applications.queries import (
     authorize_application_edition_api_scope,
@@ -80,6 +72,18 @@ from maru.applications.starters import starter_catalog
 from maru.audit.services import AuditRecord, append_audit
 from maru.core.api_input import reject_unknown_fields
 from maru.identity.models import Account
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from decimal import Decimal
+
+    from rest_framework.request import Request
+
+    from maru.applications.models import (
+        ApplicationDefinition,
+        ApplicationQuestion,
+        ApplicationSubmission,
+    )
 
 IDEMPOTENCY_HEADER = "Idempotency-Key"
 CANONICAL_UUID_PATTERN = (
@@ -181,6 +185,8 @@ class _DefinitionSuccessorPayload(TypedDict):
 
 
 class ApplicationConflict(APIException):
+    """Signal application conflict."""
+
     status_code = status.HTTP_409_CONFLICT
     default_detail = "The application workflow changed; reload before retrying."
     default_code = "application_conflict"
@@ -273,7 +279,7 @@ def _preauthorize_review_submission(
 
 
 def _correlation(request: Request) -> UUID:
-    return UUID(request._request.correlation_id)  # type: ignore[attr-defined]
+    return UUID(request._request.correlation_id)  # type: ignore[attr-defined]  # noqa: SLF001
 
 
 def _retry_key(request: Request) -> UUID:
@@ -329,7 +335,7 @@ def _validated(
     serializer = serializer_class(data=request.data)
     reject_unknown_fields(request.data, allowed_fields=frozenset(serializer.fields))
     serializer.is_valid(raise_exception=True)
-    return cast(dict[str, Any], serializer.validated_data)
+    return cast("dict[str, Any]", serializer.validated_data)
 
 
 def _failure(error: Exception) -> Never:
@@ -505,6 +511,8 @@ class PrivateApplicationsAPIView(APIView):
 
 
 class ApplicationStarterCatalogView(PrivateApplicationsAPIView):
+    """Expose application starter catalog through the HTTP API."""
+
     @extend_schema(
         operation_id="applications_list_starters",
         responses={200: ApplicationStarterSummarySerializer(many=True)},
@@ -512,6 +520,24 @@ class ApplicationStarterCatalogView(PrivateApplicationsAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the starters.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         try:
             definition_workspace(
                 actor=_actor(request),
@@ -540,6 +566,8 @@ class ApplicationStarterCatalogView(PrivateApplicationsAPIView):
 
 
 class ApplicationDefinitionCollectionView(PrivateApplicationsAPIView):
+    """Expose application definition collection through the HTTP API."""
+
     @extend_schema(
         operation_id="applications_list_definitions",
         responses={200: ApplicationDefinitionSerializer(many=True)},
@@ -547,6 +575,24 @@ class ApplicationDefinitionCollectionView(PrivateApplicationsAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the definitions.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         try:
             definitions = definition_workspace(
                 actor=_actor(request),
@@ -575,6 +621,24 @@ class ApplicationDefinitionCollectionView(PrivateApplicationsAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Create the definition.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_edition(
             request,
             organization_id=organization_id,
@@ -598,6 +662,8 @@ class ApplicationDefinitionCollectionView(PrivateApplicationsAPIView):
 
 
 class ApplicationDefinitionCommandView(PrivateApplicationsAPIView):
+    """Expose application definition command through the HTTP API."""
+
     @extend_schema(
         operation_id="applications_command_definition",
         parameters=[_APPLICATION_IDEMPOTENCY_PARAMETER],
@@ -614,6 +680,31 @@ class ApplicationDefinitionCommandView(PrivateApplicationsAPIView):
         edition_id: UUID,
         definition_id: UUID,
     ) -> Response:
+        """Apply the requested application-definition command.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        definition_id : UUID
+            The definition identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         _preauthorize_edition(
             request,
             organization_id=organization_id,
@@ -647,7 +738,7 @@ class ApplicationDefinitionCommandView(PrivateApplicationsAPIView):
                     retry_key=retry_key,
                     correlation_id=correlation_id,
                     source_channel="api",
-                    **cast(_DefinitionConfigurePayload, payload),
+                    **cast("_DefinitionConfigurePayload", payload),
                 )
             elif operation == "section.add":
                 result = add_section(
@@ -658,7 +749,7 @@ class ApplicationDefinitionCommandView(PrivateApplicationsAPIView):
                     retry_key=retry_key,
                     correlation_id=correlation_id,
                     source_channel="api",
-                    **cast(_SectionAddPayload, payload),
+                    **cast("_SectionAddPayload", payload),
                 )
             elif operation == "question.add":
                 result = add_question(
@@ -669,7 +760,7 @@ class ApplicationDefinitionCommandView(PrivateApplicationsAPIView):
                     retry_key=retry_key,
                     correlation_id=correlation_id,
                     source_channel="api",
-                    **cast(_QuestionAddPayload, payload),
+                    **cast("_QuestionAddPayload", payload),
                 )
             elif operation == "definition.activate":
                 result = activate_definition(
@@ -680,7 +771,7 @@ class ApplicationDefinitionCommandView(PrivateApplicationsAPIView):
                     retry_key=retry_key,
                     correlation_id=correlation_id,
                     source_channel="api",
-                    **cast(_DefinitionLifecyclePayload, payload),
+                    **cast("_DefinitionLifecyclePayload", payload),
                 )
             elif operation == "definition.retire":
                 result = retire_definition(
@@ -691,7 +782,7 @@ class ApplicationDefinitionCommandView(PrivateApplicationsAPIView):
                     retry_key=retry_key,
                     correlation_id=correlation_id,
                     source_channel="api",
-                    **cast(_DefinitionLifecyclePayload, payload),
+                    **cast("_DefinitionLifecyclePayload", payload),
                 )
             else:
                 result = create_successor_definition(
@@ -702,7 +793,7 @@ class ApplicationDefinitionCommandView(PrivateApplicationsAPIView):
                     retry_key=retry_key,
                     correlation_id=correlation_id,
                     source_channel="api",
-                    **cast(_DefinitionSuccessorPayload, payload),
+                    **cast("_DefinitionSuccessorPayload", payload),
                 )
         except Exception as error:  # noqa: BLE001
             _failure(error)
@@ -714,6 +805,8 @@ class ApplicationDefinitionCommandView(PrivateApplicationsAPIView):
 
 
 class MyApplicationWorkspaceView(PrivateApplicationsAPIView):
+    """Expose my application workspace through the HTTP API."""
+
     @extend_schema(
         operation_id="applications_retrieve_my_workspace",
         responses={200: MyApplicationWorkspaceSerializer},
@@ -721,6 +814,24 @@ class MyApplicationWorkspaceView(PrivateApplicationsAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Retrieve my workspace.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _actor(request)
         try:
             available = available_applications(
@@ -756,6 +867,8 @@ class MyApplicationWorkspaceView(PrivateApplicationsAPIView):
 
 
 class ApplicationSubmissionCreateView(PrivateApplicationsAPIView):
+    """Expose application submission create through the HTTP API."""
+
     @extend_schema(
         operation_id="applications_start_submission",
         parameters=[_APPLICATION_IDEMPOTENCY_PARAMETER],
@@ -772,6 +885,26 @@ class ApplicationSubmissionCreateView(PrivateApplicationsAPIView):
         edition_id: UUID,
         definition_id: UUID,
     ) -> Response:
+        """Start the submission.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        definition_id : UUID
+            The definition identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_self(
             request,
             organization_id=organization_id,
@@ -796,6 +929,8 @@ class ApplicationSubmissionCreateView(PrivateApplicationsAPIView):
 
 
 class ApplicationAnswerRevisionView(PrivateApplicationsAPIView):
+    """Expose application answer revision through the HTTP API."""
+
     @extend_schema(
         operation_id="applications_append_answer",
         parameters=[_APPLICATION_IDEMPOTENCY_PARAMETER],
@@ -812,6 +947,26 @@ class ApplicationAnswerRevisionView(PrivateApplicationsAPIView):
         edition_id: UUID,
         submission_id: UUID,
     ) -> Response:
+        """Append the answer.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        submission_id : UUID
+            The submission identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_self_submission(
             request,
             organization_id=organization_id,
@@ -836,6 +991,8 @@ class ApplicationAnswerRevisionView(PrivateApplicationsAPIView):
 
 
 class ApplicationSubmitView(PrivateApplicationsAPIView):
+    """Expose application submit through the HTTP API."""
+
     @extend_schema(
         operation_id="applications_submit_submission",
         parameters=[_APPLICATION_IDEMPOTENCY_PARAMETER],
@@ -849,6 +1006,26 @@ class ApplicationSubmitView(PrivateApplicationsAPIView):
         edition_id: UUID,
         submission_id: UUID,
     ) -> Response:
+        """Submit the submission.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        submission_id : UUID
+            The submission identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_self_submission(
             request,
             organization_id=organization_id,
@@ -873,6 +1050,8 @@ class ApplicationSubmitView(PrivateApplicationsAPIView):
 
 
 class ApplicationReviewQueueView(PrivateApplicationsAPIView):
+    """Expose application review queue through the HTTP API."""
+
     @extend_schema(
         operation_id="applications_list_review_queue",
         responses={
@@ -882,6 +1061,24 @@ class ApplicationReviewQueueView(PrivateApplicationsAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the review queue.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _actor(request)
         try:
             submissions = review_queue(
@@ -905,6 +1102,8 @@ class ApplicationReviewQueueView(PrivateApplicationsAPIView):
 
 
 class ApplicationReviewDecisionView(PrivateApplicationsAPIView):
+    """Expose application review decision through the HTTP API."""
+
     @extend_schema(
         operation_id="applications_record_review_decision",
         parameters=[_APPLICATION_IDEMPOTENCY_PARAMETER],
@@ -918,6 +1117,26 @@ class ApplicationReviewDecisionView(PrivateApplicationsAPIView):
         edition_id: UUID,
         submission_id: UUID,
     ) -> Response:
+        """Record the review decision.
+
+        Keep authenticated application data and safe errors out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        submission_id : UUID
+            The submission identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         _preauthorize_review_submission(
             request,
             organization_id=organization_id,

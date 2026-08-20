@@ -11,15 +11,38 @@ MAX_EXPIRY_BATCH = 1_000
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Expire elapsed platform-account invitations and destroy their encrypted "
         "delivery payloads. This scheduler command does not need private keys."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument("--limit", type=int, default=100)
 
     def handle(self, *args: object, **options: object) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : object
+            Positional arguments forwarded to the framework implementation.
+        **options : object
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args
         limit = options["limit"]
         if type(limit) is not int or not 1 <= limit <= MAX_EXPIRY_BATCH:

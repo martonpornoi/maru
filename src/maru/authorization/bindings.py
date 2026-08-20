@@ -21,8 +21,18 @@ _WORKFORCE_POSITION_BINDING_NAME_PREFIX = (
 
 
 def workforce_position_binding_id(position_id: UUID) -> UUID:
-    """Return the stable binding identifier used by the scope-v2 migration."""
+    """Return the stable binding identifier used by the scope-v2 migration.
 
+    Parameters
+    ----------
+    position_id : UUID
+        The position identifier within the requested scope.
+
+    Returns
+    -------
+    UUID
+        The resolved UUID for workforce position binding id.
+    """
     return uuid5(
         NAMESPACE_URL,
         f"{_WORKFORCE_POSITION_BINDING_NAME_PREFIX}{position_id}",
@@ -46,9 +56,23 @@ def ensure_workforce_position_binding(
     The persisted Position is the source of truth. Locking and re-reading it
     prevents a stale or caller-mutated model instance from choosing authority
     scope, and serializes concurrent creators with the database binding guard.
-    """
 
-    if position._state.adding or position.pk is None:
+    Parameters
+    ----------
+    position : Position
+        The workforce position within the exact edition structure.
+
+    Returns
+    -------
+    ScopedResourceBinding
+        The resolved ScopedResourceBinding for ensure workforce position binding.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
+    if position._state.adding or position.pk is None:  # noqa: SLF001
         raise ValidationError(
             "Save the workforce position before creating its resource binding.",
             code="workforce_position_unavailable",
@@ -117,8 +141,21 @@ def resource_binding_target_exists(
     *,
     for_update: bool = False,
 ) -> bool:
-    """Validate one typed binding against its domain owner's exact scope."""
+    """Validate one typed binding against its domain owner's exact scope.
 
+    Parameters
+    ----------
+    binding : ScopedResourceBinding | Mapping[str, Any]
+        The binding mapping to validate or transform.
+    for_update : bool, default=False
+        The for update evaluated while resource binding target exists.
+
+    Returns
+    -------
+    bool
+        `True` when Validate one typed binding against its domain owner's exact
+        scope; otherwise `False`.
+    """
     if isinstance(binding, Mapping):
         resource_kind = binding["resource_kind"]
         resource_id = binding["resource_id"]

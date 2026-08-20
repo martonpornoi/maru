@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from io import StringIO
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from django.apps import apps
@@ -14,6 +13,10 @@ from django.core.management.base import CommandError
 from maru.demo.management.commands.seed_marucon_rehearsal import (
     RETIRED_COMMAND_MESSAGE,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from pathlib import Path
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 

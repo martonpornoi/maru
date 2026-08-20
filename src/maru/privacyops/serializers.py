@@ -1,3 +1,5 @@
+"""Provide serializers support for the privacyops module."""
+
 from rest_framework import serializers
 
 from maru.privacyops.models import (
@@ -8,13 +10,19 @@ from maru.privacyops.models import (
 
 
 class SubjectRightsRequestCreateSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate subject rights request create data."""
+
     organization_id = serializers.UUIDField(required=False, allow_null=True)
     kind = serializers.ChoiceField(choices=SubjectRightsRequest.Kind.choices)
     summary = serializers.CharField(max_length=1000)
 
 
 class SubjectRightsRequestSerializer(serializers.ModelSerializer[SubjectRightsRequest]):
+    """Serialize and validate subject rights request data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = SubjectRightsRequest
         fields = (
             "id",
@@ -33,6 +41,8 @@ class SubjectRightsRequestSerializer(serializers.ModelSerializer[SubjectRightsRe
 class StaffSubjectRightsRequestSerializer(
     serializers.ModelSerializer[SubjectRightsRequest]
 ):
+    """Serialize and validate staff subject rights request data."""
+
     account_id = serializers.UUIDField(read_only=True)
     account_display_name = serializers.CharField(
         source="account.display_name",
@@ -41,6 +51,8 @@ class StaffSubjectRightsRequestSerializer(
     account_email = serializers.EmailField(source="account.email", read_only=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = SubjectRightsRequest
         fields = (
             "id",
@@ -62,6 +74,8 @@ class StaffSubjectRightsRequestSerializer(
 class SubjectRightsRequestTransitionSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate subject rights request transition data."""
+
     action = serializers.ChoiceField(
         choices=(
             ("begin_identity_check", "Begin identity check"),
@@ -78,6 +92,8 @@ class SubjectRightsRequestTransitionSerializer(
 
 
 class PostEditionCorrectionCreateSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate post edition correction create data."""
+
     profile_id = serializers.UUIDField()
     changed_fields = serializers.JSONField()
     reason = serializers.CharField(max_length=1000)
@@ -86,6 +102,8 @@ class PostEditionCorrectionCreateSerializer(serializers.Serializer[dict[str, obj
 class PostEditionCorrectionDecisionSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate post edition correction decision data."""
+
     approve = serializers.BooleanField()
     reason = serializers.CharField(max_length=1000)
 
@@ -93,7 +111,11 @@ class PostEditionCorrectionDecisionSerializer(
 class PostEditionCorrectionSerializer(
     serializers.ModelSerializer[PostEditionCorrection]
 ):
+    """Serialize and validate post edition correction data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = PostEditionCorrection
         fields = (
             "id",
@@ -112,12 +134,18 @@ class PostEditionCorrectionSerializer(
 
 
 class RegistrationProfileMinimizeSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate registration profile minimize data."""
+
     profile_id = serializers.UUIDField()
     policy_id = serializers.UUIDField()
 
 
 class DisposalReceiptSerializer(serializers.ModelSerializer[DisposalReceipt]):
+    """Serialize and validate disposal receipt data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = DisposalReceipt
         fields = (
             "id",

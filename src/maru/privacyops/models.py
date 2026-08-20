@@ -9,7 +9,11 @@ from maru.core.models import UUIDTimeStampedModel
 
 
 class SubjectRightsRequest(UUIDTimeStampedModel):
+    """Store subject rights request records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         ACCESS = "access", "Access"
         CORRECTION = "correction", "Correction"
         PORTABILITY = "portability", "Portability"
@@ -18,6 +22,8 @@ class SubjectRightsRequest(UUIDTimeStampedModel):
         DELETION = "deletion", "Deletion"
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         RECEIVED = "received", "Received"
         IDENTITY_CHECK = "identity_check", "Identity check"
         IN_PROGRESS = "in_progress", "In progress"
@@ -43,6 +49,8 @@ class SubjectRightsRequest(UUIDTimeStampedModel):
     safe_outcome_summary = models.CharField(max_length=1000, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-requested_at", "-id")
 
 
@@ -50,6 +58,8 @@ class PostEditionCorrection(UUIDTimeStampedModel):
     """Append-only correction overlay; archived source facts stay unchanged."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PROPOSED = "proposed", "Proposed"
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
@@ -73,6 +83,8 @@ class PostEditionCorrection(UUIDTimeStampedModel):
     decision_reason = models.CharField(max_length=1000, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("requested_at", "id")
         indexes = [
             models.Index(
@@ -82,6 +94,20 @@ class PostEditionCorrection(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             current = type(self).objects.filter(id=self.id).values("status").first()
             if current and current["status"] != self.Status.PROPOSED:
@@ -97,6 +123,8 @@ class RetentionPolicy(UUIDTimeStampedModel):
     """Versioned purpose/jurisdiction policy, not a blanket account TTL."""
 
     class Disposition(models.TextChoices):
+        """Enumerate supported disposition values."""
+
         DELETE = "delete", "Delete"
         MINIMIZE = "minimize", "Minimize"
         RETAIN = "retain", "Retain with legal basis"
@@ -113,6 +141,8 @@ class RetentionPolicy(UUIDTimeStampedModel):
     active = models.BooleanField(default=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name_plural = "retention policies"
         ordering = ("organization_id", "data_category", "version")
         constraints = [
@@ -152,6 +182,8 @@ class DisposalReceipt(UUIDTimeStampedModel):
     downstream_receipts = models.JSONField(default=list, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("applied_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -161,6 +193,20 @@ class DisposalReceipt(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Disposal receipts are append-only.",

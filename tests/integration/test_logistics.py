@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -15,7 +16,6 @@ from maru.audit.models import AuditEvent
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.models import EventEdition
 from maru.events.services import transition_edition
-from maru.identity.models import Account
 from maru.logistics.models import (
     Asset,
     AssetAgreement,
@@ -58,6 +58,9 @@ from maru.logistics.services import (
 )
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.workforce_helpers import create_department_for_test
+
+if TYPE_CHECKING:
+    from maru.identity.models import Account
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

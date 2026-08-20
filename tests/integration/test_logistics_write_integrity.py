@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
@@ -16,7 +17,6 @@ from django.utils import timezone
 from maru.authorization.models import ScopedResourceBinding
 from maru.events.models import EventEdition
 from maru.events.services import transition_edition
-from maru.identity.models import Account
 from maru.logistics.models import (
     Asset,
     AssetAgreement,
@@ -86,9 +86,12 @@ from maru.logistics.services import (
     submit_equipment_offer,
     withdraw_equipment_offer,
 )
-from maru.workforce.models import Department
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 from tests.workforce_helpers import create_department_for_test
+
+if TYPE_CHECKING:
+    from maru.identity.models import Account
+    from maru.workforce.models import Department
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

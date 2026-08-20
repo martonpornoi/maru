@@ -27,6 +27,8 @@ class NotificationPreference(UUIDTimeStampedModel):
     marketing_consented_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=("account", "organization"),
@@ -35,6 +37,13 @@ class NotificationPreference(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.marketing_email_consent != bool(
             self.marketing_consent_version and self.marketing_consented_at
@@ -49,6 +58,8 @@ class NotificationMessage(UUIDTimeStampedModel):
     """Immutable rendered operational message in the platform inbox."""
 
     class Purpose(models.TextChoices):
+        """Enumerate supported purpose values."""
+
         OPERATIONAL = "operational", "Operational service"
         MARKETING = "marketing", "Optional marketing"
         EMERGENCY = "emergency", "Emergency"
@@ -71,6 +82,8 @@ class NotificationMessage(UUIDTimeStampedModel):
     read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("-rendered_at", "-id")
         indexes = [
             models.Index(
@@ -84,6 +97,25 @@ class NotificationMessage(UUIDTimeStampedModel):
         ]
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Messages require the communication retention workflow.",
@@ -95,9 +127,13 @@ class NotificationDelivery(UUIDTimeStampedModel):
     """Mutable delivery state backed by append-only effect attempts."""
 
     class Channel(models.TextChoices):
+        """Enumerate supported channel values."""
+
         EMAIL = "email", "Email"
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PENDING = "pending", "Pending"
         SUCCEEDED = "succeeded", "Succeeded"
         SUPPRESSED = "suppressed", "Suppressed by preference"
@@ -117,6 +153,8 @@ class NotificationDelivery(UUIDTimeStampedModel):
     delivered_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         verbose_name_plural = "notification deliveries"
         constraints = [
             models.UniqueConstraint(

@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import asdict
-from datetime import datetime
-from typing import TypedDict, cast
+from typing import TYPE_CHECKING, TypedDict, cast
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -104,6 +101,12 @@ from maru.venues.services import (
     withdraw_venue_booking_publication,
 )
 from maru.workforce.models import Department
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from django import forms
 
 _PROPERTY_PROFILE_FIELDS = tuple(VenuePropertyProfile.__dataclass_fields__)
 _PROPERTY_UPDATE_FIELDS = (
@@ -786,9 +789,9 @@ def _space_response(
             edition_time_zone=edition.time_zone,
         )
     if active_form_name == "availability_form":
-        availability_form = cast(VenueAvailabilityForm, active_form)
+        availability_form = cast("VenueAvailabilityForm", active_form)
     if active_form_name == "booking_form":
-        booking_form = cast(VenueBookingForm, active_form)
+        booking_form = cast("VenueBookingForm", active_form)
     bookings = tuple(
         VenueBooking.objects.filter(
             organization_id=edition.organization_id,
@@ -826,7 +829,7 @@ def _space_response(
                 )
         if active_booking_id == booking.id and active_form is not None:
             if active_form_name == "reschedule_form":
-                reschedule_form = cast(VenueBookingForm, active_form)
+                reschedule_form = cast("VenueBookingForm", active_form)
             elif active_form_name.startswith("state_form_"):
                 state_forms[active_form_name.removeprefix("state_form_")] = active_form
         booking_rows.append(
@@ -876,6 +879,29 @@ def venue_workspace(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render venue workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -897,6 +923,24 @@ def venue_property_create_page(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render venue property create page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -929,6 +973,24 @@ def venue_property_create(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render venue property create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -952,7 +1014,7 @@ def venue_property_create(
                 slug=str(form.cleaned_data["slug"]),
                 profile=profile,
                 reason=str(form.cleaned_data["reason"]),
-                idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+                idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
                 correlation_id=_correlation_id(request),
                 source_channel="browser",
             )
@@ -990,6 +1052,31 @@ def venue_property_detail_page(
     edition_slug: str,
     property_id: UUID,
 ) -> HttpResponse:
+    """Render venue property detail page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -1056,6 +1143,26 @@ def venue_property_update(
     edition_slug: str,
     property_id: UUID,
 ) -> HttpResponse:
+    """Render venue property update.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1074,10 +1181,10 @@ def venue_property_update(
             actor=actor,
             organization_id=edition.organization_id,
             property_id=property_id,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
             changes=form.changes,
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1094,6 +1201,26 @@ def venue_catalog_path_create(
     edition_slug: str,
     property_id: UUID,
 ) -> HttpResponse:
+    """Render venue catalog path create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1115,10 +1242,10 @@ def venue_catalog_path_create(
             space_kind=str(values["space_kind"]),
             configuration_code=str(values["configuration_code"]),
             configuration_name=str(values["configuration_name"]),
-            seated_capacity=cast(int, values["seated_capacity"]),
-            standing_capacity=cast(int, values["standing_capacity"]),
-            table_capacity=cast(int, values["table_capacity"]),
-            fire_capacity=cast(int, values["fire_capacity"]),
+            seated_capacity=cast("int", values["seated_capacity"]),
+            standing_capacity=cast("int", values["standing_capacity"]),
+            table_capacity=cast("int", values["table_capacity"]),
+            fire_capacity=cast("int", values["fire_capacity"]),
             public_description=str(values.get("public_description", "")),
             accessibility_features=str(values.get("accessibility_features", "")),
             known_barriers=str(values.get("known_barriers", "")),
@@ -1130,7 +1257,7 @@ def venue_catalog_path_create(
             property_id=property_id,
             catalog=catalog,
             reason=str(values["reason"]),
-            idempotency_key=cast(UUID, values["retry_key"]),
+            idempotency_key=cast("UUID", values["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         )
@@ -1155,6 +1282,26 @@ def venue_combination_create(
     edition_slug: str,
     property_id: UUID,
 ) -> HttpResponse:
+    """Render venue combination create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1181,11 +1328,11 @@ def venue_combination_create(
             code=str(form.cleaned_data["code"]),
             name=str(form.cleaned_data["name"]),
             member_space_ids=cast(
-                tuple[UUID, ...],
+                "tuple[UUID, ...]",
                 form.cleaned_data["member_space_ids"],
             ),
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1202,6 +1349,26 @@ def venue_media_add(
     edition_slug: str,
     property_id: UUID,
 ) -> HttpResponse:
+    """Render venue media add.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1226,9 +1393,9 @@ def venue_media_add(
             license_basis=str(form.cleaned_data["license_basis"]),
             usage_scope=str(form.cleaned_data["usage_scope"]),
             attribution=str(form.cleaned_data.get("attribution", "")),
-            expires_at=cast(datetime | None, form.cleaned_data.get("expires_at")),
+            expires_at=cast("datetime | None", form.cleaned_data.get("expires_at")),
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1246,6 +1413,28 @@ def venue_media_approve(
     property_id: UUID,
     media_id: UUID,
 ) -> HttpResponse:
+    """Render venue media approve.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+    media_id : UUID
+        The identifier of the media.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1265,10 +1454,10 @@ def venue_media_approve(
             organization_id=edition.organization_id,
             property_id=property_id,
             media_id=media_id,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
             public_reference=str(form.cleaned_data.get("public_reference", "")),
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1286,6 +1475,26 @@ def venue_layout_add(
     edition_slug: str,
     property_id: UUID,
 ) -> HttpResponse:
+    """Render venue layout add.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1308,16 +1517,16 @@ def venue_layout_add(
         command=lambda: add_venue_layout_version(
             actor=actor,
             organization_id=edition.organization_id,
-            space_id=cast(UUID, form.cleaned_data["space_id"]),
+            space_id=cast("UUID", form.cleaned_data["space_id"]),
             layout_code=str(form.cleaned_data["layout_code"]),
-            version=cast(int, form.cleaned_data["version"]),
+            version=cast("int", form.cleaned_data["version"]),
             title=str(form.cleaned_data["title"]),
             visibility=str(form.cleaned_data["visibility"]),
             source_reference=str(form.cleaned_data["source_reference"]),
             checksum_sha256=str(form.cleaned_data["checksum_sha256"]),
             notes=str(form.cleaned_data.get("notes", "")),
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1335,6 +1544,28 @@ def venue_layout_approve(
     property_id: UUID,
     layout_id: UUID,
 ) -> HttpResponse:
+    """Render venue layout approve.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+    layout_id : UUID
+        The identifier of the layout.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1353,10 +1584,10 @@ def venue_layout_approve(
             actor=actor,
             organization_id=edition.organization_id,
             layout_id=layout_id,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
             approved_reference=str(form.cleaned_data.get("public_reference", "")),
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1374,6 +1605,26 @@ def venue_room_type_create(
     edition_slug: str,
     property_id: UUID,
 ) -> HttpResponse:
+    """Render venue room type create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1396,11 +1647,11 @@ def venue_room_type_create(
             public_name=str(form.cleaned_data["public_name"]),
             description=str(form.cleaned_data.get("description", "")),
             accessible_features=str(form.cleaned_data.get("accessible_features", "")),
-            minimum_occupants=cast(int, form.cleaned_data["minimum_occupants"]),
-            maximum_occupants=cast(int, form.cleaned_data["maximum_occupants"]),
+            minimum_occupants=cast("int", form.cleaned_data["minimum_occupants"]),
+            maximum_occupants=cast("int", form.cleaned_data["maximum_occupants"]),
             provider_reference=str(form.cleaned_data.get("provider_reference", "")),
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1417,6 +1668,26 @@ def venue_inventory_set(
     edition_slug: str,
     property_id: UUID,
 ) -> HttpResponse:
+    """Render venue inventory set.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    property_id : UUID
+        The identifier of the property.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1443,17 +1714,17 @@ def venue_inventory_set(
         command=lambda: set_accommodation_night_inventory(
             actor=actor,
             organization_id=edition.organization_id,
-            room_type_id=cast(UUID, form.cleaned_data["room_type_id"]),
+            room_type_id=cast("UUID", form.cleaned_data["room_type_id"]),
             night=form.cleaned_data["night"],
-            room_capacity=cast(int, form.cleaned_data["room_capacity"]),
+            room_capacity=cast("int", form.cleaned_data["room_capacity"]),
             release_at=form.cleaned_data["release_at"],
             provider_reference=str(form.cleaned_data.get("provider_reference", "")),
             expected_version=cast(
-                int | None,
+                "int | None",
                 form.cleaned_data.get("expected_version"),
             ),
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1469,6 +1740,24 @@ def venue_edition_select(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render venue edition select.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1491,9 +1780,9 @@ def venue_edition_select(
                 actor=actor,
                 organization_id=edition.organization_id,
                 edition_id=edition.id,
-                property_id=cast(UUID, form.cleaned_data["property_id"]),
+                property_id=cast("UUID", form.cleaned_data["property_id"]),
                 responsible_department_id=cast(
-                    UUID,
+                    "UUID",
                     form.cleaned_data["responsible_department_id"],
                 ),
                 local_name=str(form.cleaned_data["local_name"]),
@@ -1507,7 +1796,7 @@ def venue_edition_select(
                     form.cleaned_data.get("opening_restrictions", "")
                 ),
                 reason=str(form.cleaned_data["reason"]),
-                idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+                idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
                 correlation_id=_correlation_id(request),
                 source_channel="browser",
             )
@@ -1539,6 +1828,24 @@ def venue_space_select(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render venue space select.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1565,19 +1872,19 @@ def venue_space_select(
                 organization_id=edition.organization_id,
                 edition_id=edition.id,
                 venue_selection_id=cast(
-                    UUID,
+                    "UUID",
                     form.cleaned_data["venue_selection_id"],
                 ),
                 source_space_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     form.cleaned_data.get("source_space_id"),
                 ),
                 source_combination_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     form.cleaned_data.get("source_combination_id"),
                 ),
                 selected_configuration_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     form.cleaned_data.get("selected_configuration_id"),
                 ),
                 local_name=str(form.cleaned_data["local_name"]),
@@ -1587,7 +1894,7 @@ def venue_space_select(
                     form.cleaned_data.get("opening_restrictions", "")
                 ),
                 reason=str(form.cleaned_data["reason"]),
-                idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+                idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
                 correlation_id=_correlation_id(request),
                 source_channel="browser",
             )
@@ -1623,6 +1930,33 @@ def venue_space_schedule_page(
     edition_slug: str,
     space_selection_id: UUID,
 ) -> HttpResponse:
+    """Render venue space schedule page.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    space_selection_id : UUID
+        The identifier of the space selection.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -1689,6 +2023,26 @@ def venue_availability_set(
     edition_slug: str,
     space_selection_id: UUID,
 ) -> HttpResponse:
+    """Render venue availability set.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    space_selection_id : UUID
+        The identifier of the space selection.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1713,10 +2067,10 @@ def venue_availability_set(
             organization_id=edition.organization_id,
             edition_id=edition.id,
             space_selection_id=space_selection_id,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
             intervals=form.intervals,
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1745,14 +2099,14 @@ def _booking_command_values(form: VenueBookingForm) -> _BookingCommandValues:
         "public_title": str(form.cleaned_data.get("public_title", "")),
         "public_description": str(form.cleaned_data.get("public_description", "")),
         "capacity_mode": str(form.cleaned_data["capacity_mode"]),
-        "expected_attendance": cast(int, form.cleaned_data["expected_attendance"]),
+        "expected_attendance": cast("int", form.cleaned_data["expected_attendance"]),
         "envelope": form.envelope,
         "public_layout_id": cast(
-            UUID | None,
+            "UUID | None",
             form.cleaned_data.get("public_layout_id"),
         ),
         "reason": str(form.cleaned_data["reason"]),
-        "idempotency_key": cast(UUID, form.cleaned_data["retry_key"]),
+        "idempotency_key": cast("UUID", form.cleaned_data["retry_key"]),
     }
 
 
@@ -1765,6 +2119,26 @@ def venue_booking_create(
     edition_slug: str,
     space_selection_id: UUID,
 ) -> HttpResponse:
+    """Render venue booking create.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    space_selection_id : UUID
+        The identifier of the space selection.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1811,6 +2185,28 @@ def venue_booking_reschedule(
     space_selection_id: UUID,
     booking_id: UUID,
 ) -> HttpResponse:
+    """Render venue booking reschedule.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    booking_id : UUID
+        The identifier of the booking.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _actor(request)
     edition = _route_edition(organization_slug, series_slug, edition_slug)
     _require_allowed(
@@ -1840,7 +2236,7 @@ def venue_booking_reschedule(
             edition_id=edition.id,
             space_selection_id=space_selection_id,
             booking_id=booking_id,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
             **_booking_command_values(form),
@@ -1861,6 +2257,35 @@ def venue_booking_command(
     booking_id: UUID,
     action: str,
 ) -> HttpResponse:
+    """Render venue booking command.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    booking_id : UUID
+        The identifier of the booking.
+    action : str
+        The requested lifecycle action.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    """
     commands = {
         "approve": approve_venue_booking,
         "publish": publish_venue_booking,
@@ -1897,9 +2322,9 @@ def venue_booking_command(
             edition_id=edition.id,
             space_selection_id=space_selection_id,
             booking_id=booking_id,
-            expected_version=cast(int, form.cleaned_data["expected_version"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
             reason=str(form.cleaned_data["reason"]),
-            idempotency_key=cast(UUID, form.cleaned_data["retry_key"]),
+            idempotency_key=cast("UUID", form.cleaned_data["retry_key"]),
             correlation_id=_correlation_id(request),
             source_channel="browser",
         ),
@@ -1911,6 +2336,23 @@ def venue_booking_command(
 @login_required(login_url="staff-login")
 @require_GET
 def my_maru_schedule_index(request: HttpRequest) -> HttpResponse:
+    """Render my maru schedule index.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid
@@ -1938,6 +2380,29 @@ def my_maru_venue_schedule(
     series_slug: str,
     edition_slug: str,
 ) -> HttpResponse:
+    """Render my maru venue schedule.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    organization_slug : str
+        The URL slug identifying the organization.
+    series_slug : str
+        The URL slug identifying the convention series.
+    edition_slug : str
+        The URL slug identifying the event edition.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     invalid = _strict_get(request)
     if invalid is not None:
         return invalid

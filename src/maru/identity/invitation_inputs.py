@@ -86,8 +86,23 @@ def _text_without_controls(value: object, *, field_name: str) -> str:
 
 
 def normalize_invitation_email(value: object) -> str:
-    """Return the platform account manager's validated email spelling."""
+    """Return the platform account manager's validated email spelling.
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for normalize invitation email.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not isinstance(value, str):
         _raise_field_error(
             field_name="email",
@@ -125,8 +140,18 @@ def normalize_invitation_email(value: object) -> str:
 
 
 def normalize_invitation_login_handle(value: object | None) -> str | None:
-    """Validate an optional handle without silently changing its spelling."""
+    """Validate an optional handle without silently changing its spelling.
 
+    Parameters
+    ----------
+    value : object | None
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str | None
+        The normalized text for normalize invitation login handle.
+    """
     if value is None or value == "":
         return None
     normalized = _text_without_controls(value, field_name="login_handle")
@@ -155,8 +180,18 @@ def normalize_invitation_login_handle(value: object | None) -> str | None:
 
 
 def invitation_login_handle_comparison_key(value: str) -> str:
-    """Return the case-insensitive uniqueness key without changing display text."""
+    """Return the case-insensitive uniqueness key without changing display text.
 
+    Parameters
+    ----------
+    value : str
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for invitation login handle comparison key.
+    """
     normalized = normalize_invitation_login_handle(value)
     if normalized is None:
         return ""
@@ -164,8 +199,18 @@ def invitation_login_handle_comparison_key(value: str) -> str:
 
 
 def normalize_invitation_display_name(value: object | None) -> str | None:
-    """Normalize an optional human label to NFC and ordinary single spaces."""
+    """Normalize an optional human label to NFC and ordinary single spaces.
 
+    Parameters
+    ----------
+    value : object | None
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str | None
+        The normalized text for normalize invitation display name.
+    """
     if value is None or value == "":
         return None
     submitted = _text_without_controls(value, field_name="display_name")
@@ -185,8 +230,18 @@ def normalize_invitation_display_name(value: object | None) -> str | None:
 
 
 def normalize_invitation_preferred_language(value: object | None) -> str:
-    """Resolve omission to the code-owned default and reject unknown locales."""
+    """Resolve omission to the code-owned default and reject unknown locales.
 
+    Parameters
+    ----------
+    value : object | None
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for normalize invitation preferred language.
+    """
     if value is None or value == "":
         return DEFAULT_INVITATION_LANGUAGE_CODE
     submitted = _text_without_controls(value, field_name="preferred_language")
@@ -210,8 +265,18 @@ def normalize_invitation_preferred_language(value: object | None) -> str:
 
 
 def normalize_invitation_reason(value: object) -> str:
-    """Normalize the required retained rationale to its canonical form."""
+    """Normalize the required retained rationale to its canonical form.
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for normalize invitation reason.
+    """
     submitted = _text_without_controls(value, field_name="reason")
     normalized = " ".join(unicodedata.normalize("NFC", submitted).split())
     if not normalized:
@@ -233,8 +298,18 @@ def normalize_invitation_reason(value: object) -> str:
 
 
 def validate_invitation_expected_version(value: object) -> int:
-    """Accept only a real non-negative integer, never a bool coercion."""
+    """Accept only a real non-negative integer, never a bool coercion.
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    int
+        The resolved int for validate invitation expected version.
+    """
     if type(value) is not int or value < 0:
         _raise_field_error(
             field_name="expected_version",
@@ -255,20 +330,50 @@ def _validate_uuid(value: object, *, field_name: str) -> UUID:
 
 
 def validate_retry_key(value: object) -> UUID:
-    """Require an adapter-parsed UUID idempotency key."""
+    """Require an adapter-parsed UUID idempotency key.
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    UUID
+        The resolved UUID for validate retry key.
+    """
     return _validate_uuid(value, field_name="retry_key")
 
 
 def validate_correlation_id(value: object) -> UUID:
-    """Require an adapter- or middleware-parsed UUID correlation identifier."""
+    """Require an adapter- or middleware-parsed UUID correlation identifier.
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    UUID
+        The resolved UUID for validate correlation id.
+    """
     return _validate_uuid(value, field_name="correlation_id")
 
 
 def validate_source_channel(value: object) -> str:
-    """Accept only bounded, lower-case evidence channel codes."""
+    """Accept only bounded, lower-case evidence channel codes.
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for validate source channel.
+    """
     if (
         not isinstance(value, str)
         or INVITATION_SOURCE_CHANNEL_PATTERN.fullmatch(value) is None
@@ -326,8 +431,23 @@ def _canonical_json_value(value: object, *, active_containers: set[int]) -> obje
 
 
 def canonical_request_json(payload: Mapping[str, object]) -> bytes:
-    """Return compact, deterministic UTF-8 JSON without bearer secrets."""
+    """Return compact, deterministic UTF-8 JSON without bearer secrets.
 
+    Parameters
+    ----------
+    payload : Mapping[str, object]
+        The untrusted payload to validate before domain use.
+
+    Returns
+    -------
+    bytes
+        The canonical byte representation for canonical request json.
+
+    Raises
+    ------
+    TypeError
+        If the caller supplies an object of an unsupported type.
+    """
     if not isinstance(payload, Mapping):
         raise TypeError("A request digest payload must be a mapping.")
     normalized = _canonical_json_value(payload, active_containers=set())
@@ -341,6 +461,16 @@ def canonical_request_json(payload: Mapping[str, object]) -> bytes:
 
 
 def canonical_request_digest(payload: Mapping[str, object]) -> str:
-    """Return the lower-case SHA-256 digest of normalized command input."""
+    """Return the lower-case SHA-256 digest of normalized command input.
 
+    Parameters
+    ----------
+    payload : Mapping[str, object]
+        The untrusted payload to validate before domain use.
+
+    Returns
+    -------
+    str
+        The normalized text for canonical request digest.
+    """
     return hashlib.sha256(canonical_request_json(payload)).hexdigest()

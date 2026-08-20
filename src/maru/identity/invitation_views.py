@@ -94,8 +94,20 @@ def _step_up_redirect(
     *,
     return_to: str | None = None,
 ) -> HttpResponse:
-    """Send a privileged browser action to the shared same-shell step-up."""
+    """Send a privileged browser action to the shared same-shell step-up.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    return_to : str | None, default=None
+        The return to evaluated while step up redirect.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     step_up_url = reverse("account-step-up")
     return _private_no_store(
         redirect(f"{step_up_url}?{urlencode({'next': return_to or request.path})}")
@@ -162,8 +174,23 @@ def _public_response(
 
 
 def _active_platform_administrator(request: HttpRequest) -> Account:
-    """Resolve fresh platform authority before parsing a protected body."""
+    """Resolve fresh platform authority before parsing a protected body.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    Account
+        The resolved Account for active platform administrator.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     if not isinstance(request.user, Account) or not request.user.is_authenticated:
         raise PermissionDenied
     actor = (
@@ -198,8 +225,23 @@ def _add_domain_validation_errors(
     *,
     allowed_fields: frozenset[str],
 ) -> bool:
-    """Map only allowlisted, value-free validation messages to the form."""
+    """Map only allowlisted, value-free validation messages to the form.
 
+    Parameters
+    ----------
+    form : forms.BaseForm
+        The form evaluated while add domain validation errors.
+    error : ValidationError
+        The error evaluated while add domain validation errors.
+    allowed_fields : frozenset[str]
+        The closed set of object keys accepted by this boundary.
+
+    Returns
+    -------
+    bool
+        `True` when Map only allowlisted, value-free validation messages to the
+        form; otherwise `False`.
+    """
     if hasattr(error, "message_dict"):
         for field_name, field_errors in error.message_dict.items():
             if field_name not in allowed_fields or field_name not in form.fields:
@@ -257,11 +299,26 @@ def _inventory_error_response(
 @login_required(login_url="staff-login")
 @require_GET
 def platform_account_inventory(request: HttpRequest) -> HttpResponse:
-    """Render one audited, bounded page of platform identity records."""
+    """Render one audited, bounded page of platform identity records.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_platform_administrator(request)
     form = PlatformAccountInventoryFilterForm(
-        request.GET if request.GET else None,
+        request.GET or None,
         initial={"search_mode": "prefix"},
     )
     if form.is_bound and not form.is_valid():
@@ -370,8 +427,23 @@ def _invitation_creation_response(
 @login_required(login_url="staff-login")
 @require_http_methods(["GET", "POST"])
 def platform_account_invite(request: HttpRequest) -> HttpResponse:  # noqa: PLR0911
-    """Reserve an inactive person account and enqueue recipient-owned acceptance."""
+    """Reserve an inactive person account and enqueue recipient-owned acceptance.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_platform_administrator(request)
     if request.method == "POST":
         step_up_response = _require_privileged_step_up(
@@ -646,6 +718,20 @@ def platform_account_invitation_detail(
     request: HttpRequest,
     invitation_id: UUID,
 ) -> HttpResponse:
+    """Return platform account invitation detail.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    invitation_id : UUID
+        The identifier of the invitation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     actor = _active_platform_administrator(request)
     if request.GET:
         return _detail_error_response(request, state="invalid", status=400)
@@ -847,6 +933,20 @@ def reissue_platform_account_invitation_view(
     request: HttpRequest,
     invitation_id: UUID,
 ) -> HttpResponse:
+    """Return reissue platform account invitation view.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    invitation_id : UUID
+        The identifier of the invitation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _invitation_action(
         request,
         invitation_id=invitation_id,
@@ -862,6 +962,20 @@ def revoke_platform_account_invitation_view(
     request: HttpRequest,
     invitation_id: UUID,
 ) -> HttpResponse:
+    """Revoke platform account invitation view.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request.
+    invitation_id : UUID
+        The identifier of the invitation.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for this request.
+    """
     return _invitation_action(
         request,
         invitation_id=invitation_id,
@@ -877,8 +991,31 @@ def _delivery_reconciliation_preflight(
     invitation_id: UUID,
     delivery_id: UUID,
 ) -> AccountInvitationDetail | HttpResponse:
-    """Authorize and bind both route locators without reading the POST body."""
+    """Authorize and bind both route locators without reading the POST body.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    actor : Account
+        The authenticated account authorizing the operation.
+    invitation_id : UUID
+        The invitation identifier within the requested scope.
+    delivery_id : UUID
+        The delivery identifier within the requested scope.
+
+    Returns
+    -------
+    AccountInvitationDetail | HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     step_up_response = _require_privileged_step_up(
         request,
         actor=actor,
@@ -965,7 +1102,7 @@ def _render_delivery_reconciliation_failure(
             actor=actor,
             invitation_id=invitation_id,
             delivery_delivered_form=cast(
-                PlatformIdentityDeliveryDeliveredForm,
+                "PlatformIdentityDeliveryDeliveredForm",
                 form,
             ),
             active_action=operation,
@@ -993,8 +1130,29 @@ def resolve_platform_identity_delivery_as_delivered_view(  # noqa: PLR0911
     invitation_id: UUID,
     delivery_id: UUID,
 ) -> HttpResponse:
-    """Record an externally confirmed provider acceptance through Page 10."""
+    """Record an externally confirmed provider acceptance through Page 10.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    invitation_id : UUID
+        The invitation identifier within the requested scope.
+    delivery_id : UUID
+        The delivery identifier within the requested scope.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_platform_administrator(request)
     preflight = _delivery_reconciliation_preflight(
         request,
@@ -1101,8 +1259,29 @@ def resolve_platform_identity_delivery_for_retry_view(  # noqa: PLR0911
     invitation_id: UUID,
     delivery_id: UUID,
 ) -> HttpResponse:
-    """Schedule one bounded retry after an operator rules out acceptance."""
+    """Schedule one bounded retry after an operator rules out acceptance.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    invitation_id : UUID
+        The invitation identifier within the requested scope.
+    delivery_id : UUID
+        The delivery identifier within the requested scope.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+
+    Raises
+    ------
+    Http404
+        If the scoped resource is unavailable to the caller.
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     actor = _active_platform_administrator(request)
     preflight = _delivery_reconciliation_preflight(
         request,
@@ -1205,8 +1384,18 @@ def resolve_platform_identity_delivery_for_retry_view(  # noqa: PLR0911
 def accept_platform_account_invitation_view(  # noqa: PLR0911
     request: HttpRequest,
 ) -> HttpResponse:
-    """Consume a fragment-carried/manual code without reflecting any secret."""
+    """Consume a fragment-carried/manual code without reflecting any secret.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    HttpResponse
+        The HTTP response for the requested operation.
+    """
     if request.GET:
         return _public_response(
             request,
@@ -1226,8 +1415,8 @@ def accept_platform_account_invitation_view(  # noqa: PLR0911
     correlation_id = _request_id(request)
     try:
         accept_platform_account_invitation(
-            raw_token=cast(str, form.cleaned_data["raw_token"]),
-            new_password=cast(str, form.cleaned_data["new_password"]),
+            raw_token=cast("str", form.cleaned_data["raw_token"]),
+            new_password=cast("str", form.cleaned_data["new_password"]),
             retry_key=form.cleaned_data["retry_key"],
             correlation_id=correlation_id,
             request_fingerprint=request_fingerprint(request),

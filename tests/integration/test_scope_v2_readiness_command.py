@@ -6,7 +6,7 @@ import json
 from datetime import date
 from io import StringIO
 from types import SimpleNamespace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import pytest
@@ -16,7 +16,6 @@ from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.utils import timezone
 
-from maru.authorization.models import RoleAssignment
 from maru.workforce.models import (
     Position,
     PositionAssignment,
@@ -34,6 +33,9 @@ from tests.workforce_helpers import (
     save_position_assignment_for_test,
     save_position_for_test,
 )
+
+if TYPE_CHECKING:
+    from maru.authorization.models import RoleAssignment
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

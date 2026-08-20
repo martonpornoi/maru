@@ -11,11 +11,10 @@ import hmac
 import json
 import re
 import secrets
-from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
 from uuid import UUID, uuid4
 
 from django.conf import settings
@@ -43,6 +42,9 @@ from maru.identity.models import (
     PlatformInvitationRetentionReceipt,
     PlatformInvitationSchedulerRun,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 RETENTION_POLICY_SETTING: Final = "MARU_IDENTITY_INVITATION_RETENTION_POLICY_JSON"
 RETENTION_POLICY_TRIGGER: Final = "terminal_transition"
@@ -107,6 +109,30 @@ class InvitationRetentionUnavailableError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class InvitationRetentionPolicy:
+    """Authorize invitation retention policy operations.
+
+    Attributes
+    ----------
+    policy_id
+        The policy identifier within the requested scope.
+    version
+        The version number associated with the supplied record or contract.
+    jurisdiction_code
+        The stable jurisdiction code from the relevant closed catalog.
+    trigger
+        The trigger retained in this immutable projection.
+    period_days
+        The period days retained in this immutable projection.
+    action
+        The stable action code describing the requested transition.
+    approved_by_reference
+        The provider or source approved by reference retained for reconciliation.
+    approved_at
+        The timezone-aware timestamp for approved.
+    digest
+        The digest retained in this immutable projection.
+    """
+
     policy_id: str
     version: int
     jurisdiction_code: str
@@ -118,11 +144,39 @@ class InvitationRetentionPolicy:
     digest: str
 
     def due_at(self, trigger_at: datetime) -> datetime:
+        """Return due at.
+
+        Parameters
+        ----------
+        trigger_at : datetime
+            The timezone-aware timestamp for trigger.
+
+        Returns
+        -------
+        datetime
+            The resolved datetime for due at.
+        """
         return trigger_at + timedelta(days=self.period_days)
 
 
 @dataclass(frozen=True, slots=True)
 class InvitationRetentionRunResult:
+    """Describe invitation retention run result.
+
+    Attributes
+    ----------
+    disposed_count
+        The bounded number of disposed records.
+    held_count
+        The bounded number of held records.
+    blocked_count
+        The bounded number of blocked records.
+    remaining_count
+        The bounded number of remaining records.
+    heartbeat_id
+        The heartbeat identifier within the requested scope.
+    """
+
     disposed_count: int
     held_count: int
     blocked_count: int
@@ -138,8 +192,23 @@ def _policy_error() -> InvitationRetentionConfigurationError:
 
 
 def _closed_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    """Reject ambiguous duplicate JSON members before policy normalization."""
+    """Reject ambiguous duplicate JSON members before policy normalization.
 
+    Parameters
+    ----------
+    pairs : list[tuple[str, object]]
+        The key-value pairs decoded from one JSON object.
+
+    Returns
+    -------
+    dict[str, object]
+        A mapping containing the resolved closed json object data.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     document: dict[str, object] = {}
     for key, value in pairs:
         if key in document:
@@ -149,8 +218,23 @@ def _closed_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
 
 
 def _retention_source_channel(value: object) -> str:
-    """Use the shared syntax contract plus this workflow's exact allowlist."""
+    """Use the shared syntax contract plus this workflow's exact allowlist.
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str
+        The normalized text for retention source channel.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     channel = validate_source_channel(value)
     if channel not in _RETENTION_SOURCE_CHANNELS:
         raise ValidationError(
@@ -161,8 +245,18 @@ def _retention_source_channel(value: object) -> str:
 
 
 def _database_now() -> datetime:
-    """Use the database server as the authority for persisted evidence time."""
+    """Use the database server as the authority for persisted evidence time.
 
+    Returns
+    -------
+    datetime
+        The resolved datetime for database now.
+
+    Raises
+    ------
+    InvitationRetentionUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     with connection.cursor() as cursor:
         cursor.execute("SELECT pg_catalog.clock_timestamp()")
         row = cursor.fetchone()
@@ -192,8 +286,19 @@ def _normalized_approved_at(value: object) -> datetime:
 
 
 def configured_invitation_retention_policy() -> InvitationRetentionPolicy:
-    """Return the strict deployment policy or fail without a fallback period."""
+    """Return the strict deployment policy or fail without a fallback period.
 
+    Returns
+    -------
+    InvitationRetentionPolicy
+        The InvitationRetentionPolicy produced by configured invitation
+        retention policy.
+
+    Raises
+    ------
+    _policy_error
+        If the operation encounters a policy error condition.
+    """
     raw = getattr(settings, RETENTION_POLICY_SETTING, "")
     if (
         not isinstance(raw, str)
@@ -264,6 +369,13 @@ def configured_invitation_retention_policy() -> InvitationRetentionPolicy:
 
 
 def invitation_retention_policy_is_ready() -> bool:
+    """Return whether invitation retention policy is ready.
+
+    Returns
+    -------
+    bool
+        Whether the requested condition is satisfied.
+    """
     try:
         configured_invitation_retention_policy()
     except InvitationRetentionConfigurationError:
@@ -287,8 +399,14 @@ def _policy_control_values(policy: InvitationRetentionPolicy) -> dict[str, objec
 
 
 def invitation_retention_policy_control_is_ready() -> bool:
-    """Require the owner-activated database control to equal the environment."""
+    """Require the owner-activated database control to equal the environment.
 
+    Returns
+    -------
+    bool
+        `True` when Require the owner-activated database control to equal the
+        environment; otherwise `False`.
+    """
     try:
         policy = configured_invitation_retention_policy()
         control = (
@@ -304,8 +422,20 @@ def invitation_retention_policy_control_is_ready() -> bool:
 def activate_configured_invitation_retention_policy() -> (
     PlatformInvitationRetentionPolicyControl
 ):
-    """Pin reviewed environment policy in the migration-owner control plane."""
+    """Pin reviewed environment policy in the migration-owner control plane.
 
+    Returns
+    -------
+    PlatformInvitationRetentionPolicyControl
+        The PlatformInvitationRetentionPolicyControl produced by activate
+        configured invitation retention policy.
+
+    Raises
+    ------
+    InvitationRetentionConfigurationError
+        If the operation encounters a invitation retention configuration
+        condition.
+    """
     policy = configured_invitation_retention_policy()
     values = _policy_control_values(policy)
     # The activation instant is evidence, not caller input.  Materialize it
@@ -421,8 +551,36 @@ def place_invitation_retention_hold(
     correlation_id: UUID,
     source_channel: object = "operator",
 ) -> PlatformInvitationRetentionHold:
-    """Place one current legal/security hold through an audited service."""
+    """Place one current legal/security hold through an audited service.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    invitation_id : UUID
+        The invitation identifier within the requested scope.
+    reference_code : object
+        The stable reference code from the relevant closed catalog.
+    reason_code : object
+        The stable reason code from the relevant closed catalog.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : object, default='operator'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    PlatformInvitationRetentionHold
+        The PlatformInvitationRetentionHold produced by place invitation
+        retention hold.
+
+    Raises
+    ------
+    InvitationRetentionUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     channel = _retention_source_channel(source_channel)
     reference = _normalize_policy_code(reference_code, field="reference_code")
     reason = _normalize_policy_code(reason_code, field="reason_code")
@@ -502,8 +660,34 @@ def release_invitation_retention_hold(
     correlation_id: UUID,
     source_channel: object = "operator",
 ) -> PlatformInvitationRetentionHold:
-    """Release a hold once; the placed and released evidence remains."""
+    """Release a hold once; the placed and released evidence remains.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    hold_id : UUID
+        The hold identifier within the requested scope.
+    reason_code : object
+        The stable reason code from the relevant closed catalog.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : object, default='operator'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    PlatformInvitationRetentionHold
+        The PlatformInvitationRetentionHold produced by release invitation
+        retention hold.
+
+    Raises
+    ------
+    InvitationRetentionUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     channel = _retention_source_channel(source_channel)
     reason = _normalize_policy_code(reason_code, field="reason_code")
     with transaction.atomic():
@@ -571,22 +755,33 @@ def _terminal_trigger_at(invitation: PlatformAccountInvitation) -> datetime | No
 
 
 def _has_other_account_relationship(account: Account) -> bool:
-    """Fail closed on every current or future non-invitation account relation."""
+    """Fail closed on every current or future non-invitation account relation.
 
+    Parameters
+    ----------
+    account : Account
+        The platform account whose state or access is being evaluated.
+
+    Returns
+    -------
+    bool
+        `True` when Fail closed on every current or future non-invitation
+        account relation; otherwise `False`.
+    """
     if account.groups.exists() or account.user_permissions.exists():
         return True
-    for relation in Account._meta.related_objects:
+    for relation in Account._meta.related_objects:  # noqa: SLF001
         related_model = relation.related_model
         if not isinstance(related_model, type):
             return True
         relation_identity = (
-            related_model._meta.label,
+            related_model._meta.label,  # noqa: SLF001
             relation.field.name,
         )
         if relation_identity in _ALLOWED_ACCOUNT_RELATIONS:
             continue
         lookup = {relation.field.name: account.id}
-        if related_model._base_manager.filter(**lookup).exists():
+        if related_model._base_manager.filter(**lookup).exists():  # noqa: SLF001
             return True
     return False
 
@@ -651,8 +846,20 @@ def _unheld_due_candidates(
     policy: InvitationRetentionPolicy,
     at: datetime,
 ) -> QuerySet[PlatformAccountInvitation]:
-    """Return only actionable due work for the production backlog signal."""
+    """Return only actionable due work for the production backlog signal.
 
+    Parameters
+    ----------
+    policy : InvitationRetentionPolicy
+        The closed policy definition governing the requested decision.
+    at : datetime
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    QuerySet[PlatformAccountInvitation]
+        The matching unheld due candidates records in deterministic order.
+    """
     return _due_candidates(policy=policy, at=at).exclude(retention_holds__active=True)
 
 
@@ -736,8 +943,22 @@ def _tombstone_invitation_challenges(
     tombstone_email: str,
     at: datetime,
 ) -> None:
-    """Tombstone arbitrary legitimate history with bounded in-memory keysets."""
+    """Tombstone arbitrary legitimate history with bounded in-memory keysets.
 
+    Parameters
+    ----------
+    invitation : PlatformAccountInvitation
+        The scoped invitation whose lifecycle is being changed.
+    account : Account
+        The platform account whose state or access is being evaluated.
+    disposal_key : bytes
+        The stable disposal key used to authenticate or deduplicate the
+        operation.
+    tombstone_email : str
+        The normalized tombstone email used for delivery or identity matching.
+    at : datetime
+        The timezone-aware instant at which to evaluate the decision.
+    """
     last_id: UUID | None = None
     while True:
         chunk_query = IdentityChallenge.objects.select_for_update().filter(
@@ -780,8 +1001,18 @@ def _tombstone_provider_references(
     disposal_key: bytes,
     at: datetime,
 ) -> None:
-    """Replace raw provider material across the complete delivery evidence graph."""
+    """Replace raw provider material across the complete delivery evidence graph.
 
+    Parameters
+    ----------
+    invitation : PlatformAccountInvitation
+        The scoped invitation whose lifecycle is being changed.
+    disposal_key : bytes
+        The stable disposal key used to authenticate or deduplicate the
+        operation.
+    at : datetime
+        The timezone-aware instant at which to evaluate the decision.
+    """
     last_id: UUID | None = None
     while True:
         delivery_query = PlatformIdentityDelivery.objects.select_for_update().filter(
@@ -1084,8 +1315,18 @@ def _candidate_page(
 
 @contextmanager
 def _retention_worker_lock() -> Iterator[None]:
-    """Serialize only retention cursors while leaving other identity work live."""
+    """Serialize only retention cursors while leaving other identity work live.
 
+    Yields
+    ------
+    None
+        The resolved Iterator[None] for retention worker lock.
+
+    Returns
+    -------
+    Iterator[None]
+        An iterator that holds the retention-worker advisory lock.
+    """
     with connection.cursor() as cursor:
         cursor.execute("SELECT pg_advisory_lock(%s)", [_RETENTION_ADVISORY_LOCK_KEY])
     try:
@@ -1103,8 +1344,31 @@ def run_platform_invitation_retention(
     limit: int = MAX_RETENTION_BATCH,
     source_channel: object = "scheduler",
 ) -> InvitationRetentionRunResult:
-    """Dispose a bounded batch and append a policy-bound scheduler heartbeat."""
+    """Dispose a bounded batch and append a policy-bound scheduler heartbeat.
 
+    Parameters
+    ----------
+    limit : int, default=MAX_RETENTION_BATCH
+        The maximum number of records to return.
+    source_channel : object, default='scheduler'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    InvitationRetentionRunResult
+        The InvitationRetentionRunResult produced by run platform invitation
+        retention.
+
+    Raises
+    ------
+    InvitationRetentionConfigurationError
+        If the operation encounters a invitation retention configuration
+        condition.
+    InvitationRetentionUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if type(limit) is not int or not 1 <= limit <= MAX_RETENTION_BATCH:
         raise ValidationError(
             {
@@ -1202,8 +1466,14 @@ def run_platform_invitation_retention(
 
 
 def terminal_invitation_payloads_are_destroyed() -> bool:
-    """Prove C4 envelopes do not survive any invitation terminal transition."""
+    """Prove C4 envelopes do not survive any invitation terminal transition.
 
+    Returns
+    -------
+    bool
+        `True` when Prove C4 envelopes do not survive any invitation terminal
+        transition; otherwise `False`.
+    """
     try:
         return not PlatformAccountInvitation.objects.filter(
             status__in=(

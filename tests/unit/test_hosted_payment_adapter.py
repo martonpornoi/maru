@@ -1,6 +1,7 @@
 import json
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
+from typing import Never
 from urllib.error import URLError
 from uuid import uuid4
 
@@ -100,7 +101,7 @@ def test_json_hosted_payment_adapter_fails_closed_for_provider_errors(
 
     monkeypatch.setenv("HOSTED_PROVIDER_KEY", "synthetic-secret")
 
-    def unavailable(*_args, **_kwargs):
+    def unavailable(*_args, **_kwargs) -> Never:
         raise URLError("unavailable")
 
     monkeypatch.setattr("maru.registration.payments.urlopen", unavailable)

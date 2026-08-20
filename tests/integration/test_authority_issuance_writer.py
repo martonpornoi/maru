@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -26,7 +26,6 @@ from maru.authorization.models import (
     RoleBundle,
 )
 from maru.effects.models import DomainEvent, OutboxMessage
-from maru.identity.models import Account
 from maru.organizations.models import (
     Organization,
     OrganizationRepresentation,
@@ -40,6 +39,11 @@ from maru.organizations.representation import (
     respond_to_representation_invitation,
 )
 from tests.factories import AccountFactory, OrganizationFactory
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from maru.identity.models import Account
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 

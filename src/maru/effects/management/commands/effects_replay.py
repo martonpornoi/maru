@@ -13,9 +13,18 @@ from maru.identity.models import Account
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Replay one tenant-owned quarantined effect with reason and audit."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument("--organization", required=True, type=UUID)
         parser.add_argument("--message", required=True, type=UUID)
         parser.add_argument("--actor", required=True)
@@ -23,6 +32,20 @@ class Command(BaseCommand):
         parser.add_argument("--additional-attempts", type=int, default=3)
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args
         try:
             actor = Account.objects.get(email__iexact=options["actor"].strip())

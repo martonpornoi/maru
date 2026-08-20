@@ -10,12 +10,21 @@ from maru.logistics.readiness import build_logistics_readiness_report
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Inspect the installed Logistics database integrity and least-privilege "
         "contract. The report contains only named gate states."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--no-fail",
             action="store_true",
@@ -23,6 +32,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: object, **options: object) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : object
+            Positional arguments forwarded to the framework implementation.
+        **options : object
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args
         report = build_logistics_readiness_report()
         self.stdout.write(json.dumps(report, sort_keys=True, separators=(",", ":")))

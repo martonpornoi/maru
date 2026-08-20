@@ -1,0 +1,3 @@
+# The sole current maintainer owns all repository paths. Raise the required
+# CODEOWNERS approval count when a second maintainer can review pull requests.
+* @martonpornoi

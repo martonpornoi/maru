@@ -30,6 +30,7 @@ class InvitationTokenKeyConfigurationError(RuntimeError):
     """A value-safe signal that token-digest keys are unavailable or malformed."""
 
     def __init__(self) -> None:
+        """Initialize the InvitationTokenKeyConfigurationError instance."""
         super().__init__("Invitation token protection is unavailable.")
 
 
@@ -59,7 +60,13 @@ def _decode_key(value: object) -> bytes:
 
 @dataclass(frozen=True, slots=True)
 class InvitationTokenKeyring:
-    """One active digest key plus bounded fallback keys for safe rotation."""
+    """One active digest key plus bounded fallback keys for safe rotation.
+
+    Attributes
+    ----------
+    active_key_id
+        The active key identifier within the requested scope.
+    """
 
     active_key_id: str
     _keys: MappingProxyType[str, bytes]
@@ -71,6 +78,25 @@ class InvitationTokenKeyring:
         active_key_id: object,
         keyring_json: object,
     ) -> InvitationTokenKeyring:
+        """Return from json.
+
+        Parameters
+        ----------
+        active_key_id : object
+            The active key identifier within the requested scope.
+        keyring_json : object
+            The JSON-encoded keyring configuration to parse.
+
+        Returns
+        -------
+        InvitationTokenKeyring
+            The resolved InvitationTokenKeyring for from json.
+
+        Raises
+        ------
+        _configuration_error
+            If the operation encounters a configuration error condition.
+        """
         if (
             not isinstance(active_key_id, str)
             or _KEY_ID_PATTERN.fullmatch(active_key_id) is None
@@ -100,12 +126,40 @@ class InvitationTokenKeyring:
 
     @property
     def key_ids(self) -> tuple[str, ...]:
+        """Return key ids.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching key ids records in deterministic order.
+        """
         return (
             self.active_key_id,
             *(key_id for key_id in self._keys if key_id != self.active_key_id),
         )
 
     def digest(self, value: str, *, purpose: str, key_id: str | None = None) -> str:
+        """Return digest.
+
+        Parameters
+        ----------
+        value : str
+            The untrusted input to normalize, validate, or compare.
+        purpose : str
+            The documented purpose constraining collection and processing.
+        key_id : str | None, default=None
+            The key identifier within the requested scope.
+
+        Returns
+        -------
+        str
+            The normalized text for digest.
+
+        Raises
+        ------
+        _configuration_error
+            If the operation encounters a configuration error condition.
+        """
         if (
             not isinstance(value, str)
             or not 1 <= len(value) <= MAX_DIGEST_INPUT_CHARACTERS
@@ -120,6 +174,20 @@ class InvitationTokenKeyring:
         return hmac.new(key, message, hashlib.sha256).hexdigest()
 
     def candidates(self, value: str, *, purpose: str) -> tuple[tuple[str, str], ...]:
+        """Return candidates.
+
+        Parameters
+        ----------
+        value : str
+            The untrusted input to normalize, validate, or compare.
+        purpose : str
+            The documented purpose constraining collection and processing.
+
+        Returns
+        -------
+        tuple[tuple[str, str], ...]
+            The matching candidates records in deterministic order.
+        """
         return tuple(
             (key_id, self.digest(value, purpose=purpose, key_id=key_id))
             for key_id in self.key_ids
@@ -127,8 +195,13 @@ class InvitationTokenKeyring:
 
 
 def invitation_token_keyring() -> InvitationTokenKeyring:
-    """Load the web-visible token digest keyring from value-safe settings."""
+    """Load the web-visible token digest keyring from value-safe settings.
 
+    Returns
+    -------
+    InvitationTokenKeyring
+        The resolved InvitationTokenKeyring for invitation token keyring.
+    """
     return InvitationTokenKeyring.from_json(
         active_key_id=getattr(settings, ACTIVE_KEY_ID_SETTING, ""),
         keyring_json=getattr(settings, KEYRING_SETTING, ""),
@@ -136,6 +209,13 @@ def invitation_token_keyring() -> InvitationTokenKeyring:
 
 
 def invitation_token_keys_are_ready() -> bool:
+    """Return whether invitation token keys are ready.
+
+    Returns
+    -------
+    bool
+        Whether the requested condition is satisfied.
+    """
     try:
         invitation_token_keyring()
     except InvitationTokenKeyConfigurationError:

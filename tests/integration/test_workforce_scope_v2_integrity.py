@@ -3,7 +3,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from threading import Barrier
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 import pytest
@@ -24,9 +24,6 @@ from maru.authorization.models import (
     RoleBundle,
     ScopedResourceBinding,
 )
-from maru.events.models import EventEdition
-from maru.identity.models import Account
-from maru.organizations.models import Organization
 from maru.workforce.models import (
     Department,
     EditionStructureControl,
@@ -44,6 +41,11 @@ from tests.workforce_helpers import (
     save_position_assignment_for_test,
     save_position_for_test,
 )
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
+    from maru.organizations.models import Organization
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

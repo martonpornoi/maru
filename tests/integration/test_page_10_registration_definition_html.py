@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
@@ -12,8 +12,6 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.registration.configuration_lifecycle import (
     activate_registration_configuration,
     review_registration_configuration,
@@ -35,6 +33,10 @@ from maru.registration.setup_definition_commands import (
     create_registration_question,
 )
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 

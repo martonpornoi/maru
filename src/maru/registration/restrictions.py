@@ -26,8 +26,21 @@ def apply_restriction_consequences(
     restriction: AccountRestriction,
     actor: Account,
 ) -> tuple[int, int]:
-    """Cancel or hide only the records named by the restriction scope."""
+    """Cancel or hide only the records named by the restriction scope.
 
+    Parameters
+    ----------
+    restriction : AccountRestriction
+        The restriction evaluated while apply restriction consequences.
+    actor : Account
+        The authenticated account authorizing the operation.
+
+    Returns
+    -------
+    tuple[int, int]
+        The matching apply restriction consequences records in deterministic
+        order.
+    """
     changed_at = timezone.now()
     registrations = Registration.objects.select_for_update().filter(
         organization_id=restriction.organization_id,

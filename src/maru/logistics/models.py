@@ -46,6 +46,8 @@ def _half_open_interval() -> Func:
 
 class _ClosedLogisticsModel(UUIDTimeStampedModel):
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -63,6 +65,8 @@ class _ClosedLogisticsModel(UUIDTimeStampedModel):
 
 class _AppendOnlyLogisticsModel(_ClosedLogisticsModel):
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -78,10 +82,14 @@ class LogisticsParty(_ClosedLogisticsModel):
     """Reusable external owner/provider/borrower, never a Maru tenant."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         BUSINESS = "business", "Business"
         INDIVIDUAL = "individual", "Individual"
 
     class Role(models.TextChoices):
+        """Enumerate supported role values."""
+
         OWNER = "owner", "Owner"
         PROVIDER = "provider", "Provider"
         RENTAL_BUSINESS = "rental_business", "Rental business"
@@ -89,6 +97,8 @@ class LogisticsParty(_ClosedLogisticsModel):
         MIXED = "mixed", "Multiple roles"
 
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         RETIRED = "retired", "Retired"
 
@@ -122,6 +132,8 @@ class LogisticsParty(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "public_name", "id")
         constraints = [
             models.CheckConstraint(
@@ -156,10 +168,26 @@ class LogisticsParty(_ClosedLogisticsModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.code = self.code.lower()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable LogisticsParty label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return self.public_name
 
 
@@ -167,6 +195,8 @@ class RestrictedLogisticsAddress(_ClosedLogisticsModel):
     """Purpose-bound pickup/storage address, never a containment object."""
 
     class Purpose(models.TextChoices):
+        """Enumerate supported purpose values."""
+
         PICKUP = "pickup", "Pickup"
         STORAGE = "storage", "Storage"
         RETURN = "return", "Return"
@@ -174,6 +204,8 @@ class RestrictedLogisticsAddress(_ClosedLogisticsModel):
         PROVIDER = "provider", "Provider"
 
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         DISPOSED = "disposed", "Disposed"
 
@@ -231,6 +263,8 @@ class RestrictedLogisticsAddress(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "purpose", "label", "id")
         constraints = [
             models.CheckConstraint(
@@ -261,6 +295,13 @@ class RestrictedLogisticsAddress(_ClosedLogisticsModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.lifecycle == self.Lifecycle.ACTIVE and not self.postal_address:
             raise ValidationError(
@@ -292,6 +333,8 @@ class EquipmentOffer(_ClosedLogisticsModel):
     """A person's self-owned offer, pending until Logistics accepts it."""
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PENDING = "pending", "Pending"
         ACCEPTED = "accepted", "Accepted"
         REJECTED = "rejected", "Rejected"
@@ -347,6 +390,8 @@ class EquipmentOffer(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "-created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -377,6 +422,13 @@ class EquipmentOffer(_ClosedLogisticsModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError(
@@ -406,7 +458,11 @@ class EquipmentOffer(_ClosedLogisticsModel):
 
 
 class EquipmentOfferItem(_AppendOnlyLogisticsModel):
+    """Store equipment offer item records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         SERIALIZED = "serialized", "Serialized item"
         BULK = "bulk", "Bulk stock"
 
@@ -427,6 +483,8 @@ class EquipmentOfferItem(_AppendOnlyLogisticsModel):
     ownership_statement = models.CharField(max_length=500)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("offer_id", "created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -445,6 +503,8 @@ class EquipmentOfferItem(_AppendOnlyLogisticsModel):
 
 
 class EquipmentOfferHistory(_AppendOnlyLogisticsModel):
+    """Store equipment offer history records."""
+
     offer = models.ForeignKey(
         EquipmentOffer,
         on_delete=models.PROTECT,
@@ -471,6 +531,8 @@ class EquipmentOfferHistory(_AppendOnlyLogisticsModel):
     occurred_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("offer_id", "offer_version", "id")
         constraints = [
             models.CheckConstraint(
@@ -493,6 +555,8 @@ class EquipmentOfferHistory(_AppendOnlyLogisticsModel):
 
 
 class EquipmentOfferAcceptance(_AppendOnlyLogisticsModel):
+    """Store equipment offer acceptance records."""
+
     offer_item = models.OneToOneField(
         EquipmentOfferItem,
         on_delete=models.PROTECT,
@@ -520,6 +584,8 @@ class EquipmentOfferAcceptance(_AppendOnlyLogisticsModel):
     accepted_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         constraints = [
             models.CheckConstraint(
                 condition=(
@@ -545,6 +611,8 @@ class LogisticsNode(_ClosedLogisticsModel):
     """Typed physical object/location; people and addresses are never nodes."""
 
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         STORAGE_SITE = "storage_site", "Storage site"
         STORAGE_AREA = "storage_area", "Storage area"
         RACK = "rack", "Rack"
@@ -556,6 +624,8 @@ class LogisticsNode(_ClosedLogisticsModel):
         VENUE_ROOM = "venue_room", "Venue room"
 
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         RETIRED = "retired", "Retired"
         RETURNED = "returned", "Returned to provider"
@@ -618,6 +688,8 @@ class LogisticsNode(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "kind", "name", "id")
         constraints = [
             models.CheckConstraint(
@@ -667,10 +739,26 @@ class LogisticsNode(_ClosedLogisticsModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.code = self.code.lower()
         super().save(*args, **kwargs)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id:
             edition = self.edition
@@ -714,6 +802,8 @@ class LogisticsNode(_ClosedLogisticsModel):
 
 class _OwnedSubject(_ClosedLogisticsModel):
     class OwnerKind(models.TextChoices):
+        """Enumerate supported owner kind values."""
+
         ORGANIZATION = "organization", "Organizer"
         ACCOUNT = "account", "Person account"
         EXTERNAL_PARTY = "external_party", "External party"
@@ -740,6 +830,8 @@ class _OwnedSubject(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         abstract = True
 
     def clean(self) -> None:
@@ -782,12 +874,16 @@ class Asset(_OwnedSubject):
     """One serialized asset; location, custody, and condition are event-derived."""
 
     class Acquisition(models.TextChoices):
+        """Enumerate supported acquisition values."""
+
         OWNED = "owned", "Owned"
         LOAN = "loan", "Loan"
         RENTAL = "rental", "Rental"
         EQUIPMENT_OFFER = "equipment_offer", "Equipment offer"
 
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         LOST = "lost", "Lost"
         RETURNED = "returned", "Returned"
@@ -825,6 +921,8 @@ class Asset(_OwnedSubject):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "catalog_code", "id")
         constraints = [
             models.CheckConstraint(
@@ -860,10 +958,26 @@ class Asset(_OwnedSubject):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.catalog_code = self.catalog_code.lower()
         super().save(*args, **kwargs)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_allocation_id:
             edition_allocation = self.edition_allocation
@@ -881,6 +995,8 @@ class StockLot(_OwnedSubject):
     """One bulk stock lot; current quantity/location derive from events."""
 
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         EXHAUSTED = "exhausted", "Exhausted"
         RETURNED = "returned", "Returned"
@@ -915,6 +1031,8 @@ class StockLot(_OwnedSubject):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "catalog_code", "id")
         constraints = [
             models.CheckConstraint(
@@ -945,10 +1063,26 @@ class StockLot(_OwnedSubject):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.catalog_code = self.catalog_code.lower()
         super().save(*args, **kwargs)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_allocation_id:
             edition_allocation = self.edition_allocation
@@ -966,6 +1100,8 @@ class PhysicalKey(_ClosedLogisticsModel):
     """A tracked physical key; keyholder responsibility grants no software access."""
 
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         LOST = "lost", "Lost"
         RETURNED = "returned", "Returned"
@@ -1010,6 +1146,8 @@ class PhysicalKey(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "code", "id")
         constraints = [
             models.CheckConstraint(
@@ -1028,10 +1166,26 @@ class PhysicalKey(_ClosedLogisticsModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.code = self.code.lower()
         super().save(*args, **kwargs)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.opens_node_id
@@ -1051,6 +1205,8 @@ class PhysicalKey(_ClosedLogisticsModel):
 
 
 class KeyholderResponsibility(_AppendOnlyLogisticsModel):
+    """Store keyholder responsibility records."""
+
     key = models.ForeignKey(
         PhysicalKey,
         on_delete=models.PROTECT,
@@ -1071,6 +1227,8 @@ class KeyholderResponsibility(_AppendOnlyLogisticsModel):
     reason = models.TextField(max_length=MAX_LOGISTICS_REASON_LENGTH)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("key_id", "starts_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -1088,7 +1246,11 @@ class KeyholderResponsibility(_AppendOnlyLogisticsModel):
 
 
 class AssetAgreement(_ClosedLogisticsModel):
+    """Store asset agreement records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         LOAN = "loan", "Loan"
         RENTAL = "rental", "Rental"
 
@@ -1188,6 +1350,8 @@ class AssetAgreement(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "return_due_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -1225,6 +1389,13 @@ class AssetAgreement(_ClosedLogisticsModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         subjects = [
             self.asset_id,
@@ -1285,6 +1456,8 @@ class AssetAgreement(_ClosedLogisticsModel):
 
 
 class ReusableKit(_ClosedLogisticsModel):
+    """Store reusable kit records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -1307,6 +1480,8 @@ class ReusableKit(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "code", "id")
         constraints = [
             models.CheckConstraint(
@@ -1330,11 +1505,22 @@ class ReusableKit(_ClosedLogisticsModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.code = self.code.lower()
         super().save(*args, **kwargs)
 
 
 class ReusableKitLine(_AppendOnlyLogisticsModel):
+    """Store reusable kit line records."""
+
     kit = models.ForeignKey(
         ReusableKit,
         on_delete=models.PROTECT,
@@ -1365,6 +1551,8 @@ class ReusableKitLine(_AppendOnlyLogisticsModel):
     notes = models.CharField(max_length=500, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("kit_id", "created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1385,6 +1573,13 @@ class ReusableKitLine(_AppendOnlyLogisticsModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         subjects = [self.asset_id, self.stock_lot_id, self.physical_key_id]
         if sum(value is not None for value in subjects) != 1:
@@ -1400,7 +1595,11 @@ class ReusableKitLine(_AppendOnlyLogisticsModel):
 
 
 class LogisticsManifest(_ClosedLogisticsModel):
+    """Store logistics manifest records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         INBOUND = "inbound", "Inbound"
         OUTBOUND = "outbound", "Outbound"
         TRANSFER = "transfer", "Transfer"
@@ -1408,6 +1607,8 @@ class LogisticsManifest(_ClosedLogisticsModel):
         STAGE_RECEIVING = "stage_receiving", "Stage Tech receiving"
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         DRAFT = "draft", "Draft"
         SEALED = "sealed", "Sealed"
         COMPLETED = "completed", "Completed"
@@ -1480,6 +1681,8 @@ class LogisticsManifest(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "manifest_number", "id")
         constraints = [
             models.CheckConstraint(
@@ -1523,6 +1726,13 @@ class LogisticsManifest(_ClosedLogisticsModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError(
@@ -1560,7 +1770,11 @@ class LogisticsManifest(_ClosedLogisticsModel):
 
 
 class LogisticsManifestLine(_AppendOnlyLogisticsModel):
+    """Store logistics manifest line records."""
+
     class SubjectKind(models.TextChoices):
+        """Enumerate supported subject kind values."""
+
         NODE = "node", "Node"
         ASSET = "asset", "Asset"
         STOCK_LOT = "stock_lot", "Stock lot"
@@ -1612,6 +1826,8 @@ class LogisticsManifestLine(_AppendOnlyLogisticsModel):
     notes = models.CharField(max_length=500, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("manifest_id", "created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -1645,6 +1861,13 @@ class LogisticsManifestLine(_AppendOnlyLogisticsModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         subjects = [
             self.node_id,
@@ -1690,7 +1913,11 @@ class LogisticsManifestLine(_AppendOnlyLogisticsModel):
 
 
 class LogisticsLabel(_ClosedLogisticsModel):
+    """Store logistics label records."""
+
     class Lifecycle(models.TextChoices):
+        """Enumerate supported lifecycle values."""
+
         ACTIVE = "active", "Active"
         REVOKED = "revoked", "Revoked"
 
@@ -1745,6 +1972,8 @@ class LogisticsLabel(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "label_code", "id")
         constraints = [
             models.CheckConstraint(
@@ -1767,6 +1996,13 @@ class LogisticsLabel(_ClosedLogisticsModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         subjects = [
             self.node_id,
@@ -1785,6 +2021,8 @@ class LogisticsEvent(_AppendOnlyLogisticsModel):
     """Canonical append-only source for current location, custody, and condition."""
 
     class EventType(models.TextChoices):
+        """Enumerate supported event type values."""
+
         RECEIVE = "receive", "Receive"
         PACK = "pack", "Pack"
         UNPACK = "unpack", "Unpack"
@@ -1798,6 +2036,8 @@ class LogisticsEvent(_AppendOnlyLogisticsModel):
         RETURN = "return", "Return"
 
     class SubjectKind(models.TextChoices):
+        """Enumerate supported subject kind values."""
+
         NODE = "node", "Node"
         ASSET = "asset", "Asset"
         STOCK_LOT = "stock_lot", "Stock lot"
@@ -1909,6 +2149,8 @@ class LogisticsEvent(_AppendOnlyLogisticsModel):
     source_channel = models.CharField(max_length=32)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "occurred_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -1965,6 +2207,13 @@ class LogisticsEvent(_AppendOnlyLogisticsModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         subjects = [
             self.node_id,
@@ -2015,6 +2264,8 @@ class LogisticsCurrentState(_ClosedLogisticsModel):
     """Materialized projection changed only while appending its source event."""
 
     class State(models.TextChoices):
+        """Enumerate supported state values."""
+
         RECEIVED = "received", "Received"
         STORED = "stored", "Stored"
         IN_TRANSIT = "in_transit", "In transit"
@@ -2087,6 +2338,8 @@ class LogisticsCurrentState(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "id")
         constraints = [
             models.CheckConstraint(
@@ -2109,6 +2362,13 @@ class LogisticsCurrentState(_ClosedLogisticsModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         subjects = [
             self.node_id,
@@ -2149,7 +2409,11 @@ class LogisticsCurrentState(_ClosedLogisticsModel):
 
 
 class LogisticsDiscrepancy(_ClosedLogisticsModel):
+    """Store logistics discrepancy records."""
+
     class Kind(models.TextChoices):
+        """Enumerate supported kind values."""
+
         MISSING = "missing", "Missing"
         UNEXPECTED = "unexpected", "Unexpected"
         COUNT = "count", "Count mismatch"
@@ -2159,6 +2423,8 @@ class LogisticsDiscrepancy(_ClosedLogisticsModel):
         RETURN_OVERDUE = "return_overdue", "Return overdue"
 
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         OPEN = "open", "Open"
         RESOLVED = "resolved", "Resolved"
 
@@ -2207,6 +2473,8 @@ class LogisticsDiscrepancy(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "status", "created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -2244,6 +2512,8 @@ class LogisticsDiscrepancy(_ClosedLogisticsModel):
 
 
 class LogisticsEditionControl(_ClosedLogisticsModel):
+    """Store logistics edition control records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -2257,9 +2527,18 @@ class LogisticsEditionControl(_ClosedLogisticsModel):
     aggregate_version = models.PositiveBigIntegerField(default=0, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id",)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError(
@@ -2269,7 +2548,11 @@ class LogisticsEditionControl(_ClosedLogisticsModel):
 
 
 class OfflineScanBatch(_ClosedLogisticsModel):
+    """Store offline scan batch records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PENDING = "pending", "Pending"
         APPLIED = "applied", "Applied"
         REVIEW = "review", "Needs review"
@@ -2304,6 +2587,8 @@ class OfflineScanBatch(_ClosedLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("edition_id", "created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -2323,7 +2608,11 @@ class OfflineScanBatch(_ClosedLogisticsModel):
 
 
 class OfflineScanOperation(_AppendOnlyLogisticsModel):
+    """Store offline scan operation records."""
+
     class Result(models.TextChoices):
+        """Enumerate supported result values."""
+
         APPLIED = "applied", "Applied"
         DUPLICATE = "duplicate", "Duplicate"
         SUPERSEDED = "superseded", "Superseded"
@@ -2364,6 +2653,8 @@ class OfflineScanOperation(_AppendOnlyLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("batch_id", "sequence", "id")
         constraints = [
             models.CheckConstraint(
@@ -2414,6 +2705,8 @@ class OfflineScanOperation(_AppendOnlyLogisticsModel):
 
 
 class OfflineOperationReceipt(_AppendOnlyLogisticsModel):
+    """Store offline operation receipt records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -2444,6 +2737,8 @@ class OfflineOperationReceipt(_AppendOnlyLogisticsModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -2462,6 +2757,8 @@ class OfflineOperationReceipt(_AppendOnlyLogisticsModel):
 
 
 class LogisticsCommandReceipt(_AppendOnlyLogisticsModel):
+    """Store logistics command receipt records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -2488,6 +2785,8 @@ class LogisticsCommandReceipt(_AppendOnlyLogisticsModel):
     source_channel = models.CharField(max_length=32)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("created_at", "id")
         constraints = [
             models.UniqueConstraint(

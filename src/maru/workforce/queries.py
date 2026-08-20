@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Literal, cast
-from uuid import UUID
+from typing import TYPE_CHECKING, Literal, cast
 
 from django.db.models import F, Q
 from django.utils import timezone
@@ -25,6 +22,11 @@ from maru.workforce.structure_templates import (
     UnknownBuiltinStructureTemplateError,
     get_builtin_structure_template,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+    from uuid import UUID
 
 # These limits are deliberately code-owned. Every relation is fetched with a
 # limit+1 probe so a response is either complete or contains no partial tree.
@@ -57,18 +59,62 @@ class _StructureProjectionLimitExceededError(Exception):
 
 @dataclass(frozen=True, slots=True)
 class OtherRole:
+    """Describe other role.
+
+    Attributes
+    ----------
+    department_name
+        The human-readable department name shown to authorized readers.
+    position_title
+        The human-readable position title shown to authorized readers.
+    """
+
     department_name: str
     position_title: str
 
 
 @dataclass(frozen=True, slots=True)
 class EffectiveHolder:
+    """Describe effective holder.
+
+    Attributes
+    ----------
+    display_name
+        The human-readable display name shown to authorized readers.
+    other_roles
+        The other roles retained in this immutable projection.
+    """
+
     display_name: str
     other_roles: tuple[OtherRole, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class PositionNode:
+    """Describe position node.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    reports_to_id
+        The reports to identifier within the requested scope.
+    reports_to_title
+        The human-readable reports to title shown to authorized readers.
+    code
+        The stable domain code to resolve or validate.
+    title
+        The human-readable title shown to authorized readers.
+    description
+        The human-readable description shown to authorized readers.
+    headcount
+        The headcount retained in this immutable projection.
+    status
+        The closed status value to evaluate or expose.
+    holders
+        The holders retained in this immutable projection.
+    """
+
     id: UUID
     reports_to_id: UUID | None
     reports_to_title: str | None
@@ -82,11 +128,31 @@ class PositionNode:
 
 @dataclass(frozen=True, slots=True)
 class StructureSource:
+    """Describe structure source.
+
+    Attributes
+    ----------
+    kind
+        The closed discriminator selecting the requested behavior.
+    """
+
     kind: Literal["empty", "manual", "legacy_existing"]
 
 
 @dataclass(frozen=True, slots=True)
 class BuiltinTemplateStructureSource:
+    """Describe builtin template structure source.
+
+    Attributes
+    ----------
+    kind
+        The closed discriminator selecting the requested behavior.
+    template_code
+        The stable template code from the relevant closed catalog.
+    template_version
+        The expected template version used to reject stale updates.
+    """
+
     kind: Literal["builtin_template"]
     template_code: str
     template_version: int
@@ -97,6 +163,30 @@ StructureSourceProjection = StructureSource | BuiltinTemplateStructureSource
 
 @dataclass(frozen=True, slots=True)
 class DepartmentNode:
+    """Describe department node.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    parent_id
+        The parent identifier within the requested scope.
+    code
+        The stable domain code to resolve or validate.
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    display_order
+        The deterministic display position within the owning collection.
+    state
+        The lifecycle state to evaluate or expose.
+    positions
+        The positions retained in this immutable projection.
+    children
+        The children retained in this immutable projection.
+    """
+
     id: UUID
     parent_id: UUID | None
     code: str
@@ -110,6 +200,20 @@ class DepartmentNode:
 
 @dataclass(frozen=True, slots=True)
 class EditionStructureProjection:
+    """Describe edition structure projection.
+
+    Attributes
+    ----------
+    state
+        The lifecycle state to evaluate or expose.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    source
+        The immutable source record or definition from which data is derived.
+    departments
+        The departments retained in this immutable projection.
+    """
+
     state: StructureProjectionState
     aggregate_version: int
     source: StructureSourceProjection
@@ -166,8 +270,13 @@ def _overflow(
 
 
 def _transitional_legacy_control() -> _StructureControlProjection:
-    """Represent an expand-before-backfill tree without inventing provenance."""
+    """Describe an expand-before-backfill tree without inventing provenance.
 
+    Returns
+    -------
+    _StructureControlProjection
+        The resolved _StructureControlProjection for transitional legacy control.
+    """
     return _StructureControlProjection(
         aggregate_version=0,
         source=StructureSource(kind="legacy_existing"),
@@ -285,8 +394,26 @@ def _validate_parent_graph[
     rows_by_id: dict[UUID, RowT],
     parent_id_for: Callable[[RowT], UUID | None],
 ) -> bool:
-    """Reject invalid graphs and report whether valid depth stays bounded."""
+    """Reject invalid graphs and report whether valid depth stays bounded.
 
+    Parameters
+    ----------
+    rows_by_id : dict[UUID, RowT]
+        The rows by identifier within the requested scope.
+    parent_id_for : Callable[[RowT], UUID | None]
+        The callback invoked to parent id for.
+
+    Returns
+    -------
+    bool
+        `True` when Reject invalid graphs and report whether valid depth stays
+        bounded; otherwise `False`.
+
+    Raises
+    ------
+    StructureProjectionIntegrityError
+        If the operation encounters a structure projection integrity condition.
+    """
     depths: dict[UUID, int] = {}
     for row_id in rows_by_id:
         if row_id in depths:
@@ -340,7 +467,7 @@ def _department_rows(
     return tuple(
         _DepartmentRow(
             id=row["id"],
-            parent_id=cast(UUID | None, row["parent_id"]),
+            parent_id=cast("UUID | None", row["parent_id"]),
             code=row["code"],
             name=row["name"],
             description=row["description"],
@@ -377,7 +504,7 @@ def _position_rows(
         _PositionRow(
             id=row["id"],
             department_id=row["department_id"],
-            reports_to_id=cast(UUID | None, row["reports_to_id"]),
+            reports_to_id=cast("UUID | None", row["reports_to_id"]),
             code=row["code"],
             title=row["title"],
             description=row["description"],
@@ -489,8 +616,33 @@ def _project_complete_edition_structure(  # noqa: PLR0912
     control: _StructureControlProjection,
     at: datetime | None = None,
 ) -> EditionStructureProjection:
-    """Build one complete minimized tree or signal a code-owned limit."""
+    """Build one complete minimized tree or signal a code-owned limit.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    control : _StructureControlProjection
+        The control used to constrain the tenant-scoped query.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    EditionStructureProjection
+        The EditionStructureProjection produced by project complete edition
+        structure.
+
+    Raises
+    ------
+    StructureProjectionIntegrityError
+        If the operation encounters a structure projection integrity condition.
+    _StructureProjectionLimitExceededError
+        If the operation encounters a structure projection limit exceeded
+        condition.
+    """
     evaluated_at = at or timezone.now()
     if not timezone.is_aware(evaluated_at):
         raise StructureProjectionIntegrityError(
@@ -644,8 +796,22 @@ def project_edition_structure(
     edition_id: UUID,
     at: datetime | None = None,
 ) -> EditionStructureProjection:
-    """Return one complete minimized tree, or an explicit generic overflow."""
+    """Return one complete minimized tree, or an explicit generic overflow.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    EditionStructureProjection
+        The resolved EditionStructureProjection for project edition structure.
+    """
     control = _structure_control_projection(
         organization_id=organization_id,
         edition_id=edition_id,

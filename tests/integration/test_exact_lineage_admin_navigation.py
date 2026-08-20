@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import pytest
@@ -42,9 +43,6 @@ from maru.authorization.provenance import (
     authority_issuances_are_current,
 )
 from maru.events.admin_context import ADMIN_EDITION_SESSION_KEY
-from maru.events.models import EventEdition
-from maru.identity.models import Account
-from maru.organizations.models import Organization
 from maru.organizations.representation import EXECUTIVE_BOARD_ROLE_CODE
 from maru.workforce.models import Position, PositionTemplate
 from tests.factories import (
@@ -56,6 +54,11 @@ from tests.factories import (
 )
 from tests.support.authority import activate_synthetic_board
 from tests.workforce_helpers import create_department_for_test, save_position_for_test
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
+    from maru.organizations.models import Organization
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

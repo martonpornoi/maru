@@ -11,8 +11,18 @@ MAX_NAVIGATION_PINS = 24
 
 
 def navigation_pin_codes(*, account: Account) -> tuple[str, ...]:
-    """Return only the signed-in account's stable destination codes."""
+    """Return only the signed-in account's stable destination codes.
 
+    Parameters
+    ----------
+    account : Account
+        The platform account whose state or access is being evaluated.
+
+    Returns
+    -------
+    tuple[str, ...]
+        The matching navigation pin codes records in deterministic order.
+    """
     return tuple(
         NavigationPin.objects.filter(account=account)
         .order_by("created_at", "id")
@@ -22,8 +32,20 @@ def navigation_pin_codes(*, account: Account) -> tuple[str, ...]:
 
 @transaction.atomic
 def pin_navigation_destination(*, account: Account, destination_code: str) -> None:
-    """Store a shortcut preference; the destination is reauthorized on reads."""
+    """Store a shortcut preference; the destination is reauthorized on reads.
 
+    Parameters
+    ----------
+    account : Account
+        The platform account whose state or access is being evaluated.
+    destination_code : str
+        The stable destination code from the relevant closed catalog.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     locked_account = Account.objects.select_for_update().get(id=account.id)
     normalized_code = destination_code.strip()
     existing = NavigationPin.objects.filter(
@@ -48,8 +70,15 @@ def pin_navigation_destination(*, account: Account, destination_code: str) -> No
 
 @transaction.atomic
 def unpin_navigation_destination(*, account: Account, destination_code: str) -> None:
-    """Remove one shortcut without touching the destination or its authority."""
+    """Remove one shortcut without touching the destination or its authority.
 
+    Parameters
+    ----------
+    account : Account
+        The platform account whose state or access is being evaluated.
+    destination_code : str
+        The stable destination code from the relevant closed catalog.
+    """
     locked_account = Account.objects.select_for_update().get(id=account.id)
     NavigationPin.objects.filter(
         account=locked_account,

@@ -9,6 +9,8 @@ from maru.core.models import UUIDTimeStampedModel
 
 
 class DomainEvent(UUIDTimeStampedModel):
+    """Store domain event records."""
+
     event_name = models.CharField(max_length=160)
     schema_version = models.PositiveSmallIntegerField()
     occurred_at = models.DateTimeField()
@@ -25,6 +27,8 @@ class DomainEvent(UUIDTimeStampedModel):
     retention_class = models.CharField(max_length=80, default="domain-standard")
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("occurred_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -44,6 +48,20 @@ class DomainEvent(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Domain events are append-only.",
@@ -53,6 +71,25 @@ class DomainEvent(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Domain events are append-only.",
@@ -61,7 +98,11 @@ class DomainEvent(UUIDTimeStampedModel):
 
 
 class OutboxMessage(UUIDTimeStampedModel):
+    """Store outbox message records."""
+
     class Status(models.TextChoices):
+        """Enumerate supported status values."""
+
         PENDING = "pending", "Pending"
         PROCESSING = "processing", "Processing"
         SUCCEEDED = "succeeded", "Succeeded"
@@ -92,6 +133,8 @@ class OutboxMessage(UUIDTimeStampedModel):
     replay_count = models.PositiveIntegerField(default=0)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("available_at", "created_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -160,6 +203,13 @@ class OutboxMessage(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if (
             self.event_id
@@ -171,10 +221,38 @@ class OutboxMessage(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Outbox messages require a controlled retention workflow.",
@@ -183,7 +261,11 @@ class OutboxMessage(UUIDTimeStampedModel):
 
 
 class EffectAttempt(UUIDTimeStampedModel):
+    """Store effect attempt records."""
+
     class Outcome(models.TextChoices):
+        """Enumerate supported outcome values."""
+
         SUCCEEDED = "succeeded", "Succeeded"
         TRANSIENT_FAILURE = "transient_failure", "Transient failure"
         PERMANENT_FAILURE = "permanent_failure", "Permanent failure"
@@ -203,6 +285,8 @@ class EffectAttempt(UUIDTimeStampedModel):
     handler_code = models.CharField(max_length=160)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("outbox_message_id", "attempt_number")
         constraints = [
             models.UniqueConstraint(
@@ -216,6 +300,20 @@ class EffectAttempt(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Effect attempts are append-only.",
@@ -225,6 +323,25 @@ class EffectAttempt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Effect attempts are append-only.",

@@ -1,3 +1,5 @@
+"""Provide admin support for the privacyops module."""
+
 from django.contrib import admin
 
 from maru.core.admin import ReadOnlyAdminMixin
@@ -14,6 +16,8 @@ class SubjectRightsRequestAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for subject rights request."""
+
     list_display = ("account", "kind", "status", "organization_id", "requested_at")
     list_filter = ("kind", "status", "organization_id", "requested_at")
     search_fields = ("account__email", "request_summary")
@@ -24,6 +28,8 @@ class PostEditionCorrectionAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for post edition correction."""
+
     list_display = (
         "target_type",
         "target_id",
@@ -39,6 +45,8 @@ class RetentionPolicyAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for retention policy."""
+
     list_display = (
         "data_category",
         "jurisdiction_code",
@@ -55,6 +63,8 @@ class DisposalReceiptAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for disposal receipt."""
+
     list_display = (
         "target_type",
         "target_id",

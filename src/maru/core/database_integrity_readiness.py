@@ -11,14 +11,16 @@ from __future__ import annotations
 import hashlib
 import re
 from collections import Counter
-from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cache
 from importlib import import_module
-from typing import Final, Protocol, cast
+from typing import TYPE_CHECKING, Final, Protocol, cast
 
 from django.apps import apps
 from django.db import DatabaseError, connection, migrations
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping, Sequence
 
 _SUPPORTED_SCHEMA: Final = "public"
 _REQUIRED_SEARCH_PATH: Final = ("search_path=pg_catalog, public, pg_temp",)
@@ -76,7 +78,25 @@ class _IntegrityMigration(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class TriggerContract:
-    """One exact non-internal trigger attachment."""
+    """One exact non-internal trigger attachment.
+
+    Attributes
+    ----------
+    name
+        The human-readable name to normalize or persist.
+    table
+        The database table whose integrity contract is being inspected.
+    function_identity
+        The function identity retained in this immutable projection.
+    trigger_type
+        The closed trigger type discriminator defined by the domain catalog.
+    is_constraint
+        Whether to is constraint.
+    deferrable
+        The deferrable retained in this immutable projection.
+    initially_deferred
+        The initially deferred retained in this immutable projection.
+    """
 
     name: str
     table: str
@@ -88,6 +108,13 @@ class TriggerContract:
 
     @property
     def catalog_row(self) -> tuple[object, ...]:
+        """Return catalog row.
+
+        Returns
+        -------
+        tuple[object, ...]
+            The matching catalog row records in deterministic order.
+        """
         return (
             self.name,
             self.table,
@@ -105,7 +132,35 @@ class TriggerContract:
 
 @dataclass(frozen=True, slots=True)
 class FunctionContract:
-    """Behavior-bearing fields for one migration-owned function."""
+    """Behavior-bearing fields for one migration-owned function.
+
+    Attributes
+    ----------
+    identity
+        The identity retained in this immutable projection.
+    source
+        The immutable source record or definition from which data is derived.
+    language
+        The language retained in this immutable projection.
+    volatility
+        The volatility retained in this immutable projection.
+    parallel
+        The parallel retained in this immutable projection.
+    security_definer
+        The security definer retained in this immutable projection.
+    leakproof
+        The leakproof retained in this immutable projection.
+    strict
+        The strict retained in this immutable projection.
+    returns_set
+        The returns set retained in this immutable projection.
+    kind
+        The closed discriminator selecting the requested behavior.
+    configuration
+        The configuration retained in this immutable projection.
+    result
+        The result retained in this immutable projection.
+    """
 
     identity: str
     source: str
@@ -122,13 +177,40 @@ class FunctionContract:
 
     @property
     def source_sha256(self) -> str:
+        """Return source sha256.
+
+        Returns
+        -------
+        str
+            The normalized text for source sha256.
+        """
         normalized = self.source.replace("\r\n", "\n").strip()
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)
 class DatabaseIntegrityContract:
-    """One bounded context's declarative integrity contract."""
+    """One bounded context's declarative integrity contract.
+
+    Attributes
+    ----------
+    status_key
+        The stable status key used to authenticate or deduplicate the operation.
+    app_label
+        The human-readable app label shown to authorized readers.
+    source_migration
+        The source migration retained in this immutable projection.
+    terminal_migration
+        The terminal migration retained in this immutable projection.
+    source_migration_module
+        The source migration module retained in this immutable projection.
+    triggers
+        The triggers mapping to validate or transform.
+    functions
+        The functions mapping to validate or transform.
+    source_contract_current
+        The source contract current retained in this immutable projection.
+    """
 
     status_key: str
     app_label: str
@@ -141,12 +223,39 @@ class DatabaseIntegrityContract:
 
     @property
     def required_migrations(self) -> tuple[tuple[str, str], ...]:
+        """Return required migrations.
+
+        Returns
+        -------
+        tuple[tuple[str, str], ...]
+            The matching required migrations records in deterministic order.
+        """
         return tuple(dict.fromkeys((self.source_migration, self.terminal_migration)))
 
 
 @dataclass(frozen=True, slots=True)
 class DatabaseIntegrityCatalog:
-    """Identifier-free result of one bounded catalog inspection."""
+    """Identifier-free result of one bounded catalog inspection.
+
+    Attributes
+    ----------
+    source_contract_current
+        The source contract current retained in this immutable projection.
+    required_migrations_applied
+        The required migrations applied retained in this immutable projection.
+    relations_installed
+        The relations installed retained in this immutable projection.
+    relation_ownership_consistent
+        The relation ownership consistent retained in this immutable projection.
+    trigger_contract_current
+        The trigger contract current retained in this immutable projection.
+    function_contract_current
+        The function contract current retained in this immutable projection.
+    function_execute_owner_only
+        The function execute owner only retained in this immutable projection.
+    function_ownership_current
+        The function ownership current retained in this immutable projection.
+    """
 
     source_contract_current: bool
     required_migrations_applied: bool
@@ -159,6 +268,14 @@ class DatabaseIntegrityCatalog:
 
     @property
     def ready(self) -> bool:
+        """Initialize the Django application integrations.
+
+        Returns
+        -------
+        bool
+            `True` when Initialize the Django application integrations; otherwise
+            `False`.
+        """
         return all(
             (
                 self.source_contract_current,
@@ -318,10 +435,29 @@ def build_database_integrity_contract(
     terminal_migration: tuple[str, str],
     source_migration_module: str,
 ) -> DatabaseIntegrityContract:
-    """Derive one closed contract from app-owned migration source."""
+    """Derive one closed contract from app-owned migration source.
 
+    Parameters
+    ----------
+    status_key : str
+        The stable status key used to authenticate or deduplicate the operation.
+    app_label : str
+        The human-readable app label shown to authorized readers.
+    source_migration : tuple[str, str]
+        The migration node used to verify schema ordering and readiness.
+    terminal_migration : tuple[str, str]
+        The migration node used to verify schema ordering and readiness.
+    source_migration_module : str
+        The source migration module evaluated by the fail-closed readiness check.
+
+    Returns
+    -------
+    DatabaseIntegrityContract
+        The DatabaseIntegrityContract produced by build database integrity
+        contract.
+    """
     migration = cast(
-        _IntegrityMigration,
+        "_IntegrityMigration",
         import_module(source_migration_module),
     )
     forward_sql = migration.FORWARD_SQL
@@ -364,13 +500,29 @@ def build_database_integrity_contract(
 
 @cache
 def bounded_context_relation_names(app_label: str) -> tuple[str, ...]:
-    """Return every concrete current relation owned by one Django app."""
+    """Return every concrete current relation owned by one Django app.
 
+    Parameters
+    ----------
+    app_label : str
+        The human-readable app label shown to authorized readers.
+
+    Returns
+    -------
+    tuple[str, ...]
+        The matching bounded context relation names records in deterministic
+        order.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    """
     relations = tuple(
         sorted(
-            model._meta.db_table
+            model._meta.db_table  # noqa: SLF001
             for model in apps.get_app_config(app_label).get_models()
-            if model._meta.managed and not model._meta.proxy
+            if model._meta.managed and not model._meta.proxy  # noqa: SLF001
         )
     )
     if not relations or len(relations) != len(set(relations)):
@@ -404,7 +556,7 @@ def _function_rows_are_current(
         present = bool(row[1])
         source = str(row[2] or "").replace("\r\n", "\n").strip()
         source_sha256 = hashlib.sha256(source.encode("utf-8")).hexdigest()
-        configuration = tuple(cast(Iterable[str], row[11] or ()))
+        configuration = tuple(cast("Iterable[str]", row[11] or ()))
         definitions_current = (
             definitions_current
             and present
@@ -443,8 +595,19 @@ def _function_rows_are_current(
 def inspect_database_integrity_catalog(
     contract: DatabaseIntegrityContract,
 ) -> DatabaseIntegrityCatalog:
-    """Inspect one bounded context without reading business rows."""
+    """Inspect one bounded context without reading business rows.
 
+    Parameters
+    ----------
+    contract : DatabaseIntegrityContract
+        The contract evaluated by the fail-closed readiness check.
+
+    Returns
+    -------
+    DatabaseIntegrityCatalog
+        The DatabaseIntegrityCatalog produced by inspect database integrity
+        catalog.
+    """
     relations = bounded_context_relation_names(contract.app_label)
     required_migrations = set(contract.required_migrations)
     with connection.cursor() as cursor:
@@ -585,8 +748,19 @@ def inspect_database_integrity_catalog(
 def database_integrity_contract_is_ready(
     contract: DatabaseIntegrityContract,
 ) -> bool:
-    """Fail closed when the catalog cannot prove the complete contract."""
+    """Fail closed when the catalog cannot prove the complete contract.
 
+    Parameters
+    ----------
+    contract : DatabaseIntegrityContract
+        The contract evaluated by the fail-closed readiness check.
+
+    Returns
+    -------
+    bool
+        `True` when Fail closed when the catalog cannot prove the complete
+        contract; otherwise `False`.
+    """
     try:
         return inspect_database_integrity_catalog(contract).ready
     except (DatabaseError, LookupError, RuntimeError, TypeError, ValueError):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -14,7 +15,6 @@ from django.utils import timezone
 from maru.authorization import provenance_readiness
 from maru.authorization.activation import activate_authority_provenance
 from maru.authorization.models import AuthorityProvenanceActivation
-from maru.events.models import EventEdition
 from maru.organizations.models import OrganizationRepresentation
 from maru.workforce.models import (
     Position,
@@ -33,6 +33,9 @@ from tests.workforce_helpers import (
     save_position_assignment_for_test,
     save_position_for_test,
 )
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

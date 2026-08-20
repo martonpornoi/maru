@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import asdict
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 from uuid import UUID, uuid4
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -20,7 +19,6 @@ from drf_spectacular.utils import (
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.exceptions import ValidationError as ApiValidationError
-from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -88,6 +86,11 @@ from .services import (
     withdraw_equipment_offer,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from rest_framework.request import Request
+
 IDEMPOTENCY_HEADER = "Idempotency-Key"
 MAX_IDEMPOTENCY_HEADER_LENGTH = 64
 CANONICAL_UUID_PATTERN = (
@@ -127,13 +130,22 @@ class PrivateLogisticsAPIView(APIView):
 
 
 class LogisticsConflict(APIException):
+    """Signal logistics conflict."""
+
     status_code = status.HTTP_409_CONFLICT
     default_detail = "The logistics operation conflicts with current state."
     default_code = "logistics_conflict"
 
     def __init__(self, *, code: str) -> None:
+        """Initialize the LogisticsConflict instance.
+
+        Parameters
+        ----------
+        code : str
+            The stable domain code to resolve or validate.
+        """
         super().__init__(
-            detail=cast(Any, {"detail": self.default_detail, "code": code}),
+            detail=cast("Any", {"detail": self.default_detail, "code": code}),
             code=code,
         )
 
@@ -199,7 +211,7 @@ def _validated[Payload: dict[str, object]](
     serializer = serializer_class(data=request.data)
     reject_unknown_fields(request.data, allowed_fields=frozenset(serializer.fields))
     serializer.is_valid(raise_exception=True)
-    return cast(Payload, serializer.validated_data)
+    return cast("Payload", serializer.validated_data)
 
 
 def _django_validation(error: DjangoValidationError) -> Never:
@@ -292,11 +304,13 @@ def _result_response(
 def _subject(values: dict[str, object]) -> SubjectLocator:
     return SubjectLocator(
         kind=str(values["kind"]),
-        object_id=cast(UUID, values["object_id"]),
+        object_id=cast("UUID", values["object_id"]),
     )
 
 
 class MyEquipmentOfferCollectionView(PrivateLogisticsAPIView):
+    """Expose my equipment offer collection through the HTTP API."""
+
     @extend_schema(
         request=None,
         responses={200: LogisticsSelfOfferProjectionSerializer(many=True)},
@@ -304,6 +318,24 @@ class MyEquipmentOfferCollectionView(PrivateLogisticsAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the current person's equipment offers.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize_self_history(
             request,
             organization_id=organization_id,
@@ -327,6 +359,24 @@ class MyEquipmentOfferCollectionView(PrivateLogisticsAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Submit the equipment offer.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -335,7 +385,7 @@ class MyEquipmentOfferCollectionView(PrivateLogisticsAPIView):
             require_self_offer_open=True,
         )
         values = _validated(request, SelfOfferSubmitSerializer)
-        item_values = cast(list[dict[str, object]], values["items"])
+        item_values = cast("list[dict[str, object]]", values["items"])
         result = _execute(
             lambda: submit_equipment_offer(
                 actor=actor,
@@ -349,16 +399,16 @@ class MyEquipmentOfferCollectionView(PrivateLogisticsAPIView):
                 pickup_access_instructions=str(
                     values.get("pickup_access_instructions", "")
                 ),
-                pickup_retention_until=cast(Any, values["pickup_retention_until"]),
-                available_from=cast(Any, values["available_from"]),
-                available_until=cast(Any, values["available_until"]),
-                requested_return_at=cast(Any, values.get("requested_return_at")),
+                pickup_retention_until=cast("Any", values["pickup_retention_until"]),
+                available_from=cast("Any", values["available_from"]),
+                available_until=cast("Any", values["available_until"]),
+                requested_return_at=cast("Any", values.get("requested_return_at")),
                 items=tuple(
                     OfferItemInput(
                         kind=str(item["kind"]),
                         name=str(item["name"]),
                         description=str(item.get("description", "")),
-                        quantity=cast(int, item["quantity"]),
+                        quantity=cast("int", item["quantity"]),
                         manufacturer=str(item.get("manufacturer", "")),
                         model_name=str(item.get("model_name", "")),
                         serial_number=str(item.get("serial_number", "")),
@@ -378,6 +428,8 @@ class MyEquipmentOfferCollectionView(PrivateLogisticsAPIView):
 
 
 class MyEquipmentOfferWithdrawView(PrivateLogisticsAPIView):
+    """Expose my equipment offer withdraw through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=VersionedReasonSerializer,
@@ -390,6 +442,26 @@ class MyEquipmentOfferWithdrawView(PrivateLogisticsAPIView):
         edition_id: UUID,
         offer_id: UUID,
     ) -> Response:
+        """Withdraw the equipment offer.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        offer_id : UUID
+            The offer identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -404,7 +476,7 @@ class MyEquipmentOfferWithdrawView(PrivateLogisticsAPIView):
                 organization_id=organization_id,
                 edition_id=edition_id,
                 offer_id=offer_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),
@@ -415,6 +487,8 @@ class MyEquipmentOfferWithdrawView(PrivateLogisticsAPIView):
 
 
 class LogisticsWorkspaceView(PrivateLogisticsAPIView):
+    """Expose logistics workspace through the HTTP API."""
+
     @extend_schema(
         request=None,
         responses={200: LogisticsWorkspaceProjectionSerializer},
@@ -422,6 +496,24 @@ class LogisticsWorkspaceView(PrivateLogisticsAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the logistics workspace.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -440,6 +532,8 @@ class LogisticsWorkspaceView(PrivateLogisticsAPIView):
 
 
 class EquipmentOfferReviewView(PrivateLogisticsAPIView):
+    """Expose equipment offer review through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=_OFFER_REVIEW_REQUEST,
@@ -452,6 +546,26 @@ class EquipmentOfferReviewView(PrivateLogisticsAPIView):
         edition_id: UUID,
         offer_id: UUID,
     ) -> Response:
+        """Review the equipment offer.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        offer_id : UUID
+            The offer identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -466,10 +580,10 @@ class EquipmentOfferReviewView(PrivateLogisticsAPIView):
                 organization_id=organization_id,
                 edition_id=edition_id,
                 offer_id=offer_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 outcome=str(values["outcome"]),
                 responsible_department_id=cast(
-                    UUID | None, values.get("responsible_department_id")
+                    "UUID | None", values.get("responsible_department_id")
                 ),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
@@ -481,6 +595,8 @@ class EquipmentOfferReviewView(PrivateLogisticsAPIView):
 
 
 class LogisticsMovementView(PrivateLogisticsAPIView):
+    """Expose logistics movement through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=MovementCommandSerializer,
@@ -489,6 +605,24 @@ class LogisticsMovementView(PrivateLogisticsAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Record the logistics event.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -496,26 +630,26 @@ class LogisticsMovementView(PrivateLogisticsAPIView):
             capability_code=OPERATIONS_MANAGE_CAPABILITY,
         )
         values = _validated(request, MovementCommandSerializer)
-        movement_values = cast(dict[str, object], values["movement"])
-        subject_values = cast(dict[str, object], movement_values["subject"])
+        movement_values = cast("dict[str, object]", values["movement"])
+        subject_values = cast("dict[str, object]", movement_values["subject"])
         movement = MovementInput(
             event_type=str(movement_values["event_type"]),
             subject=_subject(subject_values),
-            occurred_at=cast(Any, movement_values["occurred_at"]),
-            source_node_id=cast(UUID | None, movement_values.get("source_node_id")),
+            occurred_at=cast("Any", movement_values["occurred_at"]),
+            source_node_id=cast("UUID | None", movement_values.get("source_node_id")),
             destination_node_id=cast(
-                UUID | None, movement_values.get("destination_node_id")
+                "UUID | None", movement_values.get("destination_node_id")
             ),
             to_custodian_account_id=cast(
-                UUID | None, movement_values.get("to_custodian_account_id")
+                "UUID | None", movement_values.get("to_custodian_account_id")
             ),
             to_custodian_party_id=cast(
-                UUID | None, movement_values.get("to_custodian_party_id")
+                "UUID | None", movement_values.get("to_custodian_party_id")
             ),
-            quantity=cast(int | None, movement_values.get("quantity")),
+            quantity=cast("int | None", movement_values.get("quantity")),
             condition_before=str(movement_values.get("condition_before", "")),
             condition_after=str(movement_values.get("condition_after", "")),
-            manifest_id=cast(UUID | None, movement_values.get("manifest_id")),
+            manifest_id=cast("UUID | None", movement_values.get("manifest_id")),
             evidence_reference=str(movement_values.get("evidence_reference", "")),
         )
         result = _execute(
@@ -524,7 +658,7 @@ class LogisticsMovementView(PrivateLogisticsAPIView):
                 organization_id=organization_id,
                 edition_id=edition_id,
                 movement=movement,
-                expected_sequence=cast(int, values["expected_sequence"]),
+                expected_sequence=cast("int", values["expected_sequence"]),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
                 correlation_id=_correlation_id(request),
@@ -535,6 +669,8 @@ class LogisticsMovementView(PrivateLogisticsAPIView):
 
 
 class LogisticsManifestCollectionView(PrivateLogisticsAPIView):
+    """Expose logistics manifest collection through the HTTP API."""
+
     @extend_schema(
         request=None,
         responses={200: LogisticsManifestProjectionSerializer(many=True)},
@@ -542,6 +678,24 @@ class LogisticsManifestCollectionView(PrivateLogisticsAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the logistics workspace.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -566,6 +720,24 @@ class LogisticsManifestCollectionView(PrivateLogisticsAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Create the logistics manifest.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -573,32 +745,32 @@ class LogisticsManifestCollectionView(PrivateLogisticsAPIView):
             capability_code=OPERATIONS_MANAGE_CAPABILITY,
         )
         values = _validated(request, ManifestCreateSerializer)
-        line_values = cast(list[dict[str, object]], values["lines"])
+        line_values = cast("list[dict[str, object]]", values["lines"])
         result = _execute(
             lambda: create_logistics_manifest(
                 actor=actor,
                 organization_id=organization_id,
                 edition_id=edition_id,
                 responsible_department_id=cast(
-                    UUID, values["responsible_department_id"]
+                    "UUID", values["responsible_department_id"]
                 ),
                 manifest_number=str(values["manifest_number"]),
                 kind=str(values["kind"]),
                 title=str(values["title"]),
-                source_node_id=cast(UUID | None, values.get("source_node_id")),
+                source_node_id=cast("UUID | None", values.get("source_node_id")),
                 destination_node_id=cast(
-                    UUID | None, values.get("destination_node_id")
+                    "UUID | None", values.get("destination_node_id")
                 ),
-                vehicle_id=cast(UUID | None, values.get("vehicle_id")),
-                provider_id=cast(UUID | None, values.get("provider_id")),
-                loading_starts_at=cast(Any, values.get("loading_starts_at")),
-                loading_ends_at=cast(Any, values.get("loading_ends_at")),
+                vehicle_id=cast("UUID | None", values.get("vehicle_id")),
+                provider_id=cast("UUID | None", values.get("provider_id")),
+                loading_starts_at=cast("Any", values.get("loading_starts_at")),
+                loading_ends_at=cast("Any", values.get("loading_ends_at")),
                 lines=tuple(
                     ManifestLineInput(
-                        subject=_subject(cast(dict[str, object], line["subject"])),
-                        quantity=cast(int, line["quantity"]),
+                        subject=_subject(cast("dict[str, object]", line["subject"])),
+                        quantity=cast("int", line["quantity"]),
                         packed_in_node_id=cast(
-                            UUID | None, line.get("packed_in_node_id")
+                            "UUID | None", line.get("packed_in_node_id")
                         ),
                         notes=str(line.get("notes", "")),
                     )
@@ -614,6 +786,8 @@ class LogisticsManifestCollectionView(PrivateLogisticsAPIView):
 
 
 class LogisticsManifestDetailView(PrivateLogisticsAPIView):
+    """Expose logistics manifest detail through the HTTP API."""
+
     @extend_schema(
         request=None,
         responses={200: LogisticsManifestProjectionSerializer},
@@ -625,6 +799,26 @@ class LogisticsManifestDetailView(PrivateLogisticsAPIView):
         edition_id: UUID,
         manifest_id: UUID,
     ) -> Response:
+        """Retrieve the workspace manifest.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        manifest_id : UUID
+            The manifest identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -645,6 +839,8 @@ class LogisticsManifestDetailView(PrivateLogisticsAPIView):
 
 
 class LogisticsManifestStateView(PrivateLogisticsAPIView):
+    """Expose logistics manifest state through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=ManifestStateSerializer,
@@ -657,6 +853,26 @@ class LogisticsManifestStateView(PrivateLogisticsAPIView):
         edition_id: UUID,
         manifest_id: UUID,
     ) -> Response:
+        """Change the manifest state.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        manifest_id : UUID
+            The manifest identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -671,7 +887,7 @@ class LogisticsManifestStateView(PrivateLogisticsAPIView):
                 organization_id=organization_id,
                 edition_id=edition_id,
                 manifest_id=manifest_id,
-                expected_version=cast(int, values["expected_version"]),
+                expected_version=cast("int", values["expected_version"]),
                 action=str(values["action"]),
                 reason=str(values["reason"]),
                 idempotency_key=_idempotency_key(request),
@@ -683,6 +899,8 @@ class LogisticsManifestStateView(PrivateLogisticsAPIView):
 
 
 class OfflineScanBatchView(PrivateLogisticsAPIView):
+    """Expose offline scan batch through the HTTP API."""
+
     @extend_schema(
         parameters=[_IDEMPOTENCY_PARAMETER],
         request=OfflineBatchSerializer,
@@ -691,6 +909,24 @@ class OfflineScanBatchView(PrivateLogisticsAPIView):
     def post(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """Ingest the offline scan batch.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -698,31 +934,31 @@ class OfflineScanBatchView(PrivateLogisticsAPIView):
             capability_code=OFFLINE_RECONCILE_CAPABILITY,
         )
         values = _validated(request, OfflineBatchSerializer)
-        operation_values = cast(list[dict[str, object]], values["operations"])
+        operation_values = cast("list[dict[str, object]]", values["operations"])
         result = _execute(
             lambda: ingest_offline_scan_batch(
                 actor=actor,
                 organization_id=organization_id,
                 edition_id=edition_id,
                 device_code=str(values["device_code"]),
-                snapshot_version=cast(int, values["snapshot_version"]),
+                snapshot_version=cast("int", values["snapshot_version"]),
                 policy_version=str(values["policy_version"]),
-                expires_at=cast(Any, values["expires_at"]),
+                expires_at=cast("Any", values["expires_at"]),
                 operations=tuple(
                     OfflineOperationInput(
-                        sequence=cast(int, operation["sequence"]),
-                        idempotency_key=cast(UUID, operation["idempotency_key"]),
+                        sequence=cast("int", operation["sequence"]),
+                        idempotency_key=cast("UUID", operation["idempotency_key"]),
                         expected_subject_sequence=cast(
-                            int, operation["expected_subject_sequence"]
+                            "int", operation["expected_subject_sequence"]
                         ),
                         action=str(operation["action"]),
                         label_code=str(operation["label_code"]),
-                        occurred_at=cast(Any, operation["occurred_at"]),
+                        occurred_at=cast("Any", operation["occurred_at"]),
                         source_label_code=str(operation.get("source_label_code", "")),
                         destination_label_code=str(
                             operation.get("destination_label_code", "")
                         ),
-                        quantity=cast(int | None, operation.get("quantity")),
+                        quantity=cast("int | None", operation.get("quantity")),
                         observed_condition=str(operation.get("observed_condition", "")),
                     )
                     for operation in operation_values
@@ -737,6 +973,8 @@ class OfflineScanBatchView(PrivateLogisticsAPIView):
 
 
 class StageTechReceivingView(PrivateLogisticsAPIView):
+    """Expose stage tech receiving through the HTTP API."""
+
     @extend_schema(
         request=None,
         responses={200: LogisticsManifestProjectionSerializer(many=True)},
@@ -744,6 +982,24 @@ class StageTechReceivingView(PrivateLogisticsAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List Stage Tech receiving manifests.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -762,6 +1018,8 @@ class StageTechReceivingView(PrivateLogisticsAPIView):
 
 
 class LogisticsActivityView(PrivateLogisticsAPIView):
+    """Expose logistics activity through the HTTP API."""
+
     @extend_schema(
         request=None,
         responses={200: LogisticsActivityProjectionSerializer(many=True)},
@@ -769,6 +1027,24 @@ class LogisticsActivityView(PrivateLogisticsAPIView):
     def get(
         self, request: Request, organization_id: UUID, edition_id: UUID
     ) -> Response:
+        """List the logistics activity.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,
@@ -787,6 +1063,8 @@ class LogisticsActivityView(PrivateLogisticsAPIView):
 
 
 class RestrictedLogisticsContactView(PrivateLogisticsAPIView):
+    """Expose restricted logistics contact through the HTTP API."""
+
     @extend_schema(
         request=RestrictedContactReadSerializer,
         responses={200: RestrictedLogisticsContactProjectionSerializer},
@@ -798,6 +1076,26 @@ class RestrictedLogisticsContactView(PrivateLogisticsAPIView):
         edition_id: UUID,
         address_id: UUID,
     ) -> Response:
+        """Read the restricted logistics contact.
+
+        Every authenticated Logistics response is private and non-cacheable.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        address_id : UUID
+            The address identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         actor = _preauthorize(
             request,
             organization_id=organization_id,

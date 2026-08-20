@@ -47,6 +47,19 @@ class ResolvedAuthorizationTarget:
     resolver functions below prove the persisted tenant chain before sealing a
     target; owner facts are derived from a persisted owning record or from the
     exact principal of a code-owned self-service action.
+
+    Attributes
+    ----------
+    organization_id
+        The organization identifier that owns the requested resource.
+    edition_id
+        The event edition identifier that scopes the operation.
+    department_id
+        The department identifier within the requested scope.
+    resource_binding_id
+        The resource binding identifier within the requested scope.
+    owner_account_id
+        The owner account identifier within the requested scope.
     """
 
     organization_id: UUID
@@ -57,6 +70,13 @@ class ResolvedAuthorizationTarget:
     _seal: object = field(repr=False, compare=False)
 
     def __init__(self) -> None:
+        """Initialize the ResolvedAuthorizationTarget instance.
+
+        Raises
+        ------
+        TypeError
+            If a supplied value has an unsupported type.
+        """
         raise TypeError(
             "Authorization targets must be created by an explicit persisted "
             "target resolver."
@@ -64,6 +84,13 @@ class ResolvedAuthorizationTarget:
 
     @property
     def scope_level(self) -> ScopeLevel:
+        """Return scope level.
+
+        Returns
+        -------
+        ScopeLevel
+            The resolved ScopeLevel for scope level.
+        """
         if self.resource_binding_id is not None:
             return ScopeLevel.RESOURCE
         if self.department_id is not None:
@@ -75,6 +102,22 @@ class ResolvedAuthorizationTarget:
 
 @dataclass(frozen=True, slots=True)
 class PolicyDecision:
+    """Describe policy decision.
+
+    Attributes
+    ----------
+    allowed
+        The allowed retained in this immutable projection.
+    fields
+        The canonical field names included in the operation.
+    obligations
+        The obligations retained in this immutable projection.
+    reason_code
+        The stable reason code from the relevant closed catalog.
+    policy_version
+        The expected policy version used to reject stale updates.
+    """
+
     allowed: bool
     fields: frozenset[str]
     obligations: frozenset[str]
@@ -90,6 +133,19 @@ class AuthorizedScopeProjection:
     tenant display identifiers.  Browser navigation may use it to constrain a
     later tenant-name query, but every destination must repeat its own policy
     decision.
+
+    Attributes
+    ----------
+    organization_id
+        The organization identifier that owns the requested resource.
+    edition_id
+        The event edition identifier that scopes the operation.
+    department_id
+        The department identifier within the requested scope.
+    resource_binding_id
+        The resource binding identifier within the requested scope.
+    capability_codes
+        The capability codes retained in this immutable projection.
     """
 
     organization_id: UUID
@@ -138,8 +194,18 @@ def _person_account_exists(account_id: UUID) -> bool:
 def resolve_organization_target(
     *, organization_id: UUID
 ) -> ResolvedAuthorizationTarget | None:
-    """Resolve an exact persisted organization without disclosing absence."""
+    """Resolve an exact persisted organization without disclosing absence.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+
+    Returns
+    -------
+    ResolvedAuthorizationTarget | None
+        The resolved ResolvedAuthorizationTarget | None for the requested scope.
+    """
     from maru.organizations.models import Organization  # noqa: PLC0415
 
     row = _safe_first(Organization.objects.filter(pk=organization_id).values("id"))
@@ -151,8 +217,20 @@ def resolve_organization_target(
 def resolve_edition_target(
     *, organization_id: UUID, edition_id: UUID
 ) -> ResolvedAuthorizationTarget | None:
-    """Resolve an edition only through its exact persisted organization."""
+    """Resolve an edition only through its exact persisted organization.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    ResolvedAuthorizationTarget | None
+        The resolved ResolvedAuthorizationTarget | None for the requested scope.
+    """
     from maru.events.models import EventEdition  # noqa: PLC0415
 
     row = _safe_first(
@@ -175,8 +253,22 @@ def resolve_department_target(
     edition_id: UUID,
     department_id: UUID,
 ) -> ResolvedAuthorizationTarget | None:
-    """Resolve one exact department; reporting descendants never inherit."""
+    """Resolve one exact department; reporting descendants never inherit.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    department_id : UUID
+        The department identifier within the requested scope.
+
+    Returns
+    -------
+    ResolvedAuthorizationTarget | None
+        The resolved ResolvedAuthorizationTarget | None for the requested scope.
+    """
     from maru.workforce.models import Department  # noqa: PLC0415
 
     row = _safe_first(
@@ -203,8 +295,24 @@ def resolve_resource_target(
     department_id: UUID,
     resource_binding_id: UUID,
 ) -> ResolvedAuthorizationTarget | None:
-    """Resolve one immutable typed binding through its complete parent chain."""
+    """Resolve one immutable typed binding through its complete parent chain.
 
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    department_id : UUID
+        The department identifier within the requested scope.
+    resource_binding_id : UUID
+        The resource binding identifier within the requested scope.
+
+    Returns
+    -------
+    ResolvedAuthorizationTarget | None
+        The resolved ResolvedAuthorizationTarget | None for the requested scope.
+    """
     from maru.authorization.models import ScopedResourceBinding  # noqa: PLC0415
 
     row = _safe_first(
@@ -243,13 +351,22 @@ def resolve_owned_target(  # noqa: PLR0911
     The owning record must expose direct ``organization_id``, ``account_id``,
     and optional ``edition_id`` fields.  Values are re-read from the database;
     caller-supplied owner identifiers are never accepted.
-    """
 
+    Parameters
+    ----------
+    resource : Model
+        The resolved resource target used for scoped authorization.
+
+    Returns
+    -------
+    ResolvedAuthorizationTarget | None
+        The resolved ResolvedAuthorizationTarget | None for the requested scope.
+    """
     if resource.pk is None:
         return None
-    if resource._meta.label_lower == "workforce.volunteerapplication":
+    if resource._meta.label_lower == "workforce.volunteerapplication":  # noqa: SLF001
         row = _safe_first(
-            type(resource)
+            type(resource)  # noqa: SLF001
             ._base_manager.filter(pk=resource.pk)
             .values(
                 "account_id",
@@ -274,14 +391,14 @@ def resolve_owned_target(  # noqa: PLR0911
             edition_id=base.edition_id,
             owner_account_id=row["account_id"],
         )
-    concrete_attnames = {field.attname for field in resource._meta.concrete_fields}
+    concrete_attnames = {field.attname for field in resource._meta.concrete_fields}  # noqa: SLF001
     if not {"organization_id", "account_id"} <= concrete_attnames:
         return None
     value_fields = ["organization_id", "account_id"]
     if "edition_id" in concrete_attnames:
         value_fields.append("edition_id")
     row = _safe_first(
-        type(resource)._base_manager.filter(pk=resource.pk).values(*value_fields)
+        type(resource)._base_manager.filter(pk=resource.pk).values(*value_fields)  # noqa: SLF001
     )
     if (
         row is None
@@ -317,8 +434,21 @@ def resolve_self_target(
     This resolver is for create/list self-service operations that have no
     owning domain row yet.  It cannot name another owner and rejects platform
     administrators as convention subjects.
-    """
 
+    Parameters
+    ----------
+    principal : Account
+        The authenticated principal whose authority is evaluated.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID | None, default=None
+        The event edition identifier that scopes the operation.
+
+    Returns
+    -------
+    ResolvedAuthorizationTarget | None
+        The resolved ResolvedAuthorizationTarget | None for the requested scope.
+    """
     person_exists = Account.objects.filter(
         pk=principal.pk,
         account_kind=Account.Kind.PERSON,
@@ -415,6 +545,20 @@ def grant_chain_is_active(  # noqa: PLR0911
     grant: CapabilityGrant,
     at: datetime,
 ) -> bool:
+    """Return whether grant chain is active.
+
+    Parameters
+    ----------
+    grant : CapabilityGrant
+        The grant evaluated while grant chain is active.
+    at : datetime
+        The point in time used for the operation.
+
+    Returns
+    -------
+    bool
+        Whether the requested condition is satisfied.
+    """
     seen: set[UUID] = set()
     current: CapabilityGrant | None = grant
     child: CapabilityGrant | None = None
@@ -447,8 +591,13 @@ def grant_chain_is_active(  # noqa: PLR0911
 
 
 def _exact_lineage_policy_state() -> tuple[bool, bool]:
-    """Return cutover evidence and runtime-contract validity without caching."""
+    """Return cutover evidence and runtime-contract validity without caching.
 
+    Returns
+    -------
+    tuple[bool, bool]
+        The matching exact lineage policy state records in deterministic order.
+    """
     latch_generation = (
         AuthorityProvenanceActivationLatch.objects.filter(singleton=True)
         .values_list("generation", flat=True)
@@ -472,8 +621,14 @@ def _exact_lineage_policy_state() -> tuple[bool, bool]:
 
 
 def exact_lineage_policy_is_active() -> bool:
-    """Confirm that the durable marker selects this exact runtime contract."""
+    """Confirm that the durable marker selects this exact runtime contract.
 
+    Returns
+    -------
+    bool
+        `True` when Confirm that the durable marker selects this exact runtime
+        contract; otherwise `False`.
+    """
     marker_present, contract_valid = _exact_lineage_policy_state()
     return marker_present and contract_valid
 
@@ -539,8 +694,18 @@ def _bulk_authority_projection_targets(
     fan-out before the batched provenance check.  These reads remain name-free
     and retain the same exact organization/edition/department/resource chain
     validation as the public single-target resolvers.
-    """
 
+    Parameters
+    ----------
+    scope_keys : Collection[_AuthorityScopeKey]
+        The scope keys evaluated while bulk authority projection targets.
+
+    Returns
+    -------
+    dict[_AuthorityScopeKey, ResolvedAuthorizationTarget]
+        A mapping containing the resolved bulk authority projection targets
+        data.
+    """
     if not scope_keys:
         return {}
 
@@ -760,8 +925,24 @@ def current_role_assignment_ids(
     must retain and pass its own pinned issuance; a missing or malformed
     required-exact contract fails closed instead of rebinding to equivalent
     authority.
-    """
 
+    Parameters
+    ----------
+    assignment_ids : Collection[UUID]
+        The selected assignment identifiers.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    frozenset[UUID]
+        The matching current role assignment ids records in deterministic order.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     requested_ids = frozenset(assignment_ids)
     if len(requested_ids) > MAX_ROLE_ASSIGNMENT_CURRENTNESS_CHECKS:
         raise ValueError("Too many role assignments for one currentness check.")
@@ -862,8 +1043,20 @@ def project_active_authority_scopes(  # noqa: PLR0912
     legacy delegated-chain behavior until the external exact-lineage fence is
     selected.  Platform oversight and self-service remain outside this
     organizer-authority projection.
-    """
 
+    Parameters
+    ----------
+    principal : Account
+        The authenticated principal whose authority is evaluated.
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    tuple[AuthorizedScopeProjection, ...]
+        The matching project active authority scopes records in deterministic
+        order.
+    """
     evaluation_time = at or timezone.now()
     if (
         not timezone.is_aware(evaluation_time)
@@ -1009,6 +1202,35 @@ def decide(  # noqa: PLR0911
     requested_fields: frozenset[str] | None = None,
     at: datetime | None = None,
 ) -> PolicyDecision:
+    """Evaluate one capability against a trusted, scoped resource target.
+
+    Parameters
+    ----------
+    principal : Account
+        The authenticated principal whose authority is evaluated.
+    capability_code : str
+        The stable capability code required by the operation.
+    resource : ResolvedAuthorizationTarget | None
+        The resolved resource target used for scoped authorization.
+    requested_fields : frozenset[str] | None, default=None
+        The canonical requested fields included in the projection or mutation.
+    at : datetime | None, default=None
+        Optional evaluation instant; defaults to the current timezone-aware
+        time.
+
+    Returns
+    -------
+    PolicyDecision
+        A fail-closed decision containing allowed fields, obligations, and a
+        stable reason code.
+
+    Notes
+    -----
+    Denial is data, not an exception. Unknown capabilities, inactive accounts,
+    unsealed targets, invalid authority provenance, and absent grants all
+    return a denied decision with no fields. Requested fields can only narrow
+    the capability's code-owned field ceiling.
+    """
     definition = capability(capability_code)
     if definition is None or not principal.is_active:
         return PolicyDecision(

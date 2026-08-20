@@ -85,6 +85,20 @@ class DemoDataConflictError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class CapacitySpec:
+    """Describe capacity spec.
+
+    Attributes
+    ----------
+    code
+        The stable domain code to resolve or validate.
+    label
+        The human-readable label shown to authorized readers.
+    contribution
+        The contribution retained in this immutable projection.
+    public
+        The public retained in this immutable projection.
+    """
+
     code: str
     label: str
     contribution: str
@@ -93,6 +107,37 @@ class CapacitySpec:
 
 @dataclass(frozen=True, slots=True)
 class PersonaSpec:
+    """Describe persona spec.
+
+    Attributes
+    ----------
+    key
+        The lookup, signing, or idempotency key selected by the contract.
+    title
+        The human-readable title shown to authorized readers.
+    capacities
+        The capacities retained in this immutable projection.
+    relationship_label
+        The human-readable relationship label shown to authorized readers.
+    membership_state
+        The closed membership state discriminator defined by the domain catalog.
+    authority
+        The authority retained in this immutable projection.
+    past
+        The past retained in this immutable projection.
+    current
+        Whether this destination represents the current request path.
+    future
+        The future retained in this immutable projection.
+    current_status
+        The closed current status discriminator defined by the domain catalog.
+    current_capacity_status
+        The closed current capacity status discriminator defined by the domain catalog.
+    shared_account_key
+        The stable shared account key used to authenticate or deduplicate the
+        operation.
+    """
+
     key: str
     title: str
     capacities: tuple[CapacitySpec, ...]
@@ -109,6 +154,24 @@ class PersonaSpec:
 
 @dataclass(frozen=True, slots=True)
 class EditionSpec:
+    """Describe edition spec.
+
+    Attributes
+    ----------
+    key
+        The lookup, signing, or idempotency key selected by the contract.
+    slug
+        The stable URL slug identifying the slug.
+    name
+        The human-readable name to normalize or persist.
+    starts_on
+        The calendar date for starts.
+    ends_on
+        The calendar date for ends.
+    lifecycle
+        The lifecycle retained in this immutable projection.
+    """
+
     key: str
     slug: str
     name: str
@@ -119,6 +182,36 @@ class EditionSpec:
 
 @dataclass(frozen=True, slots=True)
 class ConventionSpec:
+    """Describe convention spec.
+
+    Attributes
+    ----------
+    key
+        The lookup, signing, or idempotency key selected by the contract.
+    organization_slug
+        The stable URL slug identifying the organization.
+    organization_name
+        The human-readable organization name shown to authorized readers.
+    series_slug
+        The stable URL slug identifying the series.
+    series_name
+        The human-readable series name shown to authorized readers.
+    short_name
+        The human-readable short name shown to authorized readers.
+    country_code
+        The stable country code from the relevant closed catalog.
+    language
+        The language retained in this immutable projection.
+    time_zone
+        The IANA time-zone name used for localized presentation.
+    language_codes
+        The language codes retained in this immutable projection.
+    currency_codes
+        The currency codes retained in this immutable projection.
+    editions
+        The editions retained in this immutable projection.
+    """
+
     key: str
     organization_slug: str
     organization_name: str
@@ -135,12 +228,33 @@ class ConventionSpec:
 
 @dataclass(frozen=True, slots=True)
 class DemoSeedSummary:
+    """Describe demo seed summary.
+
+    Attributes
+    ----------
+    created
+        The created mapping to validate or transform.
+    totals
+        The totals mapping to validate or transform.
+    featured_logins
+        The featured logins retained in this immutable projection.
+    passwords_reset
+        The passwords reset retained in this immutable projection.
+    """
+
     created: dict[str, int]
     totals: dict[str, int]
     featured_logins: tuple[str, ...]
     passwords_reset: int
 
     def as_dict(self) -> dict[str, object]:
+        """Serialize this specification as a dictionary.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved as dict data.
+        """
         return {
             "dataset": "maru-synthetic-two-convention-v5",
             "synthetic_only": True,
@@ -813,6 +927,15 @@ def _stable_id(kind: str, key: str) -> UUID:
 
 class _DemoSeeder:
     def __init__(self, *, password: str, reset_passwords: bool) -> None:
+        """Initialize the _DemoSeeder instance.
+
+        Parameters
+        ----------
+        password : str
+            The password assigned to generated demo accounts.
+        reset_passwords : bool
+            Whether to replace passwords on existing demo accounts.
+        """
         self.password_hash = make_password(password)
         self.reset_passwords = reset_passwords
         self.created: Counter[str] = Counter()
@@ -950,8 +1073,24 @@ class _DemoSeeder:
         administrator: Account,
         accounts: dict[str, Account],
     ) -> None:
-        """Exercise the real two-controller handoff in the synthetic fixture."""
+        """Exercise the real two-controller handoff in the synthetic fixture.
 
+        Parameters
+        ----------
+        convention : ConventionSpec
+            The convention evaluated while executive board representation.
+        organization : Organization
+            The organization that owns the requested resource.
+        administrator : Account
+            The platform administrator authorizing the privileged action.
+        accounts : dict[str, Account]
+            The accounts mapping to validate or transform.
+
+        Raises
+        ------
+        DemoDataConflictError
+            If the operation encounters a demo data conflict condition.
+        """
         representation = (
             OrganizationRepresentation.objects.filter(organization=organization)
             .select_related("organization")
@@ -1949,8 +2088,33 @@ class _DemoSeeder:
         actor: Account,
         base_configuration: RegistrationConfiguration,
     ) -> RegistrationConfiguration:
-        """Create the complete current-edition demo form without rewriting v1."""
+        """Create the complete current-edition demo form without rewriting v1.
 
+        Parameters
+        ----------
+        convention : ConventionSpec
+            The convention evaluated while current demo configuration.
+        edition : EventEdition
+            The event edition that scopes the operation.
+        organization : Organization
+            The organization that owns the requested resource.
+        template : RegistrationTemplate
+            The immutable starter or template used as the copy source.
+        actor : Account
+            The authenticated account authorizing the operation.
+        base_configuration : RegistrationConfiguration
+            The base configuration evaluated while current demo configuration.
+
+        Returns
+        -------
+        RegistrationConfiguration
+            The resolved RegistrationConfiguration for current demo configuration.
+
+        Raises
+        ------
+        DemoDataConflictError
+            If the operation encounters a demo data conflict condition.
+        """
         configuration_id = _stable_id(
             "registration-configuration",
             f"{convention.key}.current.full-demo.v2",
@@ -2739,8 +2903,24 @@ class _DemoSeeder:
         administrator: Account,
         registration: Registration,
     ) -> None:
-        """Populate the versioned extension catalog and one current value."""
+        """Populate the versioned extension catalog and one current value.
 
+        Parameters
+        ----------
+        convention : ConventionSpec
+            The convention evaluated while profile extension example.
+        edition : EventEdition
+            The event edition that scopes the operation.
+        administrator : Account
+            The platform administrator authorizing the privileged action.
+        registration : Registration
+            The attendee registration governed by the operation.
+
+        Raises
+        ------
+        DemoDataConflictError
+            If the operation encounters a demo data conflict condition.
+        """
         field_id = _stable_id(
             "registration-profile-extension-field",
             f"{convention.key}.{edition.id}.arrival-detail.v1",
@@ -3358,8 +3538,20 @@ def seed_demo_data(
     password: str,
     reset_passwords: bool = False,
 ) -> DemoSeedSummary:
-    """Create or verify the local-only synthetic fixture atomically."""
+    """Create or verify the local-only synthetic fixture atomically.
 
+    Parameters
+    ----------
+    password : str
+        The plaintext secret to verify without logging or retaining it.
+    reset_passwords : bool, default=False
+        The reset passwords evaluated while seed demo data.
+
+    Returns
+    -------
+    DemoSeedSummary
+        The resolved DemoSeedSummary for seed demo data.
+    """
     return _DemoSeeder(
         password=password,
         reset_passwords=reset_passwords,

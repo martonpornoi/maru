@@ -5,9 +5,7 @@ from __future__ import annotations
 import hashlib
 import socket
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Protocol
-from uuid import UUID
+from typing import TYPE_CHECKING, Protocol
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -29,7 +27,6 @@ from maru.authorization.policy import (
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
-from maru.identity.models import Account
 from maru.participation.models import Participation, ParticipationCapacity
 from maru.workforce.edition_write_scope import (
     lock_active_department_write_target,
@@ -44,6 +41,12 @@ from maru.workforce.models import (
     VolunteerOpportunity,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
+
+    from maru.identity.models import Account
+
 VIEW_SELF = "workforce.view_self"
 APPLY_SELF = "workforce.apply_self"
 MANAGE_DOCUMENTS = "workforce.manage_documents"
@@ -54,14 +57,47 @@ CLAMAV_CHUNK_SIZE = 64 * 1024
 
 
 class ReadableUpload(Protocol):
+    """Describe readable upload."""
+
     name: str | None
     content_type: str | None
 
-    def read(self, size: int = -1) -> bytes: ...
+    def read(self, size: int = -1) -> bytes:
+        """Read.
+
+        Parameters
+        ----------
+        size : int, default=-1
+            The size applied within the audited domain transition.
+
+        Returns
+        -------
+        bytes
+            The canonical byte representation for read.
+        """
+        ...
 
 
 @dataclass(frozen=True, slots=True)
 class ProcessedDocument:
+    """Describe processed document.
+
+    Attributes
+    ----------
+    content
+        The untrusted content bytes to validate or persist.
+    original_filename
+        The original filename retained in this immutable projection.
+    content_type
+        The closed content type discriminator defined by the domain catalog.
+    byte_count
+        The bounded number of byte records.
+    sha256
+        The sha256 retained in this immutable projection.
+    scanner_code
+        The stable scanner code from the relevant closed catalog.
+    """
+
     content: ContentFile[bytes]
     original_filename: str
     content_type: str
@@ -174,8 +210,25 @@ def _clamav_scan(data: bytes) -> str:
 
 
 def process_pdf(upload: ReadableUpload, *, max_bytes: int) -> ProcessedDocument:
-    """Bound and scan one PDF without interpreting or rendering its contents."""
+    """Bound and scan one PDF without interpreting or rendering its contents.
 
+    Parameters
+    ----------
+    upload : ReadableUpload
+        The upload applied within the audited domain transition.
+    max_bytes : int
+        The max bytes applied within the audited domain transition.
+
+    Returns
+    -------
+    ProcessedDocument
+        The resolved ProcessedDocument for process pdf.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     effective_limit = min(max_bytes, MAX_ONBOARDING_DOCUMENT_BYTES)
     data = upload.read(effective_limit + 1)
     if len(data) > effective_limit:
@@ -220,6 +273,31 @@ def submit_volunteer_application(
     correlation_id: UUID,
     now: datetime | None = None,
 ) -> VolunteerApplication:
+    """Submit volunteer application.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    opportunity_id : UUID
+        The identifier of the opportunity.
+    motivation : str
+        The motivation applied within the audited domain transition.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    VolunteerApplication
+        The newly persisted VolunteerApplication with its durable command evidence.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     normalized_motivation = motivation.strip()
     if not normalized_motivation:
         raise ValidationError(
@@ -300,6 +378,29 @@ def upload_onboarding_document(
     upload: ReadableUpload,
     correlation_id: UUID,
 ) -> OnboardingDocumentRequest:
+    """Upload onboarding document.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    request_id : UUID
+        The identifier of the request.
+    upload : ReadableUpload
+        The upload applied within the audited domain transition.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    OnboardingDocumentRequest
+        The persisted onboarding document awaiting review.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     with transaction.atomic():
         document_request = (
             OnboardingDocumentRequest.objects.select_for_update()
@@ -366,6 +467,31 @@ def review_onboarding_document(
     reason: str,
     correlation_id: UUID,
 ) -> OnboardingDocumentRequest:
+    """Review onboarding document.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    request_id : UUID
+        The identifier of the request.
+    decision : str
+        The requested governed decision.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+
+    Returns
+    -------
+    OnboardingDocumentRequest
+        The authorized OnboardingDocumentRequest visible within the requested scope.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     normalized_reason = reason.strip()
     if decision not in {
         OnboardingDocumentRequest.Status.APPROVED,
@@ -459,6 +585,41 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
     correlation_id: UUID,
     proposed_assignment_id: UUID | None = None,
 ) -> PositionAssignment:
+    """Activate position assignment.
+
+    Parameters
+    ----------
+    position_id : UUID
+        The identifier of the position.
+    account : Account
+        The account applied within the audited domain transition.
+    actor : Account
+        The authenticated person performing the operation.
+    approver : Account
+        The independent authority source approving the transition.
+    effective_from : datetime
+        The timezone-aware boundary for effective from.
+    expires_at : datetime | None
+        The time at which the value expires.
+    reason : str
+        The operator-supplied reason for the operation.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    proposed_assignment_id : UUID | None, default=None
+        The identifier of the proposed assignment.
+
+    Returns
+    -------
+    PositionAssignment
+        The updated PositionAssignment after the transition commits.
+
+    Raises
+    ------
+    AuthorizationDenied
+        If the actor lacks the required scoped capability.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     normalized_reason = reason.strip()
     if not normalized_reason:
         raise ValidationError({"reason": "An assignment reason is required."})

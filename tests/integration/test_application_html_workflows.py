@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -33,10 +34,7 @@ from maru.applications.models import (
     ReviewerBasis,
 )
 from maru.applications.queries import my_application_editions
-from maru.authorization.models import RoleBundle
-from maru.events.models import EventEdition
 from maru.identity.models import Account, NavigationPin
-from maru.workforce.models import Department
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
@@ -45,6 +43,11 @@ from tests.factories import (
     RoleBundleFactory,
 )
 from tests.workforce_helpers import create_department_for_test
+
+if TYPE_CHECKING:
+    from maru.authorization.models import RoleBundle
+    from maru.events.models import EventEdition
+    from maru.workforce.models import Department
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 

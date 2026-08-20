@@ -33,6 +33,18 @@ SAFE_METADATA_KEYS = frozenset(SAFE_METADATA_TYPES)
 
 
 def validate_safe_metadata(value: dict[str, object]) -> None:
+    """Validate safe metadata.
+
+    Parameters
+    ----------
+    value : dict[str, object]
+        The untrusted value to normalize against the documented contract.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not isinstance(value, dict):
         raise ValidationError(
             "Audit metadata must be an object.",
@@ -71,7 +83,7 @@ def validate_safe_metadata(value: dict[str, object]) -> None:
                 code="unsafe_audit_metadata",
             )
         if key == "target_count":
-            target_count = cast(int, item)
+            target_count = cast("int", item)
             if target_count >= 0:
                 continue
             raise ValidationError(
@@ -81,15 +93,33 @@ def validate_safe_metadata(value: dict[str, object]) -> None:
 
 
 class AuditIntegrityBatch(UUIDTimeStampedModel):
+    """Store audit integrity batch records."""
+
     sequence = models.PositiveBigIntegerField(unique=True)
     previous_digest = models.CharField(max_length=64, validators=[SHA256_VALIDATOR])
     digest = models.CharField(max_length=64, validators=[SHA256_VALIDATOR])
     event_count = models.PositiveIntegerField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("sequence",)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Audit integrity batches are immutable.",
@@ -99,6 +129,25 @@ class AuditIntegrityBatch(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Audit integrity batches are immutable.",
@@ -107,7 +156,11 @@ class AuditIntegrityBatch(UUIDTimeStampedModel):
 
 
 class AuditEvent(UUIDTimeStampedModel):
+    """Store audit event records."""
+
     class Outcome(models.TextChoices):
+        """Enumerate supported outcome values."""
+
         ALLOW = "allow", "Allow"
         DENY = "deny", "Deny"
         ERROR = "error", "Error"
@@ -162,6 +215,8 @@ class AuditEvent(UUIDTimeStampedModel):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("occurred_at", "id")
         constraints = [
             models.UniqueConstraint(
@@ -208,6 +263,20 @@ class AuditEvent(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Audit events are append-only.",
@@ -217,6 +286,25 @@ class AuditEvent(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         _ = args, kwargs
         raise ValidationError(
             "Audit events are append-only.",

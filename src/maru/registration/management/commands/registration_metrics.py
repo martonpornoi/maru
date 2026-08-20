@@ -26,14 +26,37 @@ from maru.registration.services import inspect_registration_lifecycle
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = "Emit Prometheus registration lifecycle and capacity safety metrics."
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument("--organization", type=UUID, required=True)
         parser.add_argument("--edition", type=UUID, required=True)
         parser.add_argument("--fail-on-drift", action="store_true")
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args
         organization_id: UUID = options["organization"]
         edition_id: UUID = options["edition"]

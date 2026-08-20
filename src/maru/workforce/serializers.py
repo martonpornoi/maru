@@ -152,16 +152,22 @@ class WorkforceProblemSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class WorkforceStructureRoleSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate workforce structure role data."""
+
     department_name = serializers.CharField()
     position_title = serializers.CharField()
 
 
 class WorkforceStructureHolderSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate workforce structure holder data."""
+
     display_name = serializers.CharField()
     other_roles = WorkforceStructureRoleSerializer(many=True)
 
 
 class WorkforceStructurePositionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate workforce structure position data."""
+
     id = serializers.UUIDField()
     reports_to_id = serializers.UUIDField(allow_null=True)
     reports_to_title = serializers.CharField(allow_null=True)
@@ -174,6 +180,8 @@ class WorkforceStructurePositionSerializer(serializers.Serializer[dict[str, obje
 
 
 class WorkforceStructureDepartmentSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate workforce structure department data."""
+
     id = serializers.UUIDField()
     parent_id = serializers.UUIDField(allow_null=True)
     code = serializers.CharField()
@@ -193,9 +201,21 @@ class WorkforceStructureDepartmentSerializer(serializers.Serializer[dict[str, ob
         }
     )
     def get_children(self, item: dict[str, object]) -> list[dict[str, object]]:
+        """Return children.
+
+        Parameters
+        ----------
+        item : dict[str, object]
+            The domain object being validated, rendered, or persisted.
+
+        Returns
+        -------
+        list[dict[str, object]]
+            The matching get children records in deterministic order.
+        """
         children = item.get("children", ())
         return cast(
-            list[dict[str, object]],
+            "list[dict[str, object]]",
             WorkforceStructureDepartmentSerializer(
                 children,  # type: ignore[arg-type]
                 many=True,
@@ -204,6 +224,8 @@ class WorkforceStructureDepartmentSerializer(serializers.Serializer[dict[str, ob
 
 
 class WorkforceStructureGovernanceSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate workforce structure governance data."""
+
     kind = serializers.ChoiceField(choices=("governance",))
     label = serializers.CharField()  # type: ignore[assignment]
     state = serializers.ChoiceField(
@@ -214,24 +236,32 @@ class WorkforceStructureGovernanceSerializer(serializers.Serializer[dict[str, ob
 class WorkforceStructureEmptySourceSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate workforce structure empty source data."""
+
     kind = serializers.ChoiceField(choices=("empty",))
 
 
 class WorkforceStructureManualSourceSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate workforce structure manual source data."""
+
     kind = serializers.ChoiceField(choices=("manual",))
 
 
 class WorkforceStructureLegacySourceSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate workforce structure legacy source data."""
+
     kind = serializers.ChoiceField(choices=("legacy_existing",))
 
 
 class WorkforceStructureBuiltinTemplateSourceSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate workforce structure builtin template source data."""
+
     kind = serializers.ChoiceField(choices=("builtin_template",))
     template_code = serializers.CharField()
     template_version = serializers.IntegerField(min_value=1)
@@ -249,10 +279,8 @@ _WORKFORCE_STRUCTURE_SOURCE_SERIALIZERS = {
     PolymorphicProxySerializer(
         component_name="WorkforceStructureSource",
         serializers=cast(
-            dict[
-                str,
-                serializers.Serializer[Any] | type[serializers.Serializer[Any]],
-            ],
+            "dict[str, serializers.Serializer[Any] | "
+            "type[serializers.Serializer[Any]]]",
             _WORKFORCE_STRUCTURE_SOURCE_SERIALIZERS,
         ),
         resource_type_field_name="kind",
@@ -269,15 +297,29 @@ class WorkforceStructureSourceField(
     """Render only the fields allowed by the source discriminator."""
 
     def to_representation(self, value: dict[str, object]) -> dict[str, object]:
+        """Serialize the instance for API output.
+
+        Parameters
+        ----------
+        value : dict[str, object]
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved to representation data.
+        """
         serializer_class = _WORKFORCE_STRUCTURE_SOURCE_SERIALIZERS.get(
             str(value.get("kind"))
         )
         if serializer_class is None:
             return {}
-        return cast(dict[str, object], serializer_class(value).data)
+        return cast("dict[str, object]", serializer_class(value).data)
 
 
 class WorkforceStructureProjectionSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate workforce structure projection data."""
+
     state = serializers.ChoiceField(choices=("complete", "structure_limit_exceeded"))
     aggregate_version = serializers.IntegerField(min_value=0)
     source = WorkforceStructureSourceField()  # type: ignore[assignment]
@@ -285,6 +327,8 @@ class WorkforceStructureProjectionSerializer(serializers.Serializer[dict[str, ob
 
 
 class WorkforceStructureSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate workforce structure data."""
+
     organization_name = serializers.CharField()
     series_name = serializers.CharField()
     edition_name = serializers.CharField()
@@ -307,13 +351,13 @@ class _ClosedStructureRequestSchema(OpenApiSerializerExtension):
         auto_schema: "AutoSchema",
         direction: "Direction",
     ) -> dict[str, Any]:
-        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]
+        schema = auto_schema._map_serializer(  # type: ignore[no-untyped-call]  # noqa: SLF001
             self.target,
             direction,
             bypass_extensions=True,
         )
         schema["additionalProperties"] = False
-        return cast(dict[str, Any], schema)
+        return cast("dict[str, Any]", schema)
 
 
 class WorkforceStructureTemplateApplySerializer(_ClosedStructureRequestSerializer):
@@ -382,17 +426,23 @@ class WorkforceDepartmentDeleteSerializer(WorkforceDepartmentRetireSerializer):
 class WorkforceStructureTemplateMutationResultSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate workforce structure template mutation result data."""
+
     aggregate_version = serializers.IntegerField(min_value=1)
 
 
 class WorkforceDepartmentMutationResultSerializer(
     serializers.Serializer[dict[str, object]]
 ):
+    """Serialize and validate workforce department mutation result data."""
+
     department_id = serializers.UUIDField()
     aggregate_version = serializers.IntegerField(min_value=1)
 
 
 class VolunteerOpportunitySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate volunteer opportunity data."""
+
     id = serializers.UUIDField()
     position_code = serializers.CharField()
     position_title = serializers.CharField()
@@ -409,10 +459,14 @@ class VolunteerOpportunitySerializer(serializers.Serializer[dict[str, object]]):
 
 
 class VolunteerApplicationSubmitSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate volunteer application submit data."""
+
     motivation = serializers.CharField(max_length=2_000)
 
 
 class VolunteerApplicationSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate volunteer application data."""
+
     id = serializers.UUIDField()
     opportunity_id = serializers.UUIDField()
     status = serializers.CharField()
@@ -420,6 +474,8 @@ class VolunteerApplicationSerializer(serializers.Serializer[dict[str, object]]):
 
 
 class OnboardingDocumentRequestSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate onboarding document request data."""
+
     id = serializers.UUIDField()
     document_type_code = serializers.CharField()
     document_type_name = serializers.CharField()
@@ -436,4 +492,6 @@ class OnboardingDocumentRequestSerializer(serializers.Serializer[dict[str, objec
 
 
 class OnboardingDocumentUploadSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate onboarding document upload data."""
+
     document = serializers.FileField()

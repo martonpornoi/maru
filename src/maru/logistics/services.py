@@ -4,10 +4,9 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from datetime import datetime
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -73,6 +72,9 @@ from .models import (
 )
 from .writer_boundary import logistics_writer
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
 SELF_OFFER_CAPABILITY = "logistics.offer_self"
 CATALOG_MANAGE_CAPABILITY = "logistics.manage_catalog"
 RESTRICTED_CONTACT_CAPABILITY = "logistics.view_restricted_contacts"
@@ -99,35 +101,63 @@ SELF_OFFER_EDITION_LIFECYCLES = frozenset(
 
 
 class LogisticsCommandError(RuntimeError):
+    """Signal logistics command."""
+
     reason_code = "logistics_command_failed"
 
 
 class LogisticsAuthorizationDeniedError(LogisticsCommandError):
+    """Signal logistics authorization denied."""
+
     reason_code = "logistics_authorization_denied"
 
 
 class LogisticsResourceUnavailableError(LogisticsCommandError):
+    """Signal logistics resource unavailable."""
+
     reason_code = "logistics_resource_unavailable"
 
 
 class LogisticsVersionConflictError(LogisticsCommandError):
+    """Signal logistics version conflict."""
+
     reason_code = "logistics_version_conflict"
 
 
 class LogisticsRetryConflictError(LogisticsCommandError):
+    """Signal logistics retry conflict."""
+
     reason_code = "logistics_retry_conflict"
 
 
 class LogisticsStateConflictError(LogisticsCommandError):
+    """Signal logistics state conflict."""
+
     reason_code = "logistics_state_conflict"
 
 
 class LogisticsContainmentCycleError(LogisticsCommandError):
+    """Signal logistics containment cycle."""
+
     reason_code = "logistics_containment_cycle"
 
 
 @dataclass(frozen=True, slots=True)
 class LogisticsCommandResult:
+    """Describe logistics command result.
+
+    Attributes
+    ----------
+    object_id
+        The object identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     object_id: UUID
     receipt_id: UUID
     resulting_version: int
@@ -136,6 +166,24 @@ class LogisticsCommandResult:
 
 @dataclass(frozen=True, slots=True)
 class PartyProfile:
+    """Describe party profile.
+
+    Attributes
+    ----------
+    kind
+        The closed discriminator selecting the requested behavior.
+    role
+        The immutable or edition-owned role evaluated for authority.
+    legal_name
+        The human-readable legal name shown to authorized readers.
+    public_name
+        The human-readable public name shown to authorized readers.
+    provider_reference
+        The provider or source provider reference retained for reconciliation.
+    website_url
+        The validated absolute HTTPS website url.
+    """
+
     kind: str
     role: str
     legal_name: str
@@ -146,6 +194,32 @@ class PartyProfile:
 
 @dataclass(frozen=True, slots=True)
 class OfferItemInput:
+    """Describe offer item input.
+
+    Attributes
+    ----------
+    kind
+        The closed discriminator selecting the requested behavior.
+    name
+        The human-readable name to normalize or persist.
+    condition
+        The configured condition evaluated against the submitted answer.
+    ownership_statement
+        The ownership statement retained in this immutable projection.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    description
+        The human-readable description shown to authorized readers.
+    manufacturer
+        The manufacturer retained in this immutable projection.
+    model_name
+        The human-readable model name shown to authorized readers.
+    serial_number
+        The serial number retained in this immutable projection.
+    value_class
+        The value class retained in this immutable projection.
+    """
+
     kind: str
     name: str
     condition: str
@@ -160,12 +234,52 @@ class OfferItemInput:
 
 @dataclass(frozen=True, slots=True)
 class SubjectLocator:
+    """Describe subject locator.
+
+    Attributes
+    ----------
+    kind
+        The closed discriminator selecting the requested behavior.
+    object_id
+        The object identifier within the requested scope.
+    """
+
     kind: str
     object_id: UUID
 
 
 @dataclass(frozen=True, slots=True)
 class MovementInput:
+    """Describe movement input.
+
+    Attributes
+    ----------
+    event_type
+        The closed event type discriminator defined by the domain catalog.
+    subject
+        The tenant-scoped person or resource governed by the operation.
+    occurred_at
+        The timezone-aware timestamp for occurred.
+    source_node_id
+        The source node identifier within the requested scope.
+    destination_node_id
+        The destination node identifier within the requested scope.
+    to_custodian_account_id
+        The to custodian account identifier within the requested scope.
+    to_custodian_party_id
+        The to custodian party identifier within the requested scope.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    condition_before
+        The timezone-aware boundary for condition before.
+    condition_after
+        The timezone-aware boundary for condition after.
+    manifest_id
+        The manifest identifier within the requested scope.
+    evidence_reference
+        The provider or source evidence reference retained for reconciliation.
+    """
+
     event_type: str
     subject: SubjectLocator
     occurred_at: datetime
@@ -182,6 +296,20 @@ class MovementInput:
 
 @dataclass(frozen=True, slots=True)
 class ManifestLineInput:
+    """Describe manifest line input.
+
+    Attributes
+    ----------
+    subject
+        The tenant-scoped person or resource governed by the operation.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    packed_in_node_id
+        The packed in node identifier within the requested scope.
+    notes
+        The bounded operator notes retained with the domain record.
+    """
+
     subject: SubjectLocator
     quantity: int = 1
     packed_in_node_id: UUID | None = None
@@ -190,6 +318,32 @@ class ManifestLineInput:
 
 @dataclass(frozen=True, slots=True)
 class OfflineOperationInput:
+    """Describe offline operation input.
+
+    Attributes
+    ----------
+    sequence
+        The sequence retained in this immutable projection.
+    idempotency_key
+        The stable key that makes an exact retry idempotent.
+    expected_subject_sequence
+        The expected expected subject sequence used to reject stale updates.
+    action
+        The stable action code describing the requested transition.
+    label_code
+        The stable label code from the relevant closed catalog.
+    occurred_at
+        The timezone-aware timestamp for occurred.
+    source_label_code
+        The stable source label code from the relevant closed catalog.
+    destination_label_code
+        The stable destination label code from the relevant closed catalog.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    observed_condition
+        The observed condition retained in this immutable projection.
+    """
+
     sequence: int
     idempotency_key: UUID
     expected_subject_sequence: int
@@ -204,6 +358,18 @@ class OfflineOperationInput:
 
 @dataclass(frozen=True, slots=True)
 class KitLineInput:
+    """Describe kit line input.
+
+    Attributes
+    ----------
+    subject
+        The tenant-scoped person or resource governed by the operation.
+    quantity
+        The positive number of inventory or entitlement units requested.
+    notes
+        The bounded operator notes retained with the domain record.
+    """
+
     subject: SubjectLocator
     quantity: int = 1
     notes: str = ""
@@ -242,7 +408,7 @@ def _require_actor(actor: Account, *, person_only: bool = False) -> Account:
         or current.is_platform_administrator
         or (person_only and current.account_kind != Account.Kind.PERSON)
     ):
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     return current
 
 
@@ -254,8 +420,31 @@ def _lock_eligible_logistics_person(
     account_id: UUID,
     extra_eligible_ids: frozenset[UUID] = frozenset(),
 ) -> Account:
-    """Resolve one convention subject; an active platform identity is insufficient."""
+    """Resolve one convention subject; an active platform identity is insufficient.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID | None
+        The event edition identifier that scopes the operation.
+    account_id : UUID
+        The platform account identifier within the requested scope.
+    extra_eligible_ids : frozenset[UUID], default=frozenset()
+        The selected extra eligible identifiers.
+
+    Returns
+    -------
+    Account
+        The resolved Account for lock eligible logistics person.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     person = (
         Account.objects.select_for_update()
         .filter(
@@ -266,7 +455,7 @@ def _lock_eligible_logistics_person(
         .first()
     )
     if person is None or person.is_platform_administrator:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     eligible = account_id == actor.id or account_id in extra_eligible_ids
     assignment_scope = PositionAssignment.objects.filter(
         account_id=account_id,
@@ -282,7 +471,7 @@ def _lock_eligible_logistics_person(
         offer_scope = offer_scope.filter(edition_id=edition_id)
     eligible = eligible or assignment_scope.exists() or offer_scope.exists()
     if not eligible:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     return person
 
 
@@ -300,7 +489,7 @@ def _require_decision(
         at=at,
     )
     if not decision.allowed:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     return decision
 
 
@@ -313,7 +502,7 @@ def _organization_context(
     )
     target = resolve_organization_target(organization_id=organization_id)
     if organization is None or target is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     return (
         current,
         organization,
@@ -350,7 +539,7 @@ def _edition_context(
         edition_id=edition_id,
     )
     if edition is None or target is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     decision = _require_decision(
         actor=current,
         capability_code=capability_code,
@@ -367,8 +556,24 @@ def _catalog_context(
     edition_id: UUID | None,
     at: datetime,
 ) -> tuple[Account, Organization, EventEdition | None, PolicyDecision]:
-    """Authorize catalog work at the exact route allocation scope."""
+    """Authorize catalog work at the exact route allocation scope.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID | None
+        The event edition identifier that scopes the operation.
+    at : datetime
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    tuple[Account, Organization, EventEdition | None, PolicyDecision]
+        The matching catalog context records in deterministic order.
+    """
     if edition_id is not None:
         return _edition_context(
             actor=actor,
@@ -406,7 +611,7 @@ def _self_context(
         edition_id=edition_id,
     )
     if edition is None or target is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     decision = _require_decision(
         actor=current,
         capability_code=SELF_OFFER_CAPABILITY,
@@ -442,7 +647,7 @@ def _manifest_context(
         manifest_id=manifest_id,
     )
     if edition is None or target is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     decision = _require_decision(
         actor=current,
         capability_code=capability_code,
@@ -475,7 +680,7 @@ def _existing_receipt(
         receipt.organization_id != organization_id
         or receipt.request_digest != request_digest
     ):
-        raise LogisticsRetryConflictError()
+        raise LogisticsRetryConflictError
     return receipt
 
 
@@ -603,7 +808,7 @@ def _require_subject_available_in_edition(
     *, subject: TrackedSubject, edition_id: UUID
 ) -> None:
     if _subject_allocation_id(subject) not in {None, edition_id}:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
 
 
 def _lock_subject(*, organization_id: UUID, locator: SubjectLocator) -> TrackedSubject:
@@ -625,7 +830,7 @@ def _lock_subject(*, organization_id: UUID, locator: SubjectLocator) -> TrackedS
         .first()
     )
     if subject is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     return subject
 
 
@@ -651,14 +856,14 @@ def _assert_acyclic_destination(
     if not isinstance(subject, LogisticsNode) or destination is None:
         return
     if destination.id == subject.id:
-        raise LogisticsContainmentCycleError()
+        raise LogisticsContainmentCycleError
     visited = {subject.id}
     cursor_id: UUID | None = destination.id
     for _ in range(MAX_CONTAINMENT_DEPTH):
         if cursor_id is None:
             return
         if cursor_id in visited:
-            raise LogisticsContainmentCycleError()
+            raise LogisticsContainmentCycleError
         visited.add(cursor_id)
         row = (
             LogisticsCurrentState.objects.filter(node_id=cursor_id)
@@ -667,7 +872,7 @@ def _assert_acyclic_destination(
             .first()
         )
         cursor_id = row["current_node_id"] if row else None
-    raise LogisticsContainmentCycleError()
+    raise LogisticsContainmentCycleError
 
 
 def _owner_values(
@@ -687,7 +892,7 @@ def _owner_values(
         return {"owner_kind": owner_kind}
     if owner_kind == Asset.OwnerKind.ACCOUNT:
         if owner_account_id is None or owner_party_id:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         account = _lock_eligible_logistics_person(
             actor=actor,
             organization_id=organization.id,
@@ -699,7 +904,7 @@ def _owner_values(
         party = (
             LogisticsParty.objects.select_for_update()
             .filter(
-                id=cast(UUID, owner_party_id),
+                id=cast("UUID", owner_party_id),
                 organization=organization,
                 lifecycle=LogisticsParty.Lifecycle.ACTIVE,
                 role__in=(
@@ -710,7 +915,7 @@ def _owner_values(
             .first()
         )
         if party is None or owner_account_id:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         return {"owner_kind": owner_kind, "owner_party": party}
     raise ValidationError({"owner_kind": "Select a supported ownership source."})
 
@@ -729,6 +934,41 @@ def create_logistics_party(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Create logistics party.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    code : str
+        The stable machine-readable code.
+    profile : PartyProfile
+        The governed profile data.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -826,7 +1066,61 @@ def create_restricted_logistics_address(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
-    """Create a purpose- and retention-bound address outside containment."""
+    """Create a purpose- and retention-bound address outside containment.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID | None
+        The event edition identifier that scopes the operation.
+    subject_account_id : UUID | None
+        The subject account identifier within the requested scope.
+    party_id : UUID | None
+        The party identifier within the requested scope.
+    purpose : str
+        The documented purpose constraining collection and processing.
+    label : str
+        The human-readable label shown to authorized readers.
+    recipient_name : str
+        The human-readable recipient name shown to authorized readers.
+    postal_address : str
+        The postal address applied within the audited domain transition.
+    access_instructions : str
+        The access instructions applied within the audited domain transition.
+    retention_until : datetime | None
+        The timezone-aware boundary for retention until.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    contact_email : str, default=''
+        The normalized contact email used for delivery or identity matching.
+    contact_phone : str, default=''
+        The normalized international contact phone, when provided.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The newly created LogisticsCommandResult.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -845,7 +1139,7 @@ def create_restricted_logistics_address(
     subject_account = None
     if subject_account_id:
         if edition is None or retention_until is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         subject_account = _lock_eligible_logistics_person(
             actor=actor,
             organization_id=organization_id,
@@ -864,7 +1158,7 @@ def create_restricted_logistics_address(
             .first()
         )
         if party is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
     if retention_until is not None and retention_until <= occurred_at:
         raise ValidationError({"retention_until": "Use a future retention time."})
     values = {
@@ -980,6 +1274,61 @@ def create_logistics_node(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Create logistics node.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    kind : str
+        The closed kind code.
+    code : str
+        The stable machine-readable code.
+    name : str
+        The human-readable name.
+    description : str
+        The human-readable description.
+    edition_id : UUID | None
+        The identifier of the event edition that scopes the operation.
+    storage_address_id : UUID | None
+        The identifier of the storage address.
+    external_owner_id : UUID | None
+        The identifier of the external owner.
+    provider_id : UUID | None
+        The identifier of the provider.
+    vehicle_registration : str
+        The vehicle registration applied within the audited domain transition.
+    venue_space_selection_id : UUID | None
+        The identifier of the venue space selection.
+    capacity_note : str
+        The capacity note applied within the audited domain transition.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1016,11 +1365,11 @@ def create_logistics_node(
                 not in ({None, edition.id} if edition is not None else {None})
             )
         ):
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
     venue_space = None
     if venue_space_selection_id is not None:
         if kind != LogisticsNode.Kind.VENUE_ROOM or edition is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         venue_space = (
             EditionSpaceSelection.objects.select_for_update()
             .filter(
@@ -1033,7 +1382,7 @@ def create_logistics_node(
             .first()
         )
         if venue_space is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
     parties = {
         party.id: party
         for party in LogisticsParty.objects.select_for_update().filter(
@@ -1047,23 +1396,23 @@ def create_logistics_node(
         )
     }
     if external_owner_id and external_owner_id not in parties:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     if provider_id and provider_id not in parties:
-        raise LogisticsResourceUnavailableError()
-    external_owner = parties.get(cast(UUID, external_owner_id))
+        raise LogisticsResourceUnavailableError
+    external_owner = parties.get(cast("UUID", external_owner_id))
     if external_owner is not None and external_owner.role not in {
         LogisticsParty.Role.OWNER,
         LogisticsParty.Role.MIXED,
     }:
-        raise LogisticsResourceUnavailableError()
-    provider = parties.get(cast(UUID, provider_id))
+        raise LogisticsResourceUnavailableError
+    provider = parties.get(cast("UUID", provider_id))
     if provider is not None and provider.role not in {
         LogisticsParty.Role.OWNER,
         LogisticsParty.Role.PROVIDER,
         LogisticsParty.Role.RENTAL_BUSINESS,
         LogisticsParty.Role.MIXED,
     }:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     values: dict[str, object] = {
         "kind": kind,
         "code": normalized_code(code),
@@ -1123,8 +1472,8 @@ def create_logistics_node(
             organization=organization,
             edition=edition,
             storage_address=address,
-            external_owner=parties.get(cast(UUID, external_owner_id)),
-            provider=parties.get(cast(UUID, provider_id)),
+            external_owner=parties.get(cast("UUID", external_owner_id)),
+            provider=parties.get(cast("UUID", provider_id)),
             venue_space_selection_id=(venue_space.id if venue_space else None),
             created_by=actor,
             last_modified_by=actor,
@@ -1191,6 +1540,61 @@ def register_serialized_asset(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Register serialized asset.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID | None
+        The identifier of the event edition that scopes the operation.
+    catalog_code : str
+        The stable catalog code from the relevant closed catalog.
+    name : str
+        The human-readable name.
+    asset_type : str
+        The closed asset type discriminator defined by the domain catalog.
+    manufacturer : str
+        The manufacturer applied within the audited domain transition.
+    model_name : str
+        The human-readable model name shown to authorized readers.
+    serial_number : str
+        The serial number applied within the audited domain transition.
+    acquisition : str
+        The acquisition applied within the audited domain transition.
+    value_class : str
+        The value class applied within the audited domain transition.
+    owner_kind : str
+        The closed owner kind discriminator defined by the domain catalog.
+    owner_account_id : UUID | None
+        The identifier of the owner account.
+    owner_party_id : UUID | None
+        The identifier of the owner party.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The logistics command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1311,6 +1715,57 @@ def register_stock_lot(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Register stock lot.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID | None
+        The identifier of the event edition that scopes the operation.
+    catalog_code : str
+        The stable catalog code from the relevant closed catalog.
+    name : str
+        The human-readable name.
+    stock_type : str
+        The closed stock type discriminator defined by the domain catalog.
+    unit : str
+        The unit applied within the audited domain transition.
+    initial_quantity : int
+        The non-negative hard limit or requested amount for initial quantity.
+    value_class : str
+        The value class applied within the audited domain transition.
+    owner_kind : str
+        The closed owner kind discriminator defined by the domain catalog.
+    owner_account_id : UUID | None
+        The identifier of the owner account.
+    owner_party_id : UUID | None
+        The identifier of the owner party.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The logistics command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1426,7 +1881,47 @@ def register_physical_key(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
-    """Register a physical key without granting its holder software access."""
+    """Register a physical key without granting its holder software access.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID | None
+        The event edition identifier that scopes the operation.
+    code : str
+        The stable domain code to resolve or validate.
+    label : str
+        The human-readable label shown to authorized readers.
+    opens_node_id : UUID
+        The opens node identifier within the requested scope.
+    provider_id : UUID | None
+        The provider identifier within the requested scope.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The resolved LogisticsCommandResult for register physical key.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1444,7 +1939,7 @@ def register_physical_key(
         .first()
     )
     if opens_node is None or opens_node.edition_id not in {None, edition_id}:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     provider = None
     if provider_id:
         provider = (
@@ -1463,7 +1958,7 @@ def register_physical_key(
             .first()
         )
         if provider is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
     values = {
         "code": normalized_code(code),
         "label": normalized_text(
@@ -1540,7 +2035,43 @@ def create_logistics_label(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
-    """Create a public label while retaining only the QR token digest."""
+    """Create a public label while retaining only the QR token digest.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    subject : SubjectLocator
+        The tenant-scoped person or resource governed by the operation.
+    label_code : str
+        The stable label code from the relevant closed catalog.
+    qr_identifier : str
+        The qr identifier applied within the audited domain transition.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The newly created LogisticsCommandResult.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1638,7 +2169,53 @@ def assign_keyholder_responsibility(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
-    """Record physical-key responsibility; this never changes authorization."""
+    """Record physical-key responsibility; this never changes authorization.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    key_id : UUID
+        The key identifier within the requested scope.
+    responsible_account_id : UUID
+        The responsible account identifier within the requested scope.
+    starts_at : datetime
+        The timezone-aware timestamp for starts.
+    ends_at : datetime | None
+        The timezone-aware timestamp for ends.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The resolved LogisticsCommandResult for assign keyholder responsibility.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    LogisticsStateConflictError
+        If the target lifecycle state does not permit the transition.
+    LogisticsVersionConflictError
+        If the supplied aggregate version is stale.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1658,9 +2235,9 @@ def assign_keyholder_responsibility(
         .first()
     )
     if key is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     if key.aggregate_version != expected_version:
-        raise LogisticsVersionConflictError()
+        raise LogisticsVersionConflictError
     responsible = _lock_eligible_logistics_person(
         actor=actor,
         organization_id=organization_id,
@@ -1681,7 +2258,7 @@ def assign_keyholder_responsibility(
             starts_at__lt=ends_at
         )
     if overlapping_responsibilities.exists():
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     normalized_reason_value = normalized_reason(reason)
     normalized_source = normalized_source_channel(source_channel)
     request_digest = canonical_digest(
@@ -1780,25 +2357,25 @@ def _agreement_party_values(
         )
     }
     if any(party_id not in parties for party_id in party_ids):
-        raise LogisticsResourceUnavailableError()
-    provider_party = parties.get(cast(UUID, provider_party_id))
+        raise LogisticsResourceUnavailableError
+    provider_party = parties.get(cast("UUID", provider_party_id))
     if provider_party is not None and provider_party.role not in {
         LogisticsParty.Role.OWNER,
         LogisticsParty.Role.PROVIDER,
         LogisticsParty.Role.RENTAL_BUSINESS,
         LogisticsParty.Role.MIXED,
     }:
-        raise LogisticsResourceUnavailableError()
-    borrower_party = parties.get(cast(UUID, borrower_party_id))
+        raise LogisticsResourceUnavailableError
+    borrower_party = parties.get(cast("UUID", borrower_party_id))
     if borrower_party is not None and borrower_party.role not in {
         LogisticsParty.Role.BORROWER,
         LogisticsParty.Role.MIXED,
     }:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     return {
-        "provider_account": accounts.get(cast(UUID, provider_account_id)),
+        "provider_account": accounts.get(cast("UUID", provider_account_id)),
         "provider": provider_party,
-        "borrower_account": accounts.get(cast(UUID, borrower_account_id)),
+        "borrower_account": accounts.get(cast("UUID", borrower_account_id)),
         "borrower_party": borrower_party,
     }
 
@@ -1828,6 +2405,67 @@ def record_asset_agreement(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Record asset agreement.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID | None
+        The identifier of the event edition that scopes the operation.
+    subject : SubjectLocator
+        The tenant-scoped person or resource governed by the operation.
+    kind : str
+        The closed kind code.
+    provider_account_id : UUID | None
+        The identifier of the provider account.
+    provider_party_id : UUID | None
+        The identifier of the provider party.
+    borrower_account_id : UUID | None
+        The identifier of the borrower account.
+    borrower_party_id : UUID | None
+        The identifier of the borrower party.
+    starts_at : datetime
+        The timezone-aware timestamp for starts.
+    ends_at : datetime
+        The timezone-aware timestamp for ends.
+    return_due_at : datetime
+        The timezone-aware timestamp for return due.
+    return_address_id : UUID | None
+        The identifier of the return address.
+    provider_reference : str
+        The provider-owned external reference.
+    terms_reference : str
+        The provider or source terms reference retained for reconciliation.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The logistics command result.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    LogisticsStateConflictError
+        If the target lifecycle state does not permit the transition.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1848,7 +2486,7 @@ def record_asset_agreement(
         tracked, "edition_id", None
     )
     if subject_edition_id and subject_edition_id != edition_id:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     subject_field = next(iter(_subject_kwargs(tracked)))
     overlapping_agreements = (
         AssetAgreement.objects.select_for_update()
@@ -1859,7 +2497,7 @@ def record_asset_agreement(
         .filter(Q(ends_at__isnull=True) | Q(ends_at__gt=starts_at))
     )
     if overlapping_agreements.exists():
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     party_values = _agreement_party_values(
         actor=actor,
         organization=organization,
@@ -1890,7 +2528,7 @@ def record_asset_agreement(
         if return_address is None or (
             return_address.edition_id and return_address.edition_id != edition_id
         ):
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
     values = {
         "provider_reference": normalized_text(
             provider_reference,
@@ -1988,6 +2626,45 @@ def create_reusable_kit(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Create reusable kit.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    code : str
+        The stable machine-readable code.
+    name : str
+        The human-readable name.
+    description : str
+        The human-readable description.
+    lines : Sequence[KitLineInput]
+        The ordered line items to process.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -2177,6 +2854,63 @@ def create_logistics_manifest(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Create logistics manifest.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    responsible_department_id : UUID
+        The identifier of the responsible department.
+    manifest_number : str
+        The manifest number applied within the audited domain transition.
+    kind : str
+        The closed kind code.
+    title : str
+        The human-readable title.
+    source_node_id : UUID | None
+        The identifier of the source node.
+    destination_node_id : UUID | None
+        The identifier of the destination node.
+    vehicle_id : UUID | None
+        The identifier of the vehicle.
+    provider_id : UUID | None
+        The identifier of the provider.
+    loading_starts_at : datetime | None
+        The timezone-aware timestamp for loading starts.
+    loading_ends_at : datetime | None
+        The timezone-aware timestamp for loading ends.
+    lines : Sequence[ManifestLineInput]
+        The ordered line items to process.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -2206,7 +2940,7 @@ def create_logistics_manifest(
         .first()
     )
     if department is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     node_ids = {
         value
         for value in (source_node_id, destination_node_id, vehicle_id)
@@ -2221,8 +2955,8 @@ def create_logistics_manifest(
     if len(nodes) != len(node_ids) or any(
         node.edition_id not in {None, edition_id} for node in nodes.values()
     ):
-        raise LogisticsResourceUnavailableError()
-    vehicle = nodes.get(cast(UUID, vehicle_id))
+        raise LogisticsResourceUnavailableError
+    vehicle = nodes.get(cast("UUID", vehicle_id))
     if vehicle is not None and vehicle.kind != LogisticsNode.Kind.VEHICLE:
         raise ValidationError({"vehicle_id": "Select a tracked vehicle node."})
     provider = None
@@ -2243,7 +2977,7 @@ def create_logistics_manifest(
             .first()
         )
         if provider is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
     if (loading_starts_at is None) != (loading_ends_at is None):
         raise ValidationError(
             {"loading_window": "Enter both loading times or neither."}
@@ -2313,9 +3047,9 @@ def create_logistics_manifest(
                 .first()
             )
             if packed_in is None:
-                raise LogisticsResourceUnavailableError()
+                raise LogisticsResourceUnavailableError
             if packed_in.edition_id not in {None, edition_id}:
-                raise LogisticsResourceUnavailableError()
+                raise LogisticsResourceUnavailableError
         line_values.append(
             (
                 subject,
@@ -2379,8 +3113,8 @@ def create_logistics_manifest(
             kind=kind,
             title=normalized_title,
             line_count=len(line_values),
-            source_node=nodes.get(cast(UUID, source_node_id)),
-            destination_node=nodes.get(cast(UUID, destination_node_id)),
+            source_node=nodes.get(cast("UUID", source_node_id)),
+            destination_node=nodes.get(cast("UUID", destination_node_id)),
             vehicle=vehicle,
             provider=provider,
             loading_starts_at=loading_starts_at,
@@ -2437,8 +3171,51 @@ def add_manifest_line(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
-    """Append one subject to a draft manifest and advance its version."""
+    """Append one subject to a draft manifest and advance its version.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    manifest_id : UUID
+        The manifest identifier within the requested scope.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    line : ManifestLineInput
+        The line applied within the audited domain transition.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The resolved LogisticsCommandResult for add manifest line.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    LogisticsStateConflictError
+        If the target lifecycle state does not permit the transition.
+    LogisticsVersionConflictError
+        If the supplied aggregate version is stale.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -2499,13 +3276,13 @@ def add_manifest_line(
         .first()
     )
     if manifest is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     if manifest.aggregate_version != expected_version:
-        raise LogisticsVersionConflictError()
+        raise LogisticsVersionConflictError
     if manifest.status != LogisticsManifest.Status.DRAFT:
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     if manifest.line_count >= MAX_MANIFEST_LINES:
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     subject = _lock_subject(
         organization_id=organization_id,
         locator=line.subject,
@@ -2524,7 +3301,7 @@ def add_manifest_line(
         manifest=manifest,
         **{f"{subject_field}_id": subject.id},
     ).exists():
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     packed_in = None
     if line.packed_in_node_id is not None:
         packed_in = (
@@ -2541,7 +3318,7 @@ def add_manifest_line(
             .first()
         )
         if packed_in is None or packed_in.edition_id not in {None, edition_id}:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
     new_version = expected_version + 1
     with logistics_writer():
         LogisticsManifestLine.objects.create(
@@ -2602,6 +3379,51 @@ def change_manifest_state(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Change manifest state.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    manifest_id : UUID
+        The identifier of the manifest.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    action : str
+        The requested lifecycle action.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The logistics command result.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    LogisticsStateConflictError
+        If the target lifecycle state does not permit the transition.
+    LogisticsVersionConflictError
+        If the supplied aggregate version is stale.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -2660,15 +3482,15 @@ def change_manifest_state(
         .first()
     )
     if manifest is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     if manifest.aggregate_version != expected_version:
-        raise LogisticsVersionConflictError()
+        raise LogisticsVersionConflictError
     if manifest.status != transition[0]:
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     if action == "seal":
         lines = tuple(manifest.lines.all())
         if not lines:
-            raise LogisticsStateConflictError()
+            raise LogisticsStateConflictError
         for route_node in (
             manifest.source_node,
             manifest.destination_node,
@@ -2678,19 +3500,19 @@ def change_manifest_state(
                 None,
                 edition_id,
             }:
-                raise LogisticsResourceUnavailableError()
+                raise LogisticsResourceUnavailableError
         line_subjects: list[TrackedSubject] = []
         for line in lines:
             if line.packed_in_node is not None and (
                 line.packed_in_node.edition_id not in {None, edition_id}
             ):
-                raise LogisticsResourceUnavailableError()
+                raise LogisticsResourceUnavailableError
             subject = _lock_subject(
                 organization_id=organization_id,
                 locator=SubjectLocator(
                     kind=line.subject_kind,
                     object_id=cast(
-                        UUID,
+                        "UUID",
                         line.node_id
                         or line.asset_id
                         or line.stock_lot_id
@@ -2710,16 +3532,16 @@ def change_manifest_state(
             for line, subject in zip(lines, line_subjects, strict=True):
                 state = _lock_current_state(subject)
                 if state is None:
-                    raise LogisticsStateConflictError()
+                    raise LogisticsStateConflictError
                 if isinstance(subject, StockLot) and (
                     line.quantity != state.quantity_on_hand
                 ):
-                    raise LogisticsStateConflictError()
+                    raise LogisticsStateConflictError
                 if manifest.source_node_id and not _state_within_node(
                     state=state,
                     expected_node_id=manifest.source_node_id,
                 ):
-                    raise LogisticsStateConflictError()
+                    raise LogisticsStateConflictError
     new_version = expected_version + 1
     with logistics_writer():
         manifest.status = transition[1]
@@ -2758,7 +3580,7 @@ def change_manifest_state(
 def _label_subject(label: LogisticsLabel) -> TrackedSubject:
     subject = label.node or label.asset or label.stock_lot or label.physical_key
     if subject is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     return subject
 
 
@@ -2780,8 +3602,49 @@ def ingest_offline_scan_batch(
     source_channel: str = "offline",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
-    """Reconcile a bounded append-only scan batch without last-write-wins."""
+    """Reconcile a bounded append-only scan batch without last-write-wins.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    device_code : str
+        The public relay-device code within the edition scope.
+    snapshot_version : int
+        The expected snapshot version used to reject stale updates.
+    policy_version : str
+        The expected policy version used to reject stale updates.
+    expires_at : datetime
+        The timezone-aware timestamp for expires.
+    operations : Sequence[OfflineOperationInput]
+        The operations applied within the audited domain transition.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='offline'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The resolved LogisticsCommandResult for ingest offline scan batch.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -3196,8 +4059,63 @@ def submit_equipment_offer(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
-    """Create one private self-owned offer without accepting operational custody."""
+    """Create one private self-owned offer without accepting operational custody.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    title : str
+        The human-readable title shown to authorized readers.
+    description : str
+        The human-readable description shown to authorized readers.
+    pickup_label : str
+        The human-readable pickup label shown to authorized readers.
+    pickup_recipient_name : str
+        The human-readable pickup recipient name shown to authorized readers.
+    pickup_postal_address : str
+        The pickup postal address applied within the audited domain transition.
+    pickup_access_instructions : str
+        The pickup access instructions applied within the audited domain transition.
+    pickup_retention_until : datetime
+        The timezone-aware boundary for pickup retention until.
+    available_from : datetime
+        The timezone-aware boundary for available from.
+    available_until : datetime
+        The timezone-aware boundary for available until.
+    requested_return_at : datetime | None
+        The timezone-aware timestamp for requested return.
+    items : Sequence[OfferItemInput]
+        The items applied within the audited domain transition.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The resolved LogisticsCommandResult for submit equipment offer.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -3210,7 +4128,7 @@ def submit_equipment_offer(
         at=occurred_at,
     )
     if edition.lifecycle not in SELF_OFFER_EDITION_LIFECYCLES:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     normalized_title = normalized_text(
         title,
         field="title",
@@ -3408,6 +4326,47 @@ def withdraw_equipment_offer(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Withdraw equipment offer.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    offer_id : UUID
+        The identifier of the offer.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The logistics command result.
+
+    Raises
+    ------
+    LogisticsAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    LogisticsStateConflictError
+        If the target lifecycle state does not permit the transition.
+    LogisticsVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -3449,11 +4408,11 @@ def withdraw_equipment_offer(
         .first()
     )
     if offer is None:
-        raise LogisticsAuthorizationDeniedError()
+        raise LogisticsAuthorizationDeniedError
     if offer.aggregate_version != expected_version:
-        raise LogisticsVersionConflictError()
+        raise LogisticsVersionConflictError
     if offer.status != EquipmentOffer.Status.PENDING:
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     new_version = expected_version + 1
     with logistics_writer():
         offer.status = EquipmentOffer.Status.WITHDRAWN
@@ -3508,6 +4467,53 @@ def review_equipment_offer(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
+    """Review equipment offer.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    offer_id : UUID
+        The identifier of the offer.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    outcome : str
+        The outcome applied within the audited domain transition.
+    responsible_department_id : UUID | None
+        The identifier of the responsible department.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='web'
+        The trusted channel that initiated the operation.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The logistics command result.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    LogisticsStateConflictError
+        If the target lifecycle state does not permit the transition.
+    LogisticsVersionConflictError
+        If the supplied aggregate version is stale.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -3556,17 +4562,17 @@ def review_equipment_offer(
         .first()
     )
     if offer is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     if offer.aggregate_version != expected_version:
-        raise LogisticsVersionConflictError()
+        raise LogisticsVersionConflictError
     if offer.status != EquipmentOffer.Status.PENDING:
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     department: Department | None = None
     if outcome == EquipmentOffer.Status.ACCEPTED:
         department = (
             Department.objects.select_for_update()
             .filter(
-                id=cast(UUID, responsible_department_id),
+                id=cast("UUID", responsible_department_id),
                 organization=organization,
                 edition=edition,
                 retired_at__isnull=True,
@@ -3574,7 +4580,7 @@ def review_equipment_offer(
             .first()
         )
         if department is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
     elif responsible_department_id is not None:
         raise ValidationError(
             {
@@ -3844,7 +4850,7 @@ def _canonical_manifest_movement(
     }
     subject_field = subject_field_by_kind.get(movement.subject.kind)
     if subject_field is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     line_id = (
         LogisticsManifestLine.objects.filter(
             manifest_id=movement.manifest_id,
@@ -3857,7 +4863,7 @@ def _canonical_manifest_movement(
         .first()
     )
     if line_id is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     return replace(
         movement,
         evidence_reference=f"manifest-line:{line_id}",
@@ -3898,7 +4904,7 @@ def _append_movement_event(
             edition is not None
             and current_node_scope["edition_id"] not in {None, edition.id}
         ):
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
 
     node_ids = {
         value
@@ -3915,19 +4921,19 @@ def _append_movement_event(
         edition is not None and node.edition_id not in {None, edition.id}
         for node in nodes.values()
     ):
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     actual_sequence = current.event_sequence if current else 0
     if expected_sequence != actual_sequence:
-        raise LogisticsVersionConflictError()
+        raise LogisticsVersionConflictError
     if current is None and movement.event_type != LogisticsEvent.EventType.RECEIVE:
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     if current is not None and movement.event_type == LogisticsEvent.EventType.RECEIVE:
-        raise LogisticsStateConflictError()
-    source_node = nodes.get(cast(UUID, movement.source_node_id))
-    destination_node = nodes.get(cast(UUID, movement.destination_node_id))
+        raise LogisticsStateConflictError
+    source_node = nodes.get(cast("UUID", movement.source_node_id))
+    destination_node = nodes.get(cast("UUID", movement.destination_node_id))
     prior_node_id = current.current_node_id if current else None
     if movement.source_node_id is not None and movement.source_node_id != prior_node_id:
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     movement_events = {
         LogisticsEvent.EventType.RECEIVE,
         LogisticsEvent.EventType.PACK,
@@ -3992,7 +4998,7 @@ def _append_movement_event(
             .first()
         )
         if custodian_party is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
     else:
         custodian_party = None
 
@@ -4012,16 +5018,16 @@ def _append_movement_event(
             .first()
         )
         if manifest is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         manifest_line = (
             manifest.lines.filter(**_manifest_subject_values(subject))
             .only("packed_in_node_id")
             .first()
         )
         if manifest_line is None:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         if movement.evidence_reference != f"manifest-line:{manifest_line.id}":
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
         manifest_destination_id = (
             manifest_line.packed_in_node_id or manifest.destination_node_id
         )
@@ -4076,11 +5082,11 @@ def _append_movement_event(
             )
         )
         if not route_matches:
-            raise LogisticsResourceUnavailableError()
+            raise LogisticsResourceUnavailableError
 
     prior_condition = current.condition if current else ""
     if movement.condition_before and movement.condition_before != prior_condition:
-        raise LogisticsStateConflictError()
+        raise LogisticsStateConflictError
     new_condition = movement.condition_after or prior_condition
     if current is None and not new_condition:
         raise ValidationError({"condition_after": "Receiving requires a condition."})
@@ -4244,8 +5250,43 @@ def record_logistics_event(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
-    """Append one custody/location fact and advance only its derived projection."""
+    """Append one custody/location fact and advance only its derived projection.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    movement : MovementInput
+        The movement applied within the audited domain transition.
+    expected_sequence : int
+        The expected expected sequence used to reject stale updates.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The resolved LogisticsCommandResult for record logistics event.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -4338,8 +5379,51 @@ def record_manifest_receipt(
     source_channel: str = "web",
     now: datetime | None = None,
 ) -> LogisticsCommandResult:
-    """Receive one exact manifest line with exact-manifest authority."""
+    """Receive one exact manifest line with exact-manifest authority.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    manifest_id : UUID
+        The manifest identifier within the requested scope.
+    line_id : UUID
+        The line identifier within the requested scope.
+    expected_sequence : int
+        The expected expected sequence used to reject stale updates.
+    occurred_at : datetime
+        The timezone-aware timestamp for occurred.
+    condition_after : str
+        The timezone-aware boundary for condition after.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    idempotency_key : UUID
+        The stable key that makes an exact retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='web'
+        The closed channel code identifying where the request originated.
+    now : datetime | None, default=None
+        The injectable timezone-aware instant used for deterministic evaluation.
+
+    Returns
+    -------
+    LogisticsCommandResult
+        The resolved LogisticsCommandResult for record manifest receipt.
+
+    Raises
+    ------
+    LogisticsResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -4377,14 +5461,14 @@ def record_manifest_receipt(
         .first()
     )
     if manifest is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     line = (
         LogisticsManifestLine.objects.select_for_update()
         .filter(id=line_id, manifest=manifest)
         .first()
     )
     if line is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     subject_id_by_kind: dict[str, UUID | None] = {
         LogisticsManifestLine.SubjectKind.NODE: line.node_id,
         LogisticsManifestLine.SubjectKind.ASSET: line.asset_id,
@@ -4394,7 +5478,7 @@ def record_manifest_receipt(
     subject_id = subject_id_by_kind.get(line.subject_kind)
     destination_node_id = line.packed_in_node_id or manifest.destination_node_id
     if subject_id is None or destination_node_id is None:
-        raise LogisticsResourceUnavailableError()
+        raise LogisticsResourceUnavailableError
     normalized_condition = normalized_text(
         condition_after,
         field="condition_after",

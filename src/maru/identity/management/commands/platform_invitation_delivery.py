@@ -21,6 +21,8 @@ from maru.identity.models import (
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Deliver durable single-use platform-account invitation messages. Run "
         "this command only in an identity worker with the private-key ring "
@@ -28,9 +30,30 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument("--delivery-limit", type=int, default=100)
 
     def handle(self, *args: object, **options: object) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : object
+            Positional arguments forwarded to the framework implementation.
+        **options : object
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args
         delivery_limit = options["delivery_limit"]
         if (

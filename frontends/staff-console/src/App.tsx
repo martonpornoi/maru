@@ -2434,7 +2434,7 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
                 </select>
                 {draftId && (
                   <a
-                    href={`/admin/registration/registrationconfiguration/${draftId}/change/`}
+                    href={`/admin/registration/registrationconfiguration/${encodeURIComponent(draftId)}/change/`}
                   >
                     Edit questions and products in bootstrap admin ↗
                   </a>

@@ -1,0 +1,30 @@
+#!/bin/sh
+
+zero=0000000000000000000000000000000000000000
+carriage_return=$(printf '\r')
+
+while read local_ref local_sha remote_ref remote_sha
+do
+    remote_sha=${remote_sha%"$carriage_return"}
+
+    if test "$local_sha" = "$zero"
+    then
+        echo "Maru policy blocks branch deletion through git push." >&2
+        exit 1
+    fi
+
+    if test "$remote_ref" = "refs/heads/main"
+    then
+        echo "Maru policy blocks direct pushes to main; use a certified pull request." >&2
+        exit 1
+    fi
+
+    if test "$remote_sha" != "$zero" &&
+       ! git merge-base --is-ancestor "$remote_sha" "$local_sha"
+    then
+        echo "Maru policy blocks non-fast-forward branch updates." >&2
+        exit 1
+    fi
+done
+
+exit 0

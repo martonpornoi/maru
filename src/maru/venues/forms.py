@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
 from datetime import UTC, date, datetime
-from typing import Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -34,7 +33,11 @@ from maru.venues.services import (
     VenueBookingEnvelope,
     VenueCapacityProfile,
 )
-from maru.workforce.models import Department
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from maru.workforce.models import Department
 
 _DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M"
 _LOCAL_DATE_TIME = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}\Z")
@@ -82,6 +85,17 @@ class EditionLocalDateTimeField(forms.Field):
     }
 
     def __init__(self, *args: Any, zone_name: str = "UTC", **kwargs: Any) -> None:
+        """Initialize the EditionLocalDateTimeField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        zone_name : str, default='UTC'
+            The human-readable zone name shown to authorized readers.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault(
             "widget",
             forms.DateTimeInput(
@@ -93,9 +107,33 @@ class EditionLocalDateTimeField(forms.Field):
         self.zone = ZoneInfo(zone_name)
 
     def set_zone(self, zone_name: str) -> None:
+        """Set zone.
+
+        Parameters
+        ----------
+        zone_name : str
+            The human-readable zone name shown to authorized readers.
+        """
         self.zone = ZoneInfo(zone_name)
 
     def to_python(self, value: object) -> datetime | None:
+        """Convert submitted input to its normalized Python representation.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        datetime | None
+            The canonical Python representation, or `None` for empty input.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if value in self.empty_values:
             return None
         if not isinstance(value, str):
@@ -103,6 +141,18 @@ class EditionLocalDateTimeField(forms.Field):
         return _parse_edition_local(value, zone=self.zone)
 
     def prepare_value(self, value: object) -> object:
+        """Prepare value.
+
+        Parameters
+        ----------
+        value : object
+            The untrusted input to normalize, validate, or compare.
+
+        Returns
+        -------
+        object
+            A widget-ready representation of the stored value.
+        """
         if isinstance(value, datetime):
             local = value.astimezone(self.zone) if value.tzinfo else value
             return local.strftime(_DATE_TIME_FORMAT)
@@ -110,10 +160,14 @@ class EditionLocalDateTimeField(forms.Field):
 
 
 class VenueRetryForm(StrictInputForm):
+    """Collect and validate venue retry input."""
+
     retry_key = CanonicalUUIDField(widget=forms.HiddenInput)
 
 
 class VenueVersionedForm(VenueRetryForm):
+    """Collect and validate venue versioned input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -121,10 +175,14 @@ class VenueVersionedForm(VenueRetryForm):
 
 
 class VenueReasonForm(VenueRetryForm):
+    """Collect and validate venue reason input."""
+
     reason = forms.CharField(max_length=1_000)
 
 
 class VenuePropertyCreateForm(VenueReasonForm):
+    """Collect and validate venue property create input."""
+
     slug = forms.SlugField(max_length=80)
     kind = forms.ChoiceField(choices=VenueProperty.Kind.choices)
     legal_name = forms.CharField(max_length=240)
@@ -154,6 +212,8 @@ class VenuePropertyCreateForm(VenueReasonForm):
 
 
 class VenuePropertyUpdateForm(VenueVersionedForm):
+    """Collect and validate venue property update input."""
+
     legal_name = forms.CharField(max_length=240)
     public_name = forms.CharField(max_length=200)
     provider_name = forms.CharField(max_length=240, required=False)
@@ -183,6 +243,13 @@ class VenuePropertyUpdateForm(VenueVersionedForm):
 
     @property
     def changes(self) -> dict[str, str]:
+        """Return changes.
+
+        Returns
+        -------
+        dict[str, str]
+            A mapping containing the resolved changes data.
+        """
         return {
             field_name: str(self.cleaned_data[field_name])
             for field_name in self.fields
@@ -191,6 +258,8 @@ class VenuePropertyUpdateForm(VenueVersionedForm):
 
 
 class VenueCatalogPathForm(VenueReasonForm):
+    """Collect and validate venue catalog path input."""
+
     site_code = forms.SlugField(max_length=80)
     site_name = forms.CharField(max_length=200)
     building_code = forms.SlugField(max_length=80)
@@ -227,6 +296,8 @@ class VenueCatalogPathForm(VenueReasonForm):
 
 
 class VenueCombinationForm(VenueReasonForm):
+    """Collect and validate venue combination input."""
+
     code = forms.SlugField(max_length=80)
     name = forms.CharField(max_length=200)
     member_space_ids = forms.MultipleChoiceField(
@@ -235,11 +306,34 @@ class VenueCombinationForm(VenueReasonForm):
     )
 
     def __init__(self, *args: Any, spaces: Iterable[VenueSpace], **kwargs: Any) -> None:
+        """Initialize the VenueCombinationForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        spaces : Iterable[VenueSpace]
+            The spaces used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
-        field = cast(forms.MultipleChoiceField, self.fields["member_space_ids"])
+        field = cast("forms.MultipleChoiceField", self.fields["member_space_ids"])
         field.choices = tuple((str(item.id), item.name) for item in spaces)
 
     def clean_member_space_ids(self) -> tuple[UUID, ...]:
+        """Validate and normalize the member space identifiers field.
+
+        Returns
+        -------
+        tuple[UUID, ...]
+            The matching clean member space ids records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         values = tuple(UUID(value) for value in self.cleaned_data["member_space_ids"])
         if len(set(values)) < _MINIMUM_COMBINATION_MEMBERS:
             raise ValidationError("Select at least two distinct physical spaces.")
@@ -247,6 +341,8 @@ class VenueCombinationForm(VenueReasonForm):
 
 
 class VenueMediaAddForm(VenueReasonForm):
+    """Collect and validate venue media add input."""
+
     kind = forms.ChoiceField(choices=VenuePropertyMedia.Kind.choices)
     source_reference = forms.CharField(max_length=1_000)
     owner_name = forms.CharField(max_length=240)
@@ -261,18 +357,33 @@ class VenueMediaAddForm(VenueReasonForm):
         edition_time_zone: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the VenueMediaAddForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        edition_time_zone : str
+            The IANA time-zone name used for localization and validation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
-        cast(EditionLocalDateTimeField, self.fields["expires_at"]).set_zone(
+        cast("EditionLocalDateTimeField", self.fields["expires_at"]).set_zone(
             edition_time_zone
         )
 
 
 class VenueReviewForm(VenueVersionedForm):
+    """Collect and validate venue review input."""
+
     public_reference = forms.CharField(max_length=1_000, required=False)
     reason = forms.CharField(max_length=1_000)
 
 
 class VenueLayoutAddForm(VenueReasonForm):
+    """Collect and validate venue layout add input."""
+
     space_id = forms.ChoiceField(choices=())
     layout_code = forms.SlugField(max_length=80)
     version = StrictBase10IntegerField(min_value=1)
@@ -287,15 +398,35 @@ class VenueLayoutAddForm(VenueReasonForm):
     )
 
     def __init__(self, *args: Any, spaces: Iterable[VenueSpace], **kwargs: Any) -> None:
+        """Initialize the VenueLayoutAddForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        spaces : Iterable[VenueSpace]
+            The spaces used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
-        field = cast(forms.ChoiceField, self.fields["space_id"])
+        field = cast("forms.ChoiceField", self.fields["space_id"])
         field.choices = tuple((str(item.id), item.name) for item in spaces)
 
     def clean_space_id(self) -> UUID:
+        """Validate and normalize the space identifier field.
+
+        Returns
+        -------
+        UUID
+            The validated and normalized space id.
+        """
         return UUID(self.cleaned_data["space_id"])
 
 
 class AccommodationRoomTypeForm(VenueReasonForm):
+    """Collect and validate accommodation room type input."""
+
     code = forms.SlugField(max_length=80)
     public_name = forms.CharField(max_length=200)
     description = forms.CharField(
@@ -313,6 +444,13 @@ class AccommodationRoomTypeForm(VenueReasonForm):
     provider_reference = forms.CharField(max_length=240, required=False)
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         minimum = cleaned.get("minimum_occupants")
         maximum = cleaned.get("maximum_occupants")
@@ -325,6 +463,8 @@ class AccommodationRoomTypeForm(VenueReasonForm):
 
 
 class AccommodationInventoryForm(VenueRetryForm):
+    """Collect and validate accommodation inventory input."""
+
     room_type_id = forms.ChoiceField(choices=())
     night = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
     room_capacity = StrictBase10IntegerField(min_value=0)
@@ -340,18 +480,40 @@ class AccommodationInventoryForm(VenueRetryForm):
         edition_time_zone: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the AccommodationInventoryForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        room_types : Iterable[AccommodationRoomType]
+            The room types used to configure and validate this form.
+        edition_time_zone : str
+            The IANA time-zone name used for localization and validation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
-        field = cast(forms.ChoiceField, self.fields["room_type_id"])
+        field = cast("forms.ChoiceField", self.fields["room_type_id"])
         field.choices = tuple((str(item.id), item.public_name) for item in room_types)
-        cast(EditionLocalDateTimeField, self.fields["release_at"]).set_zone(
+        cast("EditionLocalDateTimeField", self.fields["release_at"]).set_zone(
             edition_time_zone
         )
 
     def clean_room_type_id(self) -> UUID:
+        """Validate and normalize the room type identifier field.
+
+        Returns
+        -------
+        UUID
+            The validated and normalized room type id.
+        """
         return UUID(self.cleaned_data["room_type_id"])
 
 
 class VenueEditionSelectionForm(VenueReasonForm):
+    """Collect and validate venue edition selection input."""
+
     property_id = forms.ChoiceField(choices=())
     responsible_department_id = forms.ChoiceField(choices=())
     local_name = forms.CharField(max_length=200)
@@ -374,13 +536,26 @@ class VenueEditionSelectionForm(VenueReasonForm):
         departments: Iterable[Department],
         **kwargs: Any,
     ) -> None:
+        """Initialize the VenueEditionSelectionForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        properties : Iterable[VenueProperty]
+            The properties used to configure and validate this form.
+        departments : Iterable[Department]
+            The departments used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
-        property_field = cast(forms.ChoiceField, self.fields["property_id"])
+        property_field = cast("forms.ChoiceField", self.fields["property_id"])
         property_field.choices = tuple(
             (str(item.id), item.public_name) for item in properties
         )
         department_field = cast(
-            forms.ChoiceField,
+            "forms.ChoiceField",
             self.fields["responsible_department_id"],
         )
         department_field.choices = tuple(
@@ -388,13 +563,29 @@ class VenueEditionSelectionForm(VenueReasonForm):
         )
 
     def clean_property_id(self) -> UUID:
+        """Validate and normalize the property identifier field.
+
+        Returns
+        -------
+        UUID
+            The validated and normalized property id.
+        """
         return UUID(self.cleaned_data["property_id"])
 
     def clean_responsible_department_id(self) -> UUID:
+        """Validate and normalize the responsible department identifier field.
+
+        Returns
+        -------
+        UUID
+            The validated and normalized responsible department id.
+        """
         return UUID(self.cleaned_data["responsible_department_id"])
 
 
 class VenueSpaceSelectionForm(VenueReasonForm):
+    """Collect and validate venue space selection input."""
+
     venue_selection_id = forms.ChoiceField(choices=())
     source_space_id = forms.ChoiceField(choices=(), required=False)
     source_combination_id = forms.ChoiceField(choices=(), required=False)
@@ -426,6 +617,23 @@ class VenueSpaceSelectionForm(VenueReasonForm):
         configurations: Iterable[VenueSpaceConfiguration],
         **kwargs: Any,
     ) -> None:
+        """Initialize the VenueSpaceSelectionForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        venue_selections : Iterable[EditionVenueSelection]
+            The venue selections used to configure and validate this form.
+        spaces : Iterable[VenueSpace]
+            The spaces used to configure and validate this form.
+        combinations : Iterable[VenueSpaceCombination]
+            The combinations used to configure and validate this form.
+        configurations : Iterable[VenueSpaceConfiguration]
+            The configurations used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         choices = {
             "venue_selection_id": tuple(
@@ -448,9 +656,16 @@ class VenueSpaceSelectionForm(VenueReasonForm):
             ),
         }
         for field_name, field_choices in choices.items():
-            cast(forms.ChoiceField, self.fields[field_name]).choices = field_choices
+            cast("forms.ChoiceField", self.fields[field_name]).choices = field_choices
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         source_space = cleaned.get("source_space_id")
         source_combination = cleaned.get("source_combination_id")
@@ -487,19 +702,54 @@ class VenueSpaceSelectionForm(VenueReasonForm):
         return UUID(str(value)) if value else None
 
     def clean_venue_selection_id(self) -> UUID:
+        """Validate and normalize the venue selection identifier field.
+
+        Returns
+        -------
+        UUID
+            The validated and normalized venue selection id.
+        """
         return UUID(self.cleaned_data["venue_selection_id"])
 
     def clean_source_space_id(self) -> UUID | None:
+        """Validate and normalize the source space identifier field.
+
+        Returns
+        -------
+        UUID | None
+            The validated and normalized source space id.
+        """
         return self._optional_uuid(self.cleaned_data.get("source_space_id"))
 
     def clean_source_combination_id(self) -> UUID | None:
+        """Validate and normalize the source combination identifier field.
+
+        Returns
+        -------
+        UUID | None
+            The validated and normalized source combination id.
+        """
         return self._optional_uuid(self.cleaned_data.get("source_combination_id"))
 
     def clean_selected_configuration_id(self) -> UUID | None:
+        """Validate and normalize the selected configuration identifier field.
+
+        Returns
+        -------
+        UUID | None
+            The validated and normalized selected configuration id.
+        """
         return self._optional_uuid(self.cleaned_data.get("selected_configuration_id"))
 
     @property
     def capacity(self) -> VenueCapacityProfile | None:
+        """Return capacity.
+
+        Returns
+        -------
+        VenueCapacityProfile | None
+            The resolved VenueCapacityProfile | None for capacity.
+        """
         if not self.cleaned_data.get("override_capacity"):
             return None
         return VenueCapacityProfile(
@@ -512,6 +762,8 @@ class VenueSpaceSelectionForm(VenueReasonForm):
 
 
 class VenueAvailabilityForm(VenueVersionedForm):
+    """Collect and validate venue availability input."""
+
     intervals_text = forms.CharField(
         max_length=20_000,
         help_text=(
@@ -527,11 +779,34 @@ class VenueAvailabilityForm(VenueVersionedForm):
         edition_time_zone: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the VenueAvailabilityForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        edition_time_zone : str
+            The IANA time-zone name used for localization and validation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.zone = ZoneInfo(edition_time_zone)
         self.intervals: tuple[VenueAvailabilityInterval, ...] = ()
 
     def clean_intervals_text(self) -> str:
+        """Validate and normalize the intervals text field.
+
+        Returns
+        -------
+        str
+            The validated and normalized intervals text.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         raw = str(self.cleaned_data["intervals_text"])
         intervals: list[VenueAvailabilityInterval] = []
         for line in raw.splitlines():
@@ -571,6 +846,8 @@ class VenueAvailabilityForm(VenueVersionedForm):
 
 
 class VenueBookingForm(VenueRetryForm):
+    """Collect and validate venue booking input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         required=False,
@@ -601,6 +878,19 @@ class VenueBookingForm(VenueRetryForm):
         edition_time_zone: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the VenueBookingForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        layouts : Iterable[VenueLayoutVersion]
+            The layouts used to configure and validate this form.
+        edition_time_zone : str
+            The IANA time-zone name used for localization and validation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         for field_name in (
             "setup_starts_at",
@@ -608,16 +898,23 @@ class VenueBookingForm(VenueRetryForm):
             "effective_ends_at",
             "teardown_ends_at",
         ):
-            cast(EditionLocalDateTimeField, self.fields[field_name]).set_zone(
+            cast("EditionLocalDateTimeField", self.fields[field_name]).set_zone(
                 edition_time_zone
             )
-        field = cast(forms.ChoiceField, self.fields["public_layout_id"])
+        field = cast("forms.ChoiceField", self.fields["public_layout_id"])
         field.choices = (
             ("", "No public layout"),
             *((str(item.id), f"{item.title} v{item.version}") for item in layouts),
         )
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         points = tuple(
             cleaned.get(field_name)
@@ -630,7 +927,7 @@ class VenueBookingForm(VenueRetryForm):
         )
         if all(isinstance(value, datetime) for value in points):
             setup, effective_start, effective_end, teardown = cast(
-                tuple[datetime, datetime, datetime, datetime],
+                "tuple[datetime, datetime, datetime, datetime]",
                 points,
             )
             if not setup <= effective_start < effective_end <= teardown:
@@ -642,22 +939,38 @@ class VenueBookingForm(VenueRetryForm):
 
     @property
     def envelope(self) -> VenueBookingEnvelope:
+        """Return envelope.
+
+        Returns
+        -------
+        VenueBookingEnvelope
+            The resolved VenueBookingEnvelope for envelope.
+        """
         return VenueBookingEnvelope(
-            setup_starts_at=cast(datetime, self.cleaned_data["setup_starts_at"]),
+            setup_starts_at=cast("datetime", self.cleaned_data["setup_starts_at"]),
             effective_starts_at=cast(
-                datetime,
+                "datetime",
                 self.cleaned_data["effective_starts_at"],
             ),
-            effective_ends_at=cast(datetime, self.cleaned_data["effective_ends_at"]),
-            teardown_ends_at=cast(datetime, self.cleaned_data["teardown_ends_at"]),
+            effective_ends_at=cast("datetime", self.cleaned_data["effective_ends_at"]),
+            teardown_ends_at=cast("datetime", self.cleaned_data["teardown_ends_at"]),
         )
 
     def clean_public_layout_id(self) -> UUID | None:
+        """Validate and normalize the public layout identifier field.
+
+        Returns
+        -------
+        UUID | None
+            The validated and normalized public layout id.
+        """
         value = self.cleaned_data.get("public_layout_id")
         return UUID(str(value)) if value else None
 
 
 class VenueBookingStateForm(VenueVersionedForm):
+    """Collect and validate venue booking state input."""
+
     reason = forms.CharField(max_length=1_000)
 
 
@@ -670,6 +983,28 @@ def inventory_initial(
     provider_reference: str,
     expected_version: int | None,
 ) -> dict[str, object]:
+    """Return inventory initial.
+
+    Parameters
+    ----------
+    room_type : AccommodationRoomType
+        The closed room type discriminator defined by the domain catalog.
+    night : date
+        The night used to configure and validate this form.
+    release_at : datetime
+        The timezone-aware timestamp for release.
+    room_capacity : int
+        The non-negative hard limit or requested amount for room capacity.
+    provider_reference : str
+        The provider-owned external reference.
+    expected_version : int | None
+        The aggregate version required for optimistic concurrency.
+
+    Returns
+    -------
+    dict[str, object]
+        A disclosure-safe mapping for inventory initial.
+    """
     return {
         "room_type_id": str(room_type.id),
         "night": night,

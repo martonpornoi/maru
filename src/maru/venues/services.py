@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
 from itertools import pairwise
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -26,7 +26,6 @@ from maru.authorization.policy import (
 )
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.workforce.models import Department
 
@@ -62,6 +61,11 @@ from .models import (
 )
 from .writer_boundary import venue_writer
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
+    from maru.identity.models import Account
+
 PROPERTY_VIEW_CAPABILITY = "venues.view_properties"
 PROPERTY_MANAGE_CAPABILITY = "venues.manage_properties"
 ACCOMMODATION_MANAGE_CAPABILITY = "venues.manage_accommodation"
@@ -75,47 +79,81 @@ MAXIMUM_AVAILABILITY_WINDOWS = 256
 
 
 class VenueCommandError(RuntimeError):
+    """Signal venue command."""
+
     reason_code = "venue_command_failed"
 
 
 class VenueAuthorizationDeniedError(VenueCommandError):
+    """Signal venue authorization denied."""
+
     reason_code = "venue_authorization_denied"
 
 
 class VenueResourceUnavailableError(VenueCommandError):
+    """Signal venue resource unavailable."""
+
     reason_code = "venue_resource_unavailable"
 
 
 class VenueVersionConflictError(VenueCommandError):
+    """Signal venue version conflict."""
+
     reason_code = "venue_version_conflict"
 
 
 class VenueRetryConflictError(VenueCommandError):
+    """Signal venue retry conflict."""
+
     reason_code = "venue_retry_conflict"
 
 
 class VenueStateConflictError(VenueCommandError):
+    """Signal venue state conflict."""
+
     reason_code = "venue_state_conflict"
 
 
 class VenueAvailabilityConflictError(VenueCommandError):
+    """Signal venue availability conflict."""
+
     reason_code = "venue_hard_availability_conflict"
 
 
 class VenueCapacityConflictError(VenueCommandError):
+    """Signal venue capacity conflict."""
+
     reason_code = "venue_capacity_conflict"
 
 
 class VenueBookingOverlapError(VenueCommandError):
+    """Signal venue booking overlap."""
+
     reason_code = "venue_booking_overlap"
 
 
 class VenueIndependentApprovalError(VenueCommandError):
+    """Signal venue independent approval."""
+
     reason_code = "venue_independent_approval_required"
 
 
 @dataclass(frozen=True, slots=True)
 class VenueCommandResult:
+    """Describe venue command result.
+
+    Attributes
+    ----------
+    object_id
+        The object identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     object_id: UUID
     receipt_id: UUID
     resulting_version: int
@@ -124,6 +162,40 @@ class VenueCommandResult:
 
 @dataclass(frozen=True, slots=True)
 class VenuePropertyProfile:
+    """Describe venue property profile.
+
+    Attributes
+    ----------
+    kind
+        The closed discriminator selecting the requested behavior.
+    legal_name
+        The human-readable legal name shown to authorized readers.
+    public_name
+        The human-readable public name shown to authorized readers.
+    provider_name
+        The human-readable provider name shown to authorized readers.
+    public_description
+        The bounded public description retained for authorized readers.
+    internal_notes
+        The bounded internal notes retained for authorized readers.
+    location_name
+        The human-readable location name shown to authorized readers.
+    postal_address
+        The postal address retained in this immutable projection.
+    country_code
+        The stable country code from the relevant closed catalog.
+    website_url
+        The validated absolute HTTPS website url.
+    public_contact
+        The public contact retained in this immutable projection.
+    contact_name
+        The human-readable contact name shown to authorized readers.
+    contact_email
+        The normalized contact email used for delivery or identity matching.
+    contact_phone
+        The normalized international contact phone, when provided.
+    """
+
     kind: str
     legal_name: str
     public_name: str
@@ -142,6 +214,46 @@ class VenuePropertyProfile:
 
 @dataclass(frozen=True, slots=True)
 class VenueSpaceCatalogInput:
+    """Describe venue space catalog input.
+
+    Attributes
+    ----------
+    site_code
+        The stable site code from the relevant closed catalog.
+    site_name
+        The human-readable site name shown to authorized readers.
+    building_code
+        The stable building code from the relevant closed catalog.
+    building_name
+        The human-readable building name shown to authorized readers.
+    space_code
+        The stable space code from the relevant closed catalog.
+    space_name
+        The human-readable space name shown to authorized readers.
+    space_kind
+        The closed space kind discriminator defined by the domain catalog.
+    configuration_code
+        The stable configuration code from the relevant closed catalog.
+    configuration_name
+        The human-readable configuration name shown to authorized readers.
+    seated_capacity
+        The non-negative hard limit or requested amount for seated capacity.
+    standing_capacity
+        The non-negative hard limit or requested amount for standing capacity.
+    table_capacity
+        The non-negative hard limit or requested amount for table capacity.
+    fire_capacity
+        The non-negative hard limit or requested amount for fire capacity.
+    public_description
+        The bounded public description retained for authorized readers.
+    accessibility_features
+        The accessibility features retained in this immutable projection.
+    known_barriers
+        The known barriers retained in this immutable projection.
+    equipment_facts
+        The equipment facts retained in this immutable projection.
+    """
+
     site_code: str
     site_name: str
     building_code: str
@@ -163,6 +275,22 @@ class VenueSpaceCatalogInput:
 
 @dataclass(frozen=True, slots=True)
 class VenueCapacityProfile:
+    """Describe venue capacity profile.
+
+    Attributes
+    ----------
+    configuration_name
+        The human-readable configuration name shown to authorized readers.
+    seated_capacity
+        The non-negative hard limit or requested amount for seated capacity.
+    standing_capacity
+        The non-negative hard limit or requested amount for standing capacity.
+    table_capacity
+        The non-negative hard limit or requested amount for table capacity.
+    fire_capacity
+        The non-negative hard limit or requested amount for fire capacity.
+    """
+
     configuration_name: str
     seated_capacity: int
     standing_capacity: int
@@ -172,6 +300,18 @@ class VenueCapacityProfile:
 
 @dataclass(frozen=True, slots=True)
 class VenueAvailabilityInterval:
+    """Describe venue availability interval.
+
+    Attributes
+    ----------
+    starts_at
+        The timezone-aware timestamp for starts.
+    ends_at
+        The timezone-aware timestamp for ends.
+    opening_restriction
+        The opening restriction retained in this immutable projection.
+    """
+
     starts_at: datetime
     ends_at: datetime
     opening_restriction: str = ""
@@ -179,6 +319,20 @@ class VenueAvailabilityInterval:
 
 @dataclass(frozen=True, slots=True)
 class VenueBookingEnvelope:
+    """Describe venue booking envelope.
+
+    Attributes
+    ----------
+    setup_starts_at
+        The timezone-aware timestamp for setup starts.
+    effective_starts_at
+        The timezone-aware timestamp for effective starts.
+    effective_ends_at
+        The timezone-aware timestamp for effective ends.
+    teardown_ends_at
+        The timezone-aware timestamp for teardown ends.
+    """
+
     setup_starts_at: datetime
     effective_starts_at: datetime
     effective_ends_at: datetime
@@ -257,7 +411,7 @@ def _normalize_profile(profile: VenuePropertyProfile) -> dict[str, str]:
 
 def _require_actor(actor: Account) -> None:
     if actor.pk is None or not actor.is_active:
-        raise VenueAuthorizationDeniedError()
+        raise VenueAuthorizationDeniedError
 
 
 def _require_decision(
@@ -275,7 +429,7 @@ def _require_decision(
         at=at,
     )
     if not decision.allowed:
-        raise VenueAuthorizationDeniedError()
+        raise VenueAuthorizationDeniedError
     return decision
 
 
@@ -329,7 +483,7 @@ def _space_decision(
         .first()
     )
     if row is None:
-        raise VenueAuthorizationDeniedError()
+        raise VenueAuthorizationDeniedError
     target = resolve_edition_space_target(
         organization_id=organization_id,
         edition_id=edition_id,
@@ -342,7 +496,7 @@ def _space_decision(
         at=at,
     )
     if target is None:
-        raise VenueAuthorizationDeniedError()
+        raise VenueAuthorizationDeniedError
     return _AuthorizedSpace(
         space_selection_id=row["id"],
         department_id=row["responsible_department_id"],
@@ -374,7 +528,7 @@ def _existing_receipt(
         receipt.organization_id != organization_id
         or receipt.request_digest != request_digest
     ):
-        raise VenueRetryConflictError()
+        raise VenueRetryConflictError
     return receipt
 
 
@@ -494,6 +648,39 @@ def create_venue_property(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Create venue property.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    slug : str
+        The stable URL slug identifying the slug.
+    profile : VenuePropertyProfile
+        The governed profile data.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -529,7 +716,7 @@ def create_venue_property(
         Organization.objects.select_for_update().filter(id=organization_id).first()
     )
     if organization is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     with venue_writer():
         property_record = VenueProperty.objects.create(
             organization=organization,
@@ -577,6 +764,47 @@ def update_venue_property(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Update venue property.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    property_id : UUID
+        The identifier of the property.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    changes : Mapping[str, str]
+        The changes applied within the audited domain transition.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    VenueStateConflictError
+        If the target lifecycle state does not permit the transition.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -642,11 +870,11 @@ def update_venue_property(
         .first()
     )
     if property_record is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     if property_record.aggregate_version != expected_version:
-        raise VenueVersionConflictError()
+        raise VenueVersionConflictError
     if property_record.lifecycle == VenueProperty.Lifecycle.RETIRED:
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     actual = {
         field_name: value
         for field_name, value in normalized.items()
@@ -700,6 +928,41 @@ def create_venue_space_catalog_path(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Create venue space catalog path.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    property_id : UUID
+        The identifier of the property.
+    catalog : VenueSpaceCatalogInput
+        The catalog applied within the audited domain transition.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -803,7 +1066,7 @@ def create_venue_space_catalog_path(
         property_record is None
         or property_record.lifecycle == VenueProperty.Lifecycle.RETIRED
     ):
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     with venue_writer():
         site = VenueSite.objects.create(
             organization=property_record.organization,
@@ -885,6 +1148,45 @@ def create_venue_space_combination(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Create venue space combination.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    property_id : UUID
+        The identifier of the property.
+    code : str
+        The stable machine-readable code.
+    name : str
+        The human-readable name.
+    member_space_ids : Sequence[UUID]
+        The selected member space identifiers.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -942,7 +1244,7 @@ def create_venue_space_combination(
         .first()
     )
     if property_record is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     spaces = tuple(
         VenueSpace.objects.select_for_update()
         .filter(
@@ -954,7 +1256,7 @@ def create_venue_space_combination(
         .order_by("id")
     )
     if len(spaces) != len(member_ids):
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     with venue_writer():
         combination = VenueSpaceCombination.objects.create(
             organization=property_record.organization,
@@ -1014,6 +1316,53 @@ def add_venue_property_media(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Add venue property media.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    property_id : UUID
+        The identifier of the property.
+    kind : str
+        The closed kind code.
+    source_reference : str
+        The source-system reference.
+    owner_name : str
+        The human-readable owner name shown to authorized readers.
+    license_basis : str
+        The license basis applied within the audited domain transition.
+    usage_scope : str
+        The usage scope applied within the audited domain transition.
+    attribution : str
+        The attribution applied within the audited domain transition.
+    expires_at : datetime | None
+        The time at which the value expires.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1073,7 +1422,7 @@ def add_venue_property_media(
         .first()
     )
     if property_record is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     with venue_writer():
         media = VenuePropertyMedia.objects.create(
             organization=property_record.organization,
@@ -1121,6 +1470,49 @@ def approve_venue_property_media(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Approve venue property media.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    property_id : UUID
+        The identifier of the property.
+    media_id : UUID
+        The identifier of the media.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    public_reference : str
+        The provider or source public reference retained for reconciliation.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    VenueIndependentApprovalError
+        If the actor is not independent from the proposal being approved.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    VenueStateConflictError
+        If the target lifecycle state does not permit the transition.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -1170,13 +1562,13 @@ def approve_venue_property_media(
         .first()
     )
     if media is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     if media.aggregate_version != expected_version:
-        raise VenueVersionConflictError()
+        raise VenueVersionConflictError
     if media.review_status != VenuePropertyMedia.ReviewStatus.PENDING:
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     if media.submitted_by_id == actor.id:
-        raise VenueIndependentApprovalError()
+        raise VenueIndependentApprovalError
     media.public_reference = public_reference
     media.review_status = VenuePropertyMedia.ReviewStatus.APPROVED
     media.reviewed_by = actor
@@ -1230,6 +1622,53 @@ def add_venue_layout_version(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Add venue layout version.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    space_id : UUID
+        The identifier of the space.
+    layout_code : str
+        The stable layout code from the relevant closed catalog.
+    version : int
+        The version number associated with the supplied record or contract.
+    title : str
+        The human-readable title.
+    visibility : str
+        The closed disclosure audience applied to the projection.
+    source_reference : str
+        The source-system reference.
+    checksum_sha256 : str
+        The canonical digest used to verify checksum.
+    notes : str
+        The bounded operator notes retained with the domain record.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1293,7 +1732,7 @@ def add_venue_layout_version(
         .first()
     )
     if space is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     with venue_writer():
         layout = VenueLayoutVersion.objects.create(
             organization=space.organization,
@@ -1341,6 +1780,49 @@ def approve_venue_layout_version(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Approve venue layout version.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    layout_id : UUID
+        The identifier of the layout.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    approved_reference : str
+        The provider or source approved reference retained for reconciliation.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    VenueIndependentApprovalError
+        If the actor is not independent from the proposal being approved.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    VenueStateConflictError
+        If the target lifecycle state does not permit the transition.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -1384,13 +1866,13 @@ def approve_venue_layout_version(
         .first()
     )
     if layout is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     if layout.aggregate_version != expected_version:
-        raise VenueVersionConflictError()
+        raise VenueVersionConflictError
     if layout.review_status != VenueLayoutVersion.ReviewStatus.PENDING:
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     if layout.submitted_by_id == actor.id:
-        raise VenueIndependentApprovalError()
+        raise VenueIndependentApprovalError
     if (
         layout.visibility == VenueLayoutVersion.Visibility.PUBLIC
         and not approved_reference
@@ -1451,6 +1933,53 @@ def create_accommodation_room_type(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Create accommodation room type.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    property_id : UUID
+        The identifier of the property.
+    code : str
+        The stable machine-readable code.
+    public_name : str
+        The human-readable public name shown to authorized readers.
+    description : str
+        The human-readable description.
+    accessible_features : str
+        The accessible features applied within the audited domain transition.
+    minimum_occupants : int
+        The minimum occupants applied within the audited domain transition.
+    maximum_occupants : int
+        The maximum occupants applied within the audited domain transition.
+    provider_reference : str
+        The provider-owned external reference.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1523,7 +2052,7 @@ def create_accommodation_room_type(
         .first()
     )
     if property_record is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     with venue_writer():
         room_type = AccommodationRoomType.objects.create(
             organization=property_record.organization,
@@ -1573,6 +2102,51 @@ def set_accommodation_night_inventory(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Set accommodation night inventory.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    room_type_id : UUID
+        The identifier of the room type.
+    night : date
+        The night applied within the audited domain transition.
+    room_capacity : int
+        The non-negative hard limit or requested amount for room capacity.
+    release_at : datetime
+        The timezone-aware timestamp for release.
+    provider_reference : str
+        The provider-owned external reference.
+    expected_version : int | None
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     if expected_version is not None:
         expected_version = _require_expected_version(expected_version)
     if (
@@ -1627,7 +2201,7 @@ def set_accommodation_night_inventory(
         .first()
     )
     if room_type is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     inventory = (
         AccommodationNightInventory.objects.select_for_update()
         .filter(room_type=room_type, night=night, organization_id=organization_id)
@@ -1636,7 +2210,7 @@ def set_accommodation_night_inventory(
     with venue_writer():
         if inventory is None:
             if expected_version is not None:
-                raise VenueVersionConflictError()
+                raise VenueVersionConflictError
             inventory = AccommodationNightInventory.objects.create(
                 organization=room_type.organization,
                 room_type=room_type,
@@ -1647,7 +2221,7 @@ def set_accommodation_night_inventory(
             )
         else:
             if inventory.aggregate_version != expected_version:
-                raise VenueVersionConflictError()
+                raise VenueVersionConflictError
             inventory.room_capacity = room_capacity
             inventory.release_at = release_at
             inventory.provider_reference = provider_reference
@@ -1728,6 +2302,49 @@ def select_venue_for_edition(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Select venue for edition.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    property_id : UUID
+        The identifier of the property.
+    responsible_department_id : UUID
+        The identifier of the responsible department.
+    local_name : str
+        The human-readable local name shown to authorized readers.
+    public_description_override : str
+        The public description override applied within the audited domain transition.
+    public_contact_override : str
+        The public contact override applied within the audited domain transition.
+    opening_restrictions : str
+        The opening restrictions applied within the audited domain transition.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1811,7 +2428,7 @@ def select_venue_for_edition(
         .first()
     )
     if edition is None or property_record is None or department is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     with venue_writer():
         selection = EditionVenueSelection.objects.create(
             organization=edition.organization,
@@ -1865,6 +2482,57 @@ def select_space_for_edition(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Select space for edition.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    venue_selection_id : UUID
+        The identifier of the venue selection.
+    source_space_id : UUID | None
+        The identifier of the source space.
+    source_combination_id : UUID | None
+        The identifier of the source combination.
+    selected_configuration_id : UUID | None
+        The identifier of the selected configuration.
+    local_name : str
+        The human-readable local name shown to authorized readers.
+    capacity : VenueCapacityProfile | None
+        The capacity applied by the operation.
+    public_access_info : str
+        The public access info applied within the audited domain transition.
+    opening_restrictions : str
+        The opening restrictions applied within the audited domain transition.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    VenueStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1937,7 +2605,7 @@ def select_space_for_edition(
         .first()
     )
     if venue_selection is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     configuration: VenueSpaceConfiguration | None = None
     source_space: VenueSpace | None = None
     source_combination: VenueSpaceCombination | None = None
@@ -1968,7 +2636,7 @@ def select_space_for_edition(
             .first()
         )
         if source_space is None or configuration is None or capacity is not None:
-            raise VenueResourceUnavailableError()
+            raise VenueResourceUnavailableError
         capacity = VenueCapacityProfile(
             configuration_name=configuration.name,
             seated_capacity=configuration.seated_capacity,
@@ -1997,7 +2665,7 @@ def select_space_for_edition(
             .first()
         )
         if source_combination is None:
-            raise VenueResourceUnavailableError()
+            raise VenueResourceUnavailableError
         members = tuple(
             VenueSpace.objects.select_for_update()
             .filter(
@@ -2009,9 +2677,9 @@ def select_space_for_edition(
             .order_by("id")
         )
         if len(members) < MINIMUM_COMBINATION_MEMBERS:
-            raise VenueStateConflictError()
+            raise VenueStateConflictError
     if capacity is None:
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     with venue_writer():
         space_selection = EditionSpaceSelection.objects.create(
             organization=venue_selection.organization,
@@ -2123,6 +2791,47 @@ def set_edition_space_availability(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Set edition space availability.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    intervals : Sequence[VenueAvailabilityInterval]
+        The intervals applied within the audited domain transition.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    VenueAvailabilityConflictError
+        If the requested interval conflicts with effective availability.
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -2171,9 +2880,9 @@ def set_edition_space_availability(
         .first()
     )
     if space_selection is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     if space_selection.aggregate_version != expected_version:
-        raise VenueVersionConflictError()
+        raise VenueVersionConflictError
     if VenueBooking.objects.filter(
         space_selection=space_selection,
         lifecycle=VenueBooking.Lifecycle.ACTIVE,
@@ -2187,7 +2896,7 @@ def set_edition_space_availability(
                 and interval.ends_at >= booking.teardown_ends_at
                 for interval in normalized
             ):
-                raise VenueAvailabilityConflictError()
+                raise VenueAvailabilityConflictError
     availability_version = space_selection.current_availability_version + 1
     space_selection.current_availability_version = availability_version
     space_selection.aggregate_version += 1
@@ -2325,7 +3034,7 @@ def _capacity_limit(
     }
     configured_limit = by_mode[capacity_mode]
     if configured_limit < 1:
-        raise VenueCapacityConflictError()
+        raise VenueCapacityConflictError
     return min(configured_limit, space_selection.fire_capacity)
 
 
@@ -2340,9 +3049,9 @@ def _require_available_capacity(
         space_selection=space_selection,
         capacity_mode=capacity_mode,
     ):
-        raise VenueCapacityConflictError()
+        raise VenueCapacityConflictError
     if space_selection.current_availability_version < 1:
-        raise VenueAvailabilityConflictError()
+        raise VenueAvailabilityConflictError
     contained = EditionSpaceAvailabilityWindow.objects.filter(
         organization_id=space_selection.organization_id,
         edition_id=space_selection.edition_id,
@@ -2352,7 +3061,7 @@ def _require_available_capacity(
         ends_at__gte=envelope.teardown_ends_at,
     ).exists()
     if not contained:
-        raise VenueAvailabilityConflictError()
+        raise VenueAvailabilityConflictError
 
 
 def _locked_space_selection(
@@ -2375,7 +3084,7 @@ def _locked_space_selection(
         .first()
     )
     if space_selection is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     return space_selection
 
 
@@ -2404,7 +3113,7 @@ def _validate_public_layout(
         .first()
     )
     if layout is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     return layout
 
 
@@ -2467,7 +3176,7 @@ def _write_booking_occupancy(*, booking: VenueBooking) -> None:
         .values_list("source_space_id", flat=True)
     )
     if not member_ids:
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     rows: list[VenueBookingOccupancy] = []
     for source_space_id in member_ids:
         rows.extend(
@@ -2508,7 +3217,7 @@ def _write_booking_occupancy(*, booking: VenueBooking) -> None:
         with transaction.atomic(), venue_writer():
             VenueBookingOccupancy.objects.bulk_create(rows)
     except IntegrityError as error:
-        raise VenueBookingOverlapError() from error
+        raise VenueBookingOverlapError from error
 
 
 def _booking_envelope(booking: VenueBooking) -> VenueBookingEnvelope:
@@ -2542,6 +3251,52 @@ def create_venue_booking(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Create venue booking.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    kind : str
+        The closed kind code.
+    external_reference : str
+        The provider or source external reference retained for reconciliation.
+    internal_title : str
+        The human-readable internal title shown to authorized readers.
+    public_title : str
+        The human-readable public title shown to authorized readers.
+    public_description : str
+        The bounded public description retained for authorized readers.
+    capacity_mode : str
+        The closed capacity mode discriminator defined by the domain catalog.
+    expected_attendance : int
+        The expected attendance applied within the audited domain transition.
+    envelope : VenueBookingEnvelope
+        The envelope applied within the audited domain transition.
+    public_layout_id : UUID | None
+        The identifier of the public layout.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The persisted record after validation and transaction commit.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -2681,6 +3436,65 @@ def reschedule_venue_booking(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Reschedule venue booking.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    booking_id : UUID
+        The identifier of the booking.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    kind : str
+        The closed kind code.
+    external_reference : str
+        The provider or source external reference retained for reconciliation.
+    internal_title : str
+        The human-readable internal title shown to authorized readers.
+    public_title : str
+        The human-readable public title shown to authorized readers.
+    public_description : str
+        The bounded public description retained for authorized readers.
+    capacity_mode : str
+        The closed capacity mode discriminator defined by the domain catalog.
+    expected_attendance : int
+        The expected attendance applied within the audited domain transition.
+    envelope : VenueBookingEnvelope
+        The envelope applied within the audited domain transition.
+    public_layout_id : UUID | None
+        The identifier of the public layout.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    VenueResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    VenueStateConflictError
+        If the target lifecycle state does not permit the transition.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -2745,11 +3559,11 @@ def reschedule_venue_booking(
         .first()
     )
     if booking is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     if booking.aggregate_version != expected_version:
-        raise VenueVersionConflictError()
+        raise VenueVersionConflictError
     if booking.lifecycle != VenueBooking.Lifecycle.ACTIVE:
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     _require_available_capacity(
         space_selection=space_selection,
         envelope=envelope,
@@ -2851,7 +3665,7 @@ def _locked_booking(
         .first()
     )
     if booking is None:
-        raise VenueResourceUnavailableError()
+        raise VenueResourceUnavailableError
     return booking
 
 
@@ -2928,6 +3742,47 @@ def approve_venue_booking(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Approve venue booking.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    booking_id : UUID
+        The identifier of the booking.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    VenueIndependentApprovalError
+        If the actor is not independent from the proposal being approved.
+    VenueStateConflictError
+        If the target lifecycle state does not permit the transition.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -2969,14 +3824,14 @@ def approve_venue_booking(
         booking_id=booking_id,
     )
     if booking.aggregate_version != expected_version:
-        raise VenueVersionConflictError()
+        raise VenueVersionConflictError
     if (
         booking.lifecycle != VenueBooking.Lifecycle.ACTIVE
         or booking.review_state != VenueBooking.ReviewState.DRAFT
     ):
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     if actor.id in {booking.created_by_id, booking.last_modified_by_id}:
-        raise VenueIndependentApprovalError()
+        raise VenueIndependentApprovalError
     old_review_state = booking.review_state
     old_publication_state = booking.publication_state
     old_lifecycle = booking.lifecycle
@@ -3023,6 +3878,47 @@ def publish_venue_booking(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Publish venue booking.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    booking_id : UUID
+        The identifier of the booking.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    VenueIndependentApprovalError
+        If the actor is not independent from the proposal being approved.
+    VenueStateConflictError
+        If the target lifecycle state does not permit the transition.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -3064,7 +3960,7 @@ def publish_venue_booking(
         booking_id=booking_id,
     )
     if booking.aggregate_version != expected_version:
-        raise VenueVersionConflictError()
+        raise VenueVersionConflictError
     if (
         booking.lifecycle != VenueBooking.Lifecycle.ACTIVE
         or booking.review_state != VenueBooking.ReviewState.APPROVED
@@ -3072,9 +3968,9 @@ def publish_venue_booking(
         or booking.kind == VenueBooking.Kind.PRIVATE
         or not booking.public_title
     ):
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     if booking.approved_by_id == actor.id:
-        raise VenueIndependentApprovalError()
+        raise VenueIndependentApprovalError
     if booking.public_layout_id and (
         booking.public_layout is None
         or booking.public_layout.visibility != VenueLayoutVersion.Visibility.PUBLIC
@@ -3082,7 +3978,7 @@ def publish_venue_booking(
         != VenueLayoutVersion.ReviewStatus.APPROVED
         or not booking.public_layout.approved_reference
     ):
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     old_review_state = booking.review_state
     old_publication_state = booking.publication_state
     old_lifecycle = booking.lifecycle
@@ -3129,6 +4025,45 @@ def withdraw_venue_booking_publication(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Withdraw venue booking publication.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    booking_id : UUID
+        The identifier of the booking.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    VenueStateConflictError
+        If the target lifecycle state does not permit the transition.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -3170,12 +4105,12 @@ def withdraw_venue_booking_publication(
         booking_id=booking_id,
     )
     if booking.aggregate_version != expected_version:
-        raise VenueVersionConflictError()
+        raise VenueVersionConflictError
     if (
         booking.lifecycle != VenueBooking.Lifecycle.ACTIVE
         or booking.publication_state != VenueBooking.PublicationState.PUBLISHED
     ):
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     old_review_state = booking.review_state
     old_publication_state = booking.publication_state
     old_lifecycle = booking.lifecycle
@@ -3220,6 +4155,45 @@ def cancel_venue_booking(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> VenueCommandResult:
+    """Cancel venue booking.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    space_selection_id : UUID
+        The identifier of the space selection.
+    booking_id : UUID
+        The identifier of the booking.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    VenueCommandResult
+        The venue command result.
+
+    Raises
+    ------
+    VenueStateConflictError
+        If the target lifecycle state does not permit the transition.
+    VenueVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -3261,9 +4235,9 @@ def cancel_venue_booking(
         booking_id=booking_id,
     )
     if booking.aggregate_version != expected_version:
-        raise VenueVersionConflictError()
+        raise VenueVersionConflictError
     if booking.lifecycle != VenueBooking.Lifecycle.ACTIVE:
-        raise VenueStateConflictError()
+        raise VenueStateConflictError
     old_review_state = booking.review_state
     old_publication_state = booking.publication_state
     old_lifecycle = booking.lifecycle

@@ -1,4 +1,5 @@
 import io
+from typing import Never
 from uuid import uuid4
 
 import pytest
@@ -91,7 +92,7 @@ def test_clamav_protocol_distinguishes_clean_infected_uncertain_and_outage(
     with pytest.raises(ValidationError, match="safe result"):
         _clamav_scan(b"uncertain")
 
-    def unavailable(*args, **kwargs):
+    def unavailable(*args, **kwargs) -> Never:
         raise OSError("scanner unavailable")
 
     monkeypatch.setattr(

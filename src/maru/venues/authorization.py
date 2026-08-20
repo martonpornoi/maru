@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from maru.authorization.policy import (
     ResolvedAuthorizationTarget,
@@ -12,6 +12,9 @@ from maru.authorization.policy import (
 from .bindings import edition_space_binding_id
 from .models import EditionSpaceSelection
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 
 def resolve_edition_space_target(
     *,
@@ -19,6 +22,22 @@ def resolve_edition_space_target(
     edition_id: UUID,
     space_selection_id: UUID,
 ) -> ResolvedAuthorizationTarget | None:
+    """Resolve edition space target.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    space_selection_id : UUID
+        The identifier of the space selection.
+
+    Returns
+    -------
+    ResolvedAuthorizationTarget | None
+        The resolved edition space target.
+    """
     row = (
         EditionSpaceSelection.objects.filter(
             id=space_selection_id,

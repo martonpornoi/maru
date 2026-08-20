@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import UTC, datetime, timedelta
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 from uuid import UUID, uuid5
 
 from django.db import transaction
@@ -39,7 +39,6 @@ from maru.identity.models import (
     IdentityChallenge,
     RestrictionAppeal,
 )
-from maru.organizations.models import Organization
 from maru.privacyops.models import (
     DisposalReceipt,
     PostEditionCorrection,
@@ -83,17 +82,34 @@ from maru.workforce.models import (
 )
 from maru.workforce.structure_commands import create_department
 
+if TYPE_CHECKING:
+    from maru.organizations.models import Organization
+
 DEMO_NAMESPACE = UUID("6c4b5775-8251-4f11-98e1-b29e09d8fbe6")
 
 
 class OwnRecord(Protocol):
+    """Describe own record."""
+
     def __call__(
         self,
         kind: str,
         object_id: UUID,
         *,
         created: bool,
-    ) -> None: ...
+    ) -> None:
+        """Invoke the configured operation.
+
+        Parameters
+        ----------
+        kind : str
+            The closed discriminator selecting the requested behavior.
+        object_id : UUID
+            The object identifier within the requested scope.
+        created : bool
+            The created evaluated while call.
+        """
+        ...
 
 
 def _id(kind: str, key: str) -> UUID:
@@ -124,8 +140,29 @@ def seed_workforce_examples(  # noqa: PLR0915
     own: OwnRecord,
     happened_at: datetime,
 ) -> None:
-    """Give every workforce admin page coherent, linked synthetic records."""
+    """Give every workforce admin page coherent, linked synthetic records.
 
+    Parameters
+    ----------
+    convention_key : str
+        The stable convention key used to authenticate or deduplicate the
+        operation.
+    organization : Organization
+        The organization that owns the requested resource.
+    edition : EventEdition
+        The event edition that scopes the operation.
+    accounts : dict[str, Account]
+        The accounts mapping to validate or transform.
+    own : OwnRecord
+        The own evaluated while seed workforce examples.
+    happened_at : datetime
+        The timezone-aware timestamp for happened.
+
+    Raises
+    ------
+    RuntimeError
+        If a required runtime invariant or dependency is unavailable.
+    """
     chair = accounts["convention-chair"]
     registration_lead = accounts["registration-lead"]
     applicant = accounts["volunteer-applicant"]
@@ -391,8 +428,28 @@ def seed_operational_examples(  # noqa: PLR0915
     administrator: Account,
     own: OwnRecord,
 ) -> None:
-    """Populate every production-safety admin model with safe synthetic evidence."""
+    """Populate every production-safety admin model with safe synthetic evidence.
 
+    Parameters
+    ----------
+    convention_key : str
+        The stable convention key used to authenticate or deduplicate the
+        operation.
+    organization : Organization
+        The organization that owns the requested resource.
+    editions : dict[str, EventEdition]
+        The editions mapping to validate or transform.
+    configurations : dict[str, RegistrationConfiguration]
+        The configurations mapping to validate or transform.
+    accounts : dict[str, Account]
+        The accounts mapping to validate or transform.
+    registrations : dict[str, Registration]
+        The registrations mapping to validate or transform.
+    administrator : Account
+        The platform administrator authorizing the privileged action.
+    own : OwnRecord
+        The own evaluated while seed operational examples.
+    """
     current = editions["current"]
     past = editions["past"]
     chair = accounts["convention-chair"]

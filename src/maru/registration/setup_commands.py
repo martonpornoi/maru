@@ -90,46 +90,103 @@ _SOURCE_KINDS = frozenset(
 
 
 class RegistrationSetupCommandError(RuntimeError):
+    """Signal registration setup command."""
+
     reason_code = "registration_setup_command_failed"
 
-    def __init__(self, message: str = "Registration setup could not be started."):
+    def __init__(
+        self, message: str = "Registration setup could not be started."
+    ) -> None:
+        """Initialize the RegistrationSetupCommandError instance.
+
+        Parameters
+        ----------
+        message : str, default='Registration setup could not be started.'
+            The disclosure-safe message associated with the outcome.
+        """
         super().__init__(message)
 
 
 class RegistrationSetupAuthorizationDeniedError(RegistrationSetupCommandError):
+    """Signal registration setup authorization denied."""
+
     reason_code = "registration_setup_authorization_denied"
 
 
 class RegistrationSetupVersionConflictError(RegistrationSetupCommandError):
+    """Signal registration setup version conflict."""
+
     reason_code = "registration_setup_version_conflict"
 
 
 class RegistrationSetupRetryConflictError(RegistrationSetupCommandError):
+    """Signal registration setup retry conflict."""
+
     reason_code = "registration_setup_retry_conflict"
 
 
 class RegistrationSetupLifecycleConflictError(RegistrationSetupCommandError):
+    """Signal registration setup lifecycle conflict."""
+
     reason_code = "registration_setup_lifecycle_conflict"
 
 
 class RegistrationSetupStateConflictError(RegistrationSetupCommandError):
+    """Signal registration setup state conflict."""
+
     reason_code = "registration_setup_state_conflict"
 
 
 class RegistrationSetupSourceUnavailableError(RegistrationSetupCommandError):
+    """Signal registration setup source unavailable."""
+
     reason_code = "registration_setup_source_unavailable"
 
 
 class RegistrationSetupLimitExceededError(RegistrationSetupCommandError):
+    """Signal registration setup limit exceeded."""
+
     reason_code = "registration_setup_limit_exceeded"
 
 
 class RegistrationSetupDependencyError(RegistrationSetupCommandError):
+    """Signal registration setup dependency."""
+
     reason_code = "registration_setup_dependency_failed"
 
 
 @dataclass(frozen=True, slots=True)
 class RegistrationSetupStartResult:
+    """Describe registration setup start result.
+
+    Attributes
+    ----------
+    setup_id
+        The setup identifier within the requested scope.
+    configuration_id
+        The configuration identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    configuration_version
+        The expected configuration version used to reject stale updates.
+    source_kind
+        The closed source kind discriminator defined by the domain catalog.
+    content_digest
+        The canonical digest used to verify content.
+    section_count
+        The bounded number of section records.
+    question_count
+        The bounded number of question records.
+    product_count
+        The bounded number of product records.
+    minor_policy_copied
+        The minor policy copied retained in this immutable projection.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     setup_id: UUID
     configuration_id: UUID
     receipt_id: UUID
@@ -288,13 +345,13 @@ def _target_decision(
             series__organization_id=organization_id,
         ).exists()
     ):
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     target = resolve_edition_target(
         organization_id=organization_id,
         edition_id=edition_id,
     )
     if target is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     decision = decide(
         principal=actor,
         capability_code="registration.manage_configuration",
@@ -302,7 +359,7 @@ def _target_decision(
         at=at,
     )
     if not decision.allowed:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     return decision
 
 
@@ -317,7 +374,7 @@ def _lock_target(
         Organization.objects.select_for_update().filter(pk=organization_id).first()
     )
     if organization is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     series = (
         ConventionSeries.objects.select_for_update()
         .filter(
@@ -327,7 +384,7 @@ def _lock_target(
         .first()
     )
     if series is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     edition = (
         EventEdition.objects.select_for_update()
         .filter(
@@ -338,7 +395,7 @@ def _lock_target(
         .first()
     )
     if edition is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     control = (
         RegistrationSetupControl.objects.select_for_update()
         .filter(
@@ -349,7 +406,7 @@ def _lock_target(
     )
     persisted_actor = Account.objects.select_for_update().filter(pk=actor.pk).first()
     if persisted_actor is None:
-        raise RegistrationSetupAuthorizationDeniedError()
+        raise RegistrationSetupAuthorizationDeniedError
     evaluated_at = timezone.now()
     decision = _target_decision(
         actor=persisted_actor,
@@ -374,7 +431,7 @@ def _bounded_rows[RowT: Model](
 ) -> tuple[RowT, ...]:
     rows = tuple(queryset[: limit + 1])
     if len(rows) > limit:
-        raise RegistrationSetupLimitExceededError()
+        raise RegistrationSetupLimitExceededError
     return rows
 
 
@@ -396,7 +453,7 @@ def _locked_template_source(scope: _LockedTarget, source_id: UUID) -> _SourceCon
         or template.created_in_catalog_version is None
         or template.last_changed_in_catalog_version is None
     ):
-        raise RegistrationSetupSourceUnavailableError()
+        raise RegistrationSetupSourceUnavailableError
     sections = _bounded_rows(
         RegistrationTemplateSection.objects.select_for_update()
         .filter(template=template)
@@ -422,11 +479,11 @@ def _locked_template_source(scope: _LockedTarget, source_id: UUID) -> _SourceCon
         products=products,
     )
     if template.content_digest != digest:
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     try:
         require_published_template_evidence(template)
     except RegistrationTemplateStateConflictError as error:
-        raise RegistrationSetupSourceUnavailableError() from error
+        raise RegistrationSetupSourceUnavailableError from error
     return _SourceContent(
         origin=RegistrationSetupOrigin.PUBLISHED_TEMPLATE,
         template=template,
@@ -455,7 +512,7 @@ def _locked_prior_configuration_source(
         .first()
     )
     if locator is None or locator["edition_id"] == scope.edition.id:
-        raise RegistrationSetupSourceUnavailableError()
+        raise RegistrationSetupSourceUnavailableError
     source_series = (
         ConventionSeries.objects.select_for_update()
         .filter(
@@ -475,7 +532,7 @@ def _locked_prior_configuration_source(
         .first()
     )
     if source_series is None or source_edition is None:
-        raise RegistrationSetupSourceUnavailableError()
+        raise RegistrationSetupSourceUnavailableError
     _target_decision(
         actor=scope.actor,
         organization_id=scope.organization.id,
@@ -494,14 +551,14 @@ def _locked_prior_configuration_source(
         .first()
     )
     if configuration is None:
-        raise RegistrationSetupSourceUnavailableError()
+        raise RegistrationSetupSourceUnavailableError
     if (
         configuration.provenance_status != RegistrationProvenanceStatus.COMPLETE
         or not configuration.content_digest
         or configuration.created_in_setup_version is None
         or configuration.last_changed_in_setup_version is None
     ):
-        raise RegistrationSetupSourceUnavailableError()
+        raise RegistrationSetupSourceUnavailableError
     source_control = (
         RegistrationSetupControl.objects.select_for_update()
         .filter(
@@ -524,7 +581,7 @@ def _locked_prior_configuration_source(
         else None
     )
     if source_control is None or source_receipt is None:
-        raise RegistrationSetupSourceUnavailableError()
+        raise RegistrationSetupSourceUnavailableError
     try:
         _require_setup_start_evidence(
             scope=replace(
@@ -537,7 +594,7 @@ def _locked_prior_configuration_source(
             configuration=configuration,
         )
     except RegistrationSetupStateConflictError as error:
-        raise RegistrationSetupSourceUnavailableError() from error
+        raise RegistrationSetupSourceUnavailableError from error
     sections = _bounded_rows(
         RegistrationSection.objects.select_for_update()
         .filter(configuration=configuration)
@@ -581,7 +638,7 @@ def _locked_prior_configuration_source(
         minor_policy=minor_policy,
     )
     if configuration.content_digest != digest:
-        raise RegistrationSetupDependencyError()
+        raise RegistrationSetupDependencyError
     try:
         _require_active_configuration_lifecycle_evidence(
             scope=replace(
@@ -594,7 +651,7 @@ def _locked_prior_configuration_source(
             content_digest=digest,
         )
     except RegistrationSetupStateConflictError as error:
-        raise RegistrationSetupSourceUnavailableError() from error
+        raise RegistrationSetupSourceUnavailableError from error
     return _SourceContent(
         origin=RegistrationSetupOrigin.PRIOR_EDITION,
         template=None,
@@ -629,11 +686,11 @@ def _source_content(
             minor_policy=None,
         )
     if source_id is None:
-        raise RegistrationSetupSourceUnavailableError()
+        raise RegistrationSetupSourceUnavailableError
     if source_kind == RegistrationSetupOrigin.PLATFORM_STARTER:
         starter = platform_registration_starter(source_id)
         if starter is None:
-            raise RegistrationSetupSourceUnavailableError()
+            raise RegistrationSetupSourceUnavailableError
         return _SourceContent(
             origin=RegistrationSetupOrigin.PLATFORM_STARTER,
             template=None,
@@ -643,7 +700,7 @@ def _source_content(
             source_digest=starter.content_digest,
             sections=starter.sections,
             questions=cast(
-                tuple[RegistrationQuestion | RegistrationTemplateQuestion, ...],
+                "tuple[RegistrationQuestion | RegistrationTemplateQuestion, ...]",
                 starter.questions,
             ),
             products=starter.products,
@@ -891,20 +948,20 @@ def _result_from_receipt(
         receipt.action != RegistrationSetupCommandReceipt.Action.SETUP_STARTED
         or receipt.request_digest != request_digest
     ):
-        raise RegistrationSetupRetryConflictError()
+        raise RegistrationSetupRetryConflictError
     configuration_target = receipt.targets.filter(
         target_kind=RegistrationSetupCommandTarget.TargetKind.CONFIGURATION,
         change_kind=RegistrationCommandChangeKind.CREATED,
     ).first()
     if configuration_target is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     configuration = RegistrationConfiguration.objects.filter(
         pk=configuration_target.target_id,
         organization=scope.organization,
         edition=scope.edition,
     ).first()
     if configuration is None:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     _require_setup_start_evidence(
         scope=scope,
         receipt=receipt,
@@ -1002,7 +1059,7 @@ def _append_targets(
     if minor_policy is not None:
         policy_payload = minor_policy_payload(minor_policy)
         if policy_payload is None:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         targets.append(
             RegistrationSetupCommandTarget(
                 receipt=receipt,
@@ -1023,8 +1080,27 @@ def _require_setup_start_evidence(  # noqa: PLR0912
     receipt: RegistrationSetupCommandReceipt,
     configuration: RegistrationConfiguration,
 ) -> AuditEvent:
-    """Prove the exact setup-start graph and immutable source binding."""
+    """Prove the exact setup-start graph and immutable source binding.
 
+    Parameters
+    ----------
+    scope : _LockedTarget
+        The exact tenant and resource scope of the operation.
+    receipt : RegistrationSetupCommandReceipt
+        The immutable command receipt proving the accepted transition.
+    configuration : RegistrationConfiguration
+        The versioned configuration governing validation and behavior.
+
+    Returns
+    -------
+    AuditEvent
+        The resolved AuditEvent for require setup start evidence.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     # Local import avoids setup_evidence's intentional command-error dependency
     # becoming a module-import cycle.
     from maru.registration.setup_evidence import (  # noqa: PLC0415
@@ -1079,7 +1155,7 @@ def _require_setup_start_evidence(  # noqa: PLR0912
         )
         > 1
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     nonconfiguration_targets = tuple(
         target
         for target in targets
@@ -1088,7 +1164,7 @@ def _require_setup_start_evidence(  # noqa: PLR0912
     if any(
         target.target_schema_version is not None for target in nonconfiguration_targets
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     later_target_keys = frozenset(
         RegistrationSetupCommandTarget.objects.filter(
             receipt__setup=control,
@@ -1119,7 +1195,7 @@ def _require_setup_start_evidence(  # noqa: PLR0912
         or len(question_rows) > MAX_SETUP_QUESTIONS
         or len(product_rows) > MAX_SETUP_PRODUCTS
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     sections = {section.id: section for section in section_rows}
     questions = {question.id: question for question in question_rows}
     products = {product.id: product for product in product_rows}
@@ -1166,7 +1242,7 @@ def _require_setup_start_evidence(  # noqa: PLR0912
         elif minor_policy is not None and minor_policy.id == target.target_id:
             policy_payload = minor_policy_payload(minor_policy)
             if policy_payload is None:
-                raise RegistrationSetupStateConflictError()
+                raise RegistrationSetupStateConflictError
             expected_digest = target_content_digest(
                 kind="minor_policy",
                 payload=policy_payload,
@@ -1174,7 +1250,7 @@ def _require_setup_start_evidence(  # noqa: PLR0912
         else:
             expected_digest = ""
         if target.content_digest != expected_digest:
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
     target_kinds = {target.target_kind for target in targets}
     changed_fields = tuple(
         field
@@ -1220,7 +1296,7 @@ def _require_setup_start_evidence(  # noqa: PLR0912
         configuration.origin != RegistrationSetupOrigin.BLANK
         and configuration.source_imported_at != audit.occurred_at
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     return audit
 
 
@@ -1230,8 +1306,28 @@ def _require_active_configuration_lifecycle_evidence(
     configuration: RegistrationConfiguration,
     content_digest: str,
 ) -> tuple[AuditEvent, AuditEvent]:
-    """Prove immutable review and activation graphs for a prior-edition source."""
+    """Prove immutable review and activation graphs for a prior-edition source.
 
+    Parameters
+    ----------
+    scope : _LockedTarget
+        The exact tenant and resource scope of the operation.
+    configuration : RegistrationConfiguration
+        The versioned configuration governing validation and behavior.
+    content_digest : str
+        The canonical digest used to verify content.
+
+    Returns
+    -------
+    tuple[AuditEvent, AuditEvent]
+        The matching require active configuration lifecycle evidence records in
+        deterministic order.
+
+    Raises
+    ------
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     # Local import keeps the generic evidence module's command-error dependency
     # from becoming an import cycle.
     from maru.registration.setup_evidence import (  # noqa: PLC0415
@@ -1250,7 +1346,7 @@ def _require_active_configuration_lifecycle_evidence(
         or configuration.activated_at is None
         or configuration.content_digest != content_digest
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     activation_receipts = tuple(
         RegistrationSetupCommandReceipt.objects.filter(
             setup=control,
@@ -1265,7 +1361,7 @@ def _require_active_configuration_lifecycle_evidence(
         .order_by("resulting_version", "id")[:2]
     )
     if len(activation_receipts) != 1:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     activation = activation_receipts[0]
     review_receipts = tuple(
         RegistrationSetupCommandReceipt.objects.filter(
@@ -1289,7 +1385,7 @@ def _require_active_configuration_lifecycle_evidence(
             != configuration.last_changed_in_setup_version
         )
     ):
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     review = review_receipts[0]
     review_audit = require_setup_command_evidence_graph(
         scope=scope,
@@ -1341,7 +1437,7 @@ def _require_active_configuration_lifecycle_evidence(
         expected_event_name="registration.configuration.activated.v1",
     )
     if review_audit.occurred_at > activation_audit.occurred_at:
-        raise RegistrationSetupStateConflictError()
+        raise RegistrationSetupStateConflictError
     return review_audit, activation_audit
 
 
@@ -1370,8 +1466,70 @@ def start_registration_setup(
     source_channel: str = "service",
     capacity_ceiling: int | None = None,
 ) -> RegistrationSetupStartResult:
-    """Start exactly one setup aggregate through copy-on-write."""
+    """Start exactly one setup aggregate through copy-on-write.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    edition_id : UUID
+        The event edition identifier that scopes the operation.
+    source_kind : str
+        The closed source kind discriminator defined by the domain catalog.
+    source_id : UUID | None
+        The source identifier within the requested scope.
+    name : str
+        The human-readable name to normalize or persist.
+    opens_at : datetime | None
+        The timezone-aware timestamp for opens.
+    closes_at : datetime | None
+        The timezone-aware timestamp for closes.
+    capacity : int | None
+        The capacity applied within the audited domain transition.
+    currency : str | None
+        The supported ISO 4217 currency code for monetary values.
+    minimum_age : int | None
+        The minimum age applied within the audited domain transition.
+    default_payment_window_minutes : int | None
+        The default payment window minutes applied within the audited domain transition.
+    waitlist_enabled : bool | None
+        The waitlist enabled applied within the audited domain transition.
+    automatic_waitlist_promotion : bool | None
+        The automatic waitlist promotion applied within the audited domain transition.
+    expected_version : int
+        The aggregate version required for optimistic concurrency control.
+    reason : str
+        The operator-supplied rationale recorded with the change.
+    retry_key : UUID
+        The stable key that makes an exact command retry idempotent.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    request_id : UUID | None, default=None
+        The correlation identifier attached to the incoming request.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+    capacity_ceiling : int | None, default=None
+        The non-negative hard limit or requested amount for capacity ceiling.
+
+    Returns
+    -------
+    RegistrationSetupStartResult
+        The resolved RegistrationSetupStartResult for start registration setup.
+
+    Raises
+    ------
+    RegistrationSetupLifecycleConflictError
+        If the operation encounters a registration setup lifecycle conflict
+        condition.
+    RegistrationSetupStateConflictError
+        If the target lifecycle state does not permit the transition.
+    RegistrationSetupVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     _strict_uuid(organization_id, field="organization_id")
     _strict_uuid(series_id, field="series_id")
     _strict_uuid(edition_id, field="edition_id")
@@ -1440,7 +1598,7 @@ def start_registration_setup(
                 request_digest=request_digest,
             )
         if scope.control is not None:
-            raise RegistrationSetupVersionConflictError()
+            raise RegistrationSetupVersionConflictError
         if (
             RegistrationConfiguration.objects.select_for_update()
             .filter(edition=scope.edition)
@@ -1452,12 +1610,12 @@ def start_registration_setup(
             .all()
             .exists()
         ):
-            raise RegistrationSetupStateConflictError()
+            raise RegistrationSetupStateConflictError
         if (
             scope.organization.lifecycle not in _EDITABLE_ORGANIZATION_LIFECYCLES
             or scope.edition.lifecycle not in _EDITABLE_EDITION_LIFECYCLES
         ):
-            raise RegistrationSetupLifecycleConflictError()
+            raise RegistrationSetupLifecycleConflictError
         source = _source_content(scope, source_kind=source_kind, source_id=source_id)
         (
             resolved_opens,

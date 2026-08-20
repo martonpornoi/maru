@@ -2,8 +2,7 @@
 
 import hashlib
 import json
-from datetime import date, datetime
-from typing import Never, cast
+from typing import TYPE_CHECKING, Never, cast
 from urllib.parse import urlsplit
 from uuid import UUID
 
@@ -218,6 +217,9 @@ from maru.registration.setup_definition_serializers import (
     RegistrationSetupProblemSerializer,
 )
 
+if TYPE_CHECKING:
+    from datetime import date, datetime
+
 MANAGE_CONFIGURATION = "registration.manage_configuration"
 VIEW_SERVICE = "registration.view_service_summary"
 VIEW_SELF = "registration.view_self"
@@ -243,6 +245,8 @@ def _open_public_configurations() -> QuerySet[RegistrationConfiguration]:
 
 
 class PublicRegistrationEditionListView(APIView):
+    """Expose public registration edition list through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -250,6 +254,18 @@ class PublicRegistrationEditionListView(APIView):
         responses=PublicRegistrationEditionSerializer(many=True),
     )
     def get(self, request: Request) -> Response:
+        """List public editions.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         del request
         items = [
             {
@@ -285,6 +301,8 @@ class PublicRegistrationEditionListView(APIView):
 
 
 class PublicRegistrationDefinitionView(APIView):
+    """Expose public registration definition through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -292,6 +310,25 @@ class PublicRegistrationDefinitionView(APIView):
         responses=PublicRegistrationDefinitionSerializer,
     )
     def get(self, request: Request, edition_id: UUID) -> Response:
+        """Retrieve public definition.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         configuration = (
             _open_public_configurations().filter(edition_id=edition_id).first()
         )
@@ -413,6 +450,31 @@ class HeadlessRegistrationSubmissionView(APIView):
         responses=dict,
     )
     def post(self, request: Request, edition_id: UUID) -> Response:
+        """Submit a headless registration.
+
+        Complete JSON submission command for independently designed frontends.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         serializer = HeadlessRegistrationSubmissionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -432,7 +494,7 @@ class HeadlessRegistrationSubmissionView(APIView):
                     "code": "collection_notice_changed",
                 }
             )
-        profile_values = cast(dict[str, object], values["profile"])
+        profile_values = cast("dict[str, object]", values["profile"])
         directory_visible = bool(profile_values.get("directory_visible", False))
         supplied_directory_version = str(values.get("directory_consent_version", ""))
         if directory_visible and (
@@ -462,16 +524,16 @@ class HeadlessRegistrationSubmissionView(APIView):
             AttendeeFursuitInput(
                 name=str(item["name"]),
                 species=str(item.get("species", "")),
-                reuse_from_id=cast(UUID | None, item.get("reuse_from_id")),
+                reuse_from_id=cast("UUID | None", item.get("reuse_from_id")),
             )
             for item in cast(
-                list[dict[str, object]],
+                "list[dict[str, object]]",
                 profile_values.get("fursuits", []),
             )
         )
         profile_input = AttendeeProfileInput(
             real_name=str(profile_values["real_name"]),
-            date_of_birth=cast(date, profile_values["date_of_birth"]),
+            date_of_birth=cast("date", profile_values["date_of_birth"]),
             address_line_1=str(profile_values["address_line_1"]),
             address_line_2=str(profile_values.get("address_line_2", "")),
             locality=str(profile_values["locality"]),
@@ -486,11 +548,11 @@ class HeadlessRegistrationSubmissionView(APIView):
             other_pronouns=str(profile_values.get("other_pronouns", "")),
             bio=str(profile_values.get("bio", "")),
             spoken_language_codes=tuple(
-                cast(list[str], profile_values["spoken_language_codes"])
+                cast("list[str]", profile_values["spoken_language_codes"])
             ),
             profile_photo=None,
             reuse_profile_photo_id=cast(
-                UUID | None,
+                "UUID | None",
                 profile_values.get("reuse_profile_photo_id"),
             ),
             keep_profile_photo=False,
@@ -501,25 +563,25 @@ class HeadlessRegistrationSubmissionView(APIView):
                 profile_values.get("directory_country_code", "")
             ).upper(),
             guardian_name=str(
-                cast(dict[str, object], profile_values.get("guardian", {})).get(
+                cast("dict[str, object]", profile_values.get("guardian", {})).get(
                     "name",
                     "",
                 )
             ),
             guardian_email=str(
-                cast(dict[str, object], profile_values.get("guardian", {})).get(
+                cast("dict[str, object]", profile_values.get("guardian", {})).get(
                     "email",
                     "",
                 )
             ),
             guardian_relationship=str(
-                cast(dict[str, object], profile_values.get("guardian", {})).get(
+                cast("dict[str, object]", profile_values.get("guardian", {})).get(
                     "relationship",
                     "",
                 )
             ),
             guardian_notice_version=str(
-                cast(dict[str, object], profile_values.get("guardian", {})).get(
+                cast("dict[str, object]", profile_values.get("guardian", {})).get(
                     "notice_version",
                     "",
                 )
@@ -529,16 +591,16 @@ class HeadlessRegistrationSubmissionView(APIView):
             result = submit_public_registration(
                 organization_id=configuration.organization_id,
                 edition_id=edition_id,
-                product_id=cast(UUID, values["product_id"]),
+                product_id=cast("UUID", values["product_id"]),
                 answers=values["answers"],
                 profile_input=profile_input,
                 correlation_id=_correlation_id(request),
                 account=account,
                 source_channel="public_api",
-                idempotency_key=cast(UUID, values["idempotency_key"]),
+                idempotency_key=cast("UUID", values["idempotency_key"]),
                 request_digest=digest,
                 expected_configuration_version=cast(
-                    int,
+                    "int",
                     values["configuration_version"],
                 ),
             )
@@ -574,6 +636,8 @@ class HeadlessRegistrationSubmissionView(APIView):
 
 
 class PublicGuardianConsentView(APIView):
+    """Expose public guardian consent through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -582,6 +646,23 @@ class PublicGuardianConsentView(APIView):
         responses=dict,
     )
     def post(self, request: Request) -> Response:
+        """Accept the guardian consent.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = GuardianConsentAcceptSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -607,6 +688,8 @@ class PublicGuardianConsentView(APIView):
 
 
 class PublicAttendeeListView(APIView):
+    """Expose public attendee list through the HTTP API."""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -614,6 +697,25 @@ class PublicAttendeeListView(APIView):
         responses=PublicAttendeeSerializer(many=True),
     )
     def get(self, request: Request, edition_id: UUID) -> Response:
+        """List public attendees.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         del request
         if (
             not EventEdition.objects.filter(id=edition_id)
@@ -714,11 +816,34 @@ class PublicAttendeeListView(APIView):
 
 
 class SelfProfileSuggestionView(APIView):
+    """Expose self profile suggestion through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_retrieve_self_profile_suggestion",
         responses={200: SelfProfileSuggestionSerializer, 204: None},
     )
     def get(self, request: Request, edition_id: UUID) -> Response:
+        """Retrieve the self profile suggestion.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         configuration = (
             _open_public_configurations().filter(edition_id=edition_id).first()
@@ -854,7 +979,7 @@ def _require_step_up(request: Request, account: Account) -> None:
     if not settings.REQUIRE_PRIVILEGED_STEP_UP:
         return
     try:
-        require_recent_step_up(account=account, request=request._request)
+        require_recent_step_up(account=account, request=request._request)  # noqa: SLF001
     except DjangoValidationError as error:
         raise ApiValidationError(
             {
@@ -1049,44 +1174,44 @@ def _self_profile_payload(
 
 
 def _update_input(values: dict[str, object]) -> AttendeeProfileInput:
-    photo_action = cast(str, values["profile_photo_action"])
+    photo_action = cast("str", values["profile_photo_action"])
     return AttendeeProfileInput(
-        real_name=cast(str, values["real_name"]),
-        date_of_birth=cast(date, values["date_of_birth"]),
-        address_line_1=cast(str, values["address_line_1"]),
-        address_line_2=cast(str, values["address_line_2"]),
-        locality=cast(str, values["locality"]),
-        postal_code=cast(str, values["postal_code"]),
-        region=cast(str, values["region"]),
-        country_code=cast(str, values["country_code"]).upper(),
-        emergency_contact_name=cast(str, values["emergency_contact_name"]),
-        emergency_contact_phone=cast(str, values["emergency_contact_phone"]),
-        phone_number=cast(str, values["phone_number"]),
-        telegram_handle=cast(str, values.get("telegram_handle", "")).lstrip("@"),
-        pronoun_code=cast(str, values["pronoun_code"]),
-        other_pronouns=cast(str, values.get("other_pronouns", "")),
-        bio=cast(str, values.get("bio", "")),
-        spoken_language_codes=tuple(cast(list[str], values["spoken_language_codes"])),
+        real_name=cast("str", values["real_name"]),
+        date_of_birth=cast("date", values["date_of_birth"]),
+        address_line_1=cast("str", values["address_line_1"]),
+        address_line_2=cast("str", values["address_line_2"]),
+        locality=cast("str", values["locality"]),
+        postal_code=cast("str", values["postal_code"]),
+        region=cast("str", values["region"]),
+        country_code=cast("str", values["country_code"]).upper(),
+        emergency_contact_name=cast("str", values["emergency_contact_name"]),
+        emergency_contact_phone=cast("str", values["emergency_contact_phone"]),
+        phone_number=cast("str", values["phone_number"]),
+        telegram_handle=cast("str", values.get("telegram_handle", "")).lstrip("@"),
+        pronoun_code=cast("str", values["pronoun_code"]),
+        other_pronouns=cast("str", values.get("other_pronouns", "")),
+        bio=cast("str", values.get("bio", "")),
+        spoken_language_codes=tuple(cast("list[str]", values["spoken_language_codes"])),
         profile_photo=None,
         reuse_profile_photo_id=cast(
-            UUID | None,
+            "UUID | None",
             values.get("reuse_profile_photo_id"),
         ),
         keep_profile_photo=photo_action == "keep",
-        brings_fursuits=cast(bool, values["brings_fursuits"]),
+        brings_fursuits=cast("bool", values["brings_fursuits"]),
         fursuits=tuple(
             AttendeeFursuitInput(
-                fursuit_id=cast(UUID | None, item.get("id")),
-                reuse_from_id=cast(UUID | None, item.get("reuse_from_id")),
-                name=cast(str, item["name"]),
-                species=cast(str, item.get("species", "")),
-                keep_photo=cast(bool, item.get("keep_photo", True)),
+                fursuit_id=cast("UUID | None", item.get("id")),
+                reuse_from_id=cast("UUID | None", item.get("reuse_from_id")),
+                name=cast("str", item["name"]),
+                species=cast("str", item.get("species", "")),
+                keep_photo=cast("bool", item.get("keep_photo", True)),
             )
-            for item in cast(list[dict[str, object]], values["fursuits"])
+            for item in cast("list[dict[str, object]]", values["fursuits"])
         ),
-        directory_visible=cast(bool, values["directory_visible"]),
+        directory_visible=cast("bool", values["directory_visible"]),
         directory_country_code=cast(
-            str,
+            "str",
             values.get("directory_country_code", ""),
         ).upper(),
     )
@@ -1141,6 +1266,8 @@ def _existing_input_with_upload(
 
 
 class MyAttendeeProfileView(APIView):
+    """Expose my attendee profile through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_retrieve_self_attendee_profile",
         responses=SelfAttendeeProfileSerializer,
@@ -1151,6 +1278,27 @@ class MyAttendeeProfileView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve the self attendee profile.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         profile = _self_profile(
             organization_id=organization_id,
@@ -1198,6 +1346,27 @@ class MyAttendeeProfileView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Update the self attendee profile.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = UpdateSelfAttendeeProfileSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -1222,6 +1391,8 @@ class MyAttendeeProfileView(APIView):
 
 
 class MyProfilePhotoUploadView(APIView):
+    """Expose my profile photo upload through the HTTP API."""
+
     parser_classes = (MultiPartParser, FormParser)
 
     @extend_schema(
@@ -1235,6 +1406,27 @@ class MyProfilePhotoUploadView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Upload the self profile photo.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = SelfProfileImageUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         account = _account(request)
@@ -1251,7 +1443,7 @@ class MyProfilePhotoUploadView(APIView):
                 profile_input=_existing_input_with_upload(
                     profile,
                     profile_photo=cast(
-                        UploadedFile,
+                        "UploadedFile",
                         serializer.validated_data["image"],
                     ),
                 ),
@@ -1271,6 +1463,8 @@ class MyProfilePhotoUploadView(APIView):
 
 
 class MyFursuitPhotoUploadView(APIView):
+    """Expose my fursuit photo upload through the HTTP API."""
+
     parser_classes = (MultiPartParser, FormParser)
 
     @extend_schema(
@@ -1285,6 +1479,29 @@ class MyFursuitPhotoUploadView(APIView):
         edition_id: UUID,
         fursuit_id: UUID,
     ) -> Response:
+        """Upload the self fursuit photo.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        fursuit_id : UUID
+            The fursuit identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = SelfProfileImageUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         account = _account(request)
@@ -1302,7 +1519,7 @@ class MyFursuitPhotoUploadView(APIView):
                     profile,
                     fursuit_photo_id=fursuit_id,
                     fursuit_photo=cast(
-                        UploadedFile,
+                        "UploadedFile",
                         serializer.validated_data["image"],
                     ),
                 ),
@@ -1322,6 +1539,8 @@ class MyFursuitPhotoUploadView(APIView):
 
 
 class RegistrationConfigurationWorkspaceView(APIView):
+    """Expose registration configuration workspace through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_retrieve_configuration_workspace",
         responses=RegistrationConfigurationWorkspaceSerializer,
@@ -1332,6 +1551,27 @@ class RegistrationConfigurationWorkspaceView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve the configuration workspace.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         decision = _scope_decision(
             account=account,
@@ -1415,6 +1655,8 @@ class RegistrationConfigurationWorkspaceView(APIView):
 
 
 class RegistrationConfigurationDraftView(APIView):
+    """Expose registration configuration draft through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_create_configuration_draft",
         request=CreateConfigurationDraftSerializer,
@@ -1426,6 +1668,31 @@ class RegistrationConfigurationDraftView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Create the configuration draft.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = CreateConfigurationDraftSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
@@ -1434,32 +1701,32 @@ class RegistrationConfigurationDraftView(APIView):
                 organization_id=organization_id,
                 edition_id=edition_id,
                 actor=_account(request),
-                name=cast(str, values["name"]),
+                name=cast("str", values["name"]),
                 correlation_id=_correlation_id(request),
-                reason=cast(str, values["reason"]),
+                reason=cast("str", values["reason"]),
                 source_template_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     values.get("source_template_id"),
                 ),
                 source_edition_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     values.get("source_edition_id"),
                 ),
-                opens_at=cast(object, values.get("opens_at")),  # type: ignore[arg-type]
-                closes_at=cast(object, values.get("closes_at")),  # type: ignore[arg-type]
-                capacity=cast(int | None, values.get("capacity")),
-                currency=cast(str | None, values.get("currency")),
-                minimum_age=cast(int | None, values.get("minimum_age")),
+                opens_at=cast("object", values.get("opens_at")),  # type: ignore[arg-type]
+                closes_at=cast("object", values.get("closes_at")),  # type: ignore[arg-type]
+                capacity=cast("int | None", values.get("capacity")),
+                currency=cast("str | None", values.get("currency")),
+                minimum_age=cast("int | None", values.get("minimum_age")),
                 default_payment_window_minutes=cast(
-                    int | None,
+                    "int | None",
                     values.get("default_payment_window_minutes"),
                 ),
                 waitlist_enabled=cast(
-                    bool | None,
+                    "bool | None",
                     values.get("waitlist_enabled"),
                 ),
                 automatic_waitlist_promotion=cast(
-                    bool | None,
+                    "bool | None",
                     values.get("automatic_waitlist_promotion"),
                 ),
                 source_channel="api",
@@ -1496,6 +1763,8 @@ class RegistrationConfigurationDraftView(APIView):
 
 
 class RegistrationConfigurationActivateView(APIView):
+    """Expose registration configuration activate through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_activate_configuration",
         request=ActivateConfigurationSerializer,
@@ -1507,6 +1776,31 @@ class RegistrationConfigurationActivateView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Activate the configuration.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = ActivateConfigurationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -1548,6 +1842,8 @@ class RegistrationConfigurationActivateView(APIView):
 
 
 class RegistrationTemplatePublishView(APIView):
+    """Expose registration template publish through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_publish_template",
         request=PublishTemplateSerializer,
@@ -1559,6 +1855,31 @@ class RegistrationTemplatePublishView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Publish the template.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = PublishTemplateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
@@ -1667,11 +1988,20 @@ def _profile_extension_problem(description: str) -> OpenApiResponse:
 
 
 class ProfileExtensionValueConflict(APIException):
+    """Signal profile extension value conflict."""
+
     status_code = status.HTTP_409_CONFLICT
     default_detail = "The profile-value request conflicts with current state."
     default_code = "profile_extension_value_conflict"
 
     def __init__(self, *, code: str) -> None:
+        """Initialize the ProfileExtensionValueConflict instance.
+
+        Parameters
+        ----------
+        code : str
+            The stable domain code to resolve or validate.
+        """
         super().__init__(
             detail={"detail": self.default_detail, "code": code},
             code=code,
@@ -1704,8 +2034,18 @@ def _profile_extension_idempotency_key(request: Request) -> UUID:
 
 
 def _commerce_idempotency_key(request: Request) -> UUID:
-    """Commerce commands use the same canonical, header-only retry contract."""
+    """Commerce commands use the same canonical, header-only retry contract.
 
+    Parameters
+    ----------
+    request : Request
+        The incoming HTTP request and authenticated principal context.
+
+    Returns
+    -------
+    UUID
+        The resolved UUID for commerce idempotency key.
+    """
     return _profile_extension_idempotency_key(request)
 
 
@@ -1792,6 +2132,29 @@ class MyRegistrationProfileExtensionsView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve my profile extensions.
+
+        Current post-submission profile fields visible to the registration owner.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        DependencyUnavailable
+            If the scoped target does not exist or cannot be disclosed.
+        """
         account = _account(request)
         try:
             registration = _profile_extension_registration(
@@ -1852,6 +2215,31 @@ class MyRegistrationProfileExtensionsView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Write my profile extension.
+
+        Current post-submission profile fields visible to the registration owner.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        DependencyUnavailable
+            If the scoped target does not exist or cannot be disclosed.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         try:
@@ -1941,6 +2329,31 @@ class StaffRegistrationProfileExtensionsView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Retrieve the staff profile extensions.
+
+        Reasoned registration-staff projection and profile-field write.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        DependencyUnavailable
+            If the scoped target does not exist or cannot be disclosed.
+        """
         account = _account(request)
         try:
             workspace = read_profile_extension_values(
@@ -1997,6 +2410,33 @@ class StaffRegistrationProfileExtensionsView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Write the staff profile extension.
+
+        Reasoned registration-staff projection and profile-field write.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        DependencyUnavailable
+            If the scoped target does not exist or cannot be disclosed.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         try:
@@ -2054,6 +2494,8 @@ class StaffRegistrationProfileExtensionsView(APIView):
 
 
 class MyRegistrationView(APIView):
+    """Expose my registration through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_retrieve_my_registration",
         responses=MyRegistrationWorkspaceSerializer,
@@ -2064,6 +2506,29 @@ class MyRegistrationView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve my registration.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         decision = _scope_decision(
             account=account,
@@ -2145,6 +2610,31 @@ class MyRegistrationView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Submit my registration.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = SubmitRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -2187,6 +2677,8 @@ class PrivateRegistrationCommerceAPIView(APIView):
 
 
 class MyAdmissionTierReplacementView(PrivateRegistrationCommerceAPIView):
+    """Expose my admission tier replacement through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_reserve_my_admission_tier_replacement",
         request=ReserveAdmissionTierReplacementSerializer,
@@ -2202,6 +2694,33 @@ class MyAdmissionTierReplacementView(PrivateRegistrationCommerceAPIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Reserve my admission tier replacement.
+
+        Keep self and staff commerce responses out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         actor = _account(request)
         try:
             authorize_tier_replacement_api_scope(
@@ -2224,11 +2743,11 @@ class MyAdmissionTierReplacementView(PrivateRegistrationCommerceAPIView):
                 edition_id=edition_id,
                 registration_id=registration_id,
                 target_product_id=cast(
-                    UUID, serializer.validated_data["target_product_id"]
+                    "UUID", serializer.validated_data["target_product_id"]
                 ),
                 actor=actor,
                 expected_registration_version=cast(
-                    int,
+                    "int",
                     serializer.validated_data["expected_registration_version"],
                 ),
                 idempotency_key=idempotency_key,
@@ -2255,6 +2774,8 @@ class MyAdmissionTierReplacementView(PrivateRegistrationCommerceAPIView):
 
 
 class MyRegistrationDemoPaymentView(PrivateRegistrationCommerceAPIView):
+    """Expose my registration demo payment through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_confirm_my_demo_payment",
         request=DemoPaymentSerializer,
@@ -2267,6 +2788,33 @@ class MyRegistrationDemoPaymentView(PrivateRegistrationCommerceAPIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Confirm my demo payment.
+
+        Keep self and staff commerce responses out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         actor = _account(request)
         try:
             authorize_owned_registration_api_scope(
@@ -2317,6 +2865,8 @@ class MyRegistrationDemoPaymentView(PrivateRegistrationCommerceAPIView):
 
 
 class MyRegistrationPaymentIntentView(APIView):
+    """Expose my registration payment intent through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_create_my_payment_intent",
         request=CreatePaymentIntentSerializer,
@@ -2329,6 +2879,31 @@ class MyRegistrationPaymentIntentView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Create my payment intent.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         account = _account(request)
         serializer = CreatePaymentIntentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -2356,8 +2931,8 @@ class MyRegistrationPaymentIntentView(APIView):
             ).first()
             intent = create_payment_intent(
                 registration=registration,
-                provider_account_id=cast(UUID, values["provider_account_id"]),
-                idempotency_key=cast(UUID, values["idempotency_key"]),
+                provider_account_id=cast("UUID", values["provider_account_id"]),
+                idempotency_key=cast("UUID", values["idempotency_key"]),
                 return_url=return_url,
             )
         except ObjectDoesNotExist as error:
@@ -2382,6 +2957,8 @@ class MyRegistrationPaymentIntentView(APIView):
 
 
 class MyRegistrationPaymentIntentStatusView(APIView):
+    """Expose my registration payment intent status through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_retrieve_my_payment_intent",
         responses=PaymentIntentSerializer,
@@ -2394,6 +2971,31 @@ class MyRegistrationPaymentIntentStatusView(APIView):
         registration_id: UUID,
         intent_id: UUID,
     ) -> Response:
+        """Retrieve my payment intent.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+        intent_id : UUID
+            The intent identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         account = _account(request)
         intent = (
             PaymentIntent.objects.select_related("provider_account")
@@ -2415,6 +3017,8 @@ class MyRegistrationPaymentIntentStatusView(APIView):
 
 
 class PaymentProviderWebhookView(APIView):
+    """Expose payment provider webhook through the HTTP API."""
+
     permission_classes = (AllowAny,)
     authentication_classes: tuple[()] = ()
 
@@ -2429,6 +3033,29 @@ class PaymentProviderWebhookView(APIView):
         organization_id: UUID,
         provider_code: str,
     ) -> Response:
+        """Receive the payment webhook.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        provider_code : str
+            The stable provider code from the relevant closed catalog.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         provider = PaymentProviderAccount.objects.filter(
             organization_id=organization_id,
             code=provider_code,
@@ -2467,6 +3094,8 @@ class PaymentProviderWebhookView(APIView):
 
 
 class StaffPaymentExceptionListView(APIView):
+    """Expose staff payment exception list through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_list_payment_exceptions",
         responses=PaymentExceptionSerializer(many=True),
@@ -2477,6 +3106,27 @@ class StaffPaymentExceptionListView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the payment exceptions.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         decision = _scope_decision(
             account=account,
@@ -2501,6 +3151,8 @@ class StaffPaymentExceptionListView(APIView):
 
 
 class StaffPaymentExceptionResolveView(APIView):
+    """Expose staff payment exception resolve through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_resolve_payment_exception",
         request=ResolvePaymentExceptionSerializer,
@@ -2513,6 +3165,33 @@ class StaffPaymentExceptionResolveView(APIView):
         edition_id: UUID,
         exception_id: UUID,
     ) -> Response:
+        """Resolve the payment exception.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        exception_id : UUID
+            The exception identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         _require_step_up(request, account)
         serializer = ResolvePaymentExceptionSerializer(data=request.data)
@@ -2544,6 +3223,8 @@ class StaffPaymentExceptionResolveView(APIView):
 
 
 class MyRegistrationReceiptListView(APIView):
+    """Expose my registration receipt list through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_list_my_receipts",
         responses=ReceiptRecordSerializer(many=True),
@@ -2555,6 +3236,29 @@ class MyRegistrationReceiptListView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """List my receipts.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        """
         account = _account(request)
         if not Registration.objects.filter(
             id=registration_id,
@@ -2572,6 +3276,8 @@ class MyRegistrationReceiptListView(APIView):
 
 
 class StaffFinancialOperationListCreateView(APIView):
+    """Expose staff financial operation list create through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_list_financial_operations",
         responses=FinancialOperationSerializer(many=True),
@@ -2583,6 +3289,29 @@ class StaffFinancialOperationListCreateView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """List the financial operations.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         decision = _scope_decision(
             account=account,
@@ -2614,6 +3343,33 @@ class StaffFinancialOperationListCreateView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Propose the financial operation.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         _require_step_up(request, account)
         serializer = ProposeFinancialOperationSerializer(data=request.data)
@@ -2626,13 +3382,13 @@ class StaffFinancialOperationListCreateView(APIView):
                 registration_id=registration_id,
                 actor=account,
                 kind=str(values["kind"]),
-                amount_minor=cast(int, values["amount_minor"]),
+                amount_minor=cast("int", values["amount_minor"]),
                 target_account_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     values.get("target_account_id"),
                 ),
                 target_product_id=cast(
-                    UUID | None,
+                    "UUID | None",
                     values.get("target_product_id"),
                 ),
                 reason=str(values["reason"]),
@@ -2656,6 +3412,8 @@ class StaffFinancialOperationListCreateView(APIView):
 
 
 class StaffFinancialOperationApproveView(APIView):
+    """Expose staff financial operation approve through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_approve_financial_operation",
         request=ApproveFinancialOperationSerializer,
@@ -2668,6 +3426,33 @@ class StaffFinancialOperationApproveView(APIView):
         edition_id: UUID,
         operation_id: UUID,
     ) -> Response:
+        """Approve the financial operation.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        operation_id : UUID
+            The caller-generated identifier that makes the operation unique.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         _require_step_up(request, account)
         serializer = ApproveFinancialOperationSerializer(data=request.data)
@@ -2699,6 +3484,8 @@ class StaffFinancialOperationApproveView(APIView):
 
 
 class StaffSettlementListCreateView(APIView):
+    """Expose staff settlement list create through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_list_settlements",
         responses=SettlementBatchSerializer(many=True),
@@ -2709,6 +3496,27 @@ class StaffSettlementListCreateView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the settlements.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         decision = _scope_decision(
             account=account,
@@ -2738,6 +3546,31 @@ class StaffSettlementListCreateView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Reconcile the settlement.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         _require_step_up(request, account)
         serializer = ReconcileSettlementSerializer(data=request.data)
@@ -2748,16 +3581,16 @@ class StaffSettlementListCreateView(APIView):
                 actor=account,
                 organization_id=organization_id,
                 edition_id=edition_id,
-                provider_account_id=cast(UUID, values["provider_account_id"]),
+                provider_account_id=cast("UUID", values["provider_account_id"]),
                 provider_reference=str(values["provider_reference"]),
                 currency=str(values["currency"]),
-                gross_minor=cast(int, values["gross_minor"]),
-                fee_minor=cast(int, values["fee_minor"]),
-                refund_minor=cast(int, values["refund_minor"]),
-                dispute_minor=cast(int, values["dispute_minor"]),
-                net_minor=cast(int, values["net_minor"]),
-                settled_at=cast(datetime, values["settled_at"]),
-                ledger_entry_ids=tuple(cast(list[UUID], values["ledger_entry_ids"])),
+                gross_minor=cast("int", values["gross_minor"]),
+                fee_minor=cast("int", values["fee_minor"]),
+                refund_minor=cast("int", values["refund_minor"]),
+                dispute_minor=cast("int", values["dispute_minor"]),
+                net_minor=cast("int", values["net_minor"]),
+                settled_at=cast("datetime", values["settled_at"]),
+                ledger_entry_ids=tuple(cast("list[UUID]", values["ledger_entry_ids"])),
                 reason=str(values["reason"]),
                 correlation_id=_correlation_id(request),
             )
@@ -2779,6 +3612,8 @@ class StaffSettlementListCreateView(APIView):
 
 
 class StaffRegistrationListView(GenericAPIView[Registration]):
+    """Expose staff registration list through the HTTP API."""
+
     serializer_class = StaffRegistrationSerializer
     pagination_class = StandardPageNumberPagination
 
@@ -2793,6 +3628,29 @@ class StaffRegistrationListView(GenericAPIView[Registration]):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the service summaries.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        RuntimeError
+            If a required runtime invariant or dependency is unavailable.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         decision = _scope_decision(
@@ -2839,11 +3697,11 @@ class StaffRegistrationListView(GenericAPIView[Registration]):
         )
         if search := values.get("search"):
             registrations = registrations.filter(
-                Q(account__display_name__icontains=cast(str, search))
-                | Q(reference__icontains=cast(str, search))
+                Q(account__display_name__icontains=cast("str", search))
+                | Q(reference__icontains=cast("str", search))
             )
         if state := values.get("state"):
-            registrations = registrations.filter(state=cast(str, state))
+            registrations = registrations.filter(state=cast("str", state))
         registrations = registrations.order_by("-submitted_at", "id")
         page = self.paginate_queryset(registrations)
         if page is None:
@@ -2958,6 +3816,8 @@ def _attendee_reporting_source(
 
 
 class StaffAttendeeReportView(APIView):
+    """Expose staff attendee report through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_retrieve_attendee_report",
         parameters=[AttendeeReportQuerySerializer],
@@ -2969,6 +3829,22 @@ class StaffAttendeeReportView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve the attendee report.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+        """
         account = _account(request)
         operation = "registration.attendee_report.retrieve"
         decision = _authorize_attendee_reporting(
@@ -2994,8 +3870,8 @@ class StaffAttendeeReportView(APIView):
                 level=str(values.get("level", "")),
             ),
         )
-        page = cast(int, values["page"])
-        page_size = cast(int, values["page_size"])
+        page = cast("int", values["page"])
+        page_size = cast("int", values["page_size"])
         start = (page - 1) * page_size
         end = start + page_size
         page_rows = filtered_rows[start:end]
@@ -3028,6 +3904,8 @@ class StaffAttendeeReportView(APIView):
 
 
 class StaffBadgeExportView(APIView):
+    """Expose staff badge export through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_export_badge_data",
         parameters=[AttendeeReportQuerySerializer],
@@ -3039,6 +3917,22 @@ class StaffBadgeExportView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> HttpResponse:
+        """Export the badge data.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        HttpResponse
+            The HTTP response for the requested operation.
+        """
         account = _account(request)
         operation = "registration.badge_data.export"
         decision = _authorize_attendee_reporting(
@@ -3096,6 +3990,8 @@ class StaffBadgeExportView(APIView):
 
 
 class StaffProfileMediaReviewListView(APIView):
+    """Expose staff profile media review list through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_list_profile_media_reviews",
         responses=ProfileMediaReviewItemSerializer(many=True),
@@ -3106,6 +4002,29 @@ class StaffProfileMediaReviewListView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the profile media reviews.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         requested_fields = frozenset(
@@ -3197,7 +4116,7 @@ class StaffProfileMediaReviewListView(APIView):
         ]
         items = sorted(
             [*profile_items, *fursuit_items],
-            key=lambda item: (cast(datetime, item["submitted_at"]), str(item["id"])),
+            key=lambda item: (cast("datetime", item["submitted_at"]), str(item["id"])),
         )
         _read_audit(
             account=account,
@@ -3222,6 +4141,8 @@ class StaffProfileMediaReviewListView(APIView):
 
 
 class StaffProfileMediaReviewDecisionView(APIView):
+    """Expose staff profile media review decision through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_review_profile_media",
         request=ProfileMediaReviewDecisionSerializer,
@@ -3234,6 +4155,29 @@ class StaffProfileMediaReviewDecisionView(APIView):
         edition_id: UUID,
         media_id: UUID,
     ) -> Response:
+        """Review the profile media.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        media_id : UUID
+            The media identifier within the requested scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        """
         serializer = ProfileMediaReviewDecisionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
@@ -3242,10 +4186,10 @@ class StaffProfileMediaReviewDecisionView(APIView):
                 organization_id=organization_id,
                 edition_id=edition_id,
                 actor=_account(request),
-                media_kind=cast(str, values["media_kind"]),
+                media_kind=cast("str", values["media_kind"]),
                 media_id=media_id,
-                decision=cast(str, values["decision"]),
-                reason=cast(str, values["reason"]),
+                decision=cast("str", values["decision"]),
+                reason=cast("str", values["reason"]),
                 correlation_id=_correlation_id(request),
             )
         except DjangoValidationError as error:
@@ -3278,6 +4222,8 @@ class StaffProfileMediaReviewDecisionView(APIView):
 
 
 class StaffRegistrationDetailView(APIView):
+    """Expose staff registration detail through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_retrieve_service_summary",
         responses=StaffRegistrationSerializer,
@@ -3289,6 +4235,31 @@ class StaffRegistrationDetailView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Retrieve the service summary.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         correlation_id = _correlation_id(request)
         decision = _scope_decision(
@@ -3347,6 +4318,8 @@ class StaffRegistrationDetailView(APIView):
 
 
 class StaffRegistrationCheckInView(APIView):
+    """Expose staff registration check in through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_check_in",
         request=CheckInSerializer,
@@ -3359,6 +4332,33 @@ class StaffRegistrationCheckInView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Check in the registration.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         serializer = CheckInSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -3396,6 +4396,8 @@ class StaffRegistrationCheckInView(APIView):
 
 
 class StaffRegistrationPaymentDeadlineView(APIView):
+    """Expose staff registration payment deadline through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_change_payment_deadline",
         request=ChangePaymentDeadlineSerializer,
@@ -3408,6 +4410,33 @@ class StaffRegistrationPaymentDeadlineView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Change the payment deadline.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         _require_step_up(request, account)
         serializer = ChangePaymentDeadlineSerializer(data=request.data)
@@ -3448,6 +4477,8 @@ class StaffRegistrationPaymentDeadlineView(APIView):
 
 
 class StaffRegistrationWaivePaymentView(APIView):
+    """Expose staff registration waive payment through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_waive_payment",
         request=WaivePaymentSerializer,
@@ -3460,6 +4491,33 @@ class StaffRegistrationWaivePaymentView(APIView):
         edition_id: UUID,
         registration_id: UUID,
     ) -> Response:
+        """Waive the payment.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+        registration_id : UUID
+            The attendee registration identifier within the edition scope.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         _require_step_up(request, account)
         serializer = WaivePaymentSerializer(data=request.data)
@@ -3499,6 +4557,8 @@ class StaffRegistrationWaivePaymentView(APIView):
 
 
 class RegistrationCommerceWorkspaceView(APIView):
+    """Expose registration commerce workspace through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_retrieve_commerce_workspace",
         responses=RegistrationCommerceWorkspaceSerializer,
@@ -3509,6 +4569,29 @@ class RegistrationCommerceWorkspaceView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve the commerce workspace.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         actor = _account(request)
         try:
             activity = registration_commerce_activity(
@@ -3595,6 +4678,8 @@ class RegistrationCommerceWorkspaceView(APIView):
 
 
 class RegistrationCapacityAdjustmentView(PrivateRegistrationCommerceAPIView):
+    """Expose registration capacity adjustment through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_adjust_effective_capacity",
         request=RegistrationCapacityAdjustmentCommandSerializer,
@@ -3609,6 +4694,33 @@ class RegistrationCapacityAdjustmentView(PrivateRegistrationCommerceAPIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Adjust the effective capacity.
+
+        Keep self and staff commerce responses out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         actor = _account(request)
         try:
             authorize_registration_commerce_edition_api_scope(
@@ -3629,10 +4741,12 @@ class RegistrationCapacityAdjustmentView(PrivateRegistrationCommerceAPIView):
                 organization_id=organization_id,
                 edition_id=edition_id,
                 actor=actor,
-                product_id=cast(UUID | None, values.get("product_id")),
-                new_capacity=cast(int, values["new_capacity"]),
-                reason=cast(str, values["reason"]),
-                expected_control_version=cast(int, values["expected_control_version"]),
+                product_id=cast("UUID | None", values.get("product_id")),
+                new_capacity=cast("int", values["new_capacity"]),
+                reason=cast("str", values["reason"]),
+                expected_control_version=cast(
+                    "int", values["expected_control_version"]
+                ),
                 idempotency_key=_commerce_idempotency_key(request),
                 correlation_id=_correlation_id(request),
                 source_channel="api",
@@ -3670,6 +4784,8 @@ class RegistrationCapacityAdjustmentView(PrivateRegistrationCommerceAPIView):
 
 
 class RegistrationWaitlistBatchOfferView(PrivateRegistrationCommerceAPIView):
+    """Expose registration waitlist batch offer through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_offer_next_waitlist_batch",
         request=WaitlistBatchOfferCommandSerializer,
@@ -3684,6 +4800,33 @@ class RegistrationWaitlistBatchOfferView(PrivateRegistrationCommerceAPIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Offer the next waitlist batch.
+
+        Keep self and staff commerce responses out of shared caches.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        ApiValidationError
+            If the request payload violates the endpoint contract.
+        NotFound
+            If the scoped resource is unavailable to the caller.
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         actor = _account(request)
         try:
             authorize_registration_commerce_edition_api_scope(
@@ -3703,11 +4846,13 @@ class RegistrationWaitlistBatchOfferView(PrivateRegistrationCommerceAPIView):
             result = offer_next_waitlist_batch(
                 organization_id=organization_id,
                 edition_id=edition_id,
-                product_id=cast(UUID, values["product_id"]),
+                product_id=cast("UUID", values["product_id"]),
                 actor=actor,
-                batch_size=cast(int, values["batch_size"]),
-                reason=cast(str, values["reason"]),
-                expected_control_version=cast(int, values["expected_control_version"]),
+                batch_size=cast("int", values["batch_size"]),
+                reason=cast("str", values["reason"]),
+                expected_control_version=cast(
+                    "int", values["expected_control_version"]
+                ),
                 idempotency_key=_commerce_idempotency_key(request),
                 correlation_id=_correlation_id(request),
                 source_channel="api",
@@ -3744,6 +4889,8 @@ class RegistrationWaitlistBatchOfferView(PrivateRegistrationCommerceAPIView):
 
 
 class RegistrationReconciliationView(APIView):
+    """Expose registration reconciliation through the HTTP API."""
+
     @extend_schema(
         operation_id="registration_retrieve_reconciliation",
         responses=RegistrationReconciliationSerializer,
@@ -3754,6 +4901,27 @@ class RegistrationReconciliationView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """Retrieve the reconciliation.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         decision = _scope_decision(
             account=account,
@@ -3786,8 +4954,8 @@ class RegistrationReconciliationView(APIView):
         products: dict[tuple[str, str], dict[str, object]] = {}
         for row in grouped:
             key = (
-                cast(str, row["product_name_snapshot"]),
-                cast(str, row["currency_snapshot"]),
+                cast("str", row["product_name_snapshot"]),
+                cast("str", row["currency_snapshot"]),
             )
             product = products.setdefault(
                 key,
@@ -3806,31 +4974,33 @@ class RegistrationReconciliationView(APIView):
                     "cancelled": 0,
                 },
             )
-            count = cast(int, row["registrations"])
-            amount = cast(int, row["amount_minor"] or 0)
-            product["registrations"] = cast(int, product["registrations"]) + count
-            state = cast(str, row["state"])
-            basis = cast(str, row["confirmation_basis"])
+            count = cast("int", row["registrations"])
+            amount = cast("int", row["amount_minor"] or 0)
+            product["registrations"] = cast("int", product["registrations"]) + count
+            state = cast("str", row["state"])
+            basis = cast("str", row["confirmation_basis"])
             if state == Registration.State.WAITLISTED:
-                product["waitlisted"] = cast(int, product["waitlisted"]) + count
+                product["waitlisted"] = cast("int", product["waitlisted"]) + count
             elif state == Registration.State.PAYMENT_PENDING:
                 product["payment_pending"] = (
-                    cast(int, product["payment_pending"]) + count
+                    cast("int", product["payment_pending"]) + count
                 )
             elif state == Registration.State.EXPIRED:
-                product["expired"] = cast(int, product["expired"]) + count
+                product["expired"] = cast("int", product["expired"]) + count
             elif state == Registration.State.CANCELLED:
-                product["cancelled"] = cast(int, product["cancelled"]) + count
+                product["cancelled"] = cast("int", product["cancelled"]) + count
             if basis == Registration.ConfirmationBasis.PROVIDER:
-                product["provider_paid"] = cast(int, product["provider_paid"]) + count
+                product["provider_paid"] = cast("int", product["provider_paid"]) + count
                 product["provider_paid_minor"] = (
-                    cast(int, product["provider_paid_minor"]) + amount
+                    cast("int", product["provider_paid_minor"]) + amount
                 )
             elif basis == Registration.ConfirmationBasis.WAIVER:
-                product["waived"] = cast(int, product["waived"]) + count
-                product["waived_minor"] = cast(int, product["waived_minor"]) + amount
+                product["waived"] = cast("int", product["waived"]) + count
+                product["waived_minor"] = cast("int", product["waived_minor"]) + amount
             elif basis == Registration.ConfirmationBasis.FREE:
-                product["free_confirmed"] = cast(int, product["free_confirmed"]) + count
+                product["free_confirmed"] = (
+                    cast("int", product["free_confirmed"]) + count
+                )
         _read_audit(
             account=account,
             organization_id=organization_id,
@@ -3844,7 +5014,7 @@ class RegistrationReconciliationView(APIView):
             reason_code=decision.reason_code,
             obligations=decision.obligations,
             target_count=sum(
-                cast(int, product["registrations"]) for product in products.values()
+                cast("int", product["registrations"]) for product in products.values()
             ),
         )
         payload = {
@@ -3855,6 +5025,8 @@ class RegistrationReconciliationView(APIView):
 
 
 class StaffActionListView(APIView):
+    """Expose staff action list through the HTTP API."""
+
     @extend_schema(
         operation_id="staff_list_assigned_actions",
         responses=ActionItemSerializer(many=True),
@@ -3865,6 +5037,27 @@ class StaffActionListView(APIView):
         organization_id: UUID,
         edition_id: UUID,
     ) -> Response:
+        """List the assigned actions.
+
+        Parameters
+        ----------
+        request : Request
+            The incoming HTTP request and authenticated principal context.
+        organization_id : UUID
+            The organization identifier that owns the requested resource.
+        edition_id : UUID
+            The event edition identifier that scopes the operation.
+
+        Returns
+        -------
+        Response
+            The HTTP response for the requested operation.
+
+        Raises
+        ------
+        PermissionDenied
+            If the caller lacks permission for the requested scope.
+        """
         account = _account(request)
         manage = _scope_decision(
             account=account,
@@ -4177,8 +5370,8 @@ class StaffActionListView(APIView):
         def action_sort_key(item: dict[str, object]) -> tuple[int, str]:
             level_order = {"urgent": 0, "blocking": 1, "action": 2, "fyi": 3}
             return (
-                level_order[cast(str, item["level"])],
-                cast(datetime, item["created_at"]).isoformat(),
+                level_order[cast("str", item["level"])],
+                cast("datetime", item["created_at"]).isoformat(),
             )
 
         actions.sort(key=action_sort_key)

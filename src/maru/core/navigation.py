@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from django.http import HttpRequest
 from django.urls import reverse
 
 from maru.authorization.policy import (
@@ -23,6 +21,11 @@ from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.identity.navigation_preferences import navigation_pin_codes
 from maru.organizations.models import Organization
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
+    from django.http import HttpRequest
 
 _SUPPORTED_PIN_NAMESPACES = frozenset(
     {"my", "work", "platform", "organization", "series", "edition", "record"}
@@ -44,6 +47,34 @@ _SECTION_ORDER = (
 
 @dataclass(frozen=True, slots=True)
 class NavigationItem:
+    """Describe one authorized destination in the shared navigation registry.
+
+    Attributes
+    ----------
+    code
+        The stable destination code used for pins and registry lookup.
+    label
+        The human-readable label shown to authorized readers.
+    url
+        The already-resolved local URL for the destination.
+    section
+        The presentation section used for deterministic grouping.
+    context_label
+        The optional organization or edition label disambiguating the item.
+    description
+        The human-readable description shown to authorized readers.
+    keywords
+        Additional task language accepted by navigation search.
+    kind
+        The closed destination kind, such as ``destination`` or ``action``.
+    current
+        Whether this destination represents the current request path.
+    pinnable
+        Whether the destination may be stored as a navigation pin.
+    pinned
+        Whether the account has pinned this destination.
+    """
+
     code: str
     label: str
     url: str
@@ -58,6 +89,25 @@ class NavigationItem:
 
     @property
     def search_text(self) -> str:
+        """Return normalized searchable text for this navigation item.
+
+        Returns
+        -------
+        str
+            The non-empty searchable fields joined in their relevance order.
+
+        Examples
+        --------
+        >>> item = NavigationItem(
+        ...     code="work.volunteers",
+        ...     label="Volunteers",
+        ...     url="/admin/workforce/",
+        ...     section="Convention work",
+        ...     keywords=("staff", "helpers"),
+        ... )
+        >>> item.search_text
+        'Volunteers staff helpers Convention work'
+        """
         return " ".join(
             part
             for part in (
@@ -72,8 +122,19 @@ class NavigationItem:
 
 
 def destination_code_is_supported(destination_code: str) -> bool:
-    """Validate preference syntax without resolving or disclosing a resource."""
+    """Validate preference syntax without resolving or disclosing a resource.
 
+    Parameters
+    ----------
+    destination_code : str
+        The stable destination code from the relevant closed catalog.
+
+    Returns
+    -------
+    bool
+        `True` when Validate preference syntax without resolving or disclosing a
+        resource; otherwise `False`.
+    """
     return bool(
         _DESTINATION_CODE_PATTERN.fullmatch(destination_code)
         and destination_code.partition(".")[0] in _SUPPORTED_PIN_NAMESPACES
@@ -86,8 +147,23 @@ def _route_is(request: HttpRequest, *names: str) -> bool:
 
 
 def _scoped_route_is(request: HttpRequest, name: str, *args: object) -> bool:
-    """Match both the route and its exact tenant-owned path parameters."""
+    """Match both the route and its exact tenant-owned path parameters.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    name : str
+        The human-readable name to normalize or persist.
+    *args : object
+        Positional arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    bool
+        `True` when Match both the route and its exact tenant-owned path
+        parameters; otherwise `False`.
+    """
     return _route_is(request, name) and request.path == reverse(name, args=args)
 
 
@@ -640,8 +716,20 @@ def _page_context_items(
     request: HttpRequest,
     page_context: Mapping[str, Any],
 ) -> list[NavigationItem]:
-    """Flatten already-authorized route context without re-querying tenant names."""
+    """Flatten already-authorized route context without re-querying tenant names.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    page_context : Mapping[str, Any]
+        The page context mapping to validate or transform.
+
+    Returns
+    -------
+    list[NavigationItem]
+        The matching page context items records in deterministic order.
+    """
     organization = page_context.get("organization")
     series = page_context.get("convention_series")
     edition = page_context.get("edition")
@@ -922,8 +1010,18 @@ def _specialist_items(
 
 
 def _decorate_navigation_item(item: NavigationItem) -> NavigationItem:
-    """Attach task language without changing route or authorization behavior."""
+    """Attach task language without changing route or authorization behavior.
 
+    Parameters
+    ----------
+    item : NavigationItem
+        The domain object being validated, rendered, or persisted.
+
+    Returns
+    -------
+    NavigationItem
+        The resolved NavigationItem for decorate navigation item.
+    """
     code = item.code
     if code == "platform.organizations":
         return replace(
@@ -1082,8 +1180,24 @@ def project_shell_navigation(
     page_context: Mapping[str, Any],
     personal_surface: bool,
 ) -> dict[str, object]:
-    """Build one live, permission-filtered menu and reauthorize every pin."""
+    """Build one live, permission-filtered menu and reauthorize every pin.
 
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming HTTP request and authenticated principal context.
+    available_apps : Iterable[Mapping[str, Any]], default=()
+        The available apps evaluated while project shell navigation.
+    page_context : Mapping[str, Any]
+        The page context mapping to validate or transform.
+    personal_surface : bool
+        The personal surface evaluated while project shell navigation.
+
+    Returns
+    -------
+    dict[str, object]
+        A mapping containing the resolved project shell navigation data.
+    """
     actor = request.user
     if (
         not isinstance(actor, Account)

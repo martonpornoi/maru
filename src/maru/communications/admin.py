@@ -1,3 +1,5 @@
+"""Provide admin support for the communications module."""
+
 from django.contrib import admin
 
 from maru.communications.models import (
@@ -13,6 +15,8 @@ class NotificationMessageAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for notification message."""
+
     list_display = (
         "account",
         "message_type",
@@ -32,6 +36,8 @@ class NotificationDeliveryAdmin(
     ReadOnlyAdminMixin,
     admin.ModelAdmin,  # type: ignore[type-arg]
 ):
+    """Configure Django administration for notification delivery."""
+
     list_display = (
         "message",
         "channel",
@@ -45,6 +51,8 @@ class NotificationDeliveryAdmin(
 
 @admin.register(NotificationPreference)
 class NotificationPreferenceAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
+    """Configure Django administration for notification preference."""
+
     list_display = (
         "account",
         "organization",

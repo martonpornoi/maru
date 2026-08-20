@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Never
 from uuid import uuid4
 
 import pytest
@@ -522,7 +523,7 @@ def test_outbox_failure_rolls_back_department_control_receipt_and_audit(
     actor = _administrator()
     edition = EventEditionFactory()
 
-    def fail_publish(*_args, **_kwargs):  # type: ignore[no-untyped-def]
+    def fail_publish(*_args, **_kwargs) -> Never:  # type: ignore[no-untyped-def]
         raise RuntimeError("synthetic structure outbox failure")
 
     monkeypatch.setattr(

@@ -16,6 +16,18 @@ MAX_EDITION_CURRENCY_CODES = 8
 
 
 def validate_lowercase_slug(value: str) -> None:
+    """Validate lowercase slug.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not LOWERCASE_SLUG_PATTERN.fullmatch(value):
         raise ValidationError(
             "Use lowercase letters, numbers, and single hyphens only.",
@@ -24,6 +36,18 @@ def validate_lowercase_slug(value: str) -> None:
 
 
 def validate_time_zone(value: str) -> None:
+    """Validate time zone.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     try:
         ZoneInfo(value)
     except (ValueError, ZoneInfoNotFoundError) as error:
@@ -34,6 +58,18 @@ def validate_time_zone(value: str) -> None:
 
 
 def validate_language_codes(values: list[str]) -> None:
+    """Validate language codes.
+
+    Parameters
+    ----------
+    values : list[str]
+        The validated values to process.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not values:
         raise ValidationError(
             "At least one language is required.",
@@ -58,6 +94,18 @@ def validate_language_codes(values: list[str]) -> None:
 
 
 def validate_currency_codes(values: list[str]) -> None:
+    """Validate currency codes.
+
+    Parameters
+    ----------
+    values : list[str]
+        The validated values to process.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not values:
         raise ValidationError(
             "At least one currency is required.",

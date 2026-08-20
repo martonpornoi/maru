@@ -24,6 +24,8 @@ var/
 build/
 dist/
 *.egg-info/
+docs/_build/
+docs/autoapi/
 node_modules/
 .pnpm-store/
 frontends/staff-console/dist/
@@ -39,4 +41,6 @@ Thumbs.db
 .tools/
 .uv-cache/
 .pip-audit-cache/
+.local-ci/
 .codex-*.log
+.codex-ci-timings/

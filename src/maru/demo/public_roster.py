@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 AWOOSTRIA_ROSTER_URL = "https://awoostria.at/about-us/our-volunteers"
 MINIMUM_ROSTER_ACCOUNTS = 2
@@ -26,12 +29,34 @@ class PublicRosterNetworkImportRetiredError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class PublicRosterAssignment:
+    """Describe public roster assignment.
+
+    Attributes
+    ----------
+    username
+        The username retained in this immutable projection.
+    role
+        The immutable or edition-owned role evaluated for authority.
+    """
+
     username: str
     role: str
 
 
 @dataclass(frozen=True, slots=True)
 class PublicRosterDepartment:
+    """Describe public roster department.
+
+    Attributes
+    ----------
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    assignments
+        The assignments retained in this immutable projection.
+    """
+
     name: str
     description: str
     assignments: tuple[PublicRosterAssignment, ...]
@@ -48,6 +73,7 @@ class _RosterParser(HTMLParser):
     """Parse semantic headings without retaining links, avatars, or contacts."""
 
     def __init__(self) -> None:
+        """Initialize the _RosterParser instance."""
         super().__init__(convert_charrefs=True)
         self.main_depth = 0
         self.capture_tag: str | None = None
@@ -120,8 +146,23 @@ class _RosterParser(HTMLParser):
 
 
 def parse_public_roster(html: str) -> tuple[PublicRosterDepartment, ...]:
-    """Parse a bounded synthetic HTML taxonomy for local tests only."""
+    """Parse a bounded synthetic HTML taxonomy for local tests only.
 
+    Parameters
+    ----------
+    html : str
+        The html evaluated while parse public roster.
+
+    Returns
+    -------
+    tuple[PublicRosterDepartment, ...]
+        The matching parse public roster records in deterministic order.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     parser = _RosterParser()
     parser.feed(html)
     departments = tuple(
@@ -146,15 +187,41 @@ def parse_public_roster(html: str) -> tuple[PublicRosterDepartment, ...]:
 
 
 def load_public_roster_file(path: Path) -> tuple[PublicRosterDepartment, ...]:
-    """Load a local synthetic taxonomy fixture without any network access."""
+    """Load a local synthetic taxonomy fixture without any network access.
 
+    Parameters
+    ----------
+    path : Path
+        The filesystem path to read, validate, or write.
+
+    Returns
+    -------
+    tuple[PublicRosterDepartment, ...]
+        The matching load public roster file records in deterministic order.
+    """
     return parse_public_roster(path.read_text(encoding="utf-8"))
 
 
 def fetch_awoostria_roster(
     url: str = AWOOSTRIA_ROSTER_URL,
 ) -> tuple[PublicRosterDepartment, ...]:
-    """Reject the retired live-roster adapter before URL or network handling."""
+    """Reject the retired live-roster adapter before URL or network handling.
 
+    Parameters
+    ----------
+    url : str, default=AWOOSTRIA_ROSTER_URL
+        The validated URL used for routing or external navigation.
+
+    Returns
+    -------
+    tuple[PublicRosterDepartment, ...]
+        The matching fetch awoostria roster records in deterministic order.
+
+    Raises
+    ------
+    PublicRosterNetworkImportRetiredError
+        If the operation encounters a public roster network import retired
+        condition.
+    """
     del url
     raise PublicRosterNetworkImportRetiredError(NETWORK_IMPORT_RETIRED_MESSAGE)

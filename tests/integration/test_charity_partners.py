@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import pytest
@@ -46,9 +47,6 @@ from maru.charities.services import (
     update_charity_partner,
 )
 from maru.effects.models import DomainEvent, OutboxMessage
-from maru.events.models import EventEdition
-from maru.identity.models import Account
-from maru.workforce.models import Department
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
@@ -56,6 +54,11 @@ from tests.factories import (
     OrganizationFactory,
 )
 from tests.workforce_helpers import create_department_for_test
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
+    from maru.workforce.models import Department
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),

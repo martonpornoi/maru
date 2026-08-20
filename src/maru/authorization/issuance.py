@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Never
-from uuid import UUID
+from typing import TYPE_CHECKING, Never
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -23,6 +21,10 @@ from maru.organizations.models import (
     OrganizationRepresentation,
     RepresentationAppointment,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from uuid import UUID
 
 type AuthorityTarget = CapabilityGrant | RoleBundle | RoleAssignment
 
@@ -249,8 +251,24 @@ def create_persistent_dual_control_issuance(
     approver_source: AuthorityIssuance,
     evaluated_at: datetime | None = None,
 ) -> AuthorityIssuance:
-    """Pin two exact persistent sources for an ordinary root issuance."""
+    """Pin two exact persistent sources for an ordinary root issuance.
 
+    Parameters
+    ----------
+    target : AuthorityTarget
+        The exact domain resource targeted by the operation.
+    actor_source : AuthorityIssuance
+        The actor source evaluated while create persistent dual control issuance.
+    approver_source : AuthorityIssuance
+        The approver source evaluated while create persistent dual control issuance.
+    evaluated_at : datetime | None, default=None
+        The timezone-aware timestamp for evaluated.
+
+    Returns
+    -------
+    AuthorityIssuance
+        The newly created AuthorityIssuance.
+    """
     locked_target = _lock_target(target)
     if isinstance(locked_target, CapabilityGrant) and (
         locked_target.delegated_from_id is not None
@@ -313,8 +331,20 @@ def create_delegated_grant_issuance(
     grant: CapabilityGrant,
     evaluated_at: datetime | None = None,
 ) -> AuthorityIssuance:
-    """Record one delegated grant whose exact source remains ``delegated_from``."""
+    """Record one delegated grant whose exact source remains ``delegated_from``.
 
+    Parameters
+    ----------
+    grant : CapabilityGrant
+        The grant evaluated while create delegated grant issuance.
+    evaluated_at : datetime | None, default=None
+        The timezone-aware timestamp for evaluated.
+
+    Returns
+    -------
+    AuthorityIssuance
+        The newly created AuthorityIssuance.
+    """
     locked_grant = _lock_target(grant)
     if not isinstance(locked_grant, CapabilityGrant):
         _raise_validation(
@@ -407,8 +437,22 @@ def _lock_board_evidence(
     actor: Account,
     approver_appointment: RepresentationAppointment,
 ) -> tuple[OrganizationRepresentation, Account, RepresentationAppointment]:
-    """Reload exact ceremony evidence so relation caches cannot affect validation."""
+    """Reload exact ceremony evidence so relation caches cannot affect validation.
 
+    Parameters
+    ----------
+    representation : OrganizationRepresentation
+        The governed organization representation being evaluated.
+    actor : Account
+        The authenticated account authorizing the operation.
+    approver_appointment : RepresentationAppointment
+        The approver appointment evaluated while lock board evidence.
+
+    Returns
+    -------
+    tuple[OrganizationRepresentation, Account, RepresentationAppointment]
+        The matching lock board evidence records in deterministic order.
+    """
     try:
         locked_representation = (
             OrganizationRepresentation.objects.select_for_update().get(
@@ -442,8 +486,26 @@ def create_executive_board_issuance(
     approver_appointment: RepresentationAppointment,
     evaluated_at: datetime,
 ) -> AuthorityIssuance:
-    """Record the non-cyclic, code-owned initial Executive Board ceremony."""
+    """Record the non-cyclic, code-owned initial Executive Board ceremony.
 
+    Parameters
+    ----------
+    target : RoleBundle | RoleAssignment
+        The exact domain resource targeted by the operation.
+    representation : OrganizationRepresentation
+        The governed organization representation being evaluated.
+    actor : Account
+        The authenticated account authorizing the operation.
+    approver_appointment : RepresentationAppointment
+        The approver appointment evaluated while create executive board issuance.
+    evaluated_at : datetime
+        The timezone-aware timestamp for evaluated.
+
+    Returns
+    -------
+    AuthorityIssuance
+        The newly created AuthorityIssuance.
+    """
     locked_target = _lock_target(target)
     if not isinstance(locked_target, (RoleBundle, RoleAssignment)):
         _raise_validation(

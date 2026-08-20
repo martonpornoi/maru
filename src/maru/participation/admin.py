@@ -18,6 +18,8 @@ class ParticipationCapacityInline(
     NoDeleteAdminMixin,
     admin.TabularInline,  # type: ignore[type-arg]
 ):
+    """Configure the participation capacity inline in Django administration."""
+
     model = ParticipationCapacity
     fields = (
         "label_snapshot",
@@ -36,6 +38,20 @@ class ParticipationCapacityInline(
         request: HttpRequest,
         obj: Participation | None = None,
     ) -> bool:
+        """Return whether add permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : Participation | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when add permission; otherwise `False`.
+        """
         if obj is not None and obj.edition.lifecycle == "archived":
             return False
         return super().has_add_permission(request, obj)
@@ -45,6 +61,20 @@ class ParticipationCapacityInline(
         request: HttpRequest,
         obj: Participation | None = None,
     ) -> tuple[str, ...]:
+        """Return readonly fields.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : Participation | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The matching get readonly fields records in deterministic order.
+        """
         _ = request
         if obj is not None and obj.edition.lifecycle == "archived":
             return self.fields
@@ -56,6 +86,8 @@ class ParticipationAdmin(
     NoDeleteAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for participation."""
+
     list_display = (
         "person",
         "edition",
@@ -119,8 +151,20 @@ class ParticipationAdmin(
     )
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Participation]:
+        """Return the permission-scoped queryset.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        QuerySet[Participation]
+            The matching get queryset records in deterministic order.
+        """
         queryset = cast(
-            QuerySet[Participation],
+            "QuerySet[Participation]",
             super().get_queryset(request),
         )
         return queryset.select_related(
@@ -129,10 +173,34 @@ class ParticipationAdmin(
 
     @admin.display(description="Person", ordering="account__display_name")
     def person(self, obj: Participation) -> str:
+        """Return a disclosure-safe label for the referenced person.
+
+        Parameters
+        ----------
+        obj : Participation
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            A display-safe person label using the configured fallback.
+        """
         return str(obj.account)
 
     @admin.display(description="Capacities")
     def capacity_labels(self, obj: Participation) -> str:
+        """Return capacity labels.
+
+        Parameters
+        ----------
+        obj : Participation
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for capacity labels.
+        """
         labels = [capacity.label_snapshot for capacity in obj.capacities.all()]
         full_label = ", ".join(labels)
         visible_labels = labels[:VISIBLE_CAPACITY_COUNT]
@@ -151,6 +219,20 @@ class ParticipationAdmin(
         request: HttpRequest,
         obj: Participation | None = None,
     ) -> bool:
+        """Return whether change permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : Participation | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when change permission; otherwise `False`.
+        """
         if obj is not None and obj.edition.lifecycle == "archived":
             return False
         return super().has_change_permission(request, obj)
@@ -161,6 +243,8 @@ class ParticipationCapacityAdmin(
     NoDeleteAdminMixin,
     EditionContextAdmin,
 ):
+    """Configure Django administration for participation capacity."""
+
     edition_context_lookup = "participation__edition_id"
     edition_context_foreign_key_lookups: ClassVar[dict[str, str]] = {
         "participation": "edition_id",
@@ -232,14 +316,50 @@ class ParticipationCapacityAdmin(
         ordering="participation__account__display_name",
     )
     def person(self, obj: ParticipationCapacity) -> str:
+        """Return a disclosure-safe label for the referenced person.
+
+        Parameters
+        ----------
+        obj : ParticipationCapacity
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            A display-safe person label using the configured fallback.
+        """
         return str(obj.participation.account)
 
     @admin.display(description="Edition", ordering="participation__edition__name")
     def edition(self, obj: ParticipationCapacity) -> str:
+        """Return edition.
+
+        Parameters
+        ----------
+        obj : ParticipationCapacity
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for edition.
+        """
         return obj.participation.edition.name
 
     @admin.display(description="Term", ordering="started_at")
     def term(self, obj: ParticipationCapacity) -> str:
+        """Return term.
+
+        Parameters
+        ----------
+        obj : ParticipationCapacity
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        str
+            The normalized text for term.
+        """
         if obj.started_at is None and obj.ended_at is None:
             return "Not recorded"
         started = obj.started_at.date().isoformat() if obj.started_at else "Unknown"
@@ -251,6 +371,20 @@ class ParticipationCapacityAdmin(
         request: HttpRequest,
         obj: ParticipationCapacity | None = None,
     ) -> bool:
+        """Return whether change permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : ParticipationCapacity | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when change permission; otherwise `False`.
+        """
         if obj is not None and obj.participation.edition.lifecycle == "archived":
             return False
         return super().has_change_permission(request, obj)

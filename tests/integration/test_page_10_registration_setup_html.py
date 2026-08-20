@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
@@ -13,8 +13,6 @@ from django.urls import reverse
 from django.utils.html import strip_tags
 
 from maru.audit.models import AuditEvent
-from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.organizations.models import OrganizationMembership
 from maru.participation.models import Participation
 from maru.registration.models import (
@@ -34,6 +32,10 @@ from tests.factories import (
     EventEditionFactory,
     RegistrationQuestionFactory,
 )
+
+if TYPE_CHECKING:
+    from maru.events.models import EventEdition
+    from maru.identity.models import Account
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 

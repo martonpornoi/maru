@@ -7,8 +7,7 @@ import re
 import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, ClassVar, Literal, Never, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Never, cast
 from uuid import UUID
 
 from django.core import signing
@@ -28,6 +27,9 @@ from maru.identity.models import (
     PlatformIdentityDelivery,
     PlatformIdentityDeliveryAttempt,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 MAX_ACCOUNT_INVENTORY_PAGE_SIZE = 100
 MAX_ACCOUNT_INVENTORY_SEARCH_LENGTH = 120
@@ -56,36 +58,75 @@ class PlatformAccountInventoryError(RuntimeError):
 
 
 class PlatformAccountInventoryDeniedError(PlatformAccountInventoryError):
+    """Signal platform account inventory denied."""
+
     code = "account_inventory_denied"
 
 
 class PlatformAccountInventoryInputError(PlatformAccountInventoryError):
+    """Signal platform account inventory input."""
+
     code = "account_inventory_input_invalid"
 
     def __init__(self, *, field_name: str, detail_code: str) -> None:
+        """Initialize the PlatformAccountInventoryInputError instance.
+
+        Parameters
+        ----------
+        field_name : str
+            The canonical field name whose policy or value is requested.
+        detail_code : str
+            The stable detail code from the relevant closed catalog.
+        """
         self.field_name = field_name
         self.detail_code = detail_code
         super().__init__("The account inventory input is invalid.")
 
 
 class PlatformAccountInventoryCursorStaleError(PlatformAccountInventoryError):
+    """Signal platform account inventory cursor stale."""
+
     code = "account_inventory_cursor_stale"
 
 
 class PlatformAccountInventoryLimitExceededError(PlatformAccountInventoryError):
+    """Signal platform account inventory limit exceeded."""
+
     code = "account_inventory_limit_exceeded"
 
 
 class PlatformAccountInventoryUnavailableError(PlatformAccountInventoryError):
+    """Signal platform account inventory unavailable."""
+
     code = "account_inventory_unavailable"
 
 
 class PlatformAccountInvitationNotFoundError(PlatformAccountInventoryError):
+    """Signal platform account invitation not found."""
+
     code = "account_invitation_not_found"
 
 
 @dataclass(frozen=True, slots=True)
 class AccountInvitationSummary:
+    """Describe account invitation summary.
+
+    Attributes
+    ----------
+    invitation_id
+        The invitation identifier within the requested scope.
+    status
+        The closed status value to evaluate or expose.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    expires_at
+        The timezone-aware timestamp for expires.
+    last_transition_at
+        The timezone-aware timestamp for last transition.
+    delivery_state
+        The closed delivery state discriminator defined by the domain catalog.
+    """
+
     invitation_id: UUID
     status: str
     aggregate_version: int
@@ -96,6 +137,30 @@ class AccountInvitationSummary:
 
 @dataclass(frozen=True, slots=True)
 class AccountInventoryItem:
+    """Describe account inventory item.
+
+    Attributes
+    ----------
+    account_id
+        The platform account identifier within the requested scope.
+    email
+        The normalized email address used for delivery or identity matching.
+    login_handle
+        The login handle retained in this immutable projection.
+    display_name
+        The human-readable display name shown to authorized readers.
+    account_kind
+        The closed account kind discriminator defined by the domain catalog.
+    is_active
+        Whether to is active.
+    is_email_verified
+        Whether to is email verified.
+    date_joined
+        The date joined retained in this immutable projection.
+    current_invitation
+        The current invitation retained in this immutable projection.
+    """
+
     account_id: UUID
     email: str
     login_handle: str
@@ -109,6 +174,18 @@ class AccountInventoryItem:
 
 @dataclass(frozen=True, slots=True)
 class AccountInventoryPage:
+    """Describe account inventory page.
+
+    Attributes
+    ----------
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    items
+        The items retained in this immutable projection.
+    next_cursor
+        The next cursor retained in this immutable projection.
+    """
+
     aggregate_version: int
     items: tuple[AccountInventoryItem, ...]
     next_cursor: str | None
@@ -116,6 +193,32 @@ class AccountInventoryPage:
 
 @dataclass(frozen=True, slots=True)
 class InvitationDeliverySummary:
+    """Describe invitation delivery summary.
+
+    Attributes
+    ----------
+    delivery_id
+        The delivery identifier within the requested scope.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    status
+        The closed status value to evaluate or expose.
+    attempt_count
+        The bounded number of attempt records.
+    max_attempts
+        The max attempts retained in this immutable projection.
+    last_attempt_at
+        The timezone-aware timestamp for last attempt.
+    next_retry_at
+        The timezone-aware timestamp for next retry.
+    delivered_at
+        The timezone-aware timestamp for delivered.
+    safe_error_code
+        The stable safe error code from the relevant closed catalog.
+    reconciliation_state
+        The closed reconciliation state discriminator defined by the domain catalog.
+    """
+
     delivery_id: UUID
     aggregate_version: int
     status: str
@@ -130,6 +233,26 @@ class InvitationDeliverySummary:
 
 @dataclass(frozen=True, slots=True)
 class InvitationTransitionItem:
+    """Describe invitation transition item.
+
+    Attributes
+    ----------
+    version
+        The version number associated with the supplied record or contract.
+    operation
+        The stable operation code recorded in audit evidence.
+    actor_id
+        The immutable identifier of the account authorizing the operation.
+    actor_display_name
+        The human-readable actor display name shown to authorized readers.
+    occurred_at
+        The timezone-aware timestamp for occurred.
+    reason
+        The operator-supplied rationale recorded with the change.
+    source_channel
+        The closed channel code identifying where the request originated.
+    """
+
     version: int
     operation: str
     actor_id: UUID | None
@@ -141,6 +264,26 @@ class InvitationTransitionItem:
 
 @dataclass(frozen=True, slots=True)
 class InvitationDeliveryAttemptItem:
+    """Describe invitation delivery attempt item.
+
+    Attributes
+    ----------
+    delivery_id
+        The delivery identifier within the requested scope.
+    attempt_number
+        The attempt number retained in this immutable projection.
+    started_at
+        The timezone-aware timestamp for started.
+    finished_at
+        The timezone-aware timestamp for finished.
+    outcome
+        The outcome retained in this immutable projection.
+    safe_error_code
+        The stable safe error code from the relevant closed catalog.
+    next_retry_at
+        The timezone-aware timestamp for next retry.
+    """
+
     delivery_id: UUID
     attempt_number: int
     started_at: datetime
@@ -152,6 +295,50 @@ class InvitationDeliveryAttemptItem:
 
 @dataclass(frozen=True, slots=True)
 class AccountInvitationDetail:
+    """Describe account invitation detail.
+
+    Attributes
+    ----------
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    invitation_id
+        The invitation identifier within the requested scope.
+    account_id
+        The platform account identifier within the requested scope.
+    email
+        The normalized email address used for delivery or identity matching.
+    login_handle
+        The login handle retained in this immutable projection.
+    display_name
+        The human-readable display name shown to authorized readers.
+    account_kind
+        The closed account kind discriminator defined by the domain catalog.
+    is_active
+        Whether to is active.
+    is_email_verified
+        Whether to is email verified.
+    status
+        The closed status value to evaluate or expose.
+    invitation_version
+        The expected invitation version used to reject stale updates.
+    expires_at
+        The timezone-aware timestamp for expires.
+    created_at
+        The timezone-aware timestamp for created.
+    last_transition_at
+        The timezone-aware timestamp for last transition.
+    created_by_id
+        The created by identifier within the requested scope.
+    created_by_display_name
+        The human-readable created by display name shown to authorized readers.
+    current_delivery
+        The current delivery retained in this immutable projection.
+    transitions
+        The transitions retained in this immutable projection.
+    delivery_attempts
+        The delivery attempts retained in this immutable projection.
+    """
+
     aggregate_version: int
     invitation_id: UUID
     account_id: UUID
@@ -175,6 +362,26 @@ class AccountInvitationDetail:
 
 @dataclass(frozen=True, slots=True)
 class PlatformAccountSensitiveReadAudit:
+    """Describe platform account sensitive read audit.
+
+    Attributes
+    ----------
+    actor_id
+        The immutable identifier of the account authorizing the operation.
+    operation
+        The stable operation code recorded in audit evidence.
+    target_id
+        The target identifier within the requested scope.
+    aggregate_version
+        The expected aggregate version used to reject stale updates.
+    result_count
+        The bounded number of result records.
+    correlation_id
+        The request correlation identifier used for audit tracing.
+    source_channel
+        The closed channel code identifying where the request originated.
+    """
+
     actor_id: UUID
     operation: str
     target_id: UUID | None
@@ -203,8 +410,18 @@ def _raise_input(*, field_name: str, detail_code: str) -> Never:
 
 
 def normalize_account_inventory_search(value: object | None) -> str | None:
-    """Normalize optional exact/prefix search without permitting controls."""
+    """Normalize optional exact/prefix search without permitting controls.
 
+    Parameters
+    ----------
+    value : object | None
+        The untrusted input to normalize, validate, or compare.
+
+    Returns
+    -------
+    str | None
+        The normalized text for normalize account inventory search.
+    """
     if value is None or value == "":
         return None
     if not isinstance(value, str):
@@ -442,7 +659,7 @@ def _load_inventory_attempt(
     page_rows = rows[:page_size]
     account_ids = tuple(row["id"] for row in page_rows)
     invitation_rows = _latest_invitations(account_ids)
-    invitation_ids = tuple(cast(UUID, row["id"]) for row in invitation_rows.values())
+    invitation_ids = tuple(cast("UUID", row["id"]) for row in invitation_rows.values())
     delivery_states = _latest_delivery_states(invitation_ids)
 
     items: list[AccountInventoryItem] = []
@@ -451,14 +668,14 @@ def _load_inventory_attempt(
         invitation_row = invitation_rows.get(account_id)
         invitation = None
         if invitation_row is not None:
-            invitation_id = cast(UUID, invitation_row["id"])
+            invitation_id = cast("UUID", invitation_row["id"])
             invitation = AccountInvitationSummary(
                 invitation_id=invitation_id,
                 status=str(invitation_row["status"]),
                 aggregate_version=int(invitation_row["aggregate_version"]),
-                expires_at=cast(datetime, invitation_row["expires_at"]),
+                expires_at=cast("datetime", invitation_row["expires_at"]),
                 last_transition_at=cast(
-                    datetime,
+                    "datetime",
                     invitation_row["last_transition_at"],
                 ),
                 delivery_state=delivery_states.get(invitation_id),
@@ -534,8 +751,43 @@ def load_platform_account_inventory(
     cursor: object | None = None,
     page_size: object = MAX_ACCOUNT_INVENTORY_PAGE_SIZE,
 ) -> AccountInventoryPage:
-    """Return one complete, audited platform account inventory page."""
+    """Return one complete, audited platform account inventory page.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    audit_hook : PlatformAccountAuditHook
+        The audit hook evaluated while load platform account inventory.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str
+        The closed channel code identifying where the request originated.
+    search : object | None, default=None
+        The search evaluated while load platform account inventory.
+    search_mode : object, default='prefix'
+        The closed search mode discriminator defined by the domain catalog.
+    kind : object | None, default=None
+        The closed discriminator selecting the requested behavior.
+    state : object | None, default=None
+        The lifecycle state to evaluate or expose.
+    cursor : object | None, default=None
+        The cursor evaluated while load platform account inventory.
+    page_size : object, default=MAX_ACCOUNT_INVENTORY_PAGE_SIZE
+        The page size evaluated while load platform account inventory.
+
+    Returns
+    -------
+    AccountInventoryPage
+        The resolved AccountInventoryPage for the requested scope.
+
+    Raises
+    ------
+    PlatformAccountInventoryError
+        If the requested operation violates this domain contract.
+    PlatformAccountInventoryUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     try:
         _require_platform_administrator(actor.id)
         normalized_search = normalize_account_inventory_search(search)
@@ -610,14 +862,14 @@ def _delivery_summary(row: Any | None) -> InvitationDeliverySummary | None:
     if row is None:
         return None
     return InvitationDeliverySummary(
-        delivery_id=cast(UUID, row["id"]),
+        delivery_id=cast("UUID", row["id"]),
         aggregate_version=int(row["aggregate_version"]),
         status=str(row["status"]),
         attempt_count=int(row["attempt_count"]),
         max_attempts=int(row["max_attempts"]),
-        last_attempt_at=cast(datetime | None, row["last_attempt_at"]),
-        next_retry_at=cast(datetime | None, row["next_retry_at"]),
-        delivered_at=cast(datetime | None, row["delivered_at"]),
+        last_attempt_at=cast("datetime | None", row["last_attempt_at"]),
+        next_retry_at=cast("datetime | None", row["next_retry_at"]),
+        delivered_at=cast("datetime | None", row["delivered_at"]),
         safe_error_code=str(row["safe_error_code"]),
         reconciliation_state=str(row["reconciliation_state"]),
     )
@@ -769,8 +1021,33 @@ def load_platform_account_invitation_detail(
     correlation_id: UUID,
     source_channel: str,
 ) -> AccountInvitationDetail:
-    """Return one complete, audited invitation detail projection."""
+    """Return one complete, audited invitation detail projection.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    invitation_id : object
+        The invitation identifier within the requested scope.
+    audit_hook : PlatformAccountAuditHook
+        The audit hook evaluated while load platform account invitation detail.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    AccountInvitationDetail
+        The resolved AccountInvitationDetail for the requested scope.
+
+    Raises
+    ------
+    PlatformAccountInventoryError
+        If the requested operation violates this domain contract.
+    PlatformAccountInventoryUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    """
     try:
         _require_platform_administrator(actor.id)
         if not isinstance(invitation_id, UUID):

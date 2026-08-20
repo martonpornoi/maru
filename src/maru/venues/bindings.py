@@ -18,6 +18,18 @@ _BINDING_PREFIX = "https://maru.invalid/authorization/venue.edition-space/"
 
 
 def edition_space_binding_id(space_selection_id: UUID) -> UUID:
+    """Return edition space binding id.
+
+    Parameters
+    ----------
+    space_selection_id : UUID
+        The identifier of the space selection.
+
+    Returns
+    -------
+    UUID
+        The UUID established after edition space binding id completes.
+    """
     return uuid5(NAMESPACE_URL, f"{_BINDING_PREFIX}{space_selection_id}")
 
 
@@ -26,7 +38,24 @@ def ensure_edition_space_binding(
     *,
     space_selection: EditionSpaceSelection,
 ) -> ScopedResourceBinding:
-    if space_selection._state.adding or space_selection.pk is None:
+    """Ensure edition space binding.
+
+    Parameters
+    ----------
+    space_selection : EditionSpaceSelection
+        The space selection evaluated while ensure edition space binding.
+
+    Returns
+    -------
+    ScopedResourceBinding
+        The persisted binding for the edition-selected space.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
+    if space_selection._state.adding or space_selection.pk is None:  # noqa: SLF001
         raise ValidationError(
             "Save the edition space before creating its resource binding.",
             code="venue_space_unavailable",

@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 from datetime import date, datetime, time
 from decimal import Decimal, InvalidOperation
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -17,7 +18,9 @@ from maru.applications.models import (
     ApplicationQuestion,
     ApplicationQuestionType,
 )
-from maru.identity.models import Account
+
+if TYPE_CHECKING:
+    from maru.identity.models import Account
 
 
 def _canonical_uuid(value: object) -> str:
@@ -97,6 +100,36 @@ def normalize_answer_value(
     account: Account,
     value: object,
 ) -> object:
+    """Normalize one typed application answer for canonical JSON storage.
+
+    Parameters
+    ----------
+    question : ApplicationQuestion
+        The versioned question defining type, bounds, and ownership.
+    account : Account
+        The submitting account; safe-file receipts must belong to this account.
+    value : object
+        The untrusted answer supplied by the applicant or an authorized editor.
+
+    Returns
+    -------
+    object
+        A JSON-compatible canonical value, or ``None`` for an explicit empty
+        answer.
+
+    Raises
+    ------
+    ValidationError
+        If the answer has the wrong type, violates configured bounds, exceeds
+        the size ceiling, or references an unavailable safe-file receipt.
+
+    Notes
+    -----
+    The caller remains responsible for question visibility, edit-window, and
+    submission authorization. This function owns value shape and canonical
+    representation; safe-file handling additionally enforces account,
+    organization, edition, and clean-scan ownership.
+    """
     if value is None:
         return None
     field_type = question.field_type
@@ -249,6 +282,38 @@ def normalize_answer_value(
 
 
 def condition_matches(condition: dict[str, object], answers: dict[str, object]) -> bool:
+    """Return whether an answer satisfies its configured condition.
+
+    Parameters
+    ----------
+    condition : dict[str, object]
+        The configured condition evaluated against the submitted answer.
+    answers : dict[str, object]
+        The submitted typed answers.
+
+    Returns
+    -------
+    bool
+        Whether the requested condition is satisfied.
+
+    Notes
+    -----
+    An empty condition is unconditional. Unknown operators fail closed instead
+    of being treated as equality or truthiness checks.
+
+    Examples
+    --------
+    >>> condition_matches(
+    ...     {"question_key": "shirt", "operator": "equals", "value": "M"},
+    ...     {"shirt": "M"},
+    ... )
+    True
+    >>> condition_matches(
+    ...     {"question_key": "skills", "operator": "contains", "value": "audio"},
+    ...     {"skills": ["lighting", "audio"]},
+    ... )
+    True
+    """
     if not condition:
         return True
     current = answers.get(str(condition["question_key"]))

@@ -22,8 +22,18 @@ _READ_OPERATIONS: Final = frozenset(
 def append_platform_account_read_audit(
     evidence: PlatformAccountSensitiveReadAudit,
 ) -> None:
-    """Persist one allow event before a protected account label is released."""
+    """Persist one allow event before a protected account label is released.
 
+    Parameters
+    ----------
+    evidence : PlatformAccountSensitiveReadAudit
+        The evidence evaluated while append platform account read audit.
+
+    Raises
+    ------
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     if evidence.operation not in _READ_OPERATIONS:
         raise ValueError("Use a supported platform account read operation.")
     if evidence.source_channel not in {"web", "api"}:

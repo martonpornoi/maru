@@ -33,10 +33,19 @@ class AuthorizationScopeWriteFence(models.Model):
     first_written_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         db_table = "authorization_scopev2writefence"
         default_permissions = ()
 
     def __str__(self) -> str:
+        """Return the human-readable AuthorizationScopeWriteFence label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return "Authorization scope-v2 writes exist"
 
 
@@ -61,6 +70,8 @@ class AuthorityProvenanceActivation(models.Model):
     activated_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         default_permissions = ()
         constraints = [
             models.CheckConstraint(
@@ -82,9 +93,30 @@ class AuthorityProvenanceActivation(models.Model):
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable AuthorityProvenanceActivation label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"Authority provenance active under {self.contract_version}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Authority provenance activation is immutable.",
@@ -94,6 +126,25 @@ class AuthorityProvenanceActivation(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "Authority provenance activation cannot be deleted.",
@@ -101,6 +152,13 @@ class AuthorityProvenanceActivation(models.Model):
         )
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.singleton is not True:
             raise ValidationError(
@@ -147,6 +205,8 @@ class AuthorityProvenanceActivationLatch(models.Model):
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         db_table = "authorization_provenanceactivationlatch"
         default_permissions = ()
         constraints = [
@@ -161,9 +221,30 @@ class AuthorityProvenanceActivationLatch(models.Model):
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable AuthorityProvenanceActivationLatch label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"Authority provenance activation generation {self.generation}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "The authority provenance activation latch is database-managed.",
@@ -171,6 +252,25 @@ class AuthorityProvenanceActivationLatch(models.Model):
         )
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "The authority provenance activation latch cannot be deleted.",
@@ -179,6 +279,18 @@ class AuthorityProvenanceActivationLatch(models.Model):
 
 
 def validate_capability_code(value: str) -> None:
+    """Validate capability code.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if capability(value) is None:
         raise ValidationError(
             "Use a capability declared by the platform.",
@@ -187,6 +299,18 @@ def validate_capability_code(value: str) -> None:
 
 
 def validate_capability_codes(values: list[str]) -> None:
+    """Validate capability codes.
+
+    Parameters
+    ----------
+    values : list[str]
+        The validated values to process.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not values:
         raise ValidationError(
             "A role bundle must contain at least one capability.",
@@ -208,6 +332,18 @@ def validate_capability_codes(values: list[str]) -> None:
 
 
 def validate_role_code(value: str) -> None:
+    """Validate role code.
+
+    Parameters
+    ----------
+    value : str
+        The untrusted value to normalize against the documented contract.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not ROLE_CODE_PATTERN.fullmatch(value):
         raise ValidationError(
             "Use a stable lowercase role code.",
@@ -219,6 +355,8 @@ class ScopedResourceBinding(UUIDTimeStampedModel):
     """Immutable, typed authorization anchor for one domain-owned resource."""
 
     class ResourceKind(models.TextChoices):
+        """Enumerate supported resource kind values."""
+
         WORKFORCE_POSITION = "workforce.position", "Workforce position"
         CHARITY_SELECTION = "charity.selection", "Charity selection"
         VENUE_EDITION_SPACE = "venue.edition_space", "Edition venue space"
@@ -243,6 +381,8 @@ class ScopedResourceBinding(UUIDTimeStampedModel):
     resource_id = models.UUIDField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "edition_id", "department_id", "id")
         constraints = [
             models.UniqueConstraint(
@@ -269,6 +409,13 @@ class ScopedResourceBinding(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.edition_id and self.edition.organization_id != self.organization_id:
             raise ValidationError(
@@ -295,6 +442,20 @@ class ScopedResourceBinding(UUIDTimeStampedModel):
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Scoped resource bindings are immutable; create a new binding.",
@@ -304,6 +465,25 @@ class ScopedResourceBinding(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "Scoped resource bindings are immutable and cannot be deleted.",
@@ -311,6 +491,13 @@ class ScopedResourceBinding(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable ScopedResourceBinding label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.resource_kind}:{self.resource_id} — {self.department}"
 
 
@@ -440,6 +627,8 @@ def _validate_authority_department_is_current(
 
 
 class CapabilityGrant(UUIDTimeStampedModel):
+    """Store capability grant records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -508,6 +697,8 @@ class CapabilityGrant(UUIDTimeStampedModel):
     revocation_reason = models.CharField(max_length=240, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "principal_id", "capability_code", "id")
         constraints = [
             models.CheckConstraint(
@@ -541,6 +732,7 @@ class CapabilityGrant(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record."""
         super().clean()
         if self.principal_id:
             validate_convention_subject(self.principal, field_name="principal")
@@ -575,10 +767,26 @@ class CapabilityGrant(UUIDTimeStampedModel):
         )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable CapabilityGrant label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         scope = (
             self.resource_binding
             if self.resource_binding_id
@@ -592,6 +800,8 @@ class CapabilityGrant(UUIDTimeStampedModel):
 
 
 class RoleBundle(UUIDTimeStampedModel):
+    """Store role bundle records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -621,6 +831,8 @@ class RoleBundle(UUIDTimeStampedModel):
     reason = models.CharField(max_length=240, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "code", "-version", "id")
         constraints = [
             models.UniqueConstraint(
@@ -630,6 +842,20 @@ class RoleBundle(UUIDTimeStampedModel):
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Role bundle versions are immutable; create a new version.",
@@ -639,10 +865,19 @@ class RoleBundle(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable RoleBundle label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.name} v{self.version} — {self.organization}"
 
 
 class RoleAssignment(UUIDTimeStampedModel):
+    """Store role assignment records."""
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -705,6 +940,8 @@ class RoleAssignment(UUIDTimeStampedModel):
     revocation_reason = models.CharField(max_length=240, blank=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("organization_id", "principal_id", "created_at", "id")
         constraints = [
             models.CheckConstraint(
@@ -738,6 +975,13 @@ class RoleAssignment(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if self.principal_id:
             validate_convention_subject(self.principal, field_name="principal")
@@ -797,10 +1041,26 @@ class RoleAssignment(UUIDTimeStampedModel):
         )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        """Return the human-readable RoleAssignment label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         scope = (
             self.resource_binding
             if self.resource_binding_id
@@ -844,6 +1104,8 @@ class AuthorityIssuance(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("ordinal",)
         constraints = [
             models.CheckConstraint(
@@ -879,9 +1141,30 @@ class AuthorityIssuance(models.Model):
         ]
 
     def __str__(self) -> str:
+        """Return the human-readable AuthorityIssuance label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"Authority issuance {self.ordinal} — {self.target}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Authority issuances are immutable; create a new issuance.",
@@ -891,6 +1174,25 @@ class AuthorityIssuance(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "Authority issuances are immutable and cannot be deleted.",
@@ -898,6 +1200,13 @@ class AuthorityIssuance(models.Model):
         )
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         targets = (
             self.capability_grant_id,
@@ -937,8 +1246,18 @@ class AuthorityIssuance(models.Model):
 
     @property
     def target(self) -> CapabilityGrant | RoleBundle | RoleAssignment:
-        """Return the one typed target guaranteed by the ledger shape."""
+        """Return the one typed target guaranteed by the ledger shape.
 
+        Returns
+        -------
+        CapabilityGrant | RoleBundle | RoleAssignment
+            The resolved CapabilityGrant | RoleBundle | RoleAssignment for target.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         for target in (
             self.capability_grant,
             self.role_bundle,
@@ -956,10 +1275,14 @@ class AuthorityControl(UUIDTimeStampedModel):
     """One immutable actor or approver proof for an authority issuance."""
 
     class Role(models.TextChoices):
+        """Enumerate supported role values."""
+
         ACTOR = "actor", "Actor"
         APPROVER = "approver", "Approver"
 
     class Basis(models.TextChoices):
+        """Enumerate supported basis values."""
+
         PERSISTENT_AUTHORITY = "persistent_authority", "Persistent authority"
         PLATFORM_REPRESENTATION_BOOTSTRAP = (
             "platform_representation_bootstrap",
@@ -1007,6 +1330,8 @@ class AuthorityControl(UUIDTimeStampedModel):
     evaluated_at = models.DateTimeField()
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         ordering = ("issuance_id", "role", "id")
         constraints = [
             models.UniqueConstraint(
@@ -1320,6 +1645,13 @@ class AuthorityControl(UUIDTimeStampedModel):
             )
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().clean()
         if not self.policy_version.strip():
             raise ValidationError(
@@ -1340,6 +1672,20 @@ class AuthorityControl(UUIDTimeStampedModel):
             self._validate_representation_basis()
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the record.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if not self._state.adding:
             raise ValidationError(
                 "Authority controls are immutable; create a new issuance.",
@@ -1349,6 +1695,25 @@ class AuthorityControl(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Delete this record when its protection rules allow it.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            The matching delete records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         del args, kwargs
         raise ValidationError(
             "Authority controls are immutable and cannot be deleted.",
@@ -1356,4 +1721,11 @@ class AuthorityControl(UUIDTimeStampedModel):
         )
 
     def __str__(self) -> str:
+        """Return the human-readable AuthorityControl label.
+
+        Returns
+        -------
+        str
+            A human-readable label for the record.
+        """
         return f"{self.get_role_display()} control for issuance {self.issuance_id}"

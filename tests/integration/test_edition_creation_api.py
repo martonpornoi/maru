@@ -4,6 +4,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
+from maru.authorization.services import AuthorizationDenied
 from maru.effects.models import DomainEvent, OutboxMessage
 from maru.events.models import EditionCreationReceipt, EventEdition
 from maru.events.serializers import EditionBasicSerializer
@@ -127,6 +128,33 @@ def test_creation_api_denies_an_inactive_direct_grant_holder() -> None:
     assert not AuditEvent.objects.exists()
     assert not DomainEvent.objects.exists()
     assert not OutboxMessage.objects.exists()
+
+
+def test_creation_api_does_not_expose_domain_denial_detail(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    administrator = AccountFactory(is_staff=True, is_superuser=True)
+    series = ConventionSeriesFactory()
+
+    def deny_creation(*args: object, **kwargs: object) -> None:
+        del args, kwargs
+        raise AuthorizationDenied(
+            "private authorization implementation detail",
+            reason_code="synthetic_denial",
+        )
+
+    monkeypatch.setattr("maru.events.api.create_event_edition", deny_creation)
+    response = _client(administrator).post(
+        _url(series.organization),
+        _payload(series_id=series.id),
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "synthetic_denial"
+    assert "private authorization" not in response.content.decode()
+    assert "cannot create an edition" in response.content.decode()
 
 
 def test_creation_api_rolls_back_and_returns_safe_503_on_effect_failure(

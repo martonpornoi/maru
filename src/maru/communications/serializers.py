@@ -10,7 +10,11 @@ from maru.communications.models import (
 
 
 class NotificationDeliverySerializer(serializers.ModelSerializer[NotificationDelivery]):
+    """Serialize and validate notification delivery data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = NotificationDelivery
         fields = (
             "channel",
@@ -24,9 +28,13 @@ class NotificationDeliverySerializer(serializers.ModelSerializer[NotificationDel
 
 
 class NotificationMessageSerializer(serializers.ModelSerializer[NotificationMessage]):
+    """Serialize and validate notification message data."""
+
     deliveries = NotificationDeliverySerializer(many=True)
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = NotificationMessage
         fields = (
             "id",
@@ -48,7 +56,11 @@ class NotificationMessageSerializer(serializers.ModelSerializer[NotificationMess
 class NotificationPreferenceSerializer(
     serializers.ModelSerializer[NotificationPreference]
 ):
+    """Serialize and validate notification preference data."""
+
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = NotificationPreference
         fields = (
             "organization_id",
@@ -65,6 +77,8 @@ class NotificationPreferenceSerializer(
 
 
 class UpdateNotificationPreferenceSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate update notification preference data."""
+
     operational_email_enabled = serializers.BooleanField()
     marketing_email_consent = serializers.BooleanField()
     marketing_consent_version = serializers.CharField(
@@ -75,6 +89,8 @@ class UpdateNotificationPreferenceSerializer(serializers.Serializer[dict[str, ob
 
 
 class DeliveryFailureSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize and validate delivery failure data."""
+
     message_id = serializers.UUIDField()
     account_id = serializers.UUIDField()
     message_type = serializers.CharField()

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from django import forms
 
@@ -19,8 +18,13 @@ from maru.organizations.services import (
     OrganizationCreationDetails,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
 
 class ConventionSeriesCreationForm(StrictInputForm):
+    """Collect and validate convention series creation input."""
+
     name = forms.CharField(
         label="Convention series name",
         max_length=160,
@@ -59,11 +63,28 @@ class ConventionSeriesCreationForm(StrictInputForm):
     )
 
     def clean_name(self) -> str:
+        """Validate and normalize the name field.
+
+        Returns
+        -------
+        str
+            The validated and normalized name.
+        """
         return " ".join(self.cleaned_data["name"].split())
 
     def creation_details(self) -> ConventionSeriesCreationDetails:
-        """Return typed command input after successful form validation."""
+        """Return typed command input after successful form validation.
 
+        Returns
+        -------
+        ConventionSeriesCreationDetails
+            The resolved ConventionSeriesCreationDetails for creation details.
+
+        Raises
+        ------
+        ValueError
+            If the supplied value cannot satisfy the documented contract.
+        """
         if not self.is_valid():
             raise ValueError("Validate the series form before reading details.")
         return ConventionSeriesCreationDetails(
@@ -76,6 +97,8 @@ class ConventionSeriesCreationForm(StrictInputForm):
 
 
 class ConventionSeriesUpdateForm(ConventionSeriesCreationForm):
+    """Collect and validate convention series update input."""
+
     expected_profile_version = forms.IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -88,6 +111,20 @@ class ConventionSeriesUpdateForm(ConventionSeriesCreationForm):
         *,
         data: Mapping[str, Any] | None = None,
     ) -> ConventionSeriesUpdateForm:
+        """Return for series.
+
+        Parameters
+        ----------
+        series : ConventionSeries
+            The series used to configure and validate this form.
+        data : Mapping[str, Any] | None, default=None
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        ConventionSeriesUpdateForm
+            The resolved ConventionSeriesUpdateForm for for series.
+        """
         return cls(
             data=data,
             initial={
@@ -102,6 +139,8 @@ class ConventionSeriesUpdateForm(ConventionSeriesCreationForm):
 
 
 class OrganizationCreationForm(StrictInputForm):
+    """Collect and validate organization creation input."""
+
     name = forms.CharField(
         label="Organization name",
         max_length=160,
@@ -222,11 +261,28 @@ class OrganizationCreationForm(StrictInputForm):
     )
 
     def clean_name(self) -> str:
+        """Validate and normalize the name field.
+
+        Returns
+        -------
+        str
+            The validated and normalized name.
+        """
         return " ".join(self.cleaned_data["name"].split())
 
     def creation_details(self) -> OrganizationCreationDetails:
-        """Return typed command input after successful form validation."""
+        """Return typed command input after successful form validation.
 
+        Returns
+        -------
+        OrganizationCreationDetails
+            The resolved OrganizationCreationDetails for creation details.
+
+        Raises
+        ------
+        ValueError
+            If the supplied value cannot satisfy the documented contract.
+        """
         if not self.is_valid():
             raise ValueError("Validate the organization form before reading details.")
         return OrganizationCreationDetails(
@@ -260,8 +316,20 @@ class OrganizationCreationForm(StrictInputForm):
         *,
         data: Mapping[str, Any] | None = None,
     ) -> OrganizationCreationForm:
-        """Build the shared complete-profile form for an existing record."""
+        """Build the shared complete-profile form for an existing record.
 
+        Parameters
+        ----------
+        organization : Organization
+            The organization that owns the requested resource.
+        data : Mapping[str, Any] | None, default=None
+            The untrusted input payload to validate or transform.
+
+        Returns
+        -------
+        OrganizationCreationForm
+            The resolved OrganizationCreationForm for for organization.
+        """
         form = cls(
             data=data,
             initial={
@@ -287,6 +355,8 @@ class OrganizationCreationForm(StrictInputForm):
 
 
 class OrganizationDeletionForm(StrictInputForm):
+    """Collect and validate organization deletion input."""
+
     confirmation_name = forms.CharField(
         label="Organization name",
         max_length=160,
@@ -304,10 +374,33 @@ class OrganizationDeletionForm(StrictInputForm):
         organization: Organization,
         **kwargs: Any,
     ) -> None:
+        """Initialize the OrganizationDeletionForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        organization : Organization
+            The organization that owns the requested resource.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.organization = organization
 
     def clean_confirmation_name(self) -> str:
+        """Validate and normalize the confirmation name field.
+
+        Returns
+        -------
+        str
+            The validated and normalized confirmation name.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         confirmation_name = str(self.cleaned_data["confirmation_name"])
         if confirmation_name != self.organization.name:
             raise forms.ValidationError(
@@ -318,6 +411,8 @@ class OrganizationDeletionForm(StrictInputForm):
 
 
 class RepresentationProvisionForm(StrictInputForm):
+    """Collect and validate representation provision input."""
+
     reason = forms.CharField(
         max_length=240,
         strip=True,
@@ -327,6 +422,8 @@ class RepresentationProvisionForm(StrictInputForm):
 
 
 class RepresentationInviteForm(StrictInputForm):
+    """Collect and validate representation invite input."""
+
     account_email = forms.EmailField(
         label="Existing account email",
         help_text=(
@@ -343,10 +440,19 @@ class RepresentationInviteForm(StrictInputForm):
     )
 
     def clean_account_email(self) -> str:
+        """Validate and normalize the account email field.
+
+        Returns
+        -------
+        str
+            The validated and normalized account email.
+        """
         return str(self.cleaned_data["account_email"]).strip().lower()
 
 
 class RepresentationResponseForm(StrictInputForm):
+    """Collect and validate representation response input."""
+
     expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
     decision = forms.ChoiceField(
         choices=(("accept", "Accept invitation"), ("decline", "Decline invitation")),
@@ -355,6 +461,8 @@ class RepresentationResponseForm(StrictInputForm):
 
 
 class RepresentationActivationForm(StrictInputForm):
+    """Collect and validate representation activation input."""
+
     expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
     confirmation_name = forms.CharField(
         label="Organization name",
@@ -379,10 +487,33 @@ class RepresentationActivationForm(StrictInputForm):
         organization: Organization,
         **kwargs: Any,
     ) -> None:
+        """Initialize the RepresentationActivationForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        organization : Organization
+            The organization that owns the requested resource.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.organization = organization
 
     def clean_confirmation_name(self) -> str:
+        """Validate and normalize the confirmation name field.
+
+        Returns
+        -------
+        str
+            The validated and normalized confirmation name.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         value = str(self.cleaned_data["confirmation_name"])
         if value != self.organization.name:
             raise forms.ValidationError(
@@ -393,6 +524,8 @@ class RepresentationActivationForm(StrictInputForm):
 
 
 class OrganizationAdminForm(forms.ModelForm):  # type: ignore[type-arg]
+    """Collect and validate organization admin input."""
+
     default_language_codes = forms.MultipleChoiceField(
         label="Default languages",
         choices=grouped_language_choices,
@@ -429,6 +562,8 @@ class OrganizationAdminForm(forms.ModelForm):  # type: ignore[type-arg]
     )
 
     class Meta:
+        """Configure Django's declarative class metadata."""
+
         model = Organization
         field_classes: ClassVar[dict[str, type[forms.Field]]] = {
             "website_url": HttpsURLField

@@ -57,7 +57,7 @@ def test_badge_name_discovers_a_semantically_labeled_snapshot_answer() -> None:
         ),
     )
     registration = cast(
-        Registration,
+        "Registration",
         SimpleNamespace(
             submission=submission,
             account=SimpleNamespace(display_name="Platform Name"),
@@ -78,7 +78,7 @@ def test_badge_name_falls_back_when_snapshot_answers_are_not_usable() -> None:
         ),
     )
     registration = cast(
-        Registration,
+        "Registration",
         SimpleNamespace(
             submission=submission,
             account=SimpleNamespace(display_name="Platform Name"),
@@ -311,10 +311,10 @@ def test_guardian_acceptance_selects_the_bounded_next_state(
 
 
 def _restriction_objects(kind: str) -> tuple[AccountRestriction, Account]:
-    account = cast(Account, SimpleNamespace(id=uuid4()))
-    actor = cast(Account, SimpleNamespace(id=uuid4()))
+    account = cast("Account", SimpleNamespace(id=uuid4()))
+    actor = cast("Account", SimpleNamespace(id=uuid4()))
     restriction = cast(
-        AccountRestriction,
+        "AccountRestriction",
         SimpleNamespace(
             organization_id=uuid4(),
             edition_id=uuid4(),

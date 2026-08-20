@@ -14,12 +14,21 @@ from maru.demo.fixture import DemoDataConflictError, seed_demo_data
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Create an idempotent two-convention synthetic dataset. "
         "Available only with local or test settings."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--password",
             default=DEMO_ACCOUNT_PASSWORD,
@@ -35,6 +44,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **options : Any
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         _ = args
         settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "")
         if settings_module not in {"maru.settings.local", "maru.settings.test"}:

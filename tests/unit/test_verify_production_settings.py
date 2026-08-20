@@ -7,16 +7,18 @@ import importlib.util
 import json
 import subprocess
 import sys
-from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Protocol, cast
-
-import pytest
+from typing import TYPE_CHECKING, Protocol, cast
 
 from maru.settings.environment import (
     invitation_public_key_configuration_is_valid,
     invitation_token_key_configuration_is_valid,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
+    import pytest
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_PATH = REPOSITORY_ROOT / "scripts" / "verify_production_settings.py"
@@ -52,7 +54,7 @@ def _load_verifier() -> _VerifierModule:
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return cast(_VerifierModule, module)
+    return cast("_VerifierModule", module)
 
 
 VERIFIER = _load_verifier()

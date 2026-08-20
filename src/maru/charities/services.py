@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -24,7 +23,6 @@ from maru.authorization.policy import (
 )
 from maru.effects.services import DomainEventRecord, publish_domain_event
 from maru.events.models import EventEdition
-from maru.identity.models import Account
 from maru.organizations.models import Organization
 from maru.workforce.models import Department
 
@@ -49,6 +47,12 @@ from .models import (
 )
 from .writer_boundary import charity_writer
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+    from datetime import datetime
+
+    from maru.identity.models import Account
+
 PARTNER_VIEW_CAPABILITY = "charities.view_partners"
 PARTNER_MANAGE_CAPABILITY = "charities.manage_partners"
 QUEUE_VIEW_CAPABILITY = "charities.view_review_queue"
@@ -60,38 +64,75 @@ SELECTION_PUBLISH_CAPABILITY = "charities.publish_selection"
 
 
 class CharityCommandError(RuntimeError):
+    """Signal charity command."""
+
     reason_code = "charity_command_failed"
 
-    def __init__(self, message: str = "The charity command could not complete."):
+    def __init__(
+        self, message: str = "The charity command could not complete."
+    ) -> None:
+        """Initialize the CharityCommandError instance.
+
+        Parameters
+        ----------
+        message : str, default='The charity command could not complete.'
+            The disclosure-safe message associated with the outcome.
+        """
         super().__init__(message)
 
 
 class CharityAuthorizationDeniedError(CharityCommandError):
+    """Signal charity authorization denied."""
+
     reason_code = "charity_authorization_denied"
 
 
 class CharityResourceUnavailableError(CharityCommandError):
+    """Signal charity resource unavailable."""
+
     reason_code = "charity_resource_unavailable"
 
 
 class CharityVersionConflictError(CharityCommandError):
+    """Signal charity version conflict."""
+
     reason_code = "charity_version_conflict"
 
 
 class CharityRetryConflictError(CharityCommandError):
+    """Signal charity retry conflict."""
+
     reason_code = "charity_retry_conflict"
 
 
 class CharityStateConflictError(CharityCommandError):
+    """Signal charity state conflict."""
+
     reason_code = "charity_state_conflict"
 
 
 class CharityIndependentApprovalError(CharityCommandError):
+    """Signal charity independent approval."""
+
     reason_code = "charity_independent_approval_required"
 
 
 @dataclass(frozen=True, slots=True)
 class CharityCommandResult:
+    """Describe charity command result.
+
+    Attributes
+    ----------
+    object_id
+        The object identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    replayed
+        The replayed retained in this immutable projection.
+    """
+
     object_id: UUID
     receipt_id: UUID
     resulting_version: int
@@ -100,6 +141,34 @@ class CharityCommandResult:
 
 @dataclass(frozen=True, slots=True)
 class CharityPartnerProfile:
+    """Describe charity partner profile.
+
+    Attributes
+    ----------
+    legal_name
+        The human-readable legal name shown to authorized readers.
+    public_name
+        The human-readable public name shown to authorized readers.
+    imprint_name
+        The human-readable imprint name shown to authorized readers.
+    short_description
+        The bounded short description retained for authorized readers.
+    description
+        The human-readable description shown to authorized readers.
+    location_name
+        The human-readable location name shown to authorized readers.
+    postal_address
+        The postal address retained in this immutable projection.
+    country_code
+        The stable country code from the relevant closed catalog.
+    website_url
+        The validated absolute HTTPS website url.
+    contact_email
+        The normalized contact email used for delivery or identity matching.
+    contact_phone
+        The normalized international contact phone, when provided.
+    """
+
     legal_name: str
     public_name: str
     imprint_name: str = ""
@@ -182,7 +251,7 @@ def _normalize_profile(profile: CharityPartnerProfile) -> dict[str, str]:
 
 def _require_actor(actor: Account) -> None:
     if actor.pk is None or not actor.is_active:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
 
 
 def _require_decision(
@@ -200,7 +269,7 @@ def _require_decision(
         at=at,
     )
     if not decision.allowed:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
     return decision
 
 
@@ -254,7 +323,7 @@ def _selection_decision(
         .first()
     )
     if row is None:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
     target = resolve_charity_selection_target(
         organization_id=organization_id,
         edition_id=edition_id,
@@ -267,7 +336,7 @@ def _selection_decision(
         at=at,
     )
     if target is None:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
     return _AuthorizedSelection(
         selection_id=row["id"],
         department_id=row["responsible_department_id"],
@@ -303,7 +372,7 @@ def _existing_receipt(
         receipt.organization_id != organization_id
         or receipt.request_digest != request_digest
     ):
-        raise CharityRetryConflictError()
+        raise CharityRetryConflictError
     return receipt
 
 
@@ -435,6 +504,39 @@ def create_charity_partner(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Create charity partner.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    slug : str
+        The stable URL slug identifying the slug.
+    profile : CharityPartnerProfile
+        The governed profile data.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    CharityAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -470,7 +572,7 @@ def create_charity_partner(
         .first()
     )
     if organization is None:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
     if receipt := _existing_receipt(
         actor=actor,
         operation=CharityCommandReceipt.Operation.PARTNER_CREATE,
@@ -533,6 +635,47 @@ def update_charity_partner(  # noqa: PLR0912
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Update charity partner.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    partner_id : UUID
+        The identifier of the partner.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    changes : Mapping[str, str]
+        The changes applied within the audited domain transition.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The persisted record after validation and transaction commit.
+
+    Raises
+    ------
+    CharityResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    CharityStateConflictError
+        If the target lifecycle state does not permit the transition.
+    CharityVersionConflictError
+        If the supplied aggregate version is stale.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -598,18 +741,18 @@ def update_charity_partner(  # noqa: PLR0912
         .first()
     )
     if partner is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     if partner.aggregate_version != expected_version:
-        raise CharityVersionConflictError()
+        raise CharityVersionConflictError
     if partner.lifecycle == CharityPartner.Lifecycle.RETIRED:
-        raise CharityStateConflictError()
+        raise CharityStateConflictError
     lifecycle = normalized.get("lifecycle")
     if (
         lifecycle is not None
         and lifecycle != partner.lifecycle
         and lifecycle not in _PARTNER_LIFECYCLE_TRANSITIONS[partner.lifecycle]
     ):
-        raise CharityStateConflictError()
+        raise CharityStateConflictError
     actual_changes = {
         field_name: value
         for field_name, value in normalized.items()
@@ -678,6 +821,55 @@ def add_charity_partner_media(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Add charity partner media.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    partner_id : UUID
+        The identifier of the partner.
+    kind : str
+        The closed kind code.
+    source_reference : str
+        The source-system reference.
+    owner_name : str
+        The human-readable owner name shown to authorized readers.
+    license_basis : str
+        The license basis applied within the audited domain transition.
+    usage_scope : str
+        The usage scope applied within the audited domain transition.
+    attribution : str
+        The attribution applied within the audited domain transition.
+    expires_at : datetime | None
+        The time at which the value expires.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+
+    Raises
+    ------
+    CharityResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    CharityStateConflictError
+        If the target lifecycle state does not permit the transition.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -752,9 +944,9 @@ def add_charity_partner_media(
         .first()
     )
     if partner is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     if partner.lifecycle == CharityPartner.Lifecycle.RETIRED:
-        raise CharityStateConflictError()
+        raise CharityStateConflictError
     with charity_writer():
         media = CharityPartnerMedia.objects.create(
             partner=partner,
@@ -872,21 +1064,21 @@ def _media_review_command(
         .first()
     )
     if media is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     if media.aggregate_version != expected_version:
-        raise CharityVersionConflictError()
+        raise CharityVersionConflictError
     if action == "approve":
         if media.review_status != CharityPartnerMedia.ReviewStatus.PENDING:
-            raise CharityStateConflictError()
+            raise CharityStateConflictError
         if media.submitted_by_id == actor.id:
-            raise CharityIndependentApprovalError()
+            raise CharityIndependentApprovalError
         if media.expires_at is not None and media.expires_at <= evaluated_at:
-            raise CharityStateConflictError()
+            raise CharityStateConflictError
         media.review_status = CharityPartnerMedia.ReviewStatus.APPROVED
         media.public_reference = public_reference
     else:
         if media.review_status != CharityPartnerMedia.ReviewStatus.APPROVED:
-            raise CharityStateConflictError()
+            raise CharityStateConflictError
         media.review_status = CharityPartnerMedia.ReviewStatus.WITHDRAWN
         media.public_reference = ""
     media.reviewed_by = actor
@@ -943,6 +1135,38 @@ def approve_charity_partner_media(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Approve charity partner media.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    partner_id : UUID
+        The identifier of the partner.
+    media_id : UUID
+        The identifier of the media.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    public_reference : str
+        The provider or source public reference retained for reconciliation.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+    """
     return _media_review_command(
         actor=actor,
         organization_id=organization_id,
@@ -973,6 +1197,36 @@ def withdraw_charity_partner_media(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Withdraw charity partner media.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    partner_id : UUID
+        The identifier of the partner.
+    media_id : UUID
+        The identifier of the media.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+    """
     return _media_review_command(
         actor=actor,
         organization_id=organization_id,
@@ -1046,6 +1300,45 @@ def propose_charity_selection(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Propose charity selection.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    partner_id : UUID
+        The identifier of the partner.
+    responsible_department_id : UUID
+        The identifier of the responsible department.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+
+    Raises
+    ------
+    CharityAuthorizationDeniedError
+        If the actor lacks the required scoped capability.
+    CharityResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    CharityStateConflictError
+        If the target lifecycle state does not permit the transition.
+    """
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
         correlation_id=correlation_id,
@@ -1078,12 +1371,12 @@ def propose_charity_selection(
         .first()
     )
     if organization is None or edition is None:
-        raise CharityAuthorizationDeniedError()
+        raise CharityAuthorizationDeniedError
     if edition.lifecycle in {
         EventEdition.Lifecycle.ARCHIVED,
         EventEdition.Lifecycle.CANCELLED,
     }:
-        raise CharityStateConflictError()
+        raise CharityStateConflictError
     if receipt := _existing_receipt(
         actor=actor,
         operation=CharityCommandReceipt.Operation.SELECTION_PROPOSE,
@@ -1115,7 +1408,7 @@ def propose_charity_selection(
         .first()
     )
     if department is None or partner is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     with charity_writer():
         selection = CharitySelection.objects.create(
             organization=organization,
@@ -1180,6 +1473,45 @@ def submit_charity_selection(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Submit charity selection.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    selection_id : UUID
+        The identifier of the selection.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+
+    Raises
+    ------
+    CharityResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    CharityStateConflictError
+        If the target lifecycle state does not permit the transition.
+    CharityVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -1223,14 +1555,14 @@ def submit_charity_selection(
         .first()
     )
     if selection is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     if selection.aggregate_version != expected_version:
-        raise CharityVersionConflictError()
+        raise CharityVersionConflictError
     if (
         selection.status != CharitySelection.Status.PROPOSED
         or selection.partner.lifecycle != CharityPartner.Lifecycle.ACTIVE
     ):
-        raise CharityStateConflictError()
+        raise CharityStateConflictError
     previous = selection.status
     selection.status = CharitySelection.Status.SUBMITTED
     selection.submitted_at = evaluated_at
@@ -1344,11 +1676,11 @@ def _review_charity_selection(
         .first()
     )
     if selection is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     if selection.aggregate_version != expected_version:
-        raise CharityVersionConflictError()
+        raise CharityVersionConflictError
     if selection.status != CharitySelection.Status.SUBMITTED:
-        raise CharityStateConflictError()
+        raise CharityStateConflictError
     previous = selection.status
     selection.status = decision_state
     selection.decided_at = evaluated_at
@@ -1408,6 +1740,36 @@ def confirm_charity_selection(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Confirm charity selection.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    selection_id : UUID
+        The identifier of the selection.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+    """
     return _review_charity_selection(
         actor=actor,
         organization_id=organization_id,
@@ -1437,6 +1799,36 @@ def reject_charity_selection(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Reject charity selection.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    selection_id : UUID
+        The identifier of the selection.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+    """
     return _review_charity_selection(
         actor=actor,
         organization_id=organization_id,
@@ -1466,6 +1858,43 @@ def add_charity_selection_private_comment(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Add charity selection private comment.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    selection_id : UUID
+        The identifier of the selection.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    private_comment : str
+        The private comment applied within the audited domain transition.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+
+    Raises
+    ------
+    CharityResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    CharityVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -1511,9 +1940,9 @@ def add_charity_selection_private_comment(
         .first()
     )
     if selection is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     if selection.aggregate_version != expected_version:
-        raise CharityVersionConflictError()
+        raise CharityVersionConflictError
     selection.aggregate_version += 1
     with charity_writer():
         selection.save()
@@ -1569,6 +1998,51 @@ def publish_charity_selection(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Publish charity selection.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    selection_id : UUID
+        The identifier of the selection.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    media_ids : Sequence[UUID]
+        The selected media identifiers.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+
+    Raises
+    ------
+    CharityIndependentApprovalError
+        If the actor is not independent from the proposal being approved.
+    CharityResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    CharityStateConflictError
+        If the target lifecycle state does not permit the transition.
+    CharityVersionConflictError
+        If the supplied aggregate version is stale.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -1630,15 +2104,15 @@ def publish_charity_selection(
         .first()
     )
     if selection is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     if selection.aggregate_version != expected_version:
-        raise CharityVersionConflictError()
+        raise CharityVersionConflictError
     if (
         selection.status != CharitySelection.Status.CONFIRMED
         or selection.publication_state != CharitySelection.PublicationState.UNPUBLISHED
         or selection.partner.lifecycle != CharityPartner.Lifecycle.ACTIVE
     ):
-        raise CharityStateConflictError()
+        raise CharityStateConflictError
     confirmation = (
         CharitySelectionTimelineEntry.objects.select_for_update()
         .filter(
@@ -1650,7 +2124,7 @@ def publish_charity_selection(
         .first()
     )
     if confirmation is None or confirmation.actor_id == actor.id:
-        raise CharityIndependentApprovalError()
+        raise CharityIndependentApprovalError
     media = tuple(
         CharityPartnerMedia.objects.select_for_update()
         .filter(
@@ -1668,7 +2142,7 @@ def publish_charity_selection(
         and (item.expires_at is None or item.expires_at > evaluated_at)
     }
     if valid_media_ids != set(normalized_media_ids):
-        raise CharityStateConflictError()
+        raise CharityStateConflictError
     previous_publication = selection.publication_state
     selection.publication_state = CharitySelection.PublicationState.PUBLISHED
     selection.publication_number += 1
@@ -1744,6 +2218,45 @@ def withdraw_charity_selection_publication(
     request_id: UUID | None = None,
     source_channel: str = "service",
 ) -> CharityCommandResult:
+    """Withdraw charity selection publication.
+
+    Parameters
+    ----------
+    actor : Account
+        The authenticated person performing the operation.
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    edition_id : UUID
+        The identifier of the event edition that scopes the operation.
+    selection_id : UUID
+        The identifier of the selection.
+    expected_version : int
+        The aggregate version required for optimistic concurrency.
+    reason : str
+        The operator-supplied reason for the operation.
+    idempotency_key : UUID
+        The stable key used to replay the request safely.
+    correlation_id : UUID
+        The correlation identifier for audit tracing.
+    request_id : UUID | None, default=None
+        The identifier of the request.
+    source_channel : str, default='service'
+        The trusted channel that initiated the operation.
+
+    Returns
+    -------
+    CharityCommandResult
+        The charity command result.
+
+    Raises
+    ------
+    CharityResourceUnavailableError
+        If the scoped target does not exist or cannot be disclosed.
+    CharityStateConflictError
+        If the target lifecycle state does not permit the transition.
+    CharityVersionConflictError
+        If the supplied aggregate version is stale.
+    """
     expected_version = _require_expected_version(expected_version)
     idempotency_key, correlation_id = _validate_command_ids(
         idempotency_key=idempotency_key,
@@ -1789,11 +2302,11 @@ def withdraw_charity_selection_publication(
         .first()
     )
     if selection is None:
-        raise CharityResourceUnavailableError()
+        raise CharityResourceUnavailableError
     if selection.aggregate_version != expected_version:
-        raise CharityVersionConflictError()
+        raise CharityVersionConflictError
     if selection.publication_state != CharitySelection.PublicationState.PUBLISHED:
-        raise CharityStateConflictError()
+        raise CharityStateConflictError
     previous = selection.publication_state
     selection.publication_state = CharitySelection.PublicationState.UNPUBLISHED
     selection.published_at = None

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from django import forms
 from django.contrib.auth.password_validation import validate_password
@@ -39,6 +38,9 @@ from maru.registration.profile_policy import (
     MAX_FURSUIT_PHOTO_BYTES,
 )
 
+if TYPE_CHECKING:
+    from datetime import date
+
 TELEGRAM_VALIDATOR = RegexValidator(
     regex=r"^@?[A-Za-z0-9_]{5,32}$",
     message="Use a Telegram username with 5-32 letters, numbers, or underscores.",
@@ -70,6 +72,13 @@ class PublicAccountBootstrapForm(forms.Form):
     )
 
     def clean(self) -> dict[str, object]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         password = str(cleaned.get("password1", ""))
         if password and password != cleaned.get("password2"):
@@ -80,6 +89,8 @@ class PublicAccountBootstrapForm(forms.Form):
 
 
 class GuardianConsentForm(forms.Form):
+    """Collect and validate guardian consent input."""
+
     token = forms.CharField(widget=forms.HiddenInput, max_length=200)
     guardian_name = forms.CharField(
         label="Guardian full name",
@@ -285,6 +296,17 @@ class AttendeeProfileForm(forms.Form):
         configuration: RegistrationConfiguration,
         **kwargs: Any,
     ) -> None:
+        """Initialize the AttendeeProfileForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        configuration : RegistrationConfiguration
+            The versioned configuration governing validation and behavior.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, **kwargs)
         self.configuration = configuration
         available_phone_regions = {choice[0] for choice in phone_region_choices()}
@@ -312,16 +334,49 @@ class AttendeeProfileForm(forms.Form):
             ].initial = policy.guardian_notice_version
 
     def clean_country_code(self) -> str:
+        """Validate and normalize the country code field.
+
+        Returns
+        -------
+        str
+            The validated and normalized country code.
+        """
         return str(self.cleaned_data["country_code"]).upper()
 
     def clean_telegram_handle(self) -> str:
+        """Validate and normalize the telegram handle field.
+
+        Returns
+        -------
+        str
+            The validated and normalized telegram handle.
+        """
         return str(self.cleaned_data.get("telegram_handle", "")).lstrip("@")
 
     def clean_directory_country_code(self) -> str:
+        """Validate and normalize the directory country code field.
+
+        Returns
+        -------
+        str
+            The validated and normalized directory country code.
+        """
         return str(self.cleaned_data.get("directory_country_code", "")).upper()
 
     def clean_date_of_birth(self) -> date:
-        birth_date = cast(date, self.cleaned_data["date_of_birth"])
+        """Validate and normalize the date of birth field.
+
+        Returns
+        -------
+        date
+            The validated and normalized date of birth.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
+        birth_date = cast("date", self.cleaned_data["date_of_birth"])
         relevant_date = self.configuration.edition.starts_on
         age = (
             relevant_date.year
@@ -344,9 +399,28 @@ class AttendeeProfileForm(forms.Form):
         return birth_date
 
     def clean_profile_photo(self) -> Any:
+        """Validate and normalize the profile photo field.
+
+        Returns
+        -------
+        Any
+            The validated and normalized profile photo.
+        """
         return _validate_profile_image(self.cleaned_data.get("profile_photo"))
 
     def clean_spoken_language_codes(self) -> list[str]:
+        """Validate and normalize the spoken language codes field.
+
+        Returns
+        -------
+        list[str]
+            The matching clean spoken language codes records in deterministic order.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         codes = [
             str(code).lower()
             for code in self.cleaned_data.get(
@@ -361,6 +435,13 @@ class AttendeeProfileForm(forms.Form):
         return codes
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         for region_field_name, number_field_name in (
             ("phone_region_code", "phone_number"),
@@ -401,6 +482,8 @@ class AttendeeProfileForm(forms.Form):
 
 
 class AttendeeFursuitForm(forms.Form):
+    """Collect and validate attendee fursuit input."""
+
     fursuit_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
     reuse_from_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
     name = forms.CharField(label="Fursuit name", max_length=120, required=False)
@@ -422,9 +505,23 @@ class AttendeeFursuitForm(forms.Form):
     )
 
     def clean_photo(self) -> Any:
+        """Validate and normalize the photo field.
+
+        Returns
+        -------
+        Any
+            The validated and normalized photo.
+        """
         return _validate_profile_image(self.cleaned_data.get("photo"))
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         if cleaned.get("remove_photo"):
             cleaned["reuse_from_id"] = None
@@ -440,16 +537,36 @@ class AttendeeFursuitForm(forms.Form):
 
 
 class BaseAttendeeFursuitFormSet(forms.BaseFormSet):  # type: ignore[type-arg]
+    """Describe base attendee fursuit form set."""
+
     def __init__(
         self,
         *args: Any,
         brings_fursuits: bool,
         **kwargs: Any,
     ) -> None:
+        """Initialize the BaseAttendeeFursuitFormSet instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        brings_fursuits : bool
+            The brings fursuits used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.brings_fursuits = brings_fursuits
         super().__init__(*args, **kwargs)
 
     def clean(self) -> None:
+        """Validate and normalize the record.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         if any(self.errors):
             return
         active = [
@@ -484,8 +601,24 @@ def attendee_fursuit_formset(
     brings_fursuits: bool,
     **kwargs: Any,
 ) -> BaseAttendeeFursuitFormSet:
+    """Return attendee fursuit formset.
+
+    Parameters
+    ----------
+    *args : Any
+        Positional arguments forwarded to the framework implementation.
+    brings_fursuits : bool
+        The brings fursuits used to configure and validate this form.
+    **kwargs : Any
+        Keyword arguments forwarded to the framework implementation.
+
+    Returns
+    -------
+    BaseAttendeeFursuitFormSet
+        The configured attendee fursuit formset.
+    """
     return cast(
-        BaseAttendeeFursuitFormSet,
+        "BaseAttendeeFursuitFormSet",
         _AttendeeFursuitFormSet(
             *args,
             brings_fursuits=brings_fursuits,  # type: ignore[call-arg]
@@ -495,6 +628,8 @@ def attendee_fursuit_formset(
 
 
 class PublicRegistrationForm(AttendeeProfileForm):
+    """Collect and validate public registration input."""
+
     email = forms.EmailField(
         max_length=254,
         help_text="Used only for your Maru login and registration service.",
@@ -529,6 +664,23 @@ class PublicRegistrationForm(AttendeeProfileForm):
         include_staff_questions: bool = False,
         **kwargs: Any,
     ) -> None:
+        """Initialize the PublicRegistrationForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        configuration : RegistrationConfiguration
+            The versioned configuration governing validation and behavior.
+        include_account_fields : bool
+            Whether to include account fields.
+        account : Account | None, default=None
+            The platform account whose state or access is being evaluated.
+        include_staff_questions : bool, default=False
+            Whether to include staff questions.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(*args, configuration=configuration, **kwargs)
         questions = configuration.questions.select_related("section")
         if not include_staff_questions:
@@ -573,6 +725,18 @@ class PublicRegistrationForm(AttendeeProfileForm):
 
     @staticmethod
     def question_field_name(question: RegistrationQuestion) -> str:
+        """Return question field name.
+
+        Parameters
+        ----------
+        question : RegistrationQuestion
+            The question used to configure and validate this form.
+
+        Returns
+        -------
+        str
+            The normalized text for question field name.
+        """
         return f"question__{question.key}"
 
     @staticmethod
@@ -614,6 +778,18 @@ class PublicRegistrationForm(AttendeeProfileForm):
         return forms.CharField(max_length=500, **common)
 
     def clean_email(self) -> str:
+        """Validate and normalize the email field.
+
+        Returns
+        -------
+        str
+            The validated and normalized email.
+
+        Raises
+        ------
+        ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         email = Account.objects.normalize_login_email(self.cleaned_data["email"])
         if Account.objects.filter(email__iexact=email).exists():
             raise ValidationError(
@@ -622,6 +798,13 @@ class PublicRegistrationForm(AttendeeProfileForm):
         return email
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         password1 = cleaned.get("password1")
         password2 = cleaned.get("password2")
@@ -640,6 +823,13 @@ class PublicRegistrationForm(AttendeeProfileForm):
         return cleaned
 
     def registration_answers(self) -> dict[str, object]:
+        """Return registration answers.
+
+        Returns
+        -------
+        dict[str, object]
+            A mapping containing the resolved registration answers data.
+        """
         answers: dict[str, object] = {}
         for question in self.dynamic_questions:
             value = self.cleaned_data.get(self.question_field_name(question))
@@ -695,6 +885,19 @@ class StaffAssistedRegistrationForm(PublicRegistrationForm):
         account: Account | None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the StaffAssistedRegistrationForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        configuration : RegistrationConfiguration
+            The versioned configuration governing validation and behavior.
+        account : Account | None
+            The platform account whose state or access is being evaluated.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         super().__init__(
             *args,
             configuration=configuration,
@@ -723,11 +926,25 @@ class StaffAssistedRegistrationForm(PublicRegistrationForm):
         product_field.queryset = products.filter(id__in=selectable_ids)
 
     def clean_account_email(self) -> str:
+        """Validate and normalize the account email field.
+
+        Returns
+        -------
+        str
+            The validated and normalized account email.
+        """
         return Account.objects.normalize_login_email(
             str(self.cleaned_data["account_email"])
         )
 
     def clean(self) -> dict[str, Any]:
+        """Validate and normalize the record.
+
+        Returns
+        -------
+        dict[str, Any]
+            A mapping containing the resolved clean data.
+        """
         cleaned = super().clean() or {}
         if self.account is not None:
             if not self.account.is_active:

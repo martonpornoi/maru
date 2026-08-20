@@ -12,12 +12,21 @@ from maru.identity.invitation_readiness import (
 
 
 class Command(BaseCommand):
+    """Execute the Django management command."""
+
     help = (
         "Inspect Page 10's additive database contract and the still-separate "
         "production cutover gates. The report contains no account data."
     )
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Add arguments.
+
+        Parameters
+        ----------
+        parser : CommandParser
+            The parser that converts untrusted input into canonical domain data.
+        """
         parser.add_argument(
             "--no-fail",
             action="store_true",
@@ -25,6 +34,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: object, **options: object) -> None:
+        """Execute the management command.
+
+        Parameters
+        ----------
+        *args : object
+            Positional arguments forwarded to the framework implementation.
+        **options : object
+            Management-command options supplied by Django.
+
+        Raises
+        ------
+        CommandError
+            If the command cannot complete safely with the supplied state.
+        """
         del args
         report = build_platform_invitation_readiness_report()
         self.stdout.write(json.dumps(report, sort_keys=True, separators=(",", ":")))

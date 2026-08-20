@@ -4,6 +4,7 @@ import json
 import smtplib
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
+from typing import Self
 from uuid import UUID, uuid4
 
 import pytest
@@ -68,7 +69,7 @@ def test_database_time_boundary_rejects_missing_or_untyped_evidence(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class FakeCursor:
-        def __enter__(self) -> FakeCursor:
+        def __enter__(self) -> Self:
             return self
 
         def __exit__(self, *_args: object) -> None:

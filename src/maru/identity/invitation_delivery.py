@@ -50,24 +50,58 @@ SMTP_PERMANENT_MAX: Final = 599
 
 
 class InvitationDeliveryError(RuntimeError):
+    """Signal invitation delivery."""
+
     reason_code = "invitation_delivery_failed"
 
-    def __init__(self, message: str = "Invitation delivery could not complete."):
+    def __init__(
+        self, message: str = "Invitation delivery could not complete."
+    ) -> None:
+        """Initialize the InvitationDeliveryError instance.
+
+        Parameters
+        ----------
+        message : str, default='Invitation delivery could not complete.'
+            The disclosure-safe message associated with the outcome.
+        """
         super().__init__(message)
 
 
 class InvitationDeliveryDependencyError(InvitationDeliveryError):
+    """Signal invitation delivery dependency."""
+
     reason_code = "invitation_delivery_dependency_unavailable"
 
 
 @dataclass(frozen=True, slots=True, repr=False)
 class InvitationDeliveryMessage:
+    """Describe invitation delivery message.
+
+    Attributes
+    ----------
+    to_email
+        The normalized to email used for delivery or identity matching.
+    subject
+        The tenant-scoped person or resource governed by the operation.
+    body
+        The body retained in this immutable projection.
+    headers
+        The headers mapping to validate or transform.
+    """
+
     to_email: str = field(repr=False)
     subject: str
     body: str = field(repr=False)
     headers: dict[str, str] = field(repr=False)
 
     def __repr__(self) -> str:
+        """Return a diagnostic InvitationDeliveryMessage representation.
+
+        Returns
+        -------
+        str
+            A diagnostic representation of the value.
+        """
         return "InvitationDeliveryMessage([redacted])"
 
 
@@ -100,6 +134,16 @@ class _DeliveryOutcome:
 
 @dataclass(frozen=True, slots=True)
 class InvitationDeliveryBacklogSnapshot:
+    """Describe invitation delivery backlog snapshot.
+
+    Attributes
+    ----------
+    eligible_count
+        The bounded number of eligible records.
+    oldest_eligible_at
+        The timezone-aware timestamp for oldest eligible.
+    """
+
     eligible_count: int
     oldest_eligible_at: datetime | None
 
@@ -132,8 +176,19 @@ def platform_identity_delivery_backlog_snapshot(
     *,
     at: datetime | None = None,
 ) -> InvitationDeliveryBacklogSnapshot:
-    """Return global count/time-only evidence, never recipient values."""
+    """Return global count/time-only evidence, never recipient values.
 
+    Parameters
+    ----------
+    at : datetime | None, default=None
+        The timezone-aware instant at which to evaluate the decision.
+
+    Returns
+    -------
+    InvitationDeliveryBacklogSnapshot
+        The InvitationDeliveryBacklogSnapshot produced by platform identity
+        delivery backlog snapshot.
+    """
     observed_at = at or timezone.now()
     eligible = _eligible_delivery_queryset(at=observed_at)
     oldest_available = eligible.filter(
@@ -839,8 +894,29 @@ def deliver_platform_identity_invitation(
     adapter: DeliveryAdapter | None = None,
     correlation_id: UUID | None = None,
 ) -> str:
-    """Lease, decrypt, deliver, and record one durable invitation message."""
+    """Lease, decrypt, deliver, and record one durable invitation message.
 
+    Parameters
+    ----------
+    delivery_id : UUID
+        The delivery identifier within the requested scope.
+    private_keyring : InvitationPrivateKeyring | None, default=None
+        The configured private signing keys indexed by key identifier.
+    adapter : DeliveryAdapter | None, default=None
+        The external-system adapter isolated behind this boundary.
+    correlation_id : UUID | None, default=None
+        The request correlation identifier used for audit tracing.
+
+    Returns
+    -------
+    str
+        The normalized text for deliver platform identity invitation.
+
+    Raises
+    ------
+    InvitationDeliveryDependencyError
+        If the operation encounters a invitation delivery dependency condition.
+    """
     correlation = correlation_id or uuid4()
     try:
         keyring = private_keyring or worker_invitation_private_keyring()
@@ -872,6 +948,29 @@ def deliver_pending_platform_identity_invitations(
     private_keyring: InvitationPrivateKeyring | None = None,
     adapter: DeliveryAdapter | None = None,
 ) -> tuple[int, int]:
+    """Return deliver pending platform identity invitations.
+
+    Parameters
+    ----------
+    limit : int, default=100
+        The maximum number of records to process.
+    private_keyring : InvitationPrivateKeyring | None, default=None
+        The configured private signing keys indexed by key identifier.
+    adapter : DeliveryAdapter | None, default=None
+        The external-system adapter isolated behind this boundary.
+
+    Returns
+    -------
+    tuple[int, int]
+        The delivery attempts for pending platform identity invitations.
+
+    Raises
+    ------
+    InvitationDeliveryDependencyError
+        If the operation encounters a invitation delivery dependency condition.
+    ValueError
+        If the supplied value cannot satisfy the documented contract.
+    """
     if type(limit) is not int or not 1 <= limit <= MAX_DELIVERY_BATCH:
         raise ValueError("Invitation delivery limit must be between 1 and 1000.")
     try:

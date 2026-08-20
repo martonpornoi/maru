@@ -60,6 +60,7 @@ class InvitationCryptoError(RuntimeError):
     _safe_message = "Invitation payload cryptography failed."
 
     def __init__(self) -> None:
+        """Initialize the InvitationCryptoError instance."""
         super().__init__(self._safe_message)
 
 
@@ -190,12 +191,21 @@ def _oaep_padding() -> padding.OAEP:
 
 @dataclass(frozen=True, slots=True, repr=False)
 class InvitationEncryptionKey:
-    """The active public key which a request process may safely hold."""
+    """The active public key which a request process may safely hold.
+
+    Attributes
+    ----------
+    encryption_key_id
+        The encryption key identifier within the requested scope.
+    public_key
+        The stable public key used to authenticate or deduplicate the operation.
+    """
 
     encryption_key_id: str
     public_key: rsa.RSAPublicKey
 
     def __post_init__(self) -> None:
+        """Implement `__post_init__` for InvitationEncryptionKey."""
         _validate_key_id(self.encryption_key_id)
         _validate_public_key(self.public_key)
 
@@ -206,18 +216,56 @@ class InvitationEncryptionKey:
         encryption_key_id: str,
         public_key_pem: bytes,
     ) -> InvitationEncryptionKey:
+        """Return from pem.
+
+        Parameters
+        ----------
+        encryption_key_id : str
+            The encryption key identifier within the requested scope.
+        public_key_pem : bytes
+            The PEM-encoded public key key material to validate.
+
+        Returns
+        -------
+        InvitationEncryptionKey
+            The resolved InvitationEncryptionKey for from pem.
+        """
         return cls(
             encryption_key_id=encryption_key_id,
             public_key=load_invitation_public_key(public_key_pem),
         )
 
     def __repr__(self) -> str:
+        """Return a diagnostic InvitationEncryptionKey representation.
+
+        Returns
+        -------
+        str
+            A diagnostic representation of the value.
+        """
         return "InvitationEncryptionKey([redacted])"
 
 
 @dataclass(frozen=True, slots=True, repr=False)
 class EncryptedInvitationPayload:
-    """Immutable, separately persistable invitation delivery envelope."""
+    """Immutable, separately persistable invitation delivery envelope.
+
+    Attributes
+    ----------
+    encryption_algorithm
+        The encryption algorithm retained in this immutable projection.
+    encryption_key_id
+        The encryption key identifier within the requested scope.
+    encrypted_payload
+        The encrypted payload retained in this immutable projection.
+    wrapped_data_key
+        The stable wrapped data key used to authenticate or deduplicate the
+        operation.
+    payload_nonce
+        The payload nonce retained in this immutable projection.
+    payload_aad_digest
+        The canonical digest used to verify payload aad.
+    """
 
     encryption_algorithm: str
     encryption_key_id: str
@@ -227,6 +275,13 @@ class EncryptedInvitationPayload:
     payload_aad_digest: str
 
     def __post_init__(self) -> None:
+        """Implement `__post_init__` for EncryptedInvitationPayload.
+
+        Raises
+        ------
+        InvitationCryptoPayloadError
+            If the requested operation violates this domain contract.
+        """
         if self.encryption_algorithm != ENCRYPTION_ALGORITHM:
             raise InvitationCryptoPayloadError
         _validate_key_id(self.encryption_key_id)
@@ -256,6 +311,13 @@ class EncryptedInvitationPayload:
             raise InvitationCryptoPayloadError
 
     def __repr__(self) -> str:
+        """Return a diagnostic EncryptedInvitationPayload representation.
+
+        Returns
+        -------
+        str
+            A diagnostic representation of the value.
+        """
         return "EncryptedInvitationPayload([redacted])"
 
 
@@ -265,6 +327,18 @@ class InvitationPrivateKeyring:
     __slots__ = ("_private_keys",)
 
     def __init__(self, private_keys: Mapping[str, rsa.RSAPrivateKey]) -> None:
+        """Initialize the InvitationPrivateKeyring instance.
+
+        Parameters
+        ----------
+        private_keys : Mapping[str, rsa.RSAPrivateKey]
+            The private keys mapping to validate or transform.
+
+        Raises
+        ------
+        InvitationCryptoConfigurationError
+            If the requested operation violates this domain contract.
+        """
         if (
             not isinstance(private_keys, Mapping)
             or not 1 <= len(private_keys) <= MAX_PRIVATE_KEYRING_KEYS
@@ -284,6 +358,25 @@ class InvitationPrivateKeyring:
         *,
         passwords: Mapping[str, bytes | None] | None = None,
     ) -> InvitationPrivateKeyring:
+        """Return from pem.
+
+        Parameters
+        ----------
+        private_key_pems : Mapping[str, bytes]
+            The private key pems mapping to validate or transform.
+        passwords : Mapping[str, bytes | None] | None, default=None
+            The passwords mapping to validate or transform.
+
+        Returns
+        -------
+        InvitationPrivateKeyring
+            The resolved InvitationPrivateKeyring for from pem.
+
+        Raises
+        ------
+        InvitationCryptoConfigurationError
+            If the operation encounters a invitation crypto configuration condition.
+        """
         if (
             not isinstance(private_key_pems, Mapping)
             or not 1 <= len(private_key_pems) <= MAX_PRIVATE_KEYRING_KEYS
@@ -306,15 +399,42 @@ class InvitationPrivateKeyring:
         }
         return cls(loaded)
 
-    def _resolve(self, encryption_key_id: str) -> rsa.RSAPrivateKey:
+    def resolve(self, encryption_key_id: str) -> rsa.RSAPrivateKey:
+        """Resolve a private key by its bounded key identifier.
+
+        Parameters
+        ----------
+        encryption_key_id : str
+            The identifier embedded in the encrypted invitation envelope.
+
+        Returns
+        -------
+        rsa.RSAPrivateKey
+            The matching private key.
+
+        Raises
+        ------
+        InvitationDecryptionKeyUnavailableError
+            If the keyring does not contain the requested identifier.
+        """
         try:
             return self._private_keys[encryption_key_id]
         except KeyError:
             raise InvitationDecryptionKeyUnavailableError from None
 
     def contains(self, encryption_key_id: object) -> bool:
-        """Return whether one validated rotation key is available."""
+        """Return whether one validated rotation key is available.
 
+        Parameters
+        ----------
+        encryption_key_id : object
+            The encryption key identifier within the requested scope.
+
+        Returns
+        -------
+        bool
+            `True` when one validated rotation key is available; otherwise `False`.
+        """
         try:
             validated_key_id = _validate_key_id(encryption_key_id)
         except InvitationCryptoConfigurationError:
@@ -323,13 +443,30 @@ class InvitationPrivateKeyring:
 
     @property
     def key_ids(self) -> tuple[str, ...]:
-        """Expose only bounded identifiers for worker-side coverage checks."""
+        """Expose only bounded identifiers for worker-side coverage checks.
 
+        Returns
+        -------
+        tuple[str, ...]
+            The matching key ids records in deterministic order.
+        """
         return tuple(self._private_keys)
 
     def matches(self, encryption_key: object) -> bool:
-        """Confirm that the active public key has its private counterpart."""
+        """Confirm that the active public key has its private counterpart.
 
+        Parameters
+        ----------
+        encryption_key : object
+            The stable encryption key used to authenticate or deduplicate the
+            operation.
+
+        Returns
+        -------
+        bool
+            `True` when Confirm that the active public key has its private
+            counterpart; otherwise `False`.
+        """
         if not isinstance(encryption_key, InvitationEncryptionKey):
             return False
         try:
@@ -342,12 +479,34 @@ class InvitationPrivateKeyring:
         )
 
     def __repr__(self) -> str:
+        """Return a diagnostic InvitationPrivateKeyring representation.
+
+        Returns
+        -------
+        str
+            A diagnostic representation of the value.
+        """
         return f"InvitationPrivateKeyring(key_count={len(self._private_keys)})"
 
 
 def load_invitation_public_key(public_key_pem: bytes) -> rsa.RSAPublicKey:
-    """Load one bounded RSA public key without accepting private-key PEM."""
+    """Load one bounded RSA public key without accepting private-key PEM.
 
+    Parameters
+    ----------
+    public_key_pem : bytes
+        The PEM-encoded public key key material to validate.
+
+    Returns
+    -------
+    rsa.RSAPublicKey
+        The resolved RSAPublicKey for the requested scope.
+
+    Raises
+    ------
+    InvitationCryptoConfigurationError
+        If the operation encounters a invitation crypto configuration condition.
+    """
     pem = _validate_key_material(public_key_pem)
     try:
         public_key = serialization.load_pem_public_key(pem)
@@ -361,8 +520,25 @@ def load_invitation_private_key(
     *,
     password: bytes | None = None,
 ) -> rsa.RSAPrivateKey:
-    """Explicitly load one worker-side RSA private key."""
+    """Explicitly load one worker-side RSA private key.
 
+    Parameters
+    ----------
+    private_key_pem : bytes
+        The PEM-encoded private key key material to validate.
+    password : bytes | None, default=None
+        The plaintext secret to verify without logging or retaining it.
+
+    Returns
+    -------
+    rsa.RSAPrivateKey
+        The resolved RSAPrivateKey for the requested scope.
+
+    Raises
+    ------
+    InvitationCryptoConfigurationError
+        If the operation encounters a invitation crypto configuration condition.
+    """
     pem = _validate_key_material(private_key_pem)
     if password is not None and (
         not isinstance(password, bytes)
@@ -391,8 +567,29 @@ def encrypt_invitation_payload(
     aad: bytes,
     active_key: InvitationEncryptionKey,
 ) -> EncryptedInvitationPayload:
-    """Encrypt a bounded payload using a public-key-only request adapter."""
+    """Encrypt a bounded payload using a public-key-only request adapter.
 
+    Parameters
+    ----------
+    payload : bytes
+        The untrusted payload to validate before domain use.
+    aad : bytes
+        The aad evaluated while encrypt invitation payload.
+    active_key : InvitationEncryptionKey
+        The stable active key used to authenticate or deduplicate the operation.
+
+    Returns
+    -------
+    EncryptedInvitationPayload
+        The resolved EncryptedInvitationPayload for encrypt invitation payload.
+
+    Raises
+    ------
+    InvitationCryptoConfigurationError
+        If the operation encounters a invitation crypto configuration condition.
+    InvitationPayloadEncryptionError
+        If the operation encounters a invitation payload encryption condition.
+    """
     if not isinstance(active_key, InvitationEncryptionKey):
         raise InvitationCryptoConfigurationError
     plaintext = _validate_bounded_bytes(
@@ -435,8 +632,27 @@ def decrypt_invitation_payload(
     expected_aad: bytes,
     private_keyring: InvitationPrivateKeyring,
 ) -> bytes:
-    """Decrypt in a worker after authenticating the caller-supplied AAD."""
+    """Decrypt in a worker after authenticating the caller-supplied AAD.
 
+    Parameters
+    ----------
+    envelope : EncryptedInvitationPayload
+        The envelope evaluated while decrypt invitation payload.
+    expected_aad : bytes
+        The expected aad evaluated while decrypt invitation payload.
+    private_keyring : InvitationPrivateKeyring
+        The configured private signing keys indexed by key identifier.
+
+    Returns
+    -------
+    bytes
+        The canonical byte representation for decrypt invitation payload.
+
+    Raises
+    ------
+    InvitationPayloadDecryptionError
+        If the operation encounters a invitation payload decryption condition.
+    """
     if not isinstance(envelope, EncryptedInvitationPayload) or not isinstance(
         private_keyring, InvitationPrivateKeyring
     ):
@@ -456,7 +672,7 @@ def decrypt_invitation_payload(
     ):
         raise InvitationPayloadDecryptionError
 
-    private_key = private_keyring._resolve(envelope.encryption_key_id)
+    private_key = private_keyring.resolve(envelope.encryption_key_id)
     try:
         wrapped_data_key = _base64url_decode(
             envelope.wrapped_data_key,

@@ -6,6 +6,7 @@ from scripts import run_ci_test_shard
 from scripts.run_ci_test_shard import (
     WeightedTestFile,
     discover_integration_tests,
+    load_timing_weights,
     partition_test_files,
     validate_shard_inputs,
     weigh_test_files,
@@ -93,13 +94,27 @@ def test_discovery_matches_and_partitions_the_current_repository_inventory() -> 
     assert discovered
     assert discovered == expected
     weighted_files = weigh_test_files(discovered)
-    assert all(
-        test_file.weight == max(test_file.path.stat().st_size, 1)
-        for test_file in weighted_files
-    )
+    assert all(test_file.weight > 0 for test_file in weighted_files)
     assigned = _flatten(partition_test_files(weighted_files, shard_count=8))
     assert Counter(assigned) == Counter(discovered)
     assert all(count == 1 for count in Counter(assigned).values())
+
+
+def test_timing_weights_use_milliseconds_and_reject_invalid_maps(
+    tmp_path: Path,
+) -> None:
+    timing_file = tmp_path / "timings.json"
+    timing_file.write_text(
+        '{"tests/integration/test_alpha.py": 1.234}\n',
+        encoding="utf-8",
+    )
+
+    assert load_timing_weights(timing_file) == {"tests/integration/test_alpha.py": 1234}
+    assert load_timing_weights(tmp_path / "missing.json") == {}
+
+    timing_file.write_text("[]\n", encoding="utf-8")
+    with pytest.raises(TypeError, match="JSON object"):
+        load_timing_weights(timing_file)
 
 
 def test_main_invokes_pytest_in_process_with_only_the_selected_whole_files(

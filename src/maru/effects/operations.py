@@ -12,6 +12,26 @@ from maru.effects.models import EffectAttempt, OutboxMessage
 
 @dataclass(frozen=True, slots=True)
 class OutboxHealthSnapshot:
+    """Describe outbox health snapshot.
+
+    Attributes
+    ----------
+    organization_id
+        The organization identifier that owns the requested resource.
+    workload_pool
+        The workload pool retained in this immutable projection.
+    counts
+        The counts retained in this immutable projection.
+    attempt_counts
+        The attempt counts retained in this immutable projection.
+    replay_count
+        The bounded number of replay records.
+    oldest_ready_age_seconds
+        The oldest ready age seconds retained in this immutable projection.
+    oldest_expired_lease_age_seconds
+        The oldest expired lease age seconds retained in this immutable projection.
+    """
+
     organization_id: UUID
     workload_pool: str
     counts: tuple[tuple[str, int], ...]
@@ -33,6 +53,22 @@ def outbox_health_snapshot(
     workload_pool: str,
     now: datetime | None = None,
 ) -> OutboxHealthSnapshot:
+    """Return outbox health snapshot.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The identifier of the organization that owns the operation.
+    workload_pool : str
+        The named worker pool that owns the work.
+    now : datetime | None, default=None
+        The effective time for the operation.
+
+    Returns
+    -------
+    OutboxHealthSnapshot
+        The OutboxHealthSnapshot established after outbox health snapshot completes.
+    """
     observed_at = now or timezone.now()
     messages = OutboxMessage.objects.filter(
         organization_id=organization_id,
@@ -100,6 +136,18 @@ def _metric_value(value: int | None) -> str:
 
 
 def render_prometheus(snapshot: OutboxHealthSnapshot) -> str:
+    """Render prometheus.
+
+    Parameters
+    ----------
+    snapshot : OutboxHealthSnapshot
+        The snapshot evaluated while render prometheus.
+
+    Returns
+    -------
+    str
+        The rendered prometheus text.
+    """
     labels = (
         f'organization_id="{snapshot.organization_id}",'
         f'workload_pool="{snapshot.workload_pool}"'

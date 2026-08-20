@@ -74,6 +74,42 @@ CONVENTION_SERIES_PROFILE_FIELDS = (
 
 @dataclass(frozen=True, slots=True)
 class OrganizationCreationDetails:
+    """Describe organization creation details.
+
+    Attributes
+    ----------
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    legal_name
+        The human-readable legal name shown to authorized readers.
+    legal_address
+        The legal address retained in this immutable projection.
+    legal_representative
+        The legal representative retained in this immutable projection.
+    registration_authority
+        The registration authority retained in this immutable projection.
+    registration_identifier
+        The registration identifier retained in this immutable projection.
+    tax_identifier
+        The tax identifier retained in this immutable projection.
+    imprint_text
+        The imprint text retained in this immutable projection.
+    website_url
+        The validated absolute HTTPS website url.
+    contact_email
+        The normalized contact email used for delivery or identity matching.
+    contact_phone
+        The normalized international contact phone, when provided.
+    country_code
+        The stable country code from the relevant closed catalog.
+    default_language_codes
+        The default language codes retained in this immutable projection.
+    default_time_zone
+        The IANA time-zone name used for localization and validation.
+    """
+
     name: str
     description: str = ""
     legal_name: str = ""
@@ -93,6 +129,22 @@ class OrganizationCreationDetails:
 
 @dataclass(frozen=True, slots=True)
 class ConventionSeriesCreationDetails:
+    """Describe convention series creation details.
+
+    Attributes
+    ----------
+    name
+        The human-readable name to normalize or persist.
+    description
+        The human-readable description shown to authorized readers.
+    website_url
+        The validated absolute HTTPS website url.
+    contact_email
+        The normalized contact email used for delivery or identity matching.
+    is_active
+        Whether to is active.
+    """
+
     name: str
     description: str = ""
     website_url: str = ""
@@ -102,18 +154,48 @@ class ConventionSeriesCreationDetails:
 
 @dataclass(frozen=True, slots=True)
 class OrganizationUpdateResult:
+    """Describe organization update result.
+
+    Attributes
+    ----------
+    organization
+        The organization that owns the requested resource.
+    changed_fields
+        The canonical field names changed by the operation.
+    """
+
     organization: Organization
     changed_fields: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class ConventionSeriesUpdateResult:
+    """Describe convention series update result.
+
+    Attributes
+    ----------
+    series
+        The series retained in this immutable projection.
+    changed_fields
+        The canonical field names changed by the operation.
+    """
+
     series: ConventionSeries
     changed_fields: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class DeletedOrganization:
+    """Describe deleted organization.
+
+    Attributes
+    ----------
+    id
+        The identifier of the target record within its authorized scope.
+    name
+        The human-readable name to normalize or persist.
+    """
+
     id: UUID
     name: str
 
@@ -292,8 +374,31 @@ def create_convention_series(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> ConventionSeries:
-    """Create one recurring brand beneath a non-closed organization."""
+    """Create one recurring brand beneath a non-closed organization.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    details : ConventionSeriesCreationDetails
+        The structured, disclosure-safe details recorded with the outcome.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    ConventionSeries
+        The newly created ConventionSeries.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     decision = _require_organization_capability(
         actor=actor,
         organization_id=organization_id,
@@ -366,8 +471,36 @@ def update_convention_series(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> ConventionSeriesUpdateResult:
-    """Update one scoped recurring brand without changing ownership or slug."""
+    """Update one scoped recurring brand without changing ownership or slug.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    series_id : UUID
+        The convention-series identifier within the organization scope.
+    expected_profile_version : int
+        The expected expected profile version used to reject stale updates.
+    details : ConventionSeriesCreationDetails
+        The structured, disclosure-safe details recorded with the outcome.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    ConventionSeriesUpdateResult
+        The updated ConventionSeriesUpdateResult after the transition is
+        committed.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     decision = _require_organization_capability(
         actor=actor,
         organization_id=organization_id,
@@ -476,8 +609,29 @@ def create_draft_organization(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> Organization:
-    """Create one draft tenant without creating convention relationships."""
+    """Create one draft tenant without creating convention relationships.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    details : OrganizationCreationDetails
+        The structured, disclosure-safe details recorded with the outcome.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    Organization
+        The newly created Organization.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    """
     if not actor.is_active or not actor.is_platform_administrator:
         raise PermissionDenied("Platform administration is required.")
 
@@ -539,8 +693,26 @@ def update_organization_profile(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> OrganizationUpdateResult:
-    """Update code-independent profile fields without changing tenant identity."""
+    """Update code-independent profile fields without changing tenant identity.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    details : OrganizationCreationDetails
+        The structured, disclosure-safe details recorded with the outcome.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    OrganizationUpdateResult
+        The updated OrganizationUpdateResult after the transition is committed.
+    """
     decision = _require_organization_capability(
         actor=actor,
         organization_id=organization_id,
@@ -604,8 +776,35 @@ def delete_empty_draft_organization(
     correlation_id: UUID,
     source_channel: str = "service",
 ) -> DeletedOrganization:
-    """Delete one unused Draft; protected domain history always wins."""
+    """Delete one unused Draft; protected domain history always wins.
 
+    Parameters
+    ----------
+    actor : Account
+        The authenticated account authorizing the operation.
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+    confirmation_name : str
+        The human-readable confirmation name shown to authorized readers.
+    acknowledged : bool
+        The acknowledged applied within the audited domain transition.
+    correlation_id : UUID
+        The request correlation identifier used for audit tracing.
+    source_channel : str, default='service'
+        The closed channel code identifying where the request originated.
+
+    Returns
+    -------
+    DeletedOrganization
+        The resolved DeletedOrganization for delete empty draft organization.
+
+    Raises
+    ------
+    PermissionDenied
+        If the caller lacks permission for the requested scope.
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not actor.is_active or not actor.is_platform_administrator:
         raise PermissionDenied("Platform administration is required.")
 

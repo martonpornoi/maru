@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, override
 from uuid import UUID, uuid4
 
 from django import forms
@@ -24,12 +23,32 @@ from maru.workforce.structure_inputs import (
 )
 from maru.workforce.structure_templates import BUILTIN_STRUCTURE_TEMPLATES
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
 DepartmentParentChoices = tuple[tuple[str, str], ...]
 
 
 def _field_local_result(field_name: str, operation: Callable[[], str]) -> str:
-    """Translate a pure dict-shaped domain error for one Django form field."""
+    """Translate a pure dict-shaped domain error for one Django form field.
 
+    Parameters
+    ----------
+    field_name : str
+        The canonical field name whose policy or value is requested.
+    operation : Callable[[], str]
+        The callback invoked to operation.
+
+    Returns
+    -------
+    str
+        The normalized text for field local result.
+
+    Raises
+    ------
+    forms.ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     try:
         return operation()
     except forms.ValidationError as error:
@@ -87,6 +106,17 @@ class CanonicalUUIDChoiceField(CanonicalUUIDField):
         choices: Iterable[tuple[str, str]] = (),
         **kwargs: Any,
     ) -> None:
+        """Initialize the CanonicalUUIDChoiceField instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        choices : Iterable[tuple[str, str]], default=()
+            The choices used to configure and validate this form.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         self.choices = tuple(choices)
         self.unavailable_values: frozenset[str] = frozenset()
         kwargs.setdefault("widget", self.widget(choices=self.choices))
@@ -98,12 +128,33 @@ class CanonicalUUIDChoiceField(CanonicalUUIDField):
         *,
         unavailable_values: Iterable[str] = (),
     ) -> None:
+        """Set choices.
+
+        Parameters
+        ----------
+        choices : Iterable[tuple[str, str]]
+            The choices used to configure and validate this form.
+        unavailable_values : Iterable[str], default=()
+            The canonical unavailable values accepted by the versioned definition.
+        """
         self.choices = tuple(choices)
         self.unavailable_values = frozenset(unavailable_values)
         self.widget.choices = self.choices
         self.widget.unavailable_values = self.unavailable_values
 
     def validate(self, value: UUID | None) -> None:
+        """Validate the supplied data.
+
+        Parameters
+        ----------
+        value : UUID | None
+            The untrusted input to normalize, validate, or compare.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the submitted state or input violates a domain invariant.
+        """
         super().validate(value)
         if value is None:
             return
@@ -136,6 +187,8 @@ class _StructureReasonForm(StrictInputForm):
 
 
 class StructureTemplateApplicationForm(_StructureReasonForm):
+    """Collect and validate structure template application input."""
+
     template = forms.ChoiceField(
         label="Built-in reference",
         choices=tuple(
@@ -169,6 +222,21 @@ class StructureTemplateApplicationForm(_StructureReasonForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the StructureTemplateApplicationForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        edition_name : str
+            The human-readable edition name shown to authorized readers.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", "id_structure_template_%s")
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("template", next(iter(BUILTIN_STRUCTURE_TEMPLATES)))
@@ -179,6 +247,13 @@ class StructureTemplateApplicationForm(_StructureReasonForm):
         self.edition_name = edition_name
 
     def clean_confirmation_name(self) -> str:
+        """Validate and normalize the confirmation name field.
+
+        Returns
+        -------
+        str
+            The validated and normalized confirmation name.
+        """
         return _field_local_result(
             "confirmation_name",
             lambda: validate_exact_confirmation(
@@ -231,6 +306,19 @@ class _DepartmentDetailsForm(_StructureReasonForm):
         expected_version: int,
         **kwargs: Any,
     ) -> None:
+        """Initialize the _DepartmentDetailsForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        parent_choices : DepartmentParentChoices
+            The departments that may be selected as the parent.
+        expected_version : int
+            The structure version used for optimistic concurrency control.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("expected_version", expected_version)
         kwargs["initial"] = initial
@@ -288,6 +376,8 @@ class _DepartmentDetailsForm(_StructureReasonForm):
 
 
 class DepartmentCreationForm(_DepartmentDetailsForm):
+    """Collect and validate department creation input."""
+
     retry_key = CanonicalUUIDField(widget=forms.HiddenInput)
 
     def __init__(
@@ -296,6 +386,17 @@ class DepartmentCreationForm(_DepartmentDetailsForm):
         retry_key: UUID | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the DepartmentCreationForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        retry_key : UUID | None, default=None
+            The stable key that makes an exact command retry idempotent.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", "id_department_create_%s")
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("retry_key", retry_key or uuid4())
@@ -304,17 +405,30 @@ class DepartmentCreationForm(_DepartmentDetailsForm):
 
 
 class DepartmentUpdateForm(_DepartmentDetailsForm):
+    """Collect and validate department update input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
     )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the DepartmentUpdateForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", "id_department_update_%s")
         super().__init__(*args, **kwargs)
 
 
 class DepartmentRetirementForm(_StructureReasonForm):
+    """Collect and validate department retirement input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -326,6 +440,17 @@ class DepartmentRetirementForm(_StructureReasonForm):
         expected_version: int,
         **kwargs: Any,
     ) -> None:
+        """Initialize the DepartmentRetirementForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", "id_department_retire_%s")
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("expected_version", expected_version)
@@ -334,6 +459,8 @@ class DepartmentRetirementForm(_StructureReasonForm):
 
 
 class DepartmentDeletionForm(_StructureReasonForm):
+    """Collect and validate department deletion input."""
+
     expected_version = StrictBase10IntegerField(
         min_value=1,
         widget=forms.HiddenInput,
@@ -357,6 +484,19 @@ class DepartmentDeletionForm(_StructureReasonForm):
         department_name: str,
         **kwargs: Any,
     ) -> None:
+        """Initialize the DepartmentDeletionForm instance.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        expected_version : int
+            The aggregate version required for optimistic concurrency control.
+        department_name : str
+            The human-readable department name shown to authorized readers.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+        """
         kwargs.setdefault("auto_id", "id_department_delete_%s")
         initial = dict(kwargs.pop("initial", {}) or {})
         initial.setdefault("expected_version", expected_version)
@@ -365,6 +505,13 @@ class DepartmentDeletionForm(_StructureReasonForm):
         self.department_name = department_name
 
     def clean_confirmation_name(self) -> str:
+        """Validate and normalize the confirmation name field.
+
+        Returns
+        -------
+        str
+            The validated and normalized confirmation name.
+        """
         return _field_local_result(
             "confirmation_name",
             lambda: validate_exact_confirmation(
@@ -375,6 +522,8 @@ class DepartmentDeletionForm(_StructureReasonForm):
 
 
 class VolunteerApplicationForm(forms.Form):
+    """Collect and validate volunteer application input."""
+
     motivation = forms.CharField(
         label="Why would you like to help in this position?",
         max_length=2_000,
@@ -387,6 +536,8 @@ class VolunteerApplicationForm(forms.Form):
 
 
 class OnboardingDocumentUploadForm(forms.Form):
+    """Collect and validate onboarding document upload input."""
+
     document = forms.FileField(
         label="Signed PDF",
         help_text=(

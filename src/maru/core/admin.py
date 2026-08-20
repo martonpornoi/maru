@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.db import models
-from django.http import HttpRequest
 
 from maru.core.forms import HttpsURLField
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from django.http import HttpRequest
 
 admin.site.site_header = "Maru Administration"
 admin.site.site_title = "Maru Administration"
@@ -27,6 +30,18 @@ class ReadOnlyAdminMixin:
     """Expose immutable or command-owned records for inspection only."""
 
     def has_add_permission(self, request: HttpRequest) -> bool:
+        """Return whether add permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+
+        Returns
+        -------
+        bool
+            `True` when add permission; otherwise `False`.
+        """
         _ = request
         return False
 
@@ -35,6 +50,20 @@ class ReadOnlyAdminMixin:
         request: HttpRequest,
         obj: models.Model | None = None,
     ) -> bool:
+        """Return whether change permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : models.Model | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when change permission; otherwise `False`.
+        """
         _ = request, obj
         return False
 
@@ -43,6 +72,20 @@ class ReadOnlyAdminMixin:
         request: HttpRequest,
         obj: models.Model | None = None,
     ) -> bool:
+        """Return whether delete permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : models.Model | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when delete permission; otherwise `False`.
+        """
         _ = request, obj
         return False
 
@@ -55,6 +98,20 @@ class NoDeleteAdminMixin:
         request: HttpRequest,
         obj: models.Model | None = None,
     ) -> bool:
+        """Return whether delete permission.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request and authenticated principal context.
+        obj : models.Model | None, default=None
+            The model instance being validated or presented.
+
+        Returns
+        -------
+        bool
+            `True` when delete permission; otherwise `False`.
+        """
         _ = request, obj
         return False
 

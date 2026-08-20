@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 MAX_BIO_LENGTH = 500
 MAX_SPOKEN_LANGUAGES = 5
@@ -240,16 +243,38 @@ LANGUAGE_CODES = frozenset(LANGUAGE_LABELS)
 
 
 def pronoun_display(pronoun_code: str, other_pronouns: str = "") -> str:
-    """Return the public/badge-safe pronoun label for one validated selection."""
+    """Return the public/badge-safe pronoun label for one validated selection.
 
+    Parameters
+    ----------
+    pronoun_code : str
+        The stable pronoun code from the relevant closed catalog.
+    other_pronouns : str, default=''
+        The other pronouns evaluated while pronoun display.
+
+    Returns
+    -------
+    str
+        The normalized text for pronoun display.
+    """
     if pronoun_code == OTHER_PRONOUN_CODE:
         return other_pronouns.strip()
     return PRONOUN_LABELS.get(pronoun_code, "")
 
 
 def validate_spoken_language_codes(value: object) -> None:
-    """Validate a unique, ordered ISO 639-1 selection."""
+    """Validate a unique, ordered ISO 639-1 selection.
 
+    Parameters
+    ----------
+    value : object
+        The untrusted input to normalize, validate, or compare.
+
+    Raises
+    ------
+    ValidationError
+        If the submitted state or input violates a domain invariant.
+    """
     if not isinstance(value, list) or any(not isinstance(code, str) for code in value):
         raise ValidationError(
             "Spoken languages must be a list of ISO 639-1 codes.",
@@ -275,4 +300,16 @@ def validate_spoken_language_codes(value: object) -> None:
 
 
 def language_labels(codes: Iterable[str]) -> list[str]:
+    """Return language labels.
+
+    Parameters
+    ----------
+    codes : Iterable[str]
+        The codes evaluated while language labels.
+
+    Returns
+    -------
+    list[str]
+        The authorized language labels records in deterministic order.
+    """
     return [LANGUAGE_LABELS[code] for code in codes if code in LANGUAGE_LABELS]

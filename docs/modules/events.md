@@ -183,6 +183,9 @@ shape; the protected audit retains the actual outcome without target IDs.
 
 Invalid skips, blank reasons, terminal transitions, and outbox failure cannot
 leave partial canonical state. Denial and failure receive safe audit evidence.
+API adapters preserve stable authorization reason codes but replace caught
+domain-exception text with operation-specific public messages, so an internal
+authorization diagnostic cannot cross the HTTP boundary.
 Database triggers defend stable edition scope/slug, date range, aggregate and
 lifecycle version integrity, separate command categories, editable profile
 lifecycle, receipt scope/immutability, transition immutability, and archive
