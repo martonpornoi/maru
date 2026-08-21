@@ -1,6 +1,9 @@
 # GitHub repository hardening plan
 
-Status: GH-000 and GH-001 implemented; GH-002 repository verification implemented and first candidate rehearsal pending
+Status: GH-000, GH-001, and GH-003 implemented; GH-002 repository verification
+implemented and first candidate rehearsal pending; GH-004 repository candidate
+and live metadata reconciliation complete; GH-005 hosted extraction passed with
+ready-state acceptance pending
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -21,7 +24,8 @@ the committed tree.
 
 ## Verified public baseline
 
-The 2026-08-20 live audit established the following starting point:
+The 2026-08-20 live audit, refined by the 2026-08-21 GH-003 audit, established
+the following starting point:
 
 - the public repository has active no-bypass rulesets for `main` and `v*`;
 - `main` requires the up-to-date repository-owned `PR gate`, pull requests,
@@ -34,7 +38,10 @@ The 2026-08-20 live audit established the following starting point:
 - there was no open CodeQL, Dependabot, or secret-scanning alert on `main`;
 - candidate and gold environments accept only `main` deployments; and
 - release immutability was disabled at the initial inspection; it was enabled
-  and read back later on 2026-08-20. Secret-validity checks remain disabled.
+  and read back later on 2026-08-20; and
+- standard secret scanning and push protection are enabled. Validity checks and
+  generic-pattern scanning were unavailable for this user-owned repository at
+  the 2026-08-21 GH-003 audit boundary and remain deferred.
 
 Live values can drift. This baseline is evidence for the recorded date, not a
 substitute for the pre-change read required by a later milestone.
@@ -66,7 +73,7 @@ Accepted and implemented outcome:
   exact Actions-allowlist validation before expensive jobs fan out.
 
 The preflight does not weaken or replace locked installation, dependency
-audits, immutable Action revisions, or the hosted exact-commit gate.
+audits, immutable Action revisions, or the hosted merge-candidate gate.
 
 Decision state: complete in this repository milestone.
 
@@ -165,35 +172,121 @@ candidate rehearsal pending.
 
 ### GH-003: Secret validity and one-time public-history audit
 
-Review provider-contact consequences before enabling secret-validity checks.
-Separately evaluate generic patterns against synthetic fixture credentials.
-Perform a bounded one-time audit of Git history, refs, personal data, secrets,
-third-party assets, copyright, dependency licenses, and public commit metadata;
-do not turn the launch audit into a permanent noisy pull-request job.
+ADR 0067 records the bounded launch decision. The one-time audit covered the
+four public branch heads and eight pull-request heads as one 46-commit graph,
+verified reachable Git objects strictly, and scanned the current repository
+candidate separately. A checksum-verified Gitleaks 8.30.1 archive produced one
+sanitized documentation false-positive category and zero unresolved secret
+findings. Public issue, pull-request, and discussion metadata, seven tracked
+owner-attested project-controlled brand assets and their embedded metadata, and
+dependency-license and notice obligations were also reviewed. The audit did not
+independently prove asset ownership or cover historical-only assets. Maru-owned
+source remains Apache-2.0; Python distribution metadata and the release
+application manifest represent bundled MIT Staff Console code with the
+`Apache-2.0 AND MIT` expression. Release assets and the OCI image carry the
+license and third-party notice, and the image carries SBOM and provenance; no
+aggregate image-wide license expression is asserted. No remaining publication
+blocker or raw finding was committed within the audited scope.
 
-State: tracked for a separate security-audit milestone.
+GitHub-hosted Actions log and artifact bytes were not downloaded or scanned. A
+drift-prone snapshot observed 62 workflow runs and 188 unexpired artifacts under
+short retention, so GH-003 does not claim to cover all public server-generated
+bytes.
+
+Standard GitHub secret scanning and push protection stay enabled. Validity
+checks and generic-pattern scanning were unavailable for the current user-owned
+repository, so they remain deferred pending eligibility, provider-contact, and
+synthetic-fixture noise review. No GitHub setting was changed and no permanent
+pull-request history scanner was added. The owner accepted the already-public
+personal Gmail author metadata without rewriting history; future maintainer
+commits use a GitHub no-reply address by default.
+
+State: complete as a bounded repository and security-audit milestone. Repeat a
+whole-history audit only after a material visibility, ownership,
+imported-history, or incident boundary.
 
 ### GH-004: Public policy and repository-description consistency
 
 Reconcile README, security, support, conduct, governance, public-readiness, and
 repository metadata with the actual public state. Remove private or pre-launch
 wording, link the private vulnerability form, refresh evidence summaries, and
-keep the pre-production boundary explicit.
+keep the active-development and production-readiness boundary explicit.
 
-State: the obsolete private/pre-launch vulnerability, Discussions, governance,
-CodeQL-baseline, and environment-setup wording is corrected in GH-000/GH-001.
-Repository metadata, durable contacts and succession, broader evidence
-summaries, and the complete public-material audit remain tracked for a separate
-public-documentation milestone.
+The 2026-08-21 authenticated audit reports 100 percent Community Profile
+health, an accurate eight-topic set, every label consumed by Issue Forms and
+automation, and the intended Issues/Discussions-on and
+Projects/Wiki/Pages/Downloads-off feature shape. Homepage remains empty for
+GH-007. Funding and a custom social preview are deliberately deferred instead
+of receiving placeholders. ADR 0070 accepts the live description **Security-
+focused Django and PostgreSQL platform for operating multi-convention events,
+under active development.** Its separately authorized description-only change
+and exact post-change readback are complete.
+
+The repository candidate replaces brittle README evidence, fixes support and
+security discovery, defines best-effort triage and safe `good first issue`
+criteria, and records a truthful sole-maintainer continuity policy. GH-003
+already completed the bounded public-material audit; GitHub-hosted log and
+artifact bytes remain its documented exclusion rather than unfinished GH-004
+scope.
+
+The owner declined to publish a login or historical personal address or create
+a placeholder mailbox. The candidate explicitly records that no private
+project-specific conduct channel or independent reviewer exists, warns against
+sensitive public reports and security-advisory misuse, and scopes GitHub's
+abuse route to GitHub-hosted behavior.
+
+State: complete. GH-008 retains actual multi-maintainer succession, independent
+moderation/security rotation, and approval/release separation.
 
 ### GH-005: Post-merge CI duplication
 
-Measure work duplicated when a pull-request result is followed by the squash
-push to `main`. Preserve default-branch CodeQL, manual full acceptance, release
-certification, and future documentation deployment while designing the
-smallest safe main-branch path.
+Pull request 8 supplied the required measurement. Draft open, draft synchronize,
+ready-for-review, and squash-push runs consumed 1,436.66 aggregate runner-
+minutes. The ready run checked synthetic merge commit `9899c1f`; its tree, the
+final pull-request head tree, and the squash-commit tree were identical, so the
+359.40-runner-minute main workflow repeated accepted content. The ready event
+was also associated with the preceding draft head. Accepted main run
+`32427570856` supplied a current JUnit timing inventory for all 157 then-current
+integration files.
 
-State: tracked; measurement must precede a workflow decision.
+ADR 0066 accepts the repository correction:
+
+- drafts run only classification plus locked-input and Actions-policy preflight,
+  with an explicitly non-green `PR gate` until **Ready for review**;
+- ready opens, synchronizations, reopenings, and `ready_for_review` run selected
+  authoritative acceptance, while `converted_to_draft` cancels obsolete work;
+- the pull-request workflow no longer repeats on the squash push to `main`;
+- managed CodeQL retains its default-branch push scan, and manual and release
+  full certification remain available;
+- repository safety precedes expensive fan-out, protected renames are treated as
+  deletions, every destructive change takes full acceptance, and approval is
+  consumed only by the exact fresh repository-owner label event;
+- an issues-only, no-checkout `pull_request_target` workflow clears stale label
+  display state without executing contribution code or serving as a relied-upon
+  acceptance retrigger; and
+- the database-free unit boundary reduces full certification from nine to eight
+  PostgreSQL services while the accepted timing refresh improves shard balance;
+  missing timings or a targeted estimate over 1,800 seconds route to full
+  acceptance.
+
+The correction changes no live ruleset or repository setting. Its checked-in
+desired state binds `PR gate` to GitHub Actions integration ID `15368`, but a
+separately authorized update and readback are still required before describing
+that provenance binding as live. Label events remain intentionally conservative
+because GitHub treats skipped required jobs as successful, cannot filter the
+pull-request trigger by label name, and suppresses recursive workflow events
+from the cleanup workflow's GitHub token.
+
+Draft pull request 9 proved that ADR 0066's trailing-comma-only CodeQL
+correction was insufficient: run `32483580306` stayed green while its Python
+log repeated the raw syntax diagnostic and omitted `workforce/queries.py`.
+ADR 0069 supersedes that compatibility mechanism with one equivalent bounded
+`TypeVar`, a line-level `UP047` exception, and a repository guard against the
+known incompatible header shapes.
+
+State: managed run `32485597468`, Python job `96781280766`, explicitly extracts
+`workforce/queries.py` with zero raw diagnostic at commit `6317538`. Ready-state
+merge-candidate acceptance remains before merge.
 
 ### GH-006: Dependency review
 
@@ -218,9 +311,17 @@ State: tracked for a separate documentation-publication milestone.
 ### GH-008: Multi-maintainer governance
 
 Defer organization transfer, secure 2FA enforcement, CODEOWNER approval,
-latest-push approval, gold-environment review, succession, and moderation
-rotation until a second trusted maintainer exists. Enabling them for one
-maintainer would deadlock work or create approval theatre.
+latest-push approval, gold-environment review, actual successor appointment,
+and independent moderation/security rotation until a second trusted maintainer
+exists. Enabling them for one maintainer would deadlock work or create
+meaningless self-approval.
+
+Before an organization transfer or another account may approve destructive
+scope, replace the current `github.actor == github.repository_owner` check with
+an explicitly reviewed maintainer authority policy. Reassess the live
+`first_time_contributors` fork-workflow approval setting if hosted-compute abuse
+appears; `all_external_contributors` is stronger but creates recurring
+maintainer approval work for safe external runs.
 
 State: deliberately deferred until the prerequisite exists.
 
@@ -238,14 +339,21 @@ a focused decision before adoption.
 
 ## External settings ledger
 
-| Setting | Observed 2026-08-20 | Tracked outcome | Milestone |
+| Setting | Observed state | Tracked outcome | Milestone |
 | --- | --- | --- | --- |
 | CodeQL merge protection | Active: `errors` and `medium_or_higher` | Accepted and reconciled | GH-001 |
 | Release immutability | Enabled directly on Maru; no release or tag | Re-read before every dispatch; require immutable post-publication evidence | GH-002 |
 | Candidate environment | Exact `main`; no admin bypass or reviewer | Keep unless operational separation is needed | GH-002 |
 | Gold environment | Exact `main`; no admin bypass or reviewer | Add independent review only with a second maintainer | GH-002/GH-008 |
-| Secret-validity checks | Disabled | Review provider contact before deciding | GH-003 |
+| Secret scanning | Enabled; no unresolved alert at the 2026-08-21 audit boundary | Keep enabled and triage every alert | Continuous/GH-003 |
+| Push protection | Enabled | Keep enabled; use only synthetic non-secret fixtures for exercises | Continuous/GH-003 |
+| Secret-validity checks | Unavailable for the current user-owned repository | Reassess eligibility and provider contact after an ownership or plan change | GH-003 |
+| Generic-pattern scanning | Unavailable for the current user-owned repository | Reassess eligibility and synthetic-fixture noise before enablement | GH-003 |
 | Actions selected allowlist | Exact immutable selected references | Add only a reviewed paired workflow pin | Every workflow milestone |
+| Repository description | 2026-08-21: security-focused Django/PostgreSQL multi-convention platform, under active development | Accepted and reconciled under ADR 0070; future changes require separate authorization and readback | GH-004 |
+| Repository topics | 2026-08-21: exact accepted eight-topic set | Retain; change only when product scope changes materially | GH-004 |
+| Community and issue metadata | 2026-08-21: 100 percent profile health; required Issue Form and automation labels exist | Keep templates, labels, and public policies coherent; do not manufacture newcomer issues | GH-004 |
+| Social preview | Default generated preview | Defer until an approved purpose-built asset exists | GH-004 |
 | GitHub Pages source | Disabled | Decide with the Pages workflow | GH-007 |
 | Repository homepage | Empty | Set only after verified Pages deployment | GH-007 |
 

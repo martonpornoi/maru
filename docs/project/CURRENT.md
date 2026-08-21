@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 Phase: Production consolidation and management-experience recovery. The
 canonical repository gate and scoped read-only Logistics browser journey remain
 accepted. ADR 0055's first task-oriented management slice is repository-
@@ -11,15 +11,32 @@ verified. ADR 0059's strict PyDocLint contract and bounded Ruff exemptions are
 repository-verified. ADR 0060's collaboration/release foundation remains
 accepted. ADR 0061's hosted latency correction passed remote run `32304152005`
 and ADR 0062 records the superseded private self-hosted interval. ADR 0063 now
-governs the public repository: hosted exact-commit acceptance, active no-bypass
+governs the public repository: hosted merge-candidate acceptance, active no-bypass
 main/tag rulesets, exact Action allowlisting, secret scanning/push protection,
 private vulnerability reporting, and managed CodeQL. ADR 0064 accepts security-
 only dependency automation, early locked-input and Action-policy validation,
 and explicit CodeQL merge protection. ADR 0065 accepts administrator-confirmed
 release immutability, verified draft publication, and exact post-publication
-release, asset, tag, image, and attestation reconciliation. The complete
-authenticated reflow, keyboard, screen-reader, owner, deployment, stopped-
-writer/cutover, restore/PITR, and production-governance gates remain open.
+release, asset, tag, image, and attestation reconciliation. ADR 0066's current
+candidate makes draft acceptance cheap and explicitly non-green and removes
+measured duplicate acceptance without removing an evidence category. Draft
+pull request 9 proved that its first CodeQL syntax correction was insufficient;
+ADR 0069 replaces the rejected union-bounded header with its narrowly exempted
+`TypeVar` form, and hosted run `32485597468` explicitly extracts the Workforce
+file with zero raw diagnostic. ADR 0067's current candidate records GH-003's
+sanitized public-history and publication
+audit, keeps enhanced secret controls deferred under the current ownership
+boundary, and closes the bundled-frontend notice gap without adding a permanent
+scanner. ADR 0068 reconciles the public collaboration
+surface, defines truthful sole-maintainer continuity and newcomer triage, and
+records reviewed repository metadata without inventing independent authority,
+an unattended conduct inbox, or a silent GitHub mutation. ADR 0070 then replaces
+its ambiguous **Pre-production** description with the separately authorized and
+read-back **under active development** wording. The complete
+authenticated reflow, keyboard,
+screen-reader, owner,
+deployment, stopped-writer/cutover, restore/PITR, and production-governance
+gates remain open.
 
 ## Current outcome
 
@@ -133,10 +150,11 @@ cross-domain-save design.
   runners and removes the persistent workstation runner. The fail-closed
   classifier retains documentation-only, ordinary affected-test, and complete
   high-risk paths behind one stable `PR gate`. Protected or mass deletion still
-  needs the maintainer-applied `destructive-change-reviewed` label.
-- Local certification keeps every integration file whole and serialized, but
-  starts one unit process and eight measured shards concurrently against nine
-  separate digest-pinned PostgreSQL containers on the 24-core/64-GB host.
+  needs the repository-owner-applied `destructive-change-reviewed` label.
+- Local certification keeps every integration file whole and serialized. Its
+  unit process is now database-free, while eight measured integration shards
+  run concurrently against eight separate digest-pinned PostgreSQL containers
+  on the 24-core/64-GB host.
   Its JUnit logs and partial coverage feed one branch-aware 90-percent verdict.
   This remains required pre-review evidence but its unsigned receipt does not
   replace GitHub's independently recorded result.
@@ -152,12 +170,15 @@ cross-domain-save design.
   native `uv`, npm, and GitHub Actions ecosystems; ordinary upgrades use an at-
   least-quarterly maintainer-owned branch. It also places a lightweight
   `uv lock --check` and exact Actions-allowlist validation before the expensive
-  full-acceptance fan-out. Those two automation changes become the default-
-  branch policy only after merge.
+  full-acceptance fan-out. Those controls are accepted on the default branch.
 - The active `main` ruleset explicitly requires CodeQL error-level alerts and
   medium-or-higher security alerts to clear. The strict `PR gate`, pull-request-
   only squash policy, resolved-conversation rule, deletion/non-fast-forward
   protection, and empty bypass list remain unchanged.
+- The checked-in `main` ruleset desired state now binds `PR gate` to GitHub
+  Actions integration ID `15368`. The observed live rule still accepts the
+  context from any source, so a separately authorized update and full readback
+  remain pending before that provenance binding can be called active.
 - Candidate and gold releases are manual, exact-current-`main`, full-certified,
   collision-refusing CalVer workflows. Repository release immutability is live;
   the administrator readback reports `enabled: true`. The ADR 0065 repository
@@ -165,12 +186,74 @@ cross-domain-save design.
   before publication, then reconciles immutable state, the exact tag commit,
   release and per-asset attestations, the OCI tag/digest, and image provenance.
   GHCR receives the non-root Django/Gunicorn image by immutable digest with OCI
-  SBOM and provenance. GitHub receives docs, OpenAPI, locks, manifest, license,
-  and checksums. No release, tag, package, or deployment has been published.
+  SBOM and provenance. GitHub receives docs, OpenAPI, locks, manifest, project
+  license, third-party notices, and checksums. No release, tag, package, or
+  deployment has been published.
+- ADR 0066 makes **Ready for review** the authoritative transition from cheap
+  draft preflight to selected hosted acceptance. Drafts retain an explicitly
+  red `PR gate`; returning a pull request to draft cancels obsolete work. The
+  squash push no longer repeats an already accepted identical tree, while
+  managed CodeQL retains its default-branch scan.
+- Repository safety now blocks every expensive path, both sides of renames are
+  classified, and every approved destructive change receives full acceptance.
+  Only the exact destructive-label application event at the current head counts
+  as approval; other pull-request actions treat an existing label as stale. A
+  no-checkout metadata control clears that stale UI label after head or
+  readiness-state changes, so the owner must review and reapply it for the
+  revised scope. Missing
+  timing evidence or a targeted projection over 30 minutes also routes to full
+  acceptance.
+  Release dispatch rejects invalid channel/sequence inputs and a release PR
+  that is not merged at the exact workflow commit before starting full
+  certification. Checkout credentials are not persisted where no Git write is
+  performed.
+- ADR 0067 audits the four public branches and eight pull-request heads as one
+  46-commit graph, the current candidate tree, public collaboration metadata,
+  seven currently tracked brand assets, and locked dependency licenses. Strict
+  Git verification passes; the one history detector result is sanitized and
+  contextually rejected as documentation prose, leaving no unresolved secret,
+  production-personal-data, asset, copyright, or dependency-license blocker.
+- Standard GitHub secret scanning and push protection remain enabled. Validity
+  and generic-pattern controls are unavailable for Maru's current user-owned
+  repository and remain deferred pending eligibility and provider-contact
+  review. The already-public personal author email is accepted without a
+  destructive history rewrite; the repository now uses GitHub no-reply author
+  metadata for future maintainer commits.
+- Maru-owned source remains Apache-2.0. Because the compiled Staff Console
+  embeds React, React DOM, and Scheduler under MIT, Python-distribution and
+  release-application metadata both declare `Apache-2.0 AND MIT`; the browser
+  bundle points to its generated notice, and the project license and exact
+  third-party notice ship in Python packages, the application image, and every
+  verified GitHub release asset set. The image-wide dependency licenses remain
+  represented by its generated SBOM rather than one misleading aggregate OCI
+  license label.
 - Apache-2.0, contribution/conduct/security/support/governance policies,
   CODEOWNERS, issue/PR templates, Dependabot grouping, public-readiness steps,
   and active rulesets establish the public collaboration baseline without
   implying production support.
+- ADR 0068 removes the README's obsolete test and vulnerability snapshot,
+  makes support and security channels directly discoverable, and defines
+  best-effort issue triage plus bounded `good first issue` criteria. Governance
+  now names the sole owner's authority, planned handoff, inactive-project, and
+  archival behavior. The Code of Conduct explicitly records that there is no
+  private Maru-specific conduct channel or independent reviewer, warns against
+  public sensitive reports, and routes GitHub-hosted abuse to GitHub Support.
+  Actual second-maintainer and independent-review controls remain in GH-008.
+- The authenticated 2026-08-21 GH-004 snapshot reports 100 percent Community
+  Profile health, the accepted eight topics, every Issue Form and automation
+  label, and the intended Issues/Discussions-on and
+  Projects/Wiki/Pages/Downloads-off feature state. Homepage stays empty for
+  GH-007; social preview and funding remain deliberately unconfigured. The live
+  description now ends with **under active development**; its description-only
+  mutation was separately authorized and read back exactly under ADR 0070.
+- PR 9's first ready-state full acceptance run `32501661144` then exercised the
+  intended fail-closed dependency boundary. Its sole originating failure was
+  `pip-audit` rejecting locked development-tool dependency `pip 26.1.2` under
+  `PYSEC-2026-3721`; the Full CI and PR gates failed only as downstream
+  consequences. The repository candidate now refreshes that one transitive
+  lock entry to patched `pip 26.2.1`. Local Python and npm audits are clean,
+  but hosted unit, PostgreSQL, coverage, and the final gate still require a
+  fresh run at the corrected commit.
 
 ### Registration, profile, and admission commerce
 
@@ -403,7 +486,8 @@ as the repository-wide gate:
   The digest-pinned random-port PostgreSQL smoke is healthy, push-guard
   simulations reject `main` and permit feature creation, and GitHub reports
   `maru-local-certifier` online with all required labels. The first published
-  exact-commit `PR gate` remains authoritative for full Python coverage.
+  hosted merge-candidate `PR gate` remains authoritative for full Python
+  coverage.
 - The ADR 0063 live transition verifies public visibility, zero registered self-
   hosted runners, Actions enabled in selected-only SHA-pinned mode, and exact
   parity between the configured external Action allowlist and workflow
@@ -418,17 +502,17 @@ as the repository-wide gate:
   `alerts_threshold: errors` and `security_alerts_threshold:
   medium_or_higher`; all prior no-bypass and pull-request protections remained
   intact.
-- The ADR 0064 candidate implements GH-000 and GH-001. Twenty-four focused
+- The merged ADR 0064 boundary implements GH-000 and GH-001. Twenty-four focused
   classifier and workflow-contract tests pass, including thirteen Dependabot,
   allowlist, and ruleset contracts. Ruff formatting/lint over 643 files, strict
   mypy over 356 source files, `uv lock --check`, direct validation of all eleven
   immutable Action references, PyDocLint, the warning-fatal Sphinx/AutoAPI
   build, validation of 272 Markdown files and 203 unique requirement
   identifiers, and whitespace validation pass. The checked-in `main` ruleset
-  snapshot matches the separately applied live CodeQL thresholds.
-  A hosted complete full-acceptance run for the exact branch head remains the
-  independent acceptance authority before merge.
-- The ADR 0065 candidate implements GH-002's repository verification boundary.
+  snapshot matches the separately applied live CodeQL thresholds. Pull request
+  8 supplied the hosted acceptance authority before merge.
+- The merged ADR 0065 boundary implements GH-002's repository verification
+  boundary.
   The live immutable-release endpoint reads `enabled: true` and
   `enforced_by_owner: false`; releases, tags, and deployments remain empty.
   Candidate and gold each retain exact-`main`, no-admin-bypass policy with no
@@ -441,10 +525,71 @@ as the repository-wide gate:
   documentation validation covers 274 Markdown files and 203 unique requirement
   identifiers, whitespace validation passes, and a fresh warning-fatal
   Sphinx/AutoAPI build succeeds. Hosted high-risk full-acceptance run
-  `32412170009` and managed CodeQL run `32412168767` pass exact commit
-  `fb73613e70a236ffa7fe757a948a701e4d6af047`, including every PostgreSQL shard,
-  combined coverage, and the final `PR gate`. No end-to-end release claim is
-  made before an explicitly authorized first candidate.
+  `32412170009` and managed CodeQL run `32412168767` pass the pull-request merge
+  candidate associated with head `fb73613e70a236ffa7fe757a948a701e4d6af047`,
+  including every PostgreSQL shard, combined coverage, and the final `PR gate`.
+  No end-to-end release claim is made before an explicitly authorized first
+  candidate.
+- The ADR 0066 audit measured four successful pull-request lifecycle runs at
+  1,436.66 aggregate runner-minutes. Draft synchronize and ready-for-review
+  were associated with the same head. The ready run checked synthetic merge
+  commit `9899c1f`, whose tree matched both the pull-request head and final
+  squash commit. Managed CodeQL run `32427570301` also
+  reported that valid Python 3.12 syntax caused `workforce/queries.py` to be
+  omitted from analysis. Removing only its trailing type-parameter comma did
+  not restore coverage: draft run `32483580306` stayed green while repeating
+  one raw syntax diagnostic and the same skipped-file warning. ADR 0069 now
+  uses the equivalent union-bounded `TypeVar` form and rejects both known
+  incompatible header shapes. No static, documentation, contract, frontend,
+  security, unit, integration, or combined-coverage evidence is removed.
+  Replacement run `32485597468` confirms restored server-side file extraction
+  with zero raw diagnostic.
+- The ADR 0066 local candidate passes Actionlint, immutable-Action and workflow
+  contracts, PowerShell parsing, `uv lock --check`, and whitespace validation.
+  Seventy-four focused policy/license/workflow tests pass. All 1,935 unit tests
+  pass in 7.00 seconds with PostgreSQL deliberately unreachable, and the moved
+  receipt/storage integration test passes against real PostgreSQL in 49.60
+  seconds. Ruff formatting and ALL-rule lint pass over 649 files; strict mypy
+  passes over 357 source files. PyDocLint and semantic validation pass over 366
+  production/tooling files, documentation validation covers 281 Markdown files
+  and 203 requirement identifiers, and a fresh warning-fatal parallel Sphinx/
+  AutoAPI build succeeds. Python 3.12 byte-compilation of the first Workforce
+  syntax candidate also passed, demonstrating why local syntax validity was
+  never sufficient CodeQL coverage evidence.
+- The ADR 0069 corrective candidate passes Python 3.12 byte-compilation, Ruff
+  ALL-rule lint and formatting, strict mypy, PyDocLint, two repository CodeQL-
+  compatibility contracts, and the two PostgreSQL-backed department and
+  position depth-limit integration cases. The latter pass in 52.68 seconds.
+  Managed run `32485597468`, Python job `96781280766`, then explicitly logs the
+  Workforce file extraction and zero raw diagnostic; all three language jobs
+  pass at commit `6317538`.
+- The ADR 0068 repository candidate passes both focused public-material
+  contracts and all 1,937 unit tests. All three Issue Form YAML files parse;
+  Ruff lint and formatting pass for the contract; documentation validation
+  covers 286 Markdown files and 203 requirement identifiers; whitespace
+  validation passes; and a fresh warning-fatal parallel Sphinx/AutoAPI build
+  succeeds. Hosted ready-state acceptance remains separate.
+- The ADR 0067 audit mirror contains four branch heads, eight pull-request
+  heads, and 46 unique commits. `git fsck --full --strict` passes. A checksum-
+  verified Gitleaks 8.30.1 scan produces one redacted documentation false
+  positive and no unresolved history finding; current-candidate, issue/pull-
+  request, and discussion scans produce no finding. The final 1,270-file
+  repository-candidate snapshot also produces no finding. An ignored synthetic
+  positive yields exactly one redacted generic-key result while its benign
+  control yields none. Asset/metadata and locked Python/Node license reviews
+  leave no publication blocker. An isolated package build emits metadata 2.4
+  with the exact `Apache-2.0 AND MIT` expression and both legal files in the
+  wheel and source distribution; its 643-member wheel and 746-member source
+  archive contain all 124 currently tracked non-Python Django template/static
+  assets and no build-cache content. A durable verifier now rebuilds and
+  inspects both distributions whenever package inputs change. Focused release,
+  package, classifier, and workflow contracts plus Ruff, strict mypy,
+  PyDocLint, documentation, lock, allowlist, YAML, and whitespace checks pass
+  locally. The warning-fatal site
+  build serves complete Maru, Sphinx, sphinxcontrib-mermaid, Furo, Pygments,
+  normalize.css, and Gumshoe license evidence; a 2,388-entry release-archive
+  rehearsal contains those seven texts and both root Maru legal files without
+  Sphinx doctree caches.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source
@@ -482,15 +627,22 @@ approval.
 
 ## Decisions and migration boundary
 
-- ADRs 0049 through 0061 and ADRs 0063 through 0065 are Accepted. ADR 0062's
+- ADRs 0049 through 0061 and ADRs 0063 through 0070 are Accepted. ADR 0062's
   private self-hosted interval is superseded. ADR 0063 restores ADR 0060/0061's
   change-aware hosted topology for public collaboration. ADR 0064 makes
   dependency automation security-only, rejects stale locked/allowlisted inputs
   before costly full acceptance, and requires explicit CodeQL merge protection.
   ADR 0065 adds a draft verification boundary and immutable post-publication
-  reconciliation without adding a persistent administrator credential. These
-  decisions remove no test, security, documentation, contract, migration, or
-  authority gate.
+  reconciliation without adding a persistent administrator credential. ADR
+  0067 records a bounded sanitized publication audit, accepts prior public
+  author metadata without rewriting history, and requires distributable third-
+  party notice evidence without adding a recurring full-history scanner. ADR
+  0068 defines public channels and sole-maintainer continuity, while ADR 0069
+  corrects the known CodeQL extraction boundary without weakening Ruff or
+  adding another scanner. ADR 0070 supersedes only ADR 0068's exact repository-
+  description wording and records the separately authorized live readback.
+  These decisions remove no test, security,
+  documentation, contract, migration, or authority gate.
 - ADR 0054 accepts the bounded architecture
   and migrated integrity boundary; it does not declare the partial
   LOG-001/002/003/004/006/007 portfolio complete or approve production rollout.
@@ -599,14 +751,37 @@ approval.
   later testing layers. Managed CodeQL, secret scanning, and push protection
   are enabled; findings must be fixed or explicitly justified rather than
   dismissed by assumption.
+- Managed CodeQL default setup does not analyze fork pull requests, and native
+  CodeQL merge protection does not cover Dependabot pull requests. The required
+  `PR gate` and default-branch/weekly scans remain, but a first cross-repository
+  fork contribution still needs a documented rehearsal.
+- A pull request can modify its candidate workflow and classifier. The present
+  sole-maintainer model relies on human review of those changes; grant no second
+  person write and merge authority until stale-dismissing approval plus
+  CODEOWNER review or a separately designed trusted-base policy check is live.
 - Public workflows must remain on standard hosted runners with read-only pull-
   request permissions. A self-hosted public runner, `pull_request_target`
   execution of contribution code, or environment/secret access for fork pull
   requests requires a separately accepted security design.
-- The ADR 0064 repository candidate is not accepted by local focused evidence
-  alone. Dependabot and the default-branch full-CI preflight remain unchanged on
-  `main` until merge, and the exact candidate head still requires hosted full
-  acceptance.
+- GH-003 is a point-in-time public-history and publication baseline. It does not
+  prove future commits, new refs or external metadata, deployment secrets,
+  legal readiness, production data handling, or the contents of GitHub-hosted
+  Actions logs/artifacts. The 62-run/188-unexpired-artifact inventory was a
+  drift-prone snapshot, not a content scan. Repeat the complete audit after a
+  material visibility, ownership, imported-history, or credential-incident
+  boundary; otherwise review the release delta and current alerts.
+- GH-004 deliberately provides no private project-specific conduct-reporting
+  channel. The owner declined to publish a login or historical personal address
+  or create a placeholder mailbox; public issues and the security-advisory inbox
+  are not substitutes. Sensitive Maru-specific or off-platform conduct concerns
+  therefore have no private project route until an operational channel and
+  independent review capacity are established. ADR 0070's authorized
+  description-only mutation and exact live readback are complete.
+- The ADR 0066/0069 repository candidate is not accepted by local focused
+  evidence alone. Hosted CodeQL now confirms that the Workforce module is
+  analyzed. Ready-state run `32501661144` correctly failed closed on vulnerable
+  transitive development-tool lock entry `pip 26.1.2`; its lock-only `26.2.1`
+  correction still requires complete hosted acceptance at the revised commit.
 - ADR 0065 does not authorize a release. The administrator-only immutability
   readback remains a mandatory maintainer pre-dispatch operation; the first
   `rc.1` remains a dedicated release pull request and public publication
@@ -622,11 +797,11 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Complete repository and hosted acceptance for GH-000 through GH-002, merge
-   the hardening candidate, and re-read the default-branch workflow. Then
-   prepare the separately authorized first candidate release pull request and
-   rehearse `rc.1`; raise reviews to one only when a second trusted maintainer
-   exists.
+1. After explicit publication approval, commit and push the lock-only
+   `pip 26.2.1` security correction to pull request 9. Complete hosted
+   merge-candidate acceptance for GH-005, GH-003, and GH-004 at that exact
+   corrected commit, then merge and re-read the default-branch state. Require
+   another reviewer only after a second trusted maintainer exists.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
@@ -639,7 +814,7 @@ approval.
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `PRODUCTION_CONSOLIDATION.md`, the
-relevant requirement IDs, ADRs 0047 through 0064, and the owning module/runbook
+relevant requirement IDs, ADRs 0047 through 0070, and the owning module/runbook
 docs. Preserve every concurrent change in the dirty working tree. Serialize all
 PostgreSQL tests that share `test_maru_test`; never infer authority from a
 selected edition or route; authorize before parsing untrusted input; retain

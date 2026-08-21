@@ -15,6 +15,15 @@ report](https://github.com/martonpornoi/maru/security/advisories/new) so the
 maintainer can assess and coordinate remediation without disclosing the report
 publicly.
 
+That GitHub form is Maru's configured private vulnerability channel. The sole
+current human repository administrator,
+[`@martonpornoi`](https://github.com/martonpornoi), is responsible for response;
+notification delivery depends on that account's GitHub settings. The reporter
+and any explicitly added advisory collaborators retain access to the private
+advisory. Maru does not yet have an independent security rotation. Use the
+separate limitations and GitHub abuse-reporting guidance in
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community conduct.
+
 Include the affected commit or release, reproduction conditions, impact,
 whether sensitive data may be involved, and any safe mitigation you have tested.
 Do not access data that is not yours, disrupt a live service, or retain personal

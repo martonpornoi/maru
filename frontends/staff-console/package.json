@@ -4,7 +4,7 @@
   "packageManager": "pnpm@11.9.0",
   "type": "module",
   "scripts": {
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/copy-legal-assets.mjs",
     "dev": "vite",
     "generate:api": "openapi-typescript ../../openapi.yaml -o src/api/schema.d.ts",
     "test": "vitest run",

@@ -3,6 +3,12 @@ description: Propose a scoped product or contributor improvement.
 title: "[Proposal]: "
 labels: ["proposal", "triage"]
 body:
+  - type: markdown
+    attributes:
+      value: >-
+        Do not report vulnerabilities or include personal data. Use Maru's
+        private vulnerability form at
+        https://github.com/martonpornoi/maru/security/advisories/new.
   - type: textarea
     id: problem
     attributes:
@@ -22,8 +28,19 @@ body:
     attributes:
       label: Security, privacy, and operations
       description: Note tenant, permission, data, recovery, and deployment implications.
+    validations:
+      required: true
   - type: textarea
     id: alternatives
     attributes:
       label: Alternatives considered
       description: Include existing workflows or workarounds where relevant.
+  - type: checkboxes
+    id: safety_confirmation
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I removed secrets, tokens, database dumps, and personal data.
+          required: true
+        - label: This proposal does not disclose a security vulnerability.
+          required: true

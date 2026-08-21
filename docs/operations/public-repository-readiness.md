@@ -13,6 +13,10 @@ were re-enabled only in exact-allowlist hosted mode.
   mutation and deletion.
 - Repository-level self-hosted runner inventory is empty. Public pull requests
   use only standard GitHub-hosted runners with read-only default permissions.
+  Eligible contribution-code runs from first-time fork contributors may await
+  maintainer approval; that starts isolated execution and does not approve the
+  pull request. Trusted base-branch metadata cleanup runs without contribution
+  checkout and is not subject to fork-code approval.
 - Actions run in `selected` mode, require SHA pinning, and allow only the exact
   revisions in `.github/actions-allowlist.json`.
 - Secret scanning, push protection, Dependabot security updates, and private
@@ -20,7 +24,11 @@ were re-enabled only in exact-allowlist hosted mode.
   configured for Actions, Python, and JavaScript/TypeScript. The `main` ruleset
   rejects CodeQL errors and security alerts of medium severity or higher;
   `PR gate` remains the sole required status check. The default branch currently
-  has zero open CodeQL, Dependabot, or secret-scanning alerts.
+  has zero open CodeQL, Dependabot, or secret-scanning alerts as of the
+  2026-08-21 GH-004 readback.
+  Managed CodeQL default setup does not analyze fork pull requests, and its
+  native merge protection does not cover Dependabot pull requests; the required
+  `PR gate` plus default-branch and weekly scans remain the available boundary.
 - The twelve findings from the first public CodeQL analysis were remediated and
   accepted through [pull request 2](https://github.com/martonpornoi/maru/pull/2).
 - Issues and Discussions are enabled. Projects, Wiki, and GitHub Pages are
@@ -34,31 +42,118 @@ were re-enabled only in exact-allowlist hosted mode.
 - Merge commits and rebase merges are disabled; squash merge and automatic
   deletion of merged branches are enabled.
 
-## Outstanding public-readiness audit
+## Public policy and metadata snapshot
+
+The authenticated 2026-08-21 GH-004 readback reported a public repository and
+100 percent GitHub Community Profile health. GitHub recognizes README,
+Apache-2.0 licensing, contribution guidance, the Code of Conduct, and the pull-
+request template. SECURITY, SUPPORT, GOVERNANCE, CODEOWNERS, two Issue Forms,
+and the Issue Form chooser are also present. The Community Profile API's
+singular `issue_template` field was null; direct repository inspection found
+both forms and the chooser, so that field did not demonstrate their absence.
+The score is a discovery/file-presence signal, not independent assurance that
+the policy content or repository is production-ready.
+
+The live description is **Security-focused Django and PostgreSQL platform for
+operating multi-convention events, under active development.** ADR 0070 records
+the explicit authorization and exact post-change readback for that description-
+only mutation. The wording signals maturity without implying a release stage,
+hosted service, production approval, or permission to use real personal data.
+
+The live topic set is accepted without change: `django`, `event-management`,
+`modular-monolith`, `openapi`, `postgresql`, `python`, `react`, and
+`typescript`. The homepage stays empty until GH-007 publishes the first
+verified Sphinx site. Issues and Discussions remain enabled; Projects, Wiki,
+Pages, and Downloads remain disabled. Sphinx documentation will use Pages, not
+an unversioned Wiki mirror.
+
+GitHub currently generates the default social preview. A custom preview is
+optional polish and is deferred until a purpose-built, owner-approved social
+asset exists; application icons and logos are not silently repurposed. Funding
+is also deferred because no sponsorship recipient or stewardship policy has
+been accepted. Do not add `.github/FUNDING.yml` or connect a recipient as a
+placeholder.
+
+The 23 live labels include every label used by the Issue Forms and current
+automation, including `bug`, `proposal`, `triage`,
+`destructive-change-reviewed`, `good first issue`, and `help wanted`. No issue
+currently carries either newcomer label. `good first issue` is reserved for
+bounded work with observable acceptance, safe synthetic inputs, usable setup
+and verification instructions, no maintainer-only access, and no hidden
+security, migration, or cross-module prerequisite. Do not manufacture newcomer
+work merely to populate the label.
+
+Support is best effort with no response or resolution SLA. Vulnerabilities use
+GitHub private vulnerability reporting. The sole current human repository
+administrator is responsible for response; notification delivery depends on
+that account's settings, and the reporter plus any explicitly added advisory
+collaborators retain access. The Code of Conduct explicitly records that Maru
+has no private project-specific conduct-reporting channel or independent
+reviewer. It rejects public disclosure of sensitive reports and misuse of the
+security-advisory form, and it scopes GitHub Support to GitHub-hosted abuse. The
+owner chose not to publish a login or historical personal address or create an
+unattended placeholder mailbox.
+
+## Completed one-time public-history audit
+
+GH-003 audited the four public branch heads and eight pull-request heads as one
+46-commit graph, passed strict reachable-object verification, and scanned the
+current repository candidate separately with checksum-verified Gitleaks 8.30.1.
+Manual review resolved the single documentation-prose detector result as a
+false positive; no unresolved credential or production-personal-data finding
+remained. Public issue, pull-request, and discussion metadata also produced no
+scanner finding. The durable checkpoint contains only sanitized scope, counts,
+and conclusions, never a matched string or raw report.
+
+All seven currently tracked brand assets and their embedded metadata, plus the
+locked dependency inventories and publication inputs, were reviewed for
+provenance, license, and notice obligations. The owner attests that those assets
+are project-controlled; the audit did not independently prove ownership or
+examine historical-only assets. Maru-owned source remains Apache-2.0. Python
+distribution metadata and the release application manifest declare
+`Apache-2.0 AND MIT`; release assets and the OCI image carry the license and MIT
+notice, while the image's SBOM and provenance describe its contents without an
+aggregate image-wide license expression. No blocker remained within that scope.
+The owner accepted the already-public historical personal Gmail author metadata
+without a destructive rewrite; future maintainer commits use a GitHub no-reply
+address by default.
+
+GH-003 did not download or scan GitHub-hosted Actions log or artifact bytes. Its
+drift-prone snapshot observed 62 workflow runs and 188 unexpired artifacts,
+which remain governed by short retention. The audit therefore makes no claim
+about every public server-generated byte.
+
+Standard GitHub secret scanning and push protection remain live. Validity
+checks and generic-pattern scanning were unavailable for the current user-owned
+repository and remain deferred pending eligibility, provider-contact, and
+synthetic-fixture noise review. GH-003 changed no live setting and deliberately
+added no permanent pull-request history scanner. Repeat the full audit only
+after a material visibility, ownership, imported-history, or incident boundary.
+
+## Outstanding public-readiness work
 
 Visibility changed before every item in the original pre-public checklist had
 fresh evidence. Treat these as immediate launch tasks, not optional later work:
 
-- Complete a secret-history scan, remove any exposed credential from history,
-  rotate it at the provider, and verify no production or personal data exists.
-- Review copyright and third-party assets, dependency licenses, generated
-  content, trademarks, examples, fixtures, commit metadata, issue references,
-  and historical branches/tags for publishability.
-- Replace temporary owner-only conduct and security contact channels with
-  durable monitored addresses. Define maintainer succession and moderation.
 - Exercise the protected-tag refusal and confirm push protection blocks a
   synthetic non-secret test pattern without publishing credentials. Add a
   second trusted maintainer before requiring one approval, CODEOWNER review,
   or independent `gold` approval.
-- Merge the ADR 0065 draft-first and post-publication verification candidate,
-  then rehearse the first explicitly authorized `rc.1`. Exercise the `candidate`
-  and `gold` environment policies, immutable release and asset attestations,
-  GHCR visibility, image provenance, deployment targets, and package cleanup.
-- Review repository description, topics, social preview, funding/sponsorship,
-  issue triage labels, support expectations, and first-good-issue scope.
-- Keep the explicit pre-production maturity statement current. Do not imply
-  that the repository or a candidate release is safe for production personal
-  data.
+- Reconcile the desired `PR gate` GitHub Actions integration binding with the
+  live ruleset under separate authorization, then read back every existing
+  protection. Rehearse a first-time cross-repository fork contribution and its
+  maintainer workflow-approval boundary.
+- Rehearse the first explicitly authorized `rc.1` through ADR 0065's merged
+  draft-first and post-publication verification boundary. Exercise the
+  `candidate` and `gold` environment policies, immutable release and asset
+  attestations, GHCR visibility, image provenance, deployment targets, and
+  package cleanup.
+- The live description, topics, feature states, default social preview, absent
+  funding, issue-label inventory, support expectations, and first-good-issue
+  boundary are reviewed and accepted by GH-004. Future external metadata
+  changes require another explicit authorization and readback.
+- Keep the detailed production-readiness boundary current. Do not imply that
+  the repository or a candidate release is safe for production personal data.
 
 ## Post-transition acceptance
 

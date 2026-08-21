@@ -12,10 +12,14 @@ application image in GitHub Container Registry with source provenance, SBOM,
 documentation, OpenAPI, dependency locks, and checksums.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) to work on Maru,
-[SECURITY.md](SECURITY.md) for private vulnerability reporting, and
+[SUPPORT.md](SUPPORT.md) for help channels,
+[SECURITY.md](SECURITY.md) for private vulnerability reporting,
+[GOVERNANCE.md](GOVERNANCE.md) for maintainer authority and continuity, and
 [the release process](docs/operations/release-process.md) for CalVer and GitHub
 artifact semantics. Contributions are licensed under
 [Apache-2.0](LICENSE) and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+Bundled third-party components retain the licenses recorded in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Each occurrence of a convention is a first-class event edition, for example
 `Awoostria 2026` or `Eurofurence 2026`. Historical editions remain available so
@@ -35,43 +39,25 @@ permission-controlled operational record.
 - Background workers for delivery, exports, imports, and other slow operations
 
 Reflex is not part of the platform core. The active browser milestone is one
-record-oriented `/admin/` shell: Administration home, embedded Convention
-work, permission-filtered specialist records, and Pages 1–9 under the reserved
-`/admin/platform/` route space. Platform administration remains separate from
-convention participation. Backend route, authorization, frontend build,
-populated and fresh migration, local restore-drill, and desktop/390-pixel
-browser smoke evidence pass. Dependency audits also report no known Python or
-JavaScript vulnerabilities. The current consolidated backend gate passes 1,239
-tests with 90.35 percent branch coverage. Accessibility, complete visual states,
-and owner rehearsal remain before
-release acceptance.
+task-oriented `/admin/` shell with Administration home, embedded Convention
+work, permission-filtered specialist records, and collision-safe platform
+routes. Platform administration remains separate from convention
+participation. Exact implemented behavior, current repository evidence, and
+remaining accessibility, recovery, deployment, and owner gates are maintained
+in [CURRENT.md](docs/project/CURRENT.md) and the
+[production-consolidation ledger](docs/project/PRODUCTION_CONSOLIDATION.md).
+Dated test, coverage, migration, and vulnerability evidence stays in those
+maintained handoff documents instead of being duplicated here.
 
-ADR 0040 defines Page 8 **Representation & access** as the first M2 slice:
-exact existing verified people accept their own Executive Board invitations,
-at least two distinct controllers cross-approve root authority, and activation
-moves the organization from Draft to Active atomically. The schema, commands,
-HTML adapters, authorization matrix, synthetic fixture handoff, and backend
-tests are implemented. Organizations migrations `0009` through `0011` add
-database-enforced governance provenance and emergency controller containment;
-organizations `0012`, participation `0004`, registration `0031`, and workforce
-`0003` enforce IDN-011 for every covered convention-subject relationship.
-Sensitive Page 8 reads and privileged denials are audited with a bounded
-100-row directory. Accessibility/complete-state evidence, representative
-deployment/PITR rehearsal, and owner tutorial remain
-open; the platform administrator is the actor only and never a convention
-subject.
-
-ADR 0041 implements the exact authorization lattice—organization, edition,
-department, and typed resource—without implicit department-tree inheritance.
-Sealed database-resolved targets, immutable workforce-position bindings,
-append-only issuance, one-way revocation, bounded delegation, PostgreSQL
-integrity guards, and a privacy-minimized migration-readiness command are in
-place. The contextual editor and computed access explanation remain unmounted,
-and exact actor/approver authority-source provenance remains a production gate.
-ADR 0042 makes all repository fixtures and
-tutorials synthetic-only and retires the former public-roster rehearsal before
-file, network, or database access. ADR 0043 adds the narrowly scoped global
-emergency containment path for a compromised Board controller.
+Maru establishes convention authority through verified recipient-owned
+accounts, an explicit multi-person Executive Board ceremony, exact scoped
+assignments, and audited containment. Organization, edition, Department, and
+typed-resource authorization remain deny-by-default without implicit hierarchy
+inheritance. Repository fixtures and tutorials are synthetic-only. See the
+[authorization model](docs/security/authorization-model.md),
+[management shell contract](docs/product/page-contracts/00-management-experience-shell.md),
+and maintained ledgers for the exact mounted behavior and residual production
+gates.
 
 ## Local quick start
 
@@ -88,10 +74,10 @@ uv run python src/manage.py runserver
 
 Open <http://127.0.0.1:8000/>. ADR 0039 places platform setup and the
 organization-scoped management spine under `/admin/platform/` inside the
-shared `/admin/` shell. Pages 1–2 are platform-administrator-only; active
-scoped non-staff accounts may use permitted Pages 3–8 and Convention work,
-while specialist records still require independent Django staff/model
-permissions.
+shared `/admin/` shell. Each route rechecks its own platform, organization,
+edition, Department, or typed-resource policy; a selected context or nearby
+navigation entry never grants access. Specialist records also retain their
+independent Django staff/model permissions.
 After signing in as the platform administrator, browse the searchable API
 reference at <http://127.0.0.1:8000/api/v1/docs/> or the reading-focused ReDoc
 view at <http://127.0.0.1:8000/api/v1/redoc/>. Tooling uses the canonical
@@ -106,11 +92,11 @@ uv run python src/manage.py createsuperuser
 ```
 
 This management command is the only generic bootstrap path for the first
-platform administrator. The Django **Accounts** specialist record is
+platform administrator. The Django **User accounts** specialist record is
 inspection-only: it cannot create people, set or reset passwords, change
 platform privileges or lifecycle, or attach convention relationships. After
 bootstrap, invite ordinary person accounts from **Platform administration >
-Accounts > Invite** so each recipient chooses their own password.
+User accounts > Invite** so each recipient chooses their own password.
 
 The local baseline prepared during ADR 0030 uses:
 
@@ -193,7 +179,10 @@ rehearsal remains a release gate.
 - [Testing strategy](docs/quality/testing-strategy.md)
 - [Documentation standards](docs/quality/documentation-standards.md)
 - [Development setup](docs/development/setup.md)
-- [Repository governance](docs/development/repository-governance.md)
+- [Project governance and maintainer continuity](GOVERNANCE.md)
+- [Repository workflow and protection](docs/development/repository-governance.md)
+- [Support policy](SUPPORT.md)
+- [Security policy](SECURITY.md)
 - [GitHub release process](docs/operations/release-process.md)
 - [Public repository readiness](docs/operations/public-repository-readiness.md)
 - [Current project state](docs/project/CURRENT.md)

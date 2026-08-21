@@ -1,13 +1,14 @@
 name: Bug report
-description: Report a reproducible Maru defect without sensitive data.
+description: Report a Maru defect without disclosing sensitive data.
 title: "[Bug]: "
 labels: ["bug", "triage"]
 body:
   - type: markdown
     attributes:
       value: >-
-        Do not report vulnerabilities or include personal data. Follow SECURITY.md
-        for private security reporting.
+        Do not report vulnerabilities or include personal data. Use Maru's
+        private vulnerability form at
+        https://github.com/martonpornoi/maru/security/advisories/new.
   - type: textarea
     id: outcome
     attributes:
@@ -16,10 +17,12 @@ body:
     validations:
       required: true
   - type: textarea
-    id: reproduction
+    id: evidence
     attributes:
-      label: Reproduction
-      description: Give the smallest safe, synthetic-data reproduction.
+      label: Evidence or reproduction conditions
+      description: >-
+        Give the smallest safe synthetic-data reproduction when available.
+        Otherwise describe frequency, triggering conditions, and sanitized logs.
     validations:
       required: true
   - type: input

@@ -117,15 +117,27 @@ restore/PITR, and owner/governance gates remain.
 ADR 0060 replaces unconditional twelve-shard pull-request acceptance with a
 change-aware stable `PR gate`: documentation changes use no PostgreSQL,
 ordinary module work uses bounded affected tests, and high-risk boundaries fail
-closed to reusable full acceptance. Full certification uses eight measured
-whole-file integration shards plus unit PostgreSQL, combined coverage, four
-parallel non-database gates, and a stable `Full CI gate`. A manual exact-source
-release workflow now publishes a CalVer-tagged immutable GHCR image with SBOM/
-provenance and GitHub evidence assets. Pull-request browser smoke, nightly
-compatibility/concurrency/visual
-matrices, synthetic deployment, and release recovery rehearsal remain next
-testing-infrastructure outcomes; ephemeral Actions databases do not satisfy
-production restore/PITR.
+closed to reusable full acceptance. ADR 0066 makes drafts cheap and explicitly
+non-green until **Ready for review**, then runs the authoritative selected path.
+Repository safety now precedes fan-out, protected renames and every destructive
+change require full acceptance, and the identical-tree squash push no longer
+repeats pull-request acceptance. Full certification uses a database-free unit
+job, eight measured whole-file PostgreSQL integration shards, combined
+coverage, four parallel non-database gates, and a stable `Full CI gate`.
+Accepted main-run timings are refreshed; missing or over-30-minute targeted
+projections promote to full acceptance. A head update also clears prior
+destructive-review evidence before the revised scope can run. Draft pull
+request 9 proved that the first Workforce header edit did not restore CodeQL
+extraction even though the job stayed green. ADR 0069 now uses an equivalent
+bounded `TypeVar` for that one union-bounded generic and rejects the two header
+shapes known to omit files; only a fresh zero-diagnostic managed log can prove
+coverage. Managed run `32485597468` supplies that proof by explicitly extracting
+the Workforce file with zero raw diagnostic. A manual exact-source release
+workflow publishes a CalVer-tagged immutable GHCR image with SBOM/provenance and
+GitHub evidence assets. Pull-request browser smoke, nightly compatibility/
+concurrency/visual matrices, synthetic deployment, and release recovery
+rehearsal remain next testing-infrastructure outcomes; ephemeral Actions
+databases do not satisfy production restore/PITR.
 
 ADR 0062's private-repository self-hosted interval is superseded by ADR 0063
 after the 2026-08-20 public transition. Public pull requests now use only
@@ -142,14 +154,30 @@ acceptance. GH-001 adds active CodeQL merge protection for errors and medium-or-
 higher security findings while retaining `PR gate` as the sole required status.
 Pull request 2's remediation of the twelve initial findings is accepted, and
 the default branch now reports zero open CodeQL alerts. ADR 0065 records the
-enabled immutable-release setting and GH-002's repository candidate: exact
+enabled immutable-release setting and GH-002's merged repository boundary: exact
 draft asset/commit verification precedes publication, and immutable release,
 asset, tag, OCI digest, and attestation reconciliation follows it without a
-persistent administrator credential. The explicitly authorized first candidate
-rehearsal, one-time public-history audit, public-policy reconciliation, post-
-merge CI measurement, dependency review, Pages publication, multi-maintainer
-governance, and remaining demand-triggered-control review stay open under
-GH-002 through GH-009.
+persistent administrator credential. ADR 0067 completes GH-003's bounded
+one-time audit over all then-public refs, current candidate material, public
+metadata, assets, and locked dependency licenses. It leaves standard secret
+scanning and push protection live, defers unavailable validity/generic controls,
+accepts prior public author metadata without rewriting history, and ships the
+MIT notice required by the compiled Staff Console. ADR 0068 now reconciles the
+public collaboration surface: stable evidence links replace brittle README
+counts, sole-maintainer continuity and best-effort channels are explicit, and
+the accepted topics, feature switches, and newcomer-label boundary are recorded
+without inventing a committee. The Code of Conduct truthfully records that Maru
+has no private project-specific conduct channel or independent reviewer; it
+neither publishes the owner's personal address nor creates an unattended
+placeholder.
+ADR 0070 supersedes ADR 0068's ambiguous **Pre-production** wording; the
+active-development description's separately authorized mutation and exact
+readback now complete GH-004.
+The explicitly authorized first candidate rehearsal, dependency review,
+Pages publication, multi-maintainer governance, and remaining demand-triggered-
+control review stay open under GH-002 and GH-006 through GH-009. GH-005's event-
+efficiency correction and GH-003's repository remediation remain subject to
+hosted merge-candidate acceptance before merge.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative

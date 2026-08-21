@@ -13,6 +13,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
@@ -29,6 +31,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
@@ -42,6 +46,15 @@ jobs:
         run: |
           python -m pip install uv==0.11.29
           uv sync --all-groups --locked
+      - name: Distribution license contracts
+        run: |
+          uv run pytest tests/unit/test_package_licensing.py \
+            tests/unit/test_release_metadata.py -q
+      - name: Build and inspect Python distributions
+        run: |
+          uv build --out-dir .ci-distributions
+          uv run python scripts/verify_package_artifacts.py \
+            --distribution-directory .ci-distributions
       - name: Static analysis
         run: |
           uv lock --check
@@ -57,6 +70,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
@@ -74,7 +89,7 @@ jobs:
         run: |
           uv run pydoclint src scripts
           uv run python scripts/validate_python_docstrings.py src scripts
-          uv run sphinx-build -W --keep-going --fresh-env -j auto -b html docs docs/_build/html
+          uv run sphinx-build -W --keep-going --fresh-env -j auto -d docs/_build/doctrees -b html docs docs/_build/html
       - name: Upload contributor documentation
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -90,6 +105,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
@@ -128,6 +145,14 @@ jobs:
           pnpm run test
           pnpm run build
           git diff --exit-code -- ../../src/maru/core/static/staff-console
+          if ! UNTRACKED_GENERATED_FILES=$(git ls-files --others --exclude-standard -- ../../src/maru/core/static/staff-console); then
+            echo "Unable to inspect generated Staff Console output."
+            exit 1
+          fi
+          if test -n "$UNTRACKED_GENERATED_FILES"; then
+            printf '%s\n' "$UNTRACKED_GENERATED_FILES"
+            exit 1
+          fi
 
   security:
     name: Full dependency security
@@ -136,6 +161,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
@@ -165,26 +192,15 @@ jobs:
 
   unit:
     name: Full unit coverage
-    needs: security
+    needs: [static, security]
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    services:
-      postgres:
-        image: postgres:17.11-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
-        env:
-          POSTGRES_DB: maru
-          POSTGRES_USER: maru
-          POSTGRES_PASSWORD: maru
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U maru -d maru"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 15
     env:
-      MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:5432/maru
+      MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:1/maru_unit_no_database
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
@@ -216,7 +232,7 @@ jobs:
 
   integration:
     name: Full PostgreSQL integration (${{ matrix.shard }}/8)
-    needs: security
+    needs: [static, security]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
@@ -240,6 +256,8 @@ jobs:
       MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:5432/maru
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
@@ -279,6 +297,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"

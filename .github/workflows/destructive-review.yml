@@ -1,0 +1,29 @@
+name: Refresh destructive review
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [synchronize, reopened, ready_for_review, converted_to_draft]
+
+permissions:
+  issues: write
+
+concurrency:
+  group: destructive-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  clear-destructive-review:
+    name: Clear stale destructive review
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'destructive-change-reviewed') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require a fresh destructive approval event
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: >-
+          gh api --method DELETE
+          "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels/destructive-change-reviewed"
+          --silent

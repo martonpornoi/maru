@@ -1,8 +1,8 @@
 # Threat model
 
-Status: Living baseline with implemented tenant, authority, and bounded-read
-controls
-Last updated: 2026-08-02
+Status: Living baseline with implemented tenant, authority, bounded-read, and
+public-contribution controls
+Last updated: 2026-08-21
 
 This living threat model covers the proposed architecture before code exists.
 Every vertical slice must refine its assets, data flows, abuse cases, controls,
@@ -107,9 +107,11 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 | Lost on-site device | cached attendee or room data exposed | managed device, disk/app encryption, narrow dataset, short lease, remote revoke, screen lock, no C3 case detail |
 | Audit tampering | privileged action disappears | append-only application API, restricted database role, hash-linked batches or external integrity checkpoints, monitored export |
 | Backup or demo leak | old production database copied to laptop | encrypted isolated backups, controlled restore, synthetic non-production data, access and restore audit |
+| Public-history or audit-report leak | an old ref retains a credential or a raw scanner report republishes it | bounded all-ref audit, standard secret scanning and push protection, sanitized evidence only, provider revocation or rotation first, separately authorized destructive cleanup |
 | Enumeration and stalking | person attendance, hotel, shift, or live location inferred | generic denial, privacy-preserving lookup, no presence API, rate limits, user block/report tools, staff training |
 | Minor safety failure | guardian or pickup information exposed or bypassed | edition age policy, scoped verification, guardian workflows, restricted fields, safeguarding review and tests |
 | Dependency/supply-chain compromise | package or build injects code | lockfiles with hashes where supported, minimal dependencies, review, SBOM, scanning, signed builds, isolated CI secrets |
+| Pull-request automation tampering | candidate workflow weakens its own classifier or required gate | sole-maintainer write boundary, full routing for automation changes, source-bound required check, read-only hosted runners, no-checkout label control, stale-dismissing CODEOWNER review before multi-maintainer writes |
 | Admin misconfiguration | form exposes restricted answer or public report | secure defaults, classification required, preview with personas, policy lint, four-eyes approval for risky change |
 
 ## Security architecture controls
@@ -185,6 +187,22 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 - Secrets live outside code and logs and rotate without a deploy.
 - Dependency, secret, static, dynamic, container, and infrastructure scanning
   feed release gates with human triage.
+- Standard GitHub secret scanning and push protection are continuous repository
+  controls. GH-003's checksum-verified all-ref and current-candidate review was
+  a one-time public-launch audit, not a permanent pull-request scanner.
+- Validity checks and generic-pattern scanning were unavailable for the current
+  user-owned repository and remain deferred. Reassess eligibility,
+  provider-contact effects, and synthetic-fixture noise after a relevant
+  ownership, plan, or incident change instead of simulating them with a custom
+  broad workflow.
+- Raw secret-scan matches and reports are sensitive security material: keep them
+  restricted and ephemeral, and commit only sanitized scope, counts, triage,
+  and conclusions.
+- Public contribution code runs only with read-only authority on isolated hosted
+  runners. A narrowly scoped `pull_request_target` control may mutate issue
+  metadata without checkout; it must never execute contribution code or expose
+  repository secrets. First-time fork workflow approval authorizes isolated
+  execution, not acceptance of the contribution.
 - Production debug mode is impossible by validated configuration.
 
 ## Abuse and community safety

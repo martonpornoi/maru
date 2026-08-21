@@ -89,6 +89,11 @@ def test_release_files_are_deterministic_and_workflow_ready(tmp_path: Path) -> N
     )
     outputs = (tmp_path / "github-output").read_text(encoding="utf-8")
     assert manifest["tag"] == "v2026.08.2-rc.1"
+    assert manifest["application_license"] == {
+        "expression": "Apache-2.0 AND MIT",
+        "files": ["LICENSE", "THIRD_PARTY_NOTICES.md"],
+        "scope": "Maru source and bundled Staff Console runtime",
+    }
     assert "prerelease=true\n" in outputs
     assert "python_version=2026.8.2\n" in outputs
 

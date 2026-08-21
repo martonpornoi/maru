@@ -334,6 +334,30 @@ Maru must not infer age from profile, appearance, behavior, or social accounts.
 
 ## Logs, analytics, and non-production data
 
+### Public repository and security-audit evidence
+
+- A deliberate public Git author name and email are C0 publication metadata,
+  not Maru account or identity evidence. The owner accepts the already-public
+  historical personal Gmail attribution without rewriting history. Future
+  maintainer commits use a GitHub no-reply address by default unless an author
+  knowingly selects another public address.
+- Public source, documentation, examples, screenshots, fixtures, and test data
+  stay synthetic and must not contain production personal data.
+- A raw secret-scan match, report, reusable fingerprint, or matched context is
+  C4, or the higher class of the material it exposes. Keep it access-restricted
+  and ephemeral, never commit or log it, and destroy the local working copy when
+  triage and any provider response are complete. A sanitized aggregate
+  checkpoint without matched content is C0 governance evidence.
+- Sanitized dependency-license, notice, and asset-provenance inventories are C0
+  when they contain no sensitive path or match content. Retain them with the
+  repository's governance and release evidence.
+- History rewriting, ref deletion, and forced updates are destructive incident
+  actions, not routine retention cleanup. Rotate or revoke a real credential
+  first and require separate authorization, impact review, and public
+  coordination before altering published history.
+
+### Application logs and non-production environments
+
 - Application logs use opaque identifiers and structured error codes.
 - Request bodies, tokens, message content, form answers, query text, and file
   contents are excluded by default.

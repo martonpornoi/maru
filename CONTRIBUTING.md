@@ -47,6 +47,26 @@ Low-risk changes use a fail-closed affected-test plan; workflows, dependencies,
 models, migrations, settings, security boundaries, and test infrastructure run
 the complete hosted acceptance matrix.
 
+Open unfinished work as a draft. Draft updates run only the cheap locked-input
+and automation-policy feedback and intentionally keep `PR gate` red. After the
+complete local certification passes, choose **Ready for review** to start the
+authoritative hosted path. Converting back to draft cancels obsolete acceptance.
+
+## Issue triage and newcomer work
+
+New bug reports and proposals start with the `triage` label. The maintainer may
+request a synthetic reproduction, redirect a support question to Discussions,
+link a duplicate, or decline work that does not fit the roadmap. Labels express
+current classification, not a promise of scheduling or a response-time SLA.
+
+An issue receives `good first issue` only when it is independently bounded,
+contains observable acceptance criteria and relevant setup or verification
+commands, needs no private data or maintainer-only access, and avoids hidden
+security, migration, or cross-module prerequisites. `help wanted` may identify
+broader work that still needs design discussion. Comment before investing in a
+large implementation, because a label is not a reservation or pre-approval of
+a particular design.
+
 ## Pull requests
 
 Complete the pull request template. Explain the user or operator outcome,
@@ -54,9 +74,25 @@ security/privacy implications, migrations and recovery, tests, documentation,
 and any intentionally deferred work. Resolve review conversations and use
 squash merge so `main` remains linear.
 
-Large or protected-path deletions require the `destructive-change-reviewed`
-label from a maintainer. Automation must not be weakened merely to make a check
-green. If a check is wrong, fix its contract and explain why.
+Large deletions and any deletion or rename of source, tests, repository
+automation, governance records, or critical root policy/deployment files
+require the repository owner to apply `destructive-change-reviewed`. Under the
+current sole-maintainer policy, automation accepts approval only on that exact
+owner label-application event for the current head; every other pull-request
+action treats an existing label as stale. A trusted metadata workflow also
+removes the stale label after a head change, so the owner must inspect the new
+scope and reapply it. Readiness and reopen transitions clear stale approval too.
+Mark a destructive pull request ready before applying the label. Automation
+must not be weakened
+merely to make a check green. If a check is wrong, fix its contract and explain
+why.
+
+Eligible contribution-code `pull_request` runs from a first-time fork
+contributor may wait for a maintainer to approve execution. That permits
+untrusted code to run with read-only authority on an isolated hosted runner; it
+does not approve the pull request or its changes. The trusted base-branch
+metadata cleanup is not subject to fork-code approval and never checks out the
+contribution.
 
 By submitting a contribution, you agree that it is licensed under the
 [Apache License 2.0](LICENSE) and that the [Code of Conduct](CODE_OF_CONDUCT.md)

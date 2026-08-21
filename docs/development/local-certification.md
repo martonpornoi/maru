@@ -1,7 +1,7 @@
 # Local exact-commit certification
 
 Status: Required contributor evidence; GitHub independently verifies pull requests
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 
 ## What the gate proves
 
@@ -15,9 +15,12 @@ Last updated: 2026-08-20
 - every unit and PostgreSQL integration test; and
 - combined branch-aware coverage at or above 90 percent.
 
-The test phase uses one unit container and eight deterministic integration
-containers. Every integration file stays whole and serial within its shard.
-The containers are local Docker resources, not nine GitHub-hosted runners.
+The test phase uses one database-free unit process and eight deterministic
+integration processes backed by eight isolated PostgreSQL containers. Every
+integration file stays whole and serial within its shard. The containers are
+local Docker resources, not eight GitHub-hosted runners. An unreachable unit
+database URL makes accidental database use fail instead of silently changing
+the unit boundary.
 
 ## Run it directly
 
@@ -53,9 +56,9 @@ Activate the tracked hook once per clone:
 
 The hook rejects direct pushes to `main`, branch deletion, and non-fast-forward
 updates. Work on a feature branch, push it normally, and open a pull request;
-GitHub then evaluates the exact head commit through the hosted `PR gate`. Git
-hooks can be bypassed and therefore supplement rather than replace GitHub's
-active ruleset.
+GitHub then evaluates the current pull-request merge candidate, derived from
+that head and up-to-date `main`, through the hosted `PR gate`. Git hooks can be
+bypassed and therefore supplement rather than replace GitHub's active ruleset.
 
 ## Public repository trust boundary
 
@@ -66,10 +69,23 @@ stable required result is `PR gate`, not a file uploaded from the contributor's
 computer.
 
 Documentation-only changes avoid PostgreSQL, ordinary source changes run unit
-and bounded affected integration tests, and changes to workflows, dependencies,
-models, migrations, settings, security boundaries, or the test harness invoke
-the complete eight-shard matrix. This selection is repository policy, not a
-contributor assertion.
+and affected integration tests, and changes to workflows, dependencies, models,
+migrations, settings, security boundaries, or the test harness invoke the
+complete eight-shard matrix. Missing timing evidence or a targeted projection
+over 30 minutes also routes to full acceptance. This selection is repository
+policy, not a contributor assertion.
+
+Draft pull requests perform only the classifier and locked-input/Actions-policy
+preflight and retain an explicitly non-green `PR gate`. **Ready for review**
+starts authoritative hosted acceptance. The pull-request workflow does not
+repeat that evidence after the protected identical-tree squash reaches `main`;
+managed CodeQL still performs its default-branch scan.
+
+A pull request can propose changes to its own candidate workflow and classifier.
+The current sole-maintainer boundary therefore includes human review of
+automation changes; before another person receives write and merge authority,
+enable stale-dismissing approval plus CODEOWNER review or add a separately
+designed trusted-base policy check.
 
 The persistent `maru-local-certifier` was unregistered before public Actions
 were enabled. Do not register a personal or trusted-network machine for public
@@ -83,4 +99,5 @@ successful `PR gate`, resolved conversations, and squash-only linear history;
 it rejects deletion and non-fast-forward updates with no bypass actors. Release
 tags are immutable under a second active ruleset. Actions are limited to the
 exact pinned references in `.github/actions-allowlist.json`, and workflow tokens
-remain read-only except for the manually invoked release boundary.
+remain read-only except for the manually invoked release boundary and the
+issues-only, no-checkout stale-label cleanup workflow.
