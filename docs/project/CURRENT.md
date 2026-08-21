@@ -17,17 +17,18 @@ private vulnerability reporting, and managed CodeQL. ADR 0064 accepts security-
 only dependency automation, early locked-input and Action-policy validation,
 and explicit CodeQL merge protection. ADR 0065 accepts administrator-confirmed
 release immutability, verified draft publication, and exact post-publication
-release, asset, tag, image, and attestation reconciliation. ADR 0066's current
-candidate makes draft acceptance cheap and explicitly non-green and removes
-measured duplicate acceptance without removing an evidence category. Draft
-pull request 9 proved that its first CodeQL syntax correction was insufficient;
+release, asset, tag, image, and attestation reconciliation. ADR 0066's accepted
+boundary makes draft acceptance cheap and explicitly non-green and removes
+measured duplicate acceptance without removing an evidence category. Pull
+request 9 proved that its first CodeQL syntax correction was insufficient;
 ADR 0069 replaces the rejected union-bounded header with its narrowly exempted
 `TypeVar` form, and hosted run `32485597468` explicitly extracts the Workforce
-file with zero raw diagnostic. ADR 0067's current candidate records GH-003's
-sanitized public-history and publication
-audit, keeps enhanced secret controls deferred under the current ownership
-boundary, and closes the bundled-frontend notice gap without adding a permanent
-scanner. ADR 0068 reconciles the public collaboration
+file with zero raw diagnostic. Corrected head `7b7add0` then passed complete
+ready-state acceptance in run `32504876594`, and pull request 9 squash-merged
+to `main` as `a42358b`. ADR 0067 records GH-003's sanitized public-history and
+publication audit, keeps enhanced secret controls deferred under the current
+ownership boundary, and closes the bundled-frontend notice gap without adding
+a permanent scanner. ADR 0068 reconciles the public collaboration
 surface, defines truthful sole-maintainer continuity and newcomer triage, and
 records reviewed repository metadata without inventing independent authority,
 an unattended conduct inbox, or a silent GitHub mutation. ADR 0070 then replaces
@@ -175,10 +176,11 @@ cross-domain-save design.
   medium-or-higher security alerts to clear. The strict `PR gate`, pull-request-
   only squash policy, resolved-conversation rule, deletion/non-fast-forward
   protection, and empty bypass list remain unchanged.
-- The checked-in `main` ruleset desired state now binds `PR gate` to GitHub
-  Actions integration ID `15368`. The observed live rule still accepts the
-  context from any source, so a separately authorized update and full readback
-  remain pending before that provenance binding can be called active.
+- The active `main` ruleset binds the strict `PR gate` to GitHub Actions
+  integration ID `15368`. Ruleset `21093924` was independently re-read after
+  the authorized update with the exact context/integration pair and every prior
+  CodeQL, pull-request, deletion, non-fast-forward, enforcement, and no-bypass
+  protection intact.
 - Candidate and gold releases are manual, exact-current-`main`, full-certified,
   collision-refusing CalVer workflows. Repository release immutability is live;
   the administrator readback reports `enabled: true`. The ADR 0065 repository
@@ -250,10 +252,12 @@ cross-domain-save design.
   intended fail-closed dependency boundary. Its sole originating failure was
   `pip-audit` rejecting locked development-tool dependency `pip 26.1.2` under
   `PYSEC-2026-3721`; the Full CI and PR gates failed only as downstream
-  consequences. The repository candidate now refreshes that one transitive
-  lock entry to patched `pip 26.2.1`. Local Python and npm audits are clean,
-  but hosted unit, PostgreSQL, coverage, and the final gate still require a
-  fresh run at the corrected commit.
+  consequences. The resulting lock refresh changed that one transitive entry to
+  patched `pip 26.2.1`. Corrected head
+  `7b7add029cf8dd22fd95e357dd1f597aaa4e0803` passed complete hosted acceptance
+  in run `32504876594`; managed CodeQL run `32504873965` passed Actions,
+  JavaScript/TypeScript, and Python. Pull request 9 squash-merged to `main` as
+  `a42358b583b04c4ad0738e05247f2cffedfbe07e`.
 
 ### Registration, profile, and admission commerce
 
@@ -568,7 +572,8 @@ as the repository-wide gate:
   Ruff lint and formatting pass for the contract; documentation validation
   covers 286 Markdown files and 203 requirement identifiers; whitespace
   validation passes; and a fresh warning-fatal parallel Sphinx/AutoAPI build
-  succeeds. Hosted ready-state acceptance remains separate.
+  succeeds. Run `32504876594` supplies the complete ready-state hosted
+  acceptance for these merged public-material changes.
 - The ADR 0067 audit mirror contains four branch heads, eight pull-request
   heads, and 46 unique commits. `git fsck --full --strict` passes. A checksum-
   verified Gitleaks 8.30.1 scan produces one redacted documentation false
@@ -777,11 +782,16 @@ approval.
   therefore have no private project route until an operational channel and
   independent review capacity are established. ADR 0070's authorized
   description-only mutation and exact live readback are complete.
-- The ADR 0066/0069 repository candidate is not accepted by local focused
-  evidence alone. Hosted CodeQL now confirms that the Workforce module is
-  analyzed. Ready-state run `32501661144` correctly failed closed on vulnerable
-  transitive development-tool lock entry `pip 26.1.2`; its lock-only `26.2.1`
-  correction still requires complete hosted acceptance at the revised commit.
+- ADR 0066, ADR 0069, and GH-005 are accepted. Run `32504876594` passed
+  preflight, repository safety, static analysis, warning-fatal documentation,
+  generated contracts and frontend verification, dependency security, unit
+  coverage, all eight PostgreSQL shards, combined coverage, `Full CI gate`, and
+  `PR gate`. Managed CodeQL run `32504873965` passed Actions,
+  JavaScript/TypeScript, and Python. This is repository acceptance, not
+  deployment, release, recovery, accessibility, or production approval. The
+  GH-005 closure branch passes all 17 focused workflow/ruleset contracts,
+  validates 288 Markdown files and 203 requirement identifiers, and builds the
+  complete Sphinx/AutoAPI site warning-fatally from a fresh environment.
 - ADR 0065 does not authorize a release. The administrator-only immutability
   readback remains a mandatory maintainer pre-dispatch operation; the first
   `rc.1` remains a dedicated release pull request and public publication
@@ -797,11 +807,9 @@ approval.
 
 ## Smallest sensible next actions
 
-1. After explicit publication approval, commit and push the lock-only
-   `pip 26.2.1` security correction to pull request 9. Complete hosted
-   merge-candidate acceptance for GH-005, GH-003, and GH-004 at that exact
-   corrected commit, then merge and re-read the default-branch state. Require
-   another reviewer only after a second trusted maintainer exists.
+1. Evaluate GH-006 dependency review against the existing locked-resolution,
+   `pip-audit`, `pnpm audit`, Dependabot, and immutable-Action controls; adopt it
+   only if it adds material non-duplicative protection.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.

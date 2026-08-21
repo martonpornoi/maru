@@ -1,9 +1,8 @@
 # GitHub repository hardening plan
 
-Status: GH-000, GH-001, and GH-003 implemented; GH-002 repository verification
-implemented and first candidate rehearsal pending; GH-004 repository candidate
-and live metadata reconciliation complete; GH-005 hosted extraction passed with
-ready-state acceptance pending
+Status: GH-000, GH-001, GH-003, GH-004, and GH-005 complete; GH-002 repository
+verification implemented with its first candidate rehearsal pending; GH-006
+through GH-009 tracked
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -269,10 +268,10 @@ ADR 0066 accepts the repository correction:
   missing timings or a targeted estimate over 1,800 seconds route to full
   acceptance.
 
-The correction changes no live ruleset or repository setting. Its checked-in
-desired state binds `PR gate` to GitHub Actions integration ID `15368`, but a
-separately authorized update and readback are still required before describing
-that provenance binding as live. Label events remain intentionally conservative
+The repository correction itself changed no live rule. Ruleset `21093924` was
+subsequently updated under separate authorization and independently re-read
+with `PR gate` bound to GitHub Actions integration ID `15368` and every prior
+protection intact. Label events remain intentionally conservative
 because GitHub treats skipped required jobs as successful, cannot filter the
 pull-request trigger by label name, and suppresses recursive workflow events
 from the cleanup workflow's GitHub token.
@@ -284,9 +283,12 @@ ADR 0069 supersedes that compatibility mechanism with one equivalent bounded
 `TypeVar`, a line-level `UP047` exception, and a repository guard against the
 known incompatible header shapes.
 
-State: managed run `32485597468`, Python job `96781280766`, explicitly extracts
-`workforce/queries.py` with zero raw diagnostic at commit `6317538`. Ready-state
-merge-candidate acceptance remains before merge.
+State: complete. Managed run `32485597468`, Python job `96781280766`, explicitly
+extracts `workforce/queries.py` with zero raw diagnostic at commit `6317538`.
+Corrected ready-state run `32504876594` passed every selected full-acceptance
+category at head `7b7add0`; CodeQL run `32504873965` passed all three languages;
+pull request 9 squash-merged as `a42358b`. The live required-status provenance
+binding is reconciled.
 
 ### GH-006: Dependency review
 
@@ -342,6 +344,7 @@ a focused decision before adoption.
 | Setting | Observed state | Tracked outcome | Milestone |
 | --- | --- | --- | --- |
 | CodeQL merge protection | Active: `errors` and `medium_or_higher` | Accepted and reconciled | GH-001 |
+| Required status provenance | `PR gate` bound to GitHub Actions integration `15368` | Accepted and reconciled; re-read after visibility, ownership, or plan drift | GH-005 |
 | Release immutability | Enabled directly on Maru; no release or tag | Re-read before every dispatch; require immutable post-publication evidence | GH-002 |
 | Candidate environment | Exact `main`; no admin bypass or reviewer | Keep unless operational separation is needed | GH-002 |
 | Gold environment | Exact `main`; no admin bypass or reviewer | Add independent review only with a second maintainer | GH-002/GH-008 |

@@ -83,11 +83,11 @@ bypass protection intact. The active `v*` tag rule rejects update, deletion,
 and non-fast-forward mutation. Verify the complete live rules after every
 visibility, ownership, or plan change rather than trusting this prose.
 
-The current checked-in desired state also binds `PR gate` to GitHub Actions
-integration ID `15368`; the context name alone is not sufficient provenance.
-That candidate value is not a claim about live state. Apply it only through a
-separately authorized update to the existing ruleset, then read back the exact
-context/integration pair together with every prior protection.
+The active `main` ruleset binds `PR gate` to GitHub Actions integration ID
+`15368`; the context name alone is not sufficient provenance. Ruleset
+`21093924` was independently read back after the authorized update with the
+exact pair and every prior protection intact. Reverify the complete rule after
+visibility, ownership, plan, or desired-state changes.
 
 ## Public hosted acceptance
 

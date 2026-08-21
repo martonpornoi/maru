@@ -173,11 +173,11 @@ placeholder.
 ADR 0070 supersedes ADR 0068's ambiguous **Pre-production** wording; the
 active-development description's separately authorized mutation and exact
 readback now complete GH-004.
-The explicitly authorized first candidate rehearsal, dependency review,
-Pages publication, multi-maintainer governance, and remaining demand-triggered-
-control review stay open under GH-002 and GH-006 through GH-009. GH-005's event-
-efficiency correction and GH-003's repository remediation remain subject to
-hosted merge-candidate acceptance before merge.
+GH-003, GH-004, and GH-005 are accepted and merged. GH-005's final ready-state
+run `32504876594` and managed CodeQL run `32504873965` passed. The explicitly
+authorized first candidate rehearsal, dependency review, Pages publication,
+multi-maintainer governance, and remaining demand-triggered-control review stay
+open under GH-002 and GH-006 through GH-009.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative

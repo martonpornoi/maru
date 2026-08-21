@@ -11,6 +11,10 @@ were re-enabled only in exact-allowlist hosted mode.
   `PR gate`, resolved conversations, squash-only linear history, and rejects
   deletion and non-fast-forward updates. The active `v*` tag ruleset rejects
   mutation and deletion.
+- The required `PR gate` is bound to GitHub Actions integration ID `15368`.
+  The authorized GH-005 ruleset update was independently read back with every
+  prior enforcement, no-bypass, pull-request, ref-mutation, and CodeQL
+  protection intact.
 - Repository-level self-hosted runner inventory is empty. Public pull requests
   use only standard GitHub-hosted runners with read-only default permissions.
   Eligible contribution-code runs from first-time fork contributors may await
@@ -139,10 +143,8 @@ fresh evidence. Treat these as immediate launch tasks, not optional later work:
   synthetic non-secret test pattern without publishing credentials. Add a
   second trusted maintainer before requiring one approval, CODEOWNER review,
   or independent `gold` approval.
-- Reconcile the desired `PR gate` GitHub Actions integration binding with the
-  live ruleset under separate authorization, then read back every existing
-  protection. Rehearse a first-time cross-repository fork contribution and its
-  maintainer workflow-approval boundary.
+- Rehearse a first-time cross-repository fork contribution and its maintainer
+  workflow-approval boundary.
 - Rehearse the first explicitly authorized `rc.1` through ADR 0065's merged
   draft-first and post-publication verification boundary. Exercise the
   `candidate` and `gold` environment policies, immutable release and asset
