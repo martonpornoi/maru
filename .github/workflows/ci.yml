@@ -3,15 +3,22 @@ name: Pull request
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
-  push:
-    branches: [main]
+    types:
+      [
+        opened,
+        synchronize,
+        reopened,
+        ready_for_review,
+        converted_to_draft,
+        labeled,
+        unlabeled,
+      ]
 
 permissions:
   contents: read
 
 concurrency:
-  group: pr-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -32,11 +39,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
       - name: Build fail-closed CI plan
         id: plan
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-          PR_LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_LABELS_JSON: >-
+            ${{
+              github.event.action == 'labeled' &&
+              github.event.label.name == 'destructive-change-reviewed' &&
+              github.actor == github.repository_owner &&
+              toJSON(github.event.pull_request.labels.*.name) ||
+              '[]'
+            }}
         run: |
           if [[ -z "${BASE_SHA//0/}" ]]; then
             BASE_SHA=$(git rev-list --max-parents=0 HEAD)
@@ -45,10 +63,17 @@ jobs:
             --base "$BASE_SHA" --head "$GITHUB_SHA" \
             --labels-json "$PR_LABELS_JSON" \
             --github-output "$GITHUB_OUTPUT"
+      - name: Verify draft locked and automation inputs
+        if: ${{ github.event.pull_request.draft == true }}
+        run: |
+          python -m pip install uv==0.11.29 PyYAML==6.0.3
+          uv lock --check
+          python scripts/validate_actions_allowlist.py
 
   repository-safety:
     name: Repository safety
     needs: changes
+    if: ${{ github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -58,31 +83,35 @@ jobs:
           DELETED_COUNT: ${{ needs.changes.outputs.deleted-count }}
         run: |
           echo "This change deletes $DELETED_COUNT files or a protected path."
-          echo "A maintainer must apply the destructive-change-reviewed label."
+          echo "The repository owner must apply destructive-change-reviewed."
           exit 1
       - name: Record safe repository scope
         run: echo "Repository deletion policy is satisfied."
 
   quality:
     name: Relevant quality
-    needs: changes
-    if: ${{ needs.changes.outputs.integration != 'full' }}
+    needs: [changes, repository-safety]
+    if: >-
+      ${{
+        github.event.pull_request.draft == false &&
+        needs.changes.outputs.integration != 'full'
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
       - name: Restore uv cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: .uv-cache
-          key: uv-${{ runner.os }}-py312-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-py312-
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: ${{ runner.os }}-uv-
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         if: ${{ needs.changes.outputs.frontend == 'true' || needs.changes.outputs.security == 'true' || needs.changes.outputs.python == 'true' }}
         with:
@@ -148,27 +177,21 @@ jobs:
 
   unit:
     name: Python unit tests
-    needs: changes
-    if: ${{ needs.changes.outputs.python == 'true' && needs.changes.outputs.integration != 'full' }}
+    needs: [changes, repository-safety]
+    if: >-
+      ${{
+        github.event.pull_request.draft == false &&
+        needs.changes.outputs.python == 'true' &&
+        needs.changes.outputs.integration != 'full'
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    services:
-      postgres:
-        image: postgres:17.11-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
-        env:
-          POSTGRES_DB: maru
-          POSTGRES_USER: maru
-          POSTGRES_PASSWORD: maru
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U maru -d maru"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 15
     env:
-      MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:5432/maru
+      MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:1/maru_unit_no_database
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
@@ -184,8 +207,12 @@ jobs:
 
   targeted-integration:
     name: Targeted PostgreSQL tests
-    needs: changes
-    if: ${{ needs.changes.outputs.integration == 'targeted' }}
+    needs: [changes, repository-safety]
+    if: >-
+      ${{
+        github.event.pull_request.draft == false &&
+        needs.changes.outputs.integration == 'targeted'
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     services:
@@ -203,11 +230,12 @@ jobs:
           --health-retries 15
     env:
       MARU_DATABASE_URL: postgresql://maru:maru@127.0.0.1:5432/maru
-      BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
@@ -230,8 +258,12 @@ jobs:
 
   full:
     name: High-risk full acceptance
-    needs: changes
-    if: ${{ needs.changes.outputs.integration == 'full' }}
+    needs: [changes, repository-safety]
+    if: >-
+      ${{
+        github.event.pull_request.draft == false &&
+        needs.changes.outputs.integration == 'full'
+      }}
     uses: ./.github/workflows/_full-ci.yml
 
   pr-gate:
@@ -241,16 +273,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Keep drafts outside merge acceptance
+        if: ${{ github.event.pull_request.draft == true }}
+        run: |
+          echo "Draft inputs passed their lightweight preflight."
+          echo "Mark the pull request ready to run authoritative acceptance."
+          exit 1
       - name: Require the selected acceptance path
         if: >-
           ${{
-            needs.changes.result != 'success' ||
-            needs.repository-safety.result != 'success' ||
-            (needs.changes.outputs.integration == 'full' && needs.full.result != 'success') ||
-            (needs.changes.outputs.integration != 'full' && needs.quality.result != 'success') ||
-            (needs.changes.outputs.python == 'true' && needs.changes.outputs.integration != 'full' && needs.unit.result != 'success') ||
-            (needs.changes.outputs.integration == 'targeted' && needs.targeted-integration.result != 'success')
+            github.event.pull_request.draft == false &&
+            (
+              needs.changes.result != 'success' ||
+              needs.repository-safety.result != 'success' ||
+              (needs.changes.outputs.integration == 'full' && needs.full.result != 'success') ||
+              (needs.changes.outputs.integration != 'full' && needs.quality.result != 'success') ||
+              (needs.changes.outputs.python == 'true' && needs.changes.outputs.integration != 'full' && needs.unit.result != 'success') ||
+              (needs.changes.outputs.integration == 'targeted' && needs.targeted-integration.result != 'success')
+            )
           }}
         run: exit 1
       - name: Record pull request acceptance
+        if: ${{ github.event.pull_request.draft == false }}
         run: echo "The change-aware Maru acceptance policy passed."

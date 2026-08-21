@@ -4,19 +4,50 @@
 
 Create work from current `main`, push a focused branch, and open a pull request.
 The protected status is `PR gate`; isolated GitHub-hosted runners evaluate the
-exact submitted commit through the repository's fail-closed change plan.
+current pull-request merge candidate derived from the submitted head and
+up-to-date `main` through the repository's fail-closed change plan.
 Squash merge is the only permitted merge method, and merged branches are
 deleted automatically.
+
+Drafts receive change classification plus locked-input and Actions-policy
+feedback only. Their `PR gate` is intentionally red because they are not yet
+merge-certified. Marking a draft **Ready for review** starts authoritative
+selected acceptance; later ready-state pushes and reopenings rerun it.
+Converting a pull request back to draft cancels obsolete work. The pull-request
+workflow does not repeat acceptance on the protected squash push to `main`;
+managed CodeQL retains its separate default-branch scan.
 
 The current sole-maintainer rules require a pull request, successful status,
 linear history, and resolved conversations but zero approving reviews. When a
 second trusted maintainer is available, change the ruleset to require one
 approval and CODEOWNER review. Never add a routine bypass actor.
 
-Deleting 25 or more paths or deleting source, workflows, ADRs, locks, license,
-or security policy requires the `destructive-change-reviewed` label. The label
-is evidence that the deletion's exact scope was reviewed; it is not permission
-to bypass tests.
+Deleting 25 or more paths, mass-renaming them, or deleting or renaming source,
+tests, repository automation, ADRs, locks, license, security policy, or critical
+root collaboration/deployment files requires the repository owner to apply
+`destructive-change-reviewed`. Under the current sole-maintainer policy, the
+label event is evidence that the exact scope was reviewed; it is not permission
+to bypass tests. Every destructive plan
+takes full acceptance, and repository safety must pass before expensive work
+starts. Acceptance consumes approval only from the exact owner-applied
+`destructive-change-reviewed` label event; all other pull-request events and
+actors are unapproved. An issues-only, no-checkout `pull_request_target`
+workflow removes
+stale label display state after synchronize, reopen, ready-for-review, and
+conversion-to-draft events. Its token-generated change is UI cleanup, not a
+relied-upon `unlabeled` retrigger. A maintainer must inspect the current scope
+and reapply the label to create a fresh approval event. This cleanup may remove
+only that stale label and must never check out or execute pull-request code.
+
+The pull-request workflow and `scripts/ci_changes.py` classifier are evaluated
+from the candidate merge tree. Their read-only token and lack of secrets bound
+the effect of untrusted execution, but a green result still assumes the sole
+maintainer reviews candidate changes to that workflow and classifier before
+merging. Before another account receives write or merge authority, record and
+implement a trusted review boundary for these files, such as mandatory
+CODEOWNER approval or default-branch-controlled gate logic. Never add write
+authority to a candidate-evaluated workflow without a separate security
+decision.
 
 Every clone must activate `.githooks/pre-push` through
 `scripts/install_git_hooks.ps1`. The hook blocks direct `main` pushes, branch
@@ -52,24 +83,45 @@ bypass protection intact. The active `v*` tag rule rejects update, deletion,
 and non-fast-forward mutation. Verify the complete live rules after every
 visibility, ownership, or plan change rather than trusting this prose.
 
+The current checked-in desired state also binds `PR gate` to GitHub Actions
+integration ID `15368`; the context name alone is not sufficient provenance.
+That candidate value is not a claim about live state. Apply it only through a
+separately authorized update to the existing ruleset, then read back the exact
+context/integration pair together with every prior protection.
+
 ## Public hosted acceptance
 
 Public pull requests run only on GitHub-hosted standard Linux runners. The
 persistent `maru-local-certifier` registration was removed before Actions were
 re-enabled, and repository-level self-hosted runner inventory must remain empty.
-Fork pull requests receive only read permissions; do not add `pull_request_target`
-execution or expose environments, package publication, or repository secrets.
+Fork pull-request acceptance receives only read permissions; do not add
+`pull_request_target` execution of contribution code or expose environments,
+package publication, or repository secrets.
+
+GitHub may hold a first-time fork contributor's workflow until a maintainer
+approves execution. That action permits the hosted job to start; it is not pull-
+request approval, a code review, or permission to merge. Managed CodeQL default
+setup does not analyze fork pull requests, and its native ruleset protection
+does not cover Dependabot pull requests. The required `PR gate` still applies
+to those pull requests, while managed CodeQL retains default-branch and weekly
+scans. Review these coverage limits explicitly rather than interpreting a
+missing pull-request CodeQL result as complete analysis.
 
 The hosted `PR gate` retains ADR 0060's change-aware boundary: documentation-
 only changes avoid PostgreSQL, ordinary Python work runs unit and bounded
 affected integration tests, and high-risk paths invoke the complete eight-
-shard reusable matrix. Before that matrix fans out, a lightweight preflight
+shard reusable matrix. Targeted selection also routes to the full matrix when
+the accepted timing map is unavailable, any selected file lacks an accepted
+timing, or the estimate exceeds 1,800 seconds. This 30-minute execution ceiling
+leaves 15 minutes for setup and runtime variance inside the targeted lane's
+45-minute timeout. Before the full matrix fans out, a lightweight preflight
 requires a current `uv.lock` and exact parity between every workflow reference
 and `.github/actions-allowlist.json`. `scripts/certify.ps1` remains the required
 local pre-review command, but its unsigned receipt is contributor evidence
 rather than a server trust boundary. Details are in
 [local exact-commit certification](local-certification.md), ADR 0063, and ADR
-0064.
+0064. The unit layer is database-free; successful full acceptance starts eight
+independent PostgreSQL services for the eight whole-file integration shards.
 
 ## Dependency update policy
 
@@ -110,13 +162,16 @@ the OCI tag-to-digest binding, and image provenance. Candidate and gold allow
 only exact `main`, disallow administrator bypass, and have no required reviewer
 while one maintainer exists. Follow the complete procedure and irreversible
 failure rules in [the release process](../operations/release-process.md) and ADR
-0065.
+0065. Wrong-branch, missing-immutability, invalid candidate/gold input
+combinations, and a release PR that is not merged into `main` at the workflow
+commit fail before complete source certification starts.
 
 ## Maintainer settings
 
 Use squash merge, automatically delete merged branches, require immutable
 Action SHAs, keep workflow tokens read-only by default, and grant write
-permissions only to the release job. Repository Actions run in `selected` mode;
+permissions only to the release job and the issues-only, no-checkout stale-label
+cleanup. Repository Actions run in `selected` mode;
 `.github/actions-allowlist.json` must exactly match every external immutable
 workflow reference. The checked-in CODEOWNERS file is ownership discovery even
 before its review rule is enabled.

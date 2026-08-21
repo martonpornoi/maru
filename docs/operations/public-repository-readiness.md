@@ -13,6 +13,10 @@ were re-enabled only in exact-allowlist hosted mode.
   mutation and deletion.
 - Repository-level self-hosted runner inventory is empty. Public pull requests
   use only standard GitHub-hosted runners with read-only default permissions.
+  Eligible contribution-code runs from first-time fork contributors may await
+  maintainer approval; that starts isolated execution and does not approve the
+  pull request. Trusted base-branch metadata cleanup runs without contribution
+  checkout and is not subject to fork-code approval.
 - Actions run in `selected` mode, require SHA pinning, and allow only the exact
   revisions in `.github/actions-allowlist.json`.
 - Secret scanning, push protection, Dependabot security updates, and private
@@ -21,6 +25,9 @@ were re-enabled only in exact-allowlist hosted mode.
   rejects CodeQL errors and security alerts of medium severity or higher;
   `PR gate` remains the sole required status check. The default branch currently
   has zero open CodeQL, Dependabot, or secret-scanning alerts.
+  Managed CodeQL default setup does not analyze fork pull requests, and its
+  native merge protection does not cover Dependabot pull requests; the required
+  `PR gate` plus default-branch and weekly scans remain the available boundary.
 - The twelve findings from the first public CodeQL analysis were remediated and
   accepted through [pull request 2](https://github.com/martonpornoi/maru/pull/2).
 - Issues and Discussions are enabled. Projects, Wiki, and GitHub Pages are
@@ -50,10 +57,15 @@ fresh evidence. Treat these as immediate launch tasks, not optional later work:
   synthetic non-secret test pattern without publishing credentials. Add a
   second trusted maintainer before requiring one approval, CODEOWNER review,
   or independent `gold` approval.
-- Merge the ADR 0065 draft-first and post-publication verification candidate,
-  then rehearse the first explicitly authorized `rc.1`. Exercise the `candidate`
-  and `gold` environment policies, immutable release and asset attestations,
-  GHCR visibility, image provenance, deployment targets, and package cleanup.
+- Reconcile the desired `PR gate` GitHub Actions integration binding with the
+  live ruleset under separate authorization, then read back every existing
+  protection. Rehearse a first-time cross-repository fork contribution and its
+  maintainer workflow-approval boundary.
+- Rehearse the first explicitly authorized `rc.1` through ADR 0065's merged
+  draft-first and post-publication verification boundary. Exercise the
+  `candidate` and `gold` environment policies, immutable release and asset
+  attestations, GHCR visibility, image provenance, deployment targets, and
+  package cleanup.
 - Review repository description, topics, social preview, funding/sponsorship,
   issue triage labels, support expectations, and first-good-issue scope.
 - Keep the explicit pre-production maturity statement current. Do not imply

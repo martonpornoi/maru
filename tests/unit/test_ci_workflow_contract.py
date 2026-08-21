@@ -15,6 +15,8 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_DIRECTORY = REPOSITORY_ROOT / ".github" / "workflows"
 PR_WORKFLOW = WORKFLOW_DIRECTORY / "ci.yml"
 FULL_WORKFLOW = WORKFLOW_DIRECTORY / "_full-ci.yml"
+MANUAL_FULL_WORKFLOW = WORKFLOW_DIRECTORY / "full-ci.yml"
+DESTRUCTIVE_REVIEW_WORKFLOW = WORKFLOW_DIRECTORY / "destructive-review.yml"
 RELEASE_WORKFLOW = WORKFLOW_DIRECTORY / "release.yml"
 LOCAL_CHECK_PATH = REPOSITORY_ROOT / "scripts" / "check.ps1"
 LOCAL_CERTIFICATION_PATH = REPOSITORY_ROOT / "scripts" / "certify.ps1"
@@ -163,6 +165,7 @@ def test_actions_allowlist_validator_rejects_duplicate_entries(
 
 def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
     workflow = _workflow(PR_WORKFLOW)
+    jobs = yaml.safe_load(workflow)["jobs"]
 
     for job in (
         "changes",
@@ -176,11 +179,54 @@ def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
         assert re.search(rf"^  {re.escape(job)}:$", workflow, re.MULTILINE)
 
     assert "name: PR gate" in workflow
+    assert "ready_for_review" in workflow
+    assert "converted_to_draft" in workflow
+    assert "Keep drafts outside merge acceptance" in workflow
+    assert "Mark the pull request ready to run authoritative acceptance" in workflow
+    assert "github.event.pull_request.draft == true" in workflow
+    assert "\n  push:" not in workflow
     assert "scripts/ci_changes.py plan" in workflow
     assert "destructive-change-reviewed" in workflow
     assert "needs.changes.outputs.integration == 'targeted'" in workflow
+    for job_name in ("quality", "unit", "targeted-integration", "full"):
+        assert jobs[job_name]["needs"] == ["changes", "repository-safety"]
+        assert "github.event.pull_request.draft == false" in jobs[job_name]["if"]
+    assert jobs["repository-safety"]["needs"] == "changes"
+    assert (
+        jobs["repository-safety"]["if"]
+        == "${{ github.event.pull_request.draft == false }}"
+    )
+    assert jobs["pr-gate"]["if"] == "${{ always() }}"
+    draft_step = next(
+        step
+        for step in jobs["pr-gate"]["steps"]
+        if step.get("name") == "Keep drafts outside merge acceptance"
+    )
+    assert draft_step["if"] == "${{ github.event.pull_request.draft == true }}"
+    assert "exit 1" in draft_step["run"]
+    change_steps = jobs["changes"]["steps"]
+    setup_index = next(
+        index
+        for index, step in enumerate(change_steps)
+        if str(step.get("uses", "")).startswith("actions/setup-python@")
+    )
+    plan_index = next(
+        index
+        for index, step in enumerate(change_steps)
+        if step.get("name") == "Build fail-closed CI plan"
+    )
+    assert setup_index < plan_index
+    plan_step = change_steps[plan_index]
+    labels_expression = plan_step["env"]["PR_LABELS_JSON"]
+    assert "github.event.action == 'labeled'" in labels_expression
+    assert "github.event.label.name == 'destructive-change-reviewed'" in (
+        labels_expression
+    )
+    assert "github.actor == github.repository_owner" in labels_expression
+    assert "'[]'" in labels_expression
     assert "uses: ./.github/workflows/_full-ci.yml" in workflow
-    assert workflow.count("image: postgres:17.11-alpine@sha256:") == 2
+    assert "path: ~/.cache/uv" in workflow
+    assert workflow.count("image: postgres:17.11-alpine@sha256:") == 1
     assert "self-hosted" not in workflow
 
 
@@ -202,8 +248,49 @@ def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> 
     assert "coverage combine .ci-artifacts/coverage-parts" in workflow
     assert "coverage report --fail-under=90" in workflow
     assert "name: Full CI gate" in workflow
-    assert workflow.count("image: postgres:17.11-alpine@sha256:") == 2
+    assert workflow.count("image: postgres:17.11-alpine@sha256:") == 1
     assert "self-hosted" not in workflow
+
+
+def test_manual_full_acceptance_does_not_claim_merge_queue_support() -> None:
+    workflow = _workflow(MANUAL_FULL_WORKFLOW)
+
+    assert "workflow_dispatch:" in workflow
+    assert "merge_group:" not in workflow
+    assert "uses: ./.github/workflows/_full-ci.yml" in workflow
+
+
+def test_destructive_review_is_cleared_without_executing_pull_request_code() -> None:
+    workflow = _workflow(DESTRUCTIVE_REVIEW_WORKFLOW)
+    jobs = yaml.safe_load(workflow)["jobs"]
+    job = jobs["clear-destructive-review"]
+
+    assert "pull_request_target:" in workflow
+    assert (
+        "types: [synchronize, reopened, ready_for_review, converted_to_draft]"
+        in workflow
+    )
+    assert "actions/checkout@" not in workflow
+    assert job["if"] == (
+        "${{ contains(github.event.pull_request.labels.*.name, "
+        "'destructive-change-reviewed') }}"
+    )
+    assert job["steps"][0]["env"]["PR_NUMBER"] == (
+        "${{ github.event.pull_request.number }}"
+    )
+    assert job["steps"][0]["run"].startswith("gh api --method DELETE")
+    assert yaml.safe_load(workflow)["permissions"] == {"issues": "write"}
+
+
+def test_checkout_credentials_are_not_persisted() -> None:
+    for path in sorted(WORKFLOW_DIRECTORY.glob("*.yml")):
+        jobs = yaml.safe_load(_workflow(path))["jobs"]
+        for job in jobs.values():
+            for step in job.get("steps", []):
+                if str(step.get("uses", "")).startswith("actions/checkout@"):
+                    assert step.get("with", {}).get("persist-credentials") is False, (
+                        path
+                    )
 
 
 def test_dependabot_creates_only_grouped_security_updates() -> None:
@@ -260,8 +347,8 @@ def test_local_certification_preserves_database_isolation_and_total_coverage() -
     for required in (
         "[int] $IntegrationShards = 8",
         "postgres:17.11-alpine@sha256:",
-        '"maru-cert-unit-$RunToken"',
         '"maru-cert-integration-$Shard-$RunToken"',
+        "maru_unit_no_database",
         '"scripts/run_ci_test_shard.py"',
         '"coverage", "combine"',
         '"coverage", "report", "--fail-under=90"',
@@ -271,7 +358,8 @@ def test_local_certification_preserves_database_isolation_and_total_coverage() -
         assert required in certification
 
     assert '"--shard-count", "$IntegrationShards"' in certification
-    assert "isolated_postgres_instances = $IntegrationShards + 1" in certification
+    assert '"maru-cert-unit-$RunToken"' not in certification
+    assert "isolated_postgres_instances = $IntegrationShards" in certification
 
 
 def test_repository_push_guard_blocks_main_deletion_and_non_fast_forward() -> None:
@@ -284,8 +372,13 @@ def test_repository_push_guard_blocks_main_deletion_and_non_fast_forward() -> No
 
 def test_release_requires_exact_source_unique_calver_and_evidence() -> None:
     workflow = _workflow(RELEASE_WORKFLOW)
+    jobs = yaml.safe_load(workflow)["jobs"]
 
     for required in (
+        "name: Validate release request",
+        "Reject invalid release inputs before certification",
+        "needs: validate-request",
+        "needs: [validate-request, certify]",
         "uses: ./.github/workflows/_full-ci.yml",
         "scripts/release_metadata.py",
         "release_immutability_verified",
@@ -313,6 +406,16 @@ def test_release_requires_exact_source_unique_calver_and_evidence() -> None:
     ):
         assert required in workflow
 
+    assert jobs["validate-request"]["permissions"] == {
+        "contents": "read",
+        "pull-requests": "read",
+    }
+    assert jobs["certify"]["needs"] == "validate-request"
+    assert jobs["publish"]["needs"] == ["validate-request", "certify"]
+    validation_run = jobs["validate-request"]["steps"][0]["run"]
+    assert 'gh pr view "$RELEASE_PR" --repo "$GITHUB_REPOSITORY"' in validation_run
+    assert "must be merged into main at the exact workflow commit" in validation_run
+
 
 def test_rulesets_and_public_collaboration_files_are_present() -> None:
     main_rules = json.loads(
@@ -326,28 +429,84 @@ def test_rulesets_and_public_collaboration_files_are_present() -> None:
         )
     )
 
+    assert main_rules["name"] == "Protect main"
+    assert set(main_rules) == {
+        "name",
+        "target",
+        "conditions",
+        "enforcement",
+        "bypass_actors",
+        "rules",
+    }
+    assert main_rules["target"] == "branch"
+    assert main_rules["conditions"] == {
+        "ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}
+    }
     assert main_rules["enforcement"] == "active"
     assert main_rules["bypass_actors"] == []
-    status_rule = next(
-        rule for rule in main_rules["rules"] if rule["type"] == "required_status_checks"
-    )
-    assert status_rule["parameters"]["required_status_checks"] == [
-        {"context": "PR gate"}
-    ]
-    assert status_rule["parameters"]["strict_required_status_checks_policy"] is True
-    code_scanning_rule = next(
-        rule for rule in main_rules["rules"] if rule["type"] == "code_scanning"
-    )
-    assert code_scanning_rule["parameters"]["code_scanning_tools"] == [
-        {
-            "tool": "CodeQL",
-            "alerts_threshold": "errors",
-            "security_alerts_threshold": "medium_or_higher",
-        }
-    ]
-    assert {rule["type"] for rule in tag_rules["rules"]} >= {
+    rules_by_type = {rule["type"]: rule for rule in main_rules["rules"]}
+    assert len(rules_by_type) == len(main_rules["rules"])
+    assert set(rules_by_type) == {
+        "deletion",
+        "non_fast_forward",
+        "required_linear_history",
+        "pull_request",
+        "required_status_checks",
+        "code_scanning",
+    }
+    for simple_rule in ("deletion", "non_fast_forward", "required_linear_history"):
+        assert rules_by_type[simple_rule] == {"type": simple_rule}
+    assert rules_by_type["pull_request"]["parameters"] == {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": False,
+        "required_review_thread_resolution": True,
+        "require_code_owner_review": False,
+        "require_last_push_approval": False,
+        "allowed_merge_methods": ["squash"],
+    }
+    status_rule = rules_by_type["required_status_checks"]
+    assert status_rule["parameters"] == {
+        "strict_required_status_checks_policy": True,
+        "do_not_enforce_on_create": False,
+        "required_status_checks": [{"context": "PR gate", "integration_id": 15368}],
+    }
+    code_scanning_rule = rules_by_type["code_scanning"]
+    assert code_scanning_rule["parameters"] == {
+        "code_scanning_tools": [
+            {
+                "tool": "CodeQL",
+                "alerts_threshold": "errors",
+                "security_alerts_threshold": "medium_or_higher",
+            }
+        ]
+    }
+    assert tag_rules["name"] == "Protect release tags"
+    assert set(tag_rules) == {
+        "name",
+        "target",
+        "conditions",
+        "enforcement",
+        "bypass_actors",
+        "rules",
+    }
+    assert tag_rules["target"] == "tag"
+    assert tag_rules["enforcement"] == "active"
+    assert tag_rules["bypass_actors"] == []
+    assert tag_rules["conditions"] == {
+        "ref_name": {"include": ["refs/tags/v*"], "exclude": []}
+    }
+    tag_rules_by_type = {rule["type"]: rule for rule in tag_rules["rules"]}
+    assert len(tag_rules_by_type) == len(tag_rules["rules"])
+    assert set(tag_rules_by_type) == {
         "deletion",
         "update",
+        "non_fast_forward",
+    }
+    assert tag_rules_by_type["deletion"] == {"type": "deletion"}
+    assert tag_rules_by_type["non_fast_forward"] == {"type": "non_fast_forward"}
+    assert tag_rules_by_type["update"] == {
+        "type": "update",
+        "parameters": {"update_allows_fetch_and_merge": False},
     }
 
     for relative_path in (

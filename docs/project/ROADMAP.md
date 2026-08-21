@@ -117,15 +117,22 @@ restore/PITR, and owner/governance gates remain.
 ADR 0060 replaces unconditional twelve-shard pull-request acceptance with a
 change-aware stable `PR gate`: documentation changes use no PostgreSQL,
 ordinary module work uses bounded affected tests, and high-risk boundaries fail
-closed to reusable full acceptance. Full certification uses eight measured
-whole-file integration shards plus unit PostgreSQL, combined coverage, four
-parallel non-database gates, and a stable `Full CI gate`. A manual exact-source
-release workflow now publishes a CalVer-tagged immutable GHCR image with SBOM/
-provenance and GitHub evidence assets. Pull-request browser smoke, nightly
-compatibility/concurrency/visual
-matrices, synthetic deployment, and release recovery rehearsal remain next
-testing-infrastructure outcomes; ephemeral Actions databases do not satisfy
-production restore/PITR.
+closed to reusable full acceptance. ADR 0066 makes drafts cheap and explicitly
+non-green until **Ready for review**, then runs the authoritative selected path.
+Repository safety now precedes fan-out, protected renames and every destructive
+change require full acceptance, and the identical-tree squash push no longer
+repeats pull-request acceptance. Full certification uses a database-free unit
+job, eight measured whole-file PostgreSQL integration shards, combined
+coverage, four parallel non-database gates, and a stable `Full CI gate`.
+Accepted main-run timings are refreshed; missing or over-30-minute targeted
+projections promote to full acceptance. A head update also clears prior
+destructive-review evidence before the revised scope can run. A repository
+contract preserves CodeQL coverage for Python 3.12 generic headers. A manual exact-source release
+workflow publishes a CalVer-tagged immutable GHCR image with SBOM/provenance and
+GitHub evidence assets. Pull-request browser smoke, nightly compatibility/
+concurrency/visual matrices, synthetic deployment, and release recovery
+rehearsal remain next testing-infrastructure outcomes; ephemeral Actions
+databases do not satisfy production restore/PITR.
 
 ADR 0062's private-repository self-hosted interval is superseded by ADR 0063
 after the 2026-08-20 public transition. Public pull requests now use only
@@ -142,14 +149,15 @@ acceptance. GH-001 adds active CodeQL merge protection for errors and medium-or-
 higher security findings while retaining `PR gate` as the sole required status.
 Pull request 2's remediation of the twelve initial findings is accepted, and
 the default branch now reports zero open CodeQL alerts. ADR 0065 records the
-enabled immutable-release setting and GH-002's repository candidate: exact
+enabled immutable-release setting and GH-002's merged repository boundary: exact
 draft asset/commit verification precedes publication, and immutable release,
 asset, tag, OCI digest, and attestation reconciliation follows it without a
 persistent administrator credential. The explicitly authorized first candidate
-rehearsal, one-time public-history audit, public-policy reconciliation, post-
-merge CI measurement, dependency review, Pages publication, multi-maintainer
-governance, and remaining demand-triggered-control review stay open under
-GH-002 through GH-009.
+rehearsal, one-time public-history audit, public-policy reconciliation,
+dependency review, Pages publication, multi-maintainer governance, and
+remaining demand-triggered-control review stay open under GH-002 through
+GH-009. GH-005's event-efficiency correction remains subject to focused local
+and hosted merge-candidate acceptance before merge.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative

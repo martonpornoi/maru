@@ -61,8 +61,10 @@ never replace a tag, release, image, checksum, SBOM, or attestation.
    support. Set **release_immutability_verified** only after step 3. The
    workflow-dispatch record preserves this maintainer confirmation. GitHub
    environment approval may pause publication.
-5. The workflow reruns full acceptance, rejects identity collisions, builds and
-   pushes the image once, and records its digest and attestations. It creates a
+5. The workflow rejects invalid branch, immutability, and channel inputs and
+   requires the release PR to be merged into `main` at the exact workflow commit
+   before rerunning full acceptance. It then rejects identity collisions, builds
+   and pushes the image once, and records its digest and attestations. It creates a
    draft release with the complete asset set, verifies its exact commit, tag,
    asset names, uploaded state, and SHA-256 digests, and only then publishes it.
 6. After publication, the workflow requires GitHub to report the release as

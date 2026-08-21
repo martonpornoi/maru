@@ -93,8 +93,9 @@ local certification before requesting review:
 
 The certifier requires a clean tree and Docker Desktop. It preserves the
 database-isolation contract by running one unit process and eight measured
-integration shards against nine separate local PostgreSQL containers, then
-combines branch coverage at the existing 90-percent floor. The public
+integration shards against eight separate local PostgreSQL containers, then
+combines branch coverage at the existing 90-percent floor. Unit tests receive
+an unreachable database URL so an accidental integration dependency fails. The public
 repository does not trust a local receipt: its stable `PR gate` independently
 runs the fail-closed selected acceptance path on isolated GitHub-hosted Linux
 runners. See [local exact-commit certification](local-certification.md) for

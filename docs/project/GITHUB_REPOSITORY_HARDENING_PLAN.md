@@ -1,6 +1,6 @@
 # GitHub repository hardening plan
 
-Status: GH-000 and GH-001 implemented; GH-002 repository verification implemented and first candidate rehearsal pending
+Status: GH-000 and GH-001 implemented; GH-002 repository verification implemented and first candidate rehearsal pending; GH-005 repository candidate complete and hosted acceptance pending
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -66,7 +66,7 @@ Accepted and implemented outcome:
   exact Actions-allowlist validation before expensive jobs fan out.
 
 The preflight does not weaken or replace locked installation, dependency
-audits, immutable Action revisions, or the hosted exact-commit gate.
+audits, immutable Action revisions, or the hosted merge-candidate gate.
 
 Decision state: complete in this repository milestone.
 
@@ -188,12 +188,45 @@ public-documentation milestone.
 
 ### GH-005: Post-merge CI duplication
 
-Measure work duplicated when a pull-request result is followed by the squash
-push to `main`. Preserve default-branch CodeQL, manual full acceptance, release
-certification, and future documentation deployment while designing the
-smallest safe main-branch path.
+Pull request 8 supplied the required measurement. Draft open, draft synchronize,
+ready-for-review, and squash-push runs consumed 1,436.66 aggregate runner-
+minutes. The ready run checked synthetic merge commit `9899c1f`; its tree, the
+final pull-request head tree, and the squash-commit tree were identical, so the
+359.40-runner-minute main workflow repeated accepted content. The ready event
+was also associated with the preceding draft head. Accepted main run
+`32427570856` supplied a current JUnit timing inventory for all 157 then-current
+integration files.
 
-State: tracked; measurement must precede a workflow decision.
+ADR 0066 accepts the repository correction:
+
+- drafts run only classification plus locked-input and Actions-policy preflight,
+  with an explicitly non-green `PR gate` until **Ready for review**;
+- ready opens, synchronizations, reopenings, and `ready_for_review` run selected
+  authoritative acceptance, while `converted_to_draft` cancels obsolete work;
+- the pull-request workflow no longer repeats on the squash push to `main`;
+- managed CodeQL retains its default-branch push scan, and manual and release
+  full certification remain available;
+- repository safety precedes expensive fan-out, protected renames are treated as
+  deletions, every destructive change takes full acceptance, and approval is
+  consumed only by the exact fresh repository-owner label event;
+- an issues-only, no-checkout `pull_request_target` workflow clears stale label
+  display state without executing contribution code or serving as a relied-upon
+  acceptance retrigger; and
+- the database-free unit boundary reduces full certification from nine to eight
+  PostgreSQL services while the accepted timing refresh improves shard balance;
+  missing timings or a targeted estimate over 1,800 seconds route to full
+  acceptance.
+
+The correction changes no live ruleset or repository setting. Its checked-in
+desired state binds `PR gate` to GitHub Actions integration ID `15368`, but a
+separately authorized update and readback are still required before describing
+that provenance binding as live. Label events remain intentionally conservative
+because GitHub treats skipped required jobs as successful, cannot filter the
+pull-request trigger by label name, and suppresses recursive workflow events
+from the cleanup workflow's GitHub token.
+
+State: locally verified repository candidate complete; hosted merge-candidate
+acceptance remains before merge.
 
 ### GH-006: Dependency review
 
@@ -221,6 +254,13 @@ Defer organization transfer, secure 2FA enforcement, CODEOWNER approval,
 latest-push approval, gold-environment review, succession, and moderation
 rotation until a second trusted maintainer exists. Enabling them for one
 maintainer would deadlock work or create approval theatre.
+
+Before an organization transfer or another account may approve destructive
+scope, replace the current `github.actor == github.repository_owner` check with
+an explicitly reviewed maintainer authority policy. Reassess the live
+`first_time_contributors` fork-workflow approval setting if hosted-compute abuse
+appears; `all_external_contributors` is stronger but creates recurring
+maintainer approval work for safe external runs.
 
 State: deliberately deferred until the prerequisite exists.
 

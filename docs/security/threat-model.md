@@ -1,8 +1,8 @@
 # Threat model
 
-Status: Living baseline with implemented tenant, authority, and bounded-read
-controls
-Last updated: 2026-08-02
+Status: Living baseline with implemented tenant, authority, bounded-read, and
+public-contribution controls
+Last updated: 2026-08-21
 
 This living threat model covers the proposed architecture before code exists.
 Every vertical slice must refine its assets, data flows, abuse cases, controls,
@@ -110,6 +110,7 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 | Enumeration and stalking | person attendance, hotel, shift, or live location inferred | generic denial, privacy-preserving lookup, no presence API, rate limits, user block/report tools, staff training |
 | Minor safety failure | guardian or pickup information exposed or bypassed | edition age policy, scoped verification, guardian workflows, restricted fields, safeguarding review and tests |
 | Dependency/supply-chain compromise | package or build injects code | lockfiles with hashes where supported, minimal dependencies, review, SBOM, scanning, signed builds, isolated CI secrets |
+| Pull-request automation tampering | candidate workflow weakens its own classifier or required gate | sole-maintainer write boundary, full routing for automation changes, source-bound required check, read-only hosted runners, no-checkout label control, stale-dismissing CODEOWNER review before multi-maintainer writes |
 | Admin misconfiguration | form exposes restricted answer or public report | secure defaults, classification required, preview with personas, policy lint, four-eyes approval for risky change |
 
 ## Security architecture controls
@@ -185,6 +186,11 @@ untrusted channel, bounded, observable, and assumed capable of failure.
 - Secrets live outside code and logs and rotate without a deploy.
 - Dependency, secret, static, dynamic, container, and infrastructure scanning
   feed release gates with human triage.
+- Public contribution code runs only with read-only authority on isolated hosted
+  runners. A narrowly scoped `pull_request_target` control may mutate issue
+  metadata without checkout; it must never execute contribution code or expose
+  repository secrets. First-time fork workflow approval authorizes isolated
+  execution, not acceptance of the contribution.
 - Production debug mode is impossible by validated configuration.
 
 ## Abuse and community safety

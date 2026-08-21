@@ -387,9 +387,7 @@ def _position_sort_key(row: _PositionRow) -> tuple[str, str, str]:
     return (row.title.casefold(), row.title, str(row.id))
 
 
-def _validate_parent_graph[
-    RowT: _DepartmentRow | _PositionRow,
-](
+def _validate_parent_graph[RowT: _DepartmentRow | _PositionRow](
     *,
     rows_by_id: dict[UUID, RowT],
     parent_id_for: Callable[[RowT], UUID | None],

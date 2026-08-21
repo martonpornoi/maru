@@ -101,8 +101,7 @@ function Start-TestProcess {
         [string] $Name,
         [Parameter(Mandatory)]
         [string[]] $Arguments,
-        [Parameter(Mandatory)]
-        [int] $DatabasePort
+        [int] $DatabasePort = 0
     )
 
     $StandardOutput = Join-Path $LogDirectory "$Name.stdout.log"
@@ -110,7 +109,12 @@ function Start-TestProcess {
     $CoverageFile = Join-Path $CoverageDirectory ".coverage.$Name"
     $Environment = @{
         COVERAGE_FILE = $CoverageFile
-        MARU_DATABASE_URL = "postgresql://maru:maru@127.0.0.1:$DatabasePort/maru"
+        MARU_DATABASE_URL = if ($DatabasePort -gt 0) {
+            "postgresql://maru:maru@127.0.0.1:$DatabasePort/maru"
+        }
+        else {
+            "postgresql://maru:maru@127.0.0.1:1/maru_unit_no_database"
+        }
     }
     $Process = Start-Process `
         -FilePath $Python `
@@ -195,12 +199,8 @@ try {
     $RunToken = "$($Commit.Substring(0, 10))-$PID".ToLowerInvariant()
     $Jobs = [Collections.Generic.List[object]]::new()
 
-    $UnitContainer = "maru-cert-unit-$RunToken"
-    $Containers.Add($UnitContainer)
-    $UnitPort = Start-IsolatedPostgres -Name $UnitContainer
     $Jobs.Add((Start-TestProcess `
         -Name "unit" `
-        -DatabasePort $UnitPort `
         -Arguments @(
             "-m", "pytest", "tests/unit", "-q", "-p", "no:cacheprovider",
             "--cov=maru", "--cov-report=", "--cov-fail-under=0",
@@ -282,7 +282,7 @@ try {
         commit = $Commit
         completed_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
         integration_shards = $IntegrationShards
-        isolated_postgres_instances = $IntegrationShards + 1
+        isolated_postgres_instances = $IntegrationShards
         branch_coverage_minimum_percent = 90
         gates = @(
             "locked_dependencies",

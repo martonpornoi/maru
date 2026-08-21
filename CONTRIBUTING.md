@@ -47,6 +47,11 @@ Low-risk changes use a fail-closed affected-test plan; workflows, dependencies,
 models, migrations, settings, security boundaries, and test infrastructure run
 the complete hosted acceptance matrix.
 
+Open unfinished work as a draft. Draft updates run only the cheap locked-input
+and automation-policy feedback and intentionally keep `PR gate` red. After the
+complete local certification passes, choose **Ready for review** to start the
+authoritative hosted path. Converting back to draft cancels obsolete acceptance.
+
 ## Pull requests
 
 Complete the pull request template. Explain the user or operator outcome,
@@ -54,9 +59,25 @@ security/privacy implications, migrations and recovery, tests, documentation,
 and any intentionally deferred work. Resolve review conversations and use
 squash merge so `main` remains linear.
 
-Large or protected-path deletions require the `destructive-change-reviewed`
-label from a maintainer. Automation must not be weakened merely to make a check
-green. If a check is wrong, fix its contract and explain why.
+Large deletions and any deletion or rename of source, tests, repository
+automation, governance records, or critical root policy/deployment files
+require the repository owner to apply `destructive-change-reviewed`. Under the
+current sole-maintainer policy, automation accepts approval only on that exact
+owner label-application event for the current head; every other pull-request
+action treats an existing label as stale. A trusted metadata workflow also
+removes the stale label after a head change, so the owner must inspect the new
+scope and reapply it. Readiness and reopen transitions clear stale approval too.
+Mark a destructive pull request ready before applying the label. Automation
+must not be weakened
+merely to make a check green. If a check is wrong, fix its contract and explain
+why.
+
+Eligible contribution-code `pull_request` runs from a first-time fork
+contributor may wait for a maintainer to approve execution. That permits
+untrusted code to run with read-only authority on an isolated hosted runner; it
+does not approve the pull request or its changes. The trusted base-branch
+metadata cleanup is not subject to fork-code approval and never checks out the
+contribution.
 
 By submitting a contribution, you agree that it is licensed under the
 [Apache License 2.0](LICENSE) and that the [Code of Conduct](CODE_OF_CONDUCT.md)

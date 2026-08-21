@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import shutil
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
@@ -34,19 +35,37 @@ FULL_INTEGRATION_FILES = {
     "scripts/run_ci_test_shard.py",
 }
 FULL_INTEGRATION_PREFIXES = (
+    ".githooks/",
+    "scripts/",
     "src/maru/audit/",
     "src/maru/authorization/",
     "src/maru/identity/",
 )
 PROTECTED_DELETION_PREFIXES = (
-    ".github/workflows/",
+    ".github/",
+    ".githooks/",
     "docs/architecture/decisions/",
-    "src/maru/",
+    "docs/checkpoints/",
+    "docs/project/",
+    "docs/security/",
+    "frontends/",
+    "scripts/",
+    "src/",
+    "tests/",
 )
 PROTECTED_DELETION_FILES = {
     "AGENTS.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "Dockerfile",
+    "GOVERNANCE.md",
     "LICENSE",
+    "README.md",
     "SECURITY.md",
+    "SUPPORT.md",
+    "compose.yaml",
+    "docs/development/repository-governance.md",
+    "docs/product/requirements.md",
     "pyproject.toml",
     "uv.lock",
 }
@@ -56,7 +75,9 @@ CRITICAL_TARGETED_TESTS = (
 )
 MASS_DELETION_THRESHOLD = 25
 NAME_STATUS_FIELD_COUNT = 2
+RENAMED_NAME_STATUS_FIELD_COUNT = 3
 MODULE_PATH_PART_COUNT = 3
+TARGETED_INTEGRATION_MAX_SECONDS = 1_800.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,14 +87,14 @@ class ChangedFile:
     Parameters
     ----------
     path : PurePosixPath
-        Repository-relative path after a rename, if applicable.
+        Repository-relative path represented by this change entry.
     status : str
         Git name-status token such as ``M``, ``A``, or ``D``.
 
     Attributes
     ----------
     path : PurePosixPath
-        Repository-relative path after a rename, if applicable.
+        Repository-relative path represented by this change entry.
     status : str
         Git name-status token such as ``M``, ``A``, or ``D``.
     """
@@ -159,7 +180,8 @@ def parse_name_status(output: str) -> tuple[ChangedFile, ...]:
     Returns
     -------
     tuple[ChangedFile, ...]
-        Changes in the order reported by Git.
+        Changes in the order reported by Git. Renames produce a deletion entry
+        for the source followed by a rename entry for the destination.
 
     Raises
     ------
@@ -175,6 +197,18 @@ def parse_name_status(output: str) -> tuple[ChangedFile, ...]:
             raise ValueError(f"invalid git name-status line: {line!r}")
         raw_status = fields[0]
         status = raw_status[:1]
+        if status == "R":
+            if len(fields) != RENAMED_NAME_STATUS_FIELD_COUNT:
+                raise ValueError(f"invalid git rename line: {line!r}")
+            source = PurePosixPath(fields[1].replace("\\", "/"))
+            destination = PurePosixPath(fields[2].replace("\\", "/"))
+            changes.extend(
+                (
+                    ChangedFile(source, "D"),
+                    ChangedFile(destination, "R"),
+                )
+            )
+            continue
         path = fields[-1]
         changes.append(ChangedFile(PurePosixPath(path.replace("\\", "/")), status))
     return tuple(changes)
@@ -203,9 +237,9 @@ def classify_changes(changes: Sequence[ChangedFile]) -> CIPlan:
     targeted = python and any(
         path.startswith(("src/", "tests/integration/")) for path in paths
     )
-    integration = "full" if full else "targeted" if targeted else "none"
     protected_deletion = any(_is_protected_deletion(change.path) for change in deleted)
     destructive = protected_deletion or len(deleted) >= MASS_DELETION_THRESHOLD
+    integration = "full" if full or destructive else "targeted" if targeted else "none"
     return CIPlan(
         documentation=documentation,
         frontend=frontend,
@@ -267,6 +301,89 @@ def select_targeted_integration_tests(
         if (repository_root / relative_path).is_file()
     )
     return tuple(sorted(selected, key=lambda path: path.as_posix()))
+
+
+def enforce_targeted_time_budget(
+    plan: CIPlan,
+    changes: Sequence[ChangedFile],
+    integration_directory: Path,
+    timing_file: Path,
+) -> CIPlan:
+    """Route an oversized or unmeasurable targeted selection to full acceptance.
+
+    Parameters
+    ----------
+    plan : CIPlan
+        Initial path-based acceptance plan.
+    changes : Sequence[ChangedFile]
+        Repository changes used to select affected integration files.
+    integration_directory : Path
+        Directory containing integration test files.
+    timing_file : Path
+        Accepted file-duration map used by full sharding.
+
+    Returns
+    -------
+    CIPlan
+        The original plan when its measured selection fits the targeted budget;
+        otherwise, an equivalent plan requiring full acceptance.
+    """
+    if plan.integration != "targeted":
+        return plan
+    selected = select_targeted_integration_tests(changes, integration_directory)
+    if not selected or not timing_file.is_file():
+        return replace(plan, integration="full")
+    durations = _load_integration_durations(timing_file)
+    repository_root = integration_directory.parents[1].resolve()
+    relative_paths = tuple(
+        path.resolve().relative_to(repository_root).as_posix() for path in selected
+    )
+    if any(path not in durations for path in relative_paths):
+        return replace(plan, integration="full")
+    estimated_seconds = sum(durations[path] for path in relative_paths)
+    if estimated_seconds > TARGETED_INTEGRATION_MAX_SECONDS:
+        return replace(plan, integration="full")
+    return plan
+
+
+def _load_integration_durations(timing_file: Path) -> dict[str, float]:
+    """Load a non-empty positive integration-duration map.
+
+    Parameters
+    ----------
+    timing_file : Path
+        JSON map from repository integration path to measured seconds.
+
+    Returns
+    -------
+    dict[str, float]
+        Normalized positive durations keyed by repository path.
+
+    Raises
+    ------
+    TypeError
+        If the JSON root or an entry has an invalid type.
+    ValueError
+        If the map is empty or contains a non-positive duration.
+    """
+    value = json.loads(timing_file.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise TypeError("integration timing map must be a JSON object")
+    durations: dict[str, float] = {}
+    for path, seconds in value.items():
+        if (
+            not isinstance(path, str)
+            or isinstance(seconds, bool)
+            or not isinstance(seconds, int | float)
+        ):
+            raise TypeError("integration timing entries need string paths and numbers")
+        duration = float(seconds)
+        if not math.isfinite(duration) or duration <= 0:
+            raise ValueError("integration timing durations must be finite and positive")
+        durations[Path(path).as_posix()] = duration
+    if not durations:
+        raise ValueError("integration timing map must not be empty")
+    return durations
 
 
 def _is_python_related(path: str) -> bool:
@@ -454,6 +571,16 @@ def _argument_parser() -> argparse.ArgumentParser:
     plan_parser = subparsers.choices["plan"]
     plan_parser.add_argument("--github-output", type=Path)
     plan_parser.add_argument("--labels-json", default="[]")
+    plan_parser.add_argument(
+        "--integration-directory",
+        type=Path,
+        default=Path("tests/integration"),
+    )
+    plan_parser.add_argument(
+        "--timing-file",
+        type=Path,
+        default=Path("scripts/ci_integration_timings.json"),
+    )
     tests_parser = subparsers.choices["tests"]
     tests_parser.add_argument(
         "--integration-directory",
@@ -498,7 +625,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         isinstance(label, str) for label in labels_value
     ):
         raise ValueError("labels JSON must be a list of strings")
-    plan = classify_changes(changes)
+    plan = enforce_targeted_time_budget(
+        classify_changes(changes),
+        changes,
+        namespace.integration_directory.resolve(),
+        namespace.timing_file.resolve(),
+    )
     outputs = plan.github_outputs()
     outputs["destructive_approved"] = str(
         not plan.destructive or "destructive-change-reviewed" in labels_value

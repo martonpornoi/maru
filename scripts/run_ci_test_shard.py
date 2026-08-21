@@ -2,7 +2,7 @@
 
 Integration test files stay whole because several Maru tests intentionally alter
 database state. Accepted JUnit durations are the repository-owned scheduling
-weights. New files use a conservative median duration until the map is refreshed.
+weights. New files use a deterministic median duration until the map is refreshed.
 """
 
 from __future__ import annotations
