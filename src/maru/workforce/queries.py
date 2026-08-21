@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal, TypeVar, cast
 
 from django.db.models import F, Q
 from django.utils import timezone
@@ -249,6 +249,9 @@ class _PositionRow:
     status: str
 
 
+_ParentGraphRowT = TypeVar("_ParentGraphRowT", bound=_DepartmentRow | _PositionRow)
+
+
 @dataclass(frozen=True, slots=True)
 class _HolderRow:
     id: UUID
@@ -387,30 +390,34 @@ def _position_sort_key(row: _PositionRow) -> tuple[str, str, str]:
     return (row.title.casefold(), row.title, str(row.id))
 
 
-def _validate_parent_graph[RowT: _DepartmentRow | _PositionRow](
+# GitHub-managed CodeQL omitted this file when the equivalent PEP 695 bounded
+# header was used. Retain the legacy TypeVar form until a hosted analysis proves
+# that the active extractor accepts this declaration.
+def _validate_parent_graph(  # noqa: UP047
     *,
-    rows_by_id: dict[UUID, RowT],
-    parent_id_for: Callable[[RowT], UUID | None],
+    rows_by_id: dict[UUID, _ParentGraphRowT],
+    parent_id_for: Callable[[_ParentGraphRowT], UUID | None],
 ) -> bool:
-    """Reject invalid graphs and report whether valid depth stays bounded.
+    """Validate parent links and enforce the projection depth bound.
 
     Parameters
     ----------
-    rows_by_id : dict[UUID, RowT]
-        The rows by identifier within the requested scope.
-    parent_id_for : Callable[[RowT], UUID | None]
-        The callback invoked to parent id for.
+    rows_by_id : dict[UUID, _ParentGraphRowT]
+        Rows keyed by identifier within the already-authorized edition scope.
+    parent_id_for : Callable[[_ParentGraphRowT], UUID | None]
+        Callback returning the parent identifier for a row.
 
     Returns
     -------
     bool
-        `True` when Reject invalid graphs and report whether valid depth stays
-        bounded; otherwise `False`.
+        ``True`` when every valid path is within ``MAX_STRUCTURE_DEPTH``;
+        ``False`` when an otherwise valid path exceeds that output bound.
 
     Raises
     ------
     StructureProjectionIntegrityError
-        If the operation encounters a structure projection integrity condition.
+        If a parent is unavailable within the scoped row set or the graph
+        contains a cycle.
     """
     depths: dict[UUID, int] = {}
     for row_id in rows_by_id:

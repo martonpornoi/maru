@@ -20,7 +20,9 @@ IGNORED_TOKEN_TYPES = {
 }
 
 
-def _trailing_type_parameter_commas(source: str) -> tuple[tuple[int, int], ...]:
+def _incompatible_type_parameter_headers(
+    source: str,
+) -> tuple[tuple[int, int], ...]:
     tokens = tuple(
         token
         for token in tokenize.generate_tokens(io.StringIO(source).readline)
@@ -46,32 +48,40 @@ def _trailing_type_parameter_commas(source: str) -> tuple[tuple[int, int], ...]:
                     if tokens[cursor - 1].string == ",":
                         violations.append(current.start)
                     break
+            elif current.string == "|" and square_depth == 1:
+                violations.append(current.start)
     return tuple(violations)
 
 
-def test_type_parameter_detector_rejects_only_a_trailing_header_comma() -> None:
-    assert _trailing_type_parameter_commas("def invalid[T,]():\n    pass\n")
-    assert _trailing_type_parameter_commas(
-        "def invalid_nested[T: tuple[int, str],]():\n    pass\n"
+def test_detector_rejects_known_incompatible_header_shapes() -> None:
+    assert _incompatible_type_parameter_headers("def invalid[T,]():\n    pass\n")
+    assert _incompatible_type_parameter_headers(
+        "def invalid_union[T: Left | Right]():\n    pass\n"
     )
-    assert not _trailing_type_parameter_commas(
+    assert not _incompatible_type_parameter_headers(
         "def valid[T: tuple[int, str], U]():\n    pass\n"
     )
+    assert not _incompatible_type_parameter_headers(
+        "def valid_bound[T: Model]():\n    pass\n"
+    )
+    assert not _incompatible_type_parameter_headers(
+        "def valid_nested[T: tuple[Left | Right, str]]():\n    pass\n"
+    )
 
 
-def test_type_parameter_headers_preserve_codeql_file_coverage() -> None:
+def test_known_codeql_incompatible_type_parameter_headers_are_absent() -> None:
     violations = []
     python_files = list(EXPLICIT_PYTHON_FILES)
     for root_name in PYTHON_ROOTS:
         python_files.extend((REPOSITORY_ROOT / root_name).rglob("*.py"))
     for path in sorted(python_files):
         source = path.read_text(encoding="utf-8")
-        for line, column in _trailing_type_parameter_commas(source):
+        for line, column in _incompatible_type_parameter_headers(source):
             relative_path = path.relative_to(REPOSITORY_ROOT).as_posix()
             violations.append(f"{relative_path}:{line}:{column + 1}")
 
     assert not violations, (
-        "Maru's active CodeQL compatibility boundary rejects a trailing comma "
-        "in a PEP 695 type-parameter header because it can omit the containing "
-        "file: " + ", ".join(violations)
+        "Maru rejects PEP 695 header shapes that have caused the active "
+        "GitHub-managed CodeQL extractor to omit a Python file: "
+        + ", ".join(violations)
     )
