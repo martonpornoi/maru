@@ -246,6 +246,14 @@ cross-domain-save design.
   GH-007; social preview and funding remain deliberately unconfigured. The live
   description now ends with **under active development**; its description-only
   mutation was separately authorized and read back exactly under ADR 0070.
+- PR 9's first ready-state full acceptance run `32501661144` then exercised the
+  intended fail-closed dependency boundary. Its sole originating failure was
+  `pip-audit` rejecting locked development-tool dependency `pip 26.1.2` under
+  `PYSEC-2026-3721`; the Full CI and PR gates failed only as downstream
+  consequences. The repository candidate now refreshes that one transitive
+  lock entry to patched `pip 26.2.1`. Local Python and npm audits are clean,
+  but hosted unit, PostgreSQL, coverage, and the final gate still require a
+  fresh run at the corrected commit.
 
 ### Registration, profile, and admission commerce
 
@@ -771,8 +779,9 @@ approval.
   description-only mutation and exact live readback are complete.
 - The ADR 0066/0069 repository candidate is not accepted by local focused
   evidence alone. Hosted CodeQL now confirms that the Workforce module is
-  analyzed, but the complete current pull-request merge candidate still
-  requires ready-state full acceptance.
+  analyzed. Ready-state run `32501661144` correctly failed closed on vulnerable
+  transitive development-tool lock entry `pip 26.1.2`; its lock-only `26.2.1`
+  correction still requires complete hosted acceptance at the revised commit.
 - ADR 0065 does not authorize a release. The administrator-only immutability
   readback remains a mandatory maintainer pre-dispatch operation; the first
   `rc.1` remains a dedicated release pull request and public publication
@@ -788,11 +797,11 @@ approval.
 
 ## Smallest sensible next actions
 
-1. After explicit publication approval, commit and push GH-004's authenticated
-   description evidence to draft pull request 9. Then mark the pull request
-   ready, complete hosted merge-candidate acceptance for
-   GH-005, GH-003, and GH-004, merge, and re-read the default-branch state.
-   Require another reviewer only after a second trusted maintainer exists.
+1. After explicit publication approval, commit and push the lock-only
+   `pip 26.2.1` security correction to pull request 9. Complete hosted
+   merge-candidate acceptance for GH-005, GH-003, and GH-004 at that exact
+   corrected commit, then merge and re-read the default-branch state. Require
+   another reviewer only after a second trusted maintainer exists.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
