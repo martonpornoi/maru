@@ -60,6 +60,22 @@ $Node = Resolve-RequiredCommand -Name "node"
 $Git = Resolve-RequiredCommand -Name "git"
 
 Invoke-Checked $Uv @("lock", "--check")
+$PackageDistributionDirectory = Join-Path $RepositoryRoot ".local-ci/package-dist"
+if (-not $PackageDistributionDirectory.StartsWith(
+    $RepositoryRoot + [IO.Path]::DirectorySeparatorChar
+)) {
+    throw "Package output escaped the repository root."
+}
+if (Test-Path -LiteralPath $PackageDistributionDirectory) {
+    Remove-Item -LiteralPath $PackageDistributionDirectory -Recurse -Force
+}
+Invoke-Checked $Uv @(
+    "build", "--out-dir", $PackageDistributionDirectory
+)
+Invoke-Checked $Uv @(
+    "run", "python", "scripts/verify_package_artifacts.py",
+    "--distribution-directory", $PackageDistributionDirectory
+)
 Invoke-Checked $Pnpm @(
     "--dir", "frontends/staff-console", "install", "--frozen-lockfile",
     "--store-dir", (Join-Path $RepositoryRoot ".pnpm-store")
@@ -80,7 +96,7 @@ Invoke-Checked $Uv @(
 )
 Invoke-Checked $Uv @(
     "run", "sphinx-build", "-W", "--keep-going", "--fresh-env", "-j", "auto",
-    "-b", "html", "docs", "docs/_build/html"
+    "-d", "docs/_build/doctrees", "-b", "html", "docs", "docs/_build/html"
 )
 Invoke-Checked $Uv @(
     "run", "python", "src/manage.py", "makemigrations", "--check", "--dry-run",
@@ -113,6 +129,17 @@ Invoke-Checked $Pnpm @(
 Invoke-Checked $Git @(
     "diff", "--exit-code", "--", "src/maru/core/static/staff-console"
 )
+$UntrackedStaffConsoleFiles = & $Git @(
+    "ls-files", "--others", "--exclude-standard", "--",
+    "src/maru/core/static/staff-console"
+)
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to inspect generated Staff Console output."
+}
+if ($UntrackedStaffConsoleFiles) {
+    Write-Host ($UntrackedStaffConsoleFiles -join [Environment]::NewLine)
+    throw "Generated Staff Console output is not completely committed."
+}
 if (-not $SkipPythonTests) {
     Invoke-Checked $Uv @(
         "run", "pytest", "--cov=maru", "--cov-report=term-missing"

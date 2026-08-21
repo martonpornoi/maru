@@ -22,6 +22,26 @@ def _change(path: str, status: str = "M") -> ChangedFile:
     [
         (("docs/quality/testing-strategy.md",), (True, False, False, "none")),
         (("frontends/staff-console/src/main.tsx",), (False, True, False, "none")),
+        (
+            ("src/maru/core/static/staff-console/app.js",),
+            (False, True, False, "none"),
+        ),
+        (
+            ("src/maru/core/templates/core/home.html",),
+            (True, False, True, "targeted"),
+        ),
+        (
+            ("src/maru/workforce/static/workforce/organization_structure.css",),
+            (True, False, True, "targeted"),
+        ),
+        (
+            ("src/maru/templates/admin/base_site.html",),
+            (True, False, True, "full"),
+        ),
+        (
+            ("src/maru/static/global.css",),
+            (True, False, True, "full"),
+        ),
         (("src/maru/catalog/api.py",), (True, False, True, "targeted")),
         (("src/maru/catalog/models.py",), (True, False, True, "full")),
         (("src/maru/catalog/migrations/0002_x.py",), (True, False, True, "full")),
@@ -45,6 +65,26 @@ def test_classifier_routes_changes_to_the_smallest_safe_path(
     ) == expected
 
 
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("docs/quality/testing-strategy.md", False),
+        ("LICENSE", True),
+        ("README.md", True),
+        ("THIRD_PARTY_NOTICES.md", True),
+        ("pyproject.toml", True),
+        ("frontends/staff-console/src/main.tsx", True),
+        ("src/maru/catalog/api.py", True),
+        ("tests/unit/test_catalog.py", False),
+    ],
+)
+def test_classifier_marks_python_distribution_inputs(path: str, expected: bool) -> None:
+    plan = classify_changes((_change(path),))
+
+    assert plan.packaging is expected
+    assert plan.github_outputs()["packaging"] == str(expected).lower()
+
+
 def test_classifier_flags_protected_and_mass_deletions() -> None:
     protected = classify_changes((_change("src/maru/core/views.py", "D"),))
     test_contract = classify_changes(
@@ -58,6 +98,7 @@ def test_classifier_flags_protected_and_mass_deletions() -> None:
         (_change("docs/checkpoints/2026-08-21-example.md", "D"),)
     )
     requirements = classify_changes((_change("docs/product/requirements.md", "D"),))
+    third_party_notices = classify_changes((_change("THIRD_PARTY_NOTICES.md", "D"),))
     mass = classify_changes(
         tuple(_change(f"notes/old-{index}.md", "D") for index in range(25))
     )
@@ -75,6 +116,8 @@ def test_classifier_flags_protected_and_mass_deletions() -> None:
     assert checkpoint.integration == "full"
     assert requirements.destructive
     assert requirements.integration == "full"
+    assert third_party_notices.destructive
+    assert third_party_notices.integration == "full"
     assert mass.destructive
     assert mass.integration == "full"
     assert not ordinary.destructive

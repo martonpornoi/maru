@@ -152,12 +152,17 @@ the default branch now reports zero open CodeQL alerts. ADR 0065 records the
 enabled immutable-release setting and GH-002's merged repository boundary: exact
 draft asset/commit verification precedes publication, and immutable release,
 asset, tag, OCI digest, and attestation reconciliation follows it without a
-persistent administrator credential. The explicitly authorized first candidate
-rehearsal, one-time public-history audit, public-policy reconciliation,
-dependency review, Pages publication, multi-maintainer governance, and
-remaining demand-triggered-control review stay open under GH-002 through
-GH-009. GH-005's event-efficiency correction remains subject to focused local
-and hosted merge-candidate acceptance before merge.
+persistent administrator credential. ADR 0067 completes GH-003's bounded
+one-time audit over all then-public refs, current candidate material, public
+metadata, assets, and locked dependency licenses. It leaves standard secret
+scanning and push protection live, defers unavailable validity/generic controls,
+accepts prior public author metadata without rewriting history, and ships the
+MIT notice required by the compiled Staff Console. The explicitly authorized
+first candidate rehearsal, public-policy reconciliation, dependency review,
+Pages publication, multi-maintainer governance, and remaining demand-triggered-
+control review stay open under GH-002 and GH-004 through GH-009. GH-005's event-
+efficiency correction and GH-003's repository remediation remain subject to
+hosted merge-candidate acceptance before merge.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative

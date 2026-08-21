@@ -1,13 +1,30 @@
 import react from "@vitejs/plugin-react";
+import type { Plugin } from "vite";
 import { defineConfig } from "vitest/config";
 
+const bundledRuntimeLicenseBanner =
+  "/*! Maru is Apache-2.0: see LICENSE.txt. Bundled dependency licenses: see THIRD_PARTY_NOTICES.md. */";
+const preserveBundledRuntimeLicense: Plugin = {
+  name: "maru:preserve-bundled-runtime-license",
+  generateBundle(_options, bundle) {
+    for (const output of Object.values(bundle)) {
+      if (output.type === "chunk") {
+        output.code = `${bundledRuntimeLicenseBanner}\n${output.code}`;
+      }
+    }
+  }
+};
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), preserveBundledRuntimeLicense],
   base: "/static/staff-console/",
   build: {
     outDir: "../../src/maru/core/static/staff-console",
     emptyOutDir: true,
     cssCodeSplit: false,
+    license: {
+      fileName: "THIRD_PARTY_NOTICES.md"
+    },
     rollupOptions: {
       input: "src/main.tsx",
       output: {

@@ -1,6 +1,6 @@
 # GitHub repository hardening plan
 
-Status: GH-000 and GH-001 implemented; GH-002 repository verification implemented and first candidate rehearsal pending; GH-005 repository candidate complete and hosted acceptance pending
+Status: GH-000, GH-001, and GH-003 implemented; GH-002 repository verification implemented and first candidate rehearsal pending; GH-005 repository candidate complete and hosted acceptance pending
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -21,7 +21,8 @@ the committed tree.
 
 ## Verified public baseline
 
-The 2026-08-20 live audit established the following starting point:
+The 2026-08-20 live audit, refined by the 2026-08-21 GH-003 audit, established
+the following starting point:
 
 - the public repository has active no-bypass rulesets for `main` and `v*`;
 - `main` requires the up-to-date repository-owned `PR gate`, pull requests,
@@ -34,7 +35,10 @@ The 2026-08-20 live audit established the following starting point:
 - there was no open CodeQL, Dependabot, or secret-scanning alert on `main`;
 - candidate and gold environments accept only `main` deployments; and
 - release immutability was disabled at the initial inspection; it was enabled
-  and read back later on 2026-08-20. Secret-validity checks remain disabled.
+  and read back later on 2026-08-20; and
+- standard secret scanning and push protection are enabled. Validity checks and
+  generic-pattern scanning were unavailable for this user-owned repository at
+  the 2026-08-21 GH-003 audit boundary and remain deferred.
 
 Live values can drift. This baseline is evidence for the recorded date, not a
 substitute for the pre-change read required by a later milestone.
@@ -165,13 +169,38 @@ candidate rehearsal pending.
 
 ### GH-003: Secret validity and one-time public-history audit
 
-Review provider-contact consequences before enabling secret-validity checks.
-Separately evaluate generic patterns against synthetic fixture credentials.
-Perform a bounded one-time audit of Git history, refs, personal data, secrets,
-third-party assets, copyright, dependency licenses, and public commit metadata;
-do not turn the launch audit into a permanent noisy pull-request job.
+ADR 0067 records the bounded launch decision. The one-time audit covered the
+four public branch heads and eight pull-request heads as one 46-commit graph,
+verified reachable Git objects strictly, and scanned the current repository
+candidate separately. A checksum-verified Gitleaks 8.30.1 archive produced one
+sanitized documentation false-positive category and zero unresolved secret
+findings. Public issue, pull-request, and discussion metadata, seven tracked
+owner-attested project-controlled brand assets and their embedded metadata, and
+dependency-license and notice obligations were also reviewed. The audit did not
+independently prove asset ownership or cover historical-only assets. Maru-owned
+source remains Apache-2.0; Python distribution metadata and the release
+application manifest represent bundled MIT Staff Console code with the
+`Apache-2.0 AND MIT` expression. Release assets and the OCI image carry the
+license and third-party notice, and the image carries SBOM and provenance; no
+aggregate image-wide license expression is asserted. No remaining publication
+blocker or raw finding was committed within the audited scope.
 
-State: tracked for a separate security-audit milestone.
+GitHub-hosted Actions log and artifact bytes were not downloaded or scanned. A
+drift-prone snapshot observed 62 workflow runs and 188 unexpired artifacts under
+short retention, so GH-003 does not claim to cover all public server-generated
+bytes.
+
+Standard GitHub secret scanning and push protection stay enabled. Validity
+checks and generic-pattern scanning were unavailable for the current user-owned
+repository, so they remain deferred pending eligibility, provider-contact, and
+synthetic-fixture noise review. No GitHub setting was changed and no permanent
+pull-request history scanner was added. The owner accepted the already-public
+personal Gmail author metadata without rewriting history; future maintainer
+commits use a GitHub no-reply address by default.
+
+State: complete as a bounded repository and security-audit milestone. Repeat a
+whole-history audit only after a material visibility, ownership,
+imported-history, or incident boundary.
 
 ### GH-004: Public policy and repository-description consistency
 
@@ -284,7 +313,10 @@ a focused decision before adoption.
 | Release immutability | Enabled directly on Maru; no release or tag | Re-read before every dispatch; require immutable post-publication evidence | GH-002 |
 | Candidate environment | Exact `main`; no admin bypass or reviewer | Keep unless operational separation is needed | GH-002 |
 | Gold environment | Exact `main`; no admin bypass or reviewer | Add independent review only with a second maintainer | GH-002/GH-008 |
-| Secret-validity checks | Disabled | Review provider contact before deciding | GH-003 |
+| Secret scanning | Enabled; no unresolved alert at the 2026-08-21 audit boundary | Keep enabled and triage every alert | Continuous/GH-003 |
+| Push protection | Enabled | Keep enabled; use only synthetic non-secret fixtures for exercises | Continuous/GH-003 |
+| Secret-validity checks | Unavailable for the current user-owned repository | Reassess eligibility and provider contact after an ownership or plan change | GH-003 |
+| Generic-pattern scanning | Unavailable for the current user-owned repository | Reassess eligibility and synthetic-fixture noise before enablement | GH-003 |
 | Actions selected allowlist | Exact immutable selected references | Add only a reviewed paired workflow pin | Every workflow milestone |
 | GitHub Pages source | Disabled | Decide with the Pages workflow | GH-007 |
 | Repository homepage | Empty | Set only after verified Pages deployment | GH-007 |

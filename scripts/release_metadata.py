@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 Channel = Literal["candidate", "gold"]
 SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
+APPLICATION_LICENSE_EXPRESSION = "Apache-2.0 AND MIT"
+APPLICATION_LICENSE_FILES = ("LICENSE", "THIRD_PARTY_NOTICES.md")
 
 
 @dataclass(frozen=True, slots=True)
@@ -161,8 +163,14 @@ def write_release_files(metadata: ReleaseMetadata, output_directory: Path) -> No
     """
     output_directory.mkdir(parents=True, exist_ok=True)
     manifest_path = output_directory / "release-manifest.json"
+    manifest = asdict(metadata)
+    manifest["application_license"] = {
+        "expression": APPLICATION_LICENSE_EXPRESSION,
+        "files": list(APPLICATION_LICENSE_FILES),
+        "scope": "Maru source and bundled Staff Console runtime",
+    }
     manifest_path.write_text(
-        json.dumps(asdict(metadata), indent=2, sort_keys=True) + "\n",
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
         newline="\n",
     )

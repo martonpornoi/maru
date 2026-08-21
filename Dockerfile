@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 RUN python -m pip install --disable-pip-version-check --no-cache-dir uv==0.11.29
-COPY pyproject.toml uv.lock README.md LICENSE ./
+COPY pyproject.toml uv.lock README.md LICENSE THIRD_PARTY_NOTICES.md ./
 COPY src ./src
 RUN uv sync --frozen --no-dev --no-editable && \
     DJANGO_SETTINGS_MODULE=maru.settings.local /opt/venv/bin/python src/manage.py collectstatic --noinput
@@ -30,7 +30,7 @@ RUN groupadd --system --gid 10001 maru && \
 COPY --from=builder --chown=maru:maru /opt/venv /opt/venv
 COPY --from=builder --chown=maru:maru /app/src /app/src
 COPY --from=builder --chown=maru:maru /app/staticfiles /app/staticfiles
-COPY --chown=maru:maru LICENSE README.md /app/
+COPY --chown=maru:maru LICENSE README.md THIRD_PARTY_NOTICES.md /app/
 
 USER 10001:10001
 EXPOSE 8000

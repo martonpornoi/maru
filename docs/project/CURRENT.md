@@ -20,9 +20,13 @@ release immutability, verified draft publication, and exact post-publication
 release, asset, tag, image, and attestation reconciliation. ADR 0066's current
 candidate makes draft acceptance cheap and explicitly non-green, removes the
 known CodeQL parser incompatibility in the Workforce query module, and removes
-measured duplicate acceptance without removing an evidence category. The
-complete authenticated reflow, keyboard, screen-reader, owner, deployment, stopped-
-writer/cutover, restore/PITR, and production-governance gates remain open.
+measured duplicate acceptance without removing an evidence category. ADR 0067's
+current candidate records GH-003's sanitized public-history and publication
+audit, keeps enhanced secret controls deferred under the current ownership
+boundary, and closes the bundled-frontend notice gap without adding a permanent
+scanner. The complete authenticated reflow, keyboard, screen-reader, owner,
+deployment, stopped-writer/cutover, restore/PITR, and production-governance
+gates remain open.
 
 ## Current outcome
 
@@ -172,8 +176,9 @@ cross-domain-save design.
   before publication, then reconciles immutable state, the exact tag commit,
   release and per-asset attestations, the OCI tag/digest, and image provenance.
   GHCR receives the non-root Django/Gunicorn image by immutable digest with OCI
-  SBOM and provenance. GitHub receives docs, OpenAPI, locks, manifest, license,
-  and checksums. No release, tag, package, or deployment has been published.
+  SBOM and provenance. GitHub receives docs, OpenAPI, locks, manifest, project
+  license, third-party notices, and checksums. No release, tag, package, or
+  deployment has been published.
 - ADR 0066 makes **Ready for review** the authoritative transition from cheap
   draft preflight to selected hosted acceptance. Drafts retain an explicitly
   red `PR gate`; returning a pull request to draft cancels obsolete work. The
@@ -192,6 +197,26 @@ cross-domain-save design.
   that is not merged at the exact workflow commit before starting full
   certification. Checkout credentials are not persisted where no Git write is
   performed.
+- ADR 0067 audits the four public branches and eight pull-request heads as one
+  46-commit graph, the current candidate tree, public collaboration metadata,
+  seven currently tracked brand assets, and locked dependency licenses. Strict
+  Git verification passes; the one history detector result is sanitized and
+  contextually rejected as documentation prose, leaving no unresolved secret,
+  production-personal-data, asset, copyright, or dependency-license blocker.
+- Standard GitHub secret scanning and push protection remain enabled. Validity
+  and generic-pattern controls are unavailable for Maru's current user-owned
+  repository and remain deferred pending eligibility and provider-contact
+  review. The already-public personal author email is accepted without a
+  destructive history rewrite; the repository now uses GitHub no-reply author
+  metadata for future maintainer commits.
+- Maru-owned source remains Apache-2.0. Because the compiled Staff Console
+  embeds React, React DOM, and Scheduler under MIT, Python-distribution and
+  release-application metadata both declare `Apache-2.0 AND MIT`; the browser
+  bundle points to its generated notice, and the project license and exact
+  third-party notice ship in Python packages, the application image, and every
+  verified GitHub release asset set. The image-wide dependency licenses remain
+  represented by its generated SBOM rather than one misleading aggregate OCI
+  license label.
 - Apache-2.0, contribution/conduct/security/support/governance policies,
   CODEOWNERS, issue/PR templates, Dependabot grouping, public-readiness steps,
   and active rulesets establish the public collaboration baseline without
@@ -485,15 +510,36 @@ as the repository-wide gate:
   managed CodeQL run can confirm restored server-side file coverage.
 - The ADR 0066 local candidate passes Actionlint, immutable-Action and workflow
   contracts, PowerShell parsing, `uv lock --check`, and whitespace validation.
-  Forty-nine focused policy/isolation tests pass. All 1,909 unit tests pass in
-  6.16 seconds with PostgreSQL deliberately unreachable, and the moved
+  Seventy-four focused policy/license/workflow tests pass. All 1,935 unit tests
+  pass in 7.00 seconds with PostgreSQL deliberately unreachable, and the moved
   receipt/storage integration test passes against real PostgreSQL in 49.60
-  seconds. Ruff formatting and ALL-rule lint pass over 646 files; strict mypy
-  passes over 356 source files. PyDocLint and semantic validation pass over 365
-  production/tooling files, documentation validation covers 276 Markdown files
+  seconds. Ruff formatting and ALL-rule lint pass over 649 files; strict mypy
+  passes over 357 source files. PyDocLint and semantic validation pass over 366
+  production/tooling files, documentation validation covers 281 Markdown files
   and 203 requirement identifiers, and a fresh warning-fatal parallel Sphinx/
   AutoAPI build succeeds. Python 3.12 byte-compilation of the CodeQL-compatible
   Workforce module also passes.
+- The ADR 0067 audit mirror contains four branch heads, eight pull-request
+  heads, and 46 unique commits. `git fsck --full --strict` passes. A checksum-
+  verified Gitleaks 8.30.1 scan produces one redacted documentation false
+  positive and no unresolved history finding; current-candidate, issue/pull-
+  request, and discussion scans produce no finding. The final 1,270-file
+  repository-candidate snapshot also produces no finding. An ignored synthetic
+  positive yields exactly one redacted generic-key result while its benign
+  control yields none. Asset/metadata and locked Python/Node license reviews
+  leave no publication blocker. An isolated package build emits metadata 2.4
+  with the exact `Apache-2.0 AND MIT` expression and both legal files in the
+  wheel and source distribution; its 643-member wheel and 746-member source
+  archive contain all 124 currently tracked non-Python Django template/static
+  assets and no build-cache content. A durable verifier now rebuilds and
+  inspects both distributions whenever package inputs change. Focused release,
+  package, classifier, and workflow contracts plus Ruff, strict mypy,
+  PyDocLint, documentation, lock, allowlist, YAML, and whitespace checks pass
+  locally. The warning-fatal site
+  build serves complete Maru, Sphinx, sphinxcontrib-mermaid, Furo, Pygments,
+  normalize.css, and Gumshoe license evidence; a 2,388-entry release-archive
+  rehearsal contains those seven texts and both root Maru legal files without
+  Sphinx doctree caches.
 - The parallel-CI candidate passes the complete 1,841-test unit suite in 56.68
   seconds and its 18 focused verifier/shard/workflow-contract tests. Ruff
   formatting/lint passes over 633 files, strict mypy passes over 356 source
@@ -531,13 +577,16 @@ approval.
 
 ## Decisions and migration boundary
 
-- ADRs 0049 through 0061 and ADRs 0063 through 0066 are Accepted. ADR 0062's
+- ADRs 0049 through 0061 and ADRs 0063 through 0067 are Accepted. ADR 0062's
   private self-hosted interval is superseded. ADR 0063 restores ADR 0060/0061's
   change-aware hosted topology for public collaboration. ADR 0064 makes
   dependency automation security-only, rejects stale locked/allowlisted inputs
   before costly full acceptance, and requires explicit CodeQL merge protection.
   ADR 0065 adds a draft verification boundary and immutable post-publication
-  reconciliation without adding a persistent administrator credential. These
+  reconciliation without adding a persistent administrator credential. ADR
+  0067 records a bounded sanitized publication audit, accepts prior public
+  author metadata without rewriting history, and requires distributable third-
+  party notice evidence without adding a recurring full-history scanner. These
   decisions remove no test, security, documentation, contract, migration, or
   authority gate.
 - ADR 0054 accepts the bounded architecture
@@ -660,6 +709,13 @@ approval.
   request permissions. A self-hosted public runner, `pull_request_target`
   execution of contribution code, or environment/secret access for fork pull
   requests requires a separately accepted security design.
+- GH-003 is a point-in-time public-history and publication baseline. It does not
+  prove future commits, new refs or external metadata, deployment secrets,
+  legal readiness, production data handling, or the contents of GitHub-hosted
+  Actions logs/artifacts. The 62-run/188-unexpired-artifact inventory was a
+  drift-prone snapshot, not a content scan. Repeat the complete audit after a
+  material visibility, ownership, imported-history, or credential-incident
+  boundary; otherwise review the release delta and current alerts.
 - The ADR 0066 repository candidate is not accepted by local focused evidence
   alone. Its current pull-request merge candidate still requires hosted full
   acceptance, and a fresh managed CodeQL run must confirm that the Workforce
@@ -679,11 +735,12 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Complete focused local and hosted merge-candidate acceptance for GH-005,
-   confirm managed CodeQL analyzes the Workforce query module, merge the event-
-   efficiency candidate, and re-read the default-branch workflow. Then prepare
-   the separately authorized first candidate release pull request and rehearse
-   `rc.1`; raise reviews to one only when a second trusted maintainer exists.
+1. Complete hosted merge-candidate acceptance for the focused GH-005 and
+   GH-003 commits, confirm managed CodeQL analyzes the Workforce query module,
+   merge the branch, and re-read the default-branch workflow and security
+   state. Then inspect GH-004's remaining public-policy/metadata work before the
+   separately authorized first `rc.1`; require another reviewer only after a
+   second trusted maintainer exists.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
@@ -696,7 +753,7 @@ approval.
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `PRODUCTION_CONSOLIDATION.md`, the
-relevant requirement IDs, ADRs 0047 through 0066, and the owning module/runbook
+relevant requirement IDs, ADRs 0047 through 0067, and the owning module/runbook
 docs. Preserve every concurrent change in the dirty working tree. Serialize all
 PostgreSQL tests that share `test_maru_test`; never infer authority from a
 selected edition or route; authorize before parsing untrusted input; retain

@@ -186,6 +186,9 @@ def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
     assert "github.event.pull_request.draft == true" in workflow
     assert "\n  push:" not in workflow
     assert "scripts/ci_changes.py plan" in workflow
+    assert jobs["changes"]["outputs"]["packaging"] == (
+        "${{ steps.plan.outputs.packaging }}"
+    )
     assert "destructive-change-reviewed" in workflow
     assert "needs.changes.outputs.integration == 'targeted'" in workflow
     for job_name in ("quality", "unit", "targeted-integration", "full"):
@@ -228,10 +231,33 @@ def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
     assert "path: ~/.cache/uv" in workflow
     assert workflow.count("image: postgres:17.11-alpine@sha256:") == 1
     assert "self-hosted" not in workflow
+    license_step = next(
+        step
+        for step in jobs["quality"]["steps"]
+        if step.get("name") == "Distribution license contracts"
+    )
+    assert (
+        "uv run pytest tests/unit/test_package_licensing.py \\\n"
+        "  tests/unit/test_release_metadata.py -q"
+    ) in license_step["run"]
+    assert "if" not in license_step
+    package_step = next(
+        step
+        for step in jobs["quality"]["steps"]
+        if step.get("name") == "Build and inspect Python distributions"
+    )
+    assert "uv build --out-dir .ci-distributions" in package_step["run"]
+    assert "scripts/verify_package_artifacts.py" in package_step["run"]
+    assert package_step["if"] == ("${{ needs.changes.outputs.packaging == 'true' }}")
+    assert (
+        "git ls-files --others --exclude-standard -- "
+        "../../src/maru/core/static/staff-console"
+    ) in workflow
 
 
 def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> None:
     workflow = _workflow(FULL_WORKFLOW)
+    jobs = yaml.safe_load(workflow)["jobs"]
 
     assert "workflow_call:" in workflow
     for job in ("preflight", "static", "documentation", "contracts", "security"):
@@ -241,7 +267,24 @@ def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> 
     assert "uv lock --check" in workflow
     assert "python scripts/validate_actions_allowlist.py" in workflow
     assert workflow.count("needs: preflight") == 4
-    assert workflow.count("needs: security") == 2
+    assert jobs["unit"]["needs"] == ["static", "security"]
+    assert jobs["integration"]["needs"] == ["static", "security"]
+    license_step = next(
+        step
+        for step in jobs["static"]["steps"]
+        if step.get("name") == "Distribution license contracts"
+    )
+    assert "if" not in license_step
+    assert "tests/unit/test_package_licensing.py" in license_step["run"]
+    assert "tests/unit/test_release_metadata.py" in license_step["run"]
+    package_step = next(
+        step
+        for step in jobs["static"]["steps"]
+        if step.get("name") == "Build and inspect Python distributions"
+    )
+    assert "uv build --out-dir .ci-distributions" in package_step["run"]
+    assert "scripts/verify_package_artifacts.py" in package_step["run"]
+    assert "if" not in package_step
     assert "shard: [1, 2, 3, 4, 5, 6, 7, 8]" in workflow
     assert "--shard-count 8" in workflow
     assert "scripts/run_ci_test_shard.py" in workflow
@@ -250,6 +293,10 @@ def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> 
     assert "name: Full CI gate" in workflow
     assert workflow.count("image: postgres:17.11-alpine@sha256:") == 1
     assert "self-hosted" not in workflow
+    assert (
+        "git ls-files --others --exclude-standard -- "
+        "../../src/maru/core/static/staff-console"
+    ) in workflow
 
 
 def test_manual_full_acceptance_does_not_claim_merge_queue_support() -> None:
@@ -293,6 +340,23 @@ def test_checkout_credentials_are_not_persisted() -> None:
                     )
 
 
+def test_staff_console_build_rejects_untracked_generated_assets() -> None:
+    generated_path = "../../src/maru/core/static/staff-console"
+    untracked_command = "git ls-files --others --exclude-standard -- " + generated_path
+    for path in (PR_WORKFLOW, FULL_WORKFLOW):
+        workflow = _workflow(path)
+        assert untracked_command in workflow
+        assert "if ! UNTRACKED_GENERATED_FILES=$(git ls-files" in workflow
+        assert "Unable to inspect generated Staff Console output." in workflow
+        assert 'if test -n "$UNTRACKED_GENERATED_FILES"' in workflow
+
+    local_check = LOCAL_CHECK_PATH.read_text(encoding="utf-8")
+    assert '"ls-files", "--others", "--exclude-standard"' in local_check
+    assert "Generated Staff Console output is not completely committed." in (
+        local_check
+    )
+
+
 def test_dependabot_creates_only_grouped_security_updates() -> None:
     configuration = yaml.safe_load(
         (REPOSITORY_ROOT / ".github" / "dependabot.yml").read_text(encoding="utf-8")
@@ -329,8 +393,8 @@ def test_documentation_contract_matches_local_and_full_acceptance() -> None:
             ),
         ),
         (
-            "uv run sphinx-build -W --keep-going --fresh-env -j auto -b html "
-            "docs docs/_build/html",
+            "uv run sphinx-build -W --keep-going --fresh-env -j auto "
+            "-d docs/_build/doctrees -b html docs docs/_build/html",
             '"run", "sphinx-build", "-W", "--keep-going", "--fresh-env"',
         ),
     ):
@@ -339,6 +403,8 @@ def test_documentation_contract_matches_local_and_full_acceptance() -> None:
 
     assert "name: contributor-documentation" in workflow
     assert "retention-days: 7" in workflow
+    assert '"build", "--out-dir", $PackageDistributionDirectory' in local_check
+    assert '"scripts/verify_package_artifacts.py"' in local_check
 
 
 def test_local_certification_preserves_database_isolation_and_total_coverage() -> None:
@@ -412,6 +478,14 @@ def test_release_requires_exact_source_unique_calver_and_evidence() -> None:
     }
     assert jobs["certify"]["needs"] == "validate-request"
     assert jobs["publish"]["needs"] == ["validate-request", "certify"]
+    assert "org.opencontainers.image.licenses" not in workflow
+    assert "rm -rf release-assets/docs/.doctrees" in workflow
+    assert "cp LICENSE THIRD_PARTY_NOTICES.md release-assets/docs/" in workflow
+    assert (
+        "cp openapi.yaml uv.lock LICENSE THIRD_PARTY_NOTICES.md release-assets/"
+        in workflow
+    )
+    assert workflow.count("release-assets/THIRD_PARTY_NOTICES.md") == 3
     validation_run = jobs["validate-request"]["steps"][0]["run"]
     assert 'gh pr view "$RELEASE_PR" --repo "$GITHUB_REPOSITORY"' in validation_run
     assert "must be merged into main at the exact workflow commit" in validation_run
@@ -511,6 +585,7 @@ def test_rulesets_and_public_collaboration_files_are_present() -> None:
 
     for relative_path in (
         "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
         "CONTRIBUTING.md",
         "CODE_OF_CONDUCT.md",
         "SECURITY.md",

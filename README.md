@@ -16,6 +16,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) to work on Maru,
 [the release process](docs/operations/release-process.md) for CalVer and GitHub
 artifact semantics. Contributions are licensed under
 [Apache-2.0](LICENSE) and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+Bundled third-party components retain the licenses recorded in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Each occurrence of a convention is a first-class event edition, for example
 `Awoostria 2026` or `Eurofurence 2026`. Historical editions remain available so

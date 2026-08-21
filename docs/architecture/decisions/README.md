@@ -71,6 +71,7 @@ the system.
 | [0064](0064-repository-supply-chain-and-code-scanning-policy.md) | Accepted | Security-only dependency automation, fail-fast lock and Actions policy checks, and reconciled CodeQL merge thresholds |
 | [0065](0065-immutable-release-publication-and-verification.md) | Accepted | Administrator-confirmed immutable-release policy, verified draft publication, and exact post-publication release and OCI evidence |
 | [0066](0066-event-efficient-fail-closed-hosted-acceptance.md) | Accepted | Draft-light ready-authoritative acceptance, fail-closed destructive routing, and eight-database full certification |
+| [0067](0067-bounded-public-history-and-secret-validity-audit.md) | Accepted | Sanitized one-time public-history, metadata, asset, and dependency-license audit without a permanent scanner |
 
 New ADRs use the next four-digit number and contain:
 

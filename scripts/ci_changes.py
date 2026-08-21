@@ -63,6 +63,7 @@ PROTECTED_DELETION_FILES = {
     "README.md",
     "SECURITY.md",
     "SUPPORT.md",
+    "THIRD_PARTY_NOTICES.md",
     "compose.yaml",
     "docs/development/repository-governance.md",
     "docs/product/requirements.md",
@@ -78,6 +79,11 @@ NAME_STATUS_FIELD_COUNT = 2
 RENAMED_NAME_STATUS_FIELD_COUNT = 3
 MODULE_PATH_PART_COUNT = 3
 TARGETED_INTEGRATION_MAX_SECONDS = 1_800.0
+STAFF_CONSOLE_STATIC_PREFIX = "src/maru/core/static/staff-console/"
+CROSS_CUTTING_DJANGO_ASSET_PREFIXES = (
+    "src/maru/static/",
+    "src/maru/templates/",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +121,8 @@ class CIPlan:
         Whether the Staff Console contract and build must be checked.
     python : bool
         Whether Python unit and framework checks are relevant.
+    packaging : bool
+        Whether Python distribution artifacts must be built and inspected.
     security : bool
         Whether dependency vulnerability checks are relevant.
     integration : str
@@ -132,6 +140,8 @@ class CIPlan:
         Whether the Staff Console contract and build must be checked.
     python : bool
         Whether Python unit and framework checks are relevant.
+    packaging : bool
+        Whether Python distribution artifacts must be built and inspected.
     security : bool
         Whether dependency vulnerability checks are relevant.
     integration : str
@@ -145,6 +155,7 @@ class CIPlan:
     documentation: bool
     frontend: bool
     python: bool
+    packaging: bool
     security: bool
     integration: str
     destructive: bool
@@ -162,6 +173,7 @@ class CIPlan:
             "documentation": str(self.documentation).lower(),
             "frontend": str(self.frontend).lower(),
             "python": str(self.python).lower(),
+            "packaging": str(self.packaging).lower(),
             "security": str(self.security).lower(),
             "integration": self.integration,
             "destructive": str(self.destructive).lower(),
@@ -231,6 +243,7 @@ def classify_changes(changes: Sequence[ChangedFile]) -> CIPlan:
     deleted = tuple(change for change in changes if change.status == "D")
     python = any(_is_python_related(path) for path in paths)
     frontend = any(_is_frontend_related(path) for path in paths)
+    packaging = any(_is_packaging_related(path) for path in paths)
     documentation = python or any(_is_documentation_related(path) for path in paths)
     security = any(_is_security_related(path) for path in paths)
     full = any(_requires_full_integration(path) for path in paths)
@@ -244,6 +257,7 @@ def classify_changes(changes: Sequence[ChangedFile]) -> CIPlan:
         documentation=documentation,
         frontend=frontend,
         python=python,
+        packaging=packaging,
         security=security,
         integration=integration,
         destructive=destructive,
@@ -387,7 +401,7 @@ def _load_integration_durations(timing_file: Path) -> dict[str, float]:
 
 
 def _is_python_related(path: str) -> bool:
-    """Return whether a path affects Python behavior or its toolchain.
+    """Return whether a path affects Python behavior or shipped Django assets.
 
     Parameters
     ----------
@@ -399,11 +413,21 @@ def _is_python_related(path: str) -> bool:
     bool
         ``True`` when Python checks are relevant.
     """
-    return path.endswith(".py") or path in {"pyproject.toml", "uv.lock"}
+    pure_path = PurePosixPath(path)
+    django_runtime_asset = (
+        path.startswith("src/maru/")
+        and any(part in {"static", "templates"} for part in pure_path.parts)
+        and not path.startswith(STAFF_CONSOLE_STATIC_PREFIX)
+    )
+    return (
+        path.endswith(".py")
+        or path in {"pyproject.toml", "uv.lock"}
+        or django_runtime_asset
+    )
 
 
 def _is_frontend_related(path: str) -> bool:
-    """Return whether a path affects the Staff Console or API contract.
+    """Return whether a path affects Staff Console source, output, or API contract.
 
     Parameters
     ----------
@@ -415,7 +439,31 @@ def _is_frontend_related(path: str) -> bool:
     bool
         ``True`` when frontend checks are relevant.
     """
-    return path.startswith("frontends/") or path == "openapi.yaml"
+    return (
+        path.startswith(("frontends/", STAFF_CONSOLE_STATIC_PREFIX))
+        or path == "openapi.yaml"
+    )
+
+
+def _is_packaging_related(path: str) -> bool:
+    """Return whether a path changes a built Python distribution.
+
+    Parameters
+    ----------
+    path : str
+        Repository-relative POSIX path.
+
+    Returns
+    -------
+    bool
+        ``True`` when wheel and source-archive inspection is relevant.
+    """
+    return path in {
+        "LICENSE",
+        "README.md",
+        "THIRD_PARTY_NOTICES.md",
+        "pyproject.toml",
+    } or path.startswith(("frontends/staff-console/", "src/maru/"))
 
 
 def _is_documentation_related(path: str) -> bool:
@@ -471,6 +519,8 @@ def _requires_full_integration(path: str) -> bool:
     """
     pure_path = PurePosixPath(path)
     if path in FULL_INTEGRATION_FILES:
+        return True
+    if path.startswith(CROSS_CUTTING_DJANGO_ASSET_PREFIXES):
         return True
     if path.startswith(FULL_INTEGRATION_PREFIXES):
         return True

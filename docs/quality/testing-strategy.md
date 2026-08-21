@@ -215,10 +215,17 @@ stable `PR gate` remains the branch-protection target:
   promotes a missing, unmeasurable, or greater-than-30-minute selection to full
   acceptance instead of letting the targeted lane exceed its 45-minute limit;
 - frontend and dependency work adds only the relevant generated-contract,
-  build, and advisory checks; and
+  build, and advisory checks. Checked-in Staff Console output is classified as
+  frontend work, while Django templates and non-Staff-Console static assets are
+  classified with their owning Python module. Every non-full quality run also
+  executes the distribution-license and release-metadata contracts. When the
+  diff changes root package metadata/legal files, frontend source, or
+  `src/maru`, it also builds and inspects a wheel and source archive against
+  every current Django template/static asset and both PEP 639 legal files. A
+  root legal-file-only change therefore cannot bypass packaging evidence; and
 - migrations, models, settings, locks, security/authority boundaries,
-  workflows, test configuration, and CI harnesses fail closed to reusable full
-  acceptance.
+  cross-cutting top-level Django templates/static, workflows, test
+  configuration, and CI harnesses fail closed to reusable full acceptance.
 
 Deleting 25 or more paths, or deleting or renaming protected source, tests,
 repository automation, governance records, or critical root policy/deployment
@@ -241,6 +248,10 @@ merge authority reviews such changes. Before granting that authority to another
 person, enable stale-dismissing approval and CODEOWNER review or introduce a
 separately designed trusted-base policy check.
 
+Both frontend paths reject tracked diffs and untracked files after rebuilding
+the checked-in Staff Console output, so a newly emitted chunk or legal asset
+cannot disappear from the submitted change.
+
 Reusable full acceptance runs static analysis, strict NumPy documentation,
 Django/OpenAPI/client contracts, Staff Console acceptance, dependency audits,
 the unit suite, and every integration file. Static analysis, documentation,
@@ -250,8 +261,10 @@ across eight isolated PostgreSQL jobs; files remain whole and serialized within
 a job. The checked-in timing map sums file-level JUnit durations from an
 accepted run and gives new files a deterministic median fallback. The selector
 validates non-empty unique assignment and uses deterministic path/index
-tie-breaks. Dependency security must pass before unit or integration work
-starts, so an advisory does not spend database runner-minutes.
+tie-breaks. Static checks, including the focused distribution-license
+contracts, and dependency security must pass before unit or integration work
+starts, so an early policy or advisory failure does not spend database runner-
+minutes.
 
 The unit suite is explicitly non-database; its only former PostgreSQL receipt
 test now belongs to integration. Unit and integration jobs publish hidden

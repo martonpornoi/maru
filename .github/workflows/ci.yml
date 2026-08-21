@@ -30,6 +30,7 @@ jobs:
       documentation: ${{ steps.plan.outputs.documentation }}
       frontend: ${{ steps.plan.outputs.frontend }}
       python: ${{ steps.plan.outputs.python }}
+      packaging: ${{ steps.plan.outputs.packaging }}
       security: ${{ steps.plan.outputs.security }}
       integration: ${{ steps.plan.outputs.integration }}
       destructive: ${{ steps.plan.outputs.destructive }}
@@ -133,12 +134,22 @@ jobs:
           uv run ruff check .
           uv run mypy src
           uv run python scripts/validate_docs.py
+      - name: Distribution license contracts
+        run: |
+          uv run pytest tests/unit/test_package_licensing.py \
+            tests/unit/test_release_metadata.py -q
+      - name: Build and inspect Python distributions
+        if: ${{ needs.changes.outputs.packaging == 'true' }}
+        run: |
+          uv build --out-dir .ci-distributions
+          uv run python scripts/verify_package_artifacts.py \
+            --distribution-directory .ci-distributions
       - name: Build contributor documentation
         if: ${{ needs.changes.outputs.documentation == 'true' }}
         run: |
           uv run pydoclint src scripts
           uv run python scripts/validate_python_docstrings.py src scripts
-          uv run sphinx-build -W --keep-going --fresh-env -b html docs docs/_build/html
+          uv run sphinx-build -W --keep-going --fresh-env -d docs/_build/doctrees -b html docs docs/_build/html
       - name: Upload contributor documentation
         if: ${{ needs.changes.outputs.documentation == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -169,6 +180,14 @@ jobs:
           pnpm run test
           pnpm run build
           git diff --exit-code -- ../../src/maru/core/static/staff-console
+          if ! UNTRACKED_GENERATED_FILES=$(git ls-files --others --exclude-standard -- ../../src/maru/core/static/staff-console); then
+            echo "Unable to inspect generated Staff Console output."
+            exit 1
+          fi
+          if test -n "$UNTRACKED_GENERATED_FILES"; then
+            printf '%s\n' "$UNTRACKED_GENERATED_FILES"
+            exit 1
+          fi
       - name: Dependency vulnerability audit
         if: ${{ needs.changes.outputs.security == 'true' }}
         run: |
