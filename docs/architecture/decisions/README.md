@@ -70,8 +70,10 @@ the system.
 | [0063](0063-public-hosted-protected-collaboration.md) | Partially superseded | Public hosted merge-candidate acceptance, no-bypass rulesets, immutable Action allowlisting, and no persistent runner; ADR 0066 replaces merge-group, exact-head, and nine-database details |
 | [0064](0064-repository-supply-chain-and-code-scanning-policy.md) | Accepted | Security-only dependency automation, fail-fast lock and Actions policy checks, and reconciled CodeQL merge thresholds |
 | [0065](0065-immutable-release-publication-and-verification.md) | Accepted | Administrator-confirmed immutable-release policy, verified draft publication, and exact post-publication release and OCI evidence |
-| [0066](0066-event-efficient-fail-closed-hosted-acceptance.md) | Accepted | Draft-light ready-authoritative acceptance, fail-closed destructive routing, and eight-database full certification |
+| [0066](0066-event-efficient-fail-closed-hosted-acceptance.md) | Partially superseded | Draft-light ready-authoritative acceptance, fail-closed destructive routing, and eight-database full certification remain; ADR 0069 replaces its Workforce CodeQL compatibility mechanism |
 | [0067](0067-bounded-public-history-and-secret-validity-audit.md) | Accepted | Sanitized one-time public-history, metadata, asset, and dependency-license audit without a permanent scanner |
+| [0068](0068-public-collaboration-channels-and-sole-maintainer-continuity.md) | Accepted | Actionable public channels, truthful sole-maintainer continuity, and reviewed repository metadata without placeholder governance |
+| [0069](0069-codeql-compatible-union-bounded-generic.md) | Accepted | Preserve Workforce CodeQL extraction with a narrowly exempted bounded TypeVar and known-incompatible-header contract |
 
 New ADRs use the next four-digit number and contain:
 

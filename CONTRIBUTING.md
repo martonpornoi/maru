@@ -52,6 +52,21 @@ and automation-policy feedback and intentionally keep `PR gate` red. After the
 complete local certification passes, choose **Ready for review** to start the
 authoritative hosted path. Converting back to draft cancels obsolete acceptance.
 
+## Issue triage and newcomer work
+
+New bug reports and proposals start with the `triage` label. The maintainer may
+request a synthetic reproduction, redirect a support question to Discussions,
+link a duplicate, or decline work that does not fit the roadmap. Labels express
+current classification, not a promise of scheduling or a response-time SLA.
+
+An issue receives `good first issue` only when it is independently bounded,
+contains observable acceptance criteria and relevant setup or verification
+commands, needs no private data or maintainer-only access, and avoids hidden
+security, migration, or cross-module prerequisites. `help wanted` may identify
+broader work that still needs design discussion. Comment before investing in a
+large implementation, because a label is not a reservation or pre-approval of
+a particular design.
+
 ## Pull requests
 
 Complete the pull request template. Explain the user or operator outcome,

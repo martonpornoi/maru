@@ -179,3 +179,34 @@ before its review rule is enabled.
 All contributors follow `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`,
 and `GOVERNANCE.md`. Architecture and requirements remain the durable decision
 system; GitHub conversation does not silently supersede either.
+
+## Public collaboration metadata
+
+The authenticated GH-004 snapshot on 2026-08-21 reports 100 percent Community
+Profile health, the intended eight repository topics, all labels referenced by
+the Issue Forms and automation, and the expected feature state: Issues and
+Discussions enabled; Projects, Wiki, Pages, and Downloads disabled. The
+homepage remains empty until the first verified GH-007 Pages deployment. Wiki
+must not become a manually maintained copy of the Sphinx source.
+
+The checked-in desired description is **Pre-production, security-focused
+Django and PostgreSQL platform for operating multi-convention events.** The
+live description does not yet include the maturity qualifier. Apply that exact
+metadata change only after separate authorization, then read it back. Keep the
+existing topics. A custom social preview and funding configuration remain
+deferred until the project has, respectively, a purpose-built approved asset
+and a real recipient plus stewardship decision. The preview is a live setting;
+funding links normally come from committed `.github/FUNDING.yml`, while
+connecting a recipient is separate external stewardship work.
+
+Root `GOVERNANCE.md` is the authority and continuity policy;
+`CODE_OF_CONDUCT.md`, `SECURITY.md`, and `SUPPORT.md` own their respective
+reporting channels and expectations. This document owns technical branch,
+workflow, and repository-setting mechanics. Do not collapse those roles into a
+single ambiguous "governance" link.
+
+The current Code of Conduct deliberately provides no private Maru-specific
+conduct channel. Do not infer an address, repurpose private vulnerability
+reporting, or direct sensitive details into a public issue. Any future private
+channel requires an explicit policy change, an operational owner, and defined
+independent-review and retention boundaries.

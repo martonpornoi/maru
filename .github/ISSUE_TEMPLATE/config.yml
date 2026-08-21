@@ -1,8 +1,14 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security report
-    url: https://github.com/martonpornoi/maru/security
-    about: Review the private vulnerability reporting policy before disclosure.
+    url: https://github.com/martonpornoi/maru/security/advisories/new
+    about: Report a suspected vulnerability privately to the maintainer.
+  - name: Conduct and abuse guidance
+    url: https://github.com/martonpornoi/maru/blob/main/CODE_OF_CONDUCT.md
+    about: Review GitHub reporting and Maru's lack of a private conduct channel.
   - name: Support policy
     url: https://github.com/martonpornoi/maru/blob/main/SUPPORT.md
     about: Check supported help channels and required diagnostics.
+  - name: Setup and design discussion
+    url: https://github.com/martonpornoi/maru/discussions
+    about: Ask a public setup question or discuss a design before proposing work.

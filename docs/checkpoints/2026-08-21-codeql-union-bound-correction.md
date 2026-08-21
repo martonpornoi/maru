@@ -1,7 +1,7 @@
 # CodeQL union-bound extraction correction
 
 Date: 2026-08-21
-Status: Local corrective candidate; replacement hosted extraction proof pending
+Status: Hosted extraction proof passed; ready-state repository acceptance pending
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 Decision: ADR 0069
 
@@ -62,11 +62,16 @@ failed coverage proof and does not claim that the Workforce file was analyzed.
 
 These checks prove Python and project behavior, not CodeQL extraction.
 
-## Required hosted acceptance
+## Hosted extraction acceptance
 
-Push this focused correction while pull request 9 remains draft. Inspect the
-new managed Python CodeQL log rather than relying on the green aggregate. The
-correction is accepted only when the log contains no raw extraction diagnostic,
-no syntax-error processing summary, and no parse location for
-`workforce/queries.py`. Ready-state repository acceptance remains separately
-required before merge.
+Commit `6317538` was pushed while pull request 9 remained draft. Managed CodeQL
+run `32485597468`, Python job `96781280766`, explicitly logged both:
+
+- `Extracted file /home/runner/work/maru/maru/src/maru/workforce/queries.py`;
+  and
+- `Found 0 raw diagnostic messages.`
+
+The log contains no syntax-error processing summary or parse location. All
+three managed Actions, Python, and JavaScript/TypeScript analysis jobs passed.
+This is the required replacement file-coverage proof. Ready-state repository
+acceptance remains separately required before merge.

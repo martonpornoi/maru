@@ -1,6 +1,9 @@
 # GitHub repository hardening plan
 
-Status: GH-000, GH-001, and GH-003 implemented; GH-002 repository verification implemented and first candidate rehearsal pending; GH-005 repository candidate complete and hosted acceptance pending
+Status: GH-000, GH-001, and GH-003 implemented; GH-002 repository verification
+implemented and first candidate rehearsal pending; GH-004 repository candidate
+complete with external reconciliation pending; GH-005 hosted extraction passed
+with ready-state acceptance pending
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -209,11 +212,31 @@ repository metadata with the actual public state. Remove private or pre-launch
 wording, link the private vulnerability form, refresh evidence summaries, and
 keep the pre-production boundary explicit.
 
-State: the obsolete private/pre-launch vulnerability, Discussions, governance,
-CodeQL-baseline, and environment-setup wording is corrected in GH-000/GH-001.
-Repository metadata, durable contacts and succession, broader evidence
-summaries, and the complete public-material audit remain tracked for a separate
-public-documentation milestone.
+The 2026-08-21 authenticated audit reports 100 percent Community Profile
+health, an accurate eight-topic set, every label consumed by Issue Forms and
+automation, and the intended Issues/Discussions-on and
+Projects/Wiki/Pages/Downloads-off feature shape. Homepage remains empty for
+GH-007. Funding and a custom social preview are deliberately deferred instead
+of receiving placeholders. The desired repository description adds the word
+**Pre-production**; changing and reading back that live field remains a
+separately authorized mutation.
+
+The repository candidate replaces brittle README evidence, fixes support and
+security discovery, defines best-effort triage and safe `good first issue`
+criteria, and records a truthful sole-maintainer continuity policy. GH-003
+already completed the bounded public-material audit; GitHub-hosted log and
+artifact bytes remain its documented exclusion rather than unfinished GH-004
+scope.
+
+The owner declined to publish a login or historical personal address or create
+a placeholder mailbox. The candidate explicitly records that no private
+project-specific conduct channel or independent reviewer exists, warns against
+sensitive public reports and security-advisory misuse, and scopes GitHub's
+abuse route to GitHub-hosted behavior.
+
+State: repository candidate complete. Live description reconciliation awaits
+separate authorization. GH-008 retains actual multi-maintainer succession,
+independent moderation/security rotation, and approval/release separation.
 
 ### GH-005: Post-merge CI duplication
 
@@ -254,8 +277,16 @@ because GitHub treats skipped required jobs as successful, cannot filter the
 pull-request trigger by label name, and suppresses recursive workflow events
 from the cleanup workflow's GitHub token.
 
-State: locally verified repository candidate complete; hosted merge-candidate
-acceptance remains before merge.
+Draft pull request 9 proved that ADR 0066's trailing-comma-only CodeQL
+correction was insufficient: run `32483580306` stayed green while its Python
+log repeated the raw syntax diagnostic and omitted `workforce/queries.py`.
+ADR 0069 supersedes that compatibility mechanism with one equivalent bounded
+`TypeVar`, a line-level `UP047` exception, and a repository guard against the
+known incompatible header shapes.
+
+State: managed run `32485597468`, Python job `96781280766`, explicitly extracts
+`workforce/queries.py` with zero raw diagnostic at commit `6317538`. Ready-state
+merge-candidate acceptance remains before merge.
 
 ### GH-006: Dependency review
 
@@ -280,9 +311,10 @@ State: tracked for a separate documentation-publication milestone.
 ### GH-008: Multi-maintainer governance
 
 Defer organization transfer, secure 2FA enforcement, CODEOWNER approval,
-latest-push approval, gold-environment review, succession, and moderation
-rotation until a second trusted maintainer exists. Enabling them for one
-maintainer would deadlock work or create approval theatre.
+latest-push approval, gold-environment review, actual successor appointment,
+and independent moderation/security rotation until a second trusted maintainer
+exists. Enabling them for one maintainer would deadlock work or create
+meaningless self-approval.
 
 Before an organization transfer or another account may approve destructive
 scope, replace the current `github.actor == github.repository_owner` check with
@@ -307,7 +339,7 @@ a focused decision before adoption.
 
 ## External settings ledger
 
-| Setting | Observed 2026-08-20 | Tracked outcome | Milestone |
+| Setting | Observed state | Tracked outcome | Milestone |
 | --- | --- | --- | --- |
 | CodeQL merge protection | Active: `errors` and `medium_or_higher` | Accepted and reconciled | GH-001 |
 | Release immutability | Enabled directly on Maru; no release or tag | Re-read before every dispatch; require immutable post-publication evidence | GH-002 |
@@ -318,6 +350,10 @@ a focused decision before adoption.
 | Secret-validity checks | Unavailable for the current user-owned repository | Reassess eligibility and provider contact after an ownership or plan change | GH-003 |
 | Generic-pattern scanning | Unavailable for the current user-owned repository | Reassess eligibility and synthetic-fixture noise before enablement | GH-003 |
 | Actions selected allowlist | Exact immutable selected references | Add only a reviewed paired workflow pin | Every workflow milestone |
+| Repository description | 2026-08-21: security-focused Django/PostgreSQL multi-convention platform | Add the explicit **Pre-production** maturity qualifier after separate authorization | GH-004 |
+| Repository topics | 2026-08-21: exact accepted eight-topic set | Retain; change only when product scope changes materially | GH-004 |
+| Community and issue metadata | 2026-08-21: 100 percent profile health; required Issue Form and automation labels exist | Keep templates, labels, and public policies coherent; do not manufacture newcomer issues | GH-004 |
+| Social preview | Default generated preview | Defer until an approved purpose-built asset exists | GH-004 |
 | GitHub Pages source | Disabled | Decide with the Pages workflow | GH-007 |
 | Repository homepage | Empty | Set only after verified Pages deployment | GH-007 |
 

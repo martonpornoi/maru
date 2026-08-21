@@ -24,7 +24,8 @@ were re-enabled only in exact-allowlist hosted mode.
   configured for Actions, Python, and JavaScript/TypeScript. The `main` ruleset
   rejects CodeQL errors and security alerts of medium severity or higher;
   `PR gate` remains the sole required status check. The default branch currently
-  has zero open CodeQL, Dependabot, or secret-scanning alerts.
+  has zero open CodeQL, Dependabot, or secret-scanning alerts as of the
+  2026-08-21 GH-004 readback.
   Managed CodeQL default setup does not analyze fork pull requests, and its
   native merge protection does not cover Dependabot pull requests; the required
   `PR gate` plus default-branch and weekly scans remain the available boundary.
@@ -40,6 +41,59 @@ were re-enabled only in exact-allowlist hosted mode.
   `enforced_by_owner: false`. No release or tag existed at that boundary.
 - Merge commits and rebase merges are disabled; squash merge and automatic
   deletion of merged branches are enabled.
+
+## Public policy and metadata snapshot
+
+The authenticated 2026-08-21 GH-004 readback reported a public repository and
+100 percent GitHub Community Profile health. GitHub recognizes README,
+Apache-2.0 licensing, contribution guidance, the Code of Conduct, and the pull-
+request template. SECURITY, SUPPORT, GOVERNANCE, CODEOWNERS, two Issue Forms,
+and the Issue Form chooser are also present. The Community Profile API's
+singular `issue_template` field was null; direct repository inspection found
+both forms and the chooser, so that field did not demonstrate their absence.
+The score is a discovery/file-presence signal, not independent assurance that
+the policy content or repository is production-ready.
+
+The live description is **Security-focused Django and PostgreSQL platform for
+operating multi-convention events.** The reviewed GH-004 desired description is
+**Pre-production, security-focused Django and PostgreSQL platform for operating
+multi-convention events.** Adding the maturity qualifier is a separately
+authorized repository mutation; checked-in wording does not claim that it is
+already live.
+
+The live topic set is accepted without change: `django`, `event-management`,
+`modular-monolith`, `openapi`, `postgresql`, `python`, `react`, and
+`typescript`. The homepage stays empty until GH-007 publishes the first
+verified Sphinx site. Issues and Discussions remain enabled; Projects, Wiki,
+Pages, and Downloads remain disabled. Sphinx documentation will use Pages, not
+an unversioned Wiki mirror.
+
+GitHub currently generates the default social preview. A custom preview is
+optional polish and is deferred until a purpose-built, owner-approved social
+asset exists; application icons and logos are not silently repurposed. Funding
+is also deferred because no sponsorship recipient or stewardship policy has
+been accepted. Do not add `.github/FUNDING.yml` or connect a recipient as a
+placeholder.
+
+The 23 live labels include every label used by the Issue Forms and current
+automation, including `bug`, `proposal`, `triage`,
+`destructive-change-reviewed`, `good first issue`, and `help wanted`. No issue
+currently carries either newcomer label. `good first issue` is reserved for
+bounded work with observable acceptance, safe synthetic inputs, usable setup
+and verification instructions, no maintainer-only access, and no hidden
+security, migration, or cross-module prerequisite. Do not manufacture newcomer
+work merely to populate the label.
+
+Support is best effort with no response or resolution SLA. Vulnerabilities use
+GitHub private vulnerability reporting. The sole current human repository
+administrator is responsible for response; notification delivery depends on
+that account's settings, and the reporter plus any explicitly added advisory
+collaborators retain access. The Code of Conduct explicitly records that Maru
+has no private project-specific conduct-reporting channel or independent
+reviewer. It rejects public disclosure of sensitive reports and misuse of the
+security-advisory form, and it scopes GitHub Support to GitHub-hosted abuse. The
+owner chose not to publish a login or historical personal address or create an
+unattended placeholder mailbox.
 
 ## Completed one-time public-history audit
 
@@ -82,8 +136,6 @@ after a material visibility, ownership, imported-history, or incident boundary.
 Visibility changed before every item in the original pre-public checklist had
 fresh evidence. Treat these as immediate launch tasks, not optional later work:
 
-- Replace temporary owner-only conduct and security contact channels with
-  durable monitored addresses. Define maintainer succession and moderation.
 - Exercise the protected-tag refusal and confirm push protection blocks a
   synthetic non-secret test pattern without publishing credentials. Add a
   second trusted maintainer before requiring one approval, CODEOWNER review,
@@ -97,8 +149,10 @@ fresh evidence. Treat these as immediate launch tasks, not optional later work:
   `candidate` and `gold` environment policies, immutable release and asset
   attestations, GHCR visibility, image provenance, deployment targets, and
   package cleanup.
-- Review repository description, topics, social preview, funding/sponsorship,
-  issue triage labels, support expectations, and first-good-issue scope.
+- After separate authorization, add **Pre-production** to the live repository
+  description and read it back. The topics, feature states, default social
+  preview, absent funding, issue-label inventory, support expectations, and
+  first-good-issue boundary are otherwise reviewed and accepted by GH-004.
 - Keep the explicit pre-production maturity statement current. Do not imply
   that the repository or a candidate release is safe for production personal
   data.

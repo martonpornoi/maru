@@ -126,8 +126,13 @@ job, eight measured whole-file PostgreSQL integration shards, combined
 coverage, four parallel non-database gates, and a stable `Full CI gate`.
 Accepted main-run timings are refreshed; missing or over-30-minute targeted
 projections promote to full acceptance. A head update also clears prior
-destructive-review evidence before the revised scope can run. A repository
-contract preserves CodeQL coverage for Python 3.12 generic headers. A manual exact-source release
+destructive-review evidence before the revised scope can run. Draft pull
+request 9 proved that the first Workforce header edit did not restore CodeQL
+extraction even though the job stayed green. ADR 0069 now uses an equivalent
+bounded `TypeVar` for that one union-bounded generic and rejects the two header
+shapes known to omit files; only a fresh zero-diagnostic managed log can prove
+coverage. Managed run `32485597468` supplies that proof by explicitly extracting
+the Workforce file with zero raw diagnostic. A manual exact-source release
 workflow publishes a CalVer-tagged immutable GHCR image with SBOM/provenance and
 GitHub evidence assets. Pull-request browser smoke, nightly compatibility/
 concurrency/visual matrices, synthetic deployment, and release recovery
@@ -157,8 +162,17 @@ one-time audit over all then-public refs, current candidate material, public
 metadata, assets, and locked dependency licenses. It leaves standard secret
 scanning and push protection live, defers unavailable validity/generic controls,
 accepts prior public author metadata without rewriting history, and ships the
-MIT notice required by the compiled Staff Console. The explicitly authorized
-first candidate rehearsal, public-policy reconciliation, dependency review,
+MIT notice required by the compiled Staff Console. ADR 0068 now reconciles the
+public collaboration surface: stable evidence links replace brittle README
+counts, sole-maintainer continuity and best-effort channels are explicit, and
+the accepted topics, feature switches, newcomer-label boundary, and desired
+pre-production description are recorded without inventing a committee or
+silently changing GitHub. The Code of Conduct truthfully records that Maru has
+no private project-specific conduct channel or independent reviewer; it neither
+publishes the owner's personal address nor creates an unattended placeholder.
+The separately authorized live description readback remains before GH-004
+closes.
+The explicitly authorized first candidate rehearsal, dependency review,
 Pages publication, multi-maintainer governance, and remaining demand-triggered-
 control review stay open under GH-002 and GH-004 through GH-009. GH-005's event-
 efficiency correction and GH-003's repository remediation remain subject to
