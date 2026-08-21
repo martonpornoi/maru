@@ -177,6 +177,15 @@ def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
         "pr-gate",
     ):
         assert re.search(rf"^  {re.escape(job)}:$", workflow, re.MULTILINE)
+    assert set(jobs) == {
+        "changes",
+        "repository-safety",
+        "quality",
+        "unit",
+        "targeted-integration",
+        "full",
+        "pr-gate",
+    }
 
     assert "name: PR gate" in workflow
     assert "ready_for_review" in workflow
@@ -188,6 +197,9 @@ def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
     assert "scripts/ci_changes.py plan" in workflow
     assert jobs["changes"]["outputs"]["packaging"] == (
         "${{ steps.plan.outputs.packaging }}"
+    )
+    assert jobs["changes"]["outputs"]["dependency-review"] == (
+        "${{ steps.plan.outputs.dependency_review }}"
     )
     assert "destructive-change-reviewed" in workflow
     assert "needs.changes.outputs.integration == 'targeted'" in workflow
@@ -253,6 +265,49 @@ def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
         "git ls-files --others --exclude-standard -- "
         "../../src/maru/core/static/staff-console"
     ) in workflow
+
+
+def test_dependency_review_is_read_only_conditional_and_fail_fast() -> None:
+    workflow_definition = yaml.safe_load(_workflow(PR_WORKFLOW))
+    change_steps = workflow_definition["jobs"]["changes"]["steps"]
+    plan_index = next(
+        index
+        for index, step in enumerate(change_steps)
+        if step.get("name") == "Build fail-closed CI plan"
+    )
+    dependency_review_index = next(
+        index
+        for index, step in enumerate(change_steps)
+        if step.get("name") == "Review introduced dependency graph changes"
+    )
+    dependency_review_step = change_steps[dependency_review_index]
+
+    assert plan_index < dependency_review_index
+    assert dependency_review_step["if"] == (
+        "${{ github.event.pull_request.draft == false && "
+        "steps.plan.outputs.dependency_review == 'true' }}"
+    )
+    assert dependency_review_step["uses"] == (
+        "actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294"
+    )
+    assert dependency_review_step["with"] == {
+        "fail-on-severity": "moderate",
+        "fail-on-scopes": "runtime, development, unknown",
+        "vulnerability-check": "true",
+        "license-check": "false",
+        "comment-summary-in-pr": "never",
+        "show-openssf-scorecard": "false",
+        "show-patched-versions": "true",
+    }
+    assert workflow_definition["permissions"] == {"contents": "read"}
+    pr_gate = workflow_definition["jobs"]["pr-gate"]
+    assert "changes" in pr_gate["needs"]
+    selected_path_step = next(
+        step
+        for step in pr_gate["steps"]
+        if step.get("name") == "Require the selected acceptance path"
+    )
+    assert "needs.changes.result != 'success'" in selected_path_step["if"]
 
 
 def test_full_workflow_parallelizes_quality_and_uses_eight_measured_shards() -> None:

@@ -85,6 +85,54 @@ def test_classifier_marks_python_distribution_inputs(path: str, expected: bool) 
     assert plan.github_outputs()["packaging"] == str(expected).lower()
 
 
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("Dockerfile", True),
+        ("pyproject.toml", True),
+        ("uv.lock", True),
+        ("frontends/staff-console/package.json", True),
+        ("frontends/staff-console/pnpm-lock.yaml", True),
+        (".github/workflows/ci.yml", True),
+        (".github/actions-allowlist.json", False),
+        ("docs/quality/testing-strategy.md", False),
+        ("src/maru/catalog/api.py", False),
+    ],
+)
+def test_classifier_marks_dependency_and_automation_security_inputs(
+    path: str, expected: bool
+) -> None:
+    plan = classify_changes((_change(path),))
+
+    assert plan.security is expected
+    assert plan.github_outputs()["security"] == str(expected).lower()
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("Dockerfile", False),
+        ("pyproject.toml", True),
+        ("uv.lock", True),
+        ("frontends/staff-console/package.json", True),
+        ("frontends/staff-console/pnpm-lock.yaml", True),
+        (".github/workflows/ci.yml", True),
+        (".github/workflows/release.yaml", True),
+        (".github/workflows/README.md", False),
+        (".github/actions-allowlist.json", False),
+        ("docs/quality/testing-strategy.md", False),
+        ("src/maru/catalog/api.py", False),
+    ],
+)
+def test_classifier_marks_graph_visible_dependency_inputs(
+    path: str, expected: bool
+) -> None:
+    plan = classify_changes((_change(path),))
+
+    assert plan.dependency_review is expected
+    assert plan.github_outputs()["dependency_review"] == str(expected).lower()
+
+
 def test_classifier_flags_protected_and_mass_deletions() -> None:
     protected = classify_changes((_change("src/maru/core/views.py", "D"),))
     test_contract = classify_changes(

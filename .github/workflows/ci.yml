@@ -32,6 +32,7 @@ jobs:
       python: ${{ steps.plan.outputs.python }}
       packaging: ${{ steps.plan.outputs.packaging }}
       security: ${{ steps.plan.outputs.security }}
+      dependency-review: ${{ steps.plan.outputs.dependency_review }}
       integration: ${{ steps.plan.outputs.integration }}
       destructive: ${{ steps.plan.outputs.destructive }}
       destructive-approved: ${{ steps.plan.outputs.destructive_approved }}
@@ -64,6 +65,17 @@ jobs:
             --base "$BASE_SHA" --head "$GITHUB_SHA" \
             --labels-json "$PR_LABELS_JSON" \
             --github-output "$GITHUB_OUTPUT"
+      - name: Review introduced dependency graph changes
+        if: ${{ github.event.pull_request.draft == false && steps.plan.outputs.dependency_review == 'true' }}
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+          fail-on-scopes: runtime, development, unknown
+          vulnerability-check: "true"
+          license-check: "false"
+          comment-summary-in-pr: never
+          show-openssf-scorecard: "false"
+          show-patched-versions: "true"
       - name: Verify draft locked and automation inputs
         if: ${{ github.event.pull_request.draft == true }}
         run: |

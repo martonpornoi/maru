@@ -215,14 +215,19 @@ stable `PR gate` remains the branch-protection target:
   promotes a missing, unmeasurable, or greater-than-30-minute selection to full
   acceptance instead of letting the targeted lane exceed its 45-minute limit;
 - frontend and dependency work adds only the relevant generated-contract,
-  build, and advisory checks. Checked-in Staff Console output is classified as
-  frontend work, while Django templates and non-Staff-Console static assets are
-  classified with their owning Python module. Every non-full quality run also
-  executes the distribution-license and release-metadata contracts. When the
-  diff changes root package metadata/legal files, frontend source, or
-  `src/maru`, it also builds and inspects a wheel and source archive against
-  every current Django template/static asset and both PEP 639 legal files. A
-  root legal-file-only change therefore cannot bypass packaging evidence; and
+  build, and advisory checks. A ready graph-visible manifest, lock, or workflow
+  diff first runs the pinned dependency-review Action inside `changes`, failing
+  on an introduced moderate-or-higher vulnerability in runtime, development,
+  or unknown scope before fan-out. `Dockerfile` keeps broader security routing
+  but does not select this graph comparison. Checked-in Staff Console output is
+  classified as frontend work,
+  while Django templates and non-Staff-Console static assets are classified
+  with their owning Python module. Every non-full quality run also executes the
+  distribution-license and release-metadata contracts. When the diff changes
+  root package metadata/legal files, frontend source, or `src/maru`, it also
+  builds and inspects a wheel and source archive against every current Django
+  template/static asset and both PEP 639 legal files. A root legal-file-only
+  change therefore cannot bypass packaging evidence; and
 - migrations, models, settings, locks, security/authority boundaries,
   cross-cutting top-level Django templates/static, workflows, test
   configuration, and CI harnesses fail closed to reusable full acceptance.
@@ -265,6 +270,16 @@ tie-breaks. Static checks, including the focused distribution-license
 contracts, and dependency security must pass before unit or integration work
 starts, so an early policy or advisory failure does not spend database runner-
 minutes.
+
+The dependency-diff step and current-tree audits prove different things. The
+former can reject a newly introduced vulnerable dependency before installation;
+the latter can catch an unchanged lock entry after advisory knowledge changes.
+The 2026-08-21 live graph contained 293 packages across PyPI, npm, GitHub
+Actions, and the root repository document, and read-only comparisons recognized
+Maru's uv, pnpm, project, and workflow inputs. Neither result covers an
+unsupported or unparseable manifest or the `Dockerfile` base image. Automated
+license enforcement remains deferred, and OpenSSF Scorecard output and
+pull-request comments remain disabled.
 
 The unit suite is explicitly non-database; its only former PostgreSQL receipt
 test now belongs to integration. Unit and integration jobs publish hidden
@@ -313,7 +328,8 @@ The next expansion should add:
 - nightly Python 3.12/3.13/3.14 unit and contract compatibility, migration-
   from-zero, concurrency repetition, randomized-order seed capture, and the
   broader responsive/visual-state matrix;
-- monitor and tune the enabled GitHub-managed CodeQL default setup, add native
+- monitor and tune the enabled GitHub-managed CodeQL default setup, complete
+  live allowlist reconciliation and ready-state hosted proof for the candidate
   dependency review, and verify secret-scanning/push-protection alert handling;
   and
 - synthetic previous-version restoration, production-shaped recovery rehearsal,
