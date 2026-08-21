@@ -189,15 +189,15 @@ Discussions enabled; Projects, Wiki, Pages, and Downloads disabled. The
 homepage remains empty until the first verified GH-007 Pages deployment. Wiki
 must not become a manually maintained copy of the Sphinx source.
 
-The checked-in desired description is **Pre-production, security-focused
-Django and PostgreSQL platform for operating multi-convention events.** The
-live description does not yet include the maturity qualifier. Apply that exact
-metadata change only after separate authorization, then read it back. Keep the
-existing topics. A custom social preview and funding configuration remain
-deferred until the project has, respectively, a purpose-built approved asset
-and a real recipient plus stewardship decision. The preview is a live setting;
-funding links normally come from committed `.github/FUNDING.yml`, while
-connecting a recipient is separate external stewardship work.
+The accepted live description is **Security-focused Django and PostgreSQL
+platform for operating multi-convention events, under active development.** ADR
+0070 records its separately authorized description-only mutation and exact
+post-change readback. Keep the existing topics. A custom social preview and
+funding configuration remain deferred until the project has, respectively, a
+purpose-built approved asset and a real recipient plus stewardship decision.
+The preview is a live setting; funding links normally come from committed
+`.github/FUNDING.yml`, while connecting a recipient is separate external
+stewardship work.
 
 Root `GOVERNANCE.md` is the authority and continuity policy;
 `CODE_OF_CONDUCT.md`, `SECURITY.md`, and `SUPPORT.md` own their respective

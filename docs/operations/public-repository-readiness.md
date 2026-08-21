@@ -55,11 +55,10 @@ The score is a discovery/file-presence signal, not independent assurance that
 the policy content or repository is production-ready.
 
 The live description is **Security-focused Django and PostgreSQL platform for
-operating multi-convention events.** The reviewed GH-004 desired description is
-**Pre-production, security-focused Django and PostgreSQL platform for operating
-multi-convention events.** Adding the maturity qualifier is a separately
-authorized repository mutation; checked-in wording does not claim that it is
-already live.
+operating multi-convention events, under active development.** ADR 0070 records
+the explicit authorization and exact post-change readback for that description-
+only mutation. The wording signals maturity without implying a release stage,
+hosted service, production approval, or permission to use real personal data.
 
 The live topic set is accepted without change: `django`, `event-management`,
 `modular-monolith`, `openapi`, `postgresql`, `python`, `react`, and
@@ -149,13 +148,12 @@ fresh evidence. Treat these as immediate launch tasks, not optional later work:
   `candidate` and `gold` environment policies, immutable release and asset
   attestations, GHCR visibility, image provenance, deployment targets, and
   package cleanup.
-- After separate authorization, add **Pre-production** to the live repository
-  description and read it back. The topics, feature states, default social
-  preview, absent funding, issue-label inventory, support expectations, and
-  first-good-issue boundary are otherwise reviewed and accepted by GH-004.
-- Keep the explicit pre-production maturity statement current. Do not imply
-  that the repository or a candidate release is safe for production personal
-  data.
+- The live description, topics, feature states, default social preview, absent
+  funding, issue-label inventory, support expectations, and first-good-issue
+  boundary are reviewed and accepted by GH-004. Future external metadata
+  changes require another explicit authorization and readback.
+- Keep the detailed production-readiness boundary current. Do not imply that
+  the repository or a candidate release is safe for production personal data.
 
 ## Post-transition acceptance
 

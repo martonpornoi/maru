@@ -165,16 +165,17 @@ accepts prior public author metadata without rewriting history, and ships the
 MIT notice required by the compiled Staff Console. ADR 0068 now reconciles the
 public collaboration surface: stable evidence links replace brittle README
 counts, sole-maintainer continuity and best-effort channels are explicit, and
-the accepted topics, feature switches, newcomer-label boundary, and desired
-pre-production description are recorded without inventing a committee or
-silently changing GitHub. The Code of Conduct truthfully records that Maru has
-no private project-specific conduct channel or independent reviewer; it neither
-publishes the owner's personal address nor creates an unattended placeholder.
-The separately authorized live description readback remains before GH-004
-closes.
+the accepted topics, feature switches, and newcomer-label boundary are recorded
+without inventing a committee. The Code of Conduct truthfully records that Maru
+has no private project-specific conduct channel or independent reviewer; it
+neither publishes the owner's personal address nor creates an unattended
+placeholder.
+ADR 0070 supersedes ADR 0068's ambiguous **Pre-production** wording; the
+active-development description's separately authorized mutation and exact
+readback now complete GH-004.
 The explicitly authorized first candidate rehearsal, dependency review,
 Pages publication, multi-maintainer governance, and remaining demand-triggered-
-control review stay open under GH-002 and GH-004 through GH-009. GH-005's event-
+control review stay open under GH-002 and GH-006 through GH-009. GH-005's event-
 efficiency correction and GH-003's repository remediation remain subject to
 hosted merge-candidate acceptance before merge.
 

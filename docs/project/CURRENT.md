@@ -27,10 +27,12 @@ file with zero raw diagnostic. ADR 0067's current candidate records GH-003's
 sanitized public-history and publication
 audit, keeps enhanced secret controls deferred under the current ownership
 boundary, and closes the bundled-frontend notice gap without adding a permanent
-scanner. ADR 0068's current candidate reconciles the public collaboration
+scanner. ADR 0068 reconciles the public collaboration
 surface, defines truthful sole-maintainer continuity and newcomer triage, and
 records reviewed repository metadata without inventing independent authority,
-an unattended conduct inbox, or a silent GitHub mutation. The complete
+an unattended conduct inbox, or a silent GitHub mutation. ADR 0070 then replaces
+its ambiguous **Pre-production** description with the separately authorized and
+read-back **under active development** wording. The complete
 authenticated reflow, keyboard,
 screen-reader, owner,
 deployment, stopped-writer/cutover, restore/PITR, and production-governance
@@ -241,9 +243,9 @@ cross-domain-save design.
   Profile health, the accepted eight topics, every Issue Form and automation
   label, and the intended Issues/Discussions-on and
   Projects/Wiki/Pages/Downloads-off feature state. Homepage stays empty for
-  GH-007; social preview and funding remain deliberately unconfigured. The
-  desired description adds the explicit **Pre-production** qualifier but is
-  not live until a separately authorized update and readback succeeds.
+  GH-007; social preview and funding remain deliberately unconfigured. The live
+  description now ends with **under active development**; its description-only
+  mutation was separately authorized and read back exactly under ADR 0070.
 
 ### Registration, profile, and admission commerce
 
@@ -556,7 +558,7 @@ as the repository-wide gate:
 - The ADR 0068 repository candidate passes both focused public-material
   contracts and all 1,937 unit tests. All three Issue Form YAML files parse;
   Ruff lint and formatting pass for the contract; documentation validation
-  covers 285 Markdown files and 203 requirement identifiers; whitespace
+  covers 286 Markdown files and 203 requirement identifiers; whitespace
   validation passes; and a fresh warning-fatal parallel Sphinx/AutoAPI build
   succeeds. Hosted ready-state acceptance remains separate.
 - The ADR 0067 audit mirror contains four branch heads, eight pull-request
@@ -617,7 +619,7 @@ approval.
 
 ## Decisions and migration boundary
 
-- ADRs 0049 through 0061 and ADRs 0063 through 0069 are Accepted. ADR 0062's
+- ADRs 0049 through 0061 and ADRs 0063 through 0070 are Accepted. ADR 0062's
   private self-hosted interval is superseded. ADR 0063 restores ADR 0060/0061's
   change-aware hosted topology for public collaboration. ADR 0064 makes
   dependency automation security-only, rejects stale locked/allowlisted inputs
@@ -629,7 +631,9 @@ approval.
   party notice evidence without adding a recurring full-history scanner. ADR
   0068 defines public channels and sole-maintainer continuity, while ADR 0069
   corrects the known CodeQL extraction boundary without weakening Ruff or
-  adding another scanner. These decisions remove no test, security,
+  adding another scanner. ADR 0070 supersedes only ADR 0068's exact repository-
+  description wording and records the separately authorized live readback.
+  These decisions remove no test, security,
   documentation, contract, migration, or authority gate.
 - ADR 0054 accepts the bounded architecture
   and migrated integrity boundary; it does not declare the partial
@@ -763,8 +767,8 @@ approval.
   or create a placeholder mailbox; public issues and the security-advisory inbox
   are not substitutes. Sensitive Maru-specific or off-platform conduct concerns
   therefore have no private project route until an operational channel and
-  independent review capacity are established. The desired repository-
-  description update remains separately authorized external work.
+  independent review capacity are established. ADR 0070's authorized
+  description-only mutation and exact live readback are complete.
 - The ADR 0066/0069 repository candidate is not accepted by local focused
   evidence alone. Hosted CodeQL now confirms that the Workforce module is
   analyzed, but the complete current pull-request merge candidate still
@@ -784,11 +788,9 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Finish GH-004's focused validation and, after explicit publication approval,
-   commit and push it to draft pull request 9. Under separate authorization,
-   update and read back only the repository
-   description and record that evidence in a follow-up branch commit. Then mark
-   the pull request ready, complete hosted merge-candidate acceptance for
+1. After explicit publication approval, commit and push GH-004's authenticated
+   description evidence to draft pull request 9. Then mark the pull request
+   ready, complete hosted merge-candidate acceptance for
    GH-005, GH-003, and GH-004, merge, and re-read the default-branch state.
    Require another reviewer only after a second trusted maintainer exists.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
@@ -803,7 +805,7 @@ approval.
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `PRODUCTION_CONSOLIDATION.md`, the
-relevant requirement IDs, ADRs 0047 through 0069, and the owning module/runbook
+relevant requirement IDs, ADRs 0047 through 0070, and the owning module/runbook
 docs. Preserve every concurrent change in the dirty working tree. Serialize all
 PostgreSQL tests that share `test_maru_test`; never infer authority from a
 selected edition or route; authorize before parsing untrusted input; retain

@@ -2,8 +2,8 @@
 
 Status: GH-000, GH-001, and GH-003 implemented; GH-002 repository verification
 implemented and first candidate rehearsal pending; GH-004 repository candidate
-complete with external reconciliation pending; GH-005 hosted extraction passed
-with ready-state acceptance pending
+and live metadata reconciliation complete; GH-005 hosted extraction passed with
+ready-state acceptance pending
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -210,16 +210,17 @@ imported-history, or incident boundary.
 Reconcile README, security, support, conduct, governance, public-readiness, and
 repository metadata with the actual public state. Remove private or pre-launch
 wording, link the private vulnerability form, refresh evidence summaries, and
-keep the pre-production boundary explicit.
+keep the active-development and production-readiness boundary explicit.
 
 The 2026-08-21 authenticated audit reports 100 percent Community Profile
 health, an accurate eight-topic set, every label consumed by Issue Forms and
 automation, and the intended Issues/Discussions-on and
 Projects/Wiki/Pages/Downloads-off feature shape. Homepage remains empty for
 GH-007. Funding and a custom social preview are deliberately deferred instead
-of receiving placeholders. The desired repository description adds the word
-**Pre-production**; changing and reading back that live field remains a
-separately authorized mutation.
+of receiving placeholders. ADR 0070 accepts the live description **Security-
+focused Django and PostgreSQL platform for operating multi-convention events,
+under active development.** Its separately authorized description-only change
+and exact post-change readback are complete.
 
 The repository candidate replaces brittle README evidence, fixes support and
 security discovery, defines best-effort triage and safe `good first issue`
@@ -234,9 +235,8 @@ project-specific conduct channel or independent reviewer exists, warns against
 sensitive public reports and security-advisory misuse, and scopes GitHub's
 abuse route to GitHub-hosted behavior.
 
-State: repository candidate complete. Live description reconciliation awaits
-separate authorization. GH-008 retains actual multi-maintainer succession,
-independent moderation/security rotation, and approval/release separation.
+State: complete. GH-008 retains actual multi-maintainer succession, independent
+moderation/security rotation, and approval/release separation.
 
 ### GH-005: Post-merge CI duplication
 
@@ -350,7 +350,7 @@ a focused decision before adoption.
 | Secret-validity checks | Unavailable for the current user-owned repository | Reassess eligibility and provider contact after an ownership or plan change | GH-003 |
 | Generic-pattern scanning | Unavailable for the current user-owned repository | Reassess eligibility and synthetic-fixture noise before enablement | GH-003 |
 | Actions selected allowlist | Exact immutable selected references | Add only a reviewed paired workflow pin | Every workflow milestone |
-| Repository description | 2026-08-21: security-focused Django/PostgreSQL multi-convention platform | Add the explicit **Pre-production** maturity qualifier after separate authorization | GH-004 |
+| Repository description | 2026-08-21: security-focused Django/PostgreSQL multi-convention platform, under active development | Accepted and reconciled under ADR 0070; future changes require separate authorization and readback | GH-004 |
 | Repository topics | 2026-08-21: exact accepted eight-topic set | Retain; change only when product scope changes materially | GH-004 |
 | Community and issue metadata | 2026-08-21: 100 percent profile health; required Issue Form and automation labels exist | Keep templates, labels, and public policies coherent; do not manufacture newcomer issues | GH-004 |
 | Social preview | Default generated preview | Defer until an approved purpose-built asset exists | GH-004 |
