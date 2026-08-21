@@ -1,7 +1,7 @@
 # Testing strategy
 
 Status: Active
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 Testing is part of product design. Coverage percentage alone is not an
 acceptance criterion.
@@ -329,8 +329,8 @@ The next expansion should add:
   from-zero, concurrency repetition, randomized-order seed capture, and the
   broader responsive/visual-state matrix;
 - monitor and tune the enabled GitHub-managed CodeQL default setup, complete
-  live allowlist reconciliation and ready-state hosted proof for the candidate
-  dependency review, and verify secret-scanning/push-protection alert handling;
+  ready-state hosted proof for the live-reconciled candidate dependency review,
+  and verify secret-scanning/push-protection alert handling;
   and
 - synthetic previous-version restoration, production-shaped recovery rehearsal,
   and container runtime smoke in the release environment. The existing release

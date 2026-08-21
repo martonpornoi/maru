@@ -180,9 +180,10 @@ governance, and remaining demand-triggered-control review stay open under
 GH-002 and GH-007 through GH-009. ADR 0071 accepts GH-006's bounded repository
 candidate: a ready-only, read-only dependency-diff step reuses the existing
 classification runner and stable `PR gate`. The separately authorized live
-twelfth Action pattern and ready-state hosted proof remain before GH-006 is
-complete. That run executes the workflow on the synthetic merge candidate;
-GitHub dependency review itself compares the pull request's base and head.
+twelfth Action pattern is reconciled exactly; ready-state hosted proof remains
+before GH-006 is complete. That run executes the workflow on the synthetic
+merge candidate; GitHub dependency review itself compares the pull request's
+base and head.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative

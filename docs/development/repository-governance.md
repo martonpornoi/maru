@@ -167,8 +167,10 @@ The dependency-review Action is pinned to verified v5.0.0 commit
 `a1d282b36b6f3519aa1f3fc636f609c47dddb294`. Adding its exact twelfth pattern
 to the live selected-Actions policy requires separate owner authorization, a
 complete pre-read, an exact append that preserves both broad trust flags as
-`false`, and a complete post-change readback. Do not mark GH-006 complete until
-that reconciliation and a current ready-state run both pass. The workflow runs
+`false`, and a complete post-change readback. For pull request 11, that process
+found the exact prior 11 patterns, added only the reviewed v5.0.0 reference, and
+read back exact parity with the 12-entry checked-in allowlist. Do not mark
+GH-006 complete until a current ready-state run also passes. The workflow runs
 on the synthetic merge candidate, while dependency review compares the pull
 request's base and head revisions.
 

@@ -2,8 +2,8 @@
 
 Status: GH-000, GH-001, GH-003, GH-004, and GH-005 complete; GH-002 repository
 verification implemented with its first candidate rehearsal pending; GH-006
-repository candidate implemented with live reconciliation and hosted proof
-pending; GH-007 through GH-009 tracked
+repository candidate implemented with live reconciliation complete and hosted
+proof pending; GH-007 through GH-009 tracked
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -317,12 +317,13 @@ graph can also omit unsupported inputs and does not cover the `Dockerfile` base
 image. License automation remains deferred until a bounded compatibility policy
 is accepted.
 
-State: repository candidate implemented. The live selected-Actions policy still
-needs a separately authorized pre-read, exact twelfth-pattern update, and
-post-change readback. An authoritative ready-state run must then prove the
-pinned Action before GH-006 is complete. The workflow executes on the synthetic
-pull-request merge candidate, while dependency review compares the pull
-request's base and head revisions.
+State: repository candidate implemented. The separately authorized live update
+was applied after an exact 11-pattern pre-read and independently read back at 12
+unique immutable patterns, with selected-only trust, mandatory SHA pinning, and
+both broad trust flags preserved. An authoritative ready-state run must now
+prove the pinned Action before GH-006 is complete. The workflow executes on the
+synthetic pull-request merge candidate, while dependency review compares the
+pull request's base and head revisions.
 
 ### GH-007: Sphinx publication through GitHub Pages
 

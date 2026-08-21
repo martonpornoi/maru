@@ -27,9 +27,10 @@ were re-enabled only in exact-allowlist hosted mode.
   at `a1d282b36b6f3519aa1f3fc636f609c47dddb294`. It runs inside the existing
   ready-state classification job with `contents: read`, no comment, no
   Scorecard output, no license enforcement, and no new status, runner, or
-  database. The live selected-Actions policy still contains the prior 11
-  patterns; its exact twelfth-pattern update and readback remain separately
-  authorized external work, and hosted Action proof is pending.
+  database. The separately authorized live selected-Actions update was read
+  back at exactly the same 12 immutable references as the checked-in policy,
+  with selected-only trust, SHA pinning, and both broad trust flags preserved.
+  Hosted Action proof remains pending.
 - Secret scanning, push protection, Dependabot security updates, and private
   vulnerability reporting are enabled. GitHub-managed default CodeQL is
   configured for Actions, Python, and JavaScript/TypeScript. The `main` ruleset
@@ -152,12 +153,11 @@ fresh evidence. Treat these as immediate launch tasks, not optional later work:
   or independent `gold` approval.
 - Rehearse a first-time cross-repository fork contribution and its maintainer
   workflow-approval boundary.
-- Authorize and reconcile the exact dependency-review v5.0.0 pattern in the
-  live selected-Actions policy, then prove the Action in an authoritative
-  ready-state run. The workflow executes on the synthetic pull-request merge
-  candidate; dependency review compares the pull request's base and head.
-  Preserve both broad trust flags as `false` and do not infer Docker-base or
-  license coverage from the dependency-graph result.
+- With the exact dependency-review v5.0.0 live policy pattern reconciled, prove
+  the Action in an authoritative ready-state run. The workflow executes on the
+  synthetic pull-request merge candidate; dependency review compares the pull
+  request's base and head. Preserve both broad trust flags as `false` and do not
+  infer Docker-base or license coverage from the dependency-graph result.
 - Rehearse the first explicitly authorized `rc.1` through ADR 0065's merged
   draft-first and post-publication verification boundary. Exercise the
   `candidate` and `gold` environment policies, immutable release and asset
