@@ -1,7 +1,7 @@
 # Development setup
 
 Status: Production-consolidation M1.1/M2.1 locally migrated and smoke-verified
-Last updated: 2026-08-19
+Last updated: 2026-08-22
 
 ## Prerequisites
 
@@ -80,6 +80,17 @@ and the GitHub-hosted acceptance workflow run the same commands; GitHub retains
 the generated site as the `contributor-documentation` artifact. See
 [`documentation-standards.md`](../quality/documentation-standards.md) for the
 section and exclusion policy.
+
+The Sphinx version, release, browser title, and public active-development notice
+come from `[project].version` in `pyproject.toml`. Do not update a second version
+constant in `docs/conf.py`. ADR 0072's separate Pages workflow publishes only
+after protected-main acceptance, using a fresh temporary output directory and
+the Pages-provided canonical base URL. Until its first deployment and HTTPS
+readback are complete, use the local HTML or pull-request artifact rather than
+assuming the public URL is live.
+Maintainers use the
+[GitHub Pages publication runbook](../operations/github-pages-publication.md)
+for one-time activation and deployment reconciliation.
 
 ## Exact-commit acceptance
 

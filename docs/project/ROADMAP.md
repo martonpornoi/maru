@@ -187,6 +187,18 @@ out the synthetic merge candidate while dependency review compared the pull
 request's base and head; neither result expands the control to licenses or
 container bases.
 
+ADR 0072 implements GH-007's repository candidate: a locked, warning-fatal
+Sphinx/AutoAPI rebuild from protected `main` with immediate pre-build and pre-
+deploy current-main checks, isolated read-only build and Pages-write/OIDC
+deployment jobs, fresh generated-only output, pyproject-derived visible
+versioning, and an exact 16-reference direct/nested Action policy. Its diagram
+runtime pins Mermaid and D3 to exact-version jsDelivr paths and disables unused
+ELK. Pages, `github-pages`, Wiki, and the repository homepage remain unchanged
+at this checkpoint. GH-007 closes only after separately authorized live
+reconciliation, hosted merge acceptance, a verified first HTTPS deployment
+from the exact merge SHA including browser diagram proof, the homepage
+readback, and an append-only closure checkpoint.
+
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative
 mounted/API-only/preserved/partial/absent/deployment-gated ledger and current

@@ -76,6 +76,7 @@ the system.
 | [0069](0069-codeql-compatible-union-bounded-generic.md) | Accepted | Preserve Workforce CodeQL extraction with a narrowly exempted bounded TypeVar and known-incompatible-header contract |
 | [0070](0070-clear-public-maturity-description.md) | Accepted | Use clear active-development wording and preserve authenticated description-only mutation evidence |
 | [0071](0071-fail-fast-pull-request-dependency-review.md) | Accepted | Review introduced dependencies before fan-out without adding a job, required status, write permission, or database |
+| [0072](0072-protected-exact-main-sphinx-pages-publication.md) | Accepted | Rebuild contributor docs from exact protected main and deploy generated HTML through a least-privilege Pages environment |
 
 New ADRs use the next four-digit number and contain:
 

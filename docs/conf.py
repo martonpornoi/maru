@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+with (PROJECT_ROOT / "pyproject.toml").open("rb") as pyproject_file:
+    project_version = tomllib.load(pyproject_file)["project"]["version"]
+if not isinstance(project_version, str):
+    raise TypeError("project.version must be a string")
+
 project = "Maru"
 author = "Maru contributors"
 copyright = "2026, Maru contributors"
-release = "0.1.0a0"
+release = project_version
+version = project_version
 
 extensions = [
     "myst_parser",
@@ -30,7 +37,13 @@ exclude_patterns = ["_build"]
 html_theme = "furo"
 html_static_path = ["_static"]
 html_css_files = ["maru.css"]
-html_title = "Maru documentation"
+html_title = f"Maru {release} contributor documentation"
+html_theme_options = {
+    "announcement": (
+        f"Maru {release} is under active development and is not approved for "
+        "production personal data."
+    )
+}
 
 myst_enable_extensions = ["colon_fence", "deflist", "fieldlist"]
 myst_fence_as_directive = ["mermaid"]
@@ -57,3 +70,9 @@ autoapi_ignore = [
     "*/migrations/*",
     "*/__pycache__/*",
 ]
+
+# Keep the extension's browser-runtime boundary explicit. These exact versions
+# are reviewed in the generated-documentation license and Pages runbooks.
+mermaid_version = "11.16.1"
+mermaid_include_elk = ""
+d3_version = "7.9.0"

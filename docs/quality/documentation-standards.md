@@ -1,7 +1,7 @@
 # Documentation standards
 
 Status: Baseline  
-Last updated: 2026-08-19
+Last updated: 2026-08-22
 
 Documentation is maintained with the implementation.
 
@@ -149,6 +149,12 @@ MyST parses Markdown, Mermaid renders diagrams, and Furo provides the HTML
 theme. The source reference is distinct from the private Swagger/ReDoc HTTP
 contract described in ADR 0056.
 
+`docs/conf.py` reads the one project version from `pyproject.toml` and uses it
+for the Sphinx version, release, HTML title, and active-development notice. Do
+not copy that value into documentation configuration. A Pages build supplies
+its canonical base URL at publication time; a local build deliberately remains
+independent of the public deployment address.
+
 Run the documentation gates with:
 
 ```powershell
@@ -164,6 +170,18 @@ as an error.
 Generated files under `docs/_build/` and intermediate AutoAPI pages are build
 products and are not committed. Ruff emits LF line endings so generated and
 reviewed Python diffs are stable across contributor platforms.
+
+ADR 0072 defines public publication. Pull requests validate and retain the HTML
+artifact but cannot deploy. After merge, a dedicated workflow rebuilds from
+protected `main` with locked dependencies, checks current remote `main`
+immediately before build and deployment, uses fresh temporary HTML and doctree
+directories, and uploads only the generated HTML root. The write/OIDC token
+exists only in the separate `github-pages` deployment job. Mermaid and D3 use
+the exact external versions recorded in `docs/conf.py` and the generated-asset
+license record; unused ELK support is disabled. Wiki remains disabled rather
+than mirroring maintained source. A public static contributor site does not
+change the authenticated OpenAPI authority or establish application deployment,
+release, support, or production-data approval.
 
 ## User documentation
 

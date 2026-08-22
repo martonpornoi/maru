@@ -131,6 +131,46 @@ runtime, development, or unknown scope. The step uses a read-only token, posts
 no comment, and adds no job or required status; a failure makes `changes`
 unsuccessful and therefore fails the stable `PR gate`.
 
+## Public documentation deployment
+
+ADR 0072 defines one separate publication path for the generated contributor
+site. Pull requests validate Sphinx warning-fatally and retain an inspectable
+artifact but receive no Pages, OIDC, environment, or preview authority. After
+merge, `pages.yml` rebuilds from protected `main` with locked dependencies and
+fresh temporary doctree/HTML directories. It checks current remote `main`
+immediately before build and deployment, but does not lock the branch: a newer
+queued run converges the site if `main` advances after the final check. It
+starts no PostgreSQL service and does not repeat application acceptance.
+
+The build job is read-only. Only its generated HTML root crosses into the
+deployment job, whose authority is limited to `pages: write`, `id-token: write`,
+and the `github-pages` environment. That environment must accept only exact
+`main`, disallow administrator bypass, and contain no reviewer, secret, or
+variable while Maru has one maintainer. Configure-time enablement remains off;
+creating or changing the Pages site is a separately authorized administrator
+operation.
+
+The exact selected-Action policy includes all direct workflow references plus
+explicitly audited immutable actions invoked inside a composite action. The
+official `upload-pages-artifact` v5.0.0 pin invokes `upload-artifact` v7.0.0 at
+its own fixed commit, so both references are required. The checked-in validator
+rejects an audited nested reference whose exact composite parent is not used.
+Do not resolve this dependency by enabling either broad GitHub-owned or
+verified-creator trust flag.
+
+Before the implementation merges, reconcile all 16 selected references, enable
+Pages with `build_type: workflow`, create and protect `github-pages`, and read
+everything back. After merge, verify the exact run SHA, deployment, Pages API,
+HTTPS root and nested pages, generated AutoAPI/assets, canonical base URL, and
+project version. Also prove a Mermaid page renders with no console error and no
+script request outside the exact-version Mermaid `11.16.1` and D3 `7.9.0`
+jsDelivr prefixes; unused ELK support remains disabled. Only then may the
+repository homepage point at the returned Pages URL. Keep Wiki disabled; the
+public site is contributor documentation, not an application deployment,
+release, or production approval. Follow the
+[Pages publication runbook](../operations/github-pages-publication.md) for the
+exact activation, verification, and recovery procedure.
+
 ## Dependency update policy
 
 Dependabot is security-only for the uv, npm, and GitHub Actions ecosystems.
@@ -217,6 +257,11 @@ the Issue Forms and automation, and the expected feature state: Issues and
 Discussions enabled; Projects, Wiki, Pages, and Downloads disabled. The
 homepage remains empty until the first verified GH-007 Pages deployment. Wiki
 must not become a manually maintained copy of the Sphinx source.
+
+The GH-007 repository candidate is intentionally ahead of that live snapshot:
+it contains the reviewed Pages workflow, exact direct-and-nested Action policy,
+and deployment contracts, while Pages, `github-pages`, and the homepage remain
+unchanged until their separate pre-read and reconciliation.
 
 The accepted live description is **Security-focused Django and PostgreSQL
 platform for operating multi-convention events, under active development.** ADR
