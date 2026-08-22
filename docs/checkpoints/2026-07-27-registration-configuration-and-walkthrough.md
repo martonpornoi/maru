@@ -1,4 +1,4 @@
-# Checkpoint: Configurable registration and Danube walkthrough
+# Checkpoint: Configurable registration and MaruCon walkthrough
 
 - Date: 2026-07-27
 - Phase: Initial registration vertical across V03/V08/V09 boundaries
@@ -20,7 +20,7 @@ Maru can now demonstrate a coherent synthetic convention registration:
 6. Authorized Front Desk staff see a minimized service record and check in the
    attendee with a reason.
 
-Danube and Aurora have different questions and products. Published templates
+MaruCon and MaruDance have different questions and products. Published templates
 and prior-edition copying prove reuse without mutable coupling.
 
 The V02 activity gap also closed: sign-in/sign-out security history is

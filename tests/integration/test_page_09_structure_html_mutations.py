@@ -161,7 +161,7 @@ def _valid_action_case(
             None,
             _url("apply-organization-structure-template", edition),
             {
-                "template": "awoostria-reference@1",
+                "template": "marucon-reference@1",
                 "expected_version": str(form["expected_version"].value()),
                 "confirmation_name": edition.name,
                 "reason": "Apply the synthetic reference structure.",
@@ -403,7 +403,7 @@ def test_template_application_uses_browser_retry_and_success_prg() -> None:
     response = client.post(
         _url("apply-organization-structure-template", edition),
         {
-            "template": "awoostria-reference@1",
+            "template": "marucon-reference@1",
             "expected_version": "0",
             "confirmation_name": edition.name,
             "reason": "Use the synthetic reference for this edition.",

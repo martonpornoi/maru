@@ -1,7 +1,7 @@
 # Synthetic demonstration data
 
-Status: Implemented synthetic fixture; public-roster rehearsal retired fail-closed
-Last updated: 2026-08-03
+Status: Implemented repository-owned fictional fixture; roster importer removed
+Last updated: 2026-08-22
 
 ## Purpose and requirements
 
@@ -16,10 +16,10 @@ settings do not expose its management command.
 ## Dataset
 
 `seed_demo_data` creates fixture version
-`maru-synthetic-two-convention-v5`:
+`maru-fictional-two-convention-v6`:
 
-- Pannon Paws Foundation (Demo), operating Danube Furry Convention;
-- Northern Tails Association (Demo), operating Aurora Tails;
+- Maru Community Events (Demo), operating MaruCon;
+- Maru Arts Collective (Demo), operating MaruDance;
 - archived 2025, preparing 2026, and draft 2027 editions per convention;
 - one demo administrator and 79 persona accounts;
 - organizer governance, convention leadership, operational department leads,
@@ -34,7 +34,7 @@ settings do not expose its management command.
   selected public roles;
 - four legacy authority examples plus ten familiar furry-convention access
   groups per organizer, with organization- or edition-scoped assignments;
-- distinct Danube and Aurora registration sections, questions, and products;
+- distinct MaruCon and MaruDance registration sections, questions, and products;
 - two immutable published registration templates;
 - reviewed active 2026 full-demo configurations with volunteer, early-bird,
   normal, Infinity supporter, and invited-guest products, plus inherited
@@ -97,8 +97,8 @@ uv run python src/manage.py seed_demo_data
 
 Sign in to Django admin with `demo.admin@maru.invalid`. Convention-chair
 accounts are highlighted in the command output for authorized API exploration.
-`danube.standard-attendee@demo.maru.invalid` is highlighted for the unregistered
-Danube attendee walkthrough. Use `danube.convention-chair@demo.maru.invalid`
+`marucon.standard-attendee@demo.maru.invalid` is highlighted for the unregistered
+MaruCon attendee walkthrough. Use `marucon.convention-chair@demo.maru.invalid`
 for configuration and Front Desk views.
 The chair can open **Manage access** with Front Desk, Registration, Board,
 Treasurer, and the other starter groups already populated. A separate synthetic
@@ -118,15 +118,11 @@ The optional `--password` argument supports deliberate local test overrides.
 The default is intentionally public and must never be reused for any real
 account or environment.
 
-## Retired public-roster rehearsal
+## Removed public-roster rehearsal
 
-ADR 0042 retires `seed_marucon_rehearsal` and the public-roster path. The former
-scenario implementation is deleted from the production package. The small
-compatibility command accepts its former argument names only to return one
-stable retirement error before password validation, file or network access,
-and database mutation. The former network entry point always raises its retired
-exception before URL handling. The local HTML parser remains solely for bounded
-synthetic taxonomy unit tests; it is not a supported data-import workflow.
+ADR 0073 removes the former roster parser, external URL, and compatibility
+management command. There is no repository-owned command, parser, or supported
+adapter that can read a public convention directory into example data.
 
 Use `seed_demo_data` for every local educational journey. It creates only
 synthetic `.invalid` identities and establishes active Executive Boards through
@@ -144,12 +140,11 @@ operator and never a convention subject.
   collides with a reserved email, organization slug, convention slug, edition
   slug, membership, participation, capacity, role, or assignment.
 - The complete load is atomic. A failure cannot leave a partly seeded dataset.
-- Existing fixture rows are verified and preserved. No row or volume is
-  deleted, and user edits are not silently rewritten. Upgrading an older
-  fixture adds new v5 records without repurposing an existing registration or
-  rewriting its historical state. V5 enriches only untouched synthetic
-  current-profile defaults with varied reporting countries and the new
-  consent-version/public-country example.
+- Existing v6 fixture rows are verified and preserved. No row or volume is
+  deleted, and user edits are not silently rewritten. Versions before v6 used
+  different convention identities and must not be upgraded in place. Create a
+  new disposable local/test database and seed v6; the command fails closed on
+  conflicting stable identities or slugs.
 - Lifecycle state is advanced through `transition_edition`, preserving its
   authorization, audit, event, outbox, and version behavior. Because archived
   examples and their synthetic readiness/manifest evidence are built in one

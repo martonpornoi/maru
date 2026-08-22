@@ -1,6 +1,6 @@
 # ADR 0042: Synthetic-only educational fixtures
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0073
 - Date: 2026-08-01
 - Supersedes in part: ADR 0028's local public-roster import boundary
 - Requirements: IDN-006, IDN-011, PRI-001, PRI-007, INT-005, NFR-001 through
@@ -35,14 +35,10 @@ website may inform a reviewed taxonomy or requirement, but its real handles,
 names, images, contact details, and person-to-role assignments are not fixture
 input.
 
-The `seed_marucon_rehearsal` compatibility command is fail-closed. It accepts
-its former option names only so old automation receives one stable retirement
-error before password validation, file access, network access, or database
-mutation. The former Awoostria network adapter always raises its retired error
-before URL handling or network I/O.
-
-The bounded HTML parser may remain for synthetic taxonomy unit tests. It is not
-a supported import boundary. A future organizer migration must satisfy INT-005
+At acceptance time, the compatibility command and network adapter failed closed
+before password validation, file access, network access, URL handling, or
+database mutation. ADR 0073 subsequently removes the command, parser, and URL
+entirely. A future organizer migration must satisfy INT-005
 with declared purpose, mapping, preview, provenance, validation, duplicate
 strategy, staging, access, retention, and operator approval; it cannot revive
 the rehearsal adapter.

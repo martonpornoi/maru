@@ -245,12 +245,11 @@ See the
 [clean convention onboarding walkthrough](../operations/clean-convention-onboarding-walkthrough.md)
 for the complete no-demo-database rehearsal.
 
-### Retired public-roster rehearsal
+### Fictional demonstration data
 
-`seed_marucon_rehearsal` is retired. It remains registered only so old scripts
-fail with one explanatory `CommandError`; every former option is rejected
-before password validation, file access, network access, or database writes.
-Maru does not import live volunteer handles into rehearsal accounts.
+The former public-roster parser and compatibility command have been removed.
+Maru does not import volunteer handles, convention identities, or organization
+taxonomies from a public directory into repository-controlled examples.
 
 Use the deterministic synthetic fixture instead:
 

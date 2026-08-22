@@ -16,7 +16,7 @@ from maru.audit.models import AuditEvent
 from maru.authorization.policy import decide
 from maru.events.models import EventEdition
 from maru.workforce.models import Department, EditionStructureControl
-from maru.workforce.structure_templates import AWOOSTRIA_REFERENCE_V1
+from maru.workforce.structure_templates import MARUCON_REFERENCE_V1
 from tests.factories import AccountFactory, EventEditionFactory
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -73,7 +73,7 @@ def _create_payload(**overrides: object) -> dict[str, object]:
 
 def _template_payload(edition: EventEdition) -> dict[str, object]:
     return {
-        "template": AWOOSTRIA_REFERENCE_V1.identifier,
+        "template": MARUCON_REFERENCE_V1.identifier,
         "expected_version": 0,
         "confirmation_name": edition.name,
         "reason": "Use the reviewed reference structure.",

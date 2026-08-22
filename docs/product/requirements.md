@@ -12,7 +12,7 @@ architecture documents, implementation issues, tests, and release notes.
 - **Organization:** An independently governed organizer and tenant.
 - **Convention series:** A recurring convention brand owned by an organization.
 - **Event edition:** One independently configured occurrence, such as
-  `Awoostria 2026`.
+  `MaruCon 2026`.
 - **Participation:** A person's relationship with an event edition, possibly in
   several capacities.
 - **Department:** An organizational unit scoped to an organization or edition.
@@ -284,9 +284,10 @@ architecture documents, implementation issues, tests, and release notes.
   edition-scoped application services shared by HTML and API clients. Every
   change must use optimistic concurrency, strict inputs, exact parent-chain
   validation, cycle prevention, and non-cascading retention rules. Maru must
-  provide an immutable, versioned built-in Awoostria reference whose edition-
-  owned copy places Helper Board above the operational department taxonomy and
-  can diverge without changing its source. The browser must keep sibling
+  provide an immutable, versioned, repository-owned fictional MaruCon starter
+  whose edition-owned copy places Convention Coordination above the
+  independently authored operational Department taxonomy and can diverge
+  without changing its source. The browser must keep sibling
   ordering server-owned: create and reparent append automatically, ordinary
   edits preserve a unique current position, and an edited duplicate position
   is repaired under the aggregate lock. Strict API integrations may continue
@@ -296,8 +297,9 @@ architecture documents, implementation issues, tests, and release notes.
   representation, participation, Position, assignment, role, capability, or
   registration relationship. The Executive Board remains the separate
   OrganizationRepresentation governance anchor and may be composed visually
-  above Helper Board without becoming a Department or an authority-inheritance
-  edge. Retirement preserves immutable typed-resource bindings and closed
+  above Convention Coordination without becoming a Department or an
+  authority-inheritance edge. Retirement preserves immutable typed-resource
+  bindings and closed
   authority as historical evidence: those rows do not by themselves block
   retirement, but they continue to block hard deletion, and no new binding or
   current authority may target a retired Department. Retirement must first end
@@ -1321,6 +1323,21 @@ architecture documents, implementation issues, tests, and release notes.
   not silently adopt undocumented or server-managed response fields. Routine
   maintenance, security-update handling, release evidence, and drift recovery
   must remain documented.
+- **NFR-012 — Ethical fictional examples and research boundaries:** Named
+  conventions, organizations, people, contacts, screenshots, fixtures,
+  tutorials, generated contracts, and other repository-controlled examples
+  must use Maru-owned fictional identities, synthetic people, and RFC-reserved
+  example domains. They must not fetch, copy, snapshot, or translate a real
+  convention roster, people directory, organization chart, people-to-role
+  mapping, brand, or source-derived operating taxonomy into example data.
+  Public material may inform generalized requirements only through documented,
+  reviewed synthesis that does not retain unnecessary branding or imply
+  affiliation. A partner-specific import requires an explicit purpose,
+  authority or lawful basis, provenance, minimization, correction, access,
+  retention, and removal contract. This restriction does not erase necessary
+  attribution for software, standards, dependencies, licenses, security
+  advisories, or an organizer's authorized use of its own identity in a
+  governed deployment.
 
 ## Explicit non-goals
 

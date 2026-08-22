@@ -192,7 +192,7 @@ class StructureTemplateApplicationForm(_StructureReasonForm):
     template = forms.ChoiceField(
         label="Built-in reference",
         choices=tuple(
-            (identifier, "Awoostria reference, version 1")
+            (identifier, "MaruCon fictional starter, version 1")
             for identifier in BUILTIN_STRUCTURE_TEMPLATES
         ),
         help_text=(

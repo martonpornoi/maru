@@ -20,7 +20,7 @@ local test scenarios.
 
 The existing local dataset was reset successfully: 80 unique synthetic
 accounts were updated, including `demo.admin@maru.invalid` and
-`danube.convention-chair@demo.maru.invalid`.
+`marucon.convention-chair@demo.maru.invalid`.
 
 ## Safety boundary
 
@@ -37,7 +37,7 @@ environment, staging deployment, or production deployment.
   production-settings refusal.
 - Ruff formatting/lint and strict mypy pass.
 - Direct local verification confirms the documented password for both the demo
-  administrator and featured Danube convention chair.
+  administrator and featured MaruCon convention chair.
 - Django's system check passes and migration drift reports no changes; no schema
   or migration change is required.
 - Documentation validation passes for 90 Markdown files and 179 unique

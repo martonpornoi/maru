@@ -29,7 +29,7 @@ product actually is.
 
 The product owner has asked for one coherent administration experience capable
 of replacing fragmented convention tools, while retaining a stable API for
-seasonal public clients. The first reference operation is Awoostria. The
+seasonal public clients. The first reference operation is fictional. The
 platform administrator must retain oversight without becoming a participant in
 any organization or edition.
 
@@ -144,10 +144,11 @@ domain and API contracts remain stable.
 
 ### Reference data
 
-The repository may ship an Awoostria-shaped organization template containing
-department names, hierarchy, generic positions, application-type templates,
-and example policies. Tests, examples, screenshots, and demo fixtures use
-synthetic people only. Public rosters are not scraped into accounts or fixtures.
+The repository may ship an independently authored fictional organization
+template containing Department names, hierarchy, generic positions,
+application-type templates, and example policies. Tests, examples,
+screenshots, and demo fixtures use synthetic people only. Public rosters are
+not scraped into accounts or fixtures.
 
 ## Consequences
 

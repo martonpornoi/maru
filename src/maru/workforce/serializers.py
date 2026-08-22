@@ -18,7 +18,7 @@ from maru.workforce.structure_inputs import (
     normalize_department_name,
     normalize_structure_reason,
 )
-from maru.workforce.structure_templates import AWOOSTRIA_REFERENCE_V1
+from maru.workforce.structure_templates import MARUCON_REFERENCE_V1
 
 if TYPE_CHECKING:
     from drf_spectacular.openapi import AutoSchema
@@ -364,7 +364,7 @@ class WorkforceStructureTemplateApplySerializer(_ClosedStructureRequestSerialize
     """Closed API input for one immutable built-in template application."""
 
     template = _StrictStructureChoiceField(
-        choices=(AWOOSTRIA_REFERENCE_V1.identifier,),
+        choices=(MARUCON_REFERENCE_V1.identifier,),
     )
     expected_version = _StrictStructureIntegerField(min_value=0, max_value=0)
     confirmation_name = _StrictStructureTextField(

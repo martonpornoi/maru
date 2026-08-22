@@ -6,14 +6,14 @@ import App from "./App";
 
 const context = {
   account_id: "11111111-1111-4111-8111-111111111111",
-  display_name: "Danube Convention Chair (Demo)",
+  display_name: "MaruCon Convention Chair (Demo)",
   preferred_language: "hu",
   can_access_advanced_records: true,
   memberships: [
     {
       organization_id: "22222222-2222-4222-8222-222222222222",
-      organization_slug: "pannon-paws-foundation",
-      organization_name: "Pannon Paws Foundation (Demo)",
+      organization_slug: "maru-community-events-demo",
+      organization_name: "Maru Community Events (Demo)",
       state: "active",
       relationship_label: "Convention Chair",
     },
@@ -21,13 +21,13 @@ const context = {
   editions: [
     {
       organization_id: "22222222-2222-4222-8222-222222222222",
-      organization_slug: "pannon-paws-foundation",
+      organization_slug: "maru-community-events-demo",
       series_id: "33333333-3333-4333-8333-333333333333",
-      series_slug: "danube-furry-convention",
-      series_name: "Danube Furry Convention",
+      series_slug: "marucon",
+      series_name: "MaruCon",
       edition_id: "44444444-4444-4444-8444-444444444444",
-      edition_slug: "danube-furry-convention-2026",
-      edition_name: "Danube Furry Convention 2026",
+      edition_slug: "marucon-2026",
+      edition_name: "MaruCon 2026",
       lifecycle: "preparing",
       time_zone: "Europe/Budapest",
       language_codes: ["en", "hu", "de"],
@@ -57,12 +57,12 @@ const context = {
 } as const;
 
 const accessWorkspace = {
-  organization_name: "Pannon Paws Foundation (Demo)",
-  edition_name: "Danube Furry Convention 2026",
+  organization_name: "Maru Community Events (Demo)",
+  edition_name: "MaruCon 2026",
   can_revoke_assignments: true,
   effective_access: {
     scope_level: "edition",
-    scope_label: "Danube Furry Convention 2026",
+    scope_label: "MaruCon 2026",
     can_manage_access: true,
     actions: [
       {
@@ -116,11 +116,11 @@ const accessWorkspace = {
       person_email: "front-desk@example.invalid",
       group_code: "front-desk",
       group_name: "Front Desk",
-      scope_label: "Danube Furry Convention 2026",
+      scope_label: "MaruCon 2026",
       status: "Active",
       effective_from: "2026-07-27T09:00:00Z",
       expires_at: null,
-      granted_by_name: "Danube Convention Chair (Demo)",
+      granted_by_name: "MaruCon Convention Chair (Demo)",
       approved_by_name: "Board Approver",
     },
   ],
@@ -131,7 +131,7 @@ const accessPreview = {
   subject_id: "30303030-3030-4030-8030-303030303030",
   subject_label: "Helpful Volunteer",
   scope_level: "edition",
-  scope_label: "Danube Furry Convention 2026",
+  scope_label: "MaruCon 2026",
   evaluated_at: "2026-07-27T09:00:00Z",
   capabilities: [
     {
@@ -173,7 +173,7 @@ const people = {
   results: [
     {
       account_id: "55555555-5555-4555-8555-555555555555",
-      display_name: "Danube Volunteer Coordinator (Demo)",
+      display_name: "MaruCon Volunteer Coordinator (Demo)",
       participation_status: "active",
       capacity_labels: ["Staff", "Volunteer Coordination"],
     },
@@ -269,13 +269,13 @@ const mediaReviews = [
 
 const registrationConfiguration = {
   id: "77777777-7777-4777-8777-777777777777",
-  name: "Danube attendee registration",
+  name: "MaruCon attendee registration",
   version: 2,
   status: "active",
   source_summary: {
     kind: "edition",
     id: "88888888-8888-4888-8888-888888888888",
-    label: "Copied from Danube Furry Convention 2025",
+    label: "Copied from MaruCon 2025",
   },
   review_required: false,
   review_note: "Dates, capacity, products, wording, and policy reviewed.",
@@ -469,7 +469,7 @@ describe("Management Console", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Danube Furry Convention 2026",
+        name: "MaruCon 2026",
       }),
     ).toBeInTheDocument();
     const peopleMetric = screen.getByText("People in edition").parentElement;
@@ -501,7 +501,7 @@ describe("Management Console", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Danube Furry Convention 2026",
+        name: "MaruCon 2026",
       }),
     ).toBeInTheDocument();
     expect(document.querySelector(".primary-nav")).not.toBeInTheDocument();
@@ -514,14 +514,14 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
 
     await user.click(screen.getByRole("button", { name: "My registration" }));
 
     expect(
       await screen.findByRole("heading", {
-        name: "Register for Danube Furry Convention 2026",
+        name: "Register for MaruCon 2026",
       }),
     ).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: /Badge name/ }))
@@ -543,7 +543,7 @@ describe("Management Console", () => {
 
     expect(
       await screen.findByText(
-        "Use this overview to understand Danube Furry Convention 2026 at a glance.",
+        "Use this overview to understand MaruCon 2026 at a glance.",
       ),
     ).toBeInTheDocument();
 
@@ -596,7 +596,7 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
 
     await user.click(screen.getByRole("button", { name: "Reports & badges" }));
@@ -606,7 +606,7 @@ describe("Management Console", () => {
     ).toBeInTheDocument();
     await waitFor(
       () => {
-        expect(screen.getAllByText("Hungary (HU)").length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/\(HU\)$/).length).toBeGreaterThan(0);
         expect(screen.getByText("River")).toBeInTheDocument();
         expect(screen.getAllByText("Volunteer").length).toBeGreaterThan(0);
       },
@@ -623,7 +623,7 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
 
     await user.click(screen.getByRole("button", { name: "People" }));
@@ -631,16 +631,16 @@ describe("Management Console", () => {
     expect(directory).toBeInTheDocument();
     await user.click(
       screen.getByRole("button", {
-        name: "Danube Volunteer Coordinator (Demo)",
+        name: "MaruCon Volunteer Coordinator (Demo)",
       }),
     );
 
     const drawer = await screen.findByRole("complementary", {
-      name: "Danube Volunteer Coordinator (Demo)",
+      name: "MaruCon Volunteer Coordinator (Demo)",
     });
     expect(
       within(drawer).getByRole("heading", {
-        name: "Danube Volunteer Coordinator (Demo)",
+        name: "MaruCon Volunteer Coordinator (Demo)",
       }),
     ).toBeInTheDocument();
     expect(within(drawer).getByText(/only the fields permitted/))
@@ -651,7 +651,7 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
     await user.click(screen.getByRole("button", { name: "People" }));
 
@@ -673,7 +673,7 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
     await user.click(screen.getByRole("button", { name: "Registration" }));
 
@@ -704,7 +704,7 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
 
     const setupSection = screen.getByText("Convention setup").closest("details");
@@ -727,7 +727,7 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
 
     await user.click(screen.getByText("Convention setup"));
@@ -769,7 +769,7 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
 
     await user.click(await screen.findByRole("button", { name: "Manage access" }));
@@ -822,7 +822,7 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
 
     await user.click(await screen.findByRole("button", { name: "Manage access" }));
@@ -886,7 +886,7 @@ describe("Management Console", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", {
-      name: "Danube Furry Convention 2026",
+      name: "MaruCon 2026",
     });
 
     await user.click(screen.getByRole("button", { name: "People" }));

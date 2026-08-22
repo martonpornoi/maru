@@ -1,6 +1,6 @@
 # ADR 0045: Governance-anchored copy-on-write edition structure
 
-- Status: Accepted
+- Status: Partially superseded by ADR 0073
 - Date: 2026-08-02
 - Clarifies: ADRs 0007, 0028, 0036, 0039, 0040, 0041, 0042, and 0044
 - Requirements: IDN-002, IDN-004, IDN-009, IDN-011, IDN-012, EVT-002,
@@ -15,13 +15,12 @@ read-only structure projection. That projection is useful, but it does not yet
 provide the record-oriented Page 9 workflow needed to establish and maintain
 an edition's structure without writing through specialist Django model forms.
 
-The Awoostria public organization taxonomy is a useful first reference for a
-furry convention. It includes an Executive Board, a Helper Board, operational
-departments, nested subdepartments, multiple role holders, and people who may
-hold several roles. It is not evidence of private reporting lines or permission
-to import identifiable volunteers. ADR 0042 therefore permits department and
-workflow shapes but forbids copying the public roster into fixtures, accounts,
-or assignments.
+An early public-convention taxonomy informed the first structure reference. It
+demonstrated governance, operational Departments, nested subdepartments,
+multiple role holders, and people holding several roles, but it was not
+evidence of private reporting lines or permission to import identifiable
+volunteers. ADR 0073 supersedes retention of that source-derived identity and
+taxonomy with a repository-owned fictional starter.
 
 There is also an important aggregate boundary. ADR 0040 defines the Executive
 Board as the organization's accountable `OrganizationRepresentation`, with
@@ -98,21 +97,13 @@ see those relationships. It never maintains a page-local ACL or reveals hidden
 principal counts. Navigation and every HTML/API action repeat the same exact
 policy decision as the destination.
 
-### Versioned built-in Awoostria reference
+### Versioned built-in reference
 
-Maru ships an immutable, code-reviewed built-in template identified as
-`awoostria-reference@1`. A later change is a new version with a new content
-digest; an already available version is never edited in place.
-
-Version 1 contains exactly 22 Department definitions: top-level **Helper
-Board**, followed by **Art**, **Charity**, **Ceremonies**, **Dealers' Den**,
-**Decorations**, **Events & Programming**, **Front Desk**, **Fursuit Support**,
-**Graphics Design**, **Human Resources**, **IT**, **Legal & Compliance**,
-**Logistics**, **Maid Café**, **Multimedia**, **PEER**, **Registration**,
-**Security**, **Social Media**, **Stage Tech**, and **Story** beneath Helper
-Board. Stable code-owned codes, descriptions, and display order belong to the
-template version. The arrangement is an editable starting point, not a claim
-about Awoostria's private legal or authority structure.
+This ADR originally accepted an immutable source-derived template. ADR 0073
+replaces its identity and exact Department catalog with
+`marucon-reference@1`, an independently authored fictional starter. The
+copy-on-write, exact-version, canonical-digest, and immutable-receipt boundary
+below remains accepted.
 
 Application is copy-on-write. It creates independent edition Departments and
 an immutable application receipt containing exact organization and edition,
@@ -141,7 +132,7 @@ organization and edition identity and a positive monotonic
 `aggregate_version`. A truly absent structure is represented to command
 callers as version zero. Existing populated editions receive an explicit
 legacy-existing control during migration; they are never labelled as having
-used the Awoostria template.
+used a built-in template.
 
 The first Page 9 slice exposes application services equivalent to:
 
@@ -238,7 +229,7 @@ from manufacturing ordinary organizer authority provenance.
 
 Position editing therefore follows as Page 9b only after its strict role-bundle
 selection, dual-control provenance, reporting-cycle, opportunity, lifecycle,
-and recovery contract is accepted. The Awoostria reference template does not
+and recovery contract is accepted. The built-in reference template does not
 pre-create Lead, Deputy, or Volunteer Positions. Multiple holders and one
 person's multiple departmental roles remain supported by the existing Position
 and PositionAssignment model when those records are deliberately created.

@@ -25928,9 +25928,9 @@ components:
       - product_id
     TemplateEnum:
       enum:
-      - awoostria-reference@1
+      - marucon-reference@1
       type: string
-      description: '* `awoostria-reference@1` - awoostria-reference@1'
+      description: '* `marucon-reference@1` - marucon-reference@1'
     Token:
       type: object
       description: Serialize and validate token data.

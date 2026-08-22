@@ -172,7 +172,7 @@ minimization, tenant/edition isolation, unknown targets, registration
 lifecycle, report denial, CSV minimization/formula neutralization, and
 sensitive-read audit.
 
-The Danube 2026 fixture was also walked in a real browser at desktop and
+The MaruCon 2026 fixture was also walked in a real browser at desktop and
 390-pixel mobile widths. The action center opened real work, Registration showed
 edition/template provenance and Front Desk state, the attendee form revealed a
 conditional fursuit question, and no runtime errors or horizontal overflow
@@ -183,7 +183,7 @@ pattern on sign in, index, application, list, add, and change pages.
 Model-specific copy keeps
 foundation records understandable without changing their authorization or
 lifecycle rules. Its persistent convention-workspace selector was verified
-with Danube 2027: edition-owned lists and choices stayed focused, eligible
+with MaruCon 2027: edition-owned lists and choices stayed focused, eligible
 registration sources remained explicitly reusable, mobile layout had no
 horizontal overflow, and the browser reported no runtime errors.
 

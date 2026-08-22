@@ -15,7 +15,8 @@ was required.
 Page 9a.1 now exposes the stopped-writer edition-structure command boundary
 through one canonical browser workflow and versioned API. The Executive Board
 remains the separate OrganizationRepresentation governance anchor. Applying
-`awoostria-reference@1` copies Helper Board plus 21 operational Departments
+`marucon-reference@1` copies Convention Coordination plus 21 independently
+authored operational Departments
 into one edition and creates no person, Position, assignment, participation,
 registration, role, or authority relationship.
 

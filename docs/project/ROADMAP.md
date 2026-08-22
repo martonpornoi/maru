@@ -3,6 +3,22 @@
 The roadmap is outcome-based. Dates are intentionally omitted until a team and
 first convention partner are known.
 
+## Current contributor-documentation outcome
+
+ADRs 0073 and 0074 add a newcomer-first public documentation layer without
+removing comprehensive reference evidence. The Sphinx root now has six curated
+hubs and one five-step entry journey; nested catalogs retain product contracts,
+runbooks, modules, research, ADRs, checkpoints, and generated Python reference.
+The repository rejects orphaned pages and root-navigation drift.
+
+Repository-controlled examples now use MaruCon, MaruDance, synthetic people,
+and reserved domains. The external-roster compatibility surface is removed,
+the source-derived Workforce starter is replaced by the independently authored
+`marucon-reference@1`, and migration `0009` refuses to relabel incompatible
+immutable receipts. After local and hosted acceptance, the next documentation
+outcome is to keep this finite entry path current while adding role guides and
+verified screenshots only as corresponding interfaces become stable.
+
 ## Current production-consolidation discipline
 
 ADR 0030 established and preserved the accepted empty-experience baseline while
@@ -70,9 +86,9 @@ Department command services, repository-owned writer reconciliation, and
 workforce `0006`/`0007` stopped-writer trigger contract are implemented and
 first repository-verified by the pre-adapter 1,471-test baseline at 90.13
 percent branch coverage. The
-immutable 22-Department
-`awoostria-reference@1` catalog pins Helper Board as sole root and contains no
-Executive Board Department. Page 9a.1 now mounts same-shell child forms and
+immutable, repository-owned 22-Department `marucon-reference@1` fictional
+starter pins Convention Coordination as sole root and contains no Executive
+Board Department. Page 9a.1 now mounts same-shell child forms and
 five strict API mutation operations for template application and Department
 create/update/reparent/reorder/retire/protected-delete. ADR 0048 keeps the
 browser's sibling order server-owned: create and reparent append under the

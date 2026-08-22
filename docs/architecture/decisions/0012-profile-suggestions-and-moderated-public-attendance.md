@@ -69,9 +69,9 @@ Image review is content moderation, not malware scanning. Production publication
 still requires scanning, safe decoding/rendition generation, storage lifecycle,
 and an incident/removal process.
 
-The pronoun vocabulary incorporates the useful choices found in the
-read-only Awoostria reference and adds name-only, ask-me, and conditional
-write-in behavior. The language contract follows the
+The pronoun vocabulary incorporates useful choices from reviewed public
+convention material and adds name-only, ask-me, and conditional write-in
+behavior. The language contract follows the
 [Library of Congress ISO 639 guidance](https://www.loc.gov/standards/iso639-2/langhome.html).
 The conditional write-in and optional-answer design also follows the practical
 direction in Georgetown University's

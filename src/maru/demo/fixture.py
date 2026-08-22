@@ -256,7 +256,7 @@ class DemoSeedSummary:
             A mapping containing the resolved as dict data.
         """
         return {
-            "dataset": "maru-synthetic-two-convention-v5",
+            "dataset": "maru-fictional-two-convention-v6",
             "synthetic_only": True,
             "admin_login": DEMO_ADMIN_EMAIL,
             "featured_logins": list(self.featured_logins),
@@ -801,12 +801,12 @@ def _personas() -> tuple[PersonaSpec, ...]:
 
 CONVENTIONS = (
     ConventionSpec(
-        key="danube",
-        organization_slug="pannon-paws-foundation",
-        organization_name="Pannon Paws Foundation (Demo)",
-        series_slug="danube-furry-convention",
-        series_name="Danube Furry Convention",
-        short_name="Danube",
+        key="marucon",
+        organization_slug="maru-community-events-demo",
+        organization_name="Maru Community Events (Demo)",
+        series_slug="marucon",
+        series_name="MaruCon",
+        short_name="MaruCon",
         country_code="HU",
         language="hu",
         time_zone="Europe/Budapest",
@@ -815,24 +815,24 @@ CONVENTIONS = (
         editions=(
             EditionSpec(
                 key="past",
-                slug="danube-furry-convention-2025",
-                name="Danube Furry Convention 2025",
+                slug="marucon-2025",
+                name="MaruCon 2025",
                 starts_on=date(2025, 8, 14),
                 ends_on=date(2025, 8, 17),
                 lifecycle=EventEdition.Lifecycle.ARCHIVED,
             ),
             EditionSpec(
                 key="current",
-                slug="danube-furry-convention-2026",
-                name="Danube Furry Convention 2026",
+                slug="marucon-2026",
+                name="MaruCon 2026",
                 starts_on=date(2026, 8, 13),
                 ends_on=date(2026, 8, 16),
                 lifecycle=EventEdition.Lifecycle.PREPARING,
             ),
             EditionSpec(
                 key="future",
-                slug="danube-furry-convention-2027",
-                name="Danube Furry Convention 2027",
+                slug="marucon-2027",
+                name="MaruCon 2027",
                 starts_on=date(2027, 8, 12),
                 ends_on=date(2027, 8, 15),
                 lifecycle=EventEdition.Lifecycle.DRAFT,
@@ -840,12 +840,12 @@ CONVENTIONS = (
         ),
     ),
     ConventionSpec(
-        key="aurora",
-        organization_slug="northern-tails-association",
-        organization_name="Northern Tails Association (Demo)",
-        series_slug="aurora-tails",
-        series_name="Aurora Tails",
-        short_name="Aurora",
+        key="marudance",
+        organization_slug="maru-arts-collective-demo",
+        organization_name="Maru Arts Collective (Demo)",
+        series_slug="marudance",
+        series_name="MaruDance",
+        short_name="MaruDance",
         country_code="FI",
         language="fi",
         time_zone="Europe/Helsinki",
@@ -854,24 +854,24 @@ CONVENTIONS = (
         editions=(
             EditionSpec(
                 key="past",
-                slug="aurora-tails-2025",
-                name="Aurora Tails 2025",
+                slug="marudance-2025",
+                name="MaruDance 2025",
                 starts_on=date(2025, 10, 2),
                 ends_on=date(2025, 10, 5),
                 lifecycle=EventEdition.Lifecycle.ARCHIVED,
             ),
             EditionSpec(
                 key="current",
-                slug="aurora-tails-2026",
-                name="Aurora Tails 2026",
+                slug="marudance-2026",
+                name="MaruDance 2026",
                 starts_on=date(2026, 10, 1),
                 ends_on=date(2026, 10, 4),
                 lifecycle=EventEdition.Lifecycle.PREPARING,
             ),
             EditionSpec(
                 key="future",
-                slug="aurora-tails-2027",
-                name="Aurora Tails 2027",
+                slug="marudance-2027",
+                name="MaruDance 2027",
                 starts_on=date(2027, 9, 30),
                 ends_on=date(2027, 10, 3),
                 lifecycle=EventEdition.Lifecycle.DRAFT,
@@ -1648,7 +1648,7 @@ class _DemoSeeder:
                 ),
                 "position": 20,
             }
-            if convention.key == "danube"
+            if convention.key == "marucon"
             else {
                 "key": "visit-planning",
                 "title": "Visit planning",
@@ -1710,7 +1710,7 @@ class _DemoSeeder:
                 "condition_value": "",
             },
         )
-        if convention.key == "danube":
+        if convention.key == "marucon":
             custom = (
                 {
                     "section_key": "fursuit-profile",
@@ -1801,7 +1801,7 @@ class _DemoSeeder:
     def _registration_product_specs(
         convention: ConventionSpec,
     ) -> tuple[dict[str, object], ...]:
-        if convention.key == "danube":
+        if convention.key == "marucon":
             return (
                 {
                     "code": "weekend",
@@ -1811,7 +1811,7 @@ class _DemoSeeder:
                     "capacity": 900,
                     "position": 10,
                     "entitlement_code": "event-admission",
-                    "entitlement_name": "Danube 2026 weekend admission",
+                    "entitlement_name": "MaruCon 2026 weekend admission",
                 },
                 {
                     "code": "sponsor",
@@ -1821,19 +1821,19 @@ class _DemoSeeder:
                     "capacity": 180,
                     "position": 20,
                     "entitlement_code": "sponsor-admission",
-                    "entitlement_name": "Danube 2026 sponsor admission",
+                    "entitlement_name": "MaruCon 2026 sponsor admission",
                 },
             )
         return (
             {
                 "code": "weekend",
-                "name": "Aurora weekend admission",
+                "name": "MaruDance weekend admission",
                 "description": "Admission for the complete convention.",
                 "price_minor": 13_500,
                 "capacity": 650,
                 "position": 10,
                 "entitlement_code": "event-admission",
-                "entitlement_name": "Aurora Tails weekend admission",
+                "entitlement_name": "MaruDance weekend admission",
             },
             {
                 "code": "youth",
@@ -1845,7 +1845,7 @@ class _DemoSeeder:
                 "capacity": 90,
                 "position": 20,
                 "entitlement_code": "youth-admission",
-                "entitlement_name": "Aurora Tails youth admission",
+                "entitlement_name": "MaruDance youth admission",
             },
         )
 
@@ -1986,7 +1986,7 @@ class _DemoSeeder:
                 ),
                 opens_at=opens_at,
                 closes_at=closes_at,
-                capacity=1_100 if convention.key == "danube" else 740,
+                capacity=1_100 if convention.key == "marucon" else 740,
                 currency="EUR",
                 created_by_id=actor.id,
             )
@@ -2227,8 +2227,8 @@ class _DemoSeeder:
                     "code": "weekend",
                     "name": "Normal weekend admission",
                     "description": "Standard admission after early bird closes.",
-                    "price_minor": (12_000 if convention.key == "danube" else 13_500),
-                    "capacity": (900 if convention.key == "danube" else 650),
+                    "price_minor": (12_000 if convention.key == "marucon" else 13_500),
+                    "capacity": (900 if convention.key == "marucon" else 650),
                     "position": 30,
                     "entitlement_code": "event-admission",
                     "entitlement_name": f"{edition.name} weekend admission",
@@ -2246,7 +2246,7 @@ class _DemoSeeder:
                         "Weekend admission with the synthetic Infinity supporter "
                         "package."
                     ),
-                    "price_minor": (22_000 if convention.key == "danube" else 24_000),
+                    "price_minor": (22_000 if convention.key == "marucon" else 24_000),
                     "capacity": 180,
                     "position": 40,
                     "entitlement_code": "infinity-ticket",
@@ -2426,7 +2426,7 @@ class _DemoSeeder:
                 "preferred-language": convention.language_codes[0],
                 "code-of-conduct": True,
             }
-            if convention.key == "danube":
+            if convention.key == "marucon":
                 answers["bringing-fursuit"] = account.email.endswith(
                     "first-time-attendee@demo.maru.invalid"
                 )
@@ -3135,7 +3135,7 @@ class _DemoSeeder:
                 accounts[persona.key] = account
                 if persona.key == "convention-chair":
                     self.featured_logins.append(account.email)
-                if convention.key == "danube" and persona.key == "standard-attendee":
+                if convention.key == "marucon" and persona.key == "standard-attendee":
                     self.featured_logins.append(account.email)
                 self._membership(
                     convention=convention,
@@ -3330,7 +3330,7 @@ class _DemoSeeder:
                 source_edition: EventEdition | None = None
                 if edition_spec.key == "current":
                     source_edition = editions["past"]
-                elif edition_spec.key == "future" and convention.key == "danube":
+                elif edition_spec.key == "future" and convention.key == "marucon":
                     source_edition = editions["current"]
                 configurations[edition_spec.key] = self._registration_configuration(
                     convention=convention,
@@ -3360,10 +3360,10 @@ class _DemoSeeder:
                     "first-time-attendee",
                     (
                         Registration.State.PAYMENT_PENDING
-                        if convention.key == "danube"
+                        if convention.key == "marucon"
                         else Registration.State.GUARDIAN_PENDING
                     ),
-                    "weekend" if convention.key == "danube" else "early-bird",
+                    "weekend" if convention.key == "marucon" else "early-bird",
                 ),
                 (
                     "guest-of-honour",

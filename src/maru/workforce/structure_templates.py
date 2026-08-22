@@ -1,9 +1,10 @@
 """Immutable built-in Department structure templates.
 
-The names and order in ``awoostria-reference@1`` are the accepted taxonomy in
-ADR 0045 and the Page 9 contract.  Its descriptions use only the matching
-non-personal workflow phrases accepted in the production-consolidation ledger;
-they do not describe people, private reporting lines, or authority.
+The names and order in ``marucon-reference@1`` form a repository-owned,
+fictional convention taxonomy. Its descriptions derive from Maru's product
+requirements rather than an external convention, public roster, or copied
+organization chart. They describe workflows, not people, private reporting
+lines, or authority.
 """
 
 from __future__ import annotations
@@ -240,7 +241,7 @@ def _department(
     description: str,
     display_order: int,
     *,
-    parent_code: str | None = "helper-board",
+    parent_code: str | None = "convention-coordination",
 ) -> StructureDepartmentDefinition:
     return StructureDepartmentDefinition(
         code=code,
@@ -251,58 +252,148 @@ def _department(
     )
 
 
-AWOOSTRIA_REFERENCE_V1 = BuiltinStructureTemplate(
-    code="awoostria-reference",
+MARUCON_REFERENCE_V1 = BuiltinStructureTemplate(
+    code="marucon-reference",
     version=1,
     departments=(
         _department(
-            "helper-board",
-            "Helper Board",
+            "convention-coordination",
+            "Convention Coordination",
             _BOARD_DESCRIPTION,
             0,
             parent_code=None,
         ),
-        _department("art", "Art", _APPLICATIONS_DESCRIPTION, 1),
-        _department("charity", "Charity", _APPLICATIONS_DESCRIPTION, 2),
-        _department("ceremonies", "Ceremonies", _SERVICE_DESCRIPTION, 3),
-        _department("dealers-den", "Dealers' Den", _APPLICATIONS_DESCRIPTION, 4),
-        _department("decorations", "Decorations", _OPERATIONS_DESCRIPTION, 5),
         _department(
-            "events-programming",
-            "Events & Programming",
-            _PROGRAMME_DESCRIPTION,
-            6,
+            "attendee-services",
+            "Attendee Services",
+            _REGISTRATION_DESCRIPTION,
+            1,
         ),
-        _department("front-desk", "Front Desk", _REGISTRATION_DESCRIPTION, 7),
-        _department("fursuit-support", "Fursuit Support", _SERVICE_DESCRIPTION, 8),
-        _department("graphics-design", "Graphics Design", _CONTENT_DESCRIPTION, 9),
-        _department("human-resources", "Human Resources", _HR_DESCRIPTION, 10),
-        _department("it", "IT", _OPERATIONS_DESCRIPTION, 11),
-        _department(
-            "legal-compliance",
-            "Legal & Compliance",
-            _SAFETY_DESCRIPTION,
-            12,
-        ),
-        _department("logistics", "Logistics", _OPERATIONS_DESCRIPTION, 13),
-        _department("maid-cafe", "Maid Café", _APPLICATIONS_DESCRIPTION, 14),
-        _department("multimedia", "Multimedia", _TECH_DESCRIPTION, 15),
-        _department("peer", "PEER", _SAFETY_DESCRIPTION, 16),
         _department(
             "registration",
             "Registration",
             _REGISTRATION_DESCRIPTION,
+            2,
+        ),
+        _department(
+            "programme",
+            "Programme",
+            _PROGRAMME_DESCRIPTION,
+            3,
+        ),
+        _department(
+            "stage-production",
+            "Stage Production",
+            _TECH_DESCRIPTION,
+            4,
+        ),
+        _department(
+            "venue-operations",
+            "Venue Operations",
+            _SERVICE_DESCRIPTION,
+            5,
+        ),
+        _department(
+            "logistics",
+            "Logistics",
+            _OPERATIONS_DESCRIPTION,
+            6,
+        ),
+        _department(
+            "volunteer-support",
+            "Volunteer Support",
+            _HR_DESCRIPTION,
+            7,
+        ),
+        _department(
+            "safety",
+            "Safety",
+            _SAFETY_DESCRIPTION,
+            8,
+        ),
+        _department(
+            "accessibility",
+            "Accessibility",
+            _SAFETY_DESCRIPTION,
+            9,
+        ),
+        _department(
+            "technology",
+            "Technology",
+            _OPERATIONS_DESCRIPTION,
+            10,
+        ),
+        _department(
+            "communications",
+            "Communications",
+            _CONTENT_DESCRIPTION,
+            11,
+        ),
+        _department(
+            "design-publications",
+            "Design & Publications",
+            _CONTENT_DESCRIPTION,
+            12,
+        ),
+        _department(
+            "exhibitors",
+            "Exhibitors",
+            _APPLICATIONS_DESCRIPTION,
+            13,
+        ),
+        _department(
+            "charity",
+            "Charity",
+            _APPLICATIONS_DESCRIPTION,
+            14,
+        ),
+        _department(
+            "guest-relations",
+            "Guest Relations",
+            _SERVICE_DESCRIPTION,
+            15,
+        ),
+        _department(
+            "accommodation",
+            "Accommodation",
+            _SERVICE_DESCRIPTION,
+            16,
+        ),
+        _department(
+            "hospitality",
+            "Hospitality",
+            _SERVICE_DESCRIPTION,
             17,
         ),
-        _department("security", "Security", _SAFETY_DESCRIPTION, 18),
-        _department("social-media", "Social Media", _CONTENT_DESCRIPTION, 19),
-        _department("stage-tech", "Stage Tech", _TECH_DESCRIPTION, 20),
-        _department("story", "Story", _CONTENT_DESCRIPTION, 21),
+        _department(
+            "finance-procurement",
+            "Finance & Procurement",
+            _APPLICATIONS_DESCRIPTION,
+            18,
+        ),
+        _department(
+            "partnerships",
+            "Partnerships",
+            _APPLICATIONS_DESCRIPTION,
+            19,
+        ),
+        _department(
+            "live-operations",
+            "Live Operations",
+            _OPERATIONS_DESCRIPTION,
+            20,
+        ),
+        _department(
+            "archive-handover",
+            "Archive & Handover",
+            _CONTENT_DESCRIPTION,
+            21,
+        ),
     ),
 )
 
 BUILTIN_STRUCTURE_TEMPLATES: Mapping[str, BuiltinStructureTemplate] = MappingProxyType(
-    {AWOOSTRIA_REFERENCE_V1.identifier: AWOOSTRIA_REFERENCE_V1}
+    {MARUCON_REFERENCE_V1.identifier: MARUCON_REFERENCE_V1}
 )
 
 

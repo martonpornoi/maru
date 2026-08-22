@@ -13,7 +13,7 @@ AUTHORITY_PROVENANCE_ACTIVATION_LOCK_KEY = 4_400_440_007
 RETIRED_DEPARTMENT_AUTHORITY_LOCK_KEY = 4_400_450_010
 
 PINNED_TEMPLATE_DIGEST = (
-    "a0eb4def29ed904b5e1279bd72bf4da7f99c94e804cabf10c196b536c5ca7901"
+    "55f4091787215fd9eef5cc1266806a1450dd6e5449d50864340601f5ec2398ee"
 )
 
 
@@ -823,10 +823,10 @@ BEGIN
     END IF;
 
     IF NEW.action = 'template_applied' THEN
-        IF NEW.template_code <> 'awoostria-reference'
+        IF NEW.template_code <> 'marucon-reference'
            OR NEW.template_version <> 1
            OR NEW.template_digest <>
-              'a0eb4def29ed904b5e1279bd72bf4da7f99c94e804cabf10c196b536c5ca7901'
+              '55f4091787215fd9eef5cc1266806a1450dd6e5449d50864340601f5ec2398ee'
            OR NEW.deleted_name_snapshot <> ''
            OR NEW.changed_fields <> ARRAY['departments']::varchar[]
            OR pg_catalog.cardinality(NEW.affected_department_ids) <> 22
@@ -844,72 +844,72 @@ BEGIN
             parent_code
         ) AS (
             VALUES
-            (1, 'helper-board', 'Helper Board',
+            (1, 'convention-coordination', 'Convention Coordination',
              'Readiness, risks, approvals, cross-department blockers, and material changes.',
              0, NULL::text),
-            (2, 'art', 'Art',
-             'Configured applications, allocations, content classification, inventory, staffing, payments, and reconciliation.',
-             1, 'helper-board'),
-            (3, 'charity', 'Charity',
-             'Configured applications, allocations, content classification, inventory, staffing, payments, and reconciliation.',
-             2, 'helper-board'),
-            (4, 'ceremonies', 'Ceremonies',
-             'Service capacity, spaces, programme dependencies, queues, shifts, and run of show.',
-             3, 'helper-board'),
-            (5, 'dealers-den', 'Dealers'' Den',
-             'Configured applications, allocations, content classification, inventory, staffing, payments, and reconciliation.',
-             4, 'helper-board'),
-            (6, 'decorations', 'Decorations',
-             'Storage, boxes, kits, manifests, movements, maintenance, deployment, and return.',
-             5, 'helper-board'),
-            (7, 'events-programming', 'Events & Programming',
+            (2, 'attendee-services', 'Attendee Services',
+             'Attendee lookup, payment and check-in state, badges, service requests, knowledge, and surge staffing.',
+             1, 'convention-coordination'),
+            (3, 'registration', 'Registration',
+             'Attendee lookup, payment and check-in state, badges, service requests, knowledge, and surge staffing.',
+             2, 'convention-coordination'),
+            (4, 'programme', 'Programme',
              'Calls, proposals, review, readiness, timetable, hosts, and public copy.',
-             6, 'helper-board'),
-            (8, 'front-desk', 'Front Desk',
-             'Attendee lookup, payment and check-in state, badges, service requests, knowledge, and surge staffing.',
-             7, 'helper-board'),
-            (9, 'fursuit-support', 'Fursuit Support',
+             3, 'convention-coordination'),
+            (5, 'stage-production', 'Stage Production',
+             'Riders, cues, equipment, rehearsals, setup and teardown, operator shifts, and media consent.',
+             4, 'convention-coordination'),
+            (6, 'venue-operations', 'Venue Operations',
              'Service capacity, spaces, programme dependencies, queues, shifts, and run of show.',
-             8, 'helper-board'),
-            (10, 'graphics-design', 'Graphics Design',
-             'Briefs, assets, approvals, rights, publishing schedule, and public content renditions.',
-             9, 'helper-board'),
-            (11, 'human-resources', 'Human Resources',
+             5, 'convention-coordination'),
+            (7, 'logistics', 'Logistics',
+             'Storage, boxes, kits, manifests, movements, maintenance, deployment, and return.',
+             6, 'convention-coordination'),
+            (8, 'volunteer-support', 'Volunteer Support',
              'Opportunities, applications, onboarding, qualifications, assignments, availability, hours, and handover.',
-             10, 'helper-board'),
-            (12, 'it', 'IT',
-             'Storage, boxes, kits, manifests, movements, maintenance, deployment, and return.',
-             11, 'helper-board'),
-            (13, 'legal-compliance', 'Legal & Compliance',
+             7, 'convention-coordination'),
+            (9, 'safety', 'Safety',
              'Narrowly scoped cases, duty routing, access policy, retention, and ordinary minimum-disclosure tasks.',
-             12, 'helper-board'),
-            (14, 'logistics', 'Logistics',
+             8, 'convention-coordination'),
+            (10, 'accessibility', 'Accessibility',
+             'Narrowly scoped cases, duty routing, access policy, retention, and ordinary minimum-disclosure tasks.',
+             9, 'convention-coordination'),
+            (11, 'technology', 'Technology',
              'Storage, boxes, kits, manifests, movements, maintenance, deployment, and return.',
-             13, 'helper-board'),
-            (15, 'maid-cafe', 'Maid Café',
+             10, 'convention-coordination'),
+            (12, 'communications', 'Communications',
+             'Briefs, assets, approvals, rights, publishing schedule, and public content renditions.',
+             11, 'convention-coordination'),
+            (13, 'design-publications', 'Design & Publications',
+             'Briefs, assets, approvals, rights, publishing schedule, and public content renditions.',
+             12, 'convention-coordination'),
+            (14, 'exhibitors', 'Exhibitors',
              'Configured applications, allocations, content classification, inventory, staffing, payments, and reconciliation.',
-             14, 'helper-board'),
-            (16, 'multimedia', 'Multimedia',
-             'Riders, cues, equipment, rehearsals, setup and teardown, operator shifts, and media consent.',
-             15, 'helper-board'),
-            (17, 'peer', 'PEER',
-             'Narrowly scoped cases, duty routing, access policy, retention, and ordinary minimum-disclosure tasks.',
-             16, 'helper-board'),
-            (18, 'registration', 'Registration',
-             'Attendee lookup, payment and check-in state, badges, service requests, knowledge, and surge staffing.',
-             17, 'helper-board'),
-            (19, 'security', 'Security',
-             'Narrowly scoped cases, duty routing, access policy, retention, and ordinary minimum-disclosure tasks.',
-             18, 'helper-board'),
-            (20, 'social-media', 'Social Media',
+             13, 'convention-coordination'),
+            (15, 'charity', 'Charity',
+             'Configured applications, allocations, content classification, inventory, staffing, payments, and reconciliation.',
+             14, 'convention-coordination'),
+            (16, 'guest-relations', 'Guest Relations',
+             'Service capacity, spaces, programme dependencies, queues, shifts, and run of show.',
+             15, 'convention-coordination'),
+            (17, 'accommodation', 'Accommodation',
+             'Service capacity, spaces, programme dependencies, queues, shifts, and run of show.',
+             16, 'convention-coordination'),
+            (18, 'hospitality', 'Hospitality',
+             'Service capacity, spaces, programme dependencies, queues, shifts, and run of show.',
+             17, 'convention-coordination'),
+            (19, 'finance-procurement', 'Finance & Procurement',
+             'Configured applications, allocations, content classification, inventory, staffing, payments, and reconciliation.',
+             18, 'convention-coordination'),
+            (20, 'partnerships', 'Partnerships',
+             'Configured applications, allocations, content classification, inventory, staffing, payments, and reconciliation.',
+             19, 'convention-coordination'),
+            (21, 'live-operations', 'Live Operations',
+             'Storage, boxes, kits, manifests, movements, maintenance, deployment, and return.',
+             20, 'convention-coordination'),
+            (22, 'archive-handover', 'Archive & Handover',
              'Briefs, assets, approvals, rights, publishing schedule, and public content renditions.',
-             19, 'helper-board'),
-            (21, 'stage-tech', 'Stage Tech',
-             'Riders, cues, equipment, rehearsals, setup and teardown, operator shifts, and media consent.',
-             20, 'helper-board'),
-            (22, 'story', 'Story',
-             'Briefs, assets, approvals, rights, publishing schedule, and public content renditions.',
-             21, 'helper-board')
+             21, 'convention-coordination')
         ), affected AS (
             SELECT supplied.department_id, supplied.ordinality
               FROM pg_catalog.unnest(NEW.affected_department_ids)

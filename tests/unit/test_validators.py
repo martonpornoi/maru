@@ -10,7 +10,7 @@ from maru.core.validators import (
 from maru.participation.models import validate_capacity_code
 
 
-@pytest.mark.parametrize("value", ["maru", "awoostria-2030", "event2"])
+@pytest.mark.parametrize("value", ["maru", "marucon-2030", "event2"])
 def test_lowercase_slug_accepts_stable_values(value: str) -> None:
     validate_lowercase_slug(value)
 
