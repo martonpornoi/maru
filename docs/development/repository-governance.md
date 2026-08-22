@@ -169,10 +169,11 @@ to the live selected-Actions policy requires separate owner authorization, a
 complete pre-read, an exact append that preserves both broad trust flags as
 `false`, and a complete post-change readback. For pull request 11, that process
 found the exact prior 11 patterns, added only the reviewed v5.0.0 reference, and
-read back exact parity with the 12-entry checked-in allowlist. Do not mark
-GH-006 complete until a current ready-state run also passes. The workflow runs
-on the synthetic merge candidate, while dependency review compares the pull
-request's base and head revisions.
+read back exact parity with the 12-entry checked-in allowlist. Ready-state run
+`32531845794` then checked out synthetic merge candidate `105c9ac`, while the
+Action compared base `cf0235f` with head `1d7f17a`. The pinned Action, complete
+selected acceptance, and `PR gate` passed. Pull request 11 squash-merged as
+`0d8af12`, completing GH-006 without enabling either broad trust flag.
 
 ## Immutable release boundary
 

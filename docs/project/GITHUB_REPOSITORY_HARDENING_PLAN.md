@@ -1,9 +1,8 @@
 # GitHub repository hardening plan
 
-Status: GH-000, GH-001, GH-003, GH-004, and GH-005 complete; GH-002 repository
-verification implemented with its first candidate rehearsal pending; GH-006
-repository candidate implemented with live reconciliation complete and hosted
-proof pending; GH-007 through GH-009 tracked
+Status: GH-000, GH-001, and GH-003 through GH-006 complete; GH-002 repository
+verification implemented with its first candidate rehearsal pending; GH-007
+through GH-009 tracked
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -295,12 +294,12 @@ binding is reconciled.
 
 ADR 0071 accepts dependency-diff review as a complement to locked resolution,
 `pip-audit`, `pnpm audit`, Dependabot, exact Action validation, and release
-evidence. The live graph contains 293 packages: 108 PyPI, 173 npm, 11 GitHub
-Actions, and the root repository document. Read-only comparisons recognize
-Maru's `uv.lock`, `pyproject.toml`, Staff Console `pnpm-lock.yaml`, and workflow
-inputs.
+evidence. The live graph contains 294 entries: 108 PyPI packages, 173 npm
+packages, 12 GitHub Actions, and the root repository document. Read-only
+comparisons recognize Maru's `uv.lock`, `pyproject.toml`, Staff Console
+`pnpm-lock.yaml`, and workflow inputs.
 
-The repository candidate runs verified v5.0.0 commit
+The merged default-branch control runs verified v5.0.0 commit
 `a1d282b36b6f3519aa1f3fc636f609c47dddb294` as one step in the existing
 `changes` job when a ready pull request's dedicated classifier output identifies
 a graph-visible manifest, lock, or workflow change. It rejects introduced
@@ -317,13 +316,16 @@ graph can also omit unsupported inputs and does not cover the `Dockerfile` base
 image. License automation remains deferred until a bounded compatibility policy
 is accepted.
 
-State: repository candidate implemented. The separately authorized live update
-was applied after an exact 11-pattern pre-read and independently read back at 12
-unique immutable patterns, with selected-only trust, mandatory SHA pinning, and
-both broad trust flags preserved. An authoritative ready-state run must now
-prove the pinned Action before GH-006 is complete. The workflow executes on the
-synthetic pull-request merge candidate, while dependency review compares the
-pull request's base and head revisions.
+State: complete. The separately authorized live update followed an exact
+11-pattern pre-read and was independently read back at 12 unique immutable
+patterns, with selected-only trust, mandatory SHA pinning, and both broad trust
+flags preserved. Ready-state run `32531845794` checked out synthetic merge
+candidate `105c9ac`, executed the pinned Action successfully against base
+`cf0235f` and head `1d7f17a`, and passed complete selected acceptance plus
+`PR gate`. Pre-merge CodeQL run `32531757710` passed all three languages. Pull
+request 11 squash-merged as `0d8af12`; its accepted head, synthetic merge, and
+squash merge share tree `3e84dde66be774e7b293471c699978f8ed7ba8bc`.
+Post-merge CodeQL run `32553943756` passed all three languages on `main`.
 
 ### GH-007: Sphinx publication through GitHub Pages
 
