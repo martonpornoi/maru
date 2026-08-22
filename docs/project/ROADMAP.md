@@ -173,17 +173,19 @@ placeholder.
 ADR 0070 supersedes ADR 0068's ambiguous **Pre-production** wording; the
 active-development description's separately authorized mutation and exact
 readback now complete GH-004.
-GH-003, GH-004, and GH-005 are accepted and merged. GH-005's final ready-state
-run `32504876594` and managed CodeQL run `32504873965` passed. The explicitly
-authorized first candidate rehearsal, Pages publication, multi-maintainer
-governance, and remaining demand-triggered-control review stay open under
-GH-002 and GH-007 through GH-009. ADR 0071 accepts GH-006's bounded repository
-candidate: a ready-only, read-only dependency-diff step reuses the existing
-classification runner and stable `PR gate`. The separately authorized live
-twelfth Action pattern is reconciled exactly; ready-state hosted proof remains
-before GH-006 is complete. That run executes the workflow on the synthetic
-merge candidate; GitHub dependency review itself compares the pull request's
-base and head.
+GH-003, GH-004, GH-005, and GH-006 are accepted and merged. GH-005's final
+ready-state run `32504876594` and managed CodeQL run `32504873965` passed. The
+explicitly authorized first candidate rehearsal, Pages publication, multi-
+maintainer governance, and remaining demand-triggered-control review stay open
+under GH-002 and GH-007 through GH-009. ADR 0071 accepts GH-006's bounded,
+ready-only, read-only dependency-diff step in the existing classification
+runner. The live twelfth Action pattern was reconciled exactly. Ready-state run
+`32531845794` then passed the pinned dependency review, complete selected
+acceptance, and `PR gate`; pull request 11 squash-merged as `0d8af12`, and post-
+merge CodeQL run `32553943756` passed all three languages. The workflow checked
+out the synthetic merge candidate while dependency review compared the pull
+request's base and head; neither result expands the control to licenses or
+container bases.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative

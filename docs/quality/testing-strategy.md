@@ -328,9 +328,9 @@ The next expansion should add:
 - nightly Python 3.12/3.13/3.14 unit and contract compatibility, migration-
   from-zero, concurrency repetition, randomized-order seed capture, and the
   broader responsive/visual-state matrix;
-- monitor and tune the enabled GitHub-managed CodeQL default setup, complete
-  ready-state hosted proof for the live-reconciled candidate dependency review,
-  and verify secret-scanning/push-protection alert handling;
+- monitor and tune the enabled GitHub-managed CodeQL default setup and merged
+  dependency-review control, and verify secret-scanning/push-protection alert
+  handling;
   and
 - synthetic previous-version restoration, production-shaped recovery rehearsal,
   and container runtime smoke in the release environment. The existing release

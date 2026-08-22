@@ -23,14 +23,20 @@ were re-enabled only in exact-allowlist hosted mode.
   checkout and is not subject to fork-code approval.
 - Actions run in `selected` mode, require SHA pinning, and allow only the exact
   revisions in `.github/actions-allowlist.json`.
-- ADR 0071's GH-006 repository candidate pins dependency-review Action v5.0.0
+- ADR 0071's merged GH-006 control pins dependency-review Action v5.0.0
   at `a1d282b36b6f3519aa1f3fc636f609c47dddb294`. It runs inside the existing
   ready-state classification job with `contents: read`, no comment, no
   Scorecard output, no license enforcement, and no new status, runner, or
   database. The separately authorized live selected-Actions update was read
   back at exactly the same 12 immutable references as the checked-in policy,
   with selected-only trust, SHA pinning, and both broad trust flags preserved.
-  Hosted Action proof remains pending.
+  Ready-state run `32531845794` executed the pinned Action successfully, passed
+  complete selected acceptance and `PR gate`, and pull request 11 squash-merged
+  as `0d8af12`. The Action reported no introduced vulnerable packages at the
+  configured moderate-or-higher threshold for that base-to-head comparison; it
+  did not approve licenses, inspect container bases, or prove unchanged
+  dependencies vulnerability-free. Post-merge CodeQL run `32553943756` passed
+  all three configured languages on `main`.
 - Secret scanning, push protection, Dependabot security updates, and private
   vulnerability reporting are enabled. GitHub-managed default CodeQL is
   configured for Actions, Python, and JavaScript/TypeScript. The `main` ruleset
@@ -153,11 +159,6 @@ fresh evidence. Treat these as immediate launch tasks, not optional later work:
   or independent `gold` approval.
 - Rehearse a first-time cross-repository fork contribution and its maintainer
   workflow-approval boundary.
-- With the exact dependency-review v5.0.0 live policy pattern reconciled, prove
-  the Action in an authoritative ready-state run. The workflow executes on the
-  synthetic pull-request merge candidate; dependency review compares the pull
-  request's base and head. Preserve both broad trust flags as `false` and do not
-  infer Docker-base or license coverage from the dependency-graph result.
 - Rehearse the first explicitly authorized `rc.1` through ADR 0065's merged
   draft-first and post-publication verification boundary. Exercise the
   `candidate` and `gold` environment policies, immutable release and asset
