@@ -11,6 +11,10 @@ personal data. The primary future release artifact is an immutable Django
 application image in GitHub Container Registry with source provenance, SBOM,
 documentation, OpenAPI, dependency locks, and checksums.
 
+Browse the [public contributor documentation](https://martonpornoi.github.io/maru/)
+for maintained product, architecture, development, operations, and security
+guides plus the statically analysed Python API reference.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) to work on Maru,
 [SUPPORT.md](SUPPORT.md) for help channels,
 [SECURITY.md](SECURITY.md) for private vulnerability reporting,
@@ -143,6 +147,7 @@ rehearsal remains a release gate.
 
 ## Documentation map
 
+- [Public generated contributor documentation](https://martonpornoi.github.io/maru/)
 - [Generated contributor documentation source](docs/index.md)
 - [Product vision](docs/product/vision.md)
 - [Product requirements](docs/product/requirements.md)

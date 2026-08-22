@@ -173,11 +173,11 @@ placeholder.
 ADR 0070 supersedes ADR 0068's ambiguous **Pre-production** wording; the
 active-development description's separately authorized mutation and exact
 readback now complete GH-004.
-GH-003, GH-004, GH-005, and GH-006 are accepted and merged. GH-005's final
+GH-003 through GH-007 are accepted and merged. GH-005's final
 ready-state run `32504876594` and managed CodeQL run `32504873965` passed. The
-explicitly authorized first candidate rehearsal, Pages publication, multi-
-maintainer governance, and remaining demand-triggered-control review stay open
-under GH-002 and GH-007 through GH-009. ADR 0071 accepts GH-006's bounded,
+explicitly authorized first candidate rehearsal, multi-maintainer governance,
+and remaining demand-triggered-control review stay open under GH-002, GH-008,
+and GH-009. ADR 0071 accepts GH-006's bounded,
 ready-only, read-only dependency-diff step in the existing classification
 runner. The live twelfth Action pattern was reconciled exactly. Ready-state run
 `32531845794` then passed the pinned dependency review, complete selected
@@ -193,11 +193,12 @@ deploy current-main checks, isolated read-only build and Pages-write/OIDC
 deployment jobs, fresh generated-only output, pyproject-derived visible
 versioning, and an exact 16-reference direct/nested Action policy. Its diagram
 runtime pins Mermaid and D3 to exact-version jsDelivr paths and disables unused
-ELK. Pages, `github-pages`, Wiki, and the repository homepage remain unchanged
-at this checkpoint. GH-007 closes only after separately authorized live
-reconciliation, hosted merge acceptance, a verified first HTTPS deployment
-from the exact merge SHA including browser diagram proof, the homepage
-readback, and an append-only closure checkpoint.
+ELK. Pull request 13 passed complete ready-state acceptance and squash-merged as
+`b50e665`; exact-main Pages run `32565940418` then built and deployed the public
+site. Exact-SHA API, HTTP, content, asset, canonical-link, and real-browser
+diagram checks passed. The separately authorized homepage now matches the
+returned Pages URL, Wiki remains off, and the append-only closure checkpoint
+records the stable live evidence.
 
 `PRODUCTION_CONSOLIDATION.md`
 is the authoritative

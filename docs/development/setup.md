@@ -85,12 +85,14 @@ The Sphinx version, release, browser title, and public active-development notice
 come from `[project].version` in `pyproject.toml`. Do not update a second version
 constant in `docs/conf.py`. ADR 0072's separate Pages workflow publishes only
 after protected-main acceptance, using a fresh temporary output directory and
-the Pages-provided canonical base URL. Until its first deployment and HTTPS
-readback are complete, use the local HTML or pull-request artifact rather than
-assuming the public URL is live.
+the Pages-provided canonical base URL. The first protected-main deployment and
+HTTPS/browser reconciliation are complete; browse the
+[public contributor documentation](https://martonpornoi.github.io/maru/).
+Local HTML and pull-request artifacts remain the preview surfaces for unmerged
+changes.
 Maintainers use the
 [GitHub Pages publication runbook](../operations/github-pages-publication.md)
-for one-time activation and deployment reconciliation.
+for deployment verification and ongoing reconciliation.
 
 ## Exact-commit acceptance
 
