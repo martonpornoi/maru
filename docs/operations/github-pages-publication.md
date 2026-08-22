@@ -1,6 +1,6 @@
 # GitHub Pages contributor-site publication
 
-Status: Repository candidate; first deployment pending
+Status: Active; first deployment and homepage reconciled
 Last updated: 2026-08-22
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 Decision: ADR 0072
@@ -127,8 +127,10 @@ to ten minutes. Require:
 
 - the deployment and its latest status to reference the exact merge SHA,
   environment `github-pages`, and the action-returned environment URL;
-- the Pages API to report `build_type: workflow`, `status: built`,
-  `public: true`, the same HTTPS URL, and no custom domain;
+- the Pages API to report `build_type: workflow`, `public: true`, HTTPS
+  enforcement, the same HTTPS URL, and no custom domain;
+- the dedicated Pages deployment-status endpoint for the exact merge SHA to
+  report `status: succeed`;
 - HTTP 200 for the site root, one nested maintained guide,
   `autoapi/maru/index.html`, and representative CSS and search assets;
 - the root HTML to contain the Maru contributor title, current
@@ -149,14 +151,30 @@ The accepted rationale and license boundary are recorded in
 Do not interpret an Action success alone as proof that public bytes are
 available or correctly rooted.
 
+For workflow-based publication, do not require the site-level `status` field or
+the legacy Pages-build endpoints as acceptance authority. During Maru's first
+verified workflow deployment, `GET /repos/{owner}/{repo}/pages` returned
+`status: null` and `GET /repos/{owner}/{repo}/pages/builds/latest` returned 404
+after public bytes were available. The exact-SHA endpoint below returned
+`status: succeed` and is the workflow-specific API proof:
+
+```powershell
+gh api repos/martonpornoi/maru/pages/deployments/<merge-sha>
+```
+
+Retain the Actions run, environment deployment record, direct HTTP checks, and
+browser proof alongside that response. A null site-level field does not excuse
+any missing exact-SHA or public-content evidence.
+
 ## Homepage and closure
 
-Only after the first deployment passes every API and HTTP check, update the
-repository homepage to the exact returned Pages URL. Re-read the repository,
-Pages site, environment, deployment, selected-Actions policy, and Wiki state.
-Record the run ID, deployment ID, exact SHA, URL, relevant stable environment
-and policy fields, and HTTP checks in an append-only checkpoint. Add the public
-documentation link to README in that closure change.
+Only after the first deployment passes all API, HTTP/content, and fresh
+browser/network checks above, update the repository homepage to the exact
+returned Pages URL. Re-read the repository, Pages site, environment,
+deployment, selected-Actions policy, and Wiki state. Record the run ID,
+deployment ID, exact SHA, URL, relevant stable environment and policy fields,
+HTTP/content checks, and browser proof in an append-only checkpoint. Add the
+public documentation link to README in that closure change.
 
 The homepage is metadata, not an authority source. If Pages is later disabled
 or moved, clear or update it in the same separately authorized reconciliation.

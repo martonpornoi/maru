@@ -80,34 +80,33 @@ hosted service, production approval, or permission to use real personal data.
 
 The live topic set is accepted without change: `django`, `event-management`,
 `modular-monolith`, `openapi`, `postgresql`, `python`, `react`, and
-`typescript`. The homepage stays empty until GH-007 publishes the first
-verified Sphinx site. Issues and Discussions remain enabled; Projects, Wiki,
-Pages, and Downloads remain disabled. Sphinx documentation will use Pages, not
-an unversioned Wiki mirror.
+`typescript`. The homepage is the exact verified public documentation URL,
+`https://martonpornoi.github.io/maru/`. Issues, Discussions, and workflow-source
+Pages are enabled; Projects, Wiki, and Downloads remain disabled. Sphinx
+documentation uses Pages, not an unversioned Wiki mirror.
 
-ADR 0072 supplies the GH-007 repository candidate without claiming that live
-state has changed. It adds a protected-main-only, warning-fatal Sphinx/AutoAPI
-workflow with separate read-only build and Pages-write/OIDC deployment jobs,
-fresh temporary output, a 1 GB ceiling, and project-version metadata derived
-from `pyproject.toml`. The checked-in selected policy contains 16 immutable
-references: 15 direct workflow actions plus the exact `upload-artifact`
-revision invoked by the official Pages uploader composite.
+ADR 0072's GH-007 implementation is accepted on `main`. It provides a
+protected-main-only, warning-fatal Sphinx/AutoAPI workflow with separate read-
+only build and Pages-write/OIDC deployment jobs, fresh temporary output, a 1 GB
+ceiling, and project-version metadata derived from `pyproject.toml`. The live
+selected policy contains 16 immutable references: 15 direct workflow actions
+plus the exact `upload-artifact` revision invoked by the official Pages uploader
+composite.
 
 The generated site's browser runtime is also bounded: Mermaid `11.16.1` and D3
 `7.9.0` load only from their exact-version jsDelivr package prefixes, and
-unused ELK support is disabled. The first live verification must prove a
+unused ELK support is disabled. First-deployment verification proved a
 maintained diagram renders without console errors or an unexpected script
-request; GitHub Pages publication does not establish an application CSP.
+request; future runtime or hosting changes repeat that proof. GitHub Pages
+publication does not establish an application CSP.
 
-Before merging that candidate, an authorized maintainer must reconcile the live
-selected policy, create the Pages site with the Actions publishing source, and
-create `github-pages` with exact-`main` deployment policy and administrator
-bypass disabled. After merge, verify the workflow and deployment against the
-exact merge SHA, read Pages back as built over HTTPS with no custom domain, and
-exercise the root, a nested guide, generated AutoAPI, static assets, canonical
-URL, and visible version. Set the repository homepage only after those checks,
-then record the exact run, deployment, URL, and readbacks in a closure
-checkpoint. Keep Wiki disabled throughout.
+The separately authorized live policy, workflow-source Pages site, and
+`github-pages` environment reconciliation preceded protected merge. After
+merge, exact-SHA deployment status, HTTPS, root, nested guide, generated
+AutoAPI, static assets, canonical URL, visible version, and real-browser checks
+passed before the separately authorized homepage update. The closure checkpoint
+records the exact run, deployment, URL, and readbacks. Wiki remained disabled
+throughout.
 
 The exact commands, desired-state files, first-deployment checks, and failure
 handling are maintained in the
@@ -179,7 +178,8 @@ after a material visibility, ownership, imported-history, or incident boundary.
 ## Outstanding public-readiness work
 
 Visibility changed before every item in the original pre-public checklist had
-fresh evidence. Treat these as immediate launch tasks, not optional later work:
+fresh evidence. GH-007 is now complete; treat the remaining items as immediate
+launch tasks, not optional later work:
 
 - Exercise the protected-tag refusal and confirm push protection blocks a
   synthetic non-secret test pattern without publishing credentials. Add a
@@ -192,10 +192,6 @@ fresh evidence. Treat these as immediate launch tasks, not optional later work:
   `candidate` and `gold` environment policies, immutable release and asset
   attestations, GHCR visibility, image provenance, deployment targets, and
   package cleanup.
-- Complete GH-007's separately authorized 16-reference selected-Actions,
-  workflow-source Pages, and exact-main `github-pages` reconciliation; merge
-  only after hosted acceptance, verify the first deployment over API and HTTPS,
-  and set the homepage only to the verified returned URL.
 - The live description, topics, feature states, default social preview, absent
   funding, issue-label inventory, support expectations, and first-good-issue
   boundary are reviewed and accepted by GH-004. Future external metadata

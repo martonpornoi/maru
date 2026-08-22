@@ -144,11 +144,11 @@ starts no PostgreSQL service and does not repeat application acceptance.
 
 The build job is read-only. Only its generated HTML root crosses into the
 deployment job, whose authority is limited to `pages: write`, `id-token: write`,
-and the `github-pages` environment. That environment must accept only exact
-`main`, disallow administrator bypass, and contain no reviewer, secret, or
-variable while Maru has one maintainer. Configure-time enablement remains off;
-creating or changing the Pages site is a separately authorized administrator
-operation.
+and the `github-pages` environment. The live environment accepts only exact
+`main`, disallows administrator bypass, and contains no reviewer, secret,
+variable, or wait timer while Maru has one maintainer. Configure-time
+enablement remains off; creating or changing the Pages site is a separately
+authorized administrator operation.
 
 The exact selected-Action policy includes all direct workflow references plus
 explicitly audited immutable actions invoked inside a composite action. The
@@ -158,18 +158,17 @@ rejects an audited nested reference whose exact composite parent is not used.
 Do not resolve this dependency by enabling either broad GitHub-owned or
 verified-creator trust flag.
 
-Before the implementation merges, reconcile all 16 selected references, enable
-Pages with `build_type: workflow`, create and protect `github-pages`, and read
-everything back. After merge, verify the exact run SHA, deployment, Pages API,
-HTTPS root and nested pages, generated AutoAPI/assets, canonical base URL, and
-project version. Also prove a Mermaid page renders with no console error and no
-script request outside the exact-version Mermaid `11.16.1` and D3 `7.9.0`
-jsDelivr prefixes; unused ELK support remains disabled. Only then may the
-repository homepage point at the returned Pages URL. Keep Wiki disabled; the
-public site is contributor documentation, not an application deployment,
-release, or production approval. Follow the
+GH-007 reconciled all 16 selected references, enabled workflow-source Pages,
+protected `github-pages`, and verified the first exact-main deployment before
+setting the homepage. Future Pages, runtime, environment, or homepage changes
+must repeat the applicable exact-SHA API, HTTPS, content, asset, canonical,
+version, and fresh-browser proof. Mermaid requests must remain inside the
+exact-version Mermaid `11.16.1` and D3 `7.9.0` jsDelivr prefixes unless a new
+decision changes the runtime; unused ELK support remains disabled. Keep Wiki
+disabled. The public site is contributor documentation, not an application
+deployment, release, or production approval. Follow the
 [Pages publication runbook](../operations/github-pages-publication.md) for the
-exact activation, verification, and recovery procedure.
+exact verification, reconciliation, and recovery procedure.
 
 ## Dependency update policy
 
@@ -253,15 +252,17 @@ system; GitHub conversation does not silently supersede either.
 
 The authenticated GH-004 snapshot on 2026-08-21 reports 100 percent Community
 Profile health, the intended eight repository topics, all labels referenced by
-the Issue Forms and automation, and the expected feature state: Issues and
-Discussions enabled; Projects, Wiki, Pages, and Downloads disabled. The
-homepage remains empty until the first verified GH-007 Pages deployment. Wiki
-must not become a manually maintained copy of the Sphinx source.
+the Issue Forms and automation, and the feature state at that checkpoint:
+Issues and Discussions enabled; Projects, Wiki, Pages, and Downloads disabled.
+GH-007 subsequently enabled verified workflow-source Pages at
+`https://martonpornoi.github.io/maru/` and set that exact URL as the repository
+homepage. Projects, Wiki, and Downloads remain disabled. Wiki must not become a
+manually maintained copy of the Sphinx source.
 
-The GH-007 repository candidate is intentionally ahead of that live snapshot:
-it contains the reviewed Pages workflow, exact direct-and-nested Action policy,
-and deployment contracts, while Pages, `github-pages`, and the homepage remain
-unchanged until their separate pre-read and reconciliation.
+GH-007's reviewed Pages workflow, exact direct-and-nested Action policy, and
+deployment contracts are accepted on `main`. The exact-main deployment, public
+HTTP/content/assets, real-browser diagram, homepage, environment, Actions
+policy, and Wiki readbacks are recorded in the append-only closure checkpoint.
 
 The accepted live description is **Security-focused Django and PostgreSQL
 platform for operating multi-convention events, under active development.** ADR

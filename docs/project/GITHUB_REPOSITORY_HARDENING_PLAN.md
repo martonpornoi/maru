@@ -1,8 +1,7 @@
 # GitHub repository hardening plan
 
-Status: GH-000, GH-001, and GH-003 through GH-006 complete; GH-002 repository
-verification implemented with its first candidate rehearsal pending; GH-007
-repository candidate implemented with live/deployment closure pending; GH-008
+Status: GH-000, GH-001, and GH-003 through GH-007 complete; GH-002 repository
+verification implemented with its first candidate rehearsal pending; GH-008
 and GH-009 tracked
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
@@ -214,10 +213,12 @@ keep the active-development and production-readiness boundary explicit.
 
 The 2026-08-21 authenticated audit reports 100 percent Community Profile
 health, an accurate eight-topic set, every label consumed by Issue Forms and
-automation, and the intended Issues/Discussions-on and
-Projects/Wiki/Pages/Downloads-off feature shape. Homepage remains empty for
-GH-007. Funding and a custom social preview are deliberately deferred instead
-of receiving placeholders. ADR 0070 accepts the live description **Security-
+automation, and the then-intended Issues/Discussions-on and
+Projects/Wiki/Pages/Downloads-off feature shape. GH-007 subsequently enabled
+verified Pages publication and set its exact URL as the homepage; Wiki,
+Projects, and Downloads remain off. Funding and a custom social preview are
+deliberately deferred instead of receiving placeholders. ADR 0070 accepts the
+live description **Security-
 focused Django and PostgreSQL platform for operating multi-convention events,
 under active development.** Its separately authorized description-only change
 and exact post-change readback are complete.
@@ -336,16 +337,23 @@ allowlist all Pages Actions, constrain deployment to `github-pages`, derive the
 displayed version from `pyproject.toml`, and set the repository homepage only
 after the first verified deployment. Do not create a Wiki mirror.
 
-State: repository candidate implemented under ADR 0072; live reconciliation,
-hosted merge acceptance, first protected-main deployment, HTTPS/API proof,
-homepage update, and closure checkpoint remain pending. The candidate separates
-read-only build authority from Pages write/OIDC deployment authority, uses fresh
-temporary output, performs current-`main` checks immediately before build and
-deployment, and models the official uploader's immutable nested Action. The
-desired selected policy has 16 references: 15 direct workflow actions plus that
-one audited nested action. Its diagram boundary retains exact-version Mermaid
-and D3 jsDelivr paths, disables unused ELK, and requires real-browser proof. No
-live Pages, environment, Actions-policy, Wiki, or homepage setting has changed.
+State: complete. Pull request 13's ready-state run was associated with head
+`a0b3fd6` while its checkout-bearing jobs tested synthetic merge `e988f050`;
+both and eventual squash merge `b50e665` share exact tree `8fa25b99`.
+Main-triggered Pages run `32565940418` built, verified, uploaded, and deployed
+the fresh site from that exact merge SHA. The dedicated Pages deployment
+endpoint reports `succeed`;
+root, nested guide, AutoAPI, CSS, and search assets return HTTP 200; and a fresh
+browser run rendered the maintained Mermaid diagram with zero console errors,
+no unexpected external script path, and no ELK request.
+
+The live selected policy contains the exact 16 reviewed references with both
+broad trust flags false and mandatory SHA pinning. Environment `github-pages`
+retains no administrator bypass and accepts only branch `main`, with no
+reviewer, secret, variable, or wait timer. The repository homepage is the exact
+public HTTPS Pages URL, and Wiki remains disabled. The implementation continues
+to separate read-only build authority from Pages write/OIDC deployment
+authority and models the official uploader's immutable nested Action.
 
 ### GH-008: Multi-maintainer governance
 
@@ -389,14 +397,14 @@ a focused decision before adoption.
 | Push protection | Enabled | Keep enabled; use only synthetic non-secret fixtures for exercises | Continuous/GH-003 |
 | Secret-validity checks | Unavailable for the current user-owned repository | Reassess eligibility and provider contact after an ownership or plan change | GH-003 |
 | Generic-pattern scanning | Unavailable for the current user-owned repository | Reassess eligibility and synthetic-fixture noise before enablement | GH-003 |
-| Actions selected allowlist | Live: exact 12 immutable references; GH-007 candidate: 16 exact direct/audited-nested references | Reconcile all four GH-007 additions before merge; keep both broad trust flags false | Every workflow milestone |
+| Actions selected allowlist | Live: exact 16 immutable direct/audited-nested references | Keep selected-only trust, SHA pinning, and both broad trust flags false | Every workflow milestone |
 | Repository description | 2026-08-21: security-focused Django/PostgreSQL multi-convention platform, under active development | Accepted and reconciled under ADR 0070; future changes require separate authorization and readback | GH-004 |
 | Repository topics | 2026-08-21: exact accepted eight-topic set | Retain; change only when product scope changes materially | GH-004 |
 | Community and issue metadata | 2026-08-21: 100 percent profile health; required Issue Form and automation labels exist | Keep templates, labels, and public policies coherent; do not manufacture newcomer issues | GH-004 |
 | Social preview | Default generated preview | Defer until an approved purpose-built asset exists | GH-004 |
-| GitHub Pages source | Disabled; workflow-source candidate implemented | Enable only after exact pre-read and selected-Actions/environment reconciliation | GH-007 |
-| `github-pages` environment | Absent | Create with exact `main`, no admin bypass, reviewer, secret, or variable before first deployment | GH-007 |
-| Repository homepage | Empty | Set only after verified Pages deployment | GH-007 |
+| GitHub Pages source | Workflow-based public HTTPS site at `https://martonpornoi.github.io/maru/` | Publish only fresh protected-`main` workflow artifacts | GH-007 |
+| `github-pages` environment | Exact branch `main`; no admin bypass, reviewer, secret, variable, or wait timer | Reconcile after ownership, default-branch, or deployment-policy drift | GH-007 |
+| Repository homepage | Exact verified Pages URL | Update or clear only with a separately authorized Pages reconciliation | GH-007 |
 
 ## Completion rule for later milestones
 

@@ -46,10 +46,11 @@ merged as `0d8af12`, and post-merge CodeQL run `32553943756` passed on `main`.
 ADR 0072's GH-007 repository candidate is now paired with its separately
 authorized live prerequisites: the exact 16-reference selected-Actions policy,
 workflow-source public HTTPS Pages site, and no-bypass `github-pages`
-environment restricted to `main`. Draft pull request 13 proved the intended
-cheap boundary, and managed CodeQL passed all three languages; ready-state
-hosted acceptance, merge, first deployment verification, and homepage closure
-remain pending.
+environment restricted to `main`. Pull request 13 proved the intended draft
+boundary, passed complete ready-state acceptance in run `32562549166`, and
+squash-merged as `b50e665`. Exact-main Pages run `32565940418`, public HTTP and
+browser proof, and the separately authorized exact homepage readback complete
+GH-007 without enabling Wiki or weakening any repository control.
 The complete authenticated reflow, keyboard, screen-reader, owner, deployment,
 stopped-writer/cutover, restore/PITR, and production-governance gates remain
 open.
@@ -251,8 +252,8 @@ cross-domain-save design.
   `https://martonpornoi.github.io/maru/`, the exact 16-reference selected policy
   with both broad flags false and mandatory SHA pinning, and one no-bypass
   `github-pages` environment restricted to branch `main` with no reviewer,
-  secret, or variable. Wiki remains disabled and the homepage remains empty
-  until first-deployment closure.
+  secret, or variable. Wiki remained disabled and the homepage remained empty
+  until the verified first-deployment closure.
 - GH-007 local acceptance passes all 73 focused workflow and classifier
   contracts, all 1,963 database-free unit tests, Ruff lint and format,
   PyDocLint, semantic validation over 366 Python source files, locked-
@@ -266,6 +267,35 @@ cross-domain-save design.
   classification and managed CodeQL for Actions, JavaScript/TypeScript, and
   Python pass; every expensive selected-acceptance job skips; and the required
   `PR gate` fails explicitly while the pull request remains draft.
+- Ready-state run `32562549166` was associated with exact head `a0b3fd6`, while
+  checkout-bearing jobs tested GitHub synthetic merge `e988f050`. Head,
+  synthetic merge, and eventual squash merge share exact tree `8fa25b99`.
+  Repository safety, locked inputs, static analysis, warning-fatal
+  documentation, Django/contracts/frontend, dependency security, unit
+  coverage, all eight PostgreSQL shards, combined coverage, **Full CI gate**,
+  and `PR gate` passed. Pull request 13 then squash-merged the tested tree as
+  `b50e665`.
+- Main-triggered Pages run `32565940418` built and verified the fresh generated
+  site, uploaded only its HTML root, and deployed from exact merge SHA
+  `b50e665`. GitHub environment deployment `6035581239` and the dedicated
+  exact-SHA Pages endpoint report success at
+  `https://martonpornoi.github.io/maru/`.
+- The live root, resilience guide, AutoAPI index, representative CSS, and
+  search index return HTTP 200. The root carries version `0.1.0a0`, the
+  active-development notice, and the `/maru/` canonical boundary. A fresh real-
+  browser run converts the maintained Mermaid source to one SVG with zero
+  console errors; all 28 external script resources stay under the exact pinned
+  Mermaid or D3 paths, and no ELK resource is requested.
+- The separately authorized homepage now equals the returned HTTPS Pages URL.
+  Post-mutation readback preserves public/unarchived `main`, Wiki disabled,
+  workflow-source public HTTPS Pages with no custom domain, the successful
+  exact-SHA deployment and returned URL, selected-only Actions with mandatory
+  SHA pinning, both broad trust flags false, the exact 16-reference list, and
+  the sole no-bypass `main` deployment policy.
+- The GH-007 closure record passes documentation validation over 297 Markdown
+  files and 203 requirement identifiers, PyDocLint and semantic validation over
+  366 Python source files, Ruff lint and format checks, and a fresh warning-
+  fatal Sphinx/AutoAPI build using the public Pages base URL.
 - The sanitized GH-007 live-reconciliation record passes documentation
   validation over 296 Markdown files and 203 requirement identifiers, a fresh
   warning-fatal Pages-base Sphinx/AutoAPI build, and whitespace validation.
@@ -275,9 +305,9 @@ cross-domain-save design.
   rejected because the current upstream advisory marks it affected and
   `11.16.1` as the first patched v11 release. The bounded CDN and inline-
   bootstrap risk is accepted only for public unauthenticated contributor
-  content. First-deployment closure must prove a maintained diagram becomes SVG
-  without a console error or unexpected script request; a custom domain, strict
-  CSP, offline guarantee, authenticated content, or larger diagram corpus
+  content. First-deployment closure proves a maintained diagram becomes SVG
+  without a console error or unexpected script request. A custom domain, strict
+  CSP, offline guarantee, authenticated content, or larger diagram corpus still
   triggers a vendoring or pre-rendering review.
 - The active `main` ruleset explicitly requires CodeQL error-level alerts and
   medium-or-higher security alerts to clear. The strict `PR gate`, pull-request-
@@ -350,11 +380,13 @@ cross-domain-save design.
   Actual second-maintainer and independent-review controls remain in GH-008.
 - The authenticated 2026-08-21 GH-004 snapshot reports 100 percent Community
   Profile health, the accepted eight topics, every Issue Form and automation
-  label, and the intended Issues/Discussions-on and
-  Projects/Wiki/Pages/Downloads-off feature state. Homepage stays empty for
-  GH-007; social preview and funding remain deliberately unconfigured. The live
-  description now ends with **under active development**; its description-only
-  mutation was separately authorized and read back exactly under ADR 0070.
+  label, and the then-intended Issues/Discussions-on and
+  Projects/Wiki/Pages/Downloads-off feature state. GH-007 subsequently enabled
+  verified Pages publication and set its exact URL as the homepage; Wiki,
+  Projects, and Downloads remain off. Social preview and funding remain
+  deliberately unconfigured. The live description now ends with **under active
+  development**; its description-only mutation was separately authorized and
+  read back exactly under ADR 0070.
 - PR 9's first ready-state full acceptance run `32501661144` then exercised the
   intended fail-closed dependency boundary. Its sole originating failure was
   `pip-audit` rejecting locked development-tool dependency `pip 26.1.2` under
@@ -758,10 +790,9 @@ approval.
   merge, and post-merge CodeQL evidence are complete. ADR 0072 adds a least-
   privilege protected-main documentation publication boundary and explicitly
   models the official Pages uploader's immutable nested Action. Its repository
-  candidate and separately authorized live prerequisites are accepted;
-  ready-state hosted acceptance, merge, and post-deployment closure remain
-  pending. These decisions remove no test, security, documentation, contract,
-  migration, or authority gate.
+  candidate, live prerequisites, hosted acceptance, protected merge, verified
+  public deployment, and homepage closure are complete. These decisions remove
+  no test, security, documentation, contract, migration, or authority gate.
 - ADR 0054 accepts the bounded architecture
   and migrated integrity boundary; it does not declare the partial
   LOG-001/002/003/004/006/007 portfolio complete or approve production rollout.
@@ -849,14 +880,13 @@ approval.
   A future strict Content Security Policy must nonce, hash, or externalize the
   documentation templates' inline initialization before forbidding inline
   script globally. The views are not a public developer portal.
-- The generated Sphinx site remains an artifact rather than a verified public
-  deployment until GH-007 merges and its first protected-main run succeeds; the
-  live selected-Actions, Pages-source, and environment prerequisites now match
-  the accepted candidate. Its Mermaid
-  diagrams use exact-version Mermaid and D3 jsDelivr runtime paths with unused
-  ELK support disabled. Publication must verify a maintained diagram, its
-  console, and its exact script requests in the target environment. GitHub
-  Pages does not establish an application CSP, release, or production approval.
+- The generated Sphinx site is a verified public contributor portal at
+  `https://martonpornoi.github.io/maru/`, not a Django deployment or supported
+  hosted service. Its Mermaid diagrams use exact-version Mermaid and D3
+  jsDelivr runtime paths with unused ELK support disabled. Future runtime,
+  custom-domain, CSP, or extension changes must repeat the maintained-diagram,
+  console, and exact-request checks. GitHub Pages does not establish an
+  application CSP, release, offline guarantee, or production approval.
 - Documentation enforcement can prove structural completeness and reject known
   placeholder patterns, but it cannot prove that every description captures
   the right domain nuance. Review must still challenge misleading omission,
@@ -927,10 +957,9 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Mark GH-007 pull request 13 ready, obtain complete hosted merge acceptance,
-   and merge the accepted exact tree. Then verify the first protected-main HTTPS
-   deployment before setting the homepage and recording the closure checkpoint.
-   Keep Wiki off.
+1. Decide whether to authorize GH-002's first `rc.1` candidate rehearsal. It
+   requires a dedicated release pull request, exact-main release inputs, and
+   the complete immutable post-publication evidence procedure.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
@@ -943,7 +972,7 @@ approval.
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `PRODUCTION_CONSOLIDATION.md`, the
-relevant requirement IDs, ADRs 0047 through 0071, and the owning module/runbook
+relevant requirement IDs, ADRs 0047 through 0072, and the owning module/runbook
 docs. Preserve every concurrent change in the dirty working tree. Serialize all
 PostgreSQL tests that share `test_maru_test`; never infer authority from a
 selected edition or route; authorize before parsing untrusted input; retain
