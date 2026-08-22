@@ -16,10 +16,9 @@ the inventory panel rather than as a stable administration destination, and
 the form did not let an administrator complete the organization information
 normally available at the time of setup.
 
-An organizer imprint such as the
-[Awoostria imprint](https://awoostria.at/policies/imprint) combines a
-recognizable name, registered legal name, address, responsible representative,
-contact address, and registration identifier. Jurisdictions vary, so Maru
+Public organizer imprints commonly combine a recognizable name, registered
+legal name, address, responsible representative, contact address, and
+registration identifier. Jurisdictions vary, so Maru
 needs common structured properties plus a bounded additional-imprint field
 instead of assuming one country's exact legal vocabulary.
 

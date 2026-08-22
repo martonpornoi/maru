@@ -120,7 +120,7 @@ def test_template_application_accepts_only_version_zero_and_exact_confirmation()
 ):
     form = StructureTemplateApplicationForm(
         {
-            "template": "awoostria-reference@1",
+            "template": "marucon-reference@1",
             "expected_version": "1",
             "confirmation_name": "Synthetic Edition ",
             "reason": "Copy the reference.",

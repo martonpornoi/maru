@@ -8,7 +8,7 @@
 ## Context
 
 Maru serves several organizers and annual editions through one account and one
-administrative surface. Showing records from Danube 2026, Danube 2027, and an
+administrative surface. Showing records from MaruCon 2026, MaruCon 2027, and an
 unrelated organizer together makes routine work error-prone even when every row
 is technically authorized. A convention operator normally works on one edition
 at a time.

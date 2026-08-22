@@ -28,6 +28,10 @@ Files in this directory are append-only historical snapshots for:
 - incidents that materially change design or operations.
 
 Do not edit a milestone snapshot to reflect later reality. Add a new checkpoint.
+ADR 0073 records one bounded exception: unnecessary external convention names
+were sanitized from currently rendered prose while the original public evidence
+remains in Git history. That ethical terminology correction does not authorize
+ordinary checkpoint rewriting.
 
 ## Naming
 

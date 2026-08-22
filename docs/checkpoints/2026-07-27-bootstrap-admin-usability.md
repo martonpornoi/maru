@@ -15,7 +15,7 @@ Search, filters, stable ordering, related-record counts, and grouped forms make
 the two-convention demonstration dataset practical to explore.
 
 The original participation label such as
-`Danube Furry Convention 2025:<account UUID>` is now a person and edition
+`MaruCon 2025:<account UUID>` is now a person and edition
 label. Its list also summarizes capacity labels such as attendee, volunteer,
 staff, host, or board membership.
 

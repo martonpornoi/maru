@@ -162,7 +162,7 @@ The first branch is composed as:
 
 ```text
 Executive Board — governance state from OrganizationRepresentation
-  Helper Board — top-level Department in this edition
+  Convention Coordination — top-level Department in this edition
     operational Departments
       optional nested Departments
 ```
@@ -173,7 +173,7 @@ Provisioning, Active, or Suspended state. It has no Department identifier and
 is never persisted or mirrored as a Department, Position, generic group, or
 PositionAssignment. Page 8 remains the owning representation workflow.
 
-Helper Board is a real Department with no persisted parent. Page 9 visually
+Convention Coordination is a real Department with no persisted parent. Page 9 visually
 places it beneath the governance node. Every subsequent parent relationship is
 an exact same-organization, same-edition Department edge. Moving a Department
 changes presentation structure only; it does not move, widen, replace, or
@@ -190,9 +190,9 @@ identifiers used for links and commands are not rendered as human content.
 
 ## Empty state and built-in reference
 
-The overview offers **Use the Awoostria reference** to an authorized manager
+The overview offers **Use the fictional MaruCon starter** to an authorized manager
 when an edition has no workforce structure. The immutable built-in selection is
-`awoostria-reference@1`; a later template is another version, never an edit of
+`marucon-reference@1`; a later template is another version, never an edit of
 version 1.
 
 Page 9a.1 implements and pins the code-owned template catalog, transactional
@@ -201,34 +201,34 @@ immutable, resolves only the exact versioned
 identifier without aliases, validates bounded unique codes/names/order,
 requires exactly one root whose parent precedes every child, forbids an
 Executive Board Department, and retains canonical UTF-8 JSON plus SHA-256
-content evidence. Version 1 has Helper Board as its sole root and all 21
-operational Departments as its direct children.
+content evidence. Version 1 has Convention Coordination as its sole root and
+all 21 operational Departments as its direct children.
 
 Version 1 creates these 22 Department records:
 
 ```text
-Helper Board
-  Art
-  Charity
-  Ceremonies
-  Dealers' Den
-  Decorations
-  Events & Programming
-  Front Desk
-  Fursuit Support
-  Graphics Design
-  Human Resources
-  IT
-  Legal & Compliance
-  Logistics
-  Maid Café
-  Multimedia
-  PEER
+Convention Coordination
+  Attendee Services
   Registration
-  Security
-  Social Media
-  Stage Tech
-  Story
+  Programme
+  Stage Production
+  Venue Operations
+  Logistics
+  Volunteer Support
+  Safety
+  Accessibility
+  Technology
+  Communications
+  Design & Publications
+  Exhibitors
+  Charity
+  Guest Relations
+  Accommodation
+  Hospitality
+  Finance & Procurement
+  Partnerships
+  Live Operations
+  Archive & Handover
 ```
 
 It does not create Executive Board. It also creates no account, membership,
@@ -462,7 +462,7 @@ Workforce `0006` and the stopped-writer `0007` cutover create one
 structure-control aggregate per existing
 populated edition without changing Department identifiers, names, parents, or
 codes. Such rows are marked legacy-existing and receive no template receipt.
-Names such as Executive Board or Helper Board never trigger representation,
+Names such as Executive Board or Convention Coordination never trigger representation,
 template, person, role, or parent inference. Empty editions remain eligible at
 version zero.
 
@@ -526,6 +526,6 @@ invents template provenance for legacy rows.
   RoleAssignments as page-local ACL entries.
 - Merging the reference into a populated tree or synchronizing a copy to a
   later built-in version.
-- Importing Awoostria usernames, people-to-role mappings, contact information,
+- Importing real-convention usernames, people-to-role mappings, contact information,
   avatars, or other live roster data.
 - Structural change control for Ready, Live, or Closing editions.

@@ -94,16 +94,16 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         ).count()
         == 4
     )
-    danube_organization = Organization.objects.get(slug="pannon-paws-foundation")
-    assert danube_organization.country_code == "HU"
-    assert danube_organization.default_language_codes == ["en", "hu", "de"]
-    assert danube_organization.legal_name
-    assert danube_organization.contact_email
-    assert danube_organization.website_url
-    danube_series = ConventionSeries.objects.get(slug="danube-furry-convention")
-    assert danube_series.description
-    assert danube_series.contact_email
-    assert danube_series.website_url
+    marucon_organization = Organization.objects.get(slug="maru-community-events-demo")
+    assert marucon_organization.country_code == "HU"
+    assert marucon_organization.default_language_codes == ["en", "hu", "de"]
+    assert marucon_organization.legal_name
+    assert marucon_organization.contact_email
+    assert marucon_organization.website_url
+    marucon_series = ConventionSeries.objects.get(slug="marucon")
+    assert marucon_series.description
+    assert marucon_series.contact_email
+    assert marucon_series.website_url
     assert set(EventEdition.objects.values_list("lifecycle", flat=True)) == {
         EventEdition.Lifecycle.ARCHIVED,
         EventEdition.Lifecycle.PREPARING,
@@ -173,16 +173,16 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         == 2
     )
 
-    danube_chair = Account.objects.get(
-        email="danube.convention-chair@demo.maru.invalid"
+    marucon_chair = Account.objects.get(
+        email="marucon.convention-chair@demo.maru.invalid"
     )
-    danube_current = EventEdition.objects.get(slug="danube-furry-convention-2026")
+    marucon_current = EventEdition.objects.get(slug="marucon-2026")
     decision = decide(
-        principal=danube_chair,
+        principal=marucon_chair,
         capability_code="events.transition",
         resource=resolve_edition_target(
-            organization_id=danube_current.organization_id,
-            edition_id=danube_current.id,
+            organization_id=marucon_current.organization_id,
+            edition_id=marucon_current.id,
         ),
     )
     assert decision.allowed
@@ -192,28 +192,28 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         "authorization.revoke",
     ):
         access_decision = decide(
-            principal=danube_chair,
+            principal=marucon_chair,
             capability_code=capability_code,
             resource=resolve_edition_target(
-                organization_id=danube_current.organization_id,
-                edition_id=danube_current.id,
+                organization_id=marucon_current.organization_id,
+                edition_id=marucon_current.id,
             ),
         )
         assert access_decision.allowed
     assert RoleBundle.objects.filter(
-        organization=danube_current.organization,
+        organization=marucon_current.organization,
         code="demo-director",
     ).exists()
-    danube_configuration = RegistrationConfiguration.objects.get(
-        edition=danube_current,
+    marucon_configuration = RegistrationConfiguration.objects.get(
+        edition=marucon_current,
         status="active",
     )
-    assert danube_configuration.source_template_id is not None
-    assert danube_configuration.questions.count() == 5
-    assert danube_configuration.products.count() == 5
+    assert marucon_configuration.source_template_id is not None
+    assert marucon_configuration.questions.count() == 5
+    assert marucon_configuration.products.count() == 5
     assert (
         RegistrationTemplate.objects.filter(
-            organization=danube_current.organization,
+            organization=marucon_current.organization,
             status="published",
         ).count()
         == 1
@@ -224,13 +224,13 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert all(
         submission.answers
         for submission in RegistrationSubmission.objects.filter(
-            registration__edition=danube_current,
+            registration__edition=marucon_current,
         )
     )
 
     sponsor = Registration.objects.get(
-        edition=danube_current,
-        account__email="danube.sponsor-attendee@demo.maru.invalid",
+        edition=marucon_current,
+        account__email="marucon.sponsor-attendee@demo.maru.invalid",
     )
     assert sponsor.entitlements.filter(
         code="infinity-ticket",
@@ -284,11 +284,11 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert sponsor.reference not in account_content
 
     registration_lead = Account.objects.get(
-        email="danube.registration-lead@demo.maru.invalid"
+        email="marucon.registration-lead@demo.maru.invalid"
     )
     assert (
         registration_lead.role_assignments.filter(
-            edition=danube_current,
+            edition=marucon_current,
             revoked_at__isnull=True,
         ).count()
         >= 2
@@ -309,10 +309,10 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
 
     totals_before = result["totals"]
     transition_edition(
-        organization_id=danube_current.organization_id,
-        edition_id=danube_current.id,
+        organization_id=marucon_current.organization_id,
+        edition_id=marucon_current.id,
         to_state=EventEdition.Lifecycle.READY,
-        actor=danube_chair,
+        actor=marucon_chair,
         reason="Prove demo workforce replay after the editable lifecycle.",
         correlation_id=uuid4(),
         source_channel="test",
@@ -329,11 +329,11 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
             replay_created.append(kind)
 
     seed_workforce_examples(
-        convention_key="danube",
-        organization=danube_current.organization,
-        edition=EventEdition.objects.get(pk=danube_current.id),
+        convention_key="marucon",
+        organization=marucon_current.organization,
+        edition=EventEdition.objects.get(pk=marucon_current.id),
         accounts={
-            key: Account.objects.get(email=f"danube.{key}@demo.maru.invalid")
+            key: Account.objects.get(email=f"marucon.{key}@demo.maru.invalid")
             for key in (
                 "convention-chair",
                 "registration-lead",
@@ -345,7 +345,10 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         happened_at=datetime(2026, 6, 12, 10, 5, tzinfo=UTC),
     )
     assert replay_created == []
-    fursuit = AttendeeFursuit.objects.order_by("id").first()
+    # Exercise the legacy-ID fallback on the second synthetic fursuit. Position
+    # zero owns a pinned media-safety receipt, so changing that ID would
+    # intentionally create new append-only safety evidence on replay.
+    fursuit = AttendeeFursuit.objects.filter(position=1).order_by("id").first()
     assert fursuit is not None
     legacy_fursuit_id = uuid4()
     AttendeeFursuit.objects.filter(id=fursuit.id).update(id=legacy_fursuit_id)
@@ -367,18 +370,18 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         expected_totals[key] += 1
     assert second_result["totals"] == expected_totals
     assert second_result["passwords_reset"] == 80
-    danube_chair.refresh_from_db()
-    assert danube_chair.check_password(DEMO_PASSWORD)
+    marucon_chair.refresh_from_db()
+    assert marucon_chair.check_password(DEMO_PASSWORD)
     assert AttendeeFursuit.objects.filter(id=legacy_fursuit_id).exists()
 
     access_client = Client()
-    access_client.force_login(danube_chair)
+    access_client.force_login(marucon_chair)
     access_response = access_client.get(
         reverse(
             "api-edition-access-workspace",
             kwargs={
-                "organization_id": danube_current.organization_id,
-                "edition_id": danube_current.id,
+                "organization_id": marucon_current.organization_id,
+                "edition_id": marucon_current.id,
             },
         )
     )
@@ -392,7 +395,7 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         "Treasurer",
     }
     assert any(
-        assignment["person_email"] == "danube.front-desk-volunteer@demo.maru.invalid"
+        assignment["person_email"] == "marucon.front-desk-volunteer@demo.maru.invalid"
         and assignment["group_name"] == "Front Desk"
         for assignment in access_payload["assignments"]
     )

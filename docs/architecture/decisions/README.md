@@ -46,10 +46,10 @@ the system.
 | [0039](0039-unified-admin-shell-and-platform-route-space.md) | Accepted | Use the original unified `/admin/` shell grammar and reserve `/admin/platform/` for Pages 1 through 7 |
 | [0040](0040-explicit-executive-board-representation-lifecycle.md) | Accepted | Establish first organization authority through exact Executive Board invitations, self-acceptance, two-person cross-approval, and atomic Draft-to-Active activation |
 | [0041](0041-exact-department-and-typed-resource-authorization-scope.md) | Accepted | Add exact department and typed-resource scope with trusted resolved targets and no implicit department-tree inheritance |
-| [0042](0042-synthetic-only-educational-fixtures.md) | Accepted | Retire live public-roster rehearsal imports and require deterministic synthetic people for fixtures, tests, and tutorials |
+| [0042](0042-synthetic-only-educational-fixtures.md) | Partially superseded | Synthetic-only people and offline fixtures remain; ADR 0073 removes the retired adapter and requires repository-owned fictional convention examples |
 | [0043](0043-global-emergency-executive-board-controller-containment.md) | Accepted | Contain a compromised controller across every organization, suspend Boards that lose quorum, and deactivate the global account atomically |
 | [0044](0044-exact-authority-issuance-provenance.md) | Accepted | Pin immutable actor and approver authority sources, propagate controller loss, and preserve a non-cyclic initial Executive Board root |
-| [0045](0045-governance-anchored-copy-on-write-edition-structure.md) | Accepted | Present organization governance above an edition-owned, copy-on-write, versioned and safely editable workforce Department tree |
+| [0045](0045-governance-anchored-copy-on-write-edition-structure.md) | Partially superseded | Governance anchoring, copy-on-write structure, versioning, provenance, and editing remain; ADR 0073 replaces the source-derived starter identity and taxonomy |
 | [0046](0046-nondelegable-runtime-database-login.md) | Accepted | Require a genuine non-delegable PostgreSQL runtime login, select-only cutover controls, and trigger-integrity ACL proof |
 | [0047](0047-governed-registration-setup-and-platform-account-invitations.md) | Accepted | Govern Page 10 registration setup and optional recipient-owned platform account invitations through strict shared commands and staged direct-writer retirement |
 | [0048](0048-automatic-browser-department-ordering.md) | Accepted | Keep Department sibling order automatic in the browser while preserving explicit bounded API ordering |
@@ -77,6 +77,8 @@ the system.
 | [0070](0070-clear-public-maturity-description.md) | Accepted | Use clear active-development wording and preserve authenticated description-only mutation evidence |
 | [0071](0071-fail-fast-pull-request-dependency-review.md) | Accepted | Review introduced dependencies before fan-out without adding a job, required status, write permission, or database |
 | [0072](0072-protected-exact-main-sphinx-pages-publication.md) | Accepted | Rebuild contributor docs from exact protected main and deploy generated HTML through a least-privilege Pages environment |
+| [0073](0073-repository-owned-fictional-convention-examples.md) | Accepted | Use repository-owned fictional convention examples and remove real-roster and source-derived taxonomy dependencies from current material |
+| [0074](0074-newcomer-first-curated-sphinx-navigation.md) | Accepted | Present six stable primary documentation hubs and one finite newcomer path while retaining complete searchable catalogs |
 
 New ADRs use the next four-digit number and contain:
 

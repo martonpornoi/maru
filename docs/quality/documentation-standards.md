@@ -39,12 +39,128 @@ Each implemented module documents:
 
 - Prefer task and domain language over framework terminology.
 - State what is authoritative and what is derived.
-- Include examples with synthetic data.
+- Include examples with repository-owned fictional and synthetic data.
 - Explain permission failures and sensitive boundaries.
 - Date operational assumptions that depend on external providers.
 - Link instead of duplicating normative content.
 - Mark proposed behavior as proposed; do not describe it as implemented.
 - Remove stale instructions in the same change that makes them stale.
+
+## Contributor site information architecture
+
+ADR 0074 defines the public Sphinx navigation. The portal is a guided entry
+point over complete maintained material, not a rendering of the repository tree.
+
+### Primary navigation contract
+
+`docs/index.md` contains one explicit, hidden, maximum-depth-one toctree with
+exactly these hubs in this order:
+
+| Rendered title | Document name | Reader outcome |
+| --- | --- | --- |
+| **Start here** | `start-here/index` | Follow the bounded newcomer route. |
+| **Product** | `product/index` | Understand users, workflows, requirements, and page contracts. |
+| **Architecture & security** | `architecture/index` | Find system, domain, authorization, privacy, resilience, and decision boundaries. |
+| **Build & contribute** | `development/index` | Set up, verify, document, and contribute safely. |
+| **Operate Maru** | `operations/index` | Select an exact tutorial, runbook, migration, recovery, or release procedure. |
+| **Reference & history** | `reference/index` | Look up modules, generated Python APIs, project records, research, and checkpoints. |
+
+The root toctree never uses `:glob:`. It does not directly enumerate backlogs,
+page contracts, module files, research, ADRs, checkpoints, or AutoAPI children.
+Those sources remain published behind their owning hubs rather than becoming a
+second exhaustive listing on the homepage or global sidebar.
+
+The visible homepage leads with Maru's purpose, accurate active-development and
+synthetic-data boundaries, and goal-based routes to understand, run, or
+contribute. A theme or visual redesign must preserve that priority before
+adding presentation.
+
+### Curated newcomer path
+
+Only `docs/start-here/` is intended to be read in sequence. Its stable five
+steps are:
+
+1. `what-is-maru` — product purpose, users, and boundaries;
+2. `current-maturity` — implemented, partial, proposed, historical, and
+   deployment-gated status;
+3. `run-locally` — disposable local setup and safe data boundary;
+4. `product-tour` — one coherent synthetic convention journey; and
+5. `first-contribution` — bounded work, local evidence, and protected review.
+
+Every newcomer page and primary hub states its audience, intended outcome, and
+expected reading or activity time. Newcomer steps link to deeper authorities
+instead of copying complete requirements, setup guides, ledgers, or governance
+rules, and each step gives a clear next action. Start here also tells an
+evaluator, explorer, contributor, or reference reader where they may branch or
+stop.
+
+### Catalog and discoverability rules
+
+- Every maintained Markdown source is reachable from `docs/index.md` through a
+  nested toctree. Adding an orphan is a validation failure even if another page
+  contains an inline link to it.
+- A bounded catalog may use a local glob when its directory defines one coherent
+  collection, such as numbered ADRs or dated checkpoints. Broad or cross-domain
+  root globs are prohibited.
+- ADRs and checkpoints remain append-only records, not onboarding sequences.
+  Project plans and research remain reference material. AutoAPI appears as one
+  catalog destination and does not expand every module at the root.
+- Existing document URLs remain stable unless a separately reviewed rename is
+  necessary. Moving a page behind a catalog changes priority, not availability.
+- Hub copy uses task and outcome language rather than exposing filenames or
+  database models as the reader's primary mental model. Link text explains why
+  a reader should follow it.
+- Contextual cross-links are encouraged when they answer the current task.
+  Search supports readers who know a term but does not replace curated routes,
+  maturity guidance, or authoritative-source labels.
+- Current implementation claims come from the maintained project state and
+  production-consolidation ledger. A dated checkpoint, research note, legacy
+  scenario, or superseded ADR must not be presented as current merely because
+  it remains searchable.
+
+`scripts/validate_docs.py` enforces the exact root order, rejects root globs and
+direct archive placement, recursively follows explicit and bounded-glob
+toctrees, and reports unreachable Markdown. The warning-fatal Sphinx build
+continues to enforce valid source and generated references.
+
+### Accessibility and presentation
+
+- Navigation uses semantic headings, descriptive ordinary links, and logical
+  source order. An icon, color, position, hover state, or reading-time estimate
+  is never the only way to understand or activate a route.
+- Essential navigation works without JavaScript and with keyboard or assistive
+  technology. Custom cards remain ordinary headings and links in the document
+  tree and retain visible focus.
+- Custom layout reflows without page-level horizontal scrolling at 320 CSS
+  pixels and at 200 percent zoom. Tables and code blocks may use clearly bounded
+  local scrolling when their content requires it.
+- Link, focus, text, border, and state colors meet WCAG 2.2 AA contrast in
+  Furo's light, dark, and automatic themes. A light-theme override must not
+  silently replace Furo's accessible dark-theme variables.
+- New presentation dependencies require a demonstrated information or
+  accessibility benefit. The baseline route cards use ordinary semantic
+  heading sections and CSS Grid; they do not require a JavaScript widget or
+  another Sphinx extension.
+
+### Ethical fictional examples
+
+ADR 0073 governs current repository-owned examples:
+
+- Named example conventions use **MaruCon** or **MaruDance** and never imply a
+  customer, partner, endorsement, or globally cleared commercial mark.
+- People, organizations, contact details, screenshots, fixtures, tutorials,
+  and generated examples are synthetic. Contacts use RFC-reserved domains such
+  as `.invalid`; production personal data is prohibited.
+- Current examples do not fetch, parse, snapshot, reproduce, or rename another
+  convention's roster, people directory, organization chart, people-to-role
+  mapping, or branding.
+- Necessary factual attribution for software, standards, dependencies,
+  licenses, security advisories, and purpose-governed research remains accurate.
+  Such material belongs in its reference, license, ADR, or research context and
+  does not become tutorial or fixture data.
+- Partner-specific research or migration requires an explicit purpose,
+  authority, provenance, minimization, correction, access, retention, and
+  removal contract before repository or deployment data is collected.
 
 ## API documentation
 

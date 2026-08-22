@@ -52,11 +52,11 @@ loses its two-controller quorum. Routine expiry, replacement, voluntary ending,
 reactivation, and quorum recovery are not implemented.
 
 ADR 0045 permits Page 9 to show a minimized Executive Board governance anchor
-above an edition's Helper Board Department. This is presentation composition,
-not a stored parent edge or cross-module write. `maru.organizations` remains the
+above an edition's Convention Coordination Department. This is presentation
+composition, not a stored parent edge or cross-module write. `maru.organizations` remains the
 only owner of representation state and appointments; `maru.workforce` remains
 the owner of Departments, Positions, and structure-template application. The
-Awoostria reference template cannot create, activate, update, or infer
+fictional MaruCon starter cannot create, activate, update, or infer
 representation, membership, appointment, controller identity, or root
 authority.
 

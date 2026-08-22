@@ -12387,10 +12387,10 @@ export interface components {
             answers: unknown;
         };
         /**
-         * @description * `awoostria-reference@1` - awoostria-reference@1
+         * @description * `marucon-reference@1` - marucon-reference@1
          * @enum {string}
          */
-        TemplateEnum: "awoostria-reference@1";
+        TemplateEnum: "marucon-reference@1";
         /** @description Serialize and validate token data. */
         Token: {
             token: string;

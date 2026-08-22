@@ -92,7 +92,7 @@ Never reverse one module independently. The operator procedure is
   approver when issuing root grants or roles.
 - Mount a contextual assignment editor and computed effective-access
   explanation before enabling department-owned browser mutations.
-- Add the synthetic Awoostria-shaped department/position template and hierarchy
+- Add a repository-owned fictional department/position template and hierarchy
   workflow; never copy a public volunteer roster into fixtures.
 - Rehearse the complete sequence against a representative restored deployment
   with old-writer, fix-forward, backup, and PITR evidence.

@@ -8,9 +8,9 @@ Decision: ADR 0008
 ## Outcome
 
 Staff and bootstrap administration now preserve one explicit event-edition
-working context. Selecting Danube 2027 focuses routine operational lists,
+working context. Selecting MaruCon 2027 focuses routine operational lists,
 details, counts, ordinary relationship choices, and new-record defaults on
-Danube 2027. Bootstrap administrators can deliberately clear the context with
+MaruCon 2027. Bootstrap administrators can deliberately clear the context with
 `All foundation data`.
 
 An authenticated Django staff account without any convention participation is
@@ -62,7 +62,7 @@ routine lists.
 - Django system and migration-drift checks pass; no migration is required.
 - Documentation validation passes 68 Markdown files and 164 unique requirement
   identifiers.
-- A populated real-browser walkthrough selected Danube 2027 and verified its
+- A populated real-browser walkthrough selected MaruCon 2027 and verified its
   scoped registration rows, eligible template visibility, reduced filters,
   `/staff/` admin fallback, desktop/mobile layout, and zero runtime errors.
 

@@ -199,34 +199,35 @@ those memberships. Restricted cases do not advertise their subject or member
 list. Platform oversight is labeled separately from participation, and a
 reasoned sensitive read appears in Activity.
 
-## Awoostria reference structure
+## Fictional MaruCon starter structure
 
-The first reusable organization template has no real accounts and contains:
+The repository-owned starter has no real accounts or imported taxonomy and
+contains:
 
 ```text
 Executive Board
-└─ Helper Board
-   ├─ Art
-   ├─ Charity
-   ├─ Ceremonies
-   ├─ Dealers' Den
-   ├─ Decorations
-   ├─ Events & Programming
-   ├─ Front Desk
-   ├─ Fursuit Support
-   ├─ Graphics Design
-   ├─ Human Resources
-   ├─ IT
-   ├─ Legal & Compliance
-   ├─ Logistics
-   ├─ Maid Cafe
-   ├─ Multimedia
-   ├─ PEER
+└─ Convention Coordination
+   ├─ Attendee Services
    ├─ Registration
-   ├─ Security
-   ├─ Social Media
-   ├─ Stage Tech
-   └─ Story
+   ├─ Programme
+   ├─ Stage Production
+   ├─ Venue Operations
+   ├─ Logistics
+   ├─ Volunteer Support
+   ├─ Safety
+   ├─ Accessibility
+   ├─ Technology
+   ├─ Communications
+   ├─ Design & Publications
+   ├─ Exhibitors
+   ├─ Charity
+   ├─ Guest Relations
+   ├─ Accommodation
+   ├─ Hospitality
+   ├─ Finance & Procurement
+   ├─ Partnerships
+   ├─ Live Operations
+   └─ Archive & Handover
 ```
 
 Departments can nest further. Each department supports multiple leads,
@@ -412,16 +413,16 @@ relationship record.
 
 | Department | Initial useful projection |
 | --- | --- |
-| Executive / Helper Board | readiness, risks, approvals, cross-department blockers, material changes |
-| Registration / Front Desk | attendee lookup, payment/check-in state, badge, service requests, knowledge, surge staffing |
-| Events & Programming | calls, proposals, review, readiness, timetable, hosts, public copy |
-| Stage Tech / Multimedia | riders, cues, equipment, rehearsals, setup/teardown, operator shifts, media consent |
-| Security / PEER / Legal | narrowly scoped cases, duty routing, access policy, retention, ordinary minimum-disclosure tasks |
-| HR | opportunities, applications, onboarding, qualifications, assignments, availability, hours, handover |
-| Logistics / Decorations / IT | storage, boxes, kits, manifests, movements, maintenance, deployment and return |
-| Dealers / Art / Charity / Maid Cafe | configured applications, allocations, content classification, inventory, staffing, payments and reconciliation |
-| Graphics / Story / Social Media | briefs, assets, approvals, rights, publishing schedule, public API/content renditions |
-| Fursuit Support / Ceremonies | service capacity, spaces, programme dependencies, queues, shifts, run of show |
+| Executive / Convention Coordination | readiness, risks, approvals, cross-department blockers, material changes |
+| Attendee Services / Registration | attendee lookup, payment/check-in state, badge, service requests, knowledge, surge staffing |
+| Programme / Guest Relations | calls, proposals, review, readiness, timetable, hosts, public copy |
+| Stage Production / Venue Operations | riders, cues, equipment, rehearsals, setup/teardown, operator shifts, media consent |
+| Safety / Accessibility | narrowly scoped cases, duty routing, access policy, retention, ordinary minimum-disclosure tasks |
+| Volunteer Support | opportunities, applications, onboarding, qualifications, assignments, availability, hours, handover |
+| Logistics / Technology / Live Operations | storage, kits, manifests, movements, maintenance, deployment and return |
+| Exhibitors / Charity / Hospitality / Partnerships | configured applications, allocations, inventory, staffing, payments and reconciliation |
+| Communications / Design & Publications | briefs, assets, approvals, rights, publishing schedule, public renditions |
+| Accommodation / Finance & Procurement / Archive & Handover | capacity, evidence, controlled spending, retention and year-to-year continuity |
 
 ## API rules
 
@@ -626,8 +627,9 @@ not production approval.
   edition-wide view, code-owned complete-tree ceilings, exact-role/active-
   person holder checks, fresh final authorization, audit-before-disclosure,
   safe typed failures, and remove the duplicate React destination.
-- [x] Implement and pin immutable `awoostria-reference@1` catalog content:
-  exact 22 Departments, Helper Board sole root, no Executive Board Department,
+- [x] Implement and pin immutable `marucon-reference@1` catalog content:
+  exact 22 repository-owned Departments, Convention Coordination sole root,
+  no Executive Board Department,
   exact identifier/no aliases, bounded graph validation, canonical JSON, and
   SHA-256 evidence. Application now uses only the mounted shared command.
 - [x] Page 9a.1: complete the edition-owned structure write boundary in the
@@ -878,7 +880,7 @@ extend information; governed documents are served by context and classification.
   rehearsal, keyboard traversal, and automated accessibility analysis.
 - [ ] Operations common picture and rehearsal mode.
 
-Exit: Awoostria can rehearse staffing, room operations, equipment movement, and
+Exit: MaruCon can rehearse staffing, room operations, equipment movement, and
 on-site change communication from Maru.
 
 ### M8 — Specialized services and production certification
@@ -891,7 +893,7 @@ on-site change communication from Maru.
 - [ ] Data inventory, retention schedule, processor review, threat review,
   accessibility audit, penetration test, restore/failover exercise, load test,
   incident runbooks, monitoring/alerts and operator training.
-- [ ] Awoostria rehearsal with synthetic data; then controlled real-data pilot.
+- [ ] MaruCon rehearsal with synthetic data; then controlled real-data pilot.
 - [ ] Release checklist, migration/recovery plan and production sign-off.
 
 Exit: production readiness is supported by evidence, not inferred from feature
@@ -949,7 +951,7 @@ completed by adding code alone:
 - privacy/legal basis, processor contracts, retention, minor/safeguarding and
   financial policy approval;
 - alert destinations, support rota, incident response and recovery owners;
-- representative Awoostria load, accessibility, security and operator rehearsal.
+- representative MaruCon load, accessibility, security and operator rehearsal.
 
 ## Ideas after the core path
 

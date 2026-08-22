@@ -98,7 +98,7 @@ def test_template_receipt_shape_is_minimized() -> None:
         affected_department_ids=[uuid4() for _ in range(22)],
         retry_key=uuid4(),
         request_digest="b" * 64,
-        template_code="awoostria-v1",
+        template_code="marucon-v1",
         template_version=1,
         template_digest="c" * 64,
     )
@@ -110,7 +110,7 @@ def test_template_receipt_shape_is_minimized() -> None:
     [
         ({"retry_key": uuid4()}, "retry evidence"),
         ({"request_digest": "d" * 64}, "retry evidence"),
-        ({"template_code": "awoostria-reference"}, "Template provenance"),
+        ({"template_code": "marucon-reference"}, "Template provenance"),
         ({"template_version": 1}, "Template provenance"),
         ({"template_digest": "e" * 64}, "Template provenance"),
     ],
@@ -168,7 +168,7 @@ def test_template_receipts_require_complete_positive_provenance(
         "affected_department_ids": [uuid4() for _ in range(22)],
         "retry_key": uuid4(),
         "request_digest": "f" * 64,
-        "template_code": "awoostria-reference",
+        "template_code": "marucon-reference",
         "template_version": 1,
         "template_digest": "a" * 64,
     }

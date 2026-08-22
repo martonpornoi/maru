@@ -39,7 +39,7 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
         "conventionseries",
     ): (
         "Use this page to group annual editions of the same convention. "
-        "For example: find every Danube edition under one stable series."
+        "For example: find every MaruCon edition under one stable series."
     ),
     (
         "organizations",

@@ -70,11 +70,13 @@ function Start-IsolatedPostgres {
         "--health-timeout", "3s",
         "--health-retries", "30",
         $PostgresImage
-    )
+    ) | Out-Null
 
     $Healthy = $false
     for ($Attempt = 1; $Attempt -le 90; $Attempt += 1) {
-        $Health = (& $Docker "inspect" "--format" "{{.State.Health.Status}}" $Name).Trim()
+        $Health = (@(
+            & $Docker "inspect" "--format" "{{.State.Health.Status}}" $Name
+        ) -join [Environment]::NewLine).Trim()
         if ($LASTEXITCODE -ne 0) {
             throw "Could not inspect PostgreSQL container $Name."
         }
@@ -88,7 +90,9 @@ function Start-IsolatedPostgres {
         throw "PostgreSQL container $Name did not become healthy."
     }
 
-    $PublishedPort = (& $Docker "port" $Name "5432/tcp" | Select-Object -First 1).Trim()
+    $PublishedPort = (@(
+        & $Docker "port" $Name "5432/tcp" | Select-Object -First 1
+    ) -join [Environment]::NewLine).Trim()
     if ($LASTEXITCODE -ne 0 -or $PublishedPort -notmatch "(?<port>[0-9]+)$") {
         throw "Could not resolve the published port for $Name."
     }
@@ -107,6 +111,8 @@ function Start-TestProcess {
     $StandardOutput = Join-Path $LogDirectory "$Name.stdout.log"
     $StandardError = Join-Path $LogDirectory "$Name.stderr.log"
     $CoverageFile = Join-Path $CoverageDirectory ".coverage.$Name"
+    $TemporaryDirectory = Join-Path (Join-Path $ArtifactRoot "tmp") $Name
+    New-Item -ItemType Directory -Path $TemporaryDirectory -Force | Out-Null
     $Environment = @{
         COVERAGE_FILE = $CoverageFile
         MARU_DATABASE_URL = if ($DatabasePort -gt 0) {
@@ -115,6 +121,9 @@ function Start-TestProcess {
         else {
             "postgresql://maru:maru@127.0.0.1:1/maru_unit_no_database"
         }
+        TEMP = $TemporaryDirectory
+        TMP = $TemporaryDirectory
+        TMPDIR = $TemporaryDirectory
     }
     $Process = Start-Process `
         -FilePath $Python `
@@ -162,7 +171,9 @@ $PostgresImage = "postgres:17.11-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e51
 Push-Location $RepositoryRoot
 $Containers = [Collections.Generic.List[string]]::new()
 try {
-    $WorkingTree = (& $Git "status" "--porcelain").Trim()
+    $WorkingTree = (@(
+        & $Git "status" "--porcelain"
+    ) -join [Environment]::NewLine).Trim()
     if ($LASTEXITCODE -ne 0) {
         throw "Could not inspect the Git working tree."
     }
@@ -170,7 +181,9 @@ try {
         throw "Certification requires a clean working tree so evidence matches one exact commit."
     }
 
-    $Commit = (& $Git "rev-parse" "HEAD").Trim()
+    $Commit = (@(
+        & $Git "rev-parse" "HEAD"
+    ) -join [Environment]::NewLine).Trim()
     if ($LASTEXITCODE -ne 0 -or $Commit -notmatch "^[0-9a-f]{40}$") {
         throw "Could not resolve the exact Git commit under certification."
     }
@@ -271,7 +284,9 @@ try {
         "-m", "coverage", "html", "-d", (Join-Path $ArtifactRoot "htmlcov")
     )
 
-    $FinalWorkingTree = (& $Git "status" "--porcelain").Trim()
+    $FinalWorkingTree = (@(
+        & $Git "status" "--porcelain"
+    ) -join [Environment]::NewLine).Trim()
     if ($LASTEXITCODE -ne 0 -or $FinalWorkingTree) {
         throw "Certification changed tracked repository content; generated artifacts are stale."
     }

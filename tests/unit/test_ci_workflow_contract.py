@@ -693,6 +693,10 @@ def test_local_certification_preserves_database_isolation_and_total_coverage() -
         '"coverage", "combine"',
         '"coverage", "report", "--fail-under=90"',
         "Certification requires a clean working tree",
+        'Join-Path (Join-Path $ArtifactRoot "tmp") $Name',
+        "TEMP = $TemporaryDirectory",
+        "TMP = $TemporaryDirectory",
+        "TMPDIR = $TemporaryDirectory",
         'result = "success"',
     ):
         assert required in certification
@@ -700,6 +704,13 @@ def test_local_certification_preserves_database_isolation_and_total_coverage() -
     assert '"--shard-count", "$IntegrationShards"' in certification
     assert '"maru-cert-unit-$RunToken"' not in certification
     assert "isolated_postgres_instances = $IntegrationShards" in certification
+    assert (
+        certification.count(
+            '& $Git "status" "--porcelain"\n    ) -join [Environment]::NewLine).Trim()'
+        )
+        == 2
+    )
+    assert "    ) | Out-Null\n\n    $Healthy = $false" in certification
 
 
 def test_repository_push_guard_blocks_main_deletion_and_non_fast_forward() -> None:

@@ -85,7 +85,7 @@ PostgreSQL guards. They applied successfully to the local database.
 
 The seed command remains idempotent and does not reset existing fixture
 passwords unless explicitly requested. The browser walkthrough added one
-clearly synthetic `Juniper Lynx` payment-pending registration to local Danube
+clearly synthetic `Juniper Lynx` payment-pending registration to local MaruCon
 2026 data.
 
 The schema additions preserve existing registration history. Reversing them

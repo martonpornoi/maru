@@ -26,7 +26,7 @@ The ADR 0037 edition-workspace milestone is delivered in two ordered slices:
    audited and idempotent edition creation; explicit working context; bounded
    record activity; and a truthful platform-oversight access summary.
 2. **M2 — governance and scoped access:** organization representation and
-   activation, invitation/acceptance, synthetic Awoostria-shaped department
+   activation, invitation/acceptance, repository-owned fictional Department
    hierarchy, department/resource authorization constraints, computed
    effective-access explanation, and audited access management.
 
