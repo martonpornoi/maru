@@ -308,6 +308,19 @@ The pull-request workflow does not repeat acceptance on the identical-tree
 squash push to `main`; managed CodeQL still owns its default-branch scan, and
 release publication recertifies the exact current `main` commit.
 
+GitHub Pages publication is not another full acceptance path. After a protected
+pull request merges, its dedicated workflow rebuilds only the already-accepted
+documentation surface from protected `main`, with point-in-time current-main
+checks immediately before build and deployment: locked-input and Action-policy
+preflight, PyDocLint, semantic docstring validation, maintained Markdown
+validation, and warning-fatal Sphinx/AutoAPI. It starts no PostgreSQL service
+and runs no application test matrix. A read-only build job produces one fresh
+generated-HTML artifact; a separate `github-pages` job with only Pages write and
+OIDC authority deploys it. Pull requests and non-main manual dispatches cannot
+publish. First-deployment evidence additionally exercises one Mermaid page in a
+real browser against its exact accepted script origins; that external behavior
+is not inferred from a successful static build.
+
 Managed CodeQL default setup does not analyze fork pull requests, and its native
 merge protection does not cover Dependabot pull requests. `PR gate` remains the
 required merge result for those changes; default-branch and weekly CodeQL scans

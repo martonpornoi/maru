@@ -1,0 +1,147 @@
+name: Publish contributor documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Pages documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - name: Require protected main
+        env:
+          REF_PROTECTED: ${{ github.ref_protected }}
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Pages publication must run from main."
+            exit 1
+          fi
+          if [[ "$REF_PROTECTED" != "true" ]]; then
+            echo "Pages publication requires the source ref to be protected."
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Require exact current main commit
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          CURRENT_MAIN=$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')
+          if [[ "$CURRENT_MAIN" != "$EXPECTED_SHA" ]]; then
+            echo "Pages publication must use the exact current main commit."
+            exit 1
+          fi
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: ${{ runner.os }}-uv-
+
+      - name: Validate locked inputs and Actions policy
+        run: |
+          python -m pip install uv==0.11.29 PyYAML==6.0.3
+          uv lock --check
+          python scripts/validate_actions_allowlist.py
+
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        with:
+          enablement: false
+
+      - name: Install locked dependencies
+        run: uv sync --all-groups --locked
+
+      - name: Validate documentation sources
+        run: |
+          uv run pydoclint src scripts
+          uv run python scripts/validate_python_docstrings.py src scripts
+          uv run python scripts/validate_docs.py
+
+      - name: Build warning-fatal Pages documentation
+        env:
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          if [[ ! "$PAGES_BASE_URL" =~ ^https://[^/]+(/.*)?$ ]]; then
+            echo "Pages must provide a valid HTTPS base URL."
+            exit 1
+          fi
+          NORMALIZED_BASE_URL="${PAGES_BASE_URL%/}/"
+          uv run sphinx-build -W --keep-going --fresh-env -j auto \
+            -D "html_baseurl=$NORMALIZED_BASE_URL" \
+            -d "$RUNNER_TEMP/maru-pages-doctrees" \
+            -b html docs "$RUNNER_TEMP/maru-pages-html"
+
+      - name: Verify generated Pages artifact
+        run: |
+          test -f "$RUNNER_TEMP/maru-pages-html/index.html"
+          test -f "$RUNNER_TEMP/maru-pages-html/autoapi/maru/index.html"
+          SYMLINK=$(find "$RUNNER_TEMP/maru-pages-html" -type l -print -quit)
+          if [[ -n "$SYMLINK" ]]; then
+            echo "Pages output must not contain symbolic links: $SYMLINK"
+            exit 1
+          fi
+          EMBEDDED_DOCTREES=$(find "$RUNNER_TEMP/maru-pages-html" -type d -name .doctrees -print -quit)
+          if [[ -n "$EMBEDDED_DOCTREES" ]]; then
+            echo "Pages output must not contain doctree caches: $EMBEDDED_DOCTREES"
+            exit 1
+          fi
+          SITE_BYTES=$(du -sb "$RUNNER_TEMP/maru-pages-html" | cut -f1)
+          if (( SITE_BYTES >= 1000000000 )); then
+            echo "Pages output must remain smaller than 1 GB; found $SITE_BYTES bytes."
+            exit 1
+          fi
+
+      - name: Upload generated Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/maru-pages-html
+          retention-days: 1
+          include-hidden-files: false
+
+  deploy:
+    name: Deploy GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Require exact current main commit
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          CURRENT_MAIN=$(git ls-remote --exit-code "https://github.com/$GITHUB_REPOSITORY.git" refs/heads/main | awk '{print $1}')
+          if [[ "$CURRENT_MAIN" != "$EXPECTED_SHA" ]]; then
+            echo "Pages deployment must use the exact current main commit."
+            exit 1
+          fi
+
+      - name: Deploy generated documentation
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

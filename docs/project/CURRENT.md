@@ -218,6 +218,48 @@ cross-domain-save design.
 - This GH-006 closure changes only seven Markdown documents. Documentation
   validation covers 292 Markdown files and 203 unique requirement identifiers;
   a fresh warning-fatal Sphinx/AutoAPI build and whitespace validation pass.
+- ADR 0072 implements the GH-007 repository candidate without changing live
+  Pages state. `pages.yml` rebuilds the professional documentation surface from
+  protected `main`, checks its commit against remote `main` immediately before
+  build and deployment, uses separate fresh temporary doctree and HTML roots,
+  rejects incomplete, linked, cached, or 1-GB-plus artifacts, and uploads only
+  generated HTML. Its read-only build job has no deployment token; only the
+  dependent `github-pages` job receives Pages write and OIDC authority. Pull
+  requests and non-main manual dispatches cannot publish. A post-check `main`
+  advancement may briefly finish the older accepted run; serialized execution
+  requires the queued newer run to converge the site.
+- Sphinx now derives `version`, `release`, its HTML title, and its visible
+  active-development notice from `[project].version`. Publication obtains the
+  canonical base URL from GitHub Pages. The exact selected-Action candidate has
+  16 immutable references: 15 direct workflow actions plus the v7.0.0
+  `upload-artifact` commit invoked by the pinned official Pages uploader. The
+  validator rejects nested authority unless its exact composite parent remains
+  directly used.
+- The authenticated GH-007 pre-read found the repository public and unarchived
+  on `main`, Pages disabled, no `github-pages` environment, Wiki disabled, an
+  empty homepage, and exact parity between the 12 live and checked-in selected
+  Action references. No external setting was mutated. Live reconciliation,
+  hosted acceptance, merge, first deployment proof, homepage update, and a
+  closure checkpoint remain required.
+- GH-007 local acceptance passes all 73 focused workflow and classifier
+  contracts, all 1,963 database-free unit tests, Ruff lint and format,
+  PyDocLint, semantic validation over 366 Python source files, locked-
+  dependency validation, the exact 16-reference policy validator, Actionlint
+  across all six workflows, documentation validation over 295 Markdown files
+  and 203 requirement identifiers, and whitespace validation. A fresh warning-fatal
+  Pages-base Sphinx/AutoAPI build produces 1,621 files and 936 HTML pages in a
+  171,059,977-byte artifact with no symlink or doctree; every HTML page has the
+  intended versioned title, development notice, and canonical URL.
+- GH-007 explicitly pins the generated site's external browser runtime to
+  Mermaid `11.16.1` and D3 `7.9.0` below exact-version jsDelivr paths and
+  disables unused ELK support. The extension's older `11.12.1` default was
+  rejected because the current upstream advisory marks it affected and
+  `11.16.1` as the first patched v11 release. The bounded CDN and inline-
+  bootstrap risk is accepted only for public unauthenticated contributor
+  content. First-deployment closure must prove a maintained diagram becomes SVG
+  without a console error or unexpected script request; a custom domain, strict
+  CSP, offline guarantee, authenticated content, or larger diagram corpus
+  triggers a vendoring or pre-rendering review.
 - The active `main` ruleset explicitly requires CodeQL error-level alerts and
   medium-or-higher security alerts to clear. The strict `PR gate`, pull-request-
   only squash policy, resolved-conversation rule, deletion/non-fast-forward
@@ -678,7 +720,7 @@ approval.
 
 ## Decisions and migration boundary
 
-- ADRs 0049 through 0061 and ADRs 0063 through 0071 are Accepted. ADR 0062's
+- ADRs 0049 through 0061 and ADRs 0063 through 0072 are Accepted. ADR 0062's
   private self-hosted interval is superseded. ADR 0063 restores ADR 0060/0061's
   change-aware hosted topology for public collaboration. ADR 0064 makes
   dependency automation security-only, rejects stale locked/allowlisted inputs
@@ -694,8 +736,12 @@ approval.
   description wording and records the separately authorized live readback. ADR
   0071 adds a ready-only, read-only dependency-diff gate without replacing
   current-tree audits; its exact Action authority, hosted execution, protected
-  merge, and post-merge CodeQL evidence are complete. These decisions remove no
-  test, security, documentation, contract, migration, or authority gate.
+  merge, and post-merge CodeQL evidence are complete. ADR 0072 adds a least-
+  privilege protected-main documentation publication boundary and explicitly
+  models the official Pages uploader's immutable nested Action. Its repository
+  candidate is accepted; live reconciliation and post-deployment closure remain
+  pending. These decisions remove no test, security, documentation, contract,
+  migration, or authority gate.
 - ADR 0054 accepts the bounded architecture
   and migrated integrity boundary; it does not declare the partial
   LOG-001/002/003/004/006/007 portfolio complete or approve production rollout.
@@ -783,10 +829,13 @@ approval.
   A future strict Content Security Policy must nonce, hash, or externalize the
   documentation templates' inline initialization before forbidding inline
   script globally. The views are not a public developer portal.
-- The generated Sphinx site is retained as a CI artifact rather than deployed.
-  Its Mermaid diagrams use the contributor site's configured browser renderer;
-  a future hosted or offline distribution must define an asset/CSP policy and
-  verify the rendered diagrams in that target environment.
+- The generated Sphinx site remains an artifact rather than a verified public
+  deployment until GH-007's live selected-Actions, Pages-source, and environment
+  reconciliation plus the first protected-main run succeed. Its Mermaid
+  diagrams use exact-version Mermaid and D3 jsDelivr runtime paths with unused
+  ELK support disabled. Publication must verify a maintained diagram, its
+  console, and its exact script requests in the target environment. GitHub
+  Pages does not establish an application CSP, release, or production approval.
 - Documentation enforcement can prove structural completeness and reject known
   placeholder patterns, but it cannot prove that every description captures
   the right domain nuance. Review must still challenge misleading omission,
@@ -857,9 +906,10 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Design GH-007's main-only, warning-fatal Sphinx Pages publication without a
-   Wiki mirror, and set the repository homepage only after the first verified
-   deployment.
+1. Reconcile GH-007's exact 16-reference selected-Actions policy, workflow-
+   source Pages site, and protected `github-pages` environment; obtain hosted
+   merge acceptance, then verify the first protected-main HTTPS deployment before
+   setting the homepage and recording the closure checkpoint. Keep Wiki off.
 2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import re
+import runpy
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -18,10 +20,21 @@ FULL_WORKFLOW = WORKFLOW_DIRECTORY / "_full-ci.yml"
 MANUAL_FULL_WORKFLOW = WORKFLOW_DIRECTORY / "full-ci.yml"
 DESTRUCTIVE_REVIEW_WORKFLOW = WORKFLOW_DIRECTORY / "destructive-review.yml"
 RELEASE_WORKFLOW = WORKFLOW_DIRECTORY / "release.yml"
+PAGES_WORKFLOW = WORKFLOW_DIRECTORY / "pages.yml"
 LOCAL_CHECK_PATH = REPOSITORY_ROOT / "scripts" / "check.ps1"
 LOCAL_CERTIFICATION_PATH = REPOSITORY_ROOT / "scripts" / "certify.ps1"
 PRE_PUSH_HOOK_PATH = REPOSITORY_ROOT / ".githooks" / "pre-push"
 ACTIONS_ALLOWLIST_PATH = REPOSITORY_ROOT / ".github" / "actions-allowlist.json"
+ACTIONS_TRANSITIVE_REFERENCES_PATH = (
+    REPOSITORY_ROOT / ".github" / "actions-transitive-references.json"
+)
+PAGES_SETTINGS_PATH = REPOSITORY_ROOT / ".github" / "pages.json"
+PAGES_ENVIRONMENT_PATH = (
+    REPOSITORY_ROOT / ".github" / "environments" / "github-pages.json"
+)
+PAGES_BRANCH_POLICY_PATH = (
+    REPOSITORY_ROOT / ".github" / "environments" / "github-pages-main-policy.json"
+)
 
 
 def _workflow(path: Path) -> str:
@@ -49,8 +62,9 @@ def test_every_workflow_parses_and_external_action_is_immutable() -> None:
     allowlist = json.loads(ACTIONS_ALLOWLIST_PATH.read_text(encoding="utf-8"))
     assert allowlist["github_owned_allowed"] is False
     assert allowlist["verified_allowed"] is False
-    assert set(allowlist["patterns_allowed"]) == external_references
-    assert validate_actions_allowlist() == external_references
+    validated_references = validate_actions_allowlist()
+    assert set(allowlist["patterns_allowed"]) == validated_references
+    assert external_references <= validated_references
 
 
 def test_actions_allowlist_validator_finds_quoted_and_flow_mapping_keys(
@@ -161,6 +175,74 @@ def test_actions_allowlist_validator_rejects_duplicate_entries(
 
     with pytest.raises(ValueError, match="duplicate references"):
         validate_actions_allowlist(workflows, allowlist)
+
+
+def test_actions_allowlist_validator_tracks_audited_transitive_actions(
+    tmp_path: Path,
+) -> None:
+    workflows = tmp_path / "workflows"
+    workflows.mkdir()
+    parent = f"example/composite@{'a' * 40}"
+    nested = f"example/nested@{'b' * 40}"
+    (workflows / "check.yml").write_text(
+        f"name: Check\njobs:\n  test:\n    steps:\n      - uses: {parent}\n",
+        encoding="utf-8",
+    )
+    allowlist = tmp_path / "actions-allowlist.json"
+    allowlist.write_text(
+        json.dumps(
+            {
+                "github_owned_allowed": False,
+                "verified_allowed": False,
+                "patterns_allowed": [parent, nested],
+            }
+        ),
+        encoding="utf-8",
+    )
+    transitive_references = tmp_path / "actions-transitive-references.json"
+    transitive_references.write_text(
+        json.dumps({parent: [nested]}),
+        encoding="utf-8",
+    )
+
+    assert validate_actions_allowlist(
+        workflows,
+        allowlist,
+        transitive_references,
+    ) == frozenset({parent, nested})
+
+
+def test_actions_allowlist_validator_rejects_unused_transitive_parent(
+    tmp_path: Path,
+) -> None:
+    workflows = tmp_path / "workflows"
+    workflows.mkdir()
+    direct = f"example/direct@{'a' * 40}"
+    unused_parent = f"example/composite@{'b' * 40}"
+    nested = f"example/nested@{'c' * 40}"
+    (workflows / "check.yml").write_text(
+        f"name: Check\njobs:\n  test:\n    steps:\n      - uses: {direct}\n",
+        encoding="utf-8",
+    )
+    allowlist = tmp_path / "actions-allowlist.json"
+    allowlist.write_text(
+        json.dumps(
+            {
+                "github_owned_allowed": False,
+                "verified_allowed": False,
+                "patterns_allowed": [direct, nested],
+            }
+        ),
+        encoding="utf-8",
+    )
+    transitive_references = tmp_path / "actions-transitive-references.json"
+    transitive_references.write_text(
+        json.dumps({unused_parent: [nested]}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="parent is not used directly"):
+        validate_actions_allowlist(workflows, allowlist, transitive_references)
 
 
 def test_pull_request_workflow_is_change_aware_with_one_stable_gate() -> None:
@@ -460,6 +542,143 @@ def test_documentation_contract_matches_local_and_full_acceptance() -> None:
     assert "retention-days: 7" in workflow
     assert '"build", "--out-dir", $PackageDistributionDirectory' in local_check
     assert '"scripts/verify_package_artifacts.py"' in local_check
+
+
+def test_pages_workflow_is_main_only_locked_and_least_privilege() -> None:
+    workflow = _workflow(PAGES_WORKFLOW)
+    jobs = yaml.safe_load(workflow)["jobs"]
+    build = jobs["build"]
+    deploy = jobs["deploy"]
+
+    assert "push:\n    branches: [main]" in workflow
+    assert "workflow_dispatch:" in workflow
+    assert "pull_request:" not in workflow
+    assert "pull_request_target:" not in workflow
+    assert "merge_group:" not in workflow
+    assert "self-hosted" not in workflow
+    assert "postgres:" not in workflow
+    assert "secrets:" not in workflow
+    assert "group: pages" in workflow
+    assert "cancel-in-progress: false" in workflow
+    assert yaml.safe_load(workflow)["permissions"] == {"contents": "read"}
+
+    assert build["permissions"] == {"contents": "read", "pages": "read"}
+    assert deploy["permissions"] == {"pages": "write", "id-token": "write"}
+    assert deploy["needs"] == "build"
+    assert deploy["environment"] == {
+        "name": "github-pages",
+        "url": "${{ steps.deployment.outputs.page_url }}",
+    }
+    assert '"$GITHUB_REF" != "refs/heads/main"' in workflow
+    assert "github.ref_protected" in workflow
+    for job in (build, deploy):
+        assert any(
+            step.get("name") == "Require exact current main commit"
+            for step in job["steps"]
+        )
+    assert "uv==0.11.29 PyYAML==6.0.3" in workflow
+    assert "uv lock --check" in workflow
+    assert "python scripts/validate_actions_allowlist.py" in workflow
+    assert "uv sync --all-groups --locked" in workflow
+    for command in (
+        "uv run pydoclint src scripts",
+        "uv run python scripts/validate_python_docstrings.py src scripts",
+        "uv run python scripts/validate_docs.py",
+        "uv run sphinx-build -W --keep-going --fresh-env -j auto",
+    ):
+        assert command in workflow
+    assert '"$PAGES_BASE_URL" =~ ^https://[^/]+(/.*)?$' in workflow
+    assert 'NORMALIZED_BASE_URL="${PAGES_BASE_URL%/}/"' in workflow
+    assert '-D "html_baseurl=$NORMALIZED_BASE_URL"' in workflow
+    assert '-d "$RUNNER_TEMP/maru-pages-doctrees"' in workflow
+    assert '-b html docs "$RUNNER_TEMP/maru-pages-html"' in workflow
+    assert "docs/_build/html" not in workflow
+    assert "maru-pages-html/index.html" in workflow
+    assert "maru-pages-html/autoapi/maru/index.html" in workflow
+    assert "SITE_BYTES >= 1000000000" in workflow
+    assert "retention-days: 1" in workflow
+    assert "include-hidden-files: false" in workflow
+    assert workflow.count("pages: write") == 1
+    assert workflow.count("id-token: write") == 1
+
+    configure_step = next(
+        step for step in build["steps"] if step.get("name") == "Configure GitHub Pages"
+    )
+    assert configure_step["with"] == {"enablement": False}
+    upload_step = next(
+        step
+        for step in build["steps"]
+        if step.get("name") == "Upload generated Pages artifact"
+    )
+    assert upload_step["with"] == {
+        "path": "${{ runner.temp }}/maru-pages-html",
+        "retention-days": 1,
+        "include-hidden-files": False,
+    }
+    deployment_step = next(
+        step
+        for step in deploy["steps"]
+        if step.get("name") == "Deploy generated documentation"
+    )
+    assert deployment_step == {
+        "name": "Deploy generated documentation",
+        "id": "deployment",
+        "uses": ("actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128"),
+    }
+
+    expected_actions = {
+        "actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d",
+        "actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9",
+        "actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128",
+    }
+    assert expected_actions <= external_action_references(WORKFLOW_DIRECTORY)
+    transitive_references = json.loads(
+        ACTIONS_TRANSITIVE_REFERENCES_PATH.read_text(encoding="utf-8")
+    )
+    assert transitive_references == {
+        "actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9": [
+            "actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f"
+        ]
+    }
+
+
+def test_sphinx_metadata_comes_from_project_version() -> None:
+    project_metadata = tomllib.loads(
+        (REPOSITORY_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    sphinx_metadata = runpy.run_path(str(REPOSITORY_ROOT / "docs" / "conf.py"))
+    expected_version = project_metadata["project"]["version"]
+
+    assert sphinx_metadata["release"] == expected_version
+    assert sphinx_metadata["version"] == expected_version
+    assert sphinx_metadata["html_title"] == (
+        f"Maru {expected_version} contributor documentation"
+    )
+    assert sphinx_metadata["html_theme_options"]["announcement"].startswith(
+        f"Maru {expected_version} is under active development"
+    )
+    assert sphinx_metadata["mermaid_version"] == "11.16.1"
+    assert sphinx_metadata["mermaid_include_elk"] == ""
+    assert sphinx_metadata["d3_version"] == "7.9.0"
+
+
+def test_pages_external_settings_have_exact_checked_in_desired_state() -> None:
+    pages_settings = json.loads(PAGES_SETTINGS_PATH.read_text(encoding="utf-8"))
+    environment = json.loads(PAGES_ENVIRONMENT_PATH.read_text(encoding="utf-8"))
+    branch_policy = json.loads(PAGES_BRANCH_POLICY_PATH.read_text(encoding="utf-8"))
+
+    assert pages_settings == {"build_type": "workflow"}
+    assert environment == {
+        "wait_timer": 0,
+        "prevent_self_review": False,
+        "reviewers": [],
+        "deployment_branch_policy": {
+            "protected_branches": False,
+            "custom_branch_policies": True,
+        },
+        "can_admins_bypass": False,
+    }
+    assert branch_policy == {"name": "main", "type": "branch"}
 
 
 def test_local_certification_preserves_database_isolation_and_total_coverage() -> None:

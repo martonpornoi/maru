@@ -1,4 +1,4 @@
-"""Validate immutable workflow references against the exact Actions allowlist."""
+"""Validate direct and audited nested actions against the exact allowlist."""
 
 from __future__ import annotations
 
@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_DIRECTORY = REPOSITORY_ROOT / ".github" / "workflows"
 ACTIONS_ALLOWLIST_PATH = REPOSITORY_ROOT / ".github" / "actions-allowlist.json"
+ACTIONS_TRANSITIVE_REFERENCES_PATH = (
+    REPOSITORY_ROOT / ".github" / "actions-transitive-references.json"
+)
 IMMUTABLE_REVISION_PATTERN = re.compile(r"[0-9a-f]{40}")
 
 
@@ -101,8 +104,9 @@ def external_action_references(workflow_directory: Path) -> frozenset[str]:
 def validate_actions_allowlist(
     workflow_directory: Path = WORKFLOW_DIRECTORY,
     allowlist_path: Path = ACTIONS_ALLOWLIST_PATH,
+    transitive_references_path: Path | None = None,
 ) -> frozenset[str]:
-    """Require the checked-in allowlist to equal all workflow references.
+    """Require the allowlist to equal direct and audited transitive references.
 
     Parameters
     ----------
@@ -110,11 +114,14 @@ def validate_actions_allowlist(
         Directory containing GitHub Actions YAML workflows.
     allowlist_path : Path, default=ACTIONS_ALLOWLIST_PATH
         JSON file defining the repository's selected Actions policy.
+    transitive_references_path : Path | None, default=None
+        JSON audit map for actions invoked inside directly used composite
+        actions. When omitted, use the sibling repository file if it exists.
 
     Returns
     -------
     frozenset[str]
-        Validated external action references.
+        Validated direct and audited transitive action references.
 
     Raises
     ------
@@ -135,10 +142,86 @@ def validate_actions_allowlist(
         raise ValueError("patterns_allowed must be a list of strings")
     if len(allowed_value) != len(set(allowed_value)):
         raise ValueError("patterns_allowed must not contain duplicate references")
+    if transitive_references_path is None:
+        sibling_path = allowlist_path.with_name(ACTIONS_TRANSITIVE_REFERENCES_PATH.name)
+        transitive_references_path = sibling_path if sibling_path.is_file() else None
+    transitive_value: object = {}
+    if transitive_references_path is not None:
+        transitive_value = json.loads(
+            transitive_references_path.read_text(encoding="utf-8")
+        )
+    transitive_references = _validate_transitive_references(
+        transitive_value,
+        direct_references=references,
+    )
+    required_references = references | transitive_references
     allowed = frozenset(allowed_value)
-    if allowed != references:
-        raise ValueError(_drift_message(references=references, allowed=allowed))
-    return references
+    if allowed != required_references:
+        raise ValueError(
+            _drift_message(references=required_references, allowed=allowed)
+        )
+    return required_references
+
+
+def _validate_transitive_references(
+    value: object,
+    *,
+    direct_references: Collection[str],
+) -> frozenset[str]:
+    """Validate explicitly audited actions invoked by composite actions.
+
+    Parameters
+    ----------
+    value : object
+        Mapping from a direct composite-action reference to its audited nested
+        action references.
+    direct_references : Collection[str]
+        Immutable external references found directly in workflow files.
+
+    Returns
+    -------
+    frozenset[str]
+        Unique immutable nested references required by the selected policy.
+
+    Raises
+    ------
+    ValueError
+        If the mapping is malformed, its parent is unused, or a nested
+        reference is mutable.
+    """
+    if not isinstance(value, dict) or not all(
+        isinstance(parent, str) and isinstance(children, list)
+        for parent, children in value.items()
+    ):
+        raise ValueError(
+            "transitive_action_references must map strings to lists of strings"
+        )
+
+    nested_references: set[str] = set()
+    for parent, children in value.items():
+        if parent not in direct_references:
+            raise ValueError(f"transitive action parent is not used directly: {parent}")
+        if not children or not all(isinstance(child, str) for child in children):
+            raise ValueError(
+                "transitive action references must be a non-empty string list: "
+                f"{parent}"
+            )
+        if len(children) != len(set(children)):
+            raise ValueError(
+                f"transitive action references must not contain duplicates: {parent}"
+            )
+        for child in children:
+            _, separator, revision = child.rpartition("@")
+            if (
+                child.startswith("./")
+                or separator != "@"
+                or IMMUTABLE_REVISION_PATTERN.fullmatch(revision) is None
+            ):
+                raise ValueError(
+                    f"transitive action is not immutable: {parent}: {child}"
+                )
+            nested_references.add(child)
+    return frozenset(nested_references)
 
 
 def _drift_message(*, references: Collection[str], allowed: Collection[str]) -> str:
@@ -167,10 +250,13 @@ def main() -> int:
     Returns
     -------
     int
-        Zero when every external action is exactly allowlisted.
+        Zero when every direct and audited nested action is exactly allowlisted.
     """
     references = validate_actions_allowlist()
-    print(f"Actions allowlist valid: {len(references)} immutable references.")
+    print(
+        "Actions allowlist valid: "
+        f"{len(references)} direct and audited transitive immutable references."
+    )
     return 0
 
 

@@ -2,7 +2,8 @@
 
 Status: GH-000, GH-001, and GH-003 through GH-006 complete; GH-002 repository
 verification implemented with its first candidate rehearsal pending; GH-007
-through GH-009 tracked
+repository candidate implemented with live/deployment closure pending; GH-008
+and GH-009 tracked
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -335,7 +336,16 @@ allowlist all Pages Actions, constrain deployment to `github-pages`, derive the
 displayed version from `pyproject.toml`, and set the repository homepage only
 after the first verified deployment. Do not create a Wiki mirror.
 
-State: tracked for a separate documentation-publication milestone.
+State: repository candidate implemented under ADR 0072; live reconciliation,
+hosted merge acceptance, first protected-main deployment, HTTPS/API proof,
+homepage update, and closure checkpoint remain pending. The candidate separates
+read-only build authority from Pages write/OIDC deployment authority, uses fresh
+temporary output, performs current-`main` checks immediately before build and
+deployment, and models the official uploader's immutable nested Action. The
+desired selected policy has 16 references: 15 direct workflow actions plus that
+one audited nested action. Its diagram boundary retains exact-version Mermaid
+and D3 jsDelivr paths, disables unused ELK, and requires real-browser proof. No
+live Pages, environment, Actions-policy, Wiki, or homepage setting has changed.
 
 ### GH-008: Multi-maintainer governance
 
@@ -379,12 +389,13 @@ a focused decision before adoption.
 | Push protection | Enabled | Keep enabled; use only synthetic non-secret fixtures for exercises | Continuous/GH-003 |
 | Secret-validity checks | Unavailable for the current user-owned repository | Reassess eligibility and provider contact after an ownership or plan change | GH-003 |
 | Generic-pattern scanning | Unavailable for the current user-owned repository | Reassess eligibility and synthetic-fixture noise before enablement | GH-003 |
-| Actions selected allowlist | Exact immutable selected references | Add only a reviewed paired workflow pin | Every workflow milestone |
+| Actions selected allowlist | Live: exact 12 immutable references; GH-007 candidate: 16 exact direct/audited-nested references | Reconcile all four GH-007 additions before merge; keep both broad trust flags false | Every workflow milestone |
 | Repository description | 2026-08-21: security-focused Django/PostgreSQL multi-convention platform, under active development | Accepted and reconciled under ADR 0070; future changes require separate authorization and readback | GH-004 |
 | Repository topics | 2026-08-21: exact accepted eight-topic set | Retain; change only when product scope changes materially | GH-004 |
 | Community and issue metadata | 2026-08-21: 100 percent profile health; required Issue Form and automation labels exist | Keep templates, labels, and public policies coherent; do not manufacture newcomer issues | GH-004 |
 | Social preview | Default generated preview | Defer until an approved purpose-built asset exists | GH-004 |
-| GitHub Pages source | Disabled | Decide with the Pages workflow | GH-007 |
+| GitHub Pages source | Disabled; workflow-source candidate implemented | Enable only after exact pre-read and selected-Actions/environment reconciliation | GH-007 |
+| `github-pages` environment | Absent | Create with exact `main`, no admin bypass, reviewer, secret, or variable before first deployment | GH-007 |
 | Repository homepage | Empty | Set only after verified Pages deployment | GH-007 |
 
 ## Completion rule for later milestones
