@@ -84,6 +84,12 @@ CROSS_CUTTING_DJANGO_ASSET_PREFIXES = (
     "src/maru/static/",
     "src/maru/templates/",
 )
+DEPENDENCY_REVIEW_FILES = {
+    "frontends/staff-console/package.json",
+    "frontends/staff-console/pnpm-lock.yaml",
+    "pyproject.toml",
+    "uv.lock",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,6 +131,8 @@ class CIPlan:
         Whether Python distribution artifacts must be built and inspected.
     security : bool
         Whether dependency vulnerability checks are relevant.
+    dependency_review : bool
+        Whether GitHub's pull-request dependency comparison is relevant.
     integration : str
         PostgreSQL policy: ``none``, ``targeted``, or ``full``.
     destructive : bool
@@ -144,6 +152,8 @@ class CIPlan:
         Whether Python distribution artifacts must be built and inspected.
     security : bool
         Whether dependency vulnerability checks are relevant.
+    dependency_review : bool
+        Whether GitHub's pull-request dependency comparison is relevant.
     integration : str
         PostgreSQL policy: ``none``, ``targeted``, or ``full``.
     destructive : bool
@@ -157,6 +167,7 @@ class CIPlan:
     python: bool
     packaging: bool
     security: bool
+    dependency_review: bool
     integration: str
     destructive: bool
     deleted_count: int
@@ -175,6 +186,7 @@ class CIPlan:
             "python": str(self.python).lower(),
             "packaging": str(self.packaging).lower(),
             "security": str(self.security).lower(),
+            "dependency_review": str(self.dependency_review).lower(),
             "integration": self.integration,
             "destructive": str(self.destructive).lower(),
             "deleted_count": str(self.deleted_count),
@@ -246,6 +258,7 @@ def classify_changes(changes: Sequence[ChangedFile]) -> CIPlan:
     packaging = any(_is_packaging_related(path) for path in paths)
     documentation = python or any(_is_documentation_related(path) for path in paths)
     security = any(_is_security_related(path) for path in paths)
+    dependency_review = any(_is_dependency_review_related(path) for path in paths)
     full = any(_requires_full_integration(path) for path in paths)
     targeted = python and any(
         path.startswith(("src/", "tests/integration/")) for path in paths
@@ -259,6 +272,7 @@ def classify_changes(changes: Sequence[ChangedFile]) -> CIPlan:
         python=python,
         packaging=packaging,
         security=security,
+        dependency_review=dependency_review,
         integration=integration,
         destructive=destructive,
         deleted_count=len(deleted),
@@ -502,6 +516,29 @@ def _is_security_related(path: str) -> bool:
         "frontends/staff-console/package.json",
         "frontends/staff-console/pnpm-lock.yaml",
     } or path.startswith(".github/workflows/")
+
+
+def _is_dependency_review_related(path: str) -> bool:
+    """Return whether GitHub can compare a changed dependency input.
+
+    Parameters
+    ----------
+    path : str
+        Repository-relative POSIX path.
+
+    Returns
+    -------
+    bool
+        ``True`` for graph-visible manifests, locks, and workflow manifests.
+
+    Notes
+    -----
+    Container base images remain part of current-tree security auditing but
+    are not represented by GitHub's dependency comparison.
+    """
+    return path in DEPENDENCY_REVIEW_FILES or (
+        path.startswith(".github/workflows/") and path.endswith((".yml", ".yaml"))
+    )
 
 
 def _requires_full_integration(path: str) -> bool:

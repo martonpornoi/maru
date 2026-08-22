@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 Phase: Production consolidation and management-experience recovery. The
 canonical repository gate and scoped read-only Logistics browser journey remain
 accepted. ADR 0055's first task-oriented management slice is repository-
@@ -33,11 +33,16 @@ surface, defines truthful sole-maintainer continuity and newcomer triage, and
 records reviewed repository metadata without inventing independent authority,
 an unattended conduct inbox, or a silent GitHub mutation. ADR 0070 then replaces
 its ambiguous **Pre-production** description with the separately authorized and
-read-back **under active development** wording. The complete
-authenticated reflow, keyboard,
-screen-reader, owner,
-deployment, stopped-writer/cutover, restore/PITR, and production-governance
-gates remain open.
+read-back **under active development** wording. ADR 0071's GH-006 candidate adds
+a read-only, pull-request-relative dependency vulnerability review before
+selected acceptance fans out, while retaining the existing lock, current-tree
+audit, Dependabot, and immutable-Action controls. Its repository change is not
+yet hosted acceptance. The separately authorized live selected-Actions update
+and readback now preserve selected-only trust, mandatory SHA pinning, both
+broad trust flags as `false`, and exactly the 12 checked-in references. The
+candidate pull request can now enter ready-state acceptance. The complete
+authenticated reflow, keyboard, screen-reader, owner, deployment, stopped-
+writer/cutover, restore/PITR, and production-governance gates remain open.
 
 ## Current outcome
 
@@ -172,6 +177,33 @@ cross-domain-save design.
   least-quarterly maintainer-owned branch. It also places a lightweight
   `uv lock --check` and exact Actions-allowlist validation before the expensive
   full-acceptance fan-out. Those controls are accepted on the default branch.
+- The GH-006 candidate pins Dependency Review Action `v5.0.0` by exact commit
+  and invokes it inside the existing **Classify changes** job only for a ready
+  pull request whose dedicated classifier output identifies a graph-visible
+  manifest, lock, or workflow change. `Dockerfile` retains broader security
+  auditing without invoking a comparison that cannot inspect its base image.
+  The Action fails on newly introduced moderate-or-higher vulnerabilities
+  across runtime, development, and unknown scopes with `contents: read`, no
+  pull-request comments, no scorecard noise, and no mechanical license
+  decision. It adds no job, required status, runner startup, or PostgreSQL
+  service; failure keeps the existing `changes` dependency non-green so
+  `PR gate` stops the fan-out.
+- Live dependency-graph evidence contains 293 packages: all 108 packages from
+  `uv.lock`, all 173 pnpm lock entries, and the existing 11 external Actions.
+  The graph has represented real Python, pnpm, and workflow changes, but it did
+  not identify the `pip 26.1.2` advisory that `pip-audit` caught. Dependency
+  Review therefore supplements rather than replaces `uv lock --check`,
+  `pip-audit`, `pnpm audit`, Dependabot, or exact Action allowlisting. Container
+  base images and legal compatibility remain separate review boundaries.
+- The GH-006 candidate passes all 68 focused classifier/workflow contracts and
+  all 1,958 database-free unit tests. Ruff check/format, `uv lock --check`,
+  Actionlint, the exact 12-reference Actions-policy validator, documentation
+  validation over 291 Markdown files and 203 requirement identifiers, a fresh
+  warning-fatal Sphinx/AutoAPI build, and whitespace validation also pass. The
+  Live policy reconciliation is complete, but the API-backed Action itself
+  remains intentionally unclaimed until a ready-state hosted run. That workflow
+  executes on the synthetic merge candidate, while dependency review compares
+  the pull request's base and head revisions.
 - The active `main` ruleset explicitly requires CodeQL error-level alerts and
   medium-or-higher security alerts to clear. The strict `PR gate`, pull-request-
   only squash policy, resolved-conversation rule, deletion/non-fast-forward
@@ -632,7 +664,7 @@ approval.
 
 ## Decisions and migration boundary
 
-- ADRs 0049 through 0061 and ADRs 0063 through 0070 are Accepted. ADR 0062's
+- ADRs 0049 through 0061 and ADRs 0063 through 0071 are Accepted. ADR 0062's
   private self-hosted interval is superseded. ADR 0063 restores ADR 0060/0061's
   change-aware hosted topology for public collaboration. ADR 0064 makes
   dependency automation security-only, rejects stale locked/allowlisted inputs
@@ -645,9 +677,11 @@ approval.
   0068 defines public channels and sole-maintainer continuity, while ADR 0069
   corrects the known CodeQL extraction boundary without weakening Ruff or
   adding another scanner. ADR 0070 supersedes only ADR 0068's exact repository-
-  description wording and records the separately authorized live readback.
-  These decisions remove no test, security,
-  documentation, contract, migration, or authority gate.
+  description wording and records the separately authorized live readback. ADR
+  0071 adds a ready-only, read-only dependency-diff gate without replacing
+  current-tree audits; its exact Action authority is live-reconciled while
+  hosted execution proof remains pending. These decisions remove no test,
+  security, documentation, contract, migration, or authority gate.
 - ADR 0054 accepts the bounded architecture
   and migrated integrity boundary; it does not declare the partial
   LOG-001/002/003/004/006/007 portfolio complete or approve production rollout.
@@ -751,11 +785,12 @@ approval.
   records still need conversion and the full 320/390/768/958/1,024/1,280/1,920,
   200-percent-zoom, keyboard, automated-accessibility, screen-reader, and owner
   evidence matrix.
-- GitHub browser/accessibility, multi-Python compatibility, native dependency
-  review, nightly concurrency repetition, and release restore rehearsal remain
-  later testing layers. Managed CodeQL, secret scanning, and push protection
-  are enabled; findings must be fixed or explicitly justified rather than
-  dismissed by assumption.
+- GitHub browser/accessibility, multi-Python compatibility, nightly concurrency
+  repetition, and release restore rehearsal remain later testing layers. The
+  native dependency-review candidate has exact live Action-policy reconciliation
+  and still needs ready-state hosted proof. Managed CodeQL, secret scanning, and
+  push protection are enabled; findings must be fixed or explicitly justified
+  rather than dismissed by assumption.
 - Managed CodeQL default setup does not analyze fork pull requests, and native
   CodeQL merge protection does not cover Dependabot pull requests. The required
   `PR gate` and default-branch/weekly scans remain, but a first cross-repository
@@ -807,22 +842,24 @@ approval.
 
 ## Smallest sensible next actions
 
-1. Evaluate GH-006 dependency review against the existing locked-resolution,
-   `pip-audit`, `pnpm audit`, Dependabot, and immutable-Action controls; adopt it
-   only if it adds material non-duplicative protection.
-2. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
+1. Make pull request 11 ready and require the API-backed base-to-head dependency
+   review plus complete merge-candidate hosted acceptance to pass before merge.
+2. Design GH-007's main-only, warning-fatal Sphinx Pages publication without a
+   Wiki mirror, and set the repository homepage only after the first verified
+   deployment.
+3. Complete the authenticated ADR 0055 width/zoom, keyboard, screen-reader, and
    owner rehearsal for the first slice, then migrate the highest-frequency
    Registration, Workforce, and organization journeys to the same primitives.
-3. Resume Page 10 compatibility-writer retirement/stopped-writer cutover,
+4. Resume Page 10 compatibility-writer retirement/stopped-writer cutover,
    representative authority reconciliation/runtime-role activation, and
    whole-database restore/PITR rehearsal.
-4. Complete provider/infrastructure, load, owner, privacy/legal, finance,
+5. Complete provider/infrastructure, load, owner, privacy/legal, finance,
    safeguarding, and operating-governance acceptance before production use.
 
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, `PRODUCTION_CONSOLIDATION.md`, the
-relevant requirement IDs, ADRs 0047 through 0070, and the owning module/runbook
+relevant requirement IDs, ADRs 0047 through 0071, and the owning module/runbook
 docs. Preserve every concurrent change in the dirty working tree. Serialize all
 PostgreSQL tests that share `test_maru_test`; never infer authority from a
 selected edition or route; authorize before parsing untrusted input; retain

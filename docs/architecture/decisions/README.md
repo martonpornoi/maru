@@ -75,6 +75,7 @@ the system.
 | [0068](0068-public-collaboration-channels-and-sole-maintainer-continuity.md) | Partially superseded | Actionable public channels, truthful sole-maintainer continuity, and reviewed repository metadata remain; ADR 0070 replaces its exact description wording |
 | [0069](0069-codeql-compatible-union-bounded-generic.md) | Accepted | Preserve Workforce CodeQL extraction with a narrowly exempted bounded TypeVar and known-incompatible-header contract |
 | [0070](0070-clear-public-maturity-description.md) | Accepted | Use clear active-development wording and preserve authenticated description-only mutation evidence |
+| [0071](0071-fail-fast-pull-request-dependency-review.md) | Accepted | Review introduced dependencies before fan-out without adding a job, required status, write permission, or database |
 
 New ADRs use the next four-digit number and contain:
 

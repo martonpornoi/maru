@@ -123,6 +123,14 @@ rather than a server trust boundary. Details are in
 0064. The unit layer is database-free; successful full acceptance starts eight
 independent PostgreSQL services for the eight whole-file integration shards.
 
+For a ready pull request whose dedicated classifier output identifies a graph-
+visible manifest, lock, or workflow change, the same `changes` job performs
+GitHub dependency review before any selected path starts. It rejects graph-
+visible dependencies introduced with a moderate-or-higher vulnerability in
+runtime, development, or unknown scope. The step uses a read-only token, posts
+no comment, and adds no job or required status; a failure makes `changes`
+unsuccessful and therefore fails the stable `PR gate`.
+
 ## Dependency update policy
 
 Dependabot is security-only for the uv, npm, and GitHub Actions ecosystems.
@@ -130,6 +138,15 @@ Each entry uses `open-pull-requests-limit: 0` to suppress routine version-
 update pull requests while retaining one grouped security-update rule. Python
 uses the native `uv` ecosystem so a security update must keep `pyproject.toml`
 and `uv.lock` coherent.
+
+Dependency review is diff evidence, not a replacement for the current-tree
+audits. It cannot catch an unchanged dependency whose vulnerability becomes
+known later, and GitHub may omit unsupported or unparseable inputs. In
+particular, it does not scan the `Dockerfile` base image. Maru therefore keeps
+locked installation, `pip-audit`, `pnpm audit`, immutable Action validation,
+source review, and release SBOM/provenance. Action-based license enforcement is
+disabled until a separately accepted compatibility policy can distinguish
+legal obligations without creating a brittle contributor allowlist.
 
 At least quarterly, and before a candidate or gold release when dependencies
 have changed materially, a maintainer creates one dependency-maintenance branch
@@ -145,6 +162,17 @@ They become the default-branch automation policy only when their reviewed pull
 request is merged. A pull request can exercise its own candidate workflow, but
 documentation of the candidate does not itself mutate GitHub settings or the
 configuration currently present on `main`.
+
+The dependency-review Action is pinned to verified v5.0.0 commit
+`a1d282b36b6f3519aa1f3fc636f609c47dddb294`. Adding its exact twelfth pattern
+to the live selected-Actions policy requires separate owner authorization, a
+complete pre-read, an exact append that preserves both broad trust flags as
+`false`, and a complete post-change readback. For pull request 11, that process
+found the exact prior 11 patterns, added only the reviewed v5.0.0 reference, and
+read back exact parity with the 12-entry checked-in allowlist. Do not mark
+GH-006 complete until a current ready-state run also passes. The workflow runs
+on the synthetic merge candidate, while dependency review compares the pull
+request's base and head revisions.
 
 ## Immutable release boundary
 

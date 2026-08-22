@@ -81,6 +81,23 @@ starts authoritative hosted acceptance. The pull-request workflow does not
 repeat that evidence after the protected identical-tree squash reaches `main`;
 managed CodeQL still performs its default-branch scan.
 
+Ready pull requests with a graph-visible dependency manifest, lock, or workflow
+input additionally run GitHub's revision-diff dependency review inside the
+existing classification job. It blocks graph-visible moderate-or-higher
+vulnerabilities introduced in runtime, development, or unknown scope before
+selected work starts. `Dockerfile` retains broader security routing without
+selecting this graph comparison. This adds no job, required status, runner, or
+PostgreSQL service; a failure reaches the existing `PR gate` through the
+unsuccessful `changes` job.
+
+The local commands cannot reproduce GitHub's dependency-graph comparison API.
+Their locked current-tree `pip-audit` and `pnpm audit` checks remain mandatory
+and intentionally broader in time: they can catch an unchanged dependency after
+new advisory knowledge appears. Dependency review does not cover unsupported
+manifests, the `Dockerfile` base image, or deferred license compatibility. A
+successful local receipt therefore does not claim that the hosted diff step ran,
+and a successful hosted diff does not replace local current-tree evidence.
+
 A pull request can propose changes to its own candidate workflow and classifier.
 The current sole-maintainer boundary therefore includes human review of
 automation changes; before another person receives write and merge authority,

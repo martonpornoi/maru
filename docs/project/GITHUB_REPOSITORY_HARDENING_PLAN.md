@@ -2,7 +2,8 @@
 
 Status: GH-000, GH-001, GH-003, GH-004, and GH-005 complete; GH-002 repository
 verification implemented with its first candidate rehearsal pending; GH-006
-through GH-009 tracked
+repository candidate implemented with live reconciliation complete and hosted
+proof pending; GH-007 through GH-009 tracked
 
 Requirements: NFR-001, NFR-002, NFR-003, NFR-011
 
@@ -292,13 +293,37 @@ binding is reconciled.
 
 ### GH-006: Dependency review
 
-Compare GitHub dependency-diff review with locked resolution, `pip-audit`,
-`pnpm audit`, and Dependabot. If accepted, run it only for dependency changes,
-pin and allowlist the Action exactly, keep permissions read-only, and aggregate
-the result through the stable `PR gate` rather than adding a permanent required
-status.
+ADR 0071 accepts dependency-diff review as a complement to locked resolution,
+`pip-audit`, `pnpm audit`, Dependabot, exact Action validation, and release
+evidence. The live graph contains 293 packages: 108 PyPI, 173 npm, 11 GitHub
+Actions, and the root repository document. Read-only comparisons recognize
+Maru's `uv.lock`, `pyproject.toml`, Staff Console `pnpm-lock.yaml`, and workflow
+inputs.
 
-State: tracked; no Action or workflow change is accepted yet.
+The repository candidate runs verified v5.0.0 commit
+`a1d282b36b6f3519aa1f3fc636f609c47dddb294` as one step in the existing
+`changes` job when a ready pull request's dedicated classifier output identifies
+a graph-visible manifest, lock, or workflow change. It rejects introduced
+moderate-or-higher vulnerabilities in runtime, development, and unknown scopes
+with patched-version guidance. The workflow remains
+`contents: read`, posts no pull-request comment, disables OpenSSF Scorecard and
+license enforcement, and adds no job, required status, runner startup, or
+PostgreSQL service. Failure flows through the existing stable `PR gate` and
+prevents selected fan-out.
+
+The current-tree audits remain mandatory. Pull request 9's already-present
+vulnerable `pip 26.1.2` demonstrates the gap in any diff-only control. GitHub's
+graph can also omit unsupported inputs and does not cover the `Dockerfile` base
+image. License automation remains deferred until a bounded compatibility policy
+is accepted.
+
+State: repository candidate implemented. The separately authorized live update
+was applied after an exact 11-pattern pre-read and independently read back at 12
+unique immutable patterns, with selected-only trust, mandatory SHA pinning, and
+both broad trust flags preserved. An authoritative ready-state run must now
+prove the pinned Action before GH-006 is complete. The workflow executes on the
+synthetic pull-request merge candidate, while dependency review compares the
+pull request's base and head revisions.
 
 ### GH-007: Sphinx publication through GitHub Pages
 
