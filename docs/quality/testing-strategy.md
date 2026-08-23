@@ -66,7 +66,7 @@ Test:
 
 Breaking API changes require an explicit migration and versioning decision.
 
-Page 9 structure contract tests additionally require recursive OpenAPI and
+Organization structure contract tests additionally require recursive OpenAPI and
 typed read and mutation problems; denial before any name query; one captured
 projection instant plus fresh final authorization; exact holder-role lineage
 and active-person filtering; row, depth, and expanded-edge limit-plus-one
@@ -187,7 +187,7 @@ empty/error states, and narrow-viewport overflow.
   activation audits, fingerprints every runtime-executable helper, defeats
   hostile search paths and shadow objects, and refuses owning-module reversal
   after durable activation even without the convergence recorder row;
-- Page 9 stopped-writer migration evidence that exercises additive workforce
+- Organization structure stopped-writer migration evidence that exercises additive workforce
   `0006`, compatible `legacy_existing` backfill and preflight in `0007`, clean
   empty reversal, populated downgrade refusal, exact command receipts, and
   fail-closed catalog tampering for all 14 helper definitions and 28 trigger

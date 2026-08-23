@@ -3,6 +3,7 @@
 {% block title %}Catalog commerce · {{ edition.name }}{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Administration</a> › Catalog commerce</div>{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="baseline-page">
@@ -16,6 +17,7 @@
       {% endif %}
       <p>Admission tickets remain governed by Registration. This catalog contains only merchandise, donations, and limited supporter products.</p>
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     {% if catalog_create_form %}
       <section class="baseline-panel">

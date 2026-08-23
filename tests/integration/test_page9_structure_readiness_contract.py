@@ -22,6 +22,7 @@ def _trigger(
     columns: tuple[str, ...] = (),
     deferrable: bool = False,
     initially_deferred: bool = False,
+    definition: str | None = None,
 ) -> tuple[object, ...]:
     return (
         table,
@@ -30,9 +31,10 @@ def _trigger(
         "O",
         deferrable,
         initially_deferred,
-        True,
+        definition is None,
         0,
         columns,
+        definition,
     )
 
 
@@ -136,6 +138,29 @@ PAGE9_TRIGGER_CONTRACTS = {
         "workforce_editionstructurecommandreceipt",
         "maru_validate_edition_structure_receipt()",
         7,
+        definition=(
+            "CREATE TRIGGER ac_workforce_page9_receipt_guard BEFORE INSERT ON "
+            "workforce_editionstructurecommandreceipt FOR EACH ROW WHEN "
+            "(new.action::text <> ALL (ARRAY['position_created'::character "
+            "varying, 'position_updated'::character varying, "
+            "'position_closed'::character varying, "
+            "'opportunity_updated'::character varying]::text[])) EXECUTE "
+            "FUNCTION maru_validate_edition_structure_receipt()"
+        ),
+    ),
+    "ac_workforce_position_receipt_guard": _trigger(
+        "workforce_editionstructurecommandreceipt",
+        "maru_validate_position_structure_receipt()",
+        7,
+        definition=(
+            "CREATE TRIGGER ac_workforce_position_receipt_guard BEFORE INSERT ON "
+            "workforce_editionstructurecommandreceipt FOR EACH ROW WHEN "
+            "(new.action::text = ANY (ARRAY['position_created'::character "
+            "varying, 'position_updated'::character varying, "
+            "'position_closed'::character varying, "
+            "'opportunity_updated'::character varying]::text[])) EXECUTE "
+            "FUNCTION maru_validate_position_structure_receipt()"
+        ),
     ),
     "ac_workforce_page9_receipt_immutable": _trigger(
         "workforce_editionstructurecommandreceipt",
@@ -183,6 +208,30 @@ PAGE9_TRIGGER_CONTRACTS = {
         deferrable=True,
         initially_deferred=True,
     ),
+    "ac_workforce_position_structure_guard": _trigger(
+        "workforce_position",
+        "maru_validate_position_structure_write()",
+        23,
+    ),
+    "workforce_position_structure_evidence": _trigger(
+        "workforce_position",
+        "maru_assert_position_structure_evidence()",
+        21,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    "ac_workforce_opportunity_structure_guard": _trigger(
+        "workforce_volunteeropportunity",
+        "maru_validate_opportunity_structure_write()",
+        23,
+    ),
+    "workforce_opportunity_structure_evidence": _trigger(
+        "workforce_volunteeropportunity",
+        "maru_assert_opportunity_structure_evidence()",
+        21,
+        deferrable=True,
+        initially_deferred=True,
+    ),
 }
 
 PAGE9_FUNCTION_DEFINITION_SHA256 = {
@@ -197,6 +246,21 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
     ),
     "maru_guard_position_retired_department()": (
         "6518f7456d68cd68fba7bf3eb3b2056de1c9a2308c49160bfcca7e052834c19d"
+    ),
+    "maru_assert_opportunity_structure_evidence()": (
+        "ccdadc120d19afccdb078986412dd48151b3458f7b178dbcd1d172a5d010689c"
+    ),
+    "maru_assert_position_structure_evidence()": (
+        "5669006e6ede713832cf294c8b1d192b990c064eec90e52d0d5b622770a74110"
+    ),
+    "maru_validate_opportunity_structure_write()": (
+        "ab2f366a1aed806f637d82aa32ddeee0d8823fcdb84b5bf112d88ecec43ff830"
+    ),
+    "maru_validate_position_structure_receipt()": (
+        "5490ada7d1367482d743391b9a0a0cca0e6ed0a96ab8c5dab3e0a477a0d1304d"
+    ),
+    "maru_validate_position_structure_write()": (
+        "89807ac3c1e9eb9cc35568a2b2e4b4ced17e661c25e2ef037dee2842e1644d48"
     ),
     "maru_prevent_department_structure_truncate()": (
         "747cdf967ed6a518d641beed4abba918ae69938ad5f4ae4c5b99e3129b8cce1f"
@@ -259,12 +323,13 @@ def _declared_page9_triggers() -> dict[str, tuple[object, ...]]:
             "O",
             contract.deferrable,
             contract.initially_deferred,
-            True,
+            contract.definition is None,
             0,
             contract.columns,
+            contract.definition,
         )
         for contract in provenance_readiness._TRIGGER_CONTRACTS
-        if "workforce_page9" in contract.name
+        if contract.name in PAGE9_TRIGGER_CONTRACTS
     }
 
 
@@ -289,7 +354,8 @@ def _installed_page9_triggers() -> dict[str, tuple[object, ...]]:
                            ON attribute.attrelid = trigger.tgrelid
                           AND attribute.attnum = selected.attnum
                         ORDER BY selected.position
-                   )
+                   ),
+                   pg_catalog.pg_get_triggerdef(trigger.oid, TRUE)
               FROM pg_catalog.pg_trigger AS trigger
               JOIN pg_catalog.pg_class AS relation
                 ON relation.oid = trigger.tgrelid
@@ -307,6 +373,13 @@ def _installed_page9_triggers() -> dict[str, tuple[object, ...]]:
                    OR trigger.tgname LIKE 'ab_workforce_page9_%'
                    OR trigger.tgname LIKE 'ac_workforce_page9_%'
                    OR trigger.tgname LIKE 'workforce_page9_%'
+                   OR trigger.tgname IN (
+                       'ac_workforce_position_receipt_guard',
+                       'ac_workforce_position_structure_guard',
+                       'workforce_position_structure_evidence',
+                       'ac_workforce_opportunity_structure_guard',
+                       'workforce_opportunity_structure_evidence'
+                   )
                )
              ORDER BY trigger.tgname
             """
@@ -315,7 +388,14 @@ def _installed_page9_triggers() -> dict[str, tuple[object, ...]]:
     assert not [
         name for name, count in Counter(row[0] for row in rows).items() if count > 1
     ]
-    return {str(row[0]): (*tuple(row[1:9]), tuple(row[9] or ())) for row in rows}
+    return {
+        str(row[0]): (
+            *tuple(row[1:9]),
+            tuple(row[9] or ()),
+            None if row[7] else str(row[10]),
+        )
+        for row in rows
+    }
 
 
 def _installed_page9_function_hashes() -> dict[str, str]:
@@ -358,7 +438,7 @@ def _installed_page9_function_hashes() -> dict[str, str]:
 
 
 def test_page9_catalog_is_declared_and_installed_exactly() -> None:
-    assert len(PAGE9_TRIGGER_CONTRACTS) == 28
+    assert len(PAGE9_TRIGGER_CONTRACTS) == 33
     assert _declared_page9_triggers() == PAGE9_TRIGGER_CONTRACTS
     assert _installed_page9_triggers() == PAGE9_TRIGGER_CONTRACTS
     assert {
@@ -455,6 +535,7 @@ def test_page9_constraint_timing_tamper_blocks_readiness() -> None:
         "0007_structure_write_integrity",
         "0008_department_fk_contract_successor",
         "0009_reconcile_fictional_structure_template",
+        "0010_position_structure_commands",
     ],
 )
 def test_missing_page9_migration_recorder_row_blocks_readiness(

@@ -4,7 +4,7 @@ Status: Historical accepted baseline; ADR 0039 unified shell is current
 Last updated: 2026-08-01
 
 ADR 0030 deliberately exposed only Sign in and one empty administration home.
-The owner accepted that baseline. Pages 1–8 superseded its executable surface,
+The owner accepted that baseline. The platform setup and representation journey superseded its executable surface,
 and ADR 0039 moved them into the unified `/admin/` shell. Keep this
 document for the isolated database and original reset boundary. Use the
 [hands-on tutorial](maru-hands-on-tutorial.md) for current routes. Backend
@@ -26,7 +26,7 @@ The database began with one account and no domain records. It may now contain
 the owner's Draft MaruCon organization and M1 rehearsal records. Do not infer a
 known-empty state from the database name or delete those records. After
 identity migration `0010`, the first account is explicitly an active
-`platform_administrator` as described by the Page 1 runbook.
+`platform_administrator` as described by the Platform administration home runbook.
 
 ## Start the current controlled shell
 
@@ -41,13 +41,13 @@ uv run python src/manage.py runserver
 Open <http://127.0.0.1:8000/admin/> and sign in as `admin`.
 
 The current surface mounts organization inventory/creation/record, convention-
-series creation/record, event-edition creation/record, Page 8 representation,
+series creation/record, event-edition creation/record, Representation & access,
 governance invitations, and explicit edition working context. Apply all
 current migrations before starting; a missing
 `login_handle`, series profile version, edition aggregate version, or creation
 receipt column means the selected database is behind the running code.
 
-Historical baseline behavior before Page 1:
+Historical baseline behavior before Platform administration home:
 
 - `/` redirects to `/admin/`;
 - an anonymous `/admin/` request redirects to `/accounts/login/`;

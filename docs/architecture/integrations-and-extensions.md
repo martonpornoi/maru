@@ -42,7 +42,7 @@ The supported REST API provides:
 An API version is a compatibility contract, not a copy of internal Django URLs.
 Breaking change requires a new major boundary or supported transition period.
 
-Page 9a.0 demonstrates the read-projection form at
+Organization structure read projection demonstrates the read-projection form at
 `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure`.
 It accepts no query parameters and returns exact organization/edition labels,
 a minimized Executive Board governance discriminator, and either one complete
@@ -57,7 +57,7 @@ The endpoint repeats fresh exact authorization and persists one minimized
 sensitive-read audit before releasing its name-bearing response. Audit failure
 uses the same generic `503` dependency boundary.
 
-Page 10 adds the platform identity invitation contract:
+Registration setup and account onboarding adds the platform identity invitation contract:
 
 ```text
 POST /api/v1/platform/account-invitations
@@ -78,7 +78,7 @@ material, audit/event/log data, or error content. Every failure is RFC 9457;
 missing identities and invalid, expired, revoked, consumed, or superseded
 public challenges follow non-disclosing boundaries.
 
-Page 10 also adds the governed Registration definition contract:
+Registration setup and account onboarding also adds the governed Registration definition contract:
 
 ```text
 POST /api/v1/organizations/{organization_id}/editions/{edition_id}/registration/configuration/{configuration_id}/commands

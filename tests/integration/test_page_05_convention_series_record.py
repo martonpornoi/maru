@@ -89,7 +89,7 @@ def test_series_record_is_scoped_reachable_and_progressive() -> None:
     assert content.count('aria-current="page"') == 1
     assert "Series record" in content
     assert "Last changed:" in content
-    assert '<h2 id="maru-access-heading">Access</h2>' in content
+    assert '<summary id="maru-access-heading">' in content
     assert "does not store its own sharing list" in content
 
 

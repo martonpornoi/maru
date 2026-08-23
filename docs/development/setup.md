@@ -127,13 +127,13 @@ The account uses its email address or optional unique login handle to sign in
 at <http://127.0.0.1:8000/admin/>. A superuser is explicitly classified as a
 non-participating platform administrator. ADR 0039 makes one `/admin/` shell
 the default, with Convention work, permission-filtered specialist records, and
-Pages 1–8 below `/admin/platform/`. Backend route and authorization
+the platform setup and representation journey below `/admin/platform/`. Backend route and authorization
 verification passes. Active scoped accounts do not need Django `is_staff`
 merely to enter the Maru shell or use their allowed organization workflows;
 specialist records still require independent staff/model permissions. Local password
 authentication is not the production identity system.
 
-ADR 0040 adds a Page 8 representation handoff to that selected-organization
+ADR 0040 adds a Representation & access handoff to that selected-organization
 route space. Its schema, service, HTML, authorization, synthetic-fixture,
 populated/fresh migration, local restore, and responsive browser checks pass.
 Do not exercise it against an important database or infer Board members from
@@ -189,7 +189,7 @@ Do not use `--fake`, disable the triggers, or roll old writers over the new
 guards. Follow the [Executive Board recovery runbook](../operations/executive-board-migration-and-recovery.md)
 and [IDN-011 subject-boundary runbook](../operations/idn011-convention-subject-migration-and-recovery.md).
 
-### Page 9 write-integrity and readiness boundary
+### Organization structure write-integrity and readiness boundary
 
 Workforce `0006_edition_structure_schema`, authorization
 `0010_retired_department_authority_guards`, and workforce
@@ -200,7 +200,7 @@ without invented receipts, and installs the final control/receipt/Department
 write boundary.
 
 Production readiness requires the `0007` recorder row, definition fingerprints
-for all 14 Page 9 `SECURITY DEFINER` helpers, and the exact catalog shape of all
+for all 14 Organization structure `SECURITY DEFINER` helpers, and the exact catalog shape of all
 28 trigger attachments. Those helpers stay outside
 `RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2`; direct `PUBLIC` and runtime
 execution remains revoked. Do not use table presence, a successful ORM save,
@@ -237,7 +237,7 @@ uv run python src/manage.py bootstrap_convention `
 ADR 0040 supersedes this broad bootstrap as the normal first-authority path.
 The command and underlying service remain operator/recovery evidence, not a
 browser or public API workflow. Do not use them for a new Draft organization or
-as an alternative to Page 8. They may be considered only by an approved legacy-
+as an alternative to Representation & access. They may be considered only by an approved legacy-
 reconciliation procedure because they also create edition, workforce, and
 participation relationships.
 
@@ -257,7 +257,7 @@ Use the deterministic synthetic fixture instead:
 uv run python src/manage.py seed_demo_data
 ```
 
-The synthetic fixture exercises the real Page 8 Executive Board provision,
+The synthetic fixture exercises the real Representation & access Executive Board provision,
 invitation, self-response, and two-controller activation services while
 keeping the platform administrator outside convention relationships. Continue
 the hands-on journey through **Representation & access** under the selected
@@ -284,7 +284,7 @@ The command creates:
 - archived 2025, preparing 2026, and draft 2027 editions for each series;
 - board, convention leadership, department leads, volunteers, attendees,
   programme hosts, dealers, guests, performers, media, and edge cases;
-- versioned Page 9 structure controls and immutable retry receipts for the
+- versioned Organization structure controls and immutable retry receipts for the
   synthetic workforce Departments, created before lifecycle progression;
 - memberships, overlapping participation capacities, historical snapshots,
   versioned role bundles, and scoped role assignments;
@@ -396,15 +396,15 @@ Do not use `flush`, delete the volume, or roll back migrations when the target
 database might contain valuable work.
 
 The edition-creation API requires a UUID `Idempotency-Key` HTTP header; its JSON
-body must not contain `idempotency_key`. HTML Page 6 manages its own hidden
+body must not contain `idempotency_key`. HTML Create event edition manages its own hidden
 retry UUID. Both adapters call the same service and receipt boundary.
 
-All Page 10 platform-invitation API mutations likewise require a canonical
+All platform account-invitation API mutations likewise require a canonical
 lower-case UUID `Idempotency-Key` header and reject `retry_key` in JSON. Public
 acceptance is JSON-only at `/api/v1/public/account-invitations/accept`; submit
 the invitation code in the body, never in a path or query string. The exact-
 origin CORS response permits `Idempotency-Key` for approved seasonal clients.
-Page 10 Registration definition mutations use the same header-only retry
+Registration-definition mutations use the same header-only retry
 contract on the canonical configuration-command and profile-extension-field
 endpoints. Their JSON bodies must not contain `retry_key`; configuration
 commands additionally require one documented closed `operation` value and the
@@ -440,8 +440,8 @@ adapting
 deliver its credential only through the deployment secret manager. Production
 health accepts only a fresh connection genuinely authenticated as that login;
 `SET ROLE` is not equivalent. The runtime role has four-operation DML on
-ordinary application tables, `SELECT`/`INSERT` on Page 9 structure receipts,
-and `SELECT`/`INSERT`/`UPDATE` on Page 9 structure controls, but only SELECT on
+ordinary application tables, `SELECT`/`INSERT` on Organization structure receipts,
+and `SELECT`/`INSERT`/`UPDATE` on Organization structure controls, but only SELECT on
 provenance marker/latch controls. It has no structure-table `REFERENCES`,
 sequence update, parameter-control ACL, persistent trigger-disable setting,
 membership admin option, or database-object grant option. Department remains

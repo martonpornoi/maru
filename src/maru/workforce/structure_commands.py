@@ -1,8 +1,4 @@
-"""Shared, unmounted Page 9a.1 Department structure commands.
-
-The HTML and API adapters deliberately do not exist yet.  This module is the
-single transaction boundary they will call once Page 9a.1 is mounted.
-"""
+"""Shared edition workforce-structure commands for browser and API adapters."""
 
 from __future__ import annotations
 
@@ -19,8 +15,11 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
+from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.authorization.catalog import POLICY_VERSION
+from maru.authorization.models import CapabilityGrant, RoleAssignment
 from maru.authorization.policy import PolicyDecision, decide, resolve_edition_target
+from maru.authorization.provenance import role_bundle_provenance_is_historical
 from maru.authorization.queries import (
     department_authority_dependencies,
     edition_resource_binding_count,
@@ -38,17 +37,29 @@ from maru.workforce.models import (
     EditionStructureControl,
     Position,
     PositionAssignment,
+    PositionTemplate,
+    VolunteerOpportunity,
 )
-from maru.workforce.queries import MAX_STRUCTURE_DEPARTMENTS, MAX_STRUCTURE_DEPTH
+from maru.workforce.queries import (
+    MAX_STRUCTURE_DEPARTMENTS,
+    MAX_STRUCTURE_DEPTH,
+    MAX_STRUCTURE_POSITIONS,
+)
 from maru.workforce.structure_inputs import (
     MAX_DEPARTMENT_DISPLAY_ORDER,
     canonical_request_digest,
     generate_department_code,
+    generate_position_code,
     normalize_department_description,
     normalize_department_name,
+    normalize_opportunity_description,
+    normalize_opportunity_headline,
+    normalize_position_description,
+    normalize_position_title,
     normalize_structure_reason,
     validate_department_display_order,
     validate_exact_confirmation,
+    validate_position_headcount,
 )
 from maru.workforce.structure_templates import (
     UnknownBuiltinStructureTemplateError,
@@ -169,6 +180,12 @@ class StructureDepartmentUnavailableError(StructureCommandError):
     reason_code = "structure_department_unavailable"
 
 
+class StructurePositionUnavailableError(StructureCommandError):
+    """Signal that a Position target is unavailable in the authorized scope."""
+
+    reason_code = "structure_position_unavailable"
+
+
 class StructureVersionConflictError(StructureCommandError):
     """Signal structure version conflict."""
 
@@ -262,12 +279,26 @@ class DepartmentStructureResult:
 
 
 @dataclass(frozen=True, slots=True)
+class PositionStructureResult:
+    """Describe one minimized Position or opportunity command result."""
+
+    structure_id: UUID
+    receipt_id: UUID | None
+    position_id: UUID
+    resulting_version: int
+    changed_fields: tuple[str, ...]
+    action: str
+    replayed: bool
+
+
+@dataclass(frozen=True, slots=True)
 class _LockedScope:
     organization: Organization
     series: ConventionSeries
     edition: EventEdition
     control: EditionStructureControl | None
     departments: tuple[Department, ...]
+    positions: tuple[Position, ...]
     manage_decision: PolicyDecision
     evaluated_at: datetime
 
@@ -439,6 +470,14 @@ def _lock_scope(
     )
     if len(departments) > MAX_STRUCTURE_DEPARTMENTS:
         raise StructureLimitConflictError
+    positions = tuple(
+        Position.objects.select_for_update(of=("self",))
+        .select_related("template", "role_bundle", "department", "reports_to")
+        .filter(organization_id=organization.id, edition_id=edition.id)
+        .order_by("id")[: MAX_STRUCTURE_POSITIONS + 1]
+    )
+    if len(positions) > MAX_STRUCTURE_POSITIONS:
+        raise StructureLimitConflictError
     persisted_actor = Account.objects.select_for_update().filter(pk=actor.pk).first()
     if persisted_actor is None:
         raise StructureAuthorizationDeniedError
@@ -456,6 +495,7 @@ def _lock_scope(
         edition=edition,
         control=control,
         departments=departments,
+        positions=positions,
         manage_decision=manage_decision,
         evaluated_at=evaluated_at,
     )
@@ -482,10 +522,7 @@ def _current_version(scope: _LockedScope) -> int:
 def _edition_has_structure_content(scope: _LockedScope) -> bool:
     if scope.departments:
         return True
-    if Position.objects.filter(
-        organization_id=scope.organization.id,
-        edition_id=scope.edition.id,
-    ).exists():
+    if scope.positions:
         return True
     if PositionAssignment.objects.filter(
         organization_id=scope.organization.id,
@@ -571,6 +608,7 @@ def _append_change_evidence(
     template_version: int | None = None,
     template_digest: str = "",
     deleted_name_snapshot: str = "",
+    affected_position: Position | None = None,
 ) -> EditionStructureCommandReceipt:
     receipt = EditionStructureCommandReceipt.objects.create(
         structure=control,
@@ -584,6 +622,7 @@ def _append_change_evidence(
         source_channel=source_channel,
         changed_fields=list(changed_fields),
         affected_department_ids=list(affected_department_ids),
+        affected_position=affected_position,
         retry_key=retry_key,
         request_digest=request_digest,
         template_code=template_code,
@@ -1659,6 +1698,1036 @@ def delete_unused_department(
             department_id=department_id,
             resulting_version=resulting_version,
             changed_fields=("departments",),
+            action=receipt.action,
+            replayed=False,
+        )
+
+
+def _position_by_id(scope: _LockedScope, position_id: UUID) -> Position:
+    position = next((item for item in scope.positions if item.id == position_id), None)
+    if position is None:
+        raise StructurePositionUnavailableError
+    return position
+
+
+def _published_position_template(
+    scope: _LockedScope,
+    *,
+    template_id: UUID,
+    actor: Account,
+    initial_authority_bootstrap: bool,
+) -> PositionTemplate:
+    template = (
+        PositionTemplate.objects.select_for_update()
+        .select_related("role_bundle")
+        .filter(
+            id=template_id,
+            organization_id=scope.organization.id,
+            status=PositionTemplate.Status.PUBLISHED,
+        )
+        .order_by()
+        .first()
+    )
+    provenance_is_historical = template is not None and (
+        role_bundle_provenance_is_historical(
+            bundle=template.role_bundle,
+            evaluated_at=scope.evaluated_at,
+            lock=True,
+        )
+    )
+    initial_chair_template_is_safe = bool(
+        initial_authority_bootstrap
+        and template is not None
+        and actor.is_platform_administrator
+        and not scope.positions
+        and scope.control is not None
+        and scope.control.aggregate_version == 1
+        and template.code == "convention-chair"
+        and template.created_by_id == actor.id
+        and template.role_bundle.created_by_id == actor.id
+        and template.role_bundle.approved_by_id is not None
+        and template.role_bundle.approved_by_id != actor.id
+    )
+    if template is None or not (
+        provenance_is_historical or initial_chair_template_is_safe
+    ):
+        raise ValidationError(
+            {
+                "template_id": ValidationError(
+                    "Choose an available published Position template.",
+                    code="structure_position_template_unavailable",
+                )
+            }
+        )
+    return template
+
+
+def _active_position_department(
+    scope: _LockedScope,
+    *,
+    department_id: UUID,
+) -> Department:
+    return _department_by_id(scope, department_id)
+
+
+def _reporting_position(
+    scope: _LockedScope,
+    *,
+    reports_to_id: UUID | None,
+    current_position_id: UUID | None = None,
+) -> Position | None:
+    if reports_to_id is None:
+        return None
+    if current_position_id is not None and reports_to_id == current_position_id:
+        raise ValidationError(
+            {
+                "reports_to_id": ValidationError(
+                    "A Position cannot report to itself.",
+                    code="structure_position_reports_to_self",
+                )
+            }
+        )
+    manager = _position_by_id(scope, reports_to_id)
+    if manager.status == Position.Status.CLOSED:
+        raise ValidationError(
+            {
+                "reports_to_id": ValidationError(
+                    "Choose a current Position in this edition.",
+                    code="structure_position_manager_closed",
+                )
+            }
+        )
+    return manager
+
+
+def _validate_position_reporting_graph(
+    positions: tuple[Position, ...],
+    *,
+    changed_position_id: UUID | None = None,
+    changed_reports_to_id: UUID | None = None,
+    added_position: Position | None = None,
+) -> None:
+    parent_by_id = {position.id: position.reports_to_id for position in positions}
+    if added_position is not None:
+        parent_by_id[added_position.id] = added_position.reports_to_id
+    if changed_position_id is not None:
+        parent_by_id[changed_position_id] = changed_reports_to_id
+    known_ids = frozenset(parent_by_id)
+    for position_id in sorted(parent_by_id, key=str):
+        seen: set[UUID] = set()
+        cursor: UUID | None = position_id
+        depth = 0
+        while cursor is not None:
+            if cursor in seen:
+                raise ValidationError(
+                    {
+                        "reports_to_id": ValidationError(
+                            "The Position reporting line cannot contain a cycle.",
+                            code="structure_position_reporting_cycle",
+                        )
+                    }
+                )
+            if cursor not in known_ids:
+                raise StructureStateConflictError(
+                    "The Position reporting graph is incomplete."
+                )
+            seen.add(cursor)
+            depth += 1
+            if depth > MAX_STRUCTURE_DEPTH:
+                raise StructureLimitConflictError
+            cursor = parent_by_id[cursor]
+
+
+def _position_authority_is_open(scope: _LockedScope, position: Position) -> bool:
+    current_or_future = Q(expires_at__isnull=True) | Q(
+        expires_at__gt=scope.evaluated_at
+    )
+    binding_scope = {
+        "organization_id": scope.organization.id,
+        "edition_id": scope.edition.id,
+        "resource_binding__resource_kind": "workforce.position",
+        "resource_binding__resource_id": position.id,
+    }
+    return bool(
+        CapabilityGrant.objects.filter(
+            **binding_scope,
+            revoked_at__isnull=True,
+        )
+        .filter(current_or_future)
+        .exists()
+        or RoleAssignment.objects.filter(
+            **binding_scope,
+            revoked_at__isnull=True,
+        )
+        .filter(current_or_future)
+        .exists()
+    )
+
+
+def create_position(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    series_id: UUID,
+    edition_id: UUID,
+    template_id: UUID,
+    department_id: UUID,
+    reports_to_id: UUID | None,
+    title: str,
+    description: str,
+    headcount: int,
+    expected_version: int,
+    reason: str,
+    retry_key: UUID,
+    correlation_id: UUID,
+    request_id: UUID | None = None,
+    source_channel: str = "service",
+    initial_authority_bootstrap: bool = False,
+) -> PositionStructureResult:
+    """Create one Position, its draft opportunity, and exact resource binding.
+
+    Parameters
+    ----------
+    actor : Account
+        Authenticated account authorizing and explaining the change.
+    organization_id : UUID
+        Organization that owns the template and exact edition.
+    series_id : UUID
+        Convention series in the persisted route chain.
+    edition_id : UUID
+        Editable event edition that owns the Position.
+    template_id : UUID
+        Published organization Position template with historical provenance.
+    department_id : UUID
+        Active exact-edition Department that permanently scopes the Position.
+    reports_to_id : UUID | None
+        Optional current same-edition operational reporting Position.
+    title : str
+        Human-readable responsibility title.
+    description : str
+        Organizer- and applicant-facing purpose and responsibilities.
+    headcount : int
+        Maximum number of proposed and active holders.
+    expected_version : int
+        Exact structure version required for optimistic concurrency.
+    reason : str
+        Organizer rationale retained with the command receipt.
+    retry_key : UUID
+        Stable identifier that makes an exact creation retry idempotent.
+    correlation_id : UUID
+        Correlation identifier shared by audit and domain-event evidence.
+    request_id : UUID | None, default=None
+        Incoming request identifier, or the correlation identifier when absent.
+    source_channel : str, default='service'
+        Closed channel code identifying the command adapter.
+    initial_authority_bootstrap : bool, default=False
+        Permit only the one initial Convention Chair template before authority
+        provenance activation; ordinary Position creation always rejects it.
+
+    Returns
+    -------
+    PositionStructureResult
+        Minimized Position identifier and committed aggregate evidence.
+
+    Raises
+    ------
+    StructureLimitConflictError
+        If the exact-edition Position ceiling has been reached.
+    StructureStateConflictError
+        If a retry receipt or aggregate lacks required Position evidence.
+    ValidationError
+        If Position input or the initial-authority bootstrap marker is invalid.
+    """
+    template_id = _validate_uuid(template_id, field_name="template_id")
+    department_id = _validate_uuid(department_id, field_name="department_id")
+    if reports_to_id is not None:
+        reports_to_id = _validate_uuid(reports_to_id, field_name="reports_to_id")
+    normalized_title = normalize_position_title(title)
+    normalized_description = normalize_position_description(description)
+    normalized_headcount = validate_position_headcount(headcount)
+    expected_version = _validate_expected_version(expected_version)
+    retry_key = _validate_uuid(retry_key, field_name="retry_key")
+    correlation_id = _validate_uuid(correlation_id, field_name="correlation_id")
+    source_channel = _validate_source_channel(source_channel)
+    if type(initial_authority_bootstrap) is not bool:
+        raise ValidationError(
+            {
+                "initial_authority_bootstrap": ValidationError(
+                    "Choose whether this is the initial authority bootstrap.",
+                    code="structure_initial_authority_bootstrap_invalid",
+                )
+            }
+        )
+    normalized_reason = normalize_structure_reason(reason)
+    _require_view_and_manage(
+        actor=actor,
+        organization_id=organization_id,
+        series_id=series_id,
+        edition_id=edition_id,
+        at=timezone.now(),
+    )
+
+    with transaction.atomic():
+        scope = _lock_scope(
+            actor=actor,
+            organization_id=organization_id,
+            series_id=series_id,
+            edition_id=edition_id,
+        )
+        _require_editable_lifecycle(scope)
+        template = _published_position_template(
+            scope,
+            template_id=template_id,
+            actor=actor,
+            initial_authority_bootstrap=initial_authority_bootstrap,
+        )
+        request_digest = canonical_request_digest(
+            {
+                "action": EditionStructureCommandReceipt.Action.POSITION_CREATED,
+                "organization_id": str(organization_id),
+                "series_id": str(series_id),
+                "edition_id": str(edition_id),
+                "template_id": str(template.id),
+                "department_id": str(department_id),
+                "reports_to_id": str(reports_to_id) if reports_to_id else None,
+                "title": normalized_title,
+                "description": normalized_description,
+                "headcount": normalized_headcount,
+                "expected_version": expected_version,
+                "reason": normalized_reason,
+                "initial_authority_bootstrap": initial_authority_bootstrap,
+            }
+        )
+        replay = _receipt_for_retry(
+            scope=scope,
+            actor_id=actor.id,
+            retry_key=retry_key,
+        )
+        if replay is not None:
+            _validate_retry_receipt(
+                receipt=replay,
+                action=EditionStructureCommandReceipt.Action.POSITION_CREATED,
+                request_digest=request_digest,
+            )
+            if replay.affected_position_id is None:
+                raise StructureStateConflictError
+            return PositionStructureResult(
+                structure_id=replay.structure_id,
+                receipt_id=replay.id,
+                position_id=replay.affected_position_id,
+                resulting_version=replay.resulting_version,
+                changed_fields=tuple(replay.changed_fields),
+                action=replay.action,
+                replayed=True,
+            )
+        current_version = _require_expected_version(scope, expected_version)
+        if scope.control is None or len(scope.positions) >= MAX_STRUCTURE_POSITIONS:
+            raise StructureLimitConflictError
+        department = _active_position_department(
+            scope,
+            department_id=department_id,
+        )
+        manager = _reporting_position(
+            scope,
+            reports_to_id=reports_to_id,
+        )
+        resulting_version = current_version + 1
+        position = Position(
+            organization=scope.organization,
+            edition=scope.edition,
+            template=template,
+            department=department,
+            reports_to=manager,
+            role_bundle=template.role_bundle,
+            code=generate_position_code(
+                template.code,
+                existing_codes=(item.code for item in scope.positions),
+            ),
+            title=normalized_title,
+            description=normalized_description,
+            headcount=normalized_headcount,
+            capacity_codes=list(template.default_capacity_codes),
+            status=Position.Status.PLANNED,
+            created_by=actor,
+            created_in_structure_version=resulting_version,
+            last_changed_in_structure_version=resulting_version,
+        )
+        _validate_position_reporting_graph(scope.positions, added_position=position)
+        control = _new_or_advanced_control(
+            scope=scope,
+            origin=EditionStructureControl.Origin.MANUAL,
+            resulting_version=resulting_version,
+        )
+        position.save(force_insert=True)
+        VolunteerOpportunity.objects.create(
+            position=position,
+            status=VolunteerOpportunity.Status.DRAFT,
+            headline=normalized_title,
+            description=normalized_description,
+            visible_when_filled=True,
+            created_in_structure_version=resulting_version,
+            last_changed_in_structure_version=resulting_version,
+        )
+        ensure_workforce_position_binding(position=position)
+        changed_fields = ("opportunity", "position", "resource_binding")
+        receipt = _append_change_evidence(
+            scope=scope,
+            actor=actor,
+            control=control,
+            action=EditionStructureCommandReceipt.Action.POSITION_CREATED,
+            resulting_version=resulting_version,
+            changed_fields=changed_fields,
+            affected_department_ids=(department.id,),
+            affected_position=position,
+            reason=normalized_reason,
+            correlation_id=correlation_id,
+            request_id=request_id,
+            source_channel=source_channel,
+            retry_key=retry_key,
+            request_digest=request_digest,
+        )
+        return PositionStructureResult(
+            structure_id=control.id,
+            receipt_id=receipt.id,
+            position_id=position.id,
+            resulting_version=resulting_version,
+            changed_fields=changed_fields,
+            action=receipt.action,
+            replayed=False,
+        )
+
+
+def update_position(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    series_id: UUID,
+    edition_id: UUID,
+    position_id: UUID,
+    reports_to_id: UUID | None,
+    title: str,
+    description: str,
+    headcount: int,
+    expected_version: int,
+    reason: str,
+    correlation_id: UUID,
+    request_id: UUID | None = None,
+    source_channel: str = "service",
+) -> PositionStructureResult:
+    """Replace the editable operational details of one current Position.
+
+    Parameters
+    ----------
+    actor : Account
+        Authenticated account authorizing and explaining the change.
+    organization_id : UUID
+        Organization that owns the exact edition.
+    series_id : UUID
+        Convention series in the persisted route chain.
+    edition_id : UUID
+        Editable event edition that owns the Position.
+    position_id : UUID
+        Current Position whose operational details are replaced.
+    reports_to_id : UUID | None
+        Optional current same-edition reporting Position.
+    title : str
+        Complete replacement responsibility title.
+    description : str
+        Complete replacement purpose and responsibilities.
+    headcount : int
+        Replacement approved holder ceiling.
+    expected_version : int
+        Exact structure version required for optimistic concurrency.
+    reason : str
+        Organizer rationale retained for a real change.
+    correlation_id : UUID
+        Correlation identifier shared by audit and domain-event evidence.
+    request_id : UUID | None, default=None
+        Incoming request identifier, or the correlation identifier when absent.
+    source_channel : str, default='service'
+        Closed channel code identifying the command adapter.
+
+    Returns
+    -------
+    PositionStructureResult
+        Committed aggregate evidence, or an unchanged same-version result.
+
+    Raises
+    ------
+    StructureStateConflictError
+        If the Position is closed or required aggregate evidence is absent.
+    ValidationError
+        If headcount or the resulting reporting graph is invalid.
+    """
+    position_id = _validate_uuid(position_id, field_name="position_id")
+    if reports_to_id is not None:
+        reports_to_id = _validate_uuid(reports_to_id, field_name="reports_to_id")
+    normalized_title = normalize_position_title(title)
+    normalized_description = normalize_position_description(description)
+    normalized_headcount = validate_position_headcount(headcount)
+    expected_version = _validate_expected_version(expected_version)
+    correlation_id = _validate_uuid(correlation_id, field_name="correlation_id")
+    source_channel = _validate_source_channel(source_channel)
+    normalized_reason = normalize_structure_reason(reason)
+    _require_view_and_manage(
+        actor=actor,
+        organization_id=organization_id,
+        series_id=series_id,
+        edition_id=edition_id,
+        at=timezone.now(),
+    )
+
+    with transaction.atomic():
+        scope = _lock_scope(
+            actor=actor,
+            organization_id=organization_id,
+            series_id=series_id,
+            edition_id=edition_id,
+        )
+        _require_editable_lifecycle(scope)
+        current_version = _require_expected_version(scope, expected_version)
+        position = _position_by_id(scope, position_id)
+        if position.status == Position.Status.CLOSED:
+            raise StructureStateConflictError("A closed Position is immutable.")
+        manager = _reporting_position(
+            scope,
+            reports_to_id=reports_to_id,
+            current_position_id=position.id,
+        )
+        open_assignments = tuple(
+            PositionAssignment.objects.select_for_update()
+            .filter(
+                position_id=position.id,
+                organization_id=scope.organization.id,
+                edition_id=scope.edition.id,
+                status__in=(
+                    PositionAssignment.Status.PROPOSED,
+                    PositionAssignment.Status.ACTIVE,
+                ),
+            )
+            .order_by("id")
+        )
+        if normalized_headcount < len(open_assignments):
+            raise ValidationError(
+                {
+                    "headcount": ValidationError(
+                        (
+                            "Headcount cannot be lower than current and proposed "
+                            "assignments."
+                        ),
+                        code="structure_position_headcount_below_assignments",
+                    )
+                }
+            )
+        changed_fields = tuple(
+            sorted(
+                field
+                for field, changed in (
+                    ("description", position.description != normalized_description),
+                    ("headcount", position.headcount != normalized_headcount),
+                    ("reports_to", position.reports_to_id != reports_to_id),
+                    ("title", position.title != normalized_title),
+                )
+                if changed
+            )
+        )
+        if not changed_fields:
+            if scope.control is None:
+                raise StructureStateConflictError
+            return PositionStructureResult(
+                structure_id=scope.control.id,
+                receipt_id=None,
+                position_id=position.id,
+                resulting_version=current_version,
+                changed_fields=(),
+                action=EditionStructureCommandReceipt.Action.POSITION_UPDATED,
+                replayed=False,
+            )
+        _validate_position_reporting_graph(
+            scope.positions,
+            changed_position_id=position.id,
+            changed_reports_to_id=reports_to_id,
+        )
+        resulting_version = current_version + 1
+        control = _new_or_advanced_control(
+            scope=scope,
+            origin=EditionStructureControl.Origin.MANUAL,
+            resulting_version=resulting_version,
+        )
+        position.title = normalized_title
+        position.description = normalized_description
+        position.headcount = normalized_headcount
+        position.reports_to = manager
+        position.last_changed_in_structure_version = resulting_version
+        position.save(
+            update_fields=(
+                "title",
+                "description",
+                "headcount",
+                "reports_to",
+                "last_changed_in_structure_version",
+                "updated_at",
+            )
+        )
+        receipt = _append_change_evidence(
+            scope=scope,
+            actor=actor,
+            control=control,
+            action=EditionStructureCommandReceipt.Action.POSITION_UPDATED,
+            resulting_version=resulting_version,
+            changed_fields=changed_fields,
+            affected_department_ids=(position.department_id,),
+            affected_position=position,
+            reason=normalized_reason,
+            correlation_id=correlation_id,
+            request_id=request_id,
+            source_channel=source_channel,
+        )
+        return PositionStructureResult(
+            structure_id=control.id,
+            receipt_id=receipt.id,
+            position_id=position.id,
+            resulting_version=resulting_version,
+            changed_fields=changed_fields,
+            action=receipt.action,
+            replayed=False,
+        )
+
+
+_OPPORTUNITY_TRANSITIONS: dict[str, frozenset[str]] = {
+    VolunteerOpportunity.Status.DRAFT: frozenset(
+        {
+            VolunteerOpportunity.Status.DRAFT,
+            VolunteerOpportunity.Status.PUBLISHED,
+            VolunteerOpportunity.Status.WITHDRAWN,
+        }
+    ),
+    VolunteerOpportunity.Status.PUBLISHED: frozenset(
+        {
+            VolunteerOpportunity.Status.PUBLISHED,
+            VolunteerOpportunity.Status.CLOSED,
+            VolunteerOpportunity.Status.WITHDRAWN,
+        }
+    ),
+    VolunteerOpportunity.Status.CLOSED: frozenset(
+        {
+            VolunteerOpportunity.Status.CLOSED,
+            VolunteerOpportunity.Status.PUBLISHED,
+            VolunteerOpportunity.Status.WITHDRAWN,
+        }
+    ),
+    VolunteerOpportunity.Status.WITHDRAWN: frozenset(
+        {VolunteerOpportunity.Status.WITHDRAWN}
+    ),
+}
+
+
+def update_position_opportunity(  # noqa: PLR0912, PLR0915
+    *,
+    actor: Account,
+    organization_id: UUID,
+    series_id: UUID,
+    edition_id: UUID,
+    position_id: UUID,
+    status: str,
+    headline: str,
+    description: str,
+    applications_open_at: datetime | None,
+    applications_close_at: datetime | None,
+    visible_when_filled: bool,
+    expected_version: int,
+    reason: str,
+    correlation_id: UUID,
+    request_id: UUID | None = None,
+    source_channel: str = "service",
+) -> PositionStructureResult:
+    """Replace the applicant-facing opportunity paired to one Position.
+
+    Parameters
+    ----------
+    actor : Account
+        Authenticated account authorizing and explaining the change.
+    organization_id : UUID
+        Organization that owns the exact edition.
+    series_id : UUID
+        Convention series in the persisted route chain.
+    edition_id : UUID
+        Editable event edition that owns the Position.
+    position_id : UUID
+        Current Position paired with the opportunity.
+    status : str
+        Requested opportunity lifecycle state.
+    headline : str
+        Complete applicant-facing headline.
+    description : str
+        Complete applicant-facing opportunity description.
+    applications_open_at : datetime | None
+        Optional aware instant when applications begin.
+    applications_close_at : datetime | None
+        Optional aware instant after opening when applications stop.
+    visible_when_filled : bool
+        Whether a filled opportunity remains publicly discoverable.
+    expected_version : int
+        Exact structure version required for optimistic concurrency.
+    reason : str
+        Organizer rationale retained for a real change.
+    correlation_id : UUID
+        Correlation identifier shared by audit and domain-event evidence.
+    request_id : UUID | None, default=None
+        Incoming request identifier, or the correlation identifier when absent.
+    source_channel : str, default='service'
+        Closed channel code identifying the command adapter.
+
+    Returns
+    -------
+    PositionStructureResult
+        Committed aggregate evidence, or an unchanged same-version result.
+
+    Raises
+    ------
+    StructureStateConflictError
+        If the Position is closed or required aggregate evidence is absent.
+    ValidationError
+        If the lifecycle, boolean, date-time, or application window is invalid.
+    """
+    position_id = _validate_uuid(position_id, field_name="position_id")
+    if status not in VolunteerOpportunity.Status.values:
+        raise ValidationError(
+            {
+                "status": ValidationError(
+                    "Choose a supported opportunity status.",
+                    code="structure_opportunity_status_invalid",
+                )
+            }
+        )
+    normalized_headline = normalize_opportunity_headline(headline)
+    normalized_description = normalize_opportunity_description(description)
+    if type(visible_when_filled) is not bool:
+        raise ValidationError(
+            {
+                "visible_when_filled": ValidationError(
+                    "Choose whether the opportunity remains visible when filled.",
+                    code="structure_opportunity_visibility_invalid",
+                )
+            }
+        )
+    for field_name, date_value in (
+        ("applications_open_at", applications_open_at),
+        ("applications_close_at", applications_close_at),
+    ):
+        if date_value is not None and not timezone.is_aware(date_value):
+            raise ValidationError(
+                {
+                    field_name: ValidationError(
+                        "Enter a date and time with an explicit timezone.",
+                        code="structure_opportunity_datetime_invalid",
+                    )
+                }
+            )
+    if (
+        applications_open_at is not None
+        and applications_close_at is not None
+        and applications_close_at <= applications_open_at
+    ):
+        raise ValidationError(
+            {
+                "applications_close_at": ValidationError(
+                    "Closing must be after opening.",
+                    code="structure_opportunity_window_invalid",
+                )
+            }
+        )
+    expected_version = _validate_expected_version(expected_version)
+    correlation_id = _validate_uuid(correlation_id, field_name="correlation_id")
+    source_channel = _validate_source_channel(source_channel)
+    normalized_reason = normalize_structure_reason(reason)
+    _require_view_and_manage(
+        actor=actor,
+        organization_id=organization_id,
+        series_id=series_id,
+        edition_id=edition_id,
+        at=timezone.now(),
+    )
+
+    with transaction.atomic():
+        scope = _lock_scope(
+            actor=actor,
+            organization_id=organization_id,
+            series_id=series_id,
+            edition_id=edition_id,
+        )
+        _require_editable_lifecycle(scope)
+        current_version = _require_expected_version(scope, expected_version)
+        position = _position_by_id(scope, position_id)
+        if position.status == Position.Status.CLOSED:
+            raise StructureStateConflictError("A closed Position is immutable.")
+        opportunity = (
+            VolunteerOpportunity.objects.select_for_update()
+            .filter(position_id=position.id)
+            .order_by()
+            .first()
+        )
+        current_status = (
+            opportunity.status
+            if opportunity is not None
+            else VolunteerOpportunity.Status.DRAFT
+        )
+        if status not in _OPPORTUNITY_TRANSITIONS[current_status]:
+            raise ValidationError(
+                {
+                    "status": ValidationError(
+                        "That opportunity lifecycle transition is not available.",
+                        code="structure_opportunity_transition_invalid",
+                    )
+                }
+            )
+        values = {
+            "status": status,
+            "headline": normalized_headline,
+            "description": normalized_description,
+            "applications_open_at": applications_open_at,
+            "applications_close_at": applications_close_at,
+            "visible_when_filled": visible_when_filled,
+        }
+        if opportunity is None:
+            changed_fields = tuple(sorted(f"opportunity.{key}" for key in values))
+        else:
+            changed_fields = tuple(
+                sorted(
+                    f"opportunity.{field}"
+                    for field, value in values.items()
+                    if getattr(opportunity, field) != value
+                )
+            )
+        position_opens = (
+            status == VolunteerOpportunity.Status.PUBLISHED
+            and position.status == Position.Status.PLANNED
+        )
+        if position_opens:
+            changed_fields = tuple(sorted((*changed_fields, "status")))
+        if not changed_fields:
+            if scope.control is None:
+                raise StructureStateConflictError
+            return PositionStructureResult(
+                structure_id=scope.control.id,
+                receipt_id=None,
+                position_id=position.id,
+                resulting_version=current_version,
+                changed_fields=(),
+                action=EditionStructureCommandReceipt.Action.OPPORTUNITY_UPDATED,
+                replayed=False,
+            )
+        resulting_version = current_version + 1
+        control = _new_or_advanced_control(
+            scope=scope,
+            origin=EditionStructureControl.Origin.MANUAL,
+            resulting_version=resulting_version,
+        )
+        if opportunity is None:
+            opportunity = VolunteerOpportunity(
+                position=position,
+                created_in_structure_version=resulting_version,
+            )
+        for field, field_value in values.items():
+            setattr(opportunity, field, field_value)
+        opportunity.last_changed_in_structure_version = resulting_version
+        opportunity.save()
+        if position_opens:
+            position.status = Position.Status.OPEN
+            position.last_changed_in_structure_version = resulting_version
+            position.save(
+                update_fields=(
+                    "status",
+                    "last_changed_in_structure_version",
+                    "updated_at",
+                )
+            )
+        receipt = _append_change_evidence(
+            scope=scope,
+            actor=actor,
+            control=control,
+            action=EditionStructureCommandReceipt.Action.OPPORTUNITY_UPDATED,
+            resulting_version=resulting_version,
+            changed_fields=changed_fields,
+            affected_department_ids=(position.department_id,),
+            affected_position=position,
+            reason=normalized_reason,
+            correlation_id=correlation_id,
+            request_id=request_id,
+            source_channel=source_channel,
+        )
+        return PositionStructureResult(
+            structure_id=control.id,
+            receipt_id=receipt.id,
+            position_id=position.id,
+            resulting_version=resulting_version,
+            changed_fields=changed_fields,
+            action=receipt.action,
+            replayed=False,
+        )
+
+
+def close_position(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    series_id: UUID,
+    edition_id: UUID,
+    position_id: UUID,
+    expected_version: int,
+    confirmation_name: str,
+    reason: str,
+    correlation_id: UUID,
+    request_id: UUID | None = None,
+    source_channel: str = "service",
+) -> PositionStructureResult:
+    """Close one dependency-free Position and stop its opportunity.
+
+    Parameters
+    ----------
+    actor : Account
+        Authenticated account authorizing and explaining the closure.
+    organization_id : UUID
+        Organization that owns the exact edition.
+    series_id : UUID
+        Convention series in the persisted route chain.
+    edition_id : UUID
+        Editable event edition that owns the Position.
+    position_id : UUID
+        Current Position to preserve as closed history.
+    expected_version : int
+        Exact structure version required for optimistic concurrency.
+    confirmation_name : str
+        Exact current Position title used as destructive-action confirmation.
+    reason : str
+        Organizer rationale retained with the closure receipt.
+    correlation_id : UUID
+        Correlation identifier shared by audit and domain-event evidence.
+    request_id : UUID | None, default=None
+        Incoming request identifier, or the correlation identifier when absent.
+    source_channel : str, default='service'
+        Closed channel code identifying the command adapter.
+
+    Returns
+    -------
+    PositionStructureResult
+        Minimized Position identifier and committed closure evidence.
+
+    Raises
+    ------
+    StructureDependencyConflictError
+        If assignments, direct reports, or scoped authority still depend on it.
+    StructureStateConflictError
+        If the Position is already closed.
+    """
+    position_id = _validate_uuid(position_id, field_name="position_id")
+    expected_version = _validate_expected_version(expected_version)
+    correlation_id = _validate_uuid(correlation_id, field_name="correlation_id")
+    source_channel = _validate_source_channel(source_channel)
+    normalized_reason = normalize_structure_reason(reason)
+    _require_view_and_manage(
+        actor=actor,
+        organization_id=organization_id,
+        series_id=series_id,
+        edition_id=edition_id,
+        at=timezone.now(),
+    )
+
+    with transaction.atomic():
+        scope = _lock_scope(
+            actor=actor,
+            organization_id=organization_id,
+            series_id=series_id,
+            edition_id=edition_id,
+        )
+        _require_editable_lifecycle(scope)
+        current_version = _require_expected_version(scope, expected_version)
+        position = _position_by_id(scope, position_id)
+        if position.status == Position.Status.CLOSED:
+            raise StructureStateConflictError("The Position is already closed.")
+        validate_exact_confirmation(confirmation_name, expected=position.title)
+        open_assignments = PositionAssignment.objects.select_for_update().filter(
+            position_id=position.id,
+            organization_id=scope.organization.id,
+            edition_id=scope.edition.id,
+            status__in=(
+                PositionAssignment.Status.PROPOSED,
+                PositionAssignment.Status.ACTIVE,
+            ),
+        )
+        has_current_direct_report = any(
+            item.reports_to_id == position.id and item.status != Position.Status.CLOSED
+            for item in scope.positions
+        )
+        if (
+            open_assignments.exists()
+            or has_current_direct_report
+            or _position_authority_is_open(scope, position)
+        ):
+            raise StructureDependencyConflictError(
+                "Current assignments, reports, or authority protect this Position."
+            )
+        opportunity = (
+            VolunteerOpportunity.objects.select_for_update()
+            .filter(position_id=position.id)
+            .order_by()
+            .first()
+        )
+        resulting_version = current_version + 1
+        control = _new_or_advanced_control(
+            scope=scope,
+            origin=EditionStructureControl.Origin.MANUAL,
+            resulting_version=resulting_version,
+        )
+        position.status = Position.Status.CLOSED
+        position.closed_at = scope.evaluated_at
+        position.closed_by = actor
+        position.last_changed_in_structure_version = resulting_version
+        position.save(
+            update_fields=(
+                "status",
+                "closed_at",
+                "closed_by",
+                "last_changed_in_structure_version",
+                "updated_at",
+            )
+        )
+        changed_fields = ["closure"]
+        if opportunity is not None and opportunity.status not in {
+            VolunteerOpportunity.Status.WITHDRAWN,
+            VolunteerOpportunity.Status.CLOSED,
+        }:
+            opportunity.status = VolunteerOpportunity.Status.CLOSED
+            opportunity.last_changed_in_structure_version = resulting_version
+            opportunity.save(
+                update_fields=(
+                    "status",
+                    "last_changed_in_structure_version",
+                    "updated_at",
+                )
+            )
+            changed_fields.append("opportunity.status")
+        canonical_changed_fields = tuple(sorted(changed_fields))
+        receipt = _append_change_evidence(
+            scope=scope,
+            actor=actor,
+            control=control,
+            action=EditionStructureCommandReceipt.Action.POSITION_CLOSED,
+            resulting_version=resulting_version,
+            changed_fields=canonical_changed_fields,
+            affected_department_ids=(position.department_id,),
+            affected_position=position,
+            reason=normalized_reason,
+            correlation_id=correlation_id,
+            request_id=request_id,
+            source_channel=source_channel,
+        )
+        return PositionStructureResult(
+            structure_id=control.id,
+            receipt_id=receipt.id,
+            position_id=position.id,
+            resulting_version=resulting_version,
+            changed_fields=canonical_changed_fields,
             action=receipt.action,
             replayed=False,
         )

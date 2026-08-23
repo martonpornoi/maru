@@ -1,5 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import axe from "axe-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "./App";
@@ -186,6 +187,57 @@ const people = {
   ],
 };
 
+const workforceStructure = {
+  organization_name: "Maru Community Events (Demo)",
+  series_name: "MaruCon",
+  edition_name: "MaruCon 2026",
+  can_manage_positions: true,
+  governance: {
+    kind: "governance",
+    label: "Executive Board",
+    state: "active",
+  },
+  structure: {
+    state: "complete",
+    aggregate_version: 3,
+    source: {
+      kind: "builtin_template",
+      template_code: "marucon-reference",
+      template_version: 1,
+    },
+    departments: [
+      {
+        id: "12121212-1212-4212-8212-121212121212",
+        parent_id: null,
+        code: "attendee-operations",
+        name: "Attendee Operations",
+        description: "Coordinate attendee-facing convention work.",
+        display_order: 10,
+        state: "active",
+        positions: [
+          {
+            id: "13131313-1313-4313-8313-131313131313",
+            reports_to_id: null,
+            reports_to_title: null,
+            code: "registration-lead",
+            title: "Registration Lead",
+            description: "Lead registration and arrival service.",
+            headcount: 2,
+            status: "open",
+            holders: [
+              {
+                display_name: "Morgan Registration Lead",
+                other_roles: [],
+              },
+            ],
+          },
+        ],
+        children: [],
+      },
+    ],
+  },
+};
+
 const actions = [
   {
     key: "registration-configuration-review",
@@ -357,6 +409,23 @@ function jsonResponse(payload: object, status = 200): Promise<Response> {
   );
 }
 
+async function expectNoAccessibilityViolations(
+  context: Element | Document = document,
+) {
+  const results = await axe.run(context, {
+    rules: {
+      "color-contrast": { enabled: false },
+    },
+  });
+  expect(
+    results.violations.map((violation) => ({
+      id: violation.id,
+      help: violation.help,
+      targets: violation.nodes.map((node) => node.target),
+    })),
+  ).toEqual([]);
+}
+
 describe("Management Console", () => {
   beforeEach(() => {
     window.history.replaceState({}, "", "/admin/workspace/");
@@ -369,6 +438,9 @@ describe("Management Console", () => {
         const url = String(input);
         if (url === "/api/v1/me/context") return jsonResponse(context);
         if (url.includes("/participations?")) return jsonResponse(people);
+        if (url.endsWith("/workforce/structure")) {
+          return jsonResponse(workforceStructure);
+        }
         if (url.endsWith("/actions")) return jsonResponse(actions);
         if (url.endsWith("/access/preview")) return jsonResponse(accessPreview);
         if (url.endsWith("/access")) return jsonResponse(accessWorkspace);
@@ -425,10 +497,35 @@ describe("Management Console", () => {
         }
         if (url.includes("/registrations?")) {
           return jsonResponse({
-            count: 0,
+            count: 1,
             next: null,
             previous: null,
-            results: [],
+            results: [
+              {
+                id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+                reference: "MARU-DEMO-001",
+                account_id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+                display_name: "Morgan Queue Attendee (Demo)",
+                product_name: "Weekend admission",
+                state: "confirmed",
+                amount_minor: 7500,
+                currency: "EUR",
+                submitted_at: "2026-07-27T08:00:00Z",
+                waitlisted_at: null,
+                offered_at: null,
+                payment_due_at: null,
+                confirmed_at: "2026-07-27T08:05:00Z",
+                checked_in_at: null,
+                expired_at: null,
+                cancelled_at: null,
+                confirmation_basis: "provider",
+                submission_source: "self_service",
+                submitted_by_id: null,
+                staff_submission_reason: "",
+                entitlements: [],
+                timeline: [],
+              },
+            ],
           });
         }
         return jsonResponse({ detail: "Unknown test request" }, 404);
@@ -499,15 +596,52 @@ describe("Management Console", () => {
   it("embeds convention work without a second global navigation menu", async () => {
     render(<App embeddedInAdmin />);
 
-    expect(
-      await screen.findByRole("heading", {
-        name: "MaruCon 2026",
-      }),
-    ).toBeInTheDocument();
+    await screen.findByRole("heading", {
+      name: "MaruCon 2026",
+    });
+    const heading = document.querySelector("h1");
+    expect(heading).not.toBeNull();
     expect(document.querySelector(".primary-nav")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("combobox", { name: "Convention workspace" }),
     ).not.toBeInTheDocument();
+    expect(document.querySelector("#main-content")?.tagName).toBe("DIV");
+    expect(document.querySelectorAll("main")).toHaveLength(0);
+    const access = await screen.findByText("Scoped authority");
+    expect(
+      (heading as HTMLHeadingElement).compareDocumentPosition(access) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("synchronizes the embedded owner workspace with the selected convention", async () => {
+    const host = document.createElement("div");
+    host.id = "root";
+    host.dataset.mode = "admin-embedded";
+    const form = document.createElement("form");
+    form.id = "maru-admin-context-form";
+    const editionInput = document.createElement("input");
+    editionInput.name = "edition_id";
+    form.append(editionInput);
+    document.body.append(host, form);
+    const requestSubmit = vi
+      .spyOn(form, "requestSubmit")
+      .mockImplementation(() => undefined);
+
+    const rendered = render(<App embeddedInAdmin />, { container: host });
+    try {
+      await waitFor(() => {
+        expect(requestSubmit).toHaveBeenCalledTimes(1);
+      });
+      expect(editionInput.value).toBe(context.editions[0].edition_id);
+      expect(
+        screen.queryByRole("combobox", { name: "Convention workspace" }),
+      ).not.toBeInTheDocument();
+    } finally {
+      rendered.unmount();
+      form.remove();
+      host.remove();
+    }
   });
 
   it("renders convention-specific questions and conditional fields", async () => {
@@ -554,6 +688,13 @@ describe("Management Console", () => {
       ),
     ).toBeInTheDocument();
 
+    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    expect(
+      await screen.findByText(
+        "Use this page to understand how departments become staffed positions and, later, workable shifts.",
+      ),
+    ).toBeInTheDocument();
+
     await user.click(screen.getByRole("button", { name: "My registration" }));
     expect(
       await screen.findByText(
@@ -561,19 +702,19 @@ describe("Management Console", () => {
       ),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Registration" }));
+    await user.click(screen.getByRole("button", { name: "Registration desk" }));
     expect(
       await screen.findByText(
-        "Use this page to configure registration and serve attendees through arrival.",
+        "Use this page to find and serve attendees from registration through arrival.",
       ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", {
-        name: /Edit questions and products in bootstrap admin/,
+        name: /Open the registration builder/,
       }),
     ).toHaveAttribute(
       "href",
-      `/admin/registration/registrationconfiguration/${encodeURIComponent(unsafeRegistrationDraftId)}/change/`,
+      "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/registration/",
     );
 
     await user.click(screen.getByRole("button", { name: "Reports & badges" }));
@@ -629,13 +770,12 @@ describe("Management Console", () => {
     await user.click(screen.getByRole("button", { name: "People" }));
     const directory = await screen.findByRole("heading", { name: "People" });
     expect(directory).toBeInTheDocument();
-    await user.click(
-      screen.getByRole("button", {
-        name: "MaruCon Volunteer Coordinator (Demo)",
-      }),
-    );
+    const opener = screen.getByRole("button", {
+      name: "MaruCon Volunteer Coordinator (Demo)",
+    });
+    await user.click(opener);
 
-    const drawer = await screen.findByRole("complementary", {
+    const drawer = await screen.findByRole("dialog", {
       name: "MaruCon Volunteer Coordinator (Demo)",
     });
     expect(
@@ -645,6 +785,192 @@ describe("Management Console", () => {
     ).toBeInTheDocument();
     expect(within(drawer).getByText(/only the fields permitted/))
       .toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        within(drawer).getByRole("button", { name: "Close person details" }),
+      ).toHaveFocus();
+    });
+    expect(document.querySelector(".shell")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+    expect(document.querySelector(".shell")).not.toHaveAttribute("aria-hidden");
+  });
+
+  it("connects structure, positions, assignments, availability, and shifts honestly", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: "MaruCon 2026" });
+
+    await user.click(screen.getByRole("button", { name: "Workforce" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Workforce" }),
+    ).toBeInTheDocument();
+    const journey = screen
+      .getByRole("heading", { name: "From structure to a workable rota" })
+      .closest("section");
+    expect(journey).not.toBeNull();
+    for (const stage of [
+      "Structure",
+      "Positions",
+      "Assignments",
+      "Availability",
+      "Shifts",
+    ]) {
+      expect(
+        within(journey as HTMLElement).getByRole("heading", { name: stage }),
+      ).toBeInTheDocument();
+    }
+    expect(
+      within(journey as HTMLElement).getAllByText("Not available yet"),
+    ).toHaveLength(2);
+    expect(
+      screen.getByRole("heading", { name: "Registration Lead" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Morgan Registration Lead")).toBeInTheDocument();
+    expect(screen.getByText("1 of 2 assigned")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open structure" }),
+    ).toHaveAttribute(
+      "href",
+      "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/",
+    );
+    expect(
+      screen.getByRole("link", { name: "Manage positions" }),
+    ).toHaveAttribute(
+      "href",
+      "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/positions/",
+    );
+    expect(
+      screen.getByRole("link", { name: "Manage Registration Lead" }),
+    ).toHaveAttribute(
+      "href",
+      "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/positions/13131313-1313-4313-8313-131313131313/",
+    );
+  });
+
+  it("does not present partial Workforce counts when the structure exceeds its safety limit", async () => {
+    const originalFetch = vi.mocked(fetch).getMockImplementation();
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init) => {
+      if (String(input).endsWith("/workforce/structure")) {
+        return jsonResponse({
+          ...workforceStructure,
+          structure: {
+            ...workforceStructure.structure,
+            state: "structure_limit_exceeded",
+            departments: [],
+          },
+        });
+      }
+      return originalFetch!(input, init);
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: "MaruCon 2026" });
+
+    await user.click(screen.getByRole("button", { name: "Workforce" }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "The complete structure is too large to show safely",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", {
+        name: "From structure to a workable rota",
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Morgan Registration Lead")).not.toBeInTheDocument();
+    expect(screen.queryByText(/active Department/)).not.toBeInTheDocument();
+  });
+
+  it("gives a non-staff owner Position management without specialist records", async () => {
+    const originalFetch = vi.mocked(fetch).getMockImplementation();
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init) => {
+      if (String(input) === "/api/v1/me/context") {
+        return jsonResponse({
+          ...context,
+          can_access_advanced_records: false,
+        });
+      }
+      return originalFetch!(input, init);
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: "MaruCon 2026" });
+
+    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    await screen.findByRole("heading", {
+      name: "From structure to a workable rota",
+    });
+
+    expect(
+      screen.queryByRole("link", { name: /Position records/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Position management/ }),
+    ).toHaveAttribute(
+      "href",
+      "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/positions/",
+    );
+    expect(
+      screen.queryByRole("link", { name: /Assignment records/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Position management is available here/),
+    ).toBeInTheDocument();
+  });
+
+  it("fails closed when the role cannot view Workforce structure", async () => {
+    const originalFetch = vi.mocked(fetch).getMockImplementation();
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init) => {
+      if (String(input).endsWith("/workforce/structure")) {
+        return jsonResponse({ detail: "Forbidden" }, 403);
+      }
+      return originalFetch!(input, init);
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: "MaruCon 2026" });
+
+    await user.click(screen.getByRole("button", { name: "Workforce" }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Workforce structure is not available for your role",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Attendee Operations")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Morgan Registration Lead"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/active Department/)).not.toBeInTheDocument();
+  });
+
+  it("keeps the registration and Workforce journeys free of automated accessibility violations", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: "MaruCon 2026" });
+
+    await user.click(screen.getByRole("button", { name: "Registration desk" }));
+    await screen.findByRole("heading", { name: "Find an attendee" });
+    await expectNoAccessibilityViolations(
+      document.querySelector<HTMLElement>(".shell")!,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Workforce" }));
+    await screen.findByRole("heading", {
+      name: "From structure to a workable rota",
+    });
+    await expectNoAccessibilityViolations(
+      document.querySelector<HTMLElement>(".shell")!,
+    );
   });
 
   it("sends search terms to the tenant- and edition-scoped endpoint", async () => {
@@ -675,7 +1001,7 @@ describe("Management Console", () => {
     await screen.findByRole("heading", {
       name: "MaruCon 2026",
     });
-    await user.click(screen.getByRole("button", { name: "Registration" }));
+    await user.click(screen.getByRole("button", { name: "Registration desk" }));
 
     expect(
       await screen.findByRole("heading", { name: "Images awaiting review" }),
@@ -700,6 +1026,91 @@ describe("Management Console", () => {
     });
   });
 
+  it("puts the searchable attendee queue before lower-frequency setup", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: "MaruCon 2026" });
+    await user.click(screen.getByRole("button", { name: "Registration desk" }));
+
+    const queueHeading = await screen.findByRole("heading", {
+      name: "Find an attendee",
+    });
+    const setupHeading = screen.getByRole("heading", {
+      name: "Registration configuration",
+    });
+    expect(
+      queueHeading.compareDocumentPosition(setupHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    const queueSection = queueHeading.closest("section");
+    expect(queueSection).not.toBeNull();
+    const attendeeTable = within(queueSection as HTMLElement).getByRole("table");
+    expect(attendeeTable).toHaveClass("attendee-table");
+    expect(
+      within(attendeeTable).getByText("MARU-DEMO-001").closest("td"),
+    ).toHaveAttribute("data-label", "Reference");
+    expect(
+      within(attendeeTable).getByText("Weekend admission").closest("td"),
+    ).toHaveAttribute("data-label", "Admission");
+
+    await user.type(
+      screen.getByRole("searchbox", {
+        name: "Search attendee name or reference",
+      }),
+      "River 42",
+    );
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Filter by registration state" }),
+      "confirmed",
+    );
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+
+    await waitFor(() => {
+      expect(
+        vi.mocked(fetch).mock.calls.some(([url]) => {
+          const requestUrl = String(url);
+          return (
+            requestUrl.includes("/registrations?") &&
+            requestUrl.includes("search=River+42") &&
+            requestUrl.includes("state=confirmed")
+          );
+        }),
+      ).toBe(true);
+    });
+  });
+
+  it("treats attendee details as a keyboard-dismissible modal and restores focus", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: "MaruCon 2026" });
+    await user.click(screen.getByRole("button", { name: "Registration desk" }));
+
+    const opener = await screen.findByRole("button", {
+      name: "Morgan Queue Attendee (Demo)",
+    });
+    await user.click(opener);
+
+    const drawer = await screen.findByRole("dialog", {
+      name: "Morgan Queue Attendee (Demo)",
+    });
+    await waitFor(() => {
+      expect(
+        within(drawer).getByRole("button", { name: "Close attendee details" }),
+      ).toHaveFocus();
+    });
+    expect(document.querySelector(".shell")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+    expect(document.querySelector(".shell")).not.toHaveAttribute("aria-hidden");
+  });
+
   it("keeps low-frequency setup in a collapsible ordered guide", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -721,6 +1132,20 @@ describe("Management Console", () => {
     expect(
       screen.getByRole("link", { name: "Browse specialist records" }),
     ).toHaveAttribute("href", "/admin/");
+    const plannedCapabilities = screen
+      .getByRole("heading", { name: "Planned capabilities" })
+      .closest("section");
+    expect(plannedCapabilities).not.toBeNull();
+    expect(
+      within(plannedCapabilities as HTMLElement).getByText(
+        "Programme & schedule",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(plannedCapabilities as HTMLElement).getByText(
+        "Not available yet",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("records readiness evidence without asking for IDs or a review time", async () => {

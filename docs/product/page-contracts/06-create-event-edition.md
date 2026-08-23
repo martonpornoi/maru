@@ -1,4 +1,4 @@
-# Page 6 contract: Create event edition
+# Create event edition contract
 
 - Status: Implemented and backend-verified for platform oversight and scoped
   Executive Board authority; owner/browser rehearsal and visual-state
@@ -25,14 +25,14 @@ evidence, not participation.
 
 ## Placement and navigation
 
-Page 5's **Convention editions** row exposes an adjacent **+ Add** action only
-for an Active series beneath a non-Closed organization. Page 6 retains the
+Convention series record's **Convention editions** row exposes an adjacent **+ Add** action only
+for an Active series beneath a non-Closed organization. Create event edition retains the
 global, selected-organization, and selected-series sections, with the edition
 add action current exactly once. Closed/inactive scope remains visible in a
 409 explanation but does not render a working creation form.
 
-On success the browser redirects to the new Page 7 record. It does not silently
-select the edition as working context; selection is an explicit Page 7 POST.
+On success the browser redirects to the new Event edition record. It does not silently
+select the edition as working context; selection is an explicit Event edition record POST.
 
 ## Explicit input contract
 
@@ -107,7 +107,7 @@ does not appear until that underlying editor exists.
   generated retry key hidden, and Draft/no-side-effect boundaries explained.
 - **Validation:** field-local errors and preserved idempotency key; no partial
   edition or evidence.
-- **Success:** new creation redirects to Page 7 / API 201.
+- **Success:** new creation redirects to Event edition record / API 201.
 - **Replay:** original edition reused / API 200.
 - **Conflicting replay or blocked parent:** 409 and no mutation.
 - **Denied:** 403 without cross-tenant existence disclosure.

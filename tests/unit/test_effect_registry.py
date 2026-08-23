@@ -144,6 +144,26 @@ def test_profile_extension_value_event_is_minimized_and_strict() -> None:
             "template_code": "marucon-reference",
             "template_version": "1",
         },
+        {
+            "action": "position_created",
+            "aggregate_version": "2",
+            "changed_fields": "opportunity,position,resource_binding",
+        },
+        {
+            "action": "position_updated",
+            "aggregate_version": "3",
+            "changed_fields": "description,headcount,reports_to,title",
+        },
+        {
+            "action": "opportunity_updated",
+            "aggregate_version": "4",
+            "changed_fields": "opportunity.headline,opportunity.status,status",
+        },
+        {
+            "action": "position_closed",
+            "aggregate_version": "5",
+            "changed_fields": "closure,opportunity.status",
+        },
     ],
 )
 def test_workforce_structure_event_has_minimized_registered_payload(
@@ -194,6 +214,22 @@ def test_workforce_structure_event_has_minimized_registered_payload(
             "action": "department_updated",
             "aggregate_version": "2",
             "changed_fields": "departments",
+        },
+        {
+            "action": "position_created",
+            "aggregate_version": "2",
+            "changed_fields": "position",
+        },
+        {
+            "action": "position_updated",
+            "aggregate_version": "3",
+            "changed_fields": "opportunity.status",
+        },
+        {
+            "action": "opportunity_updated",
+            "aggregate_version": "4",
+            "changed_fields": "opportunity.headline",
+            "position_id": "private-identifier",
         },
     ],
 )

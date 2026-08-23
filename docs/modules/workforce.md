@@ -1,18 +1,18 @@
 # Workforce module
 
 Status: Position, hierarchy, opportunity, agreement, authority onboarding,
-ADR 0041 containment, and Page 9a.1's version-fenced read, aggregate, commands,
-stopped-writer database core, and strict HTML/API Department mutation adapters
-are accepted in the canonical current tree; responsive, recovery, deployment,
+ADR 0041 containment, and version-fenced Department and Position management
+with shared strict HTML/API commands and stopped-writer database enforcement
+are implemented in the canonical current tree; assignment approval,
+availability, shifts, complete rendered accessibility, recovery, deployment,
 and production acceptance remain gated
-Last updated: 2026-08-11
+Last updated: 2026-08-23
 
 ## Purpose and requirements
 
-`maru.workforce` owns the executable HR-007, HR-008, and HR-010 slices defined
-by ADRs 0019 and 0028, the accepted HR-011 edition-structure boundary, and
-IDN-011's non-participation boundary. It turns an edition responsibility into
-explicit structure:
+`maru.workforce` owns the executable HR-007, HR-008, HR-010, HR-011, and HR-012
+slices defined by ADRs 0019, 0028, and 0075, plus IDN-011's non-participation
+boundary. It turns an edition responsibility into explicit structure:
 
 ```text
 department hierarchy
@@ -37,10 +37,10 @@ platform-only subject classification without rejecting `reviewed_by`,
 ## Legacy empty-organization bootstrap
 
 ADR 0040 supersedes this broad workforce ceremony as the normal way to
-establish first organization authority. A new Draft organization uses Page 8's
+establish first organization authority. A new Draft organization uses Representation & access's
 purpose-built Executive Board lifecycle. The service below remains preserved
-recovery evidence for legacy reconciliation only; it must not compete with Page
-8 or be used without a separately approved procedure.
+recovery evidence for legacy reconciliation only; it must not compete with
+Representation & access or be used without a separately approved procedure.
 
 An empty organization cannot use its own scoped permission commands before it
 has a controller. The preserved one-shot, trust-on-first-use service was the
@@ -61,19 +61,26 @@ no organizer membership, convention role, participation, or workforce
 position. A second run fails closed.
 
 The preserved service now creates that first Department through the same
-Page 9 structure command used by every supported Department writer. Its
+Organization structure command used by every supported Department writer. Its
 correlation identifier is also the deterministic retry key and request
 identifier, so the immutable receipt ties the attributed platform actor to
-structure version 1. Before creating the Department, Position, or assignment,
-the service joins the canonical edition write scope; Position and assignment
-writes additionally lock the active Department target. This keeps recovery
-bootstrap inside the Page 9, provenance, retirement, and edition-mutex lock
-order without turning the platform administrator into a convention subject.
+structure version 1. It then creates the first Convention Chair Position,
+private draft opportunity, and exact resource binding through the governed
+Position command at version 2. Because this ceremony necessarily predates
+historical RoleBundle issuance, a non-HTTP exception accepts only the exact
+platform-administrator-created, independently approved `convention-chair`
+template at version 1 while no Position exists. Every ordinary Position still
+requires historical provenance. Before creating the Department, Position, or
+assignment, the service joins the canonical edition write scope; Position and
+assignment writes additionally lock the active Department target. This keeps
+recovery bootstrap inside the Organization structure, provenance, retirement,
+and edition-mutex lock order without turning the platform administrator into a
+convention subject.
 
 The former browser ceremony and
 `/api/v1/management/convention-bootstrap` endpoint are not mounted. Their old
 tests and implementation remain historical recovery evidence; they are not a
-second setup path beside Page 8. Candidate reads and mutations must use an
+second setup path beside Representation & access. Candidate reads and mutations must use an
 approved operator reconciliation procedure and retain the service's existing
 audit and atomicity boundaries.
 
@@ -99,7 +106,7 @@ default headcount, and capacity codes.
 
 ## Organization structure projection
 
-Page 9a.1 mounts one **Organization structure** overview with same-shell
+Workforce mounts one **Organization structure** overview with same-shell
 management child pages at the exact selected-edition route and backs other
 clients with the strict API described below. The read projection is:
 
@@ -155,7 +162,7 @@ ADR 0042 removed the former public-roster rehearsal. Repository fixtures and
 tutorials use synthetic people only; public labels never become accounts,
 appointments, assignments, or authority.
 
-ADR 0045 defines Page 9 **Organization structure** at the selected-edition
+ADR 0045 defines **Organization structure** at the selected-edition
 route documented in
 [`09-organization-structure.md`](../product/page-contracts/09-organization-structure.md).
 Its governance-anchored projection is deliberately composed from two sources:
@@ -191,6 +198,34 @@ overview, three child GET page shapes, five POST actions, strict GET plus five
 API mutations, and exact navigation now mount those shared services without
 reopening specialist Department writes.
 
+### Workforce task workspace
+
+Convention work exposes `/admin/workspace/?view=workforce` as a task-oriented
+reader over the same strict exact-edition projection. It is not a duplicate
+Department writer and does not revive the retired `?view=structure` page. It
+presents five dependent stages:
+
+```text
+Structure -> Positions -> Assignments -> Availability -> Shifts
+```
+
+The first three stages summarize implemented records: active Departments,
+Position purpose/reporting/state, approved headcount, vacancies, and minimized
+current holders. **Open structure** reaches Department management; **Manage
+positions**, **Create Position**, and per-Position **Manage** actions reach the
+purpose-built Position workspace when a fresh exact-edition policy decision
+permits it. Public opportunities and the signed-in person's onboarding
+documents remain separate continuation links. Non-staff organizers receive no
+link to Django PositionAssignment records they cannot access; Django staff with
+independent model permission may still receive a clearly labelled temporary
+assignment-record link.
+
+Availability and Shifts are deliberately noninteractive **Not available yet**
+steps. No assignment is treated as availability, and no Position is treated as
+a shift. Their placement records the intended HR-009/SCH-001/SCH-005 sequence
+without adding a model, writer, authority, or schedule projection before those
+transactional contracts are accepted.
+
 ### Built-in reference and independent copy
 
 The immutable built-in `marucon-reference@1` is a repository-owned fictional
@@ -220,7 +255,7 @@ version never mutates an earlier source or an already copied edition.
 
 ### Department command boundary
 
-Page 9 reads require `workforce.view_structure` effective at the exact edition;
+Organization structure reads require `workforce.view_structure` effective at the exact edition;
 department-only authority is too narrow for the complete tree. Mutations also
 require `workforce.manage_structure`, except for explicit non-participating
 platform oversight. Board representation or hierarchy position by itself is
@@ -254,52 +289,95 @@ block hard deletion, while the binding service rejects every new binding below
 a retired Department. Ready, Live, Closing, Archived, and Cancelled editions
 remain read-only until a separate structure change-control design is accepted.
 
-Position editing is Page 9b. It must first define immutable PositionTemplate
-and RoleBundle selection, ADR 0044 dual-control provenance, typed binding,
-opportunity, lifecycle, reporting-cycle, and recovery behavior. The built-in
-Department template creates no Lead, Deputy, or Volunteer Positions.
+Position management is now the separate HR-012 workflow described below. The
+built-in Department template still creates no Lead, Deputy, or Volunteer
+Positions; a manager deliberately creates each responsibility from a published
+organization Position template.
 
 ## Positions and published opportunities
 
-A department belongs to exactly one organization and edition and may have one
-same-edition parent. A position belongs to one department, may report to
-another same-edition position, pins one template and role bundle, and has an
-explicit headcount. PostgreSQL rejects cross-organization or cross-edition
-relationships even when ORM validation is bypassed.
+A Department belongs to exactly one organization and edition and may have one
+same-edition parent. A Position belongs to one Department, may report to
+another current same-edition Position, pins one published Position template
+and exact historically valid RoleBundle issuance, and has explicit approved
+headcount. PostgreSQL rejects cross-organization or cross-edition relationships
+and reporting cycles even when ORM validation is bypassed.
 
-Creating a position automatically creates its one-to-one volunteer
-opportunity. Organizers may publish, close, or withdraw the opportunity and
-set application dates. A published filled position remains in the public list
-when `visible_when_filled` is enabled, but it no longer accepts applications.
-Headcount greater than one supports roles with multiple holders.
+The purpose-built Position workspace requires both
+`workforce.view_structure` and `workforce.manage_structure` at the exact
+edition, except for explicit attributed platform oversight. The overview is
+bounded and groups Positions beneath human Department names. Creation offers
+only active Departments, current reporting Positions, and published
+organization templates whose RoleBundle provenance is valid. Route scope and
+authorization are resolved before input parsing or name disclosure.
 
-The Position specialist-record save and preserved workforce bootstrap also
-call authorization's explicit typed-binding service after the Position is
-saved. The service re-reads the locked row instead of trusting submitted scope,
-and the surrounding transaction rolls Position creation back if its exact
-immutable authorization binding cannot be established. Any future production
-import or application service that creates Positions must make the same call;
-direct ORM creation is only a low-level building block, not a complete live
-creation workflow.
+One idempotent creation transaction persists all of the following or none:
+
+- a `planned` Position with immutable organization, edition, Department,
+  template, RoleBundle, code, capacity codes, creator, and creation version;
+- its one-to-one private `draft` volunteer opportunity;
+- its exact typed `workforce.position` resource binding;
+- one aggregate version step and immutable command receipt containing the
+  retained reason; and
+- minimized audit, domain event, and outbox evidence.
+
+Current Positions may completely replace title, purpose/responsibilities,
+approved headcount, and optional reporting Position. Headcount cannot fall
+below proposed and active assignments. Normalized no-ops advance no version and
+write no evidence. The detail view keeps immutable role meaning next to current
+operational details and shows its own newest-first command reasons; the
+Organization structure overview shows recent structure reasons. Existing
+legacy Positions receive no invented creation actor or receipt; their first
+real governed Position or opportunity change records its actual resulting
+version while leaving the unknown creation version null.
+
+The paired opportunity separately owns applicant-facing headline, description,
+optional opening/closing times, visibility when filled, and lifecycle. Its
+allowed transitions are draft to published, published to closed, closed back to
+published, and any non-withdrawn state to final withdrawn. Publishing a planned
+Position opens it in the same structure version. A published filled Position
+may remain discoverable when `visible_when_filled` is enabled but accepts no
+further applications. Publication creates no application, assignment,
+participation, RoleAssignment, capability grant, or schedule commitment.
+HTML forms use the edition's IANA time zone and reject ambiguous or nonexistent
+local minutes. API timestamps must carry `Z` or an explicit numeric UTC offset.
+
+Position closure is one-way, requires the exact current title and a retained
+reason, and closes the paired opportunity unless it is already closed or
+withdrawn. It refuses a proposed or active assignment, a non-closed direct
+report, or current/future Position-scoped CapabilityGrant or RoleAssignment.
+The owning assignment, reporting, or access workflow must resolve the
+dependency; Position management never silently revokes or deletes it. The
+closed Position remains a readable historical record and cannot be edited,
+published, reopened, or deleted.
+
+Position and VolunteerOpportunity specialist records are inspection-only. The
+preserved bootstrap and local synthetic fixture can retain internally
+consistent legacy rows, but every governed mutation uses the shared commands.
+Workforce `0010` requires an exact same-version Position command receipt for
+governed Position/opportunity changes and rejects direct deletion, immutable
+identity/scope/template/role/capacity changes, invalid opportunity transitions
+or windows, invalid reporting graphs, and changed governed rows without
+evidence.
 
 Operational Position and PositionAssignment writers join one canonical
 identifier-only edition write boundary before taking either row lock or
-performing either write. The order is the outer Page 9 generation barrier,
+performing either write. The order is the outer structure-generation barrier,
 authority-provenance barrier, retired-Department barrier, then locked
 Organization, ConventionSeries, EventEdition, exact-edition mutex, current
 Department, Position, and PositionAssignment where applicable. Every tenant
 edge and retirement state is rechecked from persisted identifiers without
-loading a label. Position specialist saves, assignment proposal saves, and
+loading a label. Governed Position commands, assignment proposal saves, and
 assignment activation use this boundary; activation also locks an identified
 proposal and the current assignment set before issuing authority or
-participation evidence. A retired
-Department cannot receive a new Position, proposal, activation, or binding.
+participation evidence. A retired Department cannot receive a new Position,
+proposal, activation, or binding.
 The locks live through the outer transaction so nested authority and binding
 services only rejoin already-held outer barriers.
 
-The local/test synthetic fixture follows the same production writer boundary.
+The local/test synthetic fixture follows the same edition writer boundary.
 On a fresh database it creates each current-edition demo Department through a
-deterministic Page 9 retry receipt while the edition is still Draft or
+deterministic Organization structure retry receipt while the edition is still Draft or
 Preparing, then creates the Position and assignment under the edition mutex
 and installs the Position resource binding. Reruns replay the receipt and may
 verify the already-complete workforce example after the edition has moved to a
@@ -308,7 +386,8 @@ An older deterministic demo Department is preserved as legacy data rather than
 renamed or replaced.
 
 An application is an expression of interest only. Accepting or reviewing it
-does not grant a role, capacity, or access.
+does not grant a role, capacity, or access. Position management deliberately
+ends before assignment proposal and independent approval.
 
 ## Reviewed onboarding documents
 
@@ -358,6 +437,10 @@ identity in the local rehearsal must not be represented as that future UX.
 Reference web routes:
 
 ```text
+/admin/workspace/?view=workforce
+/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/positions/
+/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/positions/new/
+/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/positions/<position-id>/
 /volunteer/<edition_id>/
 /volunteer/<edition_id>/<opportunity_id>/apply/
 /volunteer/<edition_id>/documents/
@@ -373,7 +456,7 @@ GET  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/doc
 POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/documents/me/<request_id>/upload
 ```
 
-Mounted Page 9 API surface:
+Mounted Organization structure API surface:
 
 ```text
 GET    /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/structure
@@ -384,8 +467,25 @@ POST   /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/d
 DELETE /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/departments/<department_id>
 ```
 
+Mounted Position management API surface:
+
+```text
+POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/positions
+PUT  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/positions/<position_id>
+PUT  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/positions/<position_id>/opportunity
+POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/positions/<position_id>/close
+```
+
+Position creation requires a canonical `Idempotency-Key`; first success returns
+`201` and identical replay returns `200`. Other successful mutations return
+`200`. Inputs are closed strict JSON objects. Authorization precedes header and
+body parsing; denied scope is name-free `403`, an authorized unavailable
+Position or relationship is `404`, validation is `400`, state/version/retry or
+dependency conflict is `409`, and an unavailable canonical dependency is
+`503`. Responses expose only `position_id` and resulting structure version.
+
 The structure GET now returns the bounded complete-tree and minimized
-governance-anchor response used by Page 9a.0. It accepts no query parameters.
+governance-anchor response used by Organization structure read projection. It accepts no query parameters.
 OpenAPI declares its `200` response and typed RFC 9457 `400`, `403`, and `503`
 problems; generated TypeScript types retain the recursive Department schema.
 The response `source` is a closed, `kind`-discriminated four-variant union.
@@ -418,11 +518,12 @@ Specialist records:
 /admin/workforce/positionassignment/
 ```
 
-These specialist routes are not the accepted Page 9 mutation contract. The
-shared commands and migration fence are active, so Department records are
-inspection-only here. Managers use the strict Page 9 HTML/API mutation
-adapters. Position writes remain a separate Page 9b decision rather than an
-implicit exception.
+These specialist routes are not the accepted product mutation contract. The
+shared commands and migration fences are active, so Department, Position, and
+Volunteer opportunity records are inspection-only here. Managers use the
+strict Organization structure and Position management HTML/API adapters.
+PositionAssignment remains a temporary staff/model-permission-gated specialist
+workflow until separate proposal and independent-approval pages are accepted.
 
 ## Database integrity and recovery
 
@@ -484,17 +585,59 @@ Board, people, Positions, assignments, authority, or template provenance from
 names. Its preflight and database triggers enforce exact scope, bounded acyclic
 hierarchy, one aggregate version step per evidenced command, immutable source
 and retry receipts, non-cascading retirement/deletion rules, and fix-forward
-downgrade behavior. Production readiness fingerprints all 14 Page 9 trigger
-functions and all 28 exact attachments, requires both Workforce migration
-recorder rows, and verifies the exact 13-reference Department FK inventory;
+downgrade behavior. Production readiness fingerprints all 19 Organization
+structure trigger functions and all 33 exact attachments, requires the current Workforce
+migration recorder chain through `0010`, and verifies the exact 13-reference
+Department FK inventory;
 the runtime login cannot invoke those helpers directly, disable them, or
 bypass their stopped-writer protocol. Reversing `0008` restores the exact
 `0007` helper, which safely refuses deletion while any successor reference is
 still installed.
 
-## Page 9 verification
+Workforce `0010_position_structure_commands` extends that aggregate protocol to
+Position and VolunteerOpportunity rows. Its preflight refuses a pre-existing
+Position whose template and RoleBundle disagree. Internally consistent legacy
+rows remain readable with null Position-command versions; the migration does
+not invent an actor, reason, or receipt. A first governed change may set only
+the real last-changed version while retaining a null unknown creation version.
+Governed writes require the current
+structure version and exactly one immutable receipt whose action, Position,
+changed fields, actor, Department scope, and resulting version match the row
+transition. The database rejects immutable identity/scope/template/role/
+capacity mutation, reporting cycles, invalid opportunity windows or lifecycle
+transitions, direct deletion, and changed governed rows without exact command
+evidence. After live Position writes, recovery fixes forward or restores the
+complete database to a mutually consistent pre-write point; it does not reverse
+this guard independently.
 
-The historical Page 9a.0 projection focus covered 52 Page 9, structure API,
+## Organization structure verification
+
+The 2026-08-23 owner rehearsal adds focused evidence for the read journey: the
+non-staff convention chair reached Workforce from Registration, retained the
+exact MaruCon 2026 host context, saw the complete five-stage orientation and
+current Position/vacancy projection, received no staff-only specialist links,
+and followed **Open structure** to canonical Department management. The 390 CSS-pixel view
+had one H1, one `main`, no duplicate identifiers, and no horizontal overflow.
+Frontend tests cover the populated journey, non-staff link boundary,
+non-disclosing `403`, and automated axe analysis. Position command, API, and
+HTML tests separately cover the manager mutation role; the owner-safe
+assignment journey and last two stages remain unimplemented.
+
+The Position management focus covers normalized idempotent creation, paired
+opportunity and typed binding, immutable provenance, complete updates,
+publication and republishing, newest-first direct reason history, legacy-row
+first-change adoption, the bounded initial-Chair recovery exception, reporting
+cycles, headcount, assignment/direct-report/authority closure fences, one-way
+closure, atomic audit/event/outbox rollback, authorization-before-lookup,
+cross-edition isolation, strict API objects and route methods, private HTML
+responses, a non-staff owner creation-through-closure journey, view-only denial,
+and direct database-write rejection. OpenAPI validation, generated TypeScript
+types, frontend type checking/build, migration drift, Ruff, mypy, documentation
+validation, and rendered owner-browser evidence remain part of the same change
+gate rather than being inferred from command tests.
+
+The historical Organization structure read-projection focus covered 52
+Organization structure, structure API,
 capability-catalog, and template tests. They covered the exact access matrix,
 denial before name lookup,
 fresh final authorization, current exact-role and active-person holder checks,
@@ -510,12 +653,12 @@ and whitespace checks pass. The definitive full repository gate also passes
 1,239 tests at 90.35 percent branch coverage. Reliable responsive-browser
 evidence for that read milestone remains pending. The later focused aggregate,
 snapshot, command, migration, writer-boundary, trigger-readiness, concurrency,
-and runtime-role suites now verify the Page 9a.1 core. The adapter API focus
+and runtime-role suites now verify the Department management core. The adapter API focus
 passes 48 tests covering strict inputs and types, exact authorization and
 non-disclosure, idempotent replay/conflict, lifecycle/version/dependency
 conflicts, rollback, CSRF/method handling, and the declared OpenAPI surface.
 A fresh isolated PostgreSQL combined gate passes 159 tests in 102.89 seconds
-across core/forms, Page 9 read and HTML mutations, mutation and adjacent
+across core/forms, Organization structure read and HTML mutations, mutation and adjacent
 workforce APIs, exact-lineage navigation, and unified routing. The definitive
 adapter-expanded repository invocation passes 1,693 tests in 1,653.43 seconds
 at 90.50 percent total branch-inclusive coverage. Authenticated responsive,
@@ -534,19 +677,20 @@ The final canonical current-tree repository gate passed all 4,067 tests in
 15,558.23 seconds (4:19:18) at 90.78 percent coverage. This is the current
 repository acceptance result; the earlier focused and historical full-run
 figures above remain milestone evidence rather than competing current totals.
-It does not certify responsive Page 9 mutation-role behavior, representative
+It does not certify responsive Organization structure mutation-role behavior, representative
 recovery, deployment, authority cutover, or production operation.
 
 ## Current limitations
 
-Qualifications, availability, shifts, time records, acceptance decisions,
-position ending/replacement UX, approval notifications, document download
-through the REST API, Page 9b Position editing, and a separately authenticated
-approval inbox remain work. The HTML/API Page 9 read and Department mutation
-adapters use the implemented aggregate/version fence, bounded retry, shared
-commands, stopped-writer migration, and runtime trigger catalog. Reliable
-browser/accessibility states, the owner
-walkthrough, ordinary production authority reconciliation, real cutover, and
-representative restore/PITR evidence remain open. The implemented first
-assignment slice continues to prove the safe path from a known person and
-reviewed agreement to scoped working access.
+Qualifications, person-owned availability, shifts, time records, assignment
+proposal/ending/replacement UX, approval notifications, document download
+through the REST API, and a separately authenticated approval inbox remain
+work. Organization structure and Position management use the implemented
+aggregate/version fence, bounded retry, shared commands, stopped-writer
+migrations, and runtime trigger catalog. The focused owner read walkthrough and
+automated Position mutation journey pass, but the complete width/zoom,
+screen-reader, failure, and mutation-role matrix, ordinary production authority
+reconciliation, real cutover, and representative restore/PITR evidence remain
+open. The implemented assignment domain continues to prove the safe path from
+a known person and reviewed agreement to scoped working access; its temporary
+specialist form is not the accepted owner experience.

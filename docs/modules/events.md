@@ -1,7 +1,8 @@
 # Events module
 
-Status: Implemented edition aggregate, shared creation/profile commands, Pages
-6–7, authorized lifecycle kernel, and scoped unified-shell context
+Status: Implemented edition aggregate, shared creation/profile commands,
+Create event edition and Event edition record, authorized lifecycle kernel,
+and scoped unified-shell context
 Last updated: 2026-08-01
 
 ## Purpose and requirements
@@ -89,8 +90,8 @@ dates, IANA zone, 1–16 unique language codes, and 1–8 unique ISO 4217 curren
 codes are validated again in the application service; the database defends
 durable scope, dates, version, lifecycle, and receipt invariants. The complete
 NFR-009 table and stable page states are in the
-[Page 6](../product/page-contracts/06-create-event-edition.md) and
-[Page 7](../product/page-contracts/07-event-edition-record.md) contracts.
+[Create event edition](../product/page-contracts/06-create-event-edition.md) and
+[Event edition record](../product/page-contracts/07-event-edition-record.md) contracts.
 
 The browser keeps its UUID retry key as a declared hidden form field. The API
 requires the equivalent UUID in the `Idempotency-Key` request header and
@@ -132,9 +133,9 @@ lifecycle mutation requires `events.transition`, a reason, and audit.
 
 ## Bootstrap administration
 
-ADR 0039 mounts Page 6 edition creation and Page 7 record/home below the exact
+ADR 0039 mounts Create event edition and the Event edition record/home below the exact
 organization and series in `/admin/platform/`. Progressive navigation reveals
-only the selected organization, series, and edition. Page 7 supports explicit
+only the selected organization, series, and edition. Event edition record supports explicit
 POST-only **Use as working edition** and **Clear working edition** actions. The session
 selection is display/query context, creates no authority or participation, and
 is not performed automatically after creation.
@@ -165,7 +166,7 @@ administrators may select any edition; ordinary accounts see only editions
 covered by current unrevoked role assignments or grants with valid delegation
 ancestry. Future, expired, revoked, foreign, or stale session choices are
 excluded and cleared. **All foundation data** clears display/query context; it
-does not broaden authority. Page 7 also exposes its exact scoped POST action.
+does not broaden authority. Event edition record also exposes its exact scoped POST action.
 Select, rejected-clear, and clear change only the authenticated session: tests
 freeze capability grants, role assignments, memberships, participation,
 registration, audit, domain-event, and outbox counts across each action,
@@ -214,7 +215,7 @@ remain future work.
 PostgreSQL tests cover creation, idempotent replay/conflict, strict inputs,
 profile update/no-op/stale behavior, date/locale/currency/slug validation,
 scope and version triggers, receipt immutability, populated downgrade refusal,
-audit/event/outbox rollback, Pages 6–7, strict explicit working context, and
+audit/event/outbox rollback, Create event edition and Event edition record, strict explicit working context, and
 non-participation. Working-context tests additionally prove platform, direct-
 grant, and canonical Executive Board selection/clear never write authority,
 relationship, registration, audit, event, or outbox state. They also cover the

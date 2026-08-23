@@ -1,43 +1,45 @@
 {% if maru_page_access.available %}
-  <section class="maru-access-summary" aria-labelledby="maru-access-heading">
-    <div class="maru-access-summary__heading">
-      <div>
-        <p class="maru-access-summary__kicker">{{ maru_page_access.policy_label }}</p>
-        <h2 id="maru-access-heading">Access</h2>
-        <p class="maru-access-summary__scope">{{ maru_page_access.scope_label }}</p>
-      </div>
+  <details class="maru-access-summary">
+    <summary id="maru-access-heading">
+      <span class="maru-access-summary__label">
+        <strong>Access</strong>
+        <span class="maru-access-summary__scope">{{ maru_page_access.scope_label }}</span>
+      </span>
+      <span class="maru-access-summary__policy">{{ maru_page_access.policy_label }}</span>
+    </summary>
+    <div class="maru-access-summary__body">
+      <p>{{ maru_page_access.explanation }}</p>
       {% if maru_page_access.can_manage %}
         <div class="maru-access-summary__actions">
           <a class="button" href="{{ maru_page_access.manage_url }}">Manage access</a>
           <a href="{{ maru_page_access.preview_url }}">Preview access</a>
         </div>
       {% endif %}
+      {% if maru_page_access.audience_labels %}
+        <ul class="maru-access-summary__audiences" aria-label="Allowed audiences">
+          {% for audience in maru_page_access.audience_labels %}<li>{{ audience }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+      {% if maru_page_access.actions %}
+        <ul class="maru-access-summary__decisions">
+          {% for action in maru_page_access.actions %}
+            <li>
+              <strong>{{ action.label }}</strong>
+              {% if action.allowed %}
+                <span>{{ action.source_label }}</span>
+              {% else %}
+                <span>Not available at this exact scope</span>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% if not maru_page_access.can_manage and maru_page_access.policy == "scoped" %}
+        <p class="maru-access-summary__note">
+          You can inspect the page under your current authority, but access
+          assignments require the separate access-management capability.
+        </p>
+      {% endif %}
     </div>
-    <p>{{ maru_page_access.explanation }}</p>
-    {% if maru_page_access.audience_labels %}
-      <ul class="maru-access-summary__audiences" aria-label="Allowed audiences">
-        {% for audience in maru_page_access.audience_labels %}<li>{{ audience }}</li>{% endfor %}
-      </ul>
-    {% endif %}
-    {% if maru_page_access.actions %}
-      <ul class="maru-access-summary__decisions">
-        {% for action in maru_page_access.actions %}
-          <li>
-            <strong>{{ action.label }}</strong>
-            {% if action.allowed %}
-              <span>{{ action.source_label }}</span>
-            {% else %}
-              <span>Not available at this exact scope</span>
-            {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-    {% if not maru_page_access.can_manage and maru_page_access.policy == "scoped" %}
-      <p class="maru-access-summary__note">
-        You can inspect the page under your current authority, but access
-        assignments require the separate access-management capability.
-      </p>
-    {% endif %}
-  </section>
+  </details>
 {% endif %}

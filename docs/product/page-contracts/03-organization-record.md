@@ -1,4 +1,4 @@
-# Page 3 contract: Organization record
+# Organization record contract
 
 - Status: Implemented and responsive-smoke verified for platform oversight and
   scoped Executive Board authority; accessibility/state/owner evidence pending
@@ -22,15 +22,15 @@ Executive Board holder, participant, registrant, or volunteer.
 
 ## Placement and navigation
 
-Page 1 inventory names link to the corresponding Page 3 record. Every page
+Platform administration home inventory names link to the corresponding Organization record. Every page
 keeps the global **Organizations** destination and its adjacent compact
-**+ Add** action. After an organization is selected, Page 3 also shows a
+**+ Add** action. After an organization is selected, Organization record also shows a
 section named for that organization with:
 
-- **Organization record**, current on Page 3; and
-- **Convention series** with an adjacent **+ Add** action linking to Page 4.
+- **Organization record**, current on Organization record; and
+- **Convention series** with an adjacent **+ Add** action linking to Create convention series.
 
-The scoped series destination anchors the Page 3 section rather than opening a
+The scoped series destination anchors the Organization record section rather than opening a
 global list. A Closed organization omits the unavailable add action. Actions
 remain individually focusable and labelled. The desktop menu begins at normal
 page padding rather than inside a centered grid; at narrow widths it stacks
@@ -39,7 +39,7 @@ above the record without horizontal overflow.
 ## Information and edit action
 
 The record heading shows the current organization name, immutable slug, and
-Draft lifecycle. The editable form uses Page 2's complete sections and rules:
+Draft lifecycle. The editable form uses Create organization's complete sections and rules:
 
 - public identity: name and description;
 - legal identity and imprint: registered name, legal address, representative,
@@ -55,7 +55,7 @@ An unchanged valid submission performs no database or audit write and reports
 that there was nothing to update.
 
 Both browser forms use closed input contracts. The profile form accepts only
-the Page 2 profile fields plus CSRF. The deletion form accepts only
+the Create organization profile fields plus CSRF. The deletion form accepts only
 `confirmation_name`, `acknowledge`, and CSRF. Forged `slug`, `lifecycle`,
 organization identifiers, version values, actor/timestamp fields, or any other
 undeclared key fail with `unknown_input_field`; they are not discarded and no
@@ -72,7 +72,7 @@ button. It requires:
 Deletion succeeds only while the organization is Draft and has no related
 domain records. Any convention series, edition, membership, grant, role,
 participation, registration, workforce, communication, restriction, payment,
-or other protected relationship refuses deletion. Success returns to Page 1
+or other protected relationship refuses deletion. Success returns to Platform administration home
 with a one-time confirmation. The organization UUID remains in audit evidence;
 its name and profile values are not copied into the event.
 
@@ -93,11 +93,11 @@ events. Audit identifies changed fields or the deleted record but excludes the
 entered legal, contact, address, representative, tax, and imprint values.
 Database or audit failure leaves the prior record intact.
 
-ADR 0040 and Page 8 define how active Executive Board authority is established.
-The shared profile service and Page 3 adapter accept exact organization-scoped
+ADR 0040 and Representation & access define how active Executive Board authority is established.
+The shared profile service and Organization record adapter accept exact organization-scoped
 `organizations.change_profile` authority. Scoped non-staff, unrelated staff,
 wrong-tenant, inactive, and platform paths are covered without creating
-placeholder membership or authority in Page 3.
+placeholder membership or authority in Organization record.
 
 ## Page states
 

@@ -169,7 +169,7 @@ untrusted channel, bounded, observable, and assumed capable of failure.
   trigger/truncate/maintenance, parameter-control ACL, non-origin trigger
   setting, sequence update, object/column grant option, or credential detail in
   health output. Prove the required connection, schema, ordinary DML,
-  append-only Page 9 structure-receipt, non-deletable structure-control,
+  append-only Organization structure receipt, non-deletable structure control,
   SELECT-only cutover-control, and sequence use/read data planes so an unusable
   role cannot appear safe. Deny excess structure-table mutation and
   `REFERENCES` without removing Department from the trigger-governed ordinary
@@ -178,7 +178,7 @@ untrusted channel, bounded, observable, and assumed capable of failure.
   closure. Require current, session, and authenticated-backend identity for
   runtime health; owner role switching is not authentication evidence.
 - Treat workforce `0006`/`0007` as a stopped-writer security boundary, not only
-  schema evolution. Readiness pins all 14 Page 9 helper definitions and 28
+  schema evolution. Readiness pins all 14 Organization structure helper definitions and 28
   exact trigger attachments, including statement/row timing, `UPDATE OF`
   columns, enabled state, and deferred evidence. Those trigger-only helpers
   remain outside the runtime role's direct function-execute allowlist. Missing

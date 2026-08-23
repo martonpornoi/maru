@@ -45,7 +45,9 @@ def test_default_login_enters_the_focused_my_maru_surface() -> None:
     assert 'aria-label="My Maru"' in content
     assert content.count('id="nav-sidebar"') == 1
     assert content.count('id="nav-filter"') == 1
-    assert 'placeholder="Search menu..."' in content
+    assert 'placeholder="Search tasks and records..."' in content
+    assert "Start here" in content
+    assert "More from Maru" in content
     assert content.count('value="my.registrations"') == 1
     assert content.count('value="my.catalog"') == 1
     assert content.count('value="my.schedule"') == 1
@@ -54,9 +56,7 @@ def test_default_login_enters_the_focused_my_maru_surface() -> None:
     assert "Catalog commerce" not in content
 
 
-def test_admin_navigation_is_flat_searchable_and_keeps_explicit_edition_context() -> (
-    None
-):
+def test_admin_navigation_is_task_first_searchable_and_keeps_explicit_context() -> None:
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     edition = EventEditionFactory(name="Synthetic Navigation Convention")
     client = _client(administrator)
@@ -68,12 +68,18 @@ def test_admin_navigation_is_flat_searchable_and_keeps_explicit_edition_context(
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Find a page" in content
+    assert "Find a task or record" in content
     assert "Selected edition" not in content
     assert 'class="maru-admin-nav-section"' not in content
-    assert content.count(">Registration setup<") == 1
-    assert content.count(">Catalog commerce<") == 1
-    assert "Attendee service" in content
+    assert (
+        content.count(f'data-navigation-code="edition.{edition.id}.registration"') == 1
+    )
+    assert content.count(f'data-navigation-code="edition.{edition.id}.catalog"') == 1
+    assert "Registration desk" in content
+    assert content.count('data-navigation-code="work.workforce"') == 1
+    assert f"{reverse('management-console')}?view=workforce" in content
+    assert 'data-navigation-group="personal"' not in content
+    assert "Customize navigation" in content
     assert edition.organization.name in content
     assert edition.series.name in content
     assert edition.name in content

@@ -15,30 +15,34 @@ Repository-controlled examples now use MaruCon, MaruDance, synthetic people,
 and reserved domains. The external-roster compatibility surface is removed,
 the source-derived Workforce starter is replaced by the independently authored
 `marucon-reference@1`, and migration `0009` refuses to relabel incompatible
-immutable receipts. After local and hosted acceptance, the next documentation
-outcome is to keep this finite entry path current while adding role guides and
-verified screenshots only as corresponding interfaces become stable.
+immutable receipts. PR #15 merged as exact protected-main commit `2b78934`, and
+GitHub Pages run `32624208484` published that exact commit successfully. The
+next documentation outcome is to keep this finite entry path current while
+adding role guides and verified screenshots only as corresponding interfaces
+become stable.
 
 ## Current production-consolidation discipline
 
 ADR 0030 established and preserved the accepted empty-experience baseline while
 retaining the tested backend and APIs. ADR 0039 now supersedes that decision's
 default URL configuration: the active milestone uses one coherent
-`/admin/` shell with Convention work, specialist records, and Pages 1–7 under
-the collision-safe `/admin/platform/` route space. Backend route, permission,
+`/admin/` shell with Convention work, specialist records, and the purpose-built
+platform setup record journey under the collision-safe `/admin/platform/`
+route space. Backend route, permission,
 schema-drift, frontend build, populated/fresh migration, local restore-drill,
 and desktop/390-pixel smoke evidence passes. The final consolidated local
 backend invocation passes 792 tests in 329.21 seconds with 90.01 percent
 coverage and no warnings. Accessibility, representative recovery/PITR,
-complete visual-state, and owner evidence remain. ADR 0031
-restored Page 1 as a platform-administrator-only organization inventory
-without adding convention participation. ADR 0032 adds the name-only audited
-Draft command, ADR 0033 expands Page 2 with the complete optional profile,
-ADR 0034 adds the linked Page 3 record, compact one-row
+complete visual-state, and owner evidence remain. ADR 0031 restored
+**Platform administration home** as a platform-administrator-only organization
+inventory without adding convention participation. ADRs 0032 and 0033 define
+the audited Draft command and complete optional profile in **Create
+organization**. ADR 0034 adds the linked **Organization record**, compact
 **Organizations**/**+ Add** navigation, audited profile updates, and protected
-empty-Draft deletion, and ADR 0035 adds organization-scoped Page 4 convention
-series creation. M1 adds Page 5 series record, Page 6 audited/idempotent edition
-creation, and Page 7 edition record plus explicit working context. ADR 0036
+empty-Draft deletion. ADR 0035 adds organization-scoped **Create convention
+series**. M1 adds **Convention series record**, audited and idempotent **Create
+event edition**, and **Event edition record** with explicit working context.
+ADR 0036
 makes navigation progressive: global pages remain
 global while selected-organization pages appear in a named contextual section,
 and the desktop sidebar aligns to ordinary viewport padding. All retain the
@@ -53,7 +57,7 @@ spine precedes M2 governance and computed scoped access; it does not weaken the
 full ADR 0037 outcome. ADR 0039 selects the richer pre-reset record-oriented
 visual grammar without restoring a second menu, Quick Start, direct
 cross-domain saves, or legacy domain assumptions. ADR 0040 now starts M2.1 with
-Page 8's explicit Executive Board representation lifecycle: exact verified
+Representation & access's explicit Executive Board representation lifecycle: exact verified
 accounts accept their own invitations, at least two distinct controllers
 cross-approve root authority, activation moves the Draft organization to
 Active atomically, and the platform administrator remains external. Its
@@ -76,19 +80,19 @@ verified with synthetic data. Production has not been cut over: explicit
 ordinary legacy recreation, representative candidate-cardinality load,
 deployment restore/PITR, and the real activation ceremony remain gates before
 production approval.
-Page 9a.0 now mounts the canonical read-only Organization structure page and
+The Organization structure read projection mounts the canonical read-only page and
 strict GET API. It composes the minimized Executive Board governance anchor
 with one version-fenced bounded, complete edition tree, validates holder role
 lineage and active-person state before labels, audits the sensitive read before
 disclosure, retries one aggregate movement, and removes the duplicate React
-structure destination. Page 9a.1's aggregate, immutable template application,
+structure destination. Department management's aggregate, immutable template application,
 Department command services, repository-owned writer reconciliation, and
 workforce `0006`/`0007` stopped-writer trigger contract are implemented and
 first repository-verified by the pre-adapter 1,471-test baseline at 90.13
 percent branch coverage. The
 immutable, repository-owned 22-Department `marucon-reference@1` fictional
 starter pins Convention Coordination as sole root and contains no Executive
-Board Department. Page 9a.1 now mounts same-shell child forms and
+Board Department. Department management now mounts same-shell child forms and
 five strict API mutation operations for template application and Department
 create/update/reparent/reorder/retire/protected-delete. ADR 0048 keeps the
 browser's sibling order server-owned: create and reparent append under the
@@ -110,9 +114,55 @@ adds task-oriented navigation and administration home, code-owned natural-
 language search, progressive specialist-record disclosure, an accessible
 intermediate/narrow drawer, a shrinkable convention-context control, and a
 coherent User accounts -> invitation -> Executive Board progression. Focused
-static and 56-of-56 integration behaviors pass. The complete authenticated
-width/zoom, keyboard, automated-accessibility, screen-reader, and owner matrix,
-plus conversion of the remaining management journeys, remains required.
+static and 56-of-56 integration behaviors pass.
+
+The completed focused hierarchy slice turns that shell into a clearer product
+hierarchy:
+navigation search leads with tasks and separates technical records, pin controls
+move behind **Customize navigation**, My Maru and Administration use independent
+registries, the workspace context becomes compact, and converted pages share
+one H1 plus one page-local computed **Access** disclosure. Attendee service is
+now **Registration desk** with a searchable/filterable/paginated queue before
+configuration; canonical edition setup is **Registration**, and capacity
+policy is **Capacity & waitlist**. Setup guide uses exact purpose-built routes
+and gives Programme, shifts, inbox, and live operations one truthful
+non-interactive roadmap home. The 390-pixel desk renders labelled attendee
+cards without page overflow. Synthetic demo editions receive honest legacy
+setup controls so the canonical reader works without fabricating Registration setup and account onboarding
+provenance or writer-cutover evidence.
+
+The owner-role read slice reconciles the embedded and host edition
+contexts, gives person/attendee/access drawers one modal keyboard contract, and
+connects Registration to one durable **Workforce** destination. Workforce reads
+the existing exact-edition bounded structure projection and presents Structure,
+Positions, Assignments, Availability, and Shifts as one dependent sequence.
+The first three stages show current records; the last two are truthful
+noninteractive placements. Non-staff owners are not sent to inaccessible Django
+records.
+
+ADR 0075 and HR-012 now complete the next Workforce slice: **Position
+management** is a purpose-built, owner-facing exact-edition workflow. One
+governed command creates a planned Position, private draft volunteer
+opportunity, immutable RoleBundle/template provenance, typed resource binding,
+aggregate version, audit/event/outbox evidence, and retained organizer reason.
+Authorized managers may completely replace operational Position details,
+publish or close the opportunity, and close an unused Position through shared
+HTML/API commands. Closure is one-way and refuses assignments, direct reports,
+or current/future Position-scoped authority. Migration `0010` makes specialist
+Position and opportunity records inspection-only in practice by rejecting
+direct mutation without exact command receipts. Assignment proposal and truly
+independent approval are now the next Workforce product outcome. The preserved
+recovery bootstrap uses the same Position command under one exact initial-Chair
+provenance exception, and internally consistent legacy rows begin evidence at
+their first real governed change without fabricated creation history.
+
+The complete authenticated width/zoom, keyboard, automated-accessibility,
+screen-reader, owner, and visual-state matrix remains required, as does
+task-oriented conversion of Venues, Logistics, and other recurring management
+journeys. The next highest-impact outcome is the owner-safe Assignment journey
+from a current Position through onboarding prerequisites, proposal, separate
+approval, and activation; person-owned Availability and transactional Shifts
+follow only after their privacy and scheduling contracts are accepted.
 
 The 2026-08-11 canonical repository acceptance supersedes those earlier
 focused counts as the current whole-tree gate: Ruff formatting/lint over 624
@@ -292,12 +342,13 @@ restore/PITR, and complete visual-state evidence remain open. Broad user/staff a
 projections beyond the implemented registration actions also remain before
 this phase is treated as complete across the whole product.
 
-The accepted Pages 1–7 implement Page 1 organization inventory, complete
-Page 2 Draft creation, Page 3 organization records for maintaining public
-identity, legal/imprint, contact, and locale defaults, Page 4 creation of a
-recurring public convention brand, Page 5 versioned series maintenance and
-edition inventory, Page 6 shared HTML/API edition creation, and Page 7
-versioned edition maintenance plus explicit working context. A
+The accepted platform setup record journey implements **Platform administration
+home** organization inventory, complete Draft creation through **Create
+organization**, **Organization record** maintenance for public identity,
+legal/imprint, contact, and locale defaults, **Create convention series** for a
+recurring public convention brand, versioned **Convention series record**
+maintenance and edition inventory, shared HTML/API **Create event edition**, and
+versioned **Event edition record** maintenance plus explicit working context. A
 confirmed empty Draft can be deleted, but a created series or any other
 protected relationship refuses deletion. Series creation generates scoped
 identity and audit evidence only. Edition creation starts one Draft identity
@@ -311,7 +362,7 @@ changes the session principal. Draft organizations
 created during this interval must be brought under the IDN-012 Executive Board
 invariant before activation.
 
-The accepted Page 8 contract is the first Phase 1 scope-v2 slice. It separates
+The accepted Representation & access contract is the first Phase 1 scope-v2 slice. It separates
 the Executive Board representation aggregate from membership, departments,
 participation, and generic role sharing; requires existing active verified
 person accounts and invitee-owned versioned decisions; and defines atomic
@@ -346,15 +397,15 @@ specialist relationship resolvers remain later M2 work. The contextual Access
 component and scoped assignment/preview workspace are mounted; deployment-
 shaped accessibility, load, and owner evidence remain.
 
-Page 9a.0 adds one exact-edition Organization structure read beneath that
+The Organization structure read projection adds one exact-edition read beneath that
 foundation. Platform oversight remains non-participating; ordinary users need
 edition-wide `workforce.view_structure`, and manage-only, Department-only,
 staff, Board placement, or selected context is insufficient. The page/API show
 one version-fenced complete bounded hierarchy or explicit no-partial overflow,
 retry one aggregate movement, and require a minimized sensitive-read audit
 before disclosure. Focused backend/OpenAPI/frontend/static checks, the
-historical 1,239-test Page 9a.0 full suite at 90.35 percent branch coverage,
-and authenticated desktop smoke pass. Page 9a.1 adds the implemented
+historical 1,239-test read-projection full suite at 90.35 percent branch
+coverage, and authenticated desktop smoke pass. Department management adds the implemented
 aggregate/receipt schema, stopped-writer migration, template and Department
 commands, shared writer order, snapshot retry, exact runtime trigger-readiness,
 same-shell child forms, and five strict API mutations. Its pre-adapter
@@ -414,7 +465,7 @@ policy without changing the immutable submission. Authoritative Infinity,
 payment, entitlement, capacity, role, and restriction facts cannot be
 reintroduced as extension fields.
 
-ADR 0047 and the Page 10 contract remain the canonical remount and writer-
+ADR 0047 and the Registration setup and account onboarding contract remain the canonical remount and writer-
 cutover target. The working tree now mounts the platform Accounts inventory,
 recipient-owned invitation and delivery flow, one edition-scoped Registration
 workspace, copy-on-write blank/prior/template setup, the immutable
@@ -470,17 +521,19 @@ guarded browser ceremony and management API are retired. The canonical
 Organization structure page shows the minimized Executive Board governance
 anchor above nested Departments, Positions, current permitted holders, and
 multi-department roles under exact edition scope. The old duplicate Convention
-work destination is removed. The Page 9a.1 aggregate, built-in-template
+work destination is removed. The Department management aggregate, built-in-template
 application, Department create/update/reparent/reorder/retire/protected-delete
 commands, writer reconciliation, versioned read retry, and database/runtime
 trigger contract are now exposed through strict same-shell HTML and versioned
 API adapters. The browser assigns sibling placement automatically while the API
-retains explicit bounded ordering. Their definitive adapter-expanded repository and coverage gate
-passes; authenticated responsive acceptance is still pending. Position editing
-remains Page 9b.
-Qualifications, availability,
-shifts, work records, purpose-built approval UI, and the programme/schedule
-side of this phase remain.
+retains explicit bounded ordering. Their definitive adapter-expanded repository
+and coverage gate passes; authenticated responsive acceptance is still pending.
+Position management now provides purpose-built creation, complete operational
+editing, volunteer-opportunity publication, protected one-way closure, direct
+reason history, shared strict HTML/API commands, and database-enforced command
+evidence. Qualifications, person-owned availability, shifts, work records,
+purpose-built independent assignment approval, and the programme/schedule side
+of this phase remain.
 
 ADR 0051 now supplies a bounded typed Applications studio with immutable
 platform starters copied into edition-owned drafts, closed field vocabularies,

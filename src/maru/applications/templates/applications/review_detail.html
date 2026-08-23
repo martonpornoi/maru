@@ -1,6 +1,8 @@
 {% extends "admin/base_site.html" %}
 
 {% block title %}Review {{ submission.definition.name }}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     <a href="{% url 'application-review-workspace' edition.organization_id edition.id %}">Application review</a>
@@ -20,6 +22,7 @@
         &middot; adapter {{ submission.definition.get_target_adapter_kind_display }}
       </p>
     </header>
+    {% include "core/_page_access_mount.html" %}
     <section class="module">
       <h2>Reviewer-visible answers only</h2>
       {% if answers %}

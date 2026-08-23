@@ -1,0 +1,166 @@
+{% extends "workforce/position_action_base.html" %}
+
+{% block position_action_title %}{{ position.title }}{% endblock %}
+{% block position_action_breadcrumb %}{{ position.title }}{% endblock %}
+{% block position_action_heading %}{{ position.title }}{% endblock %}
+{% block position_action_intro %}
+  Keep this responsibility understandable to organizers and applicants while
+  preserving its exact Department, template, role bundle, and stable identity.
+{% endblock %}
+{% block position_reload_link %}
+  <a href="{% url 'organization-structure-position' organization.slug convention_series.slug edition.slug position.id %}">Reload the latest Position</a>
+{% endblock %}
+
+{% block position_action_content %}
+  <section class="baseline-panel" aria-labelledby="position-summary-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Current responsibility</p>
+        <h2 id="position-summary-title">Scope and authority meaning</h2>
+      </div>
+      <span class="baseline-count">{{ position.get_status_display }}</span>
+    </div>
+    <dl class="workforce-position-summary">
+      <div><dt>Department</dt><dd>{{ position.department.name }}</dd></div>
+      <div><dt>Reports to</dt><dd>{% if position.reports_to %}{{ position.reports_to.title }}{% else %}No reporting Position{% endif %}</dd></div>
+      <div><dt>Approved headcount</dt><dd>{{ projected_position.holders|length }} of {{ position.headcount }} assigned</dd></div>
+      <div><dt>Open assignment records</dt><dd>{{ open_assignment_count }}</dd></div>
+      <div><dt>Position template</dt><dd>{{ position.template.name }} v{{ position.template.version }}</dd></div>
+      <div><dt>Future role bundle</dt><dd>{{ position.role_bundle.name }} v{{ position.role_bundle.version }}</dd></div>
+      <div><dt>Volunteer opportunity</dt><dd>{% if opportunity %}{{ opportunity.get_status_display }}{% else %}Draft setup required{% endif %}</dd></div>
+      <div><dt>Applications retained</dt><dd>{{ application_count }}</dd></div>
+    </dl>
+    {% if position.status == "closed" %}
+      <div class="baseline-state baseline-state--warning" role="status">
+        <h3>This Position is closed</h3>
+        <p>
+          Its scope, authority mapping, opportunity, assignments, applications,
+          and reasons remain historical. Closed Positions cannot be reopened or edited.
+        </p>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if update_form %}
+    {% if update_form.non_field_errors or update_form.expected_version.errors %}
+      <div class="baseline-errors" role="alert">{{ update_form.non_field_errors }}{{ update_form.expected_version.errors }}</div>
+    {% endif %}
+    <form
+      method="post"
+      action="{% url 'update-organization-structure-position' organization.slug convention_series.slug edition.slug position.id %}"
+      class="baseline-form workforce-structure-form"
+      novalidate
+    >
+      {% csrf_token %}
+      {{ update_form.expected_version }}
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="position-details-title">
+        <div class="baseline-section-heading">
+          <p class="baseline-kicker">Organizer-facing definition</p>
+          <h2 id="position-details-title">Position details</h2>
+          <p>A normalized no-op writes no version, audit, event, or history entry.</p>
+        </div>
+        {% include "core/_baseline_form_field.html" with field=update_form.title %}
+        {% include "core/_baseline_form_field.html" with field=update_form.description %}
+        {% include "core/_baseline_form_field.html" with field=update_form.headcount %}
+        {% include "core/_baseline_form_field.html" with field=update_form.reports_to_id %}
+        {% include "core/_baseline_form_field.html" with field=update_form.reason %}
+      </section>
+      <div class="baseline-form-actions workforce-structure-primary-actions">
+        <button type="submit"{% if reload_required or not position_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Save Position details</button>
+      </div>
+    </form>
+  {% endif %}
+
+  {% if opportunity_form %}
+    {% if opportunity_form.non_field_errors or opportunity_form.expected_version.errors %}
+      <div class="baseline-errors" role="alert">{{ opportunity_form.non_field_errors }}{{ opportunity_form.expected_version.errors }}</div>
+    {% endif %}
+    <form
+      method="post"
+      action="{% url 'update-organization-structure-position-opportunity' organization.slug convention_series.slug edition.slug position.id %}"
+      class="baseline-form workforce-structure-form"
+      novalidate
+    >
+      {% csrf_token %}
+      {{ opportunity_form.expected_version }}
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="position-opportunity-title">
+        <div class="baseline-section-heading">
+          <p class="baseline-kicker">Applicant-facing publication</p>
+          <h2 id="position-opportunity-title">Volunteer opportunity</h2>
+          <p>
+            Publishing makes this role visible to potential volunteers. It does
+            not accept a person, create an assignment, or grant software access.
+          </p>
+        </div>
+        {% include "core/_baseline_form_field.html" with field=opportunity_form.status %}
+        {% include "core/_baseline_form_field.html" with field=opportunity_form.headline %}
+        {% include "core/_baseline_form_field.html" with field=opportunity_form.description %}
+        <div class="workforce-form-grid">
+          {% include "core/_baseline_form_field.html" with field=opportunity_form.applications_open_at %}
+          {% include "core/_baseline_form_field.html" with field=opportunity_form.applications_close_at %}
+        </div>
+        {% include "core/_baseline_form_field.html" with field=opportunity_form.visible_when_filled %}
+        {% include "core/_baseline_form_field.html" with field=opportunity_form.reason %}
+      </section>
+      <div class="baseline-form-actions workforce-structure-primary-actions">
+        <button type="submit"{% if reload_required or not position_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Save opportunity</button>
+      </div>
+    </form>
+  {% endif %}
+
+  {% if closure_form %}
+    <details class="workforce-structure-command-disclosure workforce-structure-command-disclosure--danger"{% if active_action == "closure" %} open{% endif %}>
+      <summary>Close Position</summary>
+      <section class="baseline-danger-zone" aria-labelledby="position-close-title">
+        <div class="baseline-section-heading">
+          <p class="baseline-kicker">One-way operational history</p>
+          <h2 id="position-close-title">Close Position</h2>
+          <p>
+            Closure preserves everything and stops the opportunity. Maru
+            refuses while current or proposed assignments, direct reports, or
+            current/future scoped authority still depend on this Position.
+          </p>
+        </div>
+        {% if closure_form.non_field_errors or closure_form.expected_version.errors %}
+          <div class="baseline-errors" role="alert">{{ closure_form.non_field_errors }}{{ closure_form.expected_version.errors }}</div>
+        {% endif %}
+        <form
+          method="post"
+          action="{% url 'close-organization-structure-position' organization.slug convention_series.slug edition.slug position.id %}"
+          class="baseline-form baseline-danger-form"
+          novalidate
+        >
+          {% csrf_token %}
+          {{ closure_form.expected_version }}
+          {% include "core/_baseline_form_field.html" with field=closure_form.confirmation_name %}
+          {% include "core/_baseline_form_field.html" with field=closure_form.reason %}
+          <div class="baseline-form-actions">
+            <button type="submit"{% if reload_required or not position_mutations_allowed %} disabled aria-disabled="true"{% endif %}>Close Position</button>
+          </div>
+        </form>
+      </section>
+    </details>
+  {% endif %}
+
+  <section class="baseline-panel workforce-history-panel" aria-labelledby="position-change-history-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Directly inspectable rationale</p>
+        <h2 id="position-change-history-title">Position change history</h2>
+      </div>
+    </div>
+    {% if position_history %}
+      <ol class="workforce-history-list">
+        {% for item in position_history %}
+          <li>
+            <div><strong>{{ item.action_label }}</strong><span>Version {{ item.resulting_version }} · {{ item.occurred_at|date:"SHORT_DATETIME_FORMAT" }}</span></div>
+            <p>{{ item.reason }}</p>
+            <small>Recorded by {{ item.actor_label }}</small>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <div class="baseline-state"><h3>No governed Position changes yet</h3><p>Legacy records show history after their first purpose-built change.</p></div>
+    {% endif %}
+  </section>
+{% endblock %}

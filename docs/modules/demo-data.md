@@ -35,6 +35,9 @@ settings do not expose its management command.
 - four legacy authority examples plus ten familiar furry-convention access
   groups per organizer, with organization- or edition-scoped assignments;
 - distinct MaruCon and MaruDance registration sections, questions, and products;
+- one honest legacy setup control per seeded edition, so the canonical
+  Registration page is readable without inventing complete Registration setup and account onboarding provenance,
+  source digests, actors, or command receipts;
 - two immutable published registration templates;
 - reviewed active 2026 full-demo configurations with volunteer, early-bird,
   normal, Infinity supporter, and invited-guest products, plus inherited
@@ -63,7 +66,7 @@ settings do not expose its management command.
   domain-event, and outbox records.
 
 The current-edition workforce examples are seeded before lifecycle
-progression. Each fresh Department is created through the Page 9 command with
+progression. Each fresh Department is created through the Organization structure command with
 a deterministic retry key and immutable receipt; its Position and assignment
 are then written beneath the canonical edition mutex and active-Department
 lock, and the Position receives its typed resource binding. A rerun replays
@@ -126,7 +129,7 @@ adapter that can read a public convention directory into example data.
 
 Use `seed_demo_data` for every local educational journey. It creates only
 synthetic `.invalid` identities and establishes active Executive Boards through
-the real Page 8 representation services. Page 8, **Representation & access**,
+the real Representation & access services. **Representation & access**,
 is the supported first-authority handoff; the platform administrator is the
 operator and never a convention subject.
 
@@ -177,7 +180,7 @@ capacities, and executable authority:
 
 Direct model creation remains explicitly limited to synthetic bootstrap data
 for aggregates that still lack audited commands. Department creation uses the
-Page 9 command, lifecycle changes use the implemented events service, and
+Organization structure command, lifecycle changes use the implemented events service, and
 Position/assignment writes use the shared edition write scope.
 
 ## Tests and observability
@@ -199,7 +202,7 @@ The integration test runs the command twice and verifies:
 - familiar Convention work access groups, current assignments, exact-person
   display, chair revocation authority, and independent approval authority;
 - password authentication;
-- deterministic Department-command receipt replay, Page 9 structure versions,
+- deterministic Department-command receipt replay, Organization structure versions,
   Position bindings, idempotency after the editable lifecycle; and
 - refusal under production settings.
 

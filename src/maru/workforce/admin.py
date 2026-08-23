@@ -13,7 +13,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 
-from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.events.admin_context import EditionContextAdmin
 from maru.events.models import EventEdition
 from maru.identity.models import Account
@@ -28,7 +27,6 @@ from maru.workforce.models import (
     OnboardingDocumentType,
     Position,
     PositionAssignment,
-    PositionDocumentRequirement,
     PositionTemplate,
     VolunteerApplication,
     VolunteerOpportunity,
@@ -240,68 +238,6 @@ def _lock_assignment_admin_target(
     return locked_assignment
 
 
-class PositionAdminForm(forms.ModelForm):  # type: ignore[type-arg]
-    """Collect and validate position admin input."""
-
-    class Meta:
-        """Configure Django's declarative class metadata."""
-
-        model = Position
-        fields = (
-            "organization",
-            "edition",
-            "template",
-            "department",
-            "reports_to",
-            "role_bundle",
-            "code",
-            "title",
-            "description",
-            "headcount",
-            "capacity_codes",
-            "status",
-            "created_by",
-        )
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the PositionAdminForm instance.
-
-        Parameters
-        ----------
-        *args : Any
-            Positional arguments forwarded to the framework implementation.
-        **kwargs : Any
-            Keyword arguments forwarded to the framework implementation.
-        """
-        super().__init__(*args, **kwargs)
-        self.fields["role_bundle"].required = False
-        self.fields["description"].required = False
-        self.fields["capacity_codes"].required = False
-
-    def clean(self) -> dict[str, Any]:
-        """Validate and normalize the record.
-
-        Returns
-        -------
-        dict[str, Any]
-            A mapping containing the resolved clean data.
-        """
-        cleaned = super().clean() or {}
-        template = cleaned.get("template")
-        if isinstance(template, PositionTemplate):
-            if not cleaned.get("role_bundle"):
-                cleaned["role_bundle"] = template.role_bundle
-                self.instance.role_bundle = template.role_bundle
-            if not str(cleaned.get("description", "")).strip():
-                cleaned["description"] = template.description
-                self.instance.description = template.description
-            if not cleaned.get("capacity_codes"):
-                values = list(template.default_capacity_codes)
-                cleaned["capacity_codes"] = values
-                self.instance.capacity_codes = values
-        return cleaned
-
-
 class PositionAssignmentAdminForm(forms.ModelForm):  # type: ignore[type-arg]
     """Collect and validate position assignment admin input."""
 
@@ -342,53 +278,6 @@ class PositionAssignmentAdminForm(forms.ModelForm):  # type: ignore[type-arg]
                 "Choose the distinct controller who independently approved this.",
             )
         return cleaned
-
-
-class PositionDocumentRequirementInline(admin.TabularInline):  # type: ignore[type-arg]
-    """Configure the position document requirement inline in Django administration."""
-
-    model = PositionDocumentRequirement
-    extra = 0
-    autocomplete_fields = ("document_type",)
-
-
-class VolunteerOpportunityInline(admin.StackedInline):  # type: ignore[type-arg]
-    """Configure the volunteer opportunity inline in Django administration."""
-
-    model = VolunteerOpportunity
-    extra = 0
-    max_num = 1
-    can_delete = False
-    fields = (
-        "status",
-        "headline",
-        "description",
-        "applications_open_at",
-        "applications_close_at",
-        "visible_when_filled",
-        "acceptance_state",
-    )
-    readonly_fields = ("acceptance_state",)
-
-    @admin.display(description="Current application state")
-    def acceptance_state(self, obj: VolunteerOpportunity) -> str:
-        """Return the application's current acceptance state.
-
-        Parameters
-        ----------
-        obj : VolunteerOpportunity
-            The model instance being validated or presented.
-
-        Returns
-        -------
-        str
-            The normalized text for acceptance state.
-        """
-        occupancy = "Filled" if obj.is_filled else "Vacant"
-        availability = (
-            "accepting applications" if obj.accepts_applications else "not accepting"
-        )
-        return f"{occupancy}; {availability}"
 
 
 @admin.register(Department)
@@ -447,9 +336,8 @@ class PositionTemplateAdmin(EditionContextAdmin):
 
 @admin.register(Position)
 class PositionAdmin(EditionContextAdmin):
-    """Configure Django administration for position."""
+    """Inspection-only registry; the Workforce Position workflow owns writes."""
 
-    form = PositionAdminForm
     edition_context_lookup = "edition_id"
     list_display = (
         "title",
@@ -471,8 +359,6 @@ class PositionAdmin(EditionContextAdmin):
         "role_bundle",
         "created_by",
     )
-    prepopulated_fields: ClassVar[dict[str, Sequence[str]]] = {"code": ("title",)}
-    inlines = (PositionDocumentRequirementInline, VolunteerOpportunityInline)
 
     @admin.display(description="Assigned")
     def active_count(self, obj: Position) -> str:
@@ -515,20 +401,27 @@ class PositionAdmin(EditionContextAdmin):
         return opportunity.get_status_display()
 
     @override
-    @transaction.atomic
-    def save_model(
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        del request
+        return False
+
+    @override
+    def has_change_permission(
         self,
         request: HttpRequest,
-        obj: Position,
-        form: forms.ModelForm,  # type: ignore[type-arg]
-        change: bool,
-    ) -> None:
-        _ = form, change
-        _lock_position_admin_target(position=obj, change=change)
-        if not obj.created_by_id and isinstance(request.user, Account):
-            obj.created_by = request.user
-        super().save_model(request, obj, form, change)
-        ensure_workforce_position_binding(position=obj)
+        obj: Position | None = None,
+    ) -> bool:
+        del request, obj
+        return False
+
+    @override
+    def has_delete_permission(
+        self,
+        request: HttpRequest,
+        obj: Position | None = None,
+    ) -> bool:
+        del request, obj
+        return False
 
 
 @admin.register(OnboardingDocumentType)
@@ -761,7 +654,7 @@ class PositionAssignmentAdmin(EditionContextAdmin):
 
 @admin.register(VolunteerOpportunity)
 class VolunteerOpportunityAdmin(EditionContextAdmin):
-    """Configure Django administration for volunteer opportunity."""
+    """Inspection-only registry; the Position workflow owns publication."""
 
     edition_context_lookup = "position__edition_id"
     list_display = (
@@ -773,6 +666,29 @@ class VolunteerOpportunityAdmin(EditionContextAdmin):
     )
     list_filter = ("status", "visible_when_filled", "position__edition")
     search_fields = ("position__title", "headline", "description")
+
+    @override
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        del request
+        return False
+
+    @override
+    def has_change_permission(
+        self,
+        request: HttpRequest,
+        obj: VolunteerOpportunity | None = None,
+    ) -> bool:
+        del request, obj
+        return False
+
+    @override
+    def has_delete_permission(
+        self,
+        request: HttpRequest,
+        obj: VolunteerOpportunity | None = None,
+    ) -> bool:
+        del request, obj
+        return False
 
 
 @admin.register(VolunteerApplication)

@@ -1,0 +1,158 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'workforce/organization_structure.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}Position management · {{ edition.name }} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if baseline_can_view_organization %}
+    <a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>
+  {% else %}
+    {{ organization.name }}
+  {% endif %}
+  &rsaquo; {{ convention_series.name }}
+  &rsaquo; {{ edition.name }}
+  &rsaquo; <a href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}">Organization structure</a>
+  &rsaquo; Position management
+{% endblock %}
+
+{% block baseline_content %}
+  <a
+    class="baseline-back-link"
+    href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}"
+  >← Organization structure</a>
+
+  <header class="baseline-page-heading baseline-page-heading--with-action">
+    <div>
+      <p class="baseline-kicker">{{ edition.name }} · Workforce</p>
+      <h1>Position management</h1>
+      <p class="baseline-intro">
+        Turn Departments into understandable responsibilities, approved
+        headcount, reporting lines, and applicant-facing opportunities without
+        granting anyone access by accident.
+      </p>
+      <p class="baseline-record-meta">
+        <span>Workforce version: <strong>{{ structure.aggregate_version }}</strong></span>
+        <span>Edition lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+      </p>
+    </div>
+    {% if position_creation_available %}
+      <a
+        class="workforce-structure-action"
+        href="{% url 'organization-structure-position-create' organization.slug convention_series.slug edition.slug %}"
+      >Create Position</a>
+    {% endif %}
+  </header>
+
+  <section class="baseline-panel" aria-labelledby="position-list-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Edition-owned responsibilities</p>
+        <h2 id="position-list-title">Positions and opportunities</h2>
+      </div>
+      <span class="baseline-count">{{ positions|length }} total</span>
+    </div>
+    {% if positions %}
+      <ul class="workforce-position-management-list">
+        {% for item in positions %}
+          <li>
+            <div class="workforce-position-management-heading">
+              <div>
+                <p class="baseline-kicker">{{ item.department_name }}</p>
+                <h3>{{ item.position.title }}</h3>
+                <p>
+                  {% if item.position.reports_to_title %}
+                    Reports to {{ item.position.reports_to_title }}
+                  {% else %}
+                    Top-level operational Position
+                  {% endif %}
+                </p>
+              </div>
+              <span class="baseline-count">{{ item.position.status|capfirst }}</span>
+            </div>
+            <p>{{ item.position.description }}</p>
+            <dl class="workforce-position-facts">
+              <div>
+                <dt>Staffing</dt>
+                <dd>{{ item.position.holders|length }} of {{ item.position.headcount }} assigned</dd>
+              </div>
+              <div>
+                <dt>Opportunity</dt>
+                <dd>
+                  {{ item.opportunity_status }}
+                  {% if item.accepts_applications %} · accepting applications{% endif %}
+                </dd>
+              </div>
+            </dl>
+            <p class="workforce-structure-node-action">
+              <a href="{% url 'organization-structure-position' organization.slug convention_series.slug edition.slug item.position.id %}">Manage {{ item.position.title }}</a>
+            </p>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="baseline-state">
+        <h3>No Positions yet</h3>
+        <p>
+          Departments describe where work belongs. A Position adds one
+          responsibility, approved headcount, future authority meaning, and a
+          draft volunteer opportunity.
+        </p>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if not has_position_departments %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>Create a Department first</h2>
+      <p>A Position needs one active Department in this edition.</p>
+      <p><a href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}">Open organization structure</a></p>
+    </div>
+  {% elif not has_position_templates %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>No approved Position template is available</h2>
+      <p>
+        A Position must pin a published template whose immutable role bundle
+        has complete independent-approval provenance. Create or reconcile that
+        role definition through Representation &amp; access before returning here.
+      </p>
+    </div>
+  {% elif not position_mutations_allowed %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>Position changes are read-only</h2>
+      <p>{{ structure_mutation_blocked_reason }}</p>
+    </div>
+  {% endif %}
+
+  <section class="baseline-panel workforce-history-panel" aria-labelledby="position-history-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Directly inspectable rationale</p>
+        <h2 id="position-history-title">Recent Workforce structure changes</h2>
+      </div>
+      <span class="baseline-count">Newest first</span>
+    </div>
+    {% if position_history %}
+      <ol class="workforce-history-list">
+        {% for item in position_history %}
+          <li>
+            <div>
+              <strong>{{ item.action_label }} · {{ item.target_label }}</strong>
+              <span>Version {{ item.resulting_version }} · {{ item.occurred_at|date:"SHORT_DATETIME_FORMAT" }}</span>
+            </div>
+            <p>{{ item.reason }}</p>
+            <small>Recorded by {{ item.actor_label }}</small>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <div class="baseline-state">
+        <h3>No retained structure changes yet</h3>
+        <p>The first governed change will record its actor, time, version, and reason here.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

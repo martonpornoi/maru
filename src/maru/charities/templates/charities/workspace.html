@@ -3,6 +3,7 @@
 {% block title %}Charity partners &middot; {{ edition.name }}{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Administration</a> &rsaquo; Charity partners</div>{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="baseline-page">
@@ -11,6 +12,7 @@
       <h1>Charity partners</h1>
       <p>{{ edition.name }} keeps reusable partner facts separate from this edition's review and public snapshot.</p>
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     <section class="baseline-panel" aria-labelledby="charity-selection-title">
       <h2 id="charity-selection-title">Edition selections</h2>

@@ -41,6 +41,21 @@ ROOT_HUB_DOCNAMES = (
     "reference/index",
 )
 ARCHIVE_DOCNAME_PREFIXES = ("architecture/decisions/", "checkpoints/")
+PURPOSE_NAMING_ARCHIVE_PREFIXES = (
+    "docs/architecture/decisions/",
+    "docs/checkpoints/",
+)
+PURPOSE_NAMING_ARCHIVE_PATHS = frozenset(
+    {
+        "docs/project/PRODUCTION_CONSOLIDATION.md",
+        "docs/project/PROGRESS.md",
+        "docs/project/RESET_REBUILD.md",
+    }
+)
+NUMBERED_SURFACE_LABEL_PATTERN = re.compile(
+    r"\bpages?\s+(?:10|[1-9])(?:[a-z](?:\.\d+)?)?(?=\b|[\u2013-])",
+    re.IGNORECASE,
+)
 PROHIBITED_CONVENTION_NAME_FINGERPRINTS = frozenset(
     {
         "1cac428d0af21a99d5b05111a23cc57a1186cb3dd72e2a86cbc0a36b471eb273",
@@ -377,6 +392,47 @@ def navigation_failures(docs_root: Path) -> list[str]:
     return failures
 
 
+def purpose_name_failures(root: Path) -> list[str]:
+    """Reject numbered management-surface labels from living guidance.
+
+    Parameters
+    ----------
+    root : Path
+        The repository root whose documentation should be inspected.
+
+    Returns
+    -------
+    list[str]
+        Stable failures for current documents that use implementation-order
+        labels instead of human task names.
+
+    Notes
+    -----
+    Accepted decisions, append-only checkpoints, and explicitly frozen project
+    ledgers retain their original language as historical evidence. Numeric
+    filename prefixes are not content and remain valid for link stability.
+    """
+    failures: list[str] = []
+    docs_root = root / "docs"
+    if not docs_root.is_dir():
+        return failures
+
+    for path in sorted(docs_root.rglob("*.md")):
+        relative = path.relative_to(root).as_posix()
+        if relative in PURPOSE_NAMING_ARCHIVE_PATHS or relative.startswith(
+            PURPOSE_NAMING_ARCHIVE_PREFIXES
+        ):
+            continue
+        content = path.read_text(encoding="utf-8")
+        for match in NUMBERED_SURFACE_LABEL_PATTERN.finditer(content):
+            line = content.count("\n", 0, match.start()) + 1
+            failures.append(
+                f"{relative}:{line}: use the management surface's purpose name "
+                f"instead of historical label {match.group(0)!r}"
+            )
+    return failures
+
+
 def _policy_content_files(root: Path) -> list[Path]:
     """Return maintained guides, examples, fixtures, and application text.
 
@@ -528,6 +584,7 @@ def main() -> int:
                 )
 
     failures.extend(navigation_failures(ROOT / "docs"))
+    failures.extend(purpose_name_failures(ROOT))
     failures.extend(ethical_content_failures(ROOT))
 
     requirements_path = ROOT / "docs" / "product" / "requirements.md"

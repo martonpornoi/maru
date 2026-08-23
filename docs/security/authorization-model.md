@@ -160,7 +160,7 @@ Authorization begins at the candidate query, not after serialization:
 Fetching broadly and filtering in Python is prohibited for tenant or restricted
 data.
 
-Page 9 applies this rule in two stages. A name-free exact-edition
+Organization structure applies this rule in two stages. A name-free exact-edition
 `workforce.view_structure` decision runs before organization, edition, or
 holder names are queried; a fresh final decision runs before the completed
 name-bearing response is released. `workforce.manage_structure` is independent
@@ -171,7 +171,7 @@ person checks.
 
 The structure projection is all-or-explicit-overflow. Code-owned row, depth,
 and expanded-edge ceilings return `structure_limit_exceeded` with no partial
-Department tree. Page 9a.1 protects the multi-query read with one captured
+Department tree. Department management protects the multi-query read with one captured
 aggregate version, a repeatable-read attempt, an exact comparison after the
 snapshot, one complete retry, and generic failure after a second movement.
 Mutations independently require exact manage authority and an expected current

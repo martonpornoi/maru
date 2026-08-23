@@ -581,6 +581,10 @@ _WORKFORCE_STRUCTURE_ACTIONS = frozenset(
         "department_updated",
         "department_retired",
         "department_deleted",
+        "position_created",
+        "position_updated",
+        "position_closed",
+        "opportunity_updated",
     }
 )
 _WORKFORCE_STRUCTURE_CHANGED_FIELDS = frozenset(
@@ -591,10 +595,38 @@ _WORKFORCE_STRUCTURE_CHANGED_FIELDS = frozenset(
         "parent_department",
         "display_order",
         "retirement",
+        "position",
+        "opportunity",
+        "resource_binding",
+        "headcount",
+        "reports_to",
+        "title",
+        "status",
+        "closure",
+        "opportunity.applications_close_at",
+        "opportunity.applications_open_at",
+        "opportunity.description",
+        "opportunity.headline",
+        "opportunity.status",
+        "opportunity.visible_when_filled",
     }
 )
 _WORKFORCE_STRUCTURE_DEPARTMENT_FIELDS = frozenset(
     {"name", "description", "parent_department", "display_order"}
+)
+_WORKFORCE_STRUCTURE_POSITION_FIELDS = frozenset(
+    {"title", "description", "headcount", "reports_to"}
+)
+_WORKFORCE_STRUCTURE_OPPORTUNITY_FIELDS = frozenset(
+    {
+        "opportunity.applications_close_at",
+        "opportunity.applications_open_at",
+        "opportunity.description",
+        "opportunity.headline",
+        "opportunity.status",
+        "opportunity.visible_when_filled",
+        "status",
+    }
 )
 _EVENT_SLUG_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 
@@ -648,6 +680,23 @@ def _validate_workforce_structure_changed(payload: dict[str, object]) -> None:
         or (
             action == "department_updated"
             and not changed_field_set.issubset(_WORKFORCE_STRUCTURE_DEPARTMENT_FIELDS)
+        )
+        or (
+            action == "position_created"
+            and changed_field_set != {"opportunity", "position", "resource_binding"}
+        )
+        or (
+            action == "position_updated"
+            and not changed_field_set.issubset(_WORKFORCE_STRUCTURE_POSITION_FIELDS)
+        )
+        or (
+            action == "opportunity_updated"
+            and not changed_field_set.issubset(_WORKFORCE_STRUCTURE_OPPORTUNITY_FIELDS)
+        )
+        or (
+            action == "position_closed"
+            and changed_field_set
+            not in ({"closure"}, {"closure", "opportunity.status"})
         )
     ):
         raise ValidationError(

@@ -1,0 +1,104 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'workforce/organization_structure.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}{% block position_action_title %}Position management{% endblock %} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if baseline_can_view_organization %}
+    <a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>
+  {% else %}
+    {{ organization.name }}
+  {% endif %}
+  &rsaquo;
+  {% if baseline_can_view_organization %}
+    <a href="{% url 'baseline-convention-series-record' organization.slug convention_series.slug %}">{{ convention_series.name }}</a>
+  {% else %}
+    {{ convention_series.name }}
+  {% endif %}
+  &rsaquo;
+  {% if baseline_can_view_edition %}
+    <a href="{% url 'baseline-event-edition-record' organization.slug convention_series.slug edition.slug %}">{{ edition.name }}</a>
+  {% else %}
+    {{ edition.name }}
+  {% endif %}
+  &rsaquo;
+  <a href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}">Organization structure</a>
+  &rsaquo;
+  <a href="{% url 'organization-structure-positions' organization.slug convention_series.slug edition.slug %}">Position management</a>
+  &rsaquo; {% block position_action_breadcrumb %}Manage{% endblock %}
+{% endblock %}
+
+{% block baseline_content %}
+  <a
+    class="baseline-back-link"
+    href="{% url 'organization-structure-positions' organization.slug convention_series.slug edition.slug %}"
+  >← Position management</a>
+
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">{{ edition.name }} · Workforce</p>
+    <h1>{% block position_action_heading %}Manage Position{% endblock %}</h1>
+    <p class="baseline-intro">{% block position_action_intro %}{% endblock %}</p>
+    <p class="baseline-record-meta">
+      <span>Workforce version: <strong>{{ structure.aggregate_version }}</strong></span>
+      <span>Edition lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+    </p>
+  </header>
+
+  <details class="maru-access-summary">
+    <summary>
+      <span class="maru-access-summary__label">
+        <strong>Access</strong>
+        <span class="maru-access-summary__scope">{{ structure_access_label }}</span>
+      </span>
+      <span class="maru-access-summary__policy">Position changes</span>
+    </summary>
+    <div class="maru-access-summary__body">
+      <p class="baseline-access-line">
+        <strong>Structure manager</strong>
+        <span>allows audited Position and opportunity changes in this exact edition.</span>
+      </p>
+      <p>
+        A reporting line explains work only. The selected template pins an
+        independently approved role bundle, but no person receives it until a
+        separate assignment is independently approved.
+      </p>
+    </div>
+  </details>
+
+  {% if action_error %}
+    <div
+      class="baseline-state baseline-state--error workforce-structure-action-error"
+      role="alert"
+      tabindex="-1"
+      data-maru-focus-on-load
+    >
+      <h2>The Position was not changed</h2>
+      <p>{{ action_error }}</p>
+      {% if reload_required %}
+        <p>{% block position_reload_link %}{% endblock %}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if not position_mutations_allowed and not show_submitted_form %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>Position changes are read-only</h2>
+      <p>{{ structure_mutation_blocked_reason }}</p>
+    </div>
+  {% endif %}
+  {% block position_action_content %}{% endblock %}
+
+  <aside class="baseline-boundary" aria-labelledby="position-authority-boundary-title">
+    <p class="baseline-kicker">Authority boundary</p>
+    <h2 id="position-authority-boundary-title">Designing a Position does not appoint a person</h2>
+    <p>
+      Creation pins future authority meaning and creates a draft public
+      opportunity. Assignment still requires headcount, onboarding evidence,
+      two distinct authorized controllers, and its own retained reason.
+    </p>
+  </aside>
+{% endblock %}

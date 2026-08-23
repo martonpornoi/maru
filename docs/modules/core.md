@@ -1,9 +1,10 @@
 # Core module
 
-Status: Implemented backend foundation, task-oriented responsive `/admin/`
-first slice, Page 8 governance integration, and Page 9a.1 structure management;
-broader journey, browser/accessibility, and owner gates remain
-Last updated: 2026-08-16
+Status: Implemented backend foundation, focused responsive `/admin/` hierarchy,
+shared management-page frame, Representation & access governance integration,
+and Organization structure/Department management; broader journey,
+accessibility, and owner gates remain
+Last updated: 2026-08-23
 
 ## Purpose and requirements
 
@@ -24,8 +25,11 @@ UX-029, INT-001, NFR-001, NFR-002, NFR-004, NFR-006, NFR-008, and NFR-009.
 - focused local sign-in and the unified `/admin/` host boundary;
 - the code-owned task navigation registry, search metadata, pin policy,
   specialist disclosure, and task-first administration home;
-- the compact context presentation and accessible responsive drawer behavior;
-- responsive, progressively scoped Pages 1–9 adapters under the reserved
+- separate personal/administrative navigation projections, progressive pin
+  customization, and explicit surface switching;
+- the compact context and effective-access presentations plus accessible
+  responsive drawer behavior;
+- responsive, progressively scoped platform-management adapters under the reserved
   `/admin/platform/` route space;
 - the shared administration host, safety mixins, platform navigation, and
   record-oriented visual grammar selected by ADRs 0039 and 0055;
@@ -48,27 +52,27 @@ authenticated `/admin/` namespace:
 
 - `/admin/` is the permission-filtered administration home;
 - `/admin/workspace/` embeds API-backed Convention work;
-- `/admin/platform/organizations/...` owns the purpose-built Pages 1–9 spine;
+- `/admin/platform/organizations/...` owns the purpose-built platform management spine;
   and
 - `/admin/<app-label>/<model-name>/...` retains specialist records.
 
 The `platform` segment is reserved so the page spine cannot collide with a
 Django application label. Explicit routes must be registered before
-`admin.site.urls`. Pages 1–2 remain platform-administrator setup. Pages 3–7 use
-exact organization/edition capability checks. Page 8 has bounded platform,
+`admin.site.urls`. Platform administration home and Create organization remain
+platform-administrator setup. The organization, series, and edition record
+surfaces use exact organization/edition capability checks. Representation & access has bounded platform,
 representation-manager, and exact-invitee policies. The shell mounts:
 
-- Page 1 organization inventory;
-- Page 2 Draft organization creation;
-- Page 3 organization record/update/protected empty-Draft deletion;
-- Page 4 convention-series creation;
-- Page 5 convention-series record/update and edition inventory;
-- Page 6 event-edition creation; and
-- Page 7 event-edition record/update and explicit working-context selection;
-  and
-- Page 8 organization representation, exact controller invitations,
+- Platform administration home and organization inventory;
+- Create organization and its Draft command;
+- Organization record/update/protected empty-Draft deletion;
+- Create convention series;
+- Convention series record/update and edition inventory;
+- Create event edition;
+- Event edition record/update and explicit working-context selection;
+- Representation & access, exact controller invitations,
   self-response, and initial Draft-to-Active activation; and
-- Page 9a.1 Organization structure at the exact edition route, with the
+- Organization structure at the exact edition route, with the
   separate Executive Board governance anchor, bounded workforce tree, and
   same-shell template and Department management child pages.
 
@@ -79,14 +83,38 @@ keeps authorized technical model pages searchable behind one collapsed
 **Specialist records** disclosure. Navigation search indexes only code-owned
 labels, descriptions, and stable generic keywords. The administration home
 leads with current work and **Continue setup** and provides one specialist
-gateway instead of repeating the complete model directory.
+gateway instead of repeating the complete model directory. Search reports task
+matches separately from technical records, clears on Escape, and leaves the
+technical results collapsed. Row-level pin controls appear only after the user
+opens **Customize navigation**.
+
+My Maru and Administration resolve independent authorized item sets and pins.
+The personal home prioritizes registration, applications, and schedule, then
+groups lower-frequency self-service links under **More from Maru**. Accounts
+with organizer or platform authority receive one explicit Administration/My
+Maru switch; the personal menu never reproduces Platform or Specialist records.
+
+The shared page frame mounts one compact **Access** disclosure after the page
+heading. Server-rendered workflows use the common template mount; the embedded
+Convention work page declares that its active React view owns the disclosure,
+preventing duplicate titles, summaries, or landmarks around the application
+root.
 
 At 1,100 CSS pixels and below, the sidebar becomes a closed-by-default overlay
 drawer with a labelled open control, visible close control, backdrop,
 `aria-expanded`/`aria-controls`, Escape handling, focus containment, background
-scroll lock, and focus return. Wider layouts retain the persistent sidebar.
+scroll lock, inert and accessibility-hidden background content, and focus
+return. Wider layouts retain the persistent sidebar.
 The convention-context control uses a compact shrinkable layout so it cannot
-force the management page wider than the viewport.
+force the management page wider than the viewport. Embedded Convention work
+uses the host selector as its only visible context control and posts its
+authorized initial edition through the existing server action before rendering
+scoped records when the host has no selection.
+
+Blocking person, attendee, and access side workspaces share one modal contract:
+labelled dialog semantics, close focus, Escape, Tab containment, inert and
+accessibility-hidden background content, body scroll lock, and return to the
+exact opener.
 
 Sign-out and edition context select/clear are POST actions. The shell creates
 no convention relationship for the platform administrator. Convention work
@@ -94,12 +122,14 @@ and specialist records use their existing independent policy/model-permission
 boundaries; being visible in one menu does not broaden them. Public and
 personal HTML routes remain outside `/admin/` according to purpose.
 
-Focused route, authorization, shell/sidebar, Page 8, and Page 9 backend
-verification passes. The first management-experience slice adds focused source
-and integration coverage for its drawer, task navigation/home, User accounts,
-invitation status, and Board progress continuity. Populated and fresh
+Focused route, authorization, shell/sidebar, Representation & access, and Organization structure backend
+verification passes. The management-experience coverage includes the drawer,
+task navigation/home, search result hierarchy, progressive customization,
+personal/admin separation, shared access placement, User accounts, invitation
+status, Board progress continuity, and Registration task naming. Populated and
+fresh
 migrations, a local populated restore drill, historical desktop/390-pixel
-smoke, and the Page 8 sensitive-read/denial audit boundary also pass. The final
+smoke, and the Representation & access sensitive-read/denial audit boundary also pass. The final
 consolidated local backend gate passes 792 tests in
 329.21 seconds with 90.01 percent coverage and no warnings; a separate behavior
 run passes the same 792 tests in 291.86 seconds. Nine focused unified-routing
@@ -112,7 +142,7 @@ or error. Authenticated rendered evidence across the complete ADR 0055
 width/zoom matrix, keyboard and automated-accessibility checks, complete visual
 states, and owner tutorial remain open.
 
-Page 9 appears once beneath an authorized selected edition and is also
+Organization structure appears once beneath an authorized selected edition and is also
 discoverable to an ordinary account whose only qualifying edition-wide
 capability is `workforce.view_structure`. Its canonical route is
 `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`.
@@ -132,7 +162,7 @@ report at most five bounded field names. Module services still repeat
 security-critical validation because transport validation alone is not an
 authority or integrity boundary.
 
-Page 8 reuses that primitive for four closed forms. Provision accepts only a
+Representation & access reuses that primitive for four closed forms. Provision accepts only a
 bounded reason; invite accepts exact email plus reason; self-response accepts a
 positive expected invitation version plus `accept|decline`; activation accepts
 a positive representation version, exact case-sensitive organization name,
@@ -161,6 +191,17 @@ navigation links recurring work and contextual access sharing. Durable
 destinations may be pinned after fresh authorization. Creation commands are
 non-pinnable contextual actions, and authorized technical records remain
 available through search and the collapsed specialist disclosure.
+
+The durable attendee-service task is named **Registration desk**. The exact
+edition setup record is **Registration**, and its capacity policy is
+**Capacity & waitlist**. These labels keep a high-frequency service queue,
+low-frequency configuration, and capacity decisions distinct without changing
+their routes or permission boundaries.
+The durable **Workforce** task reads the existing exact-edition structure
+projection and connects Structure, Positions, Assignments, Availability, and
+Shifts. It does not create another Department writer; authorized managers reach
+the purpose-built Position workspace, and unavailable future stages remain
+labelled and noninteractive.
 Django's `nav_sidebar.js` expects one `#nav-filter` even when no model directory
 is available. The custom sidebar preserves that DOM contract and hides the
 filter for scoped accounts with no Specialist records instead of removing it.
@@ -190,13 +231,13 @@ ADR 0027 removes the former global Quick Start because it consumed every
 administration page's top chrome. Dependency guidance remains contextually in
 Convention work's **Setup guide**; record existence still does not prove
 approval, authority, readiness, or completion. ADR 0040 replaces its broad
-first-authority ceremony as the normal path with selected-organization Page 8.
+first-authority ceremony as the normal path with selected-organization Representation & access.
 The old bootstrap command/service is recovery evidence only until an explicit
 legacy-reconciliation procedure approves a narrower use. Its former web
 ceremony and `/api/v1/management/convention-bootstrap` endpoint are not mounted.
 
 Every active authenticated account enters the management product at `/admin/`.
-An exact Page 8 invitee may open only their scoped invitation even before they
+An exact Representation & access invitee may open only their scoped invitation even before they
 hold organization authority; active non-administrators without a relationship
 retain the safe empty state. Ordinary Django record pages remain staff/model-
 permission protected. Platform staff status does not grant convention
@@ -247,33 +288,36 @@ methods are disabled. The locked sidecar assets must be included by
 
 Unit tests cover strict environment parsing, validators, request correlation,
 safe log output, problem response shape, health/build behavior, sidecar asset
-discovery, and CORS/baseline exclusion. Integration tests cover Pages 1–7
+discovery, and CORS/baseline exclusion. Integration tests cover the platform setup record journey
 authorization, progressive/current navigation, strict input, safe failure
 behavior, platform non-participation, and the schema/Swagger/ReDoc route,
 rendering, stale-authority, read-only, and response-hardening contracts.
 
 Current integration tests cover route collisions, anonymous/inactive/platform/
 scoped-nonstaff/staff boundaries, sidebar visibility, Convention work,
-specialist-record gating, old-route behavior, Page 8 menu and disclosure,
+specialist-record gating, old-route behavior, Representation & access menu and disclosure,
 strict forms, stale/replay behavior, and activation failure. They prove that a
 selected edition, Django staff flag, and visible menu never grant organization
 authority. Database-level representation tests cover cross-approval,
 constraints, atomicity, and platform exclusion. The responsive smoke, local
-migration/restore, bounded Page 8 read/denial audit, final local full suite/
+migration/restore, bounded Representation & access read/denial audit, final local full suite/
 coverage gate, nine-test focused routing regression, live Board logout, and
-platform-administrator reload pass. The historical Page 9a.0 focused tests
+platform-administrator reload pass. The historical Organization structure read projection focused tests
 additionally cover
 canonical/current navigation, structure-only edition discovery, view/manage
 independence, department-only denial, non-participating platform oversight,
 explicit overflow, safe dependency failure, and absence of the retired React
 destination. Both HTML and API require the minimized structure-read audit to
-persist before disclosure. Page 9a.1 adds 118 targeted adapter and invariant
+persist before disclosure. Department management adds 118 targeted adapter and invariant
 cases; the definitive repository invocation passes 1,693 tests at 90.50
 percent total branch-inclusive coverage.
 Focused management-experience tests additionally cover drawer markup and
 behavior contracts, collapsed/searchable specialist access, search-only
 actions, natural task keywords, the task-first home, User accounts
-presentation, invitation next steps, and Board progress. Authenticated rendered
+presentation, invitation next steps, Board progress, personal/admin separation,
+compact page-access placement, Registration task naming, the owner-visible
+Workforce destination, and embedded context synchronization. Authenticated
+rendered
 checks at 320, 390, 768, 958, 1,024, 1,280, and 1,920 CSS pixels plus 200
 percent zoom, keyboard/automated accessibility, complete visual states, and
 owner evidence remain required.
@@ -283,12 +327,16 @@ owner evidence remain required.
 Complete computed effective access, invitation notification discovery,
 metrics/tracing export, error capture, rate limiting, and a public status
 service remain. The task-oriented shell/home and User accounts-to-Board flow
-are the first converted slice; Registration, Workforce, Venues, Logistics, and
-other specialist journeys are not yet certified against the same complete
-state and browser matrix. Page 8's root-representation explanation is only the
-first policy-derived slice; Page 9 adds a current principal-specific structure
+now include shared framing, Registration-desk orientation, the owner-safe
+Workforce read journey, and governed Position management; assignments, Venues,
+Logistics, and other
+specialist journeys are not yet certified against the same complete state and
+browser matrix. Representation & access's root-representation
+explanation is only the
+first policy-derived slice; Organization structure adds a current principal-specific structure
 view/manage summary but not named relationship disclosure or the complete
-department/resource/field explanation. Page 9a.1's version fence, commands,
-and strict adapters are mounted; Page 9b Position management and the computed
-access explanation remain separate. The unified shell and Pages 8â€“9 are
-implemented backend milestones, not production-ready release claims.
+department/resource/field explanation. Department and Position management use
+the structure version fence and strict adapters; assignment approval and the
+computed access explanation remain separate. The unified shell,
+Representation & access, and Organization structure are implemented backend
+milestones, not production-ready release claims.

@@ -213,6 +213,83 @@
   background: #8b5b12 !important;
 }
 
+.workforce-position-management-list,
+.workforce-history-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workforce-position-management-list > li,
+.workforce-history-list > li {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #e5e0d7;
+}
+
+.workforce-position-management-heading,
+.workforce-history-list > li > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.workforce-position-management-heading h3,
+.workforce-position-management-heading p,
+.workforce-history-list p {
+  margin: 0.2rem 0 0;
+}
+
+.workforce-position-facts,
+.workforce-position-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 1rem 0 0;
+}
+
+.workforce-position-facts > div,
+.workforce-position-summary > div {
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e5e0d7;
+  border-radius: 0.25rem;
+  background: #fbfaf7;
+}
+
+.workforce-position-facts dt,
+.workforce-position-summary dt {
+  color: #68758a;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.workforce-position-facts dd,
+.workforce-position-summary dd {
+  margin: 0.3rem 0 0;
+  overflow-wrap: anywhere;
+  color: #071b3a;
+  font-weight: 700;
+}
+
+.workforce-history-list > li > div span,
+.workforce-history-list small {
+  color: #68758a;
+}
+
+.workforce-history-list p {
+  max-width: 72ch;
+  overflow-wrap: anywhere;
+}
+
+.workforce-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 @media (max-width: 52rem) {
   .workforce-structure-actions {
     align-items: stretch;
@@ -254,5 +331,16 @@
     width: 100%;
     box-sizing: border-box;
     text-align: center;
+  }
+
+  .workforce-position-management-heading,
+  .workforce-history-list > li > div {
+    flex-direction: column;
+  }
+
+  .workforce-position-facts,
+  .workforce-position-summary,
+  .workforce-form-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -4,6 +4,7 @@
 {% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs" aria-current="page">My Maru / Equipment offers</div>{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="maru-management-page">
@@ -14,6 +15,7 @@
         <p>Only conventions where you may currently offer equipment or already own an offer appear here.</p>
       </div>
     </header>
+    {% include "core/_page_access_mount.html" %}
     <section class="module" aria-labelledby="offer-editions-title">
       <h2 id="offer-editions-title">Conventions</h2>
       {% if offer_editions %}

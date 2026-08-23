@@ -950,7 +950,7 @@ def test_structure_access_matrix_is_exact_and_department_scope_is_too_narrow() -
     )
 
 
-def test_denial_happens_before_name_queries_and_success_repeats_exact_decision() -> (
+def test_denial_precedes_name_queries_and_success_rechecks_view_and_manage() -> (
     None
 ):
     edition = EventEditionFactory(name="Must not be disclosed")
@@ -971,7 +971,11 @@ def test_denial_happens_before_name_queries_and_success_repeats_exact_decision()
     with patch("maru.workforce.api.decide", wraps=decide) as repeated:
         success = _authenticated_client(platform).get(url)
     assert success.status_code == 200
-    assert repeated.call_count == 2
+    assert [call.kwargs["capability_code"] for call in repeated.call_args_list] == [
+        "workforce.view_structure",
+        "workforce.view_structure",
+        "workforce.manage_structure",
+    ]
 
 
 def test_incomplete_abstract_field_ceiling_fails_closed_before_projection() -> None:
@@ -1186,6 +1190,7 @@ def test_api_uses_one_projection_instant_and_fresh_final_authorization() -> None
     assert projector.call_args.kwargs["at"] == projection_at
     assert [call.kwargs["at"] for call in policy.call_args_list] == [
         projection_at,
+        response_check_at,
         response_check_at,
     ]
 

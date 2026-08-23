@@ -40,7 +40,7 @@ def create_department_for_test(
     display_order: int = 0,
     actor: Account | None = None,
 ) -> Department:
-    """Create one Department through Page 9 at the exact current version."""
+    """Create one Department through the governed structure command."""
 
     platform_actor = actor or AccountFactory(is_staff=True, is_superuser=True)
     current_version = (
@@ -77,7 +77,7 @@ def apply_builtin_structure_template_for_test(
     edition: EventEdition,
     actor: Account | None = None,
 ) -> BuiltinStructureTemplateResult:
-    """Apply the immutable reference template through the Page 9 command."""
+    """Apply the immutable reference template through the structure command."""
 
     platform_actor = actor or AccountFactory(is_staff=True, is_superuser=True)
     current_version = (
@@ -109,7 +109,7 @@ def retire_department_for_test(
     department: Department,
     actor: Account | None = None,
 ) -> Department:
-    """Retire one dependency-free Department through the Page 9 command."""
+    """Retire one dependency-free Department through the structure command."""
 
     platform_actor = actor or AccountFactory(is_staff=True, is_superuser=True)
     current_version = EditionStructureControl.objects.values_list(

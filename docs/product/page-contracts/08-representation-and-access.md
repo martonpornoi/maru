@@ -1,4 +1,4 @@
-# Page 8 contract: Representation & access
+# Representation & access contract
 
 - Status: Initial lifecycle implemented, hardened, and locally verified; final
   suite, automated accessibility, complete visual-state, and owner rehearsal pending
@@ -44,7 +44,7 @@ After an organization is selected, the shared sidebar shows
 **Representation & access** beside **Organization record** and the scoped
 convention-series row. The page uses the same Maru logo, shell, title, purpose,
 access summary, modules, form language, tables, focus behavior, and narrow
-stacking as Pages 1 through 7. It never renders a second global menu, workspace
+stacking as the platform setup record journey. It never renders a second global menu, workspace
 selector, or Quick Start strip.
 
 The first task-oriented people-to-governance journey reaches this page from
@@ -97,7 +97,7 @@ Invited -> Accepted -> Active
 
 `Suspended` representation and `Ended` appointment states are durable model
 vocabulary for later reasoned suspension, removal, replacement, and recovery
-commands. No form on Page 8 may set them directly. Until those commands and
+commands. No form on Representation & access may set them directly. Until those commands and
 their quorum/revocation tests exist, the full ongoing representation lifecycle
 is incomplete.
 
@@ -182,7 +182,7 @@ Activation refuses unless at least two distinct controllers have Accepted, no
 controller invitation remains unanswered, and every accepted account is still
 active, verified, non-platform, and without a suspended membership. A
 pre-existing reserved `executive-board` bundle is a conflict for human
-reconciliation; Page 8 never overwrites it.
+reconciliation; Representation & access never overwrites it.
 
 One transaction:
 
@@ -313,7 +313,7 @@ procedure is in
 
 ## Acceptance checks
 
-- Page 8 link appears once at selected-organization scope with correct current
+- Representation & access link appears once at selected-organization scope with correct current
   navigation and no second shell;
 - User accounts, invitation outcome, and Representation & access form a
   truthful identity-to-governance handoff with no relationship side effect;

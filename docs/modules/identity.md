@@ -2,7 +2,7 @@
 
 Status: Verified identity lifecycle, explicit platform administrators, human
 login handles, session controls, safe activity labels, scoped restrictions,
-strict Page 10 platform-invitation HTML/API adapters, the repository-verified
+strict platform account-invitation HTML/API adapters, the repository-verified
 User accounts first experience slice, and an author-verified retention-v10
 corrective candidate; complete rendered owner acceptance, independent retention
 acceptance, production policy activation, and writer cutover remain gated
@@ -63,7 +63,7 @@ registrants, volunteers, onboarding subjects, or workforce assignees.
   returning display name or the generic `Maru account` fallback without email,
   login handle, authentication state, or contact data;
 - `active_person_account_display_labels(account_ids)`, the narrower bounded
-  Page 9a.0 adapter that returns a minimized display label only while the
+  Organization structure adapter that returns a minimized display label only while the
   already-authorized relationship points to an active `person` account;
 - `create_platform_account_invitation(...)`,
   `reissue_platform_account_invitation(...)`,
@@ -245,10 +245,10 @@ session inventory/revocation, privileged step-up, rate limits, append-only
 security history, scoped restriction issue/revoke/consequence, appeal decision,
 authorization, and cross-tenant denial. `identity_delivery` durably delivers
 pending challenges and reports success/failure for supervision.
-Page 9a.0 integration tests additionally prove that identity labels are not
+Organization structure integration tests additionally prove that identity labels are not
 queried until authorization has retained current role evidence and that
 inactive or platform-classified accounts are omitted.
-The focused Page 10 API suite additionally proves closed/server-owned-field
+The focused Registration setup and account onboarding API suite additionally proves closed/server-owned-field
 rejection, authorization and step-up before parsing, canonical idempotency,
 safe replay/conflict behavior, audited bounded inventory/detail projections,
 cursor and page-size limits, random-versus-revoked non-enumeration, adversarial
@@ -273,7 +273,7 @@ resistant MFA. Production must configure and supervise email delivery, tune
 distributed rate coordination for its topology, define platform suspension and
 duplicate-account merge procedures, and complete security review. Restriction
 records are not a substitute for a restricted conduct-case system.
-Page 10 invitation routes remain production-gated until the accepted retention
+Registration setup and account onboarding invitation routes remain production-gated until the accepted retention
 schedule, delivery-worker heartbeat, stopped-writer generation, deployment
 recovery rehearsal, and full readiness contract pass; route reachability is not
 that cutover evidence.

@@ -1,7 +1,10 @@
 {% extends "admin/base_site.html" %}
 
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+
 {% block content %}
-  <main id="content" class="maru-management-page">
+  <div id="content-main" class="maru-management-page">
     <p><a href="{% url 'venue-workspace' organization.slug convention_series.slug edition.slug %}">Back to venues and spaces</a></p>
     <header class="maru-page-header">
       <div>
@@ -10,6 +13,7 @@
         <p>{{ schedule.space.configuration_name }} / seated {{ schedule.space.seated_capacity }} / standing {{ schedule.space.standing_capacity }} / table {{ schedule.space.table_capacity }} / fire {{ schedule.space.fire_capacity }}</p>
       </div>
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     <section class="module" aria-labelledby="venue-availability-title">
       <h2 id="venue-availability-title">Hard availability</h2>
@@ -111,5 +115,5 @@
         </details>
       {% endif %}
     </section>
-  </main>
+  </div>
 {% endblock %}

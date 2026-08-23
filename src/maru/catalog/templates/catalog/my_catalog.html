@@ -4,6 +4,7 @@
 {% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-maru-home' %}">My Maru</a> › Catalog</div>{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="baseline-page">
@@ -13,6 +14,7 @@
       <p>Catalog prices and availability are checked again atomically when you order.</p>
       <a class="button secondary" href="{% url 'my-catalog-orders' edition.id %}">Order history</a>
     </header>
+    {% include "core/_page_access_mount.html" %}
     {% for card in product_cards %}
       <section class="baseline-panel">
         <div class="baseline-panel-heading">

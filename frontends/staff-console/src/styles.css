@@ -422,6 +422,22 @@ a.nav-item:hover {
   align-items: flex-end;
 }
 
+.page-heading-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.page-heading-actions .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .eyebrow,
 .section-kicker {
   margin: 0 0 0.5rem;
@@ -1094,6 +1110,15 @@ a.nav-item:hover {
   margin-bottom: 1.2rem;
 }
 
+.attendee-queue {
+  margin-bottom: 1.2rem;
+}
+
+.attendee-queue-heading {
+  align-items: end;
+  margin-bottom: 0.85rem;
+}
+
 .configuration-summary {
   display: grid;
   grid-template-columns: minmax(15rem, 2fr) repeat(3, minmax(6rem, 0.6fr));
@@ -1588,6 +1613,10 @@ a.nav-item:hover {
   background: #e4eee9;
 }
 
+.row-open-label {
+  display: none;
+}
+
 .table-empty {
   display: grid;
   gap: 0.3rem;
@@ -2000,6 +2029,29 @@ a.nav-item:hover {
 
 .setup-note h2 {
   margin: 0;
+}
+
+.planned-capabilities {
+  margin-top: 1rem;
+}
+
+.planned-capability-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.65rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planned-capability-list li {
+  padding: 0.75rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.6rem;
+  color: var(--muted);
+  background: var(--paper);
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .bootstrap-ceremony {
@@ -2600,6 +2652,192 @@ a.nav-item:hover {
   align-items: center;
 }
 
+body.maru-react-drawer-open {
+  overflow: hidden;
+}
+
+body.maru-admin-workspace-page .drawer-scrim {
+  z-index: 50;
+}
+
+body.maru-admin-workspace-page .person-drawer,
+body.maru-admin-workspace-page .access-drawer {
+  --ink: var(--body-fg);
+  --muted: var(--body-quiet-color);
+  --paper: var(--body-bg);
+  --white: var(--body-bg);
+  --line: var(--hairline-color);
+  --forest: var(--primary);
+  --forest-deep: var(--secondary);
+  --mint: var(--accent);
+  color: var(--body-fg);
+  font-family: var(--font-family-primary);
+}
+
+.workforce-loading {
+  min-height: 9rem;
+  display: grid;
+  gap: 0.8rem;
+  place-items: center;
+}
+
+.workforce-journey-intro {
+  max-width: 58rem;
+  margin: 0 0 1rem;
+}
+
+.workforce-journey {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workforce-journey > li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.workforce-journey h3,
+.workforce-department h3,
+.workforce-position-list h4 {
+  margin: 0;
+}
+
+.workforce-journey p {
+  max-width: 62rem;
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.workforce-step-number {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--forest-deep);
+  background: var(--white);
+  font-weight: 800;
+}
+
+.workforce-step-state {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--forest);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.workforce-step-state.planned {
+  color: var(--muted);
+}
+
+.workforce-journey .planned-step {
+  background: color-mix(in srgb, var(--paper) 84%, var(--line));
+}
+
+.workforce-departments {
+  display: grid;
+  gap: 1rem;
+}
+
+.workforce-department {
+  margin-inline-start: min(calc(var(--department-depth) * 1rem), 3rem);
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--paper);
+}
+
+.workforce-department-heading,
+.workforce-position-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.workforce-position-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workforce-position-list > li {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: var(--white);
+}
+
+.workforce-position-list h4 {
+  font-size: 1rem;
+}
+
+.workforce-position-list p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.workforce-assignment-summary {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+}
+
+.workforce-assignment-summary ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workforce-assignment-summary li,
+.workforce-assignment-summary > span {
+  width: fit-content;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--paper) 76%, var(--line));
+  font-size: 0.7rem;
+}
+
+.workforce-position-action {
+  width: fit-content;
+  margin-top: 0.9rem;
+}
+
+.workforce-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.workforce-owner-boundary {
+  margin: 1rem 0 0;
+}
+
+.workforce-boundary {
+  margin-top: 1rem;
+}
+
 .admin-embedded-shell {
   min-width: 0;
   color: var(--ink);
@@ -2734,6 +2972,10 @@ a.nav-item:hover {
     gap: 1rem;
   }
 
+  .page-heading-actions {
+    justify-content: flex-start;
+  }
+
   .bootstrap-page {
     padding: 1.25rem 1rem;
   }
@@ -2805,7 +3047,8 @@ a.nav-item:hover {
   }
 
   .setup-steps li,
-  .access-assignment {
+  .access-assignment,
+  .workforce-journey > li {
     grid-template-columns: auto minmax(0, 1fr);
   }
 
@@ -2815,6 +3058,14 @@ a.nav-item:hover {
   .access-card-actions,
   .access-inline-form {
     grid-column: 1 / -1;
+  }
+
+  .workforce-journey .secondary-button {
+    grid-column: 1 / -1;
+  }
+
+  .workforce-department {
+    margin-inline-start: 0;
   }
 
   .setup-note {
@@ -2934,7 +3185,8 @@ a.nav-item:hover {
 .admin-embedded-shell .event-hero,
 .admin-embedded-shell .metric,
 .admin-embedded-shell .forms-section,
-.admin-embedded-shell .access-drawer {
+.admin-embedded-shell .access-drawer,
+body.maru-admin-workspace-page .access-drawer {
   border: 1px solid var(--hairline-color);
   border-radius: 4px;
   color: var(--body-fg);
@@ -2955,6 +3207,10 @@ a.nav-item:hover {
   border-radius: 3px 3px 0 0;
   color: var(--header-link-color);
   background: var(--primary);
+}
+
+.admin-embedded-shell .attendee-queue-heading {
+  margin: 0 0 0.85rem;
 }
 
 .admin-embedded-shell .panel-heading h2,
@@ -3111,6 +3367,103 @@ a.nav-item:hover {
 @media (max-width: 767px) {
   .admin-embedded-shell .event-hero {
     grid-template-columns: 1fr;
+  }
+
+  /*
+   * The registration desk is used while moving through a venue, often on a
+   * phone. Present each attendee as a complete record instead of asking staff
+   * to pan across a desktop table and lose the row context.
+   */
+  .attendee-queue .people-table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .admin-embedded-shell .attendee-table {
+    min-width: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .attendee-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .attendee-table tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .attendee-table tbody tr {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--hairline-color);
+    border-radius: 4px;
+    background: var(--body-bg);
+  }
+
+  .admin-embedded-shell .attendee-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(5.5rem, 34%) minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+    width: auto;
+    padding: 0.7rem 0.8rem;
+    overflow-wrap: anywhere;
+    border-bottom: 1px solid var(--hairline-color);
+  }
+
+  .attendee-table tbody td::before {
+    content: attr(data-label);
+    color: var(--body-quiet-color);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .admin-embedded-shell .attendee-table tbody td:first-child {
+    display: block;
+    padding: 0.8rem;
+    background: var(--darkened-bg);
+  }
+
+  .attendee-table tbody td:first-child::before,
+  .attendee-table tbody .attendee-row-action::before {
+    display: none;
+  }
+
+  .attendee-table .person-link {
+    width: 100%;
+  }
+
+  .admin-embedded-shell .attendee-table tbody .attendee-row-action {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.55rem 0.8rem;
+    border-bottom: 0;
+  }
+
+  .attendee-table .row-open {
+    width: auto;
+    height: auto;
+    display: inline-flex;
+    gap: 0.45rem;
+    align-items: center;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+  }
+
+  .attendee-table .row-open-label {
+    display: inline;
   }
 
 }

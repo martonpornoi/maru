@@ -1,8 +1,9 @@
 # Organizations module
 
-Status: Implemented tenant, brand, localization, Pages 1–5, initial Page 8
-Executive Board lifecycle, emergency containment, Page 9 minimized governance-
-anchor query, and the repository-verified User accounts-to-Board presentation;
+Status: Implemented tenant, brand, localization, the organization and
+convention-series record journey, initial Representation & access Executive
+Board lifecycle, emergency containment, minimized Organization structure
+governance-anchor query, and the repository-verified User accounts-to-Board presentation;
 complete rendered owner acceptance remains open and mounted Department
 mutations remain workforce-owned
 Last updated: 2026-08-15
@@ -51,7 +52,7 @@ sessions and authority, deactivates the account, and suspends any Board that
 loses its two-controller quorum. Routine expiry, replacement, voluntary ending,
 reactivation, and quorum recovery are not implemented.
 
-ADR 0045 permits Page 9 to show a minimized Executive Board governance anchor
+ADR 0045 permits Organization structure to show a minimized Executive Board governance anchor
 above an edition's Convention Coordination Department. This is presentation
 composition, not a stored parent edge or cross-module write. `maru.organizations` remains the
 only owner of representation state and appointments; `maru.workforce` remains
@@ -60,12 +61,12 @@ fictional MaruCon starter cannot create, activate, update, or infer
 representation, membership, appointment, controller identity, or root
 authority.
 
-Page 9a.0 now implements that read composition. The public organizations query
+Organization structure now implements that read composition. The public organizations query
 accepts one already-authorized organization identifier and returns exactly a
 `governance` discriminator, the fixed **Executive Board** label, and the
 truthful `absent`, `provisioning`, `active`, or `suspended` state. It never
 returns a representation identifier, appointment, controller, membership,
-reason, count, or authority record. Page 9 authorizes the exact edition before
+reason, count, or authority record. Organization structure authorizes the exact edition before
 calling it and repeats fresh authorization before releasing the composed
 response.
 
@@ -114,7 +115,7 @@ non-browser clients.
   normalizes the required name, generates a collision-safe slug within that
   organization, validates the complete series, and appends its audit event.
 - `update_convention_series(...)`, the atomic
-  `organizations.change_series` command used by Page 5 and its API adapter. It
+  `organizations.change_series` command used by Convention series record and its API adapter. It
   locks the exact organization-owned series, compares
   the expected profile version, writes only changed brand fields, and commits
   minimized audit plus `organizations.convention_series.updated.v1` and its
@@ -140,20 +141,20 @@ non-browser clients.
 - `PUT /api/v1/organizations/{organization_id}/series/{series_id}`, the strict
   complete profile replacement.
 
-Generic unscoped organization APIs remain absent. Page 2 remains platform-only;
-Pages 3 through 5 are exact-organization workflows whose Board-authority
+Generic unscoped organization APIs remain absent. Create organization remains platform-only;
+Organization record, Create convention series, and Convention series record are exact-organization workflows whose Board-authority
 browser paths have backend route and policy coverage. Existing series
 APIs remain platform-administrator adapters until their separate API policy and
 projection contract changes. These record operations create no membership,
 governance, event edition, participation, registration, or workforce
 relationships.
 
-Page 8 has no declared public API in M2.1. Its HTML adapters call these same
+Representation & access has no declared public API in M2.1. Its HTML adapters call these same
 module-owned commands. A future API must define strict projections,
 enumeration resistance, retry semantics, authentication, approval, and OpenAPI
 evidence rather than saving these models directly.
 
-ADR 0055 adds a presentation-only continuity layer to Page 8. Its persistent
+ADR 0055 adds a presentation-only continuity layer to Representation & access. Its persistent
 three-step progression distinguishes provisioning, exact-account invitations
 and invitee responses, and final two-controller activation. A platform
 administrator may follow a shortcut to **User accounts** to prepare people;
@@ -164,10 +165,10 @@ this handoff; the full authenticated width/zoom, keyboard, screen-reader,
 state, and owner matrix remains open.
 
 ADR 0045's public, minimized `executive_board_governance_anchor(...)` query
-for Page 9 resolves the exact organization and returns only the
+for Organization structure resolves the exact organization and returns only the
 fixed representation label and truthful absent, Provisioning, Active, or
 Suspended state. It returns no appointment, email, membership, reason,
-controller count, role assignment, or authority provenance. The Page 9 adapters
+controller count, role assignment, or authority provenance. The Organization structure adapters
 compose that query with workforce's edition-owned structure projection; the
 workforce module does not save organization models. The bounded read query and
 strict template/Department mutation adapters are implemented. Those mutations
@@ -184,7 +185,7 @@ reuse the same recognizable slug while same-tenant collisions receive numeric
 suffixes. Draft, Active, and Suspended parents may prepare a series; Closed
 parents cannot.
 
-Page 5 edits the same complete profile through optimistic concurrency. Its
+Convention series record edits the same complete profile through optimistic concurrency. Its
 HTML form accepts only the declared profile fields, expected profile version,
 and CSRF. The API `PUT` is a strict complete replacement. Undeclared ownership,
 slug, lifecycle, timestamp, or other fields are rejected rather than ignored.
@@ -237,8 +238,8 @@ The registered `organizations.representation.changed.v1` event is deliberately
 minimized to action, fixed representation code, and resulting state. It does
 not carry email, display name, reason text, profile values, or capability lists.
 
-Page 9's governance-anchor rendition is C1 and intentionally narrower than the
-Page 8 directory: fixed label plus current representation state only. It does
+Organization structure's governance-anchor rendition is C1 and intentionally narrower than the
+Representation & access directory: fixed label plus current representation state only. It does
 not authorize a workforce mutation, reveal whether a particular person is a
 controller, or turn Board representation into edition participation. Any
 future named access explanation still uses the exact authorization and
@@ -250,20 +251,20 @@ relationship projection required by UX-020.
 - events reference an owning organization and series;
 - participation references the owning organization;
 - the self-context projection consumes the membership query; and
-- the Page 9 presentation consumes the minimized representation-
+- the Organization structure presentation consumes the minimized representation-
   anchor query and never writes through it.
 
 ## Bootstrap administration
 
 The shared administration menu always exposes the global Organizations row.
 Once an authorized view has selected an organization, a section named for it
-links to its record, Page 8 **Representation & access**, and Convention series
+links to its record, **Representation & access**, and Convention series
 section, with series creation beside that destination while lifecycle permits
 it. Selecting a series adds its own
 record and Convention editions destinations; new-edition availability depends
-on both organization and series state. Page 9a.0 adds **Organization
+on both organization and series state. The shell adds **Organization
 structure** once beneath an exact selected edition and only when the same exact
-Page 9 view decision succeeds. A user with edition-wide
+Organization structure view decision succeeds. A user with edition-wide
 `workforce.view_structure` can discover that edition even without
 `events.view_basic`; inaccessible sibling record links remain hidden. This is
 display context only: it
@@ -280,10 +281,10 @@ choices. The organization form also explains the tenant/organizer role; the
 series form explains recurring-brand continuity. Generic administration
 deletion remains disabled. Organization, convention-series, membership,
 representation, and appointment specialist records are inspection-only so
-model forms cannot bypass the audited commands. The purpose-built Page 3
+model forms cannot bypass the audited commands. The purpose-built Organization record
 command handles only confirmed empty Drafts.
 
-Page 8 presents provision, exact invitation, self-response, and activation as
+Representation & access presents provision, exact invitation, self-response, and activation as
 separate POST operations. Its forms use closed input contracts: reason is
 1–240 normalized characters; invitation takes one exact email and reason;
 response takes a positive expected invitation version and `accept|decline`;
@@ -358,34 +359,34 @@ PostgreSQL tests cover case-insensitive scoped uniqueness, protected deletion,
 two-tenant synthetic data, localization normalization/validation, readable
 language/time-zone/telephone choices, and self-context non-disclosure.
 Page tests additionally cover membership rejection plus empty, populated,
-denied, and safe database-failure inventory states. Page 2 tests cover shared
+denied, and safe database-failure inventory states. Create organization tests cover shared
 side navigation, name-only and complete-profile creation, every optional field
 validator, normalization, Unicode fallback and bounded slug generation,
 collision handling, code-owned Draft/defaults, repeated service authorization
 and model validation, atomic auditing and rollback, safe audit metadata,
 one-time confirmation, and the absence of relationship side effects.
-Page 3 tests cover linked records, compact navigation, complete profile
+Organization record tests cover linked records, compact navigation, complete profile
 updates, code-owned slug/lifecycle, no-op saves, safe error states, service
 authorization, audit value minimization, exact deletion confirmation,
 Draft/relationship guards, and atomic update/delete rollback.
-Page 4 tests cover empty and populated organization-scoped series projections,
+Create convention series tests cover empty and populated organization-scoped series projections,
 contextual navigation, denied-before-lookup authorization, unknown and Closed
 parents, name-only and complete optional creation, crafted-scope resistance,
 per-tenant slug collision/fallback/bounds, repeated service validation,
 value-minimized atomic audit/domain-event/outbox evidence, publication and
 database rollback with safe 503 disclosure, and the absence of edition or
 people-relationship side effects.
-Page 5 and API tests cover exact tenant scope, strict input, complete profile
+Convention series record and API tests cover exact tenant scope, strict input, complete profile
 replacement, no-op and stale saves, stable ownership/slug database guards,
 profile-version monotonicity, safe activity, audit/event/outbox rollback,
 pagination, error shapes, fail-closed populated downgrade, and the absence of
 convention relationships.
 
-Page 8 tests cover platform/manager/self/ordinary/inactive and cross-tenant
+Representation & access tests cover platform/manager/self/ordinary/inactive and cross-tenant
 visibility, unknown-account equivalence, platform-subject rejection, duplicate
 invitations, self-response stale/replay, activation eligibility and quorum,
 non-self cross-approval, exact scope, database constraints, minimized mutation
-evidence, rollback, and absence of unrelated side effects. Pages 3 through 5
+evidence, rollback, and absence of unrelated side effects. Organization record, Create convention series, and Convention series record
 also exercise active Board assignments and scoped non-staff shell entry.
 Focused hardening tests cover generic reserved-role isolation, manager-only
 sensitive-read audit, privileged-denial audit, raw scope/provenance/version
@@ -415,18 +416,19 @@ final consolidated backend invocation passes 792 tests with 90.01 percent
 coverage and no warnings. Automated accessibility, complete visual states,
 representative deployment/PITR, and owner rehearsal remain release gates.
 
-The historical Page 9a.0 tests additionally prove absent and Provisioning anchor states, the
+The historical Organization structure read-projection tests additionally prove
+absent and Provisioning anchor states, the
 fixed identity-free label, separation from a same-named operational Executive
 Board Department, platform non-participation, canonical navigation, and safe
-foreign/dependency denial. They are included in the current 52-test Page 9/API/
+foreign/dependency denial. They are included in the current 52-test Organization structure/API/
 catalog/template focused run and the definitive 1,239-test full-suite run at
-90.35 percent branch coverage. Page 9a.1's adapter-expanded repository gate
+90.35 percent branch coverage. Department management's adapter-expanded repository gate
 passes 1,693 tests at 90.50 percent total branch-inclusive coverage;
 authenticated responsive evidence for the management slice remains open.
 
 ## Limitations
 
-Page 8's Executive Board provisioning, invitation, acceptance, initial
+Representation & access's Executive Board provisioning, invitation, acceptance, initial
 activation, and platform emergency containment are implemented and backend-
 verified. Local migration/restore evidence is not representative production
 recovery or PITR certification. Appointment expiry, withdrawal, routine
@@ -434,7 +436,7 @@ replacement/ending, planned suspension/reactivation, quorum recovery, legacy
 active-tenant reconciliation, invitation notification delivery, organization
 and series lifecycle transitions beyond initial activation, slug migration, publication,
 processors, ownership transfer, closure/data exit, and the complete
-convention-owned organizer experience remain. Page 9 implements and tests the
+convention-owned organizer experience remain. Organization structure implements and tests the
 minimized governance-anchor query, exact navigation, strict read API, and
 principal-specific view/manage summary. ADR 0045's structure aggregate,
 Department mutation services/routes, and migrations are implemented. The full

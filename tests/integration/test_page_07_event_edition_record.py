@@ -498,7 +498,7 @@ def test_ready_and_closed_edition_profiles_are_read_only() -> None:
     ready_content = ready.content.decode()
     assert "Edition profile is read-only" in ready_content
     assert 'name="expected_aggregate_version"' not in ready_content
-    assert '<h2 id="maru-access-heading">Access</h2>' in ready_content
+    assert '<summary id="maru-access-heading">' in ready_content
     assert "does not store its own sharing list" in ready_content
 
     EventEdition.objects.filter(id=edition.id).update(

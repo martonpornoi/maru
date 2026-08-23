@@ -1,9 +1,10 @@
-# Page 9 contract: Organization structure
+# Organization structure contract
 
-- Status: Page 9a.1 bounded version-fenced read, shared Department command and
+- Status: Bounded version-fenced read, shared Department commands and
   stopped-writer database core, and strict HTML/API mutation adapters mounted;
-  definitive repository/coverage acceptance passes, while responsive-browser,
-  accessibility, owner, and deployment-recovery acceptance remains pending
+  definitive repository/coverage acceptance passes, and the exact-edition read
+  now feeds an owner-rehearsed Workforce orientation; complete mutation-role,
+  responsive, accessibility, and deployment-recovery acceptance remains pending
 - Route: `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/`
 - Current browser mutations: separate POST-only template application,
   Department create, complete update/reparent with automatic sibling placement,
@@ -19,7 +20,7 @@
 
 ## Purpose and primary users
 
-Page 9 lets an authorized organizer establish and maintain the Department tree
+Organization structure lets an authorized organizer establish and maintain the Department tree
 for one exact event edition. It also explains how that operational structure
 sits beneath the organization's accountable governance without creating a
 second representation record.
@@ -35,16 +36,17 @@ The first management slice serves:
 
 It is not a Board appointment page, people directory, general access editor,
 Position/role-bundle editor, volunteer assignment tool, or generic specialist
-model form.
+model form. Position changes belong to the separate
+[Position management contract](position-management.md).
 
-## Implemented Page 9a.1 read and management slice
+## Implemented read and Department management slice
 
 The current implementation mounts the canonical overview, its same-shell child
 pages, five browser mutation actions, the strict GET projection, and five API
 mutation operations. It removes the older React Convention work `structure`
 destination and `?view=structure` path, so there is one browser workflow and
 one current navigation action. Every adapter calls the shared application
-services and database write protocol; no Page 9 adapter writes a Department
+services and database write protocol; no Organization structure adapter writes a Department
 through a model form or direct ORM save.
 
 The organizations module returns only the fixed **Executive Board** label and
@@ -56,7 +58,7 @@ legacy operational Department is also named Executive Board.
 
 The current projector owns these hard ceilings:
 
-| Projection dimension | Page 9a.0 ceiling |
+| Projection dimension | Organization structure read projection ceiling |
 | --- | ---: |
 | Departments | 256 |
 | Positions | 1,024 |
@@ -107,9 +109,9 @@ coherence is not a substitute for current authority.
 ## Placement, scope, and navigation
 
 The shared sidebar reveals **Organization structure** once beneath the selected
-edition. It is current exactly once on the overview and each Page 9 child page,
+edition. It is current exactly once on the overview and each Organization structure child page,
 and uses the same Maru logo, record header, modules, form language, focus
-treatment, and responsive stacking as Pages 3 through 8. No second menu,
+treatment, and responsive stacking as the organization-scoped setup and representation surfaces. No second menu,
 workspace selector, or Quick Start panel is added.
 
 The canonical browser surface is:
@@ -156,6 +158,30 @@ means access, or provide a page-local ACL. A **Manage access** action appears
 only when the exact underlying authorization workflow is mounted and the
 current viewer can use it; no inert or authority-bypassing shortcut is shown.
 
+### Workforce orientation over the same projection
+
+`/admin/workspace/?view=workforce` is an additional task view, not another
+Department editor. It calls this contract's strict structure
+GET for the exact selected edition and summarizes Departments, Positions,
+approved headcount, vacancies, and current minimized holders. **Open structure**
+returns to this canonical route for Department management.
+
+The view places the current projection in the operational sequence **Structure
+-> Positions -> Assignments -> Availability -> Shifts**. The first three stages
+describe records that already exist. Availability and Shifts are visibly
+labelled **Not available yet**, expose no controls, and do not infer person-owned
+availability or fabricate a rota from Positions. Authorized managers receive
+purpose-built Position management links; a view-only organizer retains the
+minimized projection. Owner accounts without Django staff/model access receive
+no specialist PositionAssignment link; authorized staff may receive one clearly
+labelled temporary assignment-record link while its owner-safe proposal and
+approval workflow remains unimplemented.
+
+This view inherits the GET projection's complete-or-empty ceiling, fresh final
+authorization, audit-before-disclosure, tenant/edition isolation, minimized
+holder fields, and non-disclosing `403`/generic `503` behavior. Client-side
+navigation or a selected workspace never widens those decisions.
+
 ## Governance-anchored projection
 
 The first branch is composed as:
@@ -171,9 +197,9 @@ Executive Board is a discriminated presentation node from the organizations
 module. It reports only its fixed human label and truthful absent,
 Provisioning, Active, or Suspended state. It has no Department identifier and
 is never persisted or mirrored as a Department, Position, generic group, or
-PositionAssignment. Page 8 remains the owning representation workflow.
+PositionAssignment. Representation & access remains the owning representation workflow.
 
-Convention Coordination is a real Department with no persisted parent. Page 9 visually
+Convention Coordination is a real Department with no persisted parent. Organization structure visually
 places it beneath the governance node. Every subsequent parent relationship is
 an exact same-organization, same-edition Department edge. Moving a Department
 changes presentation structure only; it does not move, widen, replace, or
@@ -195,7 +221,7 @@ when an edition has no workforce structure. The immutable built-in selection is
 `marucon-reference@1`; a later template is another version, never an edit of
 version 1.
 
-Page 9a.1 implements and pins the code-owned template catalog, transactional
+Department management implements and pins the code-owned template catalog, transactional
 application command, and strict browser/API adapters. The catalog is
 immutable, resolves only the exact versioned
 identifier without aliases, validates bounded unique codes/names/order,
@@ -304,7 +330,7 @@ control values.
 
 ## Retirement and protected deletion
 
-Retirement is a separate one-way POST action in Page 9a. It accepts only the
+Retirement is a separate one-way POST action in Organization structure. It accepts only the
 current expected structure version and reason. It is refused while the
 Department has a current child, open Position, an active assignment whose term
 has not ended, unclosed authority that is effective now or scheduled for later,
@@ -327,7 +353,7 @@ as an alternative only when retirement itself is safe.
 
 The database deletion contract recognizes all 13 current Department foreign
 keys, including the Applications, Charities, Logistics, Registration, and
-Venues references added after the original Page 9 cutover. Workforce `0008`
+Venues references added after the original Organization structure cutover. Workforce `0008`
 depends on those exact FK-creator migrations. Its reverse restores the `0007`
 allowlist and therefore fails deletion closed until the successor references
 are removed by a graph-consistent downgrade.
@@ -339,8 +365,8 @@ template receipt remains truthful even after the copy diverges.
 ## Shared service and API boundary
 
 The HTML and API adapters share the same bounded workforce query,
-organizations governance-anchor query, and mutation services. The mounted Page
-9a API surface is:
+organizations governance-anchor query, and mutation services. The mounted
+Organization structure API surface is:
 
 ```text
 GET    /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure
@@ -439,7 +465,7 @@ selection while retaining the native control and its accessible name.
 
 The pre-adapter command/database graph passes 1,471 tests in 1,538.40 seconds
 on fresh isolated PostgreSQL at 90.13 percent branch coverage. The strict
-mutation API focus passes 48 tests. A fresh isolated combined Page 9 gate
+mutation API focus passes 48 tests. A fresh isolated combined Organization structure gate
 passes 159 tests in 102.89 seconds across core/forms, bounded reads, HTML
 mutations, mutation and adjacent workforce APIs, exact-lineage navigation, and
 unified routing. These invocations overlap and must not be summed.
@@ -478,8 +504,10 @@ organization/edition/code and receipt provenance, monotonic aggregate version,
 same-edition parents, cycle freedom, non-cascading retirement, and incompatible
 downgrade after the first new write.
 
-After that activation, generic Department/Position specialist records are
-inspection-only for mutations covered by Page 9. Recovery fixes forward or
+After that activation, generic Department specialist records are
+inspection-only for mutations covered by Organization structure. Position and
+Volunteer opportunity specialist records are separately inspection-only under
+the Position management contract. Recovery fixes forward or
 restores workforce, authorization bindings, audit, events, and outbox to one
 consistent point. It never deletes only the structure control/receipt or
 invents template provenance for legacy rows.
@@ -519,8 +547,9 @@ invents template provenance for legacy rows.
 
 ## Explicit non-goals
 
-- Creating, changing, or assigning Positions, including Lead, Deputy, or
-  Volunteer roles; this is Page 9b after the authority-bearing contract.
+- Creating or changing Positions and volunteer opportunities; these belong to
+  the Position management contract. Assigning people remains a later
+  independently approved workflow.
 - Provisioning, changing, or publishing Executive Board appointments.
 - Inferring access from Department nesting or editing CapabilityGrants and
   RoleAssignments as page-local ACL entries.

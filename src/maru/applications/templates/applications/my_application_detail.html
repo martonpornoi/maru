@@ -2,6 +2,7 @@
 
 {% block title %}{{ submission.definition.name }} &middot; My applications{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     <a href="{% url 'my-application-index' %}">My applications</a> &rsaquo;
@@ -22,6 +23,7 @@
         &middot; edit until {{ submission.definition.applicant_edit_until }}
       </p>
     </header>
+    {% include "core/_page_access_mount.html" %}
     {% for row in answer_rows %}
       <section class="module">
         <h2>{{ row.question.label }}</h2>

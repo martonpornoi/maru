@@ -1,5 +1,7 @@
 """Stable workforce request and response contracts."""
 
+import re
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, ClassVar, Never, cast
 from uuid import UUID
 
@@ -8,14 +10,24 @@ from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema_field
 from rest_framework import serializers
 
-from maru.workforce.models import Position
+from maru.workforce.models import Position, VolunteerOpportunity
 from maru.workforce.structure_inputs import (
     CANONICAL_UUID_PATTERN,
     MAX_DEPARTMENT_DESCRIPTION_LENGTH,
     MAX_DEPARTMENT_NAME_LENGTH,
+    MAX_OPPORTUNITY_DESCRIPTION_LENGTH,
+    MAX_OPPORTUNITY_HEADLINE_LENGTH,
+    MAX_POSITION_DESCRIPTION_LENGTH,
+    MAX_POSITION_HEADCOUNT,
+    MAX_POSITION_TITLE_LENGTH,
     MAX_STRUCTURE_REASON_LENGTH,
+    MIN_POSITION_HEADCOUNT,
     normalize_department_description,
     normalize_department_name,
+    normalize_opportunity_description,
+    normalize_opportunity_headline,
+    normalize_position_description,
+    normalize_position_title,
     normalize_structure_reason,
 )
 from maru.workforce.structure_templates import MARUCON_REFERENCE_V1
@@ -23,6 +35,8 @@ from maru.workforce.structure_templates import MARUCON_REFERENCE_V1
 if TYPE_CHECKING:
     from drf_spectacular.openapi import AutoSchema
     from drf_spectacular.utils import Direction
+
+_EXPLICIT_OFFSET_DATE_TIME = re.compile(r".+(?:[zZ]|[+-][0-9]{2}:[0-9]{2})\Z")
 
 
 def _django_validation_code(
@@ -63,6 +77,22 @@ class _StrictStructureTextField(serializers.CharField):
         return super().to_internal_value(data)
 
 
+class _AwareStructureDateTimeField(serializers.DateTimeField):
+    """Require a JSON date-time string with an explicit UTC offset."""
+
+    default_error_messages: ClassVar[dict[str, Any]] = {
+        "timezone_required": "Enter a date and time with an explicit timezone.",
+    }
+
+    def to_internal_value(self, data: object) -> datetime:
+        if (
+            not isinstance(data, str)
+            or _EXPLICIT_OFFSET_DATE_TIME.fullmatch(data) is None
+        ):
+            self.fail("timezone_required")
+        return super().to_internal_value(data)
+
+
 class _NormalizedDepartmentNameField(_StrictStructureTextField):
     def to_internal_value(self, data: object) -> str:
         raw = super().to_internal_value(data)
@@ -93,6 +123,48 @@ class _NormalizedStructureReasonField(_StrictStructureTextField):
             _raise_serializer_validation(error, fallback="structure_reason_invalid")
 
 
+class _NormalizedPositionTitleField(_StrictStructureTextField):
+    def to_internal_value(self, data: object) -> str:
+        raw = super().to_internal_value(data)
+        try:
+            return normalize_position_title(raw)
+        except DjangoValidationError as error:
+            _raise_serializer_validation(error, fallback="structure_title_invalid")
+
+
+class _NormalizedPositionDescriptionField(_StrictStructureTextField):
+    def to_internal_value(self, data: object) -> str:
+        raw = super().to_internal_value(data)
+        try:
+            return normalize_position_description(raw)
+        except DjangoValidationError as error:
+            _raise_serializer_validation(
+                error,
+                fallback="structure_description_invalid",
+            )
+
+
+class _NormalizedOpportunityHeadlineField(_StrictStructureTextField):
+    def to_internal_value(self, data: object) -> str:
+        raw = super().to_internal_value(data)
+        try:
+            return normalize_opportunity_headline(raw)
+        except DjangoValidationError as error:
+            _raise_serializer_validation(error, fallback="structure_headline_invalid")
+
+
+class _NormalizedOpportunityDescriptionField(_StrictStructureTextField):
+    def to_internal_value(self, data: object) -> str:
+        raw = super().to_internal_value(data)
+        try:
+            return normalize_opportunity_description(raw)
+        except DjangoValidationError as error:
+            _raise_serializer_validation(
+                error,
+                fallback="structure_description_invalid",
+            )
+
+
 class _StrictStructureIntegerField(serializers.IntegerField):
     """Accept a JSON integer, excluding bool, string and float coercion."""
 
@@ -102,6 +174,19 @@ class _StrictStructureIntegerField(serializers.IntegerField):
 
     def to_internal_value(self, data: object) -> int:
         if type(data) is not int:
+            self.fail("invalid_type")
+        return super().to_internal_value(data)
+
+
+class _StrictStructureBooleanField(serializers.BooleanField):
+    """Accept only a JSON boolean without string or integer coercion."""
+
+    default_error_messages: ClassVar[dict[str, Any]] = {
+        "invalid_type": "Enter a JSON boolean for this field.",
+    }
+
+    def to_internal_value(self, data: object) -> bool:
+        if type(data) is not bool:
             self.fail("invalid_type")
         return super().to_internal_value(data)
 
@@ -332,12 +417,13 @@ class WorkforceStructureSerializer(serializers.Serializer[dict[str, object]]):
     organization_name = serializers.CharField()
     series_name = serializers.CharField()
     edition_name = serializers.CharField()
+    can_manage_positions = serializers.BooleanField()
     governance = WorkforceStructureGovernanceSerializer()
     structure = WorkforceStructureProjectionSerializer()
 
 
 class _ClosedStructureRequestSerializer(serializers.Serializer[dict[str, object]]):
-    """Marker base for Page 9 request objects that reject unknown properties."""
+    """Marker base for structure request objects that reject unknown properties."""
 
 
 class _ClosedStructureRequestSchema(OpenApiSerializerExtension):
@@ -423,6 +509,117 @@ class WorkforceDepartmentDeleteSerializer(WorkforceDepartmentRetireSerializer):
     )
 
 
+class WorkforcePositionCreateSerializer(_ClosedStructureRequestSerializer):
+    """Closed input for creating one governed Position and draft opportunity."""
+
+    template_id = _CanonicalStructureUUIDField()
+    department_id = _CanonicalStructureUUIDField()
+    reports_to_id = _CanonicalStructureUUIDField(allow_null=True)
+    title = _NormalizedPositionTitleField(
+        max_length=MAX_POSITION_TITLE_LENGTH,
+        trim_whitespace=False,
+    )
+    description = _NormalizedPositionDescriptionField(
+        max_length=MAX_POSITION_DESCRIPTION_LENGTH,
+        trim_whitespace=False,
+    )
+    headcount = _StrictStructureIntegerField(
+        min_value=MIN_POSITION_HEADCOUNT,
+        max_value=MAX_POSITION_HEADCOUNT,
+    )
+    expected_version = _StrictStructureIntegerField(min_value=1)
+    reason = _NormalizedStructureReasonField(
+        max_length=MAX_STRUCTURE_REASON_LENGTH,
+        trim_whitespace=False,
+    )
+
+
+class WorkforcePositionUpdateSerializer(_ClosedStructureRequestSerializer):
+    """Closed complete-replacement input for editable Position details."""
+
+    reports_to_id = _CanonicalStructureUUIDField(allow_null=True)
+    title = _NormalizedPositionTitleField(
+        max_length=MAX_POSITION_TITLE_LENGTH,
+        trim_whitespace=False,
+    )
+    description = _NormalizedPositionDescriptionField(
+        max_length=MAX_POSITION_DESCRIPTION_LENGTH,
+        trim_whitespace=False,
+    )
+    headcount = _StrictStructureIntegerField(
+        min_value=MIN_POSITION_HEADCOUNT,
+        max_value=MAX_POSITION_HEADCOUNT,
+    )
+    expected_version = _StrictStructureIntegerField(min_value=1)
+    reason = _NormalizedStructureReasonField(
+        max_length=MAX_STRUCTURE_REASON_LENGTH,
+        trim_whitespace=False,
+    )
+
+
+class WorkforcePositionOpportunityUpdateSerializer(_ClosedStructureRequestSerializer):
+    """Closed complete-replacement input for a Position's public opportunity."""
+
+    status = _StrictStructureChoiceField(choices=VolunteerOpportunity.Status.choices)
+    headline = _NormalizedOpportunityHeadlineField(
+        max_length=MAX_OPPORTUNITY_HEADLINE_LENGTH,
+        trim_whitespace=False,
+    )
+    description = _NormalizedOpportunityDescriptionField(
+        max_length=MAX_OPPORTUNITY_DESCRIPTION_LENGTH,
+        trim_whitespace=False,
+    )
+    applications_open_at = _AwareStructureDateTimeField(allow_null=True)
+    applications_close_at = _AwareStructureDateTimeField(allow_null=True)
+    visible_when_filled = _StrictStructureBooleanField()
+    expected_version = _StrictStructureIntegerField(min_value=1)
+    reason = _NormalizedStructureReasonField(
+        max_length=MAX_STRUCTURE_REASON_LENGTH,
+        trim_whitespace=False,
+    )
+
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Require a chronologically valid optional application window.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            Strictly parsed complete opportunity replacement.
+
+        Returns
+        -------
+        dict[str, object]
+            The unchanged replacement after chronological validation.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the optional closing instant is not after the opening instant.
+        """
+        opens = attrs["applications_open_at"]
+        closes = attrs["applications_close_at"]
+        if opens is not None and closes is not None and closes <= opens:  # type: ignore[operator]
+            raise serializers.ValidationError(
+                {"applications_close_at": ["Closing must be after opening."]},
+                code="structure_opportunity_window_invalid",
+            )
+        return attrs
+
+
+class WorkforcePositionCloseSerializer(_ClosedStructureRequestSerializer):
+    """Closed input for dependency-safe, history-preserving Position closure."""
+
+    expected_version = _StrictStructureIntegerField(min_value=1)
+    confirmation_name = _StrictStructureTextField(
+        max_length=MAX_POSITION_TITLE_LENGTH,
+        trim_whitespace=False,
+    )
+    reason = _NormalizedStructureReasonField(
+        max_length=MAX_STRUCTURE_REASON_LENGTH,
+        trim_whitespace=False,
+    )
+
+
 class WorkforceStructureTemplateMutationResultSerializer(
     serializers.Serializer[dict[str, object]]
 ):
@@ -437,6 +634,15 @@ class WorkforceDepartmentMutationResultSerializer(
     """Serialize and validate workforce department mutation result data."""
 
     department_id = serializers.UUIDField()
+    aggregate_version = serializers.IntegerField(min_value=1)
+
+
+class WorkforcePositionMutationResultSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    """Serialize the minimized result shared by Position mutations."""
+
+    position_id = serializers.UUIDField()
     aggregate_version = serializers.IntegerField(min_value=1)
 
 

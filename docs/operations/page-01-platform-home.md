@@ -1,11 +1,11 @@
-# Page 1 platform administration home
+# Platform administration home
 
-Status: Page 1 backend and responsive-smoke verified in the unified shell;
+Status: Platform administration home backend and responsive-smoke verified in the unified shell;
 accessibility/state-matrix/owner rehearsal pending
 Last updated: 2026-08-01
 
 ADR 0031 replaces the accepted empty `/admin/` state with a read-only
-organization inventory. ADR 0032 subsequently adds a separate Page 2 creation
+organization inventory. ADR 0032 subsequently adds a separate Create organization creation
 route; the inventory remains free of inline editing and convention-owned work.
 ADR 0039 moves the inventory to `/admin/platform/organizations/` inside the
 one administration shell.
@@ -29,7 +29,7 @@ never delete owner-created records. For a deterministic populated tour, use
 `seed_demo_data`; for an isolated empty journey, follow the hands-on tutorial's
 separate-database procedure. Never reset `maru` or any other existing database.
 
-## Start Page 1
+## Start Platform administration home
 
 From the repository root in PowerShell:
 
@@ -77,13 +77,13 @@ read-only `503` page. The
 HTML does not contain the database exception and no convention data changes.
 Check PostgreSQL and `/health/ready`, then retry.
 
-The accepted baseline is commit `db5af58` and Page 1's review landmark is
+The accepted baseline is commit `db5af58` and Platform administration home's review landmark is
 `codex/page-01-platform-home`. Both are ancestors of the consolidation line.
 Inspect them with `git show`; do not switch or merge them into active work to
 change current routing.
 
 ## Next page
 
-Page 2 is documented in
+Create organization is documented in
 [`page-02-create-organization.md`](page-02-create-organization.md). It creates a
 complete optional Draft organization profile and returns to this inventory.

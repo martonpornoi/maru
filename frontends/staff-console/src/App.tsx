@@ -1,10 +1,15 @@
 import {
+  createContext,
+  type CSSProperties,
   type FormEvent,
   type ReactNode,
+  useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 
 import {
   activateRegistrationConfiguration,
@@ -39,6 +44,7 @@ import {
   loadRegistrationReconciliation,
   loadSecurityHistory,
   loadStaffRegistrations,
+  loadWorkforceStructure,
   type MyContext,
   type MyRegistrationWorkspace,
   type Participation,
@@ -57,7 +63,11 @@ import {
   reviewReadinessGate,
   type SecurityEvent,
   type StaffRegistration,
+  type StaffRegistrationFilters,
   type StaffRegistrationPage,
+  type WorkforceStructureDepartment,
+  type WorkforceStructurePosition,
+  type WorkforceStructureWorkspace,
   publishRegistrationTemplate,
   previewAccess,
   replaceAccessAssignment,
@@ -83,24 +93,24 @@ type Destination =
   | "today"
   | "my-registration"
   | "people"
+  | "workforce"
   | "commerce"
   | "reports"
   | "security"
   | "setup";
 
 const upcomingDestinations = [
-  "Work",
-  "Plan",
-  "Programme",
-  "Communications",
-  "Operations",
+  "Programme & schedule",
+  "Team inbox",
+  "Live operations",
 ];
 
 const destinationLabels: Record<Destination, string> = {
   today: "Today",
   "my-registration": "My registration",
   people: "People",
-  commerce: "Registration",
+  workforce: "Workforce",
+  commerce: "Registration desk",
   reports: "Reports & badges",
   security: "Security history",
   setup: "Setup guide",
@@ -110,6 +120,12 @@ const recommendedGroups: Record<Destination, string[]> = {
   today: ["convention-chair", "vice-chair", "board-member"],
   "my-registration": [],
   people: ["department-lead", "staff-member", "board-member"],
+  workforce: [
+    "convention-chair",
+    "vice-chair",
+    "volunteer-coordinator",
+    "department-lead",
+  ],
   commerce: [
     "registration-lead",
     "front-desk",
@@ -174,6 +190,68 @@ function selectedAdminEditionId(): string | undefined {
   return document.getElementById("root")?.dataset.selectedEdition || undefined;
 }
 
+function registrationSetupPath(edition: EditionContext): string {
+  return [
+    "/admin/platform/organizations",
+    encodeURIComponent(edition.organization_slug),
+    "series",
+    encodeURIComponent(edition.series_slug),
+    "editions",
+    encodeURIComponent(edition.edition_slug),
+    "registration",
+    "",
+  ].join("/");
+}
+
+function workforceStructurePath(edition: EditionContext): string {
+  return [
+    "/admin/platform/organizations",
+    encodeURIComponent(edition.organization_slug),
+    "series",
+    encodeURIComponent(edition.series_slug),
+    "editions",
+    encodeURIComponent(edition.edition_slug),
+    "structure",
+    "",
+  ].join("/");
+}
+
+function workforcePositionsPath(
+  edition: EditionContext,
+  positionId?: string,
+): string {
+  const segments = [
+    "/admin/platform/organizations",
+    encodeURIComponent(edition.organization_slug),
+    "series",
+    encodeURIComponent(edition.series_slug),
+    "editions",
+    encodeURIComponent(edition.edition_slug),
+    "structure",
+    "positions",
+  ];
+  if (positionId) segments.push(encodeURIComponent(positionId));
+  segments.push("");
+  return segments.join("/");
+}
+
+function workforceWorkspacePath(): string {
+  return "/admin/workspace/?view=workforce";
+}
+
+function submitEmbeddedEditionContext(editionId: string): boolean {
+  const form = document.querySelector<HTMLFormElement>(
+    "#maru-admin-context-form",
+  );
+  const input = form?.querySelector<HTMLInputElement>(
+    "input[name='edition_id']",
+  );
+  if (!form || !input) return false;
+  input.value = editionId;
+  form.requestSubmit();
+  return true;
+}
+
 function Icon({
   children,
   label,
@@ -188,9 +266,166 @@ function Icon({
   );
 }
 
+function CenterState({
+  children,
+  live,
+}: {
+  children: ReactNode;
+  live?: "polite";
+}) {
+  if (isAdminEmbedded()) {
+    return (
+      <div className="center-state" aria-live={live}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <main className="center-state" aria-live={live}>
+      {children}
+    </main>
+  );
+}
+
+function ModalDrawer({
+  labelledBy,
+  className,
+  scrimClassName = "",
+  closeLabel,
+  onClose,
+  children,
+}: {
+  labelledBy: string;
+  className: string;
+  scrimClassName?: string;
+  closeLabel: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  const drawerRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    const returnFocus =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : undefined;
+    const background = (
+      isAdminEmbedded()
+        ? ["#header", ".breadcrumbs", "#main", "#toggle-nav-sidebar"].map(
+            (selector) => document.querySelector<HTMLElement>(selector),
+          )
+        : [
+            document.getElementById("root") ??
+              document.querySelector<HTMLElement>(".shell"),
+          ]
+    ).filter((element): element is HTMLElement => element !== null);
+    const previous = background.map((element) => ({
+      element,
+      ariaHidden: element.getAttribute("aria-hidden"),
+      inert: element.hasAttribute("inert"),
+    }));
+    const focusableSelector = [
+      "a[href]",
+      "button:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "summary",
+      "[tabindex]:not([tabindex='-1'])",
+    ].join(",");
+
+    for (const element of background) {
+      element.setAttribute("inert", "");
+      element.setAttribute("aria-hidden", "true");
+    }
+    document.body.classList.add("maru-react-drawer-open");
+
+    const focusFirst = () => {
+      const first = drawerRef.current?.querySelector<HTMLElement>(
+        focusableSelector,
+      );
+      (first ?? drawerRef.current)?.focus();
+    };
+    const focusTimer = window.setTimeout(focusFirst, 0);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab" || !drawerRef.current) return;
+      const focusable = Array.from(
+        drawerRef.current.querySelectorAll<HTMLElement>(focusableSelector),
+      ).filter((element) => element.getClientRects().length > 0);
+      if (!focusable.length) {
+        event.preventDefault();
+        drawerRef.current.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable.at(-1) ?? first;
+      if (!drawerRef.current.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown, true);
+
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.body.classList.remove("maru-react-drawer-open");
+      for (const state of previous) {
+        if (state.inert) state.element.setAttribute("inert", "");
+        else state.element.removeAttribute("inert");
+        if (state.ariaHidden === null) state.element.removeAttribute("aria-hidden");
+        else state.element.setAttribute("aria-hidden", state.ariaHidden);
+      }
+      if (returnFocus?.isConnected) returnFocus.focus();
+    };
+  }, []);
+
+  return createPortal(
+    <div
+      className={`drawer-scrim ${scrimClassName}`.trim()}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <aside
+        className={className}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={labelledBy}
+        ref={drawerRef}
+        tabIndex={-1}
+      >
+        <button className="drawer-close" onClick={onClose} aria-label={closeLabel}>
+          ×
+        </button>
+        {children}
+      </aside>
+    </div>,
+    document.body,
+  );
+}
+
 function LoadingScreen() {
   return (
-    <main className="center-state" aria-live="polite">
+    <CenterState live="polite">
       <img
         className="brand-mark"
         src="/static/core/brand/maru_square_logo_no_text.png"
@@ -198,13 +433,13 @@ function LoadingScreen() {
       />
       <div className="loading-line" />
       <p>Opening your convention workspace…</p>
-    </main>
+    </CenterState>
   );
 }
 
 function ErrorScreen({ message }: { message: string }) {
   return (
-    <main className="center-state">
+    <CenterState>
       <img
         className="brand-mark"
         src="/static/core/brand/maru_square_logo_no_text.png"
@@ -219,13 +454,13 @@ function ErrorScreen({ message }: { message: string }) {
       <button className="primary-button" onClick={() => window.location.reload()}>
         Try again
       </button>
-    </main>
+    </CenterState>
   );
 }
 
 function EmptyContext({ context }: { context: MyContext }) {
   return (
-    <main className="center-state">
+    <CenterState>
       <img
         className="brand-mark"
         src="/static/core/brand/maru_square_logo_no_text.png"
@@ -254,7 +489,7 @@ function EmptyContext({ context }: { context: MyContext }) {
       >
         Sign out
       </button>
-    </main>
+    </CenterState>
   );
 }
 
@@ -317,6 +552,15 @@ function Sidebar({
           >
             <Icon>◎</Icon> People
           </button>
+          <button
+            className={
+              destination === "workforce" ? "nav-item active" : "nav-item"
+            }
+            aria-current={destination === "workforce" ? "page" : undefined}
+            onClick={() => onNavigate("workforce")}
+          >
+            <Icon>⌘</Icon> Workforce
+          </button>
           {canManageAccess && (
             <button className="nav-item" onClick={onOpenAccess}>
               <Icon>⌁</Icon> Access
@@ -331,7 +575,7 @@ function Sidebar({
             aria-current={destination === "commerce" ? "page" : undefined}
             onClick={() => onNavigate("commerce")}
           >
-            <Icon>▣</Icon> Registration
+            <Icon>▣</Icon> Registration desk
           </button>
           <button
             className={destination === "reports" ? "nav-item active" : "nav-item"}
@@ -476,6 +720,59 @@ function PageHelp({
   );
 }
 
+type EmbeddedPageAccessValue = {
+  editionName: string;
+  workspace?: AccessWorkspace;
+  onOpenAccess?: () => void;
+};
+
+const EmbeddedPageAccessContext = createContext<EmbeddedPageAccessValue | null>(
+  null,
+);
+
+function EmbeddedPageAccess() {
+  const access = useContext(EmbeddedPageAccessContext);
+  if (!access) return null;
+  const effective = access.workspace?.effective_access;
+  const allowedActions = effective?.actions.filter((action) => action.allowed) ?? [];
+
+  return (
+    <details className="maru-access-summary maru-embedded-page-access">
+      <summary id="maru-access-heading">
+        <span className="maru-access-summary__label">
+          <strong>Access</strong>
+          <span className="maru-access-summary__scope">
+            {effective?.scope_label ?? access.editionName}
+          </span>
+        </span>
+        <span className="maru-access-summary__policy">Scoped authority</span>
+      </summary>
+      <div className="maru-access-summary__body">
+        <p>
+          Your current platform or exact-edition authority determines what this
+          page exposes. Changing the selected convention changes context only;
+          it never grants access.
+        </p>
+        {allowedActions.length > 0 && (
+          <ul className="maru-access-summary__decisions">
+            {allowedActions.map((action) => (
+              <li key={action.capability_code}>
+                <strong>{action.label}</strong>
+                <span>{action.source_label}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {access.onOpenAccess && (
+          <button className="secondary-button" onClick={access.onOpenAccess}>
+            Manage access
+          </button>
+        )}
+      </div>
+    </details>
+  );
+}
+
 function TodayView({
   context,
   edition,
@@ -510,6 +807,7 @@ function TodayView({
         </div>
         <StatusPill lifecycle={edition.lifecycle} />
       </div>
+      <EmbeddedPageAccess />
 
       <section className="event-hero" aria-labelledby="event-heading">
         <div>
@@ -704,15 +1002,12 @@ function PersonDrawer({
   onClose: () => void;
 }) {
   return (
-    <div className="drawer-scrim" onMouseDown={onClose}>
-      <aside
-        className="person-drawer"
-        aria-labelledby="person-name"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <button className="drawer-close" onClick={onClose} aria-label="Close">
-          ×
-        </button>
+    <ModalDrawer
+      className="person-drawer"
+      labelledBy="person-name"
+      closeLabel="Close person details"
+      onClose={onClose}
+    >
         <span className="person-monogram" aria-hidden="true">
           {person.display_name.charAt(0).toUpperCase()}
         </span>
@@ -740,8 +1035,7 @@ function PersonDrawer({
           capability. Contact details and sensitive records are intentionally
           outside this view.
         </p>
-      </aside>
-    </div>
+    </ModalDrawer>
   );
 }
 
@@ -795,6 +1089,7 @@ function PeopleView({
             />
           </div>
         </div>
+        <EmbeddedPageAccess />
         <section className="permission-state">
           <span className="permission-lock" aria-hidden="true">◇</span>
           <h2>People summaries aren’t available for your role</h2>
@@ -820,6 +1115,7 @@ function PeopleView({
         </div>
         <span className="record-count">{page?.count ?? 0} people</span>
       </div>
+      <EmbeddedPageAccess />
 
       <form className="filter-bar" onSubmit={submit} role="search">
         <label className="search-field">
@@ -1011,6 +1307,7 @@ function ReportsView({ edition }: { edition: EditionContext }) {
             />
           </div>
         </div>
+        <EmbeddedPageAccess />
         <section className="permission-state">
           <span className="permission-lock" aria-hidden="true">▥</span>
           <h2>Attendee reporting isn’t available for your role</h2>
@@ -1043,6 +1340,7 @@ function ReportsView({ edition }: { edition: EditionContext }) {
           Download badge CSV
         </a>
       </div>
+      <EmbeddedPageAccess />
 
       {error && <p className="inline-error" role="alert">{error}</p>}
 
@@ -1742,6 +2040,7 @@ function MyRegistrationView({ edition }: { edition: EditionContext }) {
           </div>
           <StatusPill lifecycle={registration.state} />
         </div>
+        <EmbeddedPageAccess />
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="registration-layout">
           <section className="panel registration-summary">
@@ -1830,6 +2129,7 @@ function MyRegistrationView({ edition }: { edition: EditionContext }) {
           />
         </div>
       </div>
+      <EmbeddedPageAccess />
       {error && <p className="form-error" role="alert">{error}</p>}
       <form className="registration-form" onSubmit={(event) => void submit(event)}>
         <section className="panel">
@@ -1914,12 +2214,630 @@ function RegistrationTimeline({
   );
 }
 
+function RegistrationQueue({
+  page,
+  denied,
+  loading,
+  filters,
+  onApplyFilters,
+  onPage,
+  onOpen,
+}: {
+  page?: StaffRegistrationPage;
+  denied: boolean;
+  loading: boolean;
+  filters: StaffRegistrationFilters;
+  onApplyFilters: (filters: StaffRegistrationFilters) => void;
+  onPage: (page: number) => void;
+  onOpen: (registration: StaffRegistration) => void;
+}) {
+  const [search, setSearch] = useState(filters.search ?? "");
+  const [state, setState] = useState(filters.state ?? "");
+
+  useEffect(() => {
+    setSearch(filters.search ?? "");
+    setState(filters.state ?? "");
+  }, [filters.search, filters.state]);
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    onApplyFilters({
+      search: search.trim() || undefined,
+      state: state || undefined,
+      page: 1,
+    });
+  }
+
+  if (denied) {
+    return (
+      <section className="permission-state">
+        <h2>Registration service is not available for your role</h2>
+        <p>
+          Maru did not expose attendee names, counts, payment state, or
+          registration existence.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="attendee-queue" aria-labelledby="attendee-queue-title">
+      <div className="panel-heading attendee-queue-heading">
+        <div>
+          <p className="section-kicker">Attendee queue</p>
+          <h2 id="attendee-queue-title">Find an attendee</h2>
+        </div>
+        <span className="record-count">{page?.count ?? 0} attendees</span>
+      </div>
+      <form className="filter-bar" onSubmit={submit} role="search">
+        <label className="search-field">
+          <span className="sr-only">Search attendee name or reference</span>
+          <Icon>⌕</Icon>
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Name or registration reference"
+          />
+        </label>
+        <label>
+          <span className="sr-only">Filter by registration state</span>
+          <select
+            value={state}
+            onChange={(event) => setState(event.target.value)}
+          >
+            <option value="">All states</option>
+            <option value="guardian_pending">Guardian consent pending</option>
+            <option value="waitlisted">Waitlisted</option>
+            <option value="payment_pending">Payment pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="checked_in">Checked in</option>
+            <option value="expired">Payment expired</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </label>
+        <button className="primary-button" type="submit">Apply</button>
+      </form>
+      <div className="people-table-wrap commerce-table" aria-busy={loading}>
+        {loading && <div className="table-progress" />}
+        <table className="attendee-table">
+          <thead>
+            <tr>
+              <th scope="col">Attendee</th>
+              <th scope="col">Reference</th>
+              <th scope="col">Admission</th>
+              <th scope="col">State</th>
+              <th scope="col"><span className="sr-only">Open</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {page?.results.map((registration) => (
+              <tr key={registration.id}>
+                <td data-label="Attendee">
+                  <button
+                    className="person-link"
+                    onClick={() => onOpen(registration)}
+                  >
+                    <span className="table-avatar" aria-hidden="true">
+                      {registration.display_name.charAt(0).toUpperCase()}
+                    </span>
+                    <strong>{registration.display_name}</strong>
+                  </button>
+                </td>
+                <td data-label="Reference">{registration.reference}</td>
+                <td data-label="Admission">{registration.product_name}</td>
+                <td data-label="State">
+                  <StatusPill lifecycle={registration.state} />
+                </td>
+                <td className="attendee-row-action">
+                  <button
+                    className="row-open"
+                    aria-label={`Open ${registration.reference}`}
+                    onClick={() => onOpen(registration)}
+                  >
+                    <span aria-hidden="true">→</span>
+                    <span className="row-open-label" aria-hidden="true">
+                      Open attendee
+                    </span>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!loading && page?.results.length === 0 && (
+          <div className="table-empty">
+            <strong>No attendees match this view</strong>
+            <span>Try removing a filter or using a shorter name or reference.</span>
+          </div>
+        )}
+      </div>
+      <div className="pagination" aria-label="Attendee pages">
+        <span>
+          Showing {page?.results.length ?? 0} of {page?.count ?? 0}
+        </span>
+        <div>
+          <button
+            className="secondary-button"
+            disabled={!page?.previous || loading}
+            onClick={() => onPage(Math.max(1, (filters.page ?? 1) - 1))}
+          >
+            Previous
+          </button>
+          <button
+            className="secondary-button"
+            disabled={!page?.next || loading}
+            onClick={() => onPage((filters.page ?? 1) + 1)}
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+type WorkforceDepartmentRow = {
+  department: WorkforceStructureDepartment;
+  depth: number;
+};
+
+function flattenWorkforceDepartments(
+  departments: WorkforceStructureDepartment[],
+  depth = 0,
+): WorkforceDepartmentRow[] {
+  return departments.flatMap((department) => [
+    { department, depth },
+    ...flattenWorkforceDepartments(department.children, depth + 1),
+  ]);
+}
+
+function positionOccupancy(position: WorkforceStructurePosition): string {
+  return `${position.holders.length} of ${position.headcount} assigned`;
+}
+
+function WorkforceView({
+  edition,
+  canAccessAdvancedRecords,
+}: {
+  edition: EditionContext;
+  canAccessAdvancedRecords: boolean;
+}) {
+  const [workspace, setWorkspace] = useState<WorkforceStructureWorkspace>();
+  const [denied, setDenied] = useState(false);
+  const [error, setError] = useState<string>();
+  const [retryVersion, setRetryVersion] = useState(0);
+
+  useEffect(() => {
+    let current = true;
+    setWorkspace(undefined);
+    setDenied(false);
+    setError(undefined);
+    void loadWorkforceStructure(edition)
+      .then((loaded) => {
+        if (current) setWorkspace(loaded);
+      })
+      .catch((loadError: unknown) => {
+        if (!current) return;
+        if (loadError instanceof ApiError && loadError.status === 403) {
+          setDenied(true);
+          return;
+        }
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "The Workforce workspace could not be loaded.",
+        );
+      });
+    return () => {
+      current = false;
+    };
+  }, [edition, retryVersion]);
+
+  const departmentRows = useMemo(
+    () => flattenWorkforceDepartments(workspace?.structure.departments ?? []),
+    [workspace],
+  );
+  const positions = departmentRows.flatMap(
+    ({ department }) => department.positions,
+  );
+  const activeAssignments = positions.reduce(
+    (count, position) => count + position.holders.length,
+    0,
+  );
+  const vacancies = positions.reduce(
+    (count, position) =>
+      count + Math.max(0, position.headcount - position.holders.length),
+    0,
+  );
+  const activeDepartments = departmentRows.filter(
+    ({ department }) => department.state === "active",
+  ).length;
+
+  return (
+    <div className="view workforce-view">
+      <div className="page-heading compact">
+        <div>
+          <p className="eyebrow">Teams &amp; volunteer operations</p>
+          <h1>Workforce</h1>
+          <PageHelp
+            purpose="Use this page to understand how departments become staffed positions and, later, workable shifts."
+            examples="review a vacant position, confirm its active holder, or see what must exist before shift planning"
+          />
+        </div>
+        {workspace?.structure.state === "complete" && (
+          <span className="record-count">
+            {positions.length} position{positions.length === 1 ? "" : "s"}
+          </span>
+        )}
+      </div>
+      <EmbeddedPageAccess />
+
+      {denied ? (
+        <section className="permission-state">
+          <span className="permission-lock" aria-hidden="true">◇</span>
+          <h2>Workforce structure is not available for your role</h2>
+          <p>
+            Maru did not expose Department names, positions, assignments, or
+            staffing counts. Ask an organizer for exact-edition Workforce view
+            authority if this is part of your duties.
+          </p>
+        </section>
+      ) : error ? (
+        <section className="permission-state" role="alert">
+          <span className="permission-lock" aria-hidden="true">!</span>
+          <h2>Workforce could not be loaded</h2>
+          <p>{error}</p>
+          <button
+            className="primary-button"
+            onClick={() => setRetryVersion((current) => current + 1)}
+          >
+            Try again
+          </button>
+        </section>
+      ) : !workspace ? (
+        <section className="panel workforce-loading" role="status">
+          <span className="table-progress" />
+          <p>Loading the complete authorized Workforce structure…</p>
+        </section>
+      ) : (
+        <>
+          {workspace.structure.state === "structure_limit_exceeded" && (
+            <section className="permission-state" role="alert">
+              <span className="permission-lock" aria-hidden="true">!</span>
+              <h2>The complete structure is too large to show safely</h2>
+              <p>
+                Maru did not substitute a partial hierarchy. Ask a platform
+                operator to review the edition before continuing.
+              </p>
+            </section>
+          )}
+
+          {workspace.structure.state === "complete" && (
+            <section
+              className="panel workforce-journey-panel"
+              aria-labelledby="workforce-journey-title"
+            >
+              <div className="panel-heading">
+                <div>
+                  <p className="section-kicker">Operational sequence</p>
+                  <h2 id="workforce-journey-title">
+                    From structure to a workable rota
+                  </h2>
+                </div>
+                <span className="quiet-badge">One connected journey</span>
+              </div>
+              <p className="muted-copy workforce-journey-intro">
+                Each stage depends on the one before it. Maru shows implemented
+                records as working steps and labels future stages plainly
+                instead of presenting dead controls.
+              </p>
+              <ol className="workforce-journey">
+                <li>
+                  <span className="workforce-step-number" aria-hidden="true">
+                    1
+                  </span>
+                  <div>
+                    <span className="workforce-step-state ready">Available</span>
+                    <h3>Structure</h3>
+                    <p>
+                      {activeDepartments} active Department
+                      {activeDepartments === 1 ? "" : "s"} place accountable work
+                      beneath {workspace.governance.label}.
+                    </p>
+                  </div>
+                  <a
+                    className="secondary-button"
+                    href={workforceStructurePath(edition)}
+                  >
+                    Open structure
+                  </a>
+                </li>
+                <li>
+                  <span className="workforce-step-number" aria-hidden="true">
+                    2
+                  </span>
+                  <div>
+                    <span className="workforce-step-state ready">Available</span>
+                    <h3>Positions</h3>
+                    <p>
+                      {positions.length} defined position
+                      {positions.length === 1 ? "" : "s"} describe responsibility,
+                      reporting, approved headcount, and the authority bundle an
+                      appointment would receive.
+                    </p>
+                  </div>
+                  <a
+                    className="secondary-button"
+                    href={
+                      workspace.can_manage_positions
+                        ? workforcePositionsPath(edition)
+                        : "#workforce-positions-title"
+                    }
+                  >
+                    {workspace.can_manage_positions
+                      ? "Manage positions"
+                      : "Review positions"}
+                  </a>
+                </li>
+                <li>
+                  <span className="workforce-step-number" aria-hidden="true">
+                    3
+                  </span>
+                  <div>
+                    <span className="workforce-step-state ready">Available</span>
+                    <h3>Assignments</h3>
+                    <p>
+                      {activeAssignments} active assignment
+                      {activeAssignments === 1 ? "" : "s"} fill those positions;{" "}
+                      {vacancies} approved place
+                      {vacancies === 1 ? " is" : "s are"} currently unfilled.
+                      Activation remains a two-person, prerequisite-checked
+                      decision.
+                    </p>
+                  </div>
+                  <a
+                    className="secondary-button"
+                    href="#workforce-positions-title"
+                  >
+                    Review assignments
+                  </a>
+                </li>
+                <li className="planned-step">
+                  <span className="workforce-step-number" aria-hidden="true">
+                    4
+                  </span>
+                  <div>
+                    <span className="workforce-step-state planned">
+                      Not available yet
+                    </span>
+                    <h3>Availability</h3>
+                    <p>
+                      This will be a person-owned statement of workable windows,
+                      constraints, and rest needs. No availability is inferred
+                      from an assignment or collected by this page today.
+                    </p>
+                  </div>
+                </li>
+                <li className="planned-step">
+                  <span className="workforce-step-number" aria-hidden="true">
+                    5
+                  </span>
+                  <div>
+                    <span className="workforce-step-state planned">
+                      Not available yet
+                    </span>
+                    <h3>Shifts</h3>
+                    <p>
+                      Shift demand, claims, confirmation, overlap checks,
+                      completion, and locking require their own transactional
+                      contract. Maru does not pretend that Positions are shifts.
+                    </p>
+                  </div>
+                </li>
+              </ol>
+            </section>
+          )}
+
+          {workspace.structure.state === "complete" && (
+            <section className="panel workforce-positions-panel" aria-labelledby="workforce-positions-title">
+              <div className="panel-heading">
+                <div>
+                  <p className="section-kicker">Current edition</p>
+                  <h2 id="workforce-positions-title">Positions &amp; active assignments</h2>
+                </div>
+                <span className="quiet-badge">
+                  {activeAssignments} assigned · {vacancies} vacant
+                </span>
+              </div>
+              {positions.length ? (
+                <div className="workforce-departments">
+                  {departmentRows
+                    .filter(({ department }) => department.positions.length > 0)
+                    .map(({ department, depth }) => (
+                      <section
+                        className="workforce-department"
+                        style={{ "--department-depth": depth } as CSSProperties}
+                        aria-labelledby={`workforce-department-${department.id}`}
+                        key={department.id}
+                      >
+                        <div className="workforce-department-heading">
+                          <div>
+                            <p className="section-kicker">Department</p>
+                            <h3 id={`workforce-department-${department.id}`}>
+                              {department.name}
+                            </h3>
+                          </div>
+                          {department.state === "retired" && (
+                            <span className="quiet-badge">Retired</span>
+                          )}
+                        </div>
+                        <ul className="workforce-position-list">
+                          {department.positions.map((position) => (
+                            <li key={position.id}>
+                              <div className="workforce-position-heading">
+                                <div>
+                                  <h4>{position.title}</h4>
+                                  <p>
+                                    {position.reports_to_title
+                                      ? `Reports to ${position.reports_to_title}`
+                                      : "Top-level operational position"}
+                                  </p>
+                                </div>
+                                <span className={`status-pill ${position.status}`}>
+                                  {lifecycleLabel(position.status)}
+                                </span>
+                              </div>
+                              {position.description && <p>{position.description}</p>}
+                              <div className="workforce-assignment-summary">
+                                <strong>{positionOccupancy(position)}</strong>
+                                {position.holders.length ? (
+                                  <ul aria-label={`Active assignments for ${position.title}`}>
+                                    {position.holders.map((holder, index) => (
+                                      <li key={`${position.id}-${index}`}>
+                                        {holder.display_name}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <span>No active holder</span>
+                                )}
+                              </div>
+                              {workspace.can_manage_positions && (
+                                <a
+                                  className="secondary-button workforce-position-action"
+                                  href={workforcePositionsPath(edition, position.id)}
+                                >
+                                  Manage {position.title}
+                                </a>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    ))}
+                </div>
+              ) : (
+                <div className="table-empty">
+                  <strong>No positions have been defined</strong>
+                  <span>
+                    {workspace.can_manage_positions
+                      ? "Create the first Position from the governed Position workspace."
+                      : "An organizer with structure-management authority can define the first Position."}
+                  </span>
+                  {workspace.can_manage_positions && (
+                    <a
+                      className="secondary-button"
+                      href={workforcePositionsPath(edition)}
+                    >
+                      Create a Position
+                    </a>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+
+          <section className="panel workforce-tools" aria-labelledby="workforce-tools-title">
+            <div className="panel-heading">
+              <div>
+                <p className="section-kicker">Continue the work</p>
+                <h2 id="workforce-tools-title">Current Workforce tools</h2>
+              </div>
+            </div>
+            <div className="workforce-tool-grid">
+              <a className="form-link-card" href={workforceStructurePath(edition)}>
+                <span className="form-card-icon" aria-hidden="true">⌘</span>
+                <span>
+                  <strong>Department structure</strong>
+                  <small>Manage the exact edition-owned hierarchy</small>
+                </span>
+                <span aria-hidden="true">↗</span>
+              </a>
+              {workspace.can_manage_positions && (
+                <a
+                  className="form-link-card"
+                  href={workforcePositionsPath(edition)}
+                >
+                  <span className="form-card-icon" aria-hidden="true">P</span>
+                  <span>
+                    <strong>Position management</strong>
+                    <small>
+                      Define responsibilities, reporting, headcount, and public
+                      opportunities
+                    </small>
+                  </span>
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )}
+              <a className="form-link-card" href={`/volunteer/${edition.edition_id}/`}>
+                <span className="form-card-icon" aria-hidden="true">♡</span>
+                <span>
+                  <strong>Published opportunities</strong>
+                  <small>See the applicant-facing position openings</small>
+                </span>
+                <span aria-hidden="true">↗</span>
+              </a>
+              <a
+                className="form-link-card"
+                href={`/volunteer/${edition.edition_id}/documents/`}
+              >
+                <span className="form-card-icon" aria-hidden="true">▤</span>
+                <span>
+                  <strong>My onboarding documents</strong>
+                  <small>Complete agreements requested from this account</small>
+                </span>
+                <span aria-hidden="true">↗</span>
+              </a>
+              {canAccessAdvancedRecords && (
+                <a
+                  className="form-link-card"
+                  href={`/admin/workforce/positionassignment/?edition__id__exact=${edition.edition_id}`}
+                >
+                  <span className="form-card-icon" aria-hidden="true">A</span>
+                  <span>
+                    <strong>Assignment records</strong>
+                    <small>Use the protected specialist activation workflow</small>
+                  </span>
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )}
+            </div>
+            {!canAccessAdvancedRecords && (
+              <p className="privacy-note workforce-owner-boundary">
+                {workspace.can_manage_positions
+                  ? "Position management is available here without staff-only access. Assignment proposal and independent activation still need their purpose-built organizer journey, so Maru does not link this account to the specialist record screen."
+                  : "This workspace is safe for viewing. Position editing and assignment activation require additional authority, so Maru does not link this account to inaccessible specialist screens."}
+              </p>
+            )}
+          </section>
+
+          <aside className="setup-note workforce-boundary" aria-labelledby="workforce-boundary-title">
+            <div>
+              <p className="section-kicker">Authority boundary</p>
+              <h2 id="workforce-boundary-title">Appointment is not ordinary access</h2>
+              <p>
+                A Workforce assignment can require documents, headcount, a
+                distinct approver, a scoped role, and participation capacity.
+                Sharing a software-access group does not fill a Position.
+              </p>
+            </div>
+          </aside>
+        </>
+      )}
+    </div>
+  );
+}
+
 function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
   const [configuration, setConfiguration] =
     useState<RegistrationConfigurationWorkspace>();
   const [configurationDenied, setConfigurationDenied] = useState(false);
   const [registrations, setRegistrations] = useState<StaffRegistrationPage>();
   const [registrationsDenied, setRegistrationsDenied] = useState(false);
+  const [registrationsLoading, setRegistrationsLoading] = useState(false);
+  const [registrationFilters, setRegistrationFilters] =
+    useState<StaffRegistrationFilters>({ page: 1 });
   const [reconciliation, setReconciliation] =
     useState<RegistrationReconciliation>();
   const [mediaReviews, setMediaReviews] =
@@ -1966,9 +2884,12 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
       });
   }
 
-  function refreshRegistrations() {
+  function refreshRegistrations(
+    filters: StaffRegistrationFilters = registrationFilters,
+  ) {
     setRegistrationsDenied(false);
-    void loadStaffRegistrations(edition)
+    setRegistrationsLoading(true);
+    void loadStaffRegistrations(edition, filters)
       .then(setRegistrations)
       .catch((loadError: unknown) => {
         if (loadError instanceof ApiError && loadError.status === 403) {
@@ -1981,7 +2902,8 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
             ? loadError.message
             : "The registration queue could not be loaded.",
         );
-      });
+      })
+      .finally(() => setRegistrationsLoading(false));
   }
 
   function refreshReconciliation() {
@@ -2019,10 +2941,12 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
   }
 
   useEffect(() => {
+    const initialRegistrationFilters = { page: 1 };
     setError(undefined);
     setSelected(undefined);
+    setRegistrationFilters(initialRegistrationFilters);
     refreshConfiguration();
-    refreshRegistrations();
+    refreshRegistrations(initialRegistrationFilters);
     refreshReconciliation();
     refreshMediaReviews();
   }, [edition]);
@@ -2254,18 +3178,41 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
     <div className="view">
       <div className="page-heading compact">
         <div>
-          <p className="eyebrow">Registration and attendee service</p>
-          <h1>Registration</h1>
+          <p className="eyebrow">Attendee service</p>
+          <h1>Registration desk</h1>
           <PageHelp
-            purpose="Use this page to configure registration and serve attendees through arrival."
-            examples="copy last year’s setup, activate a reviewed draft, or check in a paid attendee"
+            purpose="Use this page to find and serve attendees from registration through arrival."
+            examples="add an attendee outside public hours, reconcile payment, or check in a confirmed attendee"
           />
         </div>
-        <span className="record-count">
-          {registrationsDenied ? "Restricted" : `${registrations?.count ?? 0} records`}
-        </span>
+        <div className="page-heading-actions">
+          <a className="secondary-button" href={registrationSetupPath(edition)}>
+            Registration setup
+          </a>
+          <span className="record-count">
+            {registrationsDenied ? "Restricted" : `${registrations?.count ?? 0} attendees`}
+          </span>
+        </div>
       </div>
+      <EmbeddedPageAccess />
       {error && <p className="form-error" role="alert">{error}</p>}
+
+      <RegistrationQueue
+        page={registrations}
+        denied={registrationsDenied}
+        loading={registrationsLoading}
+        filters={registrationFilters}
+        onApplyFilters={(filters) => {
+          setRegistrationFilters(filters);
+          refreshRegistrations(filters);
+        }}
+        onPage={(page) => {
+          const filters = { ...registrationFilters, page };
+          setRegistrationFilters(filters);
+          refreshRegistrations(filters);
+        }}
+        onOpen={setSelected}
+      />
 
       {!configurationDenied && configuration && (
         <section className="panel configuration-panel">
@@ -2318,17 +3265,9 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
                 Add attendee outside public hours
               </a>
               <a
-                href={`/admin/workforce/position/?edition__id__exact=${edition.edition_id}`}
+                href={workforceWorkspacePath()}
               >
-                Manage hierarchy and positions in administration ↗
-              </a>
-              <a
-                href={`/admin/workforce/onboardingdocumentrequest/?edition__id__exact=${edition.edition_id}`}
-              >
-                Request or review volunteer agreements ↗
-              </a>
-              <a href={`/volunteer/${edition.edition_id}/`}>
-                Preview published volunteer opportunities ↗
+                Continue to Workforce: positions, assignments, and future shifts ↗
               </a>
             </div>
           )}
@@ -2434,9 +3373,9 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
                 </select>
                 {draftId && (
                   <a
-                    href={`/admin/registration/registrationconfiguration/${encodeURIComponent(draftId)}/change/`}
+                    href={registrationSetupPath(edition)}
                   >
-                    Edit questions and products in bootstrap admin ↗
+                    Open the registration builder ↗
                   </a>
                 )}
                 <textarea
@@ -2630,79 +3569,13 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
         </section>
       )}
 
-      {registrationsDenied ? (
-        <section className="permission-state">
-          <h2>Registration service is not available for your role</h2>
-          <p>
-            Maru did not expose attendee names, counts, payment state, or
-            registration existence.
-          </p>
-        </section>
-      ) : (
-        <section className="people-table-wrap commerce-table">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Attendee</th>
-                <th scope="col">Reference</th>
-                <th scope="col">Admission</th>
-                <th scope="col">State</th>
-                <th scope="col"><span className="sr-only">Open</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {registrations?.results.map((registration) => (
-                <tr key={registration.id}>
-                  <td>
-                    <button
-                      className="person-link"
-                      onClick={() => setSelected(registration)}
-                    >
-                      <span className="table-avatar" aria-hidden="true">
-                        {registration.display_name.charAt(0).toUpperCase()}
-                      </span>
-                      <strong>{registration.display_name}</strong>
-                    </button>
-                  </td>
-                  <td>{registration.reference}</td>
-                  <td>{registration.product_name}</td>
-                  <td><StatusPill lifecycle={registration.state} /></td>
-                  <td>
-                    <button
-                      className="row-open"
-                      aria-label={`Open ${registration.reference}`}
-                      onClick={() => setSelected(registration)}
-                    >
-                      →
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {registrations?.results.length === 0 && (
-            <div className="table-empty">
-              <strong>No attendee registrations yet</strong>
-              <span>New submissions will appear in this edition-scoped queue.</span>
-            </div>
-          )}
-        </section>
-      )}
-
       {selected && (
-        <div className="drawer-scrim" onMouseDown={() => setSelected(undefined)}>
-          <aside
-            className="person-drawer registration-drawer"
-            aria-labelledby="registration-person"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <button
-              className="drawer-close"
-              onClick={() => setSelected(undefined)}
-              aria-label="Close"
-            >
-              ×
-            </button>
+        <ModalDrawer
+          className="person-drawer registration-drawer"
+          labelledBy="registration-person"
+          closeLabel="Close attendee details"
+          onClose={() => setSelected(undefined)}
+        >
             <p className="section-kicker">Front Desk service view</p>
             <h2 id="registration-person">{selected.display_name}</h2>
             <StatusPill lifecycle={selected.state} />
@@ -2808,8 +3681,7 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
               This purpose-limited view excludes form answers, email, HR records,
               safety cases, and unrelated participation data.
             </p>
-          </aside>
-        </div>
+        </ModalDrawer>
       )}
     </div>
   );
@@ -3236,26 +4108,33 @@ function SetupView({
     {
       title: "Organization",
       summary: "Set the legal organizer, working languages, and default time zone.",
-      href: "/admin/organizations/organization/",
+      href: `/admin/platform/organizations/${encodeURIComponent(edition.organization_slug)}/`,
     },
     {
       title: "Convention series",
       summary: "Define the recurring convention identity shared by its editions.",
-      href: "/admin/organizations/conventionseries/",
+      href: `/admin/platform/organizations/${encodeURIComponent(edition.organization_slug)}/series/${encodeURIComponent(edition.series_slug)}/`,
     },
     {
       title: "Event edition",
       summary: "Create the dated convention occurrence, venue, locale, and currency.",
-      href: "/admin/events/eventedition/",
+      href: `/admin/platform/organizations/${encodeURIComponent(edition.organization_slug)}/series/${encodeURIComponent(edition.series_slug)}/editions/${encodeURIComponent(edition.edition_slug)}/`,
     },
     {
       title: "Registration",
       summary: "Prepare products, form questions, opening windows, and payment rules.",
-      href: "/admin/registration/registrationconfiguration/",
+      href: registrationSetupPath(edition),
+    },
+    {
+      title: "Workforce",
+      summary:
+        "Review Departments, Positions, active assignments, and the future shift-planning boundary.",
+      href: workforceWorkspacePath(),
     },
     {
       title: "Teams & access",
-      summary: "Assign accountable groups and people for this convention.",
+      summary:
+        "Share system capabilities without treating access as a workforce appointment.",
       action: "access",
     },
     {
@@ -3278,6 +4157,7 @@ function SetupView({
           />
         </div>
       </div>
+      <EmbeddedPageAccess />
       <EditionLifecyclePanel
         edition={edition}
         onTransitioned={onTransitioned}
@@ -3311,6 +4191,24 @@ function SetupView({
               </li>
             ))}
           </ol>
+          <section className="panel planned-capabilities" aria-labelledby="planned-capabilities-title">
+            <div className="panel-heading">
+              <div>
+                <p className="section-kicker">Product roadmap</p>
+                <h2 id="planned-capabilities-title">Planned capabilities</h2>
+              </div>
+              <span className="quiet-badge">Not available yet</span>
+            </div>
+            <p className="muted-copy">
+              These areas have an intentional home in Maru, but they are not
+              links until their workflows and authorization contracts are ready.
+            </p>
+            <ul className="planned-capability-list">
+              {upcomingDestinations.map((label) => (
+                <li key={label}>{label}</li>
+              ))}
+            </ul>
+          </section>
           <section className="setup-note">
             <div>
               <p className="section-kicker">Occasional maintenance</p>
@@ -3727,17 +4625,13 @@ function AccessDrawer({
   }
 
   return (
-    <div className="drawer-scrim access-scrim" onMouseDown={onClose}>
-      <aside
-        className="access-drawer"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="access-heading"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <button className="drawer-close" onClick={onClose} aria-label="Close">
-          ×
-        </button>
+    <ModalDrawer
+      className="access-drawer"
+      scrimClassName="access-scrim"
+      labelledBy="access-heading"
+      closeLabel="Close access workspace"
+      onClose={onClose}
+    >
         <p className="section-kicker">People &amp; groups</p>
         <h2 id="access-heading">Access to {destinationLabels[destination]}</h2>
         <p className="muted-copy">
@@ -3992,8 +4886,7 @@ function AccessDrawer({
             </p>
           )}
         </section>
-      </aside>
-    </div>
+    </ModalDrawer>
   );
 }
 
@@ -4025,6 +4918,7 @@ function SecurityView() {
           />
         </div>
       </div>
+      <EmbeddedPageAccess />
       <section className="panel security-history">
         {error && <p className="form-error" role="alert">{error}</p>}
         {events?.length ? (
@@ -4075,14 +4969,27 @@ export default function App({
   const [fatalError, setFatalError] = useState<string>();
 
   useEffect(() => {
+    let current = true;
     void loadMyContext()
       .then((loaded) => {
-        setContext(loaded);
-        setEdition(
-          chooseInitialEdition(loaded.editions, selectedAdminEditionId()),
+        if (!current) return;
+        const initialEdition = chooseInitialEdition(
+          loaded.editions,
+          selectedAdminEditionId(),
         );
+        setContext(loaded);
+        if (
+          embeddedInAdmin &&
+          initialEdition &&
+          !selectedAdminEditionId() &&
+          submitEmbeddedEditionContext(initialEdition.edition_id)
+        ) {
+          return;
+        }
+        setEdition(initialEdition);
       })
       .catch((error: unknown) => {
+        if (!current) return;
         if (error instanceof ApiError && [401, 403].includes(error.status)) {
           window.location.assign("/accounts/login/?next=/admin/workspace/");
           return;
@@ -4091,7 +4998,10 @@ export default function App({
           error instanceof Error ? error.message : "An unexpected error occurred.",
         );
       });
-  }, []);
+    return () => {
+      current = false;
+    };
+  }, [embeddedInAdmin]);
 
   useEffect(() => {
     if (!edition) return;
@@ -4178,6 +5088,9 @@ export default function App({
 
   function changeEdition(next: EditionContext) {
     window.localStorage.setItem("maru.staff.edition", next.edition_id);
+    if (embeddedInAdmin && submitEmbeddedEditionContext(next.edition_id)) {
+      return;
+    }
     setEdition(next);
     setFilters({ page: 1 });
     setPeople(undefined);
@@ -4268,6 +5181,12 @@ export default function App({
           onPage={(page) => setFilters((current) => ({ ...current, page }))}
         />
       )}
+      {destination === "workforce" && (
+        <WorkforceView
+          edition={edition}
+          canAccessAdvancedRecords={context.can_access_advanced_records}
+        />
+      )}
       {destination === "commerce" && (
         <RegistrationOperationsView edition={edition} />
       )}
@@ -4295,11 +5214,41 @@ export default function App({
       onRevoke={revokeAccess}
     />
   );
+  const embeddedPageAccess = {
+    editionName: activeEdition.edition_name,
+    workspace: accessWorkspace,
+    onOpenAccess:
+      embeddedInAdmin && accessWorkspace
+        ? () => setAccessOpen(true)
+        : undefined,
+  };
 
   if (embeddedInAdmin) {
     return (
-      <div className="admin-embedded-shell">
-        {!context.can_access_advanced_records && (
+      <EmbeddedPageAccessContext.Provider value={embeddedPageAccess}>
+        <div className="admin-embedded-shell">
+          <div id="main-content" className="admin-embedded-content">
+            {destinationContent}
+          </div>
+          {accessDrawer}
+        </div>
+      </EmbeddedPageAccessContext.Provider>
+    );
+  }
+
+  return (
+    <EmbeddedPageAccessContext.Provider value={embeddedPageAccess}>
+      <div className="shell">
+        <a className="skip-link" href="#main-content">Skip to content</a>
+        <Sidebar
+          destination={destination}
+          edition={edition}
+          onNavigate={setDestination}
+          canManageAccess={Boolean(accessWorkspace)}
+          canAccessAdvancedRecords={context.can_access_advanced_records}
+          onOpenAccess={() => setAccessOpen(true)}
+        />
+        <div className="workspace">
           <Topbar
             context={context}
             edition={edition}
@@ -4307,35 +5256,10 @@ export default function App({
             canManageAccess={Boolean(accessWorkspace)}
             onOpenAccess={() => setAccessOpen(true)}
           />
-        )}
-        <main id="main-content">{destinationContent}</main>
+          <main id="main-content">{destinationContent}</main>
+        </div>
         {accessDrawer}
       </div>
-    );
-  }
-
-  return (
-    <div className="shell">
-      <a className="skip-link" href="#main-content">Skip to content</a>
-      <Sidebar
-        destination={destination}
-        edition={edition}
-        onNavigate={setDestination}
-        canManageAccess={Boolean(accessWorkspace)}
-        canAccessAdvancedRecords={context.can_access_advanced_records}
-        onOpenAccess={() => setAccessOpen(true)}
-      />
-      <div className="workspace">
-        <Topbar
-          context={context}
-          edition={edition}
-          onEditionChange={changeEdition}
-          canManageAccess={Boolean(accessWorkspace)}
-          onOpenAccess={() => setAccessOpen(true)}
-        />
-        <main id="main-content">{destinationContent}</main>
-      </div>
-      {accessDrawer}
-    </div>
+    </EmbeddedPageAccessContext.Provider>
   );
 }

@@ -1,6 +1,6 @@
-# Page 4 create convention series
+# Create convention series
 
-Status: Page 4 backend-verified for platform and scoped Board access; browser
+Status: Create convention series backend-verified for platform and scoped Board access; browser
 rehearsal pending
 Last updated: 2026-08-01
 
@@ -22,9 +22,9 @@ Account kind: platform_administrator
 The password is local test data. Never reuse it in a deployment or real
 account. The database contains the owner-created Draft `MaruCon` with slug
 `marucon`, zero series/editions/relationships, and its original creation audit
-event. Browser QA opened Page 4 but did not submit it.
+event. Browser QA opened Create convention series but did not submit it.
 
-## Start and open Page 4
+## Start and open Create convention series
 
 From the repository root in PowerShell:
 
@@ -40,26 +40,26 @@ series**. Its direct route is
 
 ## Expected behavior
 
-- Page 3 shows only the selected organization's series and contextual add
+- Organization record shows only the selected organization's series and contextual add
   action before the complete profile;
 - the sidebar keeps the global **Organizations**/**+ Add** row and, while
   MaruCon is selected, adds **Organization record** and **Convention series**
   with the scoped series **+ Add** action beside it;
 - the sidebar begins at ordinary viewport padding on desktop and stacks above
   content without horizontal overflow at narrow widths;
-- Page 4 displays the parent but accepts no organization or slug field;
+- Create convention series displays the parent but accepts no organization or slug field;
 - only Convention series name is required;
 - description, website, public contact email, and availability are optional;
 - availability starts Active and does not publish or create an edition;
 - Maru normalizes the name and generates a bounded slug unique within MaruCon;
-- success returns to Page 3 with the created row and one-time confirmation;
+- success returns to Organization record with the created row and one-time confirmation;
 - creation, value-minimized audit,
   `organizations.convention_series.created.v1`, and outbox delivery are atomic;
   and
 - this platform account remains outside every convention relationship.
 
-Do not use Page 4 to create an edition. Page 5 now owns the existing series
-record and Page 6 owns the dated event-edition command.
+Do not use Create convention series to create an edition. Convention series record now owns the existing series
+record and Create event edition owns the dated event-edition command.
 
 ## Failure and recovery
 
@@ -69,7 +69,7 @@ denied before organization lookup. A database, audit, event-publication, or
 outbox failure returns a generic non-disclosing `503`; transaction rollback
 removes the partial series and every correlated evidence row.
 
-Page 4 adds no migration. If it cannot load, check PostgreSQL and
+Create convention series adds no migration. If it cannot load, check PostgreSQL and
 `/health/ready`, then retry. Do not diagnose against or modify the preserved
 `maru` or `marucon_rehearsal` databases.
 
@@ -77,5 +77,5 @@ Page 4 adds no migration. If it cannot load, check PostgreSQL and
 
 Continue with the
 [organization-to-edition hands-on tutorial](maru-hands-on-tutorial.md), which
-covers Pages 5–7 and the explicit working-edition context. The original
+covers the convention-series and edition record surfaces and the explicit working-edition context. The original
 per-page owner pause was superseded by ADR 0037's executable milestone cadence.

@@ -5709,6 +5709,144 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Create a Position and its private draft volunteer opportunity.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated strict JSON request with an idempotency header.
+         *     organization_id : UUID
+         *         Untrusted organization route identifier.
+         *     edition_id : UUID
+         *         Untrusted event-edition route identifier.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Minimized Position identifier and resulting structure version.
+         */
+        post: operations["workforce_create_position"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/positions/{position_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * @description Replace editable Position details through the shared command.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated strict complete-replacement JSON request.
+         *     organization_id : UUID
+         *         Untrusted organization route identifier.
+         *     edition_id : UUID
+         *         Untrusted event-edition route identifier.
+         *     position_id : UUID
+         *         Position identifier resolved after exact-edition authorization.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Minimized Position identifier and resulting structure version.
+         */
+        put: operations["workforce_update_position"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/positions/{position_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Close the Position and its public opportunity through one command.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated strict Position-closure JSON request.
+         *     organization_id : UUID
+         *         Untrusted organization route identifier.
+         *     edition_id : UUID
+         *         Untrusted event-edition route identifier.
+         *     position_id : UUID
+         *         Position identifier resolved after exact-edition authorization.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Minimized Position identifier and resulting structure version.
+         */
+        post: operations["workforce_close_position"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/positions/{position_id}/opportunity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * @description Replace the applicant-facing opportunity through the shared command.
+         *
+         *     Parameters
+         *     ----------
+         *     request : Request
+         *         Authenticated strict complete-replacement JSON request.
+         *     organization_id : UUID
+         *         Untrusted organization route identifier.
+         *     edition_id : UUID
+         *         Untrusted event-edition route identifier.
+         *     position_id : UUID
+         *         Position identifier resolved after exact-edition authorization.
+         *
+         *     Returns
+         *     -------
+         *     Response
+         *         Minimized Position identifier and resulting structure version.
+         */
+        put: operations["workforce_update_position_opportunity"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/structure": {
         parameters: {
             query?: never;
@@ -12839,6 +12977,63 @@ export interface components {
             expected_version: number;
             reason: string;
         };
+        /** @description Closed input for dependency-safe, history-preserving Position closure. */
+        WorkforcePositionClose: {
+            expected_version: number;
+            confirmation_name: string;
+            reason: string;
+        };
+        /** @description Closed input for creating one governed Position and draft opportunity. */
+        WorkforcePositionCreate: {
+            /** Format: uuid */
+            template_id: string;
+            /** Format: uuid */
+            department_id: string;
+            /** Format: uuid */
+            reports_to_id: string | null;
+            title: string;
+            description: string;
+            headcount: number;
+            expected_version: number;
+            reason: string;
+        };
+        /** @description Serialize the minimized result shared by Position mutations. */
+        WorkforcePositionMutationResult: {
+            /** Format: uuid */
+            position_id: string;
+            aggregate_version: number;
+        };
+        /** @description Closed complete-replacement input for a Position's public opportunity. */
+        WorkforcePositionOpportunityUpdate: {
+            status: components["schemas"]["WorkforcePositionOpportunityUpdateStatusEnum"];
+            headline: string;
+            description: string;
+            /** Format: date-time */
+            applications_open_at: string | null;
+            /** Format: date-time */
+            applications_close_at: string | null;
+            visible_when_filled: boolean;
+            expected_version: number;
+            reason: string;
+        };
+        /**
+         * @description * `draft` - Draft
+         *     * `published` - Published
+         *     * `closed` - Closed
+         *     * `withdrawn` - Withdrawn
+         * @enum {string}
+         */
+        WorkforcePositionOpportunityUpdateStatusEnum: "draft" | "published" | "closed" | "withdrawn";
+        /** @description Closed complete-replacement input for editable Position details. */
+        WorkforcePositionUpdate: {
+            /** Format: uuid */
+            reports_to_id: string | null;
+            title: string;
+            description: string;
+            headcount: number;
+            expected_version: number;
+            reason: string;
+        };
         /** @description RFC 9457 response shape used by workforce endpoints. */
         WorkforceProblem: {
             /** Format: uri */
@@ -12856,6 +13051,7 @@ export interface components {
             organization_name: string;
             series_name: string;
             edition_name: string;
+            can_manage_positions: boolean;
             governance: components["schemas"]["WorkforceStructureGovernance"];
             structure: components["schemas"]["WorkforceStructureProjection"];
         };
@@ -18242,6 +18438,304 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VolunteerApplication"];
+                };
+            };
+        };
+    };
+    workforce_create_position: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description A canonical lower-case hyphenated UUID. Repeating the same request with the same key returns HTTP 200 and the original minimized result. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                edition_id: string;
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkforcePositionCreate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforcePositionMutationResult"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforcePositionMutationResult"];
+                };
+            };
+            /** @description The Position request or idempotency key is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The mutation route or required authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The exact Department or reporting Position is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The request conflicts with current structure state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A canonical command dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+        };
+    };
+    workforce_update_position: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+                position_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkforcePositionUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforcePositionMutationResult"];
+                };
+            };
+            /** @description The complete Position replacement is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The mutation route or required authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The exact Position or reporting Position is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The request conflicts with current structure state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A canonical command dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+        };
+    };
+    workforce_close_position: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+                position_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkforcePositionClose"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforcePositionMutationResult"];
+                };
+            };
+            /** @description The Position closure request is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The mutation route or required authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The exact Position is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description Current dependencies or structure state prevent closure. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A canonical command dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+        };
+    };
+    workforce_update_position_opportunity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                edition_id: string;
+                organization_id: string;
+                position_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkforcePositionOpportunityUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkforcePositionMutationResult"];
+                };
+            };
+            /** @description The complete opportunity replacement is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The mutation route or required authority is unavailable. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The exact Position is unavailable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description The request conflicts with current structure state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
+                };
+            };
+            /** @description A canonical command dependency is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["WorkforceProblem"];
                 };
             };
         };

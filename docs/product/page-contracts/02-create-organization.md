@@ -1,4 +1,4 @@
-# Page 2 contract: Create organization
+# Create organization contract
 
 - Status: Revised, implemented, and backend-verified in the unified shell;
   browser rehearsal pending
@@ -20,7 +20,7 @@ Only the name is required.
 
 ## Placement and navigation
 
-Pages 1 through 3 share a persistent **Platform administration** navigation
+Platform administration home, Create organization, and Organization record share a persistent **Platform administration** navigation
 row:
 
 - **Organizations** is the primary link to
@@ -30,11 +30,11 @@ row:
 
 The current destination uses `aria-current="page"`. The navigation remains
 visible beside the content on desktop and becomes a compact horizontal block at
-narrow widths. Page 1 does not render a second competing creation button.
+narrow widths. Platform administration home does not render a second competing creation button.
 
 On success the browser redirects to `/admin/platform/organizations/`, where the
 new Draft row and a one-time success confirmation are visible. The organization
-name links to its Page 3 record.
+name links to its Organization record.
 
 ## Information and actions
 
@@ -144,7 +144,7 @@ desktop.
 
 ## Acceptance checks
 
-- one-row **Organizations** and adjacent **+ Add** navigation on Pages 1–3;
+- one-row **Organizations** and adjacent **+ Add** navigation on the organization setup and record surfaces;
 - active platform-administrator GET and POST;
 - anonymous redirect and ordinary/staff denial;
 - name-only submission with code-owned defaults;
@@ -163,7 +163,7 @@ desktop.
 ## Explicit non-goals
 
 - Editing or safely deleting the already-created MaruCon record; that belongs
-  to Page 3.
+  to Organization record.
 - Publishing imprint or contact information.
 - Organization activation, suspension, closure, or transfer.
 - Executive Board creation or appointment.

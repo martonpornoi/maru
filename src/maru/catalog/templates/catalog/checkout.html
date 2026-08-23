@@ -4,10 +4,12 @@
 {% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-catalog-orders' edition.id %}">Orders</a> › {{ order.reference }}</div>{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="baseline-page">
     <header class="baseline-page-heading"><p class="baseline-kicker">{{ edition.name }}</p><h1>{{ order.reference }}</h1><p>{{ order.get_status_display }} · {{ order.total_minor }} {{ order.currency }}</p></header>
+    {% include "core/_page_access_mount.html" %}
     <section class="baseline-panel">
       <h2>Order</h2>
       <ul>{% for line in order.lines.all %}<li>{{ line.quantity }} × {{ line.product_name_snapshot }} / {{ line.variant_name_snapshot }} — {{ line.line_total_minor }} {{ order.currency }}</li>{% endfor %}</ul>

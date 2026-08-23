@@ -32,7 +32,10 @@ from maru.registration.models import (
     FinancialLedgerEntry,
     Registration,
     RegistrationConfiguration,
+    RegistrationProvenanceStatus,
     RegistrationSection,
+    RegistrationSetupControl,
+    RegistrationSetupOrigin,
     RegistrationSubmission,
     RegistrationTemplate,
     RegistrationTemplateSection,
@@ -70,6 +73,7 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert result["totals"]["outbox_messages"] == 30
     assert result["totals"]["registration_templates"] == 2
     assert result["totals"]["registration_configurations"] == 8
+    assert result["totals"]["registration_setup_controls"] == 6
     assert result["totals"]["registration_template_sections"] == 6
     assert result["totals"]["registration_sections"] == 24
     assert result["totals"]["registration_questions"] == 40
@@ -211,6 +215,14 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert marucon_configuration.source_template_id is not None
     assert marucon_configuration.questions.count() == 5
     assert marucon_configuration.products.count() == 5
+    assert (
+        RegistrationSetupControl.objects.filter(
+            origin=RegistrationSetupOrigin.LEGACY_EXISTING,
+            provenance_status=RegistrationProvenanceStatus.LEGACY_UNKNOWN,
+            aggregate_version=1,
+        ).count()
+        == 6
+    )
     assert (
         RegistrationTemplate.objects.filter(
             organization=marucon_current.organization,
@@ -399,6 +411,22 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         and assignment["group_name"] == "Front Desk"
         for assignment in access_payload["assignments"]
     )
+
+    registration_setup_response = access_client.get(
+        reverse(
+            "registration-setup",
+            kwargs={
+                "organization_slug": marucon_current.organization.slug,
+                "series_slug": marucon_current.series.slug,
+                "edition_slug": marucon_current.slug,
+            },
+        )
+    )
+    assert registration_setup_response.status_code == 200
+    registration_setup_content = registration_setup_response.content.decode()
+    assert "<h1>Registration</h1>" in registration_setup_content
+    assert "Active registration version" in registration_setup_content
+    assert "existing provenance" in registration_setup_content
 
 
 def test_demo_seed_refuses_nonlocal_settings(monkeypatch: pytest.MonkeyPatch) -> None:

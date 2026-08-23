@@ -43,6 +43,38 @@
     </p>
   </header>
 
+  <details class="maru-access-summary">
+    <summary id="effective-access-title">
+      <span class="maru-access-summary__label">
+        <strong>Access</strong>
+        <span class="maru-access-summary__scope">{{ organization.name }}</span>
+      </span>
+      <span class="maru-access-summary__policy">Representation authority</span>
+    </summary>
+    <div class="maru-access-summary__body">
+      <p class="baseline-access-line">
+        <strong>Platform administrators</strong>
+        <span>may provision and activate the initial representation.</span>
+      </p>
+      {% if representation and representation.state == "active" %}
+        <p class="baseline-access-line">
+          <strong>Active Executive Board controllers</strong>
+          <span>may view the organization and manage its scoped authority.</span>
+        </p>
+      {% elif own_appointment %}
+        <p class="baseline-access-line">
+          <strong>You, as the exact invited account</strong>
+          <span>may view and answer only your invitation.</span>
+        </p>
+      {% endif %}
+      <p>
+        Maru derives this summary from platform authority, the representation
+        state, exact invitation ownership, active immutable role assignments,
+        and their effective terms. This is not a page-local access list.
+      </p>
+    </div>
+  </details>
+
   <section class="baseline-panel" aria-labelledby="board-setup-progress-title">
     <div class="baseline-panel-heading">
       <div>
@@ -88,35 +120,6 @@
         </p>
       </li>
     </ol>
-  </section>
-
-  <section class="baseline-access-summary" aria-labelledby="effective-access-title">
-    <div>
-      <p class="baseline-kicker" id="effective-access-title">Effective access</p>
-      <p class="baseline-access-line">
-        <strong>Platform administrators</strong>
-        <span>may provision and activate the initial representation.</span>
-      </p>
-      {% if representation and representation.state == "active" %}
-        <p class="baseline-access-line">
-          <strong>Active Executive Board controllers</strong>
-          <span>may view the organization and manage its scoped authority.</span>
-        </p>
-      {% elif own_appointment %}
-        <p class="baseline-access-line">
-          <strong>You, as the exact invited account</strong>
-          <span>may view and answer only your invitation.</span>
-        </p>
-      {% endif %}
-    </div>
-    <details>
-      <summary>How is this calculated?</summary>
-      <p>
-        Maru derives this summary from platform authority, the representation
-        state, exact invitation ownership, active immutable role assignments,
-        and their effective terms. This is not a page-local access list.
-      </p>
-    </details>
   </section>
 
   {% if not representation %}

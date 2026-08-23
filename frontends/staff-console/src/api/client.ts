@@ -126,6 +126,12 @@ export type ProfileExtensionWorkspace = {
   registration_id: string;
   fields: ProfileExtensionField[];
 };
+export type WorkforceStructurePosition =
+  components["schemas"]["WorkforceStructurePosition"];
+export type WorkforceStructureDepartment =
+  components["schemas"]["WorkforceStructureDepartment"];
+export type WorkforceStructureWorkspace =
+  components["schemas"]["WorkforceStructure"];
 
 type Problem = {
   code?: string;
@@ -221,6 +227,15 @@ export function loadParticipations(
   filters: ParticipationFilters = {},
 ): Promise<ParticipationPage> {
   return requestJson<ParticipationPage>(participationPath(edition, filters));
+}
+
+export function loadWorkforceStructure(
+  edition: EditionContext,
+): Promise<WorkforceStructureWorkspace> {
+  return requestJson<WorkforceStructureWorkspace>(
+    `/api/v1/organizations/${edition.organization_id}` +
+      `/editions/${edition.edition_id}/workforce/structure`,
+  );
 }
 
 function editionApiPath(edition: EditionContext): string {

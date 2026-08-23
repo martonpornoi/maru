@@ -1,8 +1,10 @@
 # Experience and information architecture
 
-Status: Unified `/admin/` shell and initial Page 8 handoff locally verified;
-final suite/accessibility/owner evidence pending
-Last updated: 2026-08-01
+Status: Focused unified shell, Representation & access handoff, shared page frame, owner-rehearsed
+Registration desk, Workforce journey, and governed Position management locally verified;
+complete mutation-role, state-matrix, width/zoom, and release accessibility
+evidence pending
+Last updated: 2026-08-23
 
 ## Current executable experience
 
@@ -25,7 +27,7 @@ is:
    `/admin/platform/organizations/new/`.
 6. Maintain its profile and nested convention-series inventory at
    `/admin/platform/organizations/<slug>/`.
-7. Open Page 8 at
+7. Open Representation & access at
    `/admin/platform/organizations/<slug>/representation/`, provision the fixed
    Executive Board root, invite at least two exact existing verified person
    accounts, let each answer their own invitation, and activate the organization
@@ -43,7 +45,7 @@ explain that the administrator operates Maru but does not participate in a
 convention. Series creation requires only the recurring brand name, keeps
 organization and slug code-owned, and does not create a dated edition or people
 relationship. Edition creation likewise creates identity and evidence only.
-Page 8 is the explicit exception that creates invited/active Board relationships
+Representation & access is the explicit exception that creates invited/active Board relationships
 for the exact people who accept; it never enrolls the platform administrator.
 
 The `platform` segment is reserved for purpose-built platform pages and avoids
@@ -53,19 +55,27 @@ sidebar, platform identity, and record-oriented visual grammar. Public and
 personal journeys may remain outside `/admin/` by purpose; they do not become a
 second staff shell. Health and versioned APIs remain authoritative contracts.
 
-Every active account may enter the Maru shell. Pages 1–2 remain platform setup.
+Every active account may enter the Maru shell. Platform administration home and Create organization remain platform setup.
 Effective organization/edition grants and role assignments allow ordinary non-
-staff accounts to reach only their scoped Pages 3–8 and Convention work;
+staff accounts to reach only their scoped the organization-scoped setup and representation surfaces and Convention work;
 invitees see only their own governance invitations. Specialist model records
 remain separately Django staff/model-permission gated.
 
 Current backend tests verify changed default routes, navigation, scoped shell
-access, Page 8's initial lifecycle, bounded sensitive reads and denials, and
-database-level platform-subject exclusion. Frontend type checking, 19 Vitest
-tests, production build, local populated/fresh migration and restore evidence,
-and desktop/390-pixel smoke pass. A clean one-pass consolidated suite and
-coverage run, keyboard/automated accessibility, complete failure-state, and
-owner-rehearsal evidence remain open under UX-013.
+access, Representation & access's initial lifecycle, bounded sensitive reads and denials, and
+database-level platform-subject exclusion. The focused recovery pass also
+verifies task-first search and pin customization, separate personal and
+administrative registries, one compact context control, one page-local access
+summary, purpose-built setup links, and a queue-first Registration desk.
+The current owner pass also verifies one host-owned selected-edition context,
+modal detail-drawer focus/Escape behavior, and a Workforce sequence over the
+existing structure projection. Frontend type checking, 28 Vitest tests,
+production build, local populated/
+fresh migration and restore evidence, desktop/390-pixel browser review, and
+the 1,100/1,101-pixel drawer breakpoint pass. A final broad suite and complete
+keyboard, failure-state, width/zoom, mutation-role, and representative
+screen-reader matrix remains open under UX-013; the focused Registration and
+Workforce views now have automated axe coverage.
 
 Every later page requires UX-013's page contract and evidence. ADR 0037 groups
 dependent pages into executable milestones instead of requiring a separate
@@ -174,9 +184,11 @@ Cross-edition reuse appears only in purpose-named workflows such as
 registration template or source-edition selection; it never silently mixes
 routine operational rows.
 
-The unified `/admin/` home keeps the complete permission-filtered alphabetical
-directory for returning operators. ADR 0027 removed the former global Quick
-Start strip.
+The unified `/admin/` home leads with current work and a small set of durable
+tasks. It retains the complete permission-filtered alphabetical model directory
+through one collapsed, searchable **Specialist records** gateway rather than
+placing every implementation noun in the default menu. ADR 0027 removed the
+former global Quick Start strip.
 Organization, series, edition, Chair identity, guarded first authority,
 registration, workforce, and readiness guidance is contextual inside
 Convention work's **Setup guide**. An eligible workspace-less superuser
@@ -185,8 +197,11 @@ there; after completion it becomes a read-only explanation rather than a
 permanent action. The guide is not a readiness checklist and ordinary
 navigation never grants access or marks work complete.
 
-The selected `/admin/` shell has one collapsible sidebar with Platform
-administration, Convention work, and Specialist records sections. Embedded
+The selected `/admin/` shell has one task-first sidebar. Convention work is
+immediately visible, while Convention tools, Organizations, Platform, and
+Specialist records are progressively disclosed according to current scope.
+Pin controls appear only inside **Customize navigation**. Search reports task
+matches first and keeps technical-record matches collapsed. Embedded
 workflows do not render another global navigation or workspace selector; their
 headings, modules, fields, tables, buttons, and responsive spacing follow the
 same language as specialist record pages. Convention work's Today page keeps
@@ -202,6 +217,12 @@ terminal transitions; registration opening remains separate.
 ## My Maru
 
 The personal surface belongs to the user, not to one department.
+
+The current personal home separates its high-frequency **Start here** tasks
+(registration, applications, and schedule) from **More from Maru**. Its menu
+contains only Personal and Work destinations; Platform and Specialist records
+remain on Administration. An authorized person may switch surfaces explicitly,
+but pins and navigation groups do not cross that boundary.
 
 ### Home
 
@@ -245,9 +266,10 @@ route, authorization, frontend, and responsive integration is locally verified:
 
 - **Platform administration:** the organization -> representation -> series ->
   edition record spine under `/admin/platform/`;
-- **Convention work:** Today, People, Organization structure, My registration,
-  Registration, Reports & badges, Setup guide, Security history, and Manage
-  access; and
+- **Convention work:** Today, People, Workforce, Organization structure, My
+  registration, Registration desk, Reports & badges, Setup guide, Security history, and
+  Manage access, with canonical edition Registration and Capacity & waitlist
+  tasks named separately; and
 - **Specialist records:** the complete permission-filtered Django record
   directory, with its existing model routes.
 
@@ -257,10 +279,17 @@ selector. Modules may
 register actions, search providers, dashboard cards, and permission
 requirements without creating another global navigation.
 
+Converted pages share one compact frame: one H1, purpose guidance where needed,
+then an **Access** disclosure naming the current scope and computed policy. The
+expanded content carries allowed actions and authority sources without
+duplicating the page title or presenting a manually maintained ACL. The React
+workspace renders this disclosure inside its active view; the Django host does
+not mount another copy before the application.
+
 ### Initial organization representation
 
 The selected organization exposes **Representation & access** before
-department-owned work. Page 8 uses a distinct, ordered handoff rather than a
+department-owned work. Representation & access uses a distinct, ordered handoff rather than a
 generic role editor: an active platform administrator provisions the fixed
 Executive Board root, authorized management exact-matches existing active
 verified person accounts, each invitee accepts or declines their own versioned
@@ -305,6 +334,32 @@ appointment still uses the workforce position workflow so NDA evidence,
 headcount, reporting hierarchy, capacities, and official convention role
 remain connected.
 
+### Workforce continuity
+
+The durable **Workforce** task connects the exact-edition Department projection
+to the human operating sequence **Structure -> Positions -> Assignments ->
+Availability -> Shifts**. It shows current Position purpose, reporting,
+headcount, vacancies, and minimized active holders from the existing bounded
+structure API. Department changes continue through canonical Department management, and
+the Registration desk uses one Workforce handoff instead of sending an owner to
+several staff-only model screens.
+
+Authorized managers continue from Positions into the purpose-built Position
+workspace. Creation deliberately chooses an immutable organization template,
+exact Department, responsibility, headcount, and optional reporting Position;
+editing separates operational details from immutable role meaning. Opportunity
+publication is a distinct applicant-facing action, and protected closure names
+its dependencies instead of silently deleting assignments, reports, or access.
+Each Position retains its directly inspectable organizer reasons.
+
+Availability and Shifts occupy explicit, noninteractive future stages. The UI
+states that availability will be person-owned and that the shift lifecycle must
+cover demand, claims, confirmation, overlap, completion, and locking. It does
+not infer availability from appointments or present Positions as scheduled
+work. Assignment proposal and truly independent approval remain the next
+Workforce workflow; non-staff owners see no inaccessible specialist links in
+their place.
+
 The implemented Reports destination starts with one purpose-built
 registration preset: attendance totals, country and attendee-level
 breakdowns, a badge-data preview, and a minimized CSV export. It is edition
@@ -312,7 +367,7 @@ scoped, capability gated, audited, filterable, and explicit about excluded
 private fields. It is the first role-oriented report, not yet the general
 saved-question/query-builder experience.
 
-### Page orientation
+### Surface orientation
 
 Every active page places one short purpose statement directly below its main
 title. It says why the page is useful, what can be done there, and gives one or
@@ -353,6 +408,12 @@ A side context panel lets an operator inspect a related object without losing
 the list, filters, selection, or scroll position.
 
 ## Search, query, and command
+
+The current shell search is navigation-only. It matches authorized code-owned
+task labels, descriptions, and generic keywords, distinguishes task matches
+from technical records, clears on Escape, and never indexes tenant or person
+values. It is not yet the object-search or command-palette capability described
+below.
 
 The command palette supports navigation and permitted actions. Global search
 uses human identifiers, aliases, fuzzy matching, and typed results. It never
@@ -450,6 +511,8 @@ authority can accelerate the flow while retaining the evidence trail.
 - Status is never communicated only by color.
 - Times always show edition time zone when ambiguity is possible.
 - Tables have compact and comfortable density settings.
+- Narrow high-frequency record tables become labelled cards when that preserves
+  row context better than panning; any retained data-region scroll is explicit.
 - Draft input survives navigation and recoverable network failure.
 - Essential tasks work at 200% zoom and on a narrow mobile screen.
 - Motion is optional and never carries operational meaning alone.

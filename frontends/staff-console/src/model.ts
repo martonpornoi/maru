@@ -65,7 +65,7 @@ export function capacityCounts(
 }
 
 export function lifecycleLabel(value: string): string {
-  return value.replaceAll("-", " ").replace(/\b\w/g, (letter) =>
+  return value.replaceAll(/[-_]/g, " ").replace(/\b\w/g, (letter) =>
     letter.toUpperCase(),
   );
 }

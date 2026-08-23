@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="maru-personal-home">
@@ -20,37 +21,37 @@
         authority for them.
       </p>
     </header>
-    <div class="maru-admin-workspace-grid">
-      <a href="{% url 'public-registration-index' %}">
-        <strong>Registration &amp; tickets</strong>
-        <span>Open registrations and review your existing convention profiles.</span>
-      </a>
-      <a href="{% url 'my-catalog-index' %}">
-        <strong>Shop &amp; orders</strong>
-        <span>Browse edition merchandise, donations, supporter products, and order history.</span>
-      </a>
-      <a href="{% url 'my-application-index' %}">
-        <strong>My applications</strong>
-        <span>Open edition applications, drafts, answer revisions, and decisions.</span>
-      </a>
-      <a href="{% url 'my-maru-schedule-index' %}">
-        <strong>My schedule</strong>
-        <span>Open attendee-safe schedules for conventions you are confirmed to attend.</span>
-      </a>
-      <a href="{% url 'my-logistics-offer-index' %}">
-        <strong>Equipment offers</strong>
-        <span>Offer equipment for eligible conventions and follow its review status.</span>
-      </a>
-      <a href="{% url 'my-representation-invitations' %}">
-        <strong>Governance invitations</strong>
-        <span>Review organization invitations addressed to this exact account.</span>
-      </a>
-      {% if has_management_access %}
-        <a href="{% url 'admin:index' %}">
-          <strong>Administration</strong>
-          <span>Open the convention and platform tools currently available to you.</span>
+    {% include "core/_page_access_mount.html" %}
+    <section class="maru-personal-primary" aria-labelledby="maru-personal-start-title">
+      <h2 id="maru-personal-start-title">Start here</h2>
+      <div class="maru-admin-workspace-grid">
+        <a href="{% url 'public-registration-index' %}">
+          <strong>Registration &amp; tickets</strong>
+          <span>Register for a convention or continue an existing attendee profile.</span>
         </a>
-      {% endif %}
-    </div>
+        <a href="{% url 'my-application-index' %}">
+          <strong>My applications</strong>
+          <span>Continue an application and review its current decision.</span>
+        </a>
+        <a href="{% url 'my-maru-schedule-index' %}">
+          <strong>My schedule</strong>
+          <span>See published plans and locations for conventions you will attend.</span>
+        </a>
+      </div>
+    </section>
+    <section class="maru-personal-secondary" aria-labelledby="maru-personal-more-title">
+      <div>
+        <p class="maru-personal-kicker">Your account</p>
+        <h2 id="maru-personal-more-title">More from Maru</h2>
+      </div>
+      <nav aria-label="More personal destinations">
+        <a href="{% url 'my-catalog-index' %}">Shop &amp; orders</a>
+        <a href="{% url 'my-logistics-offer-index' %}">Equipment offers</a>
+        <a href="{% url 'my-representation-invitations' %}">Governance invitations</a>
+        {% if has_management_access %}
+          <a href="{% url 'admin:index' %}">Administration</a>
+        {% endif %}
+      </nav>
+    </section>
   </div>
 {% endblock %}

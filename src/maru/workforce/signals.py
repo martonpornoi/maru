@@ -27,7 +27,11 @@ def ensure_position_opportunity(
         Dispatch metadata supplied by Django's signal framework.
     """
     _ = sender, kwargs
-    if created:
+    # Governed Position commands create the versioned opportunity explicitly so
+    # both rows can share one aggregate version and one immutable receipt. Keep
+    # this compatibility hook only for legacy/bootstrap fixture writers whose
+    # Position has no structure-command evidence.
+    if created and instance.created_in_structure_version is None:
         VolunteerOpportunity.objects.create(
             position=instance,
             headline=instance.title,

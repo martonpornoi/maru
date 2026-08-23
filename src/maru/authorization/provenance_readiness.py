@@ -118,6 +118,7 @@ _ACTIVATION_MIGRATIONS = (
     ("workforce", "0007_structure_write_integrity"),
     ("workforce", "0008_department_fk_contract_successor"),
     ("workforce", "0009_reconcile_fictional_structure_template"),
+    ("workforce", "0010_position_structure_commands"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -151,6 +152,7 @@ class _TriggerContract:
     deferrable: bool = False
     initially_deferred: bool = False
     columns: tuple[str, ...] = ()
+    definition: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -742,6 +744,30 @@ _TRIGGER_CONTRACTS = (
         "workforce_editionstructurecommandreceipt",
         "maru_validate_edition_structure_receipt()",
         _ROW_BEFORE_INSERT,
+        definition=(
+            "CREATE TRIGGER ac_workforce_page9_receipt_guard BEFORE INSERT ON "
+            "workforce_editionstructurecommandreceipt FOR EACH ROW WHEN "
+            "(new.action::text <> ALL (ARRAY['position_created'::character "
+            "varying, 'position_updated'::character varying, "
+            "'position_closed'::character varying, "
+            "'opportunity_updated'::character varying]::text[])) EXECUTE "
+            "FUNCTION maru_validate_edition_structure_receipt()"
+        ),
+    ),
+    _TriggerContract(
+        "ac_workforce_position_receipt_guard",
+        "workforce_editionstructurecommandreceipt",
+        "maru_validate_position_structure_receipt()",
+        _ROW_BEFORE_INSERT,
+        definition=(
+            "CREATE TRIGGER ac_workforce_position_receipt_guard BEFORE INSERT ON "
+            "workforce_editionstructurecommandreceipt FOR EACH ROW WHEN "
+            "(new.action::text = ANY (ARRAY['position_created'::character "
+            "varying, 'position_updated'::character varying, "
+            "'position_closed'::character varying, "
+            "'opportunity_updated'::character varying]::text[])) EXECUTE "
+            "FUNCTION maru_validate_position_structure_receipt()"
+        ),
     ),
     _TriggerContract(
         "ac_workforce_page9_receipt_immutable",
@@ -794,6 +820,34 @@ _TRIGGER_CONTRACTS = (
         "workforce_department",
         "maru_assert_department_structure_evidence()",
         _ROW_AFTER_INSERT_UPDATE_DELETE,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "ac_workforce_position_structure_guard",
+        "workforce_position",
+        "maru_validate_position_structure_write()",
+        _ROW_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "workforce_position_structure_evidence",
+        "workforce_position",
+        "maru_assert_position_structure_evidence()",
+        _ROW_AFTER_INSERT_UPDATE,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "ac_workforce_opportunity_structure_guard",
+        "workforce_volunteeropportunity",
+        "maru_validate_opportunity_structure_write()",
+        _ROW_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "workforce_opportunity_structure_evidence",
+        "workforce_volunteeropportunity",
+        "maru_assert_opportunity_structure_evidence()",
+        _ROW_AFTER_INSERT_UPDATE,
         deferrable=True,
         initially_deferred=True,
     ),
@@ -878,6 +932,11 @@ _CORE_FUNCTIONS = (
     "maru_prevent_department_structure_truncate()",
     "maru_guard_position_retired_department()",
     "maru_guard_assignment_retired_department()",
+    "maru_validate_position_structure_receipt()",
+    "maru_validate_position_structure_write()",
+    "maru_assert_position_structure_evidence()",
+    "maru_validate_opportunity_structure_write()",
+    "maru_assert_opportunity_structure_evidence()",
 )
 
 _FUNCTION_DEFINITION_SHA256 = {
@@ -1072,6 +1131,21 @@ _FUNCTION_DEFINITION_SHA256 = {
     "maru_guard_assignment_retired_department()": (
         "e6265228b38fd359960c4e5e3506265b221f6bfb29628873f8d9df0e206611da"
     ),
+    "maru_assert_opportunity_structure_evidence()": (
+        "ccdadc120d19afccdb078986412dd48151b3458f7b178dbcd1d172a5d010689c"
+    ),
+    "maru_assert_position_structure_evidence()": (
+        "5669006e6ede713832cf294c8b1d192b990c064eec90e52d0d5b622770a74110"
+    ),
+    "maru_validate_opportunity_structure_write()": (
+        "ab2f366a1aed806f637d82aa32ddeee0d8823fcdb84b5bf112d88ecec43ff830"
+    ),
+    "maru_validate_position_structure_receipt()": (
+        "5490ada7d1367482d743391b9a0a0cca0e6ed0a96ab8c5dab3e0a477a0d1304d"
+    ),
+    "maru_validate_position_structure_write()": (
+        "89807ac3c1e9eb9cc35568a2b2e4b4ced17e661c25e2ef037dee2842e1644d48"
+    ),
     "maru_guard_position_retired_department()": (
         "6518f7456d68cd68fba7bf3eb3b2056de1c9a2308c49160bfcca7e052834c19d"
     ),
@@ -1183,6 +1257,11 @@ _DOWNGRADE_FENCE_TRIGGER_NAMES = frozenset(
         "ac_workforce_page9_assignment_retired_guard",
         "workforce_page9_control_evidence",
         "workforce_page9_department_evidence",
+        "ac_workforce_position_receipt_guard",
+        "ac_workforce_position_structure_guard",
+        "workforce_position_structure_evidence",
+        "ac_workforce_opportunity_structure_guard",
+        "workforce_opportunity_structure_evidence",
     }
 )
 _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
@@ -1250,6 +1329,11 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_prevent_department_structure_truncate()",
         "maru_guard_position_retired_department()",
         "maru_guard_assignment_retired_department()",
+        "maru_validate_position_structure_receipt()",
+        "maru_validate_position_structure_write()",
+        "maru_assert_position_structure_evidence()",
+        "maru_validate_opportunity_structure_write()",
+        "maru_assert_opportunity_structure_evidence()",
     }
 )
 
@@ -1384,7 +1468,8 @@ def _inspect_cutover_catalog() -> _CatalogState:
                            ON attribute.attrelid = trigger.tgrelid
                           AND attribute.attnum = selected.attnum
                         ORDER BY selected.position
-                   )
+                   ),
+                   pg_get_triggerdef(trigger.oid, TRUE)
               FROM pg_trigger AS trigger
               JOIN pg_class AS relation ON relation.oid = trigger.tgrelid
               JOIN pg_namespace AS relation_namespace
@@ -1408,6 +1493,7 @@ def _inspect_cutover_catalog() -> _CatalogState:
         installed_triggers = {
             row[0]: (*tuple(row[1:9]), tuple(row[9] or ())) for row in trigger_rows
         }
+        installed_trigger_definitions = {row[0]: str(row[10]) for row in trigger_rows}
         cursor.execute(
             """
             SELECT required.identity,
@@ -1520,9 +1606,12 @@ def _inspect_cutover_catalog() -> _CatalogState:
             "O",
             contract.deferrable,
             contract.initially_deferred,
-            True,
+            contract.definition is None,
             0,
             contract.columns,
+        ) and (
+            contract.definition is None
+            or installed_trigger_definitions.get(contract.name) == contract.definition
         )
 
     functions_installed = (

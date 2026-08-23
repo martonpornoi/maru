@@ -122,7 +122,7 @@ confirmation/payment reconciliation, entitlement consequence, and check-in
 produce attendee and purpose-limited staff renditions. Form answers remain in
 the exact submission snapshot and are not copied into the general timeline.
 
-Pages 5 and 7 add the first controlled-shell record histories. They project a
+Convention series record and Event edition record add the first controlled-shell record histories. They project a
 bounded allowlist of convention-series and edition domain facts, safe actor
 display labels, changed-field labels, and edition/organization-local time. They
 do not copy entered values, email, raw actor identifiers, source channel, or

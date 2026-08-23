@@ -34,13 +34,13 @@ _DESTINATION_CODE_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,159}$")
 _SECTION_ORDER = (
     "Pinned",
     "Convention work",
-    "Platform",
-    "Personal",
-    "Organizations",
     "Convention tools",
+    "Organizations",
+    "Platform",
     "Account",
     "Actions",
     "Specialist records",
+    "Personal",
     "Work",
 )
 
@@ -323,11 +323,39 @@ def _management_items(request: HttpRequest) -> list[NavigationItem]:
         ),
         _workspace_item(
             request,
+            code="work.workforce",
+            label="Workforce",
+            view="workforce",
+            description=(
+                "Review Departments, Positions, assignments, and the path to "
+                "availability and shifts."
+            ),
+            keywords=(
+                "staff",
+                "volunteers",
+                "teams",
+                "departments",
+                "positions",
+                "assignments",
+                "availability",
+                "shifts",
+                "rota",
+            ),
+        ),
+        _workspace_item(
+            request,
             code="work.attendee-service",
-            label="Attendee service",
+            label="Registration desk",
             view="commerce",
-            description="Help attendees with registration, admission, and payments.",
-            keywords=("registration", "tickets", "orders", "support"),
+            description="Find and help attendees from registration through arrival.",
+            keywords=(
+                "registration",
+                "attendees",
+                "tickets",
+                "payments",
+                "check in",
+                "support",
+            ),
         ),
         _workspace_item(
             request,
@@ -401,7 +429,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
         items.append(
             NavigationItem(
                 code=f"edition.{edition.id}.registration",
-                label="Registration setup",
+                label="Registration",
                 url=reverse(
                     "registration-setup",
                     args=(
@@ -481,7 +509,7 @@ def _selected_edition_items(request: HttpRequest) -> list[NavigationItem]:
             items.append(
                 NavigationItem(
                     code=f"edition.{edition.id}.registration-commerce",
-                    label="Registration commerce",
+                    label="Capacity & waitlist",
                     url=reverse(
                         "registration-commerce-workspace",
                         args=(
@@ -912,7 +940,7 @@ def _page_context_items(
         items.append(
             NavigationItem(
                 code=f"edition.{edition.id}.registration",
-                label="Registration setup",
+                label="Registration",
                 url=reverse(
                     "registration-setup",
                     args=(organization.slug, series.slug, edition.slug),
@@ -1219,7 +1247,16 @@ def project_shell_navigation(
             *_specialist_items(request, available_apps),
         )
     )
-    eligible_by_code = {item.code: item for item in items}
+    personal_codes = {item.code for item in personal_items}
+    surface_items = [
+        item
+        for item in items
+        if (
+            (personal_surface and item.code in personal_codes)
+            or (not personal_surface and item.code not in personal_codes)
+        )
+    ]
+    eligible_by_code = {item.code: item for item in surface_items}
     pin_codes = navigation_pin_codes(account=actor)
     pinned_items = [
         replace(eligible_by_code[code], section="Pinned", pinned=True)
@@ -1229,11 +1266,8 @@ def project_shell_navigation(
     pinned_code_set = {item.code for item in pinned_items}
 
     if personal_surface:
-        personal_codes = {item.code for item in personal_items}
         visible_items = [
-            item
-            for item in items
-            if item.code in personal_codes and item.code not in pinned_code_set
+            item for item in surface_items if item.code not in pinned_code_set
         ]
         if admin_shell_access(request)["workspace_available"] or actor.is_staff:
             visible_items.append(
@@ -1244,10 +1278,13 @@ def project_shell_navigation(
                     section="Work",
                     description="Open organizer and platform administration tools.",
                     keywords=("staff", "organizer", "management"),
+                    pinnable=False,
                 )
             )
     else:
-        visible_items = [item for item in items if item.code not in pinned_code_set]
+        visible_items = [
+            item for item in surface_items if item.code not in pinned_code_set
+        ]
 
     grouped: dict[str, list[NavigationItem]] = {}
     if pinned_items:
@@ -1271,9 +1308,9 @@ def project_shell_navigation(
                 "Actions",
                 "Convention tools",
                 "Organizations",
+                "Platform",
                 "Specialist records",
-            }
-            or (label == "Personal" and not personal_surface),
+            },
             "search_only": label == "Actions",
             "current": any(item.current for item in grouped[label]),
         }

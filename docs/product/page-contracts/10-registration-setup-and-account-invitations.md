@@ -1,7 +1,7 @@
-# Page 10 contract: Registration setup and account invitations
+# Registration setup and account onboarding contract
 
-- Status: Accepted target contract; implementation and writer cutover are not
-  claimed by this document
+- Status: Accepted target contract; canonical read/orientation slice mounted,
+  complete implementation and writer cutover are not claimed by this document
 - Canonical edition route:
   `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/registration/`
 - Related platform route: `/admin/platform/accounts/`
@@ -16,7 +16,7 @@
 
 ## Purpose, outcome, and current truth
 
-Page 10 makes the first end-to-end convention journey understandable without
+Registration setup and account onboarding makes the first end-to-end convention journey understandable without
 creating a second administration product. It gives an authorized operator:
 
 1. an optional platform-level way to invite a person account;
@@ -38,7 +38,7 @@ administrator.
 This contract does not assert that the current registration APIs, Django
 model-admin pages, React registration destination, fixture writers, or identity
 bootstrap already meet it. Those are inputs to the staged migration in ADR
-0047. Page 10 becomes the canonical writer only after its readiness gate is
+0047. Registration setup and account onboarding becomes the canonical writer only after its readiness gate is
 active. Legacy compatibility writers with an at-least-one-custom-question gate
 or truthiness-based capacity inheritance do not meet this contract and must be
 retired or reconciled before that gate can pass.
@@ -64,14 +64,30 @@ strict database-time/source evidence, and populated-v7 recovery tests, but
 still awaits an independent verdict. Canonical lifecycle adapters, successor and
 retirement commands, profile-value commands, compatibility-writer
 reconciliation, stopped-writer guards, and production cutover remain separate
-work; this checkpoint does not mark Page 10 implemented or production ready.
+work; this checkpoint does not mark Registration setup and account onboarding implemented or production ready.
 
 Independently of that registration cutover, the first management-experience
 slice implements the **User accounts** inventory, contextual invitation flow,
-status-aware invitation next steps, and the handoff toward Page 8. Focused HTML
+status-aware invitation next steps, and the handoff toward Representation & access. Focused HTML
 integration tests cover that presentation. It changes no invitation command,
 identity-retention, authorization, or convention-relationship behavior and is
-not evidence that the broader Page 10 writer is ready.
+not evidence that the broader Registration setup and account onboarding writer is ready.
+
+The focused management recovery also separates the high-frequency
+**Registration desk** from this canonical **Registration** setup record. The
+desk places a searchable, filterable, paginated attendee queue before
+configuration and links directly to Registration setup and account onboarding for setup work. Its purpose-limited
+attendee detail is a labelled modal drawer with initial close focus, contained
+keyboard navigation, Escape closure, background isolation/scroll lock, and
+focus return to the exact attendee opener. The lower-frequency setup area has
+one owner-safe handoff to **Workforce** instead of several specialist-record
+links with different staff-only permission boundaries. Registration setup and account onboarding's active
+version is readable in the fictional local fixture through one honest
+`legacy_existing` setup control per configured edition with
+`legacy_unknown` provenance. The fixture invents no actor, source digest,
+command receipt, or completed writer cutover. Focused browser and integration
+evidence for that handoff does not satisfy this contract's full state,
+accessibility, concurrency, or recovery gates.
 
 ## Placement and navigation
 
@@ -83,6 +99,11 @@ destinations:
 - **Registration** once beneath the selected exact edition, visible only after
   the complete route scope is safely resolved and the viewer may access the
   registration setup workspace.
+
+Convention work separately exposes **Registration desk** for attendee service
+and **Capacity & waitlist** for capacity policy. Those names are not aliases for
+the Registration setup and account onboarding writer: the desk serves current registrations, while
+**Registration** owns edition configuration and provenance.
 
 **Invite account** is a contextual action owned by **User accounts**. It remains
 discoverable through navigation search's search-only **Actions** group and is
@@ -96,7 +117,7 @@ records** gateway.
 Each child page has exactly one current navigation action. It uses the same
 Maru logo, side-menu position, record header, modules, forms, buttons, status
 language, spacing, focus treatment, and responsive stacking as earlier restored
-pages. Page 10 adds no Quick Start, workspace switcher, second global menu, or
+pages. Registration setup and account onboarding adds no Quick Start, workspace switcher, second global menu, or
 embedded competing shell.
 
 The registration header shows the organization, series, edition, edition
@@ -108,7 +129,7 @@ status-aware next step: wait for recipient acceptance, reissue an expired
 invitation, return to User accounts, or—only after acceptance—choose an
 organization and continue to **Representation & access**. That continuity does
 not create a membership, Board appointment, or authority and does not weaken
-Page 8's eligibility rules. A **Manage access** control is shown only when the
+Representation & access's eligibility rules. A **Manage access** control is shown only when the
 underlying exact-scope authority workflow exists and the viewer may use it; no
 inert page-local ACL editor is rendered.
 
@@ -231,7 +252,7 @@ The existing configuration workspace/draft/activation and self/staff profile
 extension endpoints remain compatibility aliases only until they reject
 unknown input, use the new application services, return the versioned
 projections, and pass the same authorization and evidence tests. Alias removal
-requires a published deprecation window and consumer inventory; Page 10 does
+requires a published deprecation window and consumer inventory; Registration setup and account onboarding does
 not silently break a public frontend.
 
 API mutation requests require a UUID `Idempotency-Key` header and reject a
@@ -259,7 +280,7 @@ record.
 | Exact-edition registration profile staff | No platform inventory or invitation right | No builder access merely from profile access | Read only if separately granted configuration authority | Read through `registration.view_profile_extensions`; write staff-permitted fields through `registration.update_profile_extensions` and a reason |
 | Active platform administrator | Global minimized account inventory and invitation commands | Explicit attributed oversight at the exact resolved edition | Explicit attributed definition oversight | No profile-value access from platform status alone; a current person relationship and exact tenant capability are required |
 
-The two profile-extension staff capabilities are additive Page 10 capabilities;
+The two profile-extension staff capabilities are additive Registration setup and account onboarding capabilities;
 they must enter the versioned capability catalog with an exact-edition ceiling
 and no inferred grant from `registration.register_on_behalf`. Existing grants
 are not silently widened. Attendee self-service uses authenticated ownership
@@ -313,8 +334,8 @@ The overview presents one of these truthful setup states:
 - **Closed by time:** keep configuration readable; explain that attendee entry
   is closed without changing the edition lifecycle.
 - **Read-only by lifecycle:** Ready/Live/Closing changes require the accepted
-  high-impact policy; Archived and Cancelled are immutable for ordinary Page
-  10 commands.
+  high-impact policy; Archived and Cancelled are immutable for ordinary
+  Registration setup commands.
 - **Unavailable:** safe dependency failure with no partial configuration,
   source, person, or access projection.
 - **Too large:** explicit limit state and no incomplete editable builder.
@@ -322,8 +343,9 @@ The overview presents one of these truthful setup states:
 The overview separates configuration status from public registration state.
 An active form is not necessarily open now, a draft is not publicly available,
 and an edition being Ready or Live does not by itself activate registration.
-Payment-provider readiness may be summarized with safe status codes, but Page
-10 neither displays credentials nor treats browser return as payment evidence.
+Payment-provider readiness may be summarized with safe status codes, but
+Registration setup neither displays credentials nor treats browser return as
+payment evidence.
 Provider-account creation and secret mapping belong to the integration/finance
 workflow governed by ADR 0014.
 
@@ -558,7 +580,7 @@ on-behalf authority does not imply access.
 
 ## Limits, ordering, and fail-closed reads
 
-Page 10 owns code-defined ceilings so one tenant cannot create an unbounded
+Registration setup and account onboarding owns code-defined ceilings so one tenant cannot create an unbounded
 projection or hide omitted records behind an apparently complete editor:
 
 | Projection dimension | Hard ceiling |
@@ -617,7 +639,7 @@ organizer edits never alter the code-owned starter or another tenant's copy.
 Ordinary configuration mutations are allowed for Draft/Preparing edition work
 under a non-Suspended, non-Closed organization. Ready, Live, and Closing
 edition changes need an accepted high-impact change-control contract before
-Page 10 enables them. Archived and Cancelled editions are read-only; a future
+Registration setup and account onboarding enables them. Archived and Cancelled editions are read-only; a future
 reasoned correction workflow may append evidence but cannot rewrite historical
 submissions. Organization suspension/closure and edition movement are checked
 again inside every command transaction.
@@ -664,13 +686,13 @@ state is prevented by the command receipt and challenge state.
 | configuration/template definitions | C1 or C2 | exact edition/template authority; published public wording is a separate projection decision |
 | profile-extension definition | Declared C1 or C2 | exact edition authority; purpose, reader audience, and separate writer policy mandatory |
 | profile-extension value and staff reason | Inherits C1/C2 field, reason C2 | owner, exact registration/Department audience, or consented minimized confirmed/public directory projection; never catalog-wide |
-| legal name/address/date of birth/guardian/emergency/safety data | C3 purpose-specific domain | excluded from generic Page 10 question and extension definitions |
+| legal name/address/date of birth/guardian/emergency/safety data | C3 purpose-specific domain | excluded from generic Registration setup and account onboarding question and extension definitions |
 | audit, receipt, event, delivery control | C1–C3 minimized evidence | append-only/control access; no source values or bearer secret |
 
 Before release, the privacy inventory must assign purpose, controller,
 retention trigger, maximum period, deletion/anonymization action, data-subject
 visibility, export behavior, and lawful basis to the invitation and new control
-records. Page 10 does not invent durations in the UI. Accepted identity facts
+records. Registration setup and account onboarding does not invent durations in the UI. Accepted identity facts
 follow the account lifecycle; expired/revoked invitation delivery evidence does
 not become indefinite marketing/contact history. Legal, payment, registration,
 and audit retention remain separate and cannot be shortened through a setup
@@ -730,7 +752,7 @@ inventory, browser replacement, and deprecation evidence pass.
 
 ## Verification and educational smoke contract
 
-Page 10 cannot be marked implemented until verification includes:
+Registration setup and account onboarding cannot be marked implemented until verification includes:
 
 - unit tests for every normalization, bound, closed variant, lifecycle,
   immutable-state, condition graph, authoritative-key, and privacy rule;
@@ -782,7 +804,7 @@ or imitates identifiable people from a live volunteer roster.
 Release readiness checks migrations, aggregate/control generation, command
 writer generation, worker availability, invitation expiry/cleanup scheduler,
 email adapter configuration, outbox lag, authorization catalog version, and
-OpenAPI parity. A missing dependency fails closed before Page 10 is mounted as
+OpenAPI parity. A missing dependency fails closed before Registration setup and account onboarding is mounted as
 canonical.
 
 The invitation-retention production gate requires one complete approved JSON
@@ -791,7 +813,7 @@ policy, its exact migration-owner-activated database control, a successful
 than 24 hours old, and immediate C4 envelope destruction for every terminal
 invitation. No duration is inferred by code. Holds remain separate audited
 commands; the worker still records and traverses held rows fairly while
-readiness excludes them from actionable backlog. Page 10 setup edits cannot
+readiness excludes them from actionable backlog. Registration setup edits cannot
 release a hold or smuggle in deletion. Every successful scheduler heartbeat
 uses a database-materialized timestamp and an INSERT-time cursor-coherence
 guard; no public service accepts an evidence-time override.
@@ -814,7 +836,7 @@ make a failed action appear successful.
 
 ## Explicit non-goals
 
-Page 10 does not:
+Registration setup and account onboarding does not:
 
 - create or infer convention relationships for a platform administrator or an
   invited person;

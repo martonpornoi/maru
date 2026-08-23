@@ -1,7 +1,10 @@
 {% extends "admin/base_site.html" %}
 
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+
 {% block content %}
-  <main id="content" class="maru-management-page">
+  <div id="content-main" class="maru-management-page">
     <header class="maru-page-header">
       <div>
         <p class="maru-eyebrow">{{ organization.name }} / {{ convention_series.name }} / {{ edition.name }}</p>
@@ -12,6 +15,7 @@
         <p><a class="button" href="{% url 'venue-property-create-page' organization.slug convention_series.slug edition.slug %}">+ Register property</a></p>
       {% endif %}
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     <section class="module" aria-labelledby="venue-space-title">
       <h2 id="venue-space-title">Edition spaces</h2>
@@ -110,5 +114,5 @@
         <p>No reusable hotel or venue properties are registered.</p>
       {% endif %}
     </section>
-  </main>
+  </div>
 {% endblock %}

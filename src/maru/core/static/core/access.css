@@ -4,11 +4,15 @@
   border: 1px solid color-mix(in srgb, var(--primary, #0b3b70) 22%, #d8dee8);
   border-radius: 0.75rem;
   background: color-mix(in srgb, var(--body-bg, #fff) 96%, #eaf2fb);
-  padding: 1rem 1.15rem;
   margin: 0 0 1.25rem;
 }
 
-.maru-access-summary__heading,
+.maru-access-workspace__panel,
+.maru-access-preview-banner {
+  padding: 1rem 1.15rem;
+}
+
+.maru-access-summary > summary,
 .maru-access-preview-banner,
 .maru-access-workspace__heading {
   display: flex;
@@ -17,10 +21,60 @@
   gap: 1rem;
 }
 
-.maru-access-summary h2,
 .maru-access-workspace h1,
 .maru-access-workspace h2 {
   margin-top: 0;
+}
+
+.maru-access-summary > summary {
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.7rem 0.85rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.maru-access-summary > summary::-webkit-details-marker {
+  display: none;
+}
+
+.maru-access-summary > summary::after {
+  content: "▾";
+  flex: none;
+  color: var(--primary, #0b3b70);
+  font-size: 0.85rem;
+  transition: transform 120ms ease;
+}
+
+.maru-access-summary[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+.maru-access-summary > summary:hover,
+.maru-access-summary > summary:focus-visible {
+  background: color-mix(in srgb, var(--primary, #0b3b70) 7%, transparent);
+}
+
+.maru-access-summary > summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary, #0b3b70) 55%, #fff);
+  outline-offset: 2px;
+}
+
+.maru-access-summary__label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.55rem;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.maru-access-summary__body {
+  padding: 0 0.85rem 0.85rem;
+  border-top: 1px solid #d8dee8;
+}
+
+.maru-access-summary__body > p:first-child {
+  margin-top: 0.85rem;
 }
 
 .maru-access-summary__kicker {
@@ -35,6 +89,13 @@
 .maru-access-summary__scope {
   margin: 0;
   color: var(--body-quiet-color, #4d5968);
+}
+
+.maru-access-summary__policy {
+  flex: none;
+  margin-left: auto;
+  color: var(--body-quiet-color, #4d5968);
+  font-size: 0.75rem;
 }
 
 .maru-access-summary__actions {
@@ -135,11 +196,17 @@
 
 @media (max-width: 48rem) {
   .maru-access-summary__heading,
+  .maru-access-summary > summary,
   .maru-access-preview-banner,
   .maru-access-workspace__heading,
   .maru-access-preview-capabilities li,
   .maru-access-assignment-list li {
     display: block;
+  }
+
+  .maru-access-summary__policy {
+    display: block;
+    margin-top: 0.2rem;
   }
 
   .maru-access-summary__actions,

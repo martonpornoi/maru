@@ -108,7 +108,7 @@ GRANT SELECT ON TABLE
     public.authorization_provenanceactivationlatch
     TO maru_runtime;
 
--- Page 9 structure receipts are append-only runtime evidence. Structure
+-- Organization structure receipts are append-only runtime evidence. Structure
 -- controls are optimistic-concurrency aggregates that may be inserted and
 -- advanced, but never deleted, by runtime. REFERENCES is unnecessary for both
 -- relations and remains denied at table and column level by the catalog proof.
@@ -135,7 +135,7 @@ GRANT SELECT, INSERT, UPDATE ON TABLE
     public.workforce_editionstructurecontrol
     TO maru_runtime;
 
--- Page 10 profile-value revisions and command receipts are append-only runtime
+-- Registration setup and account onboarding profile-value revisions and command receipts are append-only runtime
 -- evidence. Their per-registration/stable-key control may be created and
 -- advanced but never deleted or referenced by the application login. Keep
 -- these exceptions after blanket/default grants; migration 0036's triggers
@@ -164,7 +164,7 @@ GRANT SELECT, INSERT, UPDATE ON TABLE
     public.registration_registrationprofileextensionvaluecontrol
     TO maru_runtime;
 
--- Page 10 migrations identity 0011 through 0018 are additive: these ACLs narrow
+-- Registration setup and account onboarding migrations identity 0011 through 0018 are additive: these ACLs narrow
 -- their current runtime data plane but do not activate the future
 -- stopped-writer generation. Transitions, command receipts, reconciliation
 -- receipts, retention receipts, and successful scheduler heartbeats are
@@ -607,11 +607,11 @@ REVOKE TRIGGER, TRUNCATE, MAINTAIN
 -- options, any runtime DML on migration metadata or the two cutover-state
 -- relations, REFERENCES on the SELECT-only control trio, DELETE/REFERENCES on
 -- the structure control, or UPDATE/DELETE/REFERENCES on structure receipts.
--- Page 10 additionally requires UPDATE-only account-inventory control access,
+-- Registration setup and account onboarding additionally requires UPDATE-only account-inventory control access,
 -- append-only invitation, delivery-attempt, late-outcome, and reconciliation
 -- evidence plus retention receipts, SELECT-only retention-policy control,
 -- one-way hold updates, and no DELETE/REFERENCES on its mutable challenge,
--- invitation, or delivery aggregates. These ACLs are not evidence that Page 10's separate
+-- invitation, or delivery aggregates. These ACLs are not evidence that Registration setup and account onboarding's separate
 -- stopped-writer cutover has occurred.
 
 COMMIT;

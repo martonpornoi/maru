@@ -1,6 +1,6 @@
-# Page 3 organization record
+# Organization record
 
-Status: Page 3 backend and responsive-smoke verified for platform and scoped
+Status: Organization record backend and responsive-smoke verified for platform and scoped
 Board access; accessibility/state-matrix/owner rehearsal pending
 Last updated: 2026-08-01
 
@@ -22,10 +22,10 @@ The password is local test data. Never reuse it in a deployment or real
 account. These credentials and the `MaruCon` slug record the historical
 controlled-rebuild exercise, not the selected database's guaranteed current
 state. Inspect before use and do not modify or delete owner-created records.
-The current responsive smoke loaded Page 3 without submitting either mutation
+The current responsive smoke loaded Organization record without submitting either mutation
 form. Use the tutorial's separate database for mutation rehearsal.
 
-## Start Page 3
+## Start Organization record
 
 From the repository root in PowerShell:
 
@@ -42,7 +42,7 @@ organization name. MaruCon's direct route is
 ## Expected behavior
 
 - one sidebar row shows **Organizations** with adjacent **+ Add**;
-- the record prepopulates the same complete profile used by Page 2;
+- the record prepopulates the same complete profile used by Create organization;
 - only organization name is required;
 - **Save changes** updates changed fields and returns to the stable slug URL;
 - posted slug, lifecycle, scope, actor, and other undeclared values are rejected
@@ -72,12 +72,12 @@ A database or audit failure returns a generic `503`; transaction rollback keeps
 the prior organization. An authorized unknown slug returns `404`; authorization
 runs before lookup for other accounts.
 
-No migration is introduced by Page 3. If the page cannot load, check PostgreSQL
+No migration is introduced by Organization record. If the page cannot load, check PostgreSQL
 and `/health/ready`, then retry. Do not modify the preserved databases while
 diagnosing the controlled rebuild.
 
 ## Next page
 
-Page 3 is accepted. Its organization-scoped Convention series section and Page
-4 creation action are documented in
+Organization record is accepted. Its organization-scoped Convention series
+section and **Create convention series** action are documented in
 [`page-04-create-convention-series.md`](page-04-create-convention-series.md).

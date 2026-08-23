@@ -53,8 +53,11 @@ from maru.registration.models import (
     RegistrationConfiguration,
     RegistrationProfileExtensionField,
     RegistrationProfileExtensionValueRevision,
+    RegistrationProvenanceStatus,
     RegistrationQuestion,
     RegistrationSection,
+    RegistrationSetupControl,
+    RegistrationSetupOrigin,
     RegistrationSubmission,
     RegistrationTemplate,
     RegistrationTemplateProduct,
@@ -2078,6 +2081,75 @@ class _DemoSeeder:
         self._own("registration_configurations", configuration.id, created=created)
         return configuration
 
+    def _registration_setup_control(
+        self,
+        *,
+        convention: ConventionSpec,
+        edition: EventEdition,
+        organization: Organization,
+    ) -> RegistrationSetupControl:
+        """Expose directly seeded registration setup through the canonical reader.
+
+        The demonstration configuration still uses the documented compatibility
+        writer while Page 10's writer cutover remains incomplete.  Mirror the
+        migration backfill boundary honestly: the aggregate is readable, but it
+        retains legacy origin and unknown provenance rather than inventing a
+        source digest, actor, or command receipt.
+
+        Parameters
+        ----------
+        convention : ConventionSpec
+            The fictional convention namespace that owns the stable identifier.
+        edition : EventEdition
+            The exact edition whose seeded configuration is exposed.
+        organization : Organization
+            The organizer that owns the exact edition.
+
+        Returns
+        -------
+        RegistrationSetupControl
+            The existing or newly created honest legacy setup control.
+
+        Raises
+        ------
+        DemoDataConflictError
+            If a reserved identifier or edition scope contains incompatible
+            registration setup provenance.
+        """
+        control_id = _stable_id(
+            "registration-setup-control",
+            f"{convention.key}.{edition.slug}",
+        )
+        control = RegistrationSetupControl.objects.filter(edition=edition).first()
+        created = control is None
+        if control is None:
+            collision = RegistrationSetupControl.objects.filter(id=control_id).first()
+            if collision is not None:
+                raise DemoDataConflictError(
+                    f"Stable registration setup control {control_id} has "
+                    "unexpected scope."
+                )
+            control = RegistrationSetupControl.objects.create(
+                id=control_id,
+                organization=organization,
+                edition=edition,
+                origin=RegistrationSetupOrigin.LEGACY_EXISTING,
+                provenance_status=RegistrationProvenanceStatus.LEGACY_UNKNOWN,
+                aggregate_version=1,
+            )
+        elif (
+            control.organization_id != organization.id
+            or control.origin != RegistrationSetupOrigin.LEGACY_EXISTING
+            or control.provenance_status != RegistrationProvenanceStatus.LEGACY_UNKNOWN
+            or control.aggregate_version < 1
+        ):
+            raise DemoDataConflictError(
+                f"Registration setup control for {edition.slug!r} has "
+                "unexpected provenance."
+            )
+        self._own("registration_setup_controls", control.id, created=created)
+        return control
+
     def _current_demo_configuration(
         self,
         *,
@@ -3349,6 +3421,12 @@ class _DemoSeeder:
                 actor=accounts["convention-chair"],
                 base_configuration=configurations["current"],
             )
+            for edition_key in configurations:
+                self._registration_setup_control(
+                    convention=convention,
+                    edition=editions[edition_key],
+                    organization=organization,
+                )
             registrations: dict[str, Registration] = {}
             registration_specs = (
                 (

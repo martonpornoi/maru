@@ -153,12 +153,12 @@ All counts must be zero. Successful events `0006` application also proves that
 every migrated currency was in the pinned ISO allowlist. In an isolated smoke
 tenant, verify:
 
-1. Page 5 opens and a changed series save increments profile version once.
+1. Convention series record opens and a changed series save increments profile version once.
 2. A no-op series save increments nothing.
-3. Page 6 creates one Draft edition with aggregate version 1.
+3. Create event edition creates one Draft edition with aggregate version 1.
 4. Repeating the same browser retry or API `Idempotency-Key` reuses it; changing
    the payload conflicts.
-5. Page 7 changes one profile field and increments aggregate version once.
+5. Event edition record changes one profile field and increments aggregate version once.
 6. A lifecycle transition increments aggregate and lifecycle versions in the
    expected independent sequence.
 7. Audit, domain event, and outbox rows are correlated and contain no entered

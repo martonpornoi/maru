@@ -281,7 +281,9 @@ def test_organizer_html_copy_configure_lifecycle_and_shell_are_executable() -> (
     content = workspace.content.decode()
     assert "Shared form studio" in content
     assert "Review and copy" in content
-    assert "My applications" in content
+    assert "My applications" not in content
+    assert "My Maru" in content
+    assert 'data-navigation-group="personal"' not in content
     assert "Access" in content
     now = timezone.now()
     retry_key = uuid4()

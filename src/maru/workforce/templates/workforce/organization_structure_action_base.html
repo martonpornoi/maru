@@ -46,9 +46,15 @@
     </p>
   </header>
 
-  <section class="baseline-access-summary" aria-labelledby="structure-action-access-title">
-    <div>
-      <p class="baseline-kicker" id="structure-action-access-title">Your effective access</p>
+  <details class="maru-access-summary">
+    <summary id="structure-action-access-title">
+      <span class="maru-access-summary__label">
+        <strong>Access</strong>
+        <span class="maru-access-summary__scope">{{ structure_access_label }}</span>
+      </span>
+      <span class="maru-access-summary__policy">Department changes</span>
+    </summary>
+    <div class="maru-access-summary__body">
       <p class="baseline-access-line">
         <strong>{{ structure_access_label }}</strong>
         <span>allows you to view this exact edition's complete hierarchy.</span>
@@ -57,9 +63,6 @@
         <strong>Structure manager</strong>
         <span>allows reasoned Department changes while the lifecycle permits them.</span>
       </p>
-    </div>
-    <details>
-      <summary>What does this access mean?</summary>
       <p>
         Management is a separate current policy decision. Department nesting
         changes reporting presentation and never widens software authority.
@@ -70,11 +73,16 @@
           making it a convention member, participant, or workforce assignee.
         </p>
       {% endif %}
-    </details>
-  </section>
+    </div>
+  </details>
 
   {% if action_error %}
-    <div class="baseline-state baseline-state--error workforce-structure-action-error" role="alert">
+    <div
+      class="baseline-state baseline-state--error workforce-structure-action-error"
+      role="alert"
+      tabindex="-1"
+      data-maru-focus-on-load
+    >
       <h2>The structure was not changed</h2>
       <p>{{ action_error }}</p>
       {% if reload_required %}
