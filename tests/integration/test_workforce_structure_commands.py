@@ -44,7 +44,7 @@ from maru.workforce.structure_commands import (
     retire_department,
     update_department,
 )
-from maru.workforce.structure_templates import AWOOSTRIA_REFERENCE_V1
+from maru.workforce.structure_templates import MARUCON_REFERENCE_V1
 from tests.factories import (
     AccountFactory,
     CapabilityGrantFactory,
@@ -105,7 +105,7 @@ def test_template_application_is_exact_atomic_minimized_and_nonparticipating() -
         organization_id=edition.organization_id,
         series_id=edition.series_id,
         edition_id=edition.id,
-        template_identifier=AWOOSTRIA_REFERENCE_V1.identifier,
+        template_identifier=MARUCON_REFERENCE_V1.identifier,
         expected_version=0,
         confirmation_name=edition.name,
         reason="Use the reviewed synthetic taxonomy.",
@@ -121,16 +121,16 @@ def test_template_application_is_exact_atomic_minimized_and_nonparticipating() -
     assert result.resulting_version == 1
     assert len(result.department_ids) == 22
     assert [item.code for item in departments] == [
-        item.code for item in AWOOSTRIA_REFERENCE_V1.departments
+        item.code for item in MARUCON_REFERENCE_V1.departments
     ]
-    assert departments[0].name == "Helper Board"
+    assert departments[0].name == "Convention Coordination"
     assert departments[0].parent_id is None
     assert {item.parent_id for item in departments[1:]} == {departments[0].id}
     assert EditionStructureControl.objects.get(edition=edition).origin == (
         EditionStructureControl.Origin.BUILTIN_TEMPLATE
     )
     receipt = EditionStructureCommandReceipt.objects.get(pk=result.receipt_id)
-    assert receipt.template_digest == AWOOSTRIA_REFERENCE_V1.sha256_digest
+    assert receipt.template_digest == MARUCON_REFERENCE_V1.sha256_digest
     assert receipt.reason == "Use the reviewed synthetic taxonomy."
     audit = AuditEvent.objects.get(operation="workforce.structure.change")
     event = DomainEvent.objects.get(event_name="workforce.structure.changed.v1")
@@ -144,7 +144,7 @@ def test_template_application_is_exact_atomic_minimized_and_nonparticipating() -
         "action": "template_applied",
         "aggregate_version": "1",
         "changed_fields": "departments",
-        "template_code": "awoostria-reference",
+        "template_code": "marucon-reference",
         "template_version": "1",
     }
     assert OutboxMessage.objects.filter(event=event).count() == 1
@@ -555,7 +555,7 @@ def test_confirmation_and_reserved_governance_name_are_strict_inputs() -> None:
             organization_id=edition.organization_id,
             series_id=edition.series_id,
             edition_id=edition.id,
-            template_identifier=AWOOSTRIA_REFERENCE_V1.identifier,
+            template_identifier=MARUCON_REFERENCE_V1.identifier,
             expected_version=0,
             confirmation_name=edition.name.lower(),
             reason="Require exact edition confirmation.",

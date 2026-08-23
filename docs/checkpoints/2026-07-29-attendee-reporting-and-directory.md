@@ -41,7 +41,7 @@ unassigned access return non-disclosing denial. The synchronous source limit is
 The v5 synthetic fixture grants the report capability to each current-edition
 chair and registration lead. It adds varied safe country examples and upgrades
 only untouched synthetic profile defaults to the new public consent example.
-The existing local migration and seed were applied successfully. Danube's
+The existing local migration and seed were applied successfully. MaruCon's
 public page now demonstrates Guest, Attendee + Volunteer, and Super sponsor.
 
 The registration runbook documents report definitions, filter/export steps,

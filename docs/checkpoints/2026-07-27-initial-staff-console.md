@@ -10,7 +10,7 @@ Maru now has its first purpose-built Staff Console at `/staff/`. It is a
 separate React/TypeScript/Vite application using OpenAPI-generated contract
 types, hosted by Django during bootstrap deployment.
 
-The Danube 2026 cockpit uses real fixture data for edition context, countdown,
+The MaruCon 2026 cockpit uses real fixture data for edition context, countdown,
 lifecycle, person count, roles, languages, and currencies. The People workspace
 supports server-side name, role, status, and pagination controls plus a
 context-preserving person panel. It exposes only the staff-summary field
@@ -38,7 +38,7 @@ data is presented as operational fact.
 - Backend staff-console/auth and participation endpoint focused suites passed.
 - Frontend typecheck and production build passed.
 - Ruff and strict mypy passed after integration.
-- Real-browser QA loaded the 40-person Danube 2026 fixture, exercised search and
+- Real-browser QA loaded the 40-person MaruCon 2026 fixture, exercised search and
   the person side panel, checked horizontal overflow at 1280 px, and confirmed
   no runtime console errors.
 

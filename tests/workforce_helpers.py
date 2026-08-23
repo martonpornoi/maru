@@ -23,7 +23,7 @@ from maru.workforce.structure_commands import (
     create_department,
     retire_department,
 )
-from maru.workforce.structure_templates import AWOOSTRIA_REFERENCE_V1
+from maru.workforce.structure_templates import MARUCON_REFERENCE_V1
 from tests.factories import AccountFactory
 
 if TYPE_CHECKING:
@@ -94,7 +94,7 @@ def apply_builtin_structure_template_for_test(
         organization_id=edition.organization_id,
         series_id=edition.series_id,
         edition_id=edition.id,
-        template_identifier=AWOOSTRIA_REFERENCE_V1.identifier,
+        template_identifier=MARUCON_REFERENCE_V1.identifier,
         expected_version=current_version,
         confirmation_name=edition.name,
         reason="Apply the synthetic current-schema structure fixture.",

@@ -17,7 +17,7 @@ control/receipt/Department evidence handshake. Direct or partially ordered
 writes cannot create an unexplained current tree.
 
 The shared, currently unmounted command core can apply the immutable
-`awoostria-reference@1` template and create, replace, reparent, reorder,
+`marucon-reference@1` template and create, replace, reparent, reorder,
 retire, or safely delete a Department. Commands use exact organization,
 series, and edition scope; fresh view-and-manage authorization; strict input;
 positive expected versions; deterministic template/create retry evidence;

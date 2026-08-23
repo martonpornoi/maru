@@ -6,7 +6,7 @@ Base commit: `327a7d63574d0118356a0fd11ca5a316d78b2aed`
 
 ## Outcome
 
-Maru now has one crash-safe, Awoostria-first plan for turning the retained
+Maru now has one crash-safe, fictional-example-first plan for turning the retained
 domain kernel and accepted Pages 1 through 4 into a production candidate. ADR
 0037 changes the delivery unit from a mandatory pause after every isolated page
 to a complete executable milestone while preserving page contracts, evidence,
@@ -37,7 +37,8 @@ applications, rooms, timetable, shifts, exports, and signage.
 - Added `docs/project/PRODUCTION_CONSOLIDATION.md` as the live capability
   ledger, information architecture, domain design, milestone checklist,
   recovery instructions, and external production-gate inventory.
-- Added public-source Awoostria research without copying personal roster data.
+- Added public-source workflow research without copying personal roster data
+  or retaining convention brands as product examples.
 - Marked the old progress/backlog documents as historical and updated the
   architecture overview, module index, roadmap, delivery-plan status, README,
   and current handoff.

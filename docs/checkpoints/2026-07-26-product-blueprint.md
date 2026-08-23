@@ -20,10 +20,10 @@ closeout, retention, and edition cloning.
 
 ## Research incorporated
 
-Public, dated research inspected operating patterns and tools around European
-furry conventions, including Eurofurence, NordicFuzzCon, ConFuzzled, and
-Awoostria, and specialist systems including pretalx, pretix, Engelsystem,
-Convention Master, Eventication, Cadence, PlanOS, Run of Show, and Smartsheet.
+Public, dated research inspected general operating patterns and specialist
+tool categories used around community conventions. The current documentation
+retains the synthesized requirements without reusing convention brands or
+implying affiliation.
 
 The resulting synthesis is in `docs/research/landscape-2026-07.md`. Source
 capabilities are evidence and inspiration; they are not copied code or proof

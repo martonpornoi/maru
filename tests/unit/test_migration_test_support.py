@@ -21,7 +21,7 @@ from tests.support.migrations import (
         (
             ("registration", "0039_profile_audiences_and_platform_starter"),
             (("registration", "0039_profile_audiences_and_platform_starter"),),
-            ("workforce", "0008_department_fk_contract_successor"),
+            ("workforce", "0009_reconcile_fictional_structure_template"),
         ),
         (
             ("registration", "0040_optional_profile_value_clear"),
@@ -29,7 +29,7 @@ from tests.support.migrations import (
                 ("registration", "0039_profile_audiences_and_platform_starter"),
                 ("registration", "0040_optional_profile_value_clear"),
             ),
-            ("workforce", "0008_department_fk_contract_successor"),
+            ("workforce", "0009_reconcile_fictional_structure_template"),
         ),
     ],
 )
@@ -42,7 +42,7 @@ def test_registration_history_selects_a_compatible_workforce_leaf(
     executor.loader.graph.leaf_nodes.return_value = (
         ("other", "0002_current"),
         ("registration", "0040_optional_profile_value_clear"),
-        ("workforce", "0008_department_fk_contract_successor"),
+        ("workforce", "0009_reconcile_fictional_structure_template"),
     )
     executor.loader.graph.forwards_plan.return_value = forward_plan
 

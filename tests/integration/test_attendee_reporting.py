@@ -22,8 +22,8 @@ DEMO_PASSWORD = "Synthetic-reporting-password-2026!"
 
 def test_demo_staff_can_report_filter_and_export_without_private_fields() -> None:
     call_command("seed_demo_data", password=DEMO_PASSWORD, verbosity=0)
-    chair = Account.objects.get(email="danube.convention-chair@demo.maru.invalid")
-    edition = EventEdition.objects.get(slug="danube-furry-convention-2026")
+    chair = Account.objects.get(email="marucon.convention-chair@demo.maru.invalid")
+    edition = EventEdition.objects.get(slug="marucon-2026")
     client = APIClient()
     client.force_login(chair)
     report_url = reverse(
@@ -82,11 +82,13 @@ def test_demo_staff_can_report_filter_and_export_without_private_fields() -> Non
 
 def test_attendee_report_denies_unassigned_and_cross_tenant_access() -> None:
     call_command("seed_demo_data", password=DEMO_PASSWORD, verbosity=0)
-    attendee = Account.objects.get(email="danube.first-time-attendee@demo.maru.invalid")
-    danube_edition = EventEdition.objects.get(slug="danube-furry-convention-2026")
-    aurora_edition = EventEdition.objects.get(slug="aurora-tails-2026")
-    danube_chair = Account.objects.get(
-        email="danube.convention-chair@demo.maru.invalid"
+    attendee = Account.objects.get(
+        email="marucon.first-time-attendee@demo.maru.invalid"
+    )
+    marucon_edition = EventEdition.objects.get(slug="marucon-2026")
+    marudance_edition = EventEdition.objects.get(slug="marudance-2026")
+    marucon_chair = Account.objects.get(
+        email="marucon.convention-chair@demo.maru.invalid"
     )
     client = APIClient()
 
@@ -94,17 +96,17 @@ def test_attendee_report_denies_unassigned_and_cross_tenant_access() -> None:
     own_edition = client.get(
         reverse(
             "api-registration-attendee-report",
-            args=(danube_edition.organization_id, danube_edition.id),
+            args=(marucon_edition.organization_id, marucon_edition.id),
         )
     )
     assert own_edition.status_code == 403
     assert "count" not in own_edition.json()
 
-    client.force_login(danube_chair)
+    client.force_login(marucon_chair)
     other_tenant = client.get(
         reverse(
             "api-registration-attendee-report",
-            args=(aurora_edition.organization_id, aurora_edition.id),
+            args=(marudance_edition.organization_id, marudance_edition.id),
         )
     )
     assert other_tenant.status_code == 403

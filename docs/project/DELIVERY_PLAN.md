@@ -3,7 +3,7 @@
 Status: Long-range product sequence; active execution is tracked separately
 Last updated: 2026-08-01
 
-Use `PRODUCTION_CONSOLIDATION.md` for current mounted state, the Awoostria-first
+Use `PRODUCTION_CONSOLIDATION.md` for current mounted state, the fictional-example
 vertical milestone order, and the crash-safe implementation checklist. This
 file remains the broader lifecycle catalogue and does not by itself indicate
 that a capability is implemented or mounted.

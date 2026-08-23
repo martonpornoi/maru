@@ -25,7 +25,7 @@ from maru.workforce.structure_commands import (
     StructureLimitConflictError,
     StructureStateConflictError,
 )
-from maru.workforce.structure_templates import AWOOSTRIA_REFERENCE_V1
+from maru.workforce.structure_templates import MARUCON_REFERENCE_V1
 from tests.factories import AccountFactory, CapabilityGrantFactory, EventEditionFactory
 
 if TYPE_CHECKING:
@@ -82,7 +82,7 @@ def _create_payload(*, expected_version: object = 0, **changes: object):
 
 def _template_payload(edition: EventEdition, **changes: object):
     payload: dict[str, object] = {
-        "template": AWOOSTRIA_REFERENCE_V1.identifier,
+        "template": MARUCON_REFERENCE_V1.identifier,
         "expected_version": 0,
         "confirmation_name": edition.name,
         "reason": "Use the reviewed reference structure.",

@@ -328,7 +328,7 @@ def test_builtin_source_is_minimized_and_department_state_is_explicit() -> None:
     assert structure["aggregate_version"] == 2
     assert structure["source"] == {
         "kind": "builtin_template",
-        "template_code": "awoostria-reference",
+        "template_code": "marucon-reference",
         "template_version": 1,
     }
     assert "template_digest" not in str(structure)
@@ -337,7 +337,7 @@ def test_builtin_source_is_minimized_and_department_state_is_explicit() -> None:
         for department in structure["departments"][0]["children"]
     }
     assert child_states["charity"] == "retired"
-    assert child_states["art"] == "active"
+    assert child_states["registration"] == "active"
 
 
 def test_manual_control_source_exposes_no_template_fields() -> None:

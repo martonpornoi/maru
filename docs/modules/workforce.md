@@ -162,12 +162,12 @@ Its governance-anchored projection is deliberately composed from two sources:
 
 ```text
 Executive Board — minimized OrganizationRepresentation anchor
-  -> Helper Board — top-level edition-owned Department
+  -> Convention Coordination — top-level edition-owned Department
        -> operational and nested edition Departments
 ```
 
 Executive Board is never copied into Department, Position, PositionAssignment,
-or a generic group. Helper Board has no persisted Department parent; the page
+or a generic group. Convention Coordination has no persisted Department parent; the page
 places it visually beneath the organization-owned governance anchor. Every
 other parent edge remains an exact same-organization, same-edition Department
 relationship. Neither visual nor Department ancestry implies authority.
@@ -193,18 +193,20 @@ reopening specialist Department writes.
 
 ### Built-in reference and independent copy
 
-The immutable built-in `awoostria-reference@1` contains Helper Board plus 21
-operational Department definitions: Art, Charity, Ceremonies, Dealers' Den,
-Decorations, Events & Programming, Front Desk, Fursuit Support, Graphics
-Design, Human Resources, IT, Legal & Compliance, Logistics, Maid Café,
-Multimedia, PEER, Registration, Security, Social Media, Stage Tech, and Story.
+The immutable built-in `marucon-reference@1` is a repository-owned fictional
+starter. Convention Coordination is its root. Its 21 operational Departments
+are Attendee Services, Registration, Programme, Stage Production, Venue
+Operations, Logistics, Volunteer Support, Safety, Accessibility, Technology,
+Communications, Design & Publications, Exhibitors, Charity, Guest Relations,
+Accommodation, Hospitality, Finance & Procurement, Partnerships, Live
+Operations, and Archive & Handover.
 
 The code-owned catalog and its application command are implemented and pinned.
 The catalog is immutable, accepts only the exact versioned identifier,
 validates unique bounded fields and one parent-before-child root graph, rejects
 any Executive Board Department, and computes canonical UTF-8 JSON plus pinned
-SHA-256 content evidence. Helper Board is the sole root and all 21 operational
-records are direct children.
+SHA-256 content evidence. Convention Coordination is the sole root and all 21
+operational records are direct children.
 
 The mounted command adapters let an authorized manager apply that exact version only
 to an empty Draft or Preparing edition workforce structure. One atomic,

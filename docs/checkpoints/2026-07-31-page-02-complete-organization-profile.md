@@ -38,9 +38,10 @@ The page shows that the resulting status is Draft. Slug and lifecycle are not
 submitted fields and crafted values cannot override them. English and UTC
 remain fallbacks when locale values are omitted.
 
-The Awoostria imprint referenced during product discussion was used only to
-identify common fact categories: legal name, address, representative, contact,
-and registration reference. Tests and fixtures continue to use synthetic data.
+A public convention imprint referenced during product discussion was used only
+to identify common fact categories: legal name, address, representative,
+contact, and registration reference. Tests and fixtures continue to use
+synthetic data.
 
 ## Security, privacy, and domain boundaries
 

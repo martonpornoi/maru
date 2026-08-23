@@ -214,7 +214,7 @@ PAGE9_FUNCTION_DEFINITION_SHA256 = {
         "52daa0c470438ca34cdd2a00e1b0aa5e61b9bed98a9cfc320b21a92fc6911686"
     ),
     "maru_validate_edition_structure_receipt()": (
-        "a8c475fcea8a338e07b91ad0ba1bb9d64cebc31b5fb53c89b49d14a477bb1e8a"
+        "0856108aaf1bf9fd11092d908fd289542e36faeb815a47e7d5de5680f2abd5a4"
     ),
     "maru_workforce_department_fk_contract_is_current()": (
         "83e5707405156ec49bd70059a1cdcdf78c7d6472a198ea0151bc63efd84fa935"
@@ -454,6 +454,7 @@ def test_page9_constraint_timing_tamper_blocks_readiness() -> None:
     [
         "0007_structure_write_integrity",
         "0008_department_fk_contract_successor",
+        "0009_reconcile_fictional_structure_template",
     ],
 )
 def test_missing_page9_migration_recorder_row_blocks_readiness(

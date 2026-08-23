@@ -35,7 +35,7 @@ mutation was required.
   mismatch from the in-progress Page 10/core working tree.
 - Applicable form focus excluding that known mismatch: 21 passed.
 - Structure command and strict mutation API focus: 60 passed.
-- Authenticated live browser: Aurora Tails 2027 → Maid Café shows Events as the
+- Authenticated live browser: MaruDance 2027 → Maid Café shows Events as the
   selected parent, displays the automatic-placement explanation, and contains
   no Display order field. The check used GET only and preserved the dataset.
 

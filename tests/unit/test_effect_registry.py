@@ -141,7 +141,7 @@ def test_profile_extension_value_event_is_minimized_and_strict() -> None:
             "action": "template_applied",
             "aggregate_version": "1",
             "changed_fields": "departments",
-            "template_code": "awoostria-reference",
+            "template_code": "marucon-reference",
             "template_version": "1",
         },
     ],

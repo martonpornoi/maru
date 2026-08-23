@@ -33,8 +33,8 @@ The loaded dataset contains:
 
 ## Conventions and annual history
 
-- Pannon Paws Foundation (Demo) operates Danube Furry Convention.
-- Northern Tails Association (Demo) operates Aurora Tails.
+- Maru Community Events (Demo) operates MaruCon.
+- Maru Arts Collective (Demo) operates MaruDance.
 - Each series has an archived 2025 edition, a preparing 2026 edition, and a
   draft 2027 edition.
 - Three synthetic accounts participate across both organizers to demonstrate
@@ -73,7 +73,7 @@ event-history, and capability-scope decisions without changing them.
 - Fixture command loaded the current local database successfully.
 - Second local load created zero records and returned identical totals.
 - Demo administrator and convention-chair passwords authenticate.
-- The Danube convention chair receives `events.transition` through the expected
+- The MaruCon convention chair receives `events.transition` through the expected
   edition-scoped role assignment.
 - Focused command tests pass, including comprehensive structure, shared
   identity, capacities, policy, idempotency, and production refusal.

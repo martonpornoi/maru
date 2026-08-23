@@ -20,7 +20,7 @@ from maru.workforce.serializers import (
     WorkforceStructureTemplateApplySerializer,
 )
 from maru.workforce.structure_audit import append_structure_read_audit
-from maru.workforce.structure_templates import AWOOSTRIA_REFERENCE_V1
+from maru.workforce.structure_templates import MARUCON_REFERENCE_V1
 
 
 def _form_data(**overrides: str) -> dict[str, str]:
@@ -168,7 +168,7 @@ def test_department_serializer_rejects_noncanonical_parent_identifiers(
 
 @pytest.mark.parametrize(
     "template_value",
-    [1, True, [AWOOSTRIA_REFERENCE_V1.identifier]],
+    [1, True, [MARUCON_REFERENCE_V1.identifier]],
 )
 def test_template_serializer_never_coerces_non_string_choices(
     template_value: object,

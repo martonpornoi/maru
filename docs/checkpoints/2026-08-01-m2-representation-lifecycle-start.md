@@ -106,7 +106,7 @@ Before Page 8 can be accepted, finish and verify:
 10. owner rehearsal of the updated synthetic tutorial.
 
 Appointment notification discovery, expiry, withdrawal, replacement, ending,
-representation suspension/reactivation, quorum recovery, Awoostria-shaped
+representation suspension/reactivation, quorum recovery, fictional convention
 departments, department/resource scope, and full effective access remain later
 M2 items rather than hidden omissions.
 

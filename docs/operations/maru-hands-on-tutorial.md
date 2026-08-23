@@ -28,12 +28,12 @@ real volunteer roster.
 ## What you will build
 
 ```text
-Synthetic Awoostria Organizers (organization)
+Synthetic MaruCon Organizers (organization)
 ├── Executive Board (representation)
 │   ├── Synthetic Alex (controller)
 │   └── Synthetic Blake (controller)
-└── Awoostria (convention series)
-    └── Awoostria 2031 (event edition)
+└── MaruCon (convention series)
+    └── MaruCon 2031 (event edition)
 ```
 
 The platform administrator is recorded as the provisioning/activation operator
@@ -131,7 +131,7 @@ For a useful rehearsal, enter:
 
 | Section | Suggested synthetic value |
 | --- | --- |
-| Organization name | `Synthetic Awoostria Organizers` |
+| Organization name | `Synthetic MaruCon Organizers` |
 | Description | `Synthetic organizer used to rehearse Maru.` |
 | Website | `example.invalid` |
 | Contact email | `office@example.invalid` |
@@ -222,7 +222,7 @@ Sign back in as the platform administrator. On Page 3, select
 stable slug followed by `/representation/`, for example:
 
 ```text
-http://127.0.0.1:8000/admin/platform/organizations/synthetic-awoostria-organizers/representation/
+http://127.0.0.1:8000/admin/platform/organizations/synthetic-marucon-organizers/representation/
 ```
 
 Use the real generated slug if a collision added a suffix.
@@ -304,9 +304,9 @@ In the selected-organization navigation, select **+ Add** beside
 
 | Field | Suggested value |
 | --- | --- |
-| Convention series name | `Awoostria` |
+| Convention series name | `MaruCon` |
 | Public description | `Synthetic recurring furry-convention brand.` |
-| Website | `awoostria.example.invalid` |
+| Website | `marucon.example.invalid` |
 | Public contact email | `convention@example.invalid` |
 | Availability | Active |
 
@@ -336,7 +336,7 @@ Select **+ Add** beside **Convention editions**. Suggested values:
 
 | Field | Suggested value |
 | --- | --- |
-| Edition name | `Awoostria 2031` |
+| Edition name | `MaruCon 2031` |
 | Starts on | `2031-06-05` |
 | Ends on | `2031-06-08` |
 | Time zone | inherited `Europe/Vienna` |
@@ -383,27 +383,27 @@ edition in the shared sidebar. Its canonical route ends in `/structure/`, for
 example:
 
 ```text
-http://127.0.0.1:8000/admin/platform/organizations/synthetic-awoostria-organizers/series/awoostria/editions/awoostria-2031/structure/
+http://127.0.0.1:8000/admin/platform/organizations/synthetic-marucon-organizers/series/marucon/editions/marucon-2031/structure/
 ```
 
 Use the actual generated slugs. The page must show the separate **Executive
 Board** governance anchor as Active, followed by an honest **No operational
 Departments yet** state. The Board is not a Department, and this read creates
-no Helper Board, account, role, participation, or assignment.
+no Convention Coordination, account, role, participation, or assignment.
 
-If you have exact structure-management authority, select **Use the Awoostria
-reference**. Confirm the exact edition name, enter a short operational reason,
-and choose **Copy 22 Departments**. Maru supplies and preserves the browser
-retry key. After the redirect, verify:
+If you have exact structure-management authority, select **Use the fictional
+MaruCon starter**. Confirm the exact edition name, enter a short operational
+reason, and choose **Copy 22 Departments**. Maru supplies and preserves the
+browser retry key. After the redirect, verify:
 
 - **Built-in reference applied** and structure version 1 are shown;
-- Helper Board is the sole top-level Department beneath the separate Executive
-  Board governance anchor;
-- all 21 operational Departments are beneath Helper Board; and
+- Convention Coordination is the sole top-level Department beneath the
+  separate Executive Board governance anchor;
+- all 21 operational Departments are beneath Convention Coordination; and
 - no person, Position, assignment, access grant, registration, or
   participation was created.
 
-The immutable source is `awoostria-reference@1`. It contains no Executive Board
+The immutable source is `marucon-reference@1`. It contains no Executive Board
 Department. Do not use the specialist Department form for this workflow; it is
 inspection-only behind the stopped-writer boundary.
 

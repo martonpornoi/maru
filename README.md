@@ -26,7 +26,7 @@ Bundled third-party components retain the licenses recorded in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Each occurrence of a convention is a first-class event edition, for example
-`Awoostria 2026` or `Eurofurence 2026`. Historical editions remain available so
+the fictional `MaruCon 2026` or `MaruDance 2026`. Historical editions remain available so
 people can see their past participation and organizers can retain an accurate,
 permission-controlled operational record.
 
@@ -196,7 +196,7 @@ rehearsal remains a release gate.
 - [Delivery plan](docs/project/DELIVERY_PLAN.md)
 - [Implementation backlog](docs/project/BACKLOG.md)
 - [Progress matrix](docs/project/PROGRESS.md)
-- [Awoostria reference operating-model research](docs/research/awoostria-reference-2026-08.md)
+- [MaruCon fictional operating model](docs/research/marucon-operating-model.md)
 - [Checkpoint system](docs/checkpoints/README.md)
 
 The product/architecture baseline and repository-controlled registration

@@ -8,8 +8,8 @@ from dataclasses import FrozenInstanceError
 import pytest
 
 from maru.workforce.structure_templates import (
-    AWOOSTRIA_REFERENCE_V1,
     BUILTIN_STRUCTURE_TEMPLATES,
+    MARUCON_REFERENCE_V1,
     BuiltinStructureTemplate,
     StructureDepartmentDefinition,
     UnknownBuiltinStructureTemplateError,
@@ -17,35 +17,35 @@ from maru.workforce.structure_templates import (
 )
 
 EXPECTED_DEPARTMENTS = (
-    ("helper-board", "Helper Board", None),
-    ("art", "Art", "helper-board"),
-    ("charity", "Charity", "helper-board"),
-    ("ceremonies", "Ceremonies", "helper-board"),
-    ("dealers-den", "Dealers' Den", "helper-board"),
-    ("decorations", "Decorations", "helper-board"),
-    ("events-programming", "Events & Programming", "helper-board"),
-    ("front-desk", "Front Desk", "helper-board"),
-    ("fursuit-support", "Fursuit Support", "helper-board"),
-    ("graphics-design", "Graphics Design", "helper-board"),
-    ("human-resources", "Human Resources", "helper-board"),
-    ("it", "IT", "helper-board"),
-    ("legal-compliance", "Legal & Compliance", "helper-board"),
-    ("logistics", "Logistics", "helper-board"),
-    ("maid-cafe", "Maid Café", "helper-board"),
-    ("multimedia", "Multimedia", "helper-board"),
-    ("peer", "PEER", "helper-board"),
-    ("registration", "Registration", "helper-board"),
-    ("security", "Security", "helper-board"),
-    ("social-media", "Social Media", "helper-board"),
-    ("stage-tech", "Stage Tech", "helper-board"),
-    ("story", "Story", "helper-board"),
+    ("convention-coordination", "Convention Coordination", None),
+    ("attendee-services", "Attendee Services", "convention-coordination"),
+    ("registration", "Registration", "convention-coordination"),
+    ("programme", "Programme", "convention-coordination"),
+    ("stage-production", "Stage Production", "convention-coordination"),
+    ("venue-operations", "Venue Operations", "convention-coordination"),
+    ("logistics", "Logistics", "convention-coordination"),
+    ("volunteer-support", "Volunteer Support", "convention-coordination"),
+    ("safety", "Safety", "convention-coordination"),
+    ("accessibility", "Accessibility", "convention-coordination"),
+    ("technology", "Technology", "convention-coordination"),
+    ("communications", "Communications", "convention-coordination"),
+    ("design-publications", "Design & Publications", "convention-coordination"),
+    ("exhibitors", "Exhibitors", "convention-coordination"),
+    ("charity", "Charity", "convention-coordination"),
+    ("guest-relations", "Guest Relations", "convention-coordination"),
+    ("accommodation", "Accommodation", "convention-coordination"),
+    ("hospitality", "Hospitality", "convention-coordination"),
+    ("finance-procurement", "Finance & Procurement", "convention-coordination"),
+    ("partnerships", "Partnerships", "convention-coordination"),
+    ("live-operations", "Live Operations", "convention-coordination"),
+    ("archive-handover", "Archive & Handover", "convention-coordination"),
 )
 
 
-def test_awoostria_reference_v1_has_the_accepted_exact_taxonomy() -> None:
-    template = AWOOSTRIA_REFERENCE_V1
+def test_marucon_reference_v1_has_the_accepted_exact_taxonomy() -> None:
+    template = MARUCON_REFERENCE_V1
 
-    assert template.identifier == "awoostria-reference@1"
+    assert template.identifier == "marucon-reference@1"
     assert (
         tuple(
             (department.code, department.name, department.parent_code)
@@ -63,8 +63,8 @@ def test_awoostria_reference_v1_has_the_accepted_exact_taxonomy() -> None:
     }
 
 
-def test_awoostria_reference_v1_fields_are_unique_and_bounded() -> None:
-    departments = AWOOSTRIA_REFERENCE_V1.departments
+def test_marucon_reference_v1_fields_are_unique_and_bounded() -> None:
+    departments = MARUCON_REFERENCE_V1.departments
 
     assert len({department.code for department in departments}) == len(departments)
     assert len({department.name.casefold() for department in departments}) == len(
@@ -83,13 +83,12 @@ def test_awoostria_reference_v1_fields_are_unique_and_bounded() -> None:
     )
 
 
-def test_awoostria_reference_v1_canonical_json_and_digest_are_pinned() -> None:
-    template = AWOOSTRIA_REFERENCE_V1
+def test_marucon_reference_v1_canonical_json_and_digest_are_pinned() -> None:
+    template = MARUCON_REFERENCE_V1
     decoded = template.canonical_json.decode("utf-8")
     payload = json.loads(decoded)
 
-    assert "Maid Café" in decoded
-    assert "\\u00e9" not in decoded
+    assert "Design & Publications" in decoded
     assert (
         json.dumps(
             payload,
@@ -103,12 +102,12 @@ def test_awoostria_reference_v1_canonical_json_and_digest_are_pinned() -> None:
     assert hashlib.sha256(template.canonical_json).hexdigest() == template.sha256_digest
     assert (
         template.sha256_digest
-        == "a0eb4def29ed904b5e1279bd72bf4da7f99c94e804cabf10c196b536c5ca7901"
+        == "55f4091787215fd9eef5cc1266806a1450dd6e5449d50864340601f5ec2398ee"
     )
 
 
 def test_catalog_and_template_content_are_immutable() -> None:
-    template = AWOOSTRIA_REFERENCE_V1
+    template = MARUCON_REFERENCE_V1
 
     with pytest.raises(TypeError):
         BUILTIN_STRUCTURE_TEMPLATES["another@1"] = template  # type: ignore[index]
@@ -121,14 +120,11 @@ def test_catalog_and_template_content_are_immutable() -> None:
 
 
 def test_catalog_uses_exact_identifiers_without_aliases() -> None:
-    assert tuple(BUILTIN_STRUCTURE_TEMPLATES) == ("awoostria-reference@1",)
-    assert (
-        get_builtin_structure_template("awoostria-reference@1")
-        is AWOOSTRIA_REFERENCE_V1
-    )
+    assert tuple(BUILTIN_STRUCTURE_TEMPLATES) == ("marucon-reference@1",)
+    assert get_builtin_structure_template("marucon-reference@1") is MARUCON_REFERENCE_V1
 
     with pytest.raises(UnknownBuiltinStructureTemplateError):
-        get_builtin_structure_template("awoostria-reference")
+        get_builtin_structure_template("marucon-reference")
 
 
 @pytest.mark.parametrize(

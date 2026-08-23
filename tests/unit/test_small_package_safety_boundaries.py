@@ -88,7 +88,7 @@ def test_event_lifecycle_evidence_cannot_be_mutated_or_deleted(
 
 
 def test_archive_amendment_label_is_bounded_and_has_a_blank_fallback() -> None:
-    edition = EventEdition(name="Aurora Tails 2027")
+    edition = EventEdition(name="MaruDance 2027")
     long_summary = "x" * (ARCHIVE_AMENDMENT_CONTENT_LENGTH + 20)
 
     assert str(ArchiveAmendment(edition=edition, summary=long_summary)).endswith(
@@ -113,7 +113,7 @@ def test_edition_details_form_rejects_invalid_date_windows(
 ) -> None:
     form = EventEditionDetailsForm(
         data={
-            "name": "Aurora Tails 2027",
+            "name": "MaruDance 2027",
             "starts_on": starts_on,
             "ends_on": ends_on,
             "time_zone": "Europe/Budapest",

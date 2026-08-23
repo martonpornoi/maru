@@ -36,8 +36,8 @@ treated as representation.
   non-participating.
 - Department template-application/create/update/reparent/order/retire/delete controls are
   not mounted. They remain Page 9a.1 under ADR 0045.
-- The immutable code-owned `awoostria-reference@1` catalog is implemented and
-  pinned: exactly 22 Departments, Helper Board as sole root, no Executive Board
+- The immutable code-owned `marucon-reference@1` catalog is implemented and
+  pinned: exactly 22 Departments, Convention Coordination as sole root, no Executive Board
   Department, exact identifier without aliases, bounded graph validation,
   canonical UTF-8 JSON, and SHA-256 content evidence. It does not apply itself.
 - Code owns ceilings of 256 Departments, 1,024 Positions, 4,096 effective
@@ -106,7 +106,7 @@ would reveal a foreign route.
   risk.
 - Page 9a.1 must add the edition structure aggregate/version fence and
   retry/conflict semantics before Department mutations are mounted.
-- Built-in Awoostria application/receipt, Department commands, migration/
+- Built-in fictional-starter application/receipt, Department commands, migration/
   downgrade/recovery rehearsal, mutation audit/events/outbox, and Page 9b
   Position management are not implemented; only the immutable catalog exists.
 - Full pytest/coverage, reliable 390-pixel, keyboard/automated accessibility,

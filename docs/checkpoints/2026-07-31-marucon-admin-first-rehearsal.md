@@ -29,10 +29,10 @@ The implemented scenario creates:
 
 ## Public roster and data boundary
 
-The local importer reads
-<https://awoostria.at/about-us/our-volunteers> only after explicit operator
-acknowledgement. It accepts public handles, department names/descriptions, and
-role labels. It excludes recruiting headings, images, and contact data, and
+The retired local importer read a public volunteer directory only after
+explicit operator acknowledgement. It accepted public handles, department
+names/descriptions, and role labels. It excluded recruiting headings, images,
+and contact data, and
 uses `.invalid` email addresses. Checked-in tests use a synthetic miniature
 instead of live personal data.
 
