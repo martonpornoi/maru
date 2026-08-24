@@ -181,10 +181,13 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         action=EditionStructureCommandReceipt.Action.POSITION_CREATED,
     )
     assert position_receipt.resulting_version == 2
-    assert position_receipt.affected_position_id == Position.objects.get(
-        edition=edition,
-        code="convention-chair",
-    ).id
+    assert (
+        position_receipt.affected_position_id
+        == Position.objects.get(
+            edition=edition,
+            code="convention-chair",
+        ).id
+    )
     assert RoleAssignment.objects.filter(
         organization=organization,
         principal=chair,
@@ -425,13 +428,11 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         code="registration-lead",
         status=PositionTemplate.Status.PUBLISHED,
     )
-    _role_actor, _role_approver, assignment_role = (
-        create_provenance_backed_role_bundle(
-            organization,
-            code="registration-lead",
-            name="Registration Lead",
-            capability_codes=tuple(starter_template.role_bundle.capability_codes),
-        )
+    _role_actor, _role_approver, assignment_role = create_provenance_backed_role_bundle(
+        organization,
+        code="registration-lead",
+        name="Registration Lead",
+        capability_codes=tuple(starter_template.role_bundle.capability_codes),
     )
     template = PositionTemplate.objects.create(
         organization=organization,

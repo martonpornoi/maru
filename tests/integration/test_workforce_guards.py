@@ -401,13 +401,11 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         organization=organization,
         code="registration-lead",
     )
-    _role_actor, _role_approver, assignment_role = (
-        create_provenance_backed_role_bundle(
-            organization,
-            code="registration-lead",
-            name="Registration Lead",
-            capability_codes=tuple(starter_template.role_bundle.capability_codes),
-        )
+    _role_actor, _role_approver, assignment_role = create_provenance_backed_role_bundle(
+        organization,
+        code="registration-lead",
+        name="Registration Lead",
+        capability_codes=tuple(starter_template.role_bundle.capability_codes),
     )
     template = PositionTemplate.objects.create(
         organization=organization,
@@ -711,13 +709,11 @@ def test_workforce_admin_inspection_reviews_and_activates_with_dual_control(
         organization=organization,
         code="registration-lead",
     )
-    _role_actor, _role_approver, assignment_role = (
-        create_provenance_backed_role_bundle(
-            organization,
-            code="registration-lead",
-            name="Registration Lead",
-            capability_codes=tuple(starter_template.role_bundle.capability_codes),
-        )
+    _role_actor, _role_approver, assignment_role = create_provenance_backed_role_bundle(
+        organization,
+        code="registration-lead",
+        name="Registration Lead",
+        capability_codes=tuple(starter_template.role_bundle.capability_codes),
     )
     template = PositionTemplate.objects.create(
         organization=organization,

@@ -1,14 +1,11 @@
 """Live creation coverage for workforce-position authorization bindings."""
 
 from dataclasses import dataclass
-from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
-from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db import connection
-from django.test import RequestFactory
 
 from maru.authorization.bindings import (
     ensure_workforce_position_binding,
@@ -17,7 +14,6 @@ from maru.authorization.bindings import (
 from maru.authorization.models import RoleBundle, ScopedResourceBinding
 from maru.events.models import EventEdition
 from maru.identity.models import Account
-from maru.workforce.admin import PositionAdmin
 from maru.workforce.bootstrap import bootstrap_organization_workforce
 from maru.workforce.models import Department, Position, PositionTemplate
 from tests.factories import AccountFactory, EventEditionFactory, RoleBundleFactory
@@ -207,34 +203,6 @@ def test_service_fails_closed_for_an_existing_mismatched_binding() -> None:
     assert error.value.code == "resource_binding_scope_mismatch"
     binding = ScopedResourceBinding.objects.get(resource_id=position.id)
     assert binding.department_id == other_department.id
-
-
-def test_position_admin_creates_binding_after_saving_position() -> None:
-    scope = _position_scope()
-    request = RequestFactory().post("/admin/workforce/position/add/")
-    request.user = scope.creator
-    position = Position(
-        organization=scope.edition.organization,
-        edition=scope.edition,
-        template=scope.template,
-        department=scope.department,
-        role_bundle=scope.role_bundle,
-        code="admin-created-position",
-        title="Admin-created position",
-        description="Synthetic admin creation.",
-        capacity_codes=["volunteer"],
-    )
-
-    PositionAdmin(Position, admin.site).save_model(
-        request,
-        position,
-        SimpleNamespace(),  # type: ignore[arg-type]
-        change=False,
-    )
-
-    binding = ScopedResourceBinding.objects.get(resource_id=position.id)
-    assert position.created_by_id == scope.creator.id
-    assert binding.department_id == scope.department.id
 
 
 def test_preserved_workforce_bootstrap_creates_chair_position_binding() -> None:

@@ -1597,21 +1597,25 @@ def _inspect_cutover_catalog() -> _CatalogState:
         migration_applied = tuple(cursor.fetchall()) == _ACTIVATION_MIGRATIONS
 
     def trigger_matches(contract: _TriggerContract) -> bool:
-        return trigger_counts[contract.name] == 1 and installed_triggers.get(
-            contract.name
-        ) == (
-            contract.table,
-            contract.function,
-            contract.trigger_type,
-            "O",
-            contract.deferrable,
-            contract.initially_deferred,
-            contract.definition is None,
-            0,
-            contract.columns,
-        ) and (
-            contract.definition is None
-            or installed_trigger_definitions.get(contract.name) == contract.definition
+        return (
+            trigger_counts[contract.name] == 1
+            and installed_triggers.get(contract.name)
+            == (
+                contract.table,
+                contract.function,
+                contract.trigger_type,
+                "O",
+                contract.deferrable,
+                contract.initially_deferred,
+                contract.definition is None,
+                0,
+                contract.columns,
+            )
+            and (
+                contract.definition is None
+                or installed_trigger_definitions.get(contract.name)
+                == contract.definition
+            )
         )
 
     functions_installed = (

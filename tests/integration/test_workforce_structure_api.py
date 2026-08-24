@@ -950,9 +950,7 @@ def test_structure_access_matrix_is_exact_and_department_scope_is_too_narrow() -
     )
 
 
-def test_denial_precedes_name_queries_and_success_rechecks_view_and_manage() -> (
-    None
-):
+def test_denial_precedes_name_queries_and_success_rechecks_view_and_manage() -> None:
     edition = EventEditionFactory(name="Must not be disclosed")
     outsider = AccountFactory()
     url = _url(
