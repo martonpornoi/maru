@@ -280,7 +280,25 @@ class DepartmentStructureResult:
 
 @dataclass(frozen=True, slots=True)
 class PositionStructureResult:
-    """Describe one minimized Position or opportunity command result."""
+    """Describe one minimized Position or opportunity command result.
+
+    Attributes
+    ----------
+    structure_id
+        The structure identifier within the requested scope.
+    receipt_id
+        The receipt identifier within the requested scope.
+    position_id
+        The Position identifier affected by the command.
+    resulting_version
+        The expected resulting version used to reject stale updates.
+    changed_fields
+        The canonical field names changed by the operation.
+    action
+        The stable action code describing the requested transition.
+    replayed
+        Whether this result came from an idempotent command replay.
+    """
 
     structure_id: UUID
     receipt_id: UUID | None
