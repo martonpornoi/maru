@@ -1,6 +1,6 @@
 # Maru hands-on tutorial: organization authority to edition
 
-Status: M1.1/M2.1 plus Page 9a.1 Department management mounted; the definitive
+Status: M1.1/M2.1 plus Department management mounted; the definitive
 adapter-expanded repository gate passes 1,693 tests in 1,653.43 seconds at
 90.50 percent total branch-inclusive coverage. Authenticated narrow-viewport,
 accessibility/state-matrix, deployment-recovery, and owner-rehearsal evidence
@@ -14,7 +14,7 @@ recurring convention series and dated edition and explicitly selects working
 context. It uses synthetic/local data. Do not use these credentials, names, or
 procedures as production approval.
 
-Backend route, permission, service, Page 8 integration, sensitive-read/denial,
+Backend route, permission, service, Representation & access integration, sensitive-read/denial,
 and database-subject tests cover this journey. Local populated/fresh migration,
 restore-drill, and desktop/390-pixel shell smoke evidence pass, but the exact
 owner-led exercise below has not yet been recorded end to end. Apply every
@@ -110,7 +110,7 @@ Open <http://127.0.0.1:8000/admin/>. Sign in with the email or login handle.
 
 The permission-filtered administration home and one collapsible left
 navigation appear. Open **Platform administration → Organizations**; its direct
-route is <http://127.0.0.1:8000/admin/platform/organizations/>. Page 1 lists
+route is <http://127.0.0.1:8000/admin/platform/organizations/>. Platform administration home lists
 organizations and keeps an adjacent **+ Add** action. The access summary
 explains that your authority is platform oversight, not convention
 participation.
@@ -124,7 +124,7 @@ Expected empty state: no invented setup record and no convention context. If
 the prepared MaruCon Draft already exists, leave it intact and use a clearly
 synthetic organization for this tutorial.
 
-## 3. Create the organization (Page 2)
+## 3. Create the organization
 
 Select **+ Add** beside Organizations. Only **Organization name** is required.
 For a useful rehearsal, enter:
@@ -154,9 +154,9 @@ Select **Create organization**. Maru:
 All browser forms use a closed input contract. Extra crafted fields such as
 `slug` or `lifecycle` are rejected rather than silently accepted or ignored.
 
-## 4. Review the organization (Page 3)
+## 4. Review the organization (Organization record)
 
-Select the organization name in the inventory. Page 3 shows its stable slug,
+Select the organization name in the inventory. Organization record shows its stable slug,
 Draft state, convention-series section, complete profile, and protected danger
 zone.
 
@@ -166,12 +166,12 @@ audit; an unchanged save reports that nothing changed and writes nothing.
 
 Deletion is deliberately narrow. It requires the current name exactly and an
 acknowledgement, and succeeds only for an empty Draft. Do not use it in this
-tutorial: once Page 8 provisions the protected representation, deletion must
+tutorial: once Representation & access provisions the protected representation, deletion must
 refuse rather than erase governance history.
 
 ## 5. Create and verify two synthetic person accounts
 
-Page 8 never creates or guesses an account. Prepare two distinct ordinary
+Representation & access never creates or guesses an account. Prepare two distinct ordinary
 `person` accounts with verified emails before inviting them. Do not create
 superusers or platform administrators, and do not copy a real volunteer roster.
 
@@ -215,9 +215,9 @@ the `.invalid` identities in a shared or production environment. Do not mark
 verification challenge is part of the identity evidence this exercise is meant
 to preserve.
 
-## 6. Provision and invite the Executive Board (Page 8)
+## 6. Provision and invite the Executive Board (Representation & access)
 
-Sign back in as the platform administrator. On Page 3, select
+Sign back in as the platform administrator. On Organization record, select
 **Representation & access**. The direct route is the organization's displayed
 stable slug followed by `/representation/`, for example:
 
@@ -269,7 +269,7 @@ delivery and reminders remain later work.
 
 ## 8. Activate organization governance
 
-Sign back in as the platform administrator and return to Page 8. Before
+Sign back in as the platform administrator and return to Representation & access. Before
 activation, confirm:
 
 - at least two distinct appointments say Accepted;
@@ -297,7 +297,7 @@ Do not edit role, membership, representation, or lifecycle records directly.
 A dependency failure must keep the entire organization/authority state as it
 was before the attempt.
 
-## 9. Create the convention series (Page 4)
+## 9. Create the convention series
 
 In the selected-organization navigation, select **+ Add** beside
 **Convention series**. Enter:
@@ -314,9 +314,9 @@ Select **Create convention series**. Active means that the series may own a
 future edition; it does not publish a website or create one. The organization
 is trusted from the route, not an editable form field.
 
-## 10. Review and edit the series (Page 5)
+## 10. Review and edit the series
 
-Select the series name on Page 3. Page 5 shows the stable series record,
+Select the series name on Organization record. Convention series record shows the stable series record,
 profile version, recent activity, and an initially empty **Convention
 editions** section.
 
@@ -330,7 +330,7 @@ The activity block uses safe domain facts, not the security audit. It shows the
 operation and changed field labels without showing the entered description,
 email, UUID, or other hidden values.
 
-## 11. Create the dated edition (Page 6)
+## 11. Create the dated edition
 
 Select **+ Add** beside **Convention editions**. Suggested values:
 
@@ -349,13 +349,13 @@ browser retry UUID through validation, so an accidental repeat reuses the
 first edition rather than creating a duplicate.
 
 Select **Create event edition**. The result is one Draft edition with aggregate
-version 1. Creation redirects to Page 7 but deliberately does not select the
+version 1. Creation redirects to Event edition record but deliberately does not select the
 edition as working context. It also creates no registration configuration,
 application type, venue, programme item, department, or shift.
 
-## 12. Review, edit, and select the edition (Page 7)
+## 12. Review, edit, and select the edition
 
-Page 7 is the stable edition landing record. Confirm:
+Event edition record is the stable edition landing record. Confirm:
 
 - the organization → series → edition chain is visible;
 - lifecycle is Draft;
@@ -376,7 +376,7 @@ Select **Use as working edition**. The POST stores display/query context in
 your session and returns to the record. It does not grant access or create a
 relationship. Select **Clear working edition** to remove that context.
 
-## 13. Establish and inspect Organization structure (Page 9a.1)
+## 13. Establish and inspect Organization structure (Department management)
 
 With the edition selected, choose **Organization structure** beneath that
 edition in the shared sidebar. Its canonical route ends in `/structure/`, for
@@ -475,7 +475,7 @@ documented projection.
 The repository does not yet ship a production third-party credential issuance
 workflow. Use the OpenAPI schema and authenticated local test clients for
 development; do not invent durable tokens or share a browser session cookie.
-Page 8 deliberately has no declared API in M2.1. Its browser adapters must use
+Representation & access deliberately has no declared API in M2.1. Its browser adapters must use
 the same module commands a future strict, versioned API would call; do not post
 to model-admin endpoints or invent an undocumented representation API.
 
@@ -506,8 +506,8 @@ dependency failure returns `503`.
 
 ## 15. What to test as different users
 
-Pages 1–2 remain platform-administrator setup. Backend tests verify Pages 3–7
-for platform oversight and active Board-capability paths. Page 8 is
+Platform administration home and Create organization remain platform-administrator setup. Backend tests verify the organization, series, and edition record surfaces
+for platform oversight and active Board-capability paths. Representation & access is
 narrower and relationship-aware: an exact invitee may see only their own
 open invitation; a representation manager may see the bounded directory for
 their organization; an unrelated ordinary account or Django staff account must
@@ -520,8 +520,8 @@ assignment, but no edition participation, registration, department position,
 or workforce assignment. The platform administrator must still have zero rows
 as a subject in all of those convention-owned tables.
 
-Pages 1–7 show a truthful principal-specific authority summary. Page 8 adds the
-root representation/invitation explanation. Page 9a.1 requires edition-wide
+the platform setup record journey show a truthful principal-specific authority summary. Representation & access adds the
+root representation/invitation explanation. Department management requires edition-wide
 `workforce.view_structure`; a Department-only capability, Django staff flag,
 Board visual position, or selected-edition session is insufficient. Manage
 authority alone does not imply view, and mutations additionally require
@@ -535,16 +535,16 @@ work.
 | Symptom | Safe response |
 | --- | --- |
 | `column ... does not exist` | Stop the server, confirm the intended database URL, run `migrate`, and restart the current build; do not fake migrations |
-| 403 after sign-in | Pages 1–2 require an active platform administrator. On Pages 3–8, confirm exact current organization/edition authority or an own open invitation. Page 9 needs exact edition-wide `workforce.view_structure`; staff, selected context, manage-only, or Department-only scope is insufficient |
+| 403 after sign-in | Platform administration home and Create organization require an active platform administrator. On the organization-scoped setup and representation surfaces, confirm exact current organization/edition authority or an own open invitation. Organization structure needs exact edition-wide `workforce.view_structure`; staff, selected context, manage-only, or Department-only scope is insufficient |
 | Structure limit exceeded | The response intentionally contains no partial hierarchy. Reduce/reconcile the persisted structure or wait for a separately reviewed larger-bound design; do not bypass the ceiling |
 | 404 under a nested URL | Return through the inventory; the organization, series, and edition route chain must match exactly |
 | Exact Board email is rejected | Confirm the account already exists, is active, is a person rather than platform administrator, and completed email verification; the UI must not reveal which test failed |
 | Activation says invitations are pending | Every invited controller must accept or decline before activation; do not bypass the pending row |
-| Activation says the version is stale | Reload Page 8 and re-evaluate the current appointments; never replace the hidden aggregate version manually |
+| Activation says the version is stale | Reload Representation & access and re-evaluate the current appointments; never replace the hidden aggregate version manually |
 | Reserved Executive Board role conflict | Stop and reconcile the existing authority record; do not overwrite or rename it through model admin |
 | 409 on edition creation | Check for Closed organization, Inactive series, or changed-payload reuse of a retry key |
 | 409 while saving | Another write advanced the profile/aggregate version or the lifecycle is read-only; reload before deciding |
-| 409 while changing structure | Reload the exact Page 9 child form. Check the current aggregate version, edition/organization lifecycle, retained Department dependencies, and whether an idempotency key was reused for different input; do not replace hidden controls manually |
+| 409 while changing structure | Reload the exact Organization structure child form. Check the current aggregate version, edition/organization lifecycle, retained Department dependencies, and whether an idempotency key was reused for different input; do not replace hidden controls manually |
 | 503 | Keep the submitted values, restore the named dependency, and retry; do not create a parallel record through raw model saves |
 | Outbox remains pending | Follow the effects worker runbook; do not edit domain-event or receipt rows |
 
@@ -555,9 +555,9 @@ edition → versioned Department-structure journey. Local migration, restore,
 frontend, sensitive-read/denial, and the earlier responsive shell gates pass.
 The command/database baseline passes 1,471 tests at 90.13 percent branch
 coverage and the strict mutation API focus passes 48 tests. The adapter-expanded
-combined Page 9 gate passes 159 tests in 102.89 seconds, and the definitive
+combined Organization structure gate passes 159 tests in 102.89 seconds, and the definitive
 repository gate passes 1,693 tests at 90.50 percent total branch-inclusive
-coverage. The authenticated responsive Page 9 management state matrix remains
+coverage. The authenticated responsive Organization structure management state matrix remains
 pending. This tutorial is not release acceptance
 evidence until representative deployment/PITR recovery, keyboard/automated
 accessibility, complete visual states, and owner rehearsal pass. Ongoing Board

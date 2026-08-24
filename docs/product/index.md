@@ -18,7 +18,7 @@ that answers your question:
   contract.
 - [Capability map](capability-map.md) describes the broader product horizon; it
   is not a statement that every capability exists today.
-- [Page contracts](page-contracts/index.md) specify the accepted management
+- [Management surface contracts](page-contracts/index.md) specify the accepted management
   surfaces and their evidence boundaries.
 - [Legacy capability map](legacy-maru-capability-map.md) is behavior-level input,
   not current implementation authority.

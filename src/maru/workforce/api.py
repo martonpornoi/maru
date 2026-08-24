@@ -64,6 +64,11 @@ from maru.workforce.serializers import (
     WorkforceDepartmentMutationResultSerializer,
     WorkforceDepartmentRetireSerializer,
     WorkforceDepartmentUpdateSerializer,
+    WorkforcePositionCloseSerializer,
+    WorkforcePositionCreateSerializer,
+    WorkforcePositionMutationResultSerializer,
+    WorkforcePositionOpportunityUpdateSerializer,
+    WorkforcePositionUpdateSerializer,
     WorkforceProblemSerializer,
     WorkforceStructureSerializer,
     WorkforceStructureTemplateApplySerializer,
@@ -77,20 +82,26 @@ from maru.workforce.structure_audit import append_structure_read_audit
 from maru.workforce.structure_commands import (
     BuiltinStructureTemplateResult,
     DepartmentStructureResult,
+    PositionStructureResult,
     StructureAuthorizationDeniedError,
     StructureCommandError,
     StructureDepartmentUnavailableError,
     StructureDependencyConflictError,
     StructureLifecycleConflictError,
     StructureLimitConflictError,
+    StructurePositionUnavailableError,
     StructureRetryConflictError,
     StructureStateConflictError,
     StructureVersionConflictError,
     apply_builtin_structure_template,
+    close_position,
     create_department,
+    create_position,
     delete_unused_department,
     retire_department,
     update_department,
+    update_position,
+    update_position_opportunity,
 )
 from maru.workforce.structure_inputs import CANONICAL_UUID_PATTERN
 from maru.workforce.structure_snapshot import (
@@ -187,7 +198,7 @@ _STRUCTURE_CONFLICT_ERRORS: dict[
     ),
     StructureDependencyConflictError: (
         StructureDependencyConflictError.reason_code,
-        {"non_field_errors": ["Retained dependencies protect this Department."]},
+        {"non_field_errors": ["Retained dependencies protect this record."]},
     ),
     StructureLimitConflictError: (
         StructureLimitConflictError.reason_code,
@@ -207,6 +218,13 @@ def _raise_structure_department_unavailable() -> Never:
     raise NotFound(
         _STRUCTURE_MUTATION_UNAVAILABLE_DETAIL,
         code=StructureDepartmentUnavailableError.reason_code,
+    )
+
+
+def _raise_structure_position_unavailable() -> Never:
+    raise NotFound(
+        _STRUCTURE_MUTATION_UNAVAILABLE_DETAIL,
+        code=StructurePositionUnavailableError.reason_code,
     )
 
 
@@ -358,6 +376,16 @@ _SAFE_STRUCTURE_VALIDATION_FIELDS = frozenset(
         "description",
         "parent_department_id",
         "display_order",
+        "template_id",
+        "department_id",
+        "reports_to_id",
+        "title",
+        "headcount",
+        "status",
+        "headline",
+        "applications_open_at",
+        "applications_close_at",
+        "visible_when_filled",
         "reason",
     }
 )
@@ -408,7 +436,11 @@ def _is_safe_structure_input_validation(error: DjangoValidationError) -> bool:
 
 
 def _execute_structure_command[
-    CommandResult: (BuiltinStructureTemplateResult, DepartmentStructureResult)
+    CommandResult: (
+        BuiltinStructureTemplateResult,
+        DepartmentStructureResult,
+        PositionStructureResult,
+    )
 ](
     command: Callable[[], CommandResult],
 ) -> CommandResult:
@@ -418,6 +450,8 @@ def _execute_structure_command[
         _raise_structure_mutation_unavailable()
     except StructureDepartmentUnavailableError:
         _raise_structure_department_unavailable()
+    except StructurePositionUnavailableError:
+        _raise_structure_position_unavailable()
     except DjangoValidationError as error:
         if not _is_safe_structure_input_validation(error):
             _raise_dependency_unavailable(
@@ -470,8 +504,9 @@ class _WorkforceStructureAutoSchema(_WorkforceStructureMutationAutoSchema):
     """Document the required JSON body on the contract's DELETE command.
 
     drf-spectacular intentionally omits DELETE bodies in its default schema
-    builder. OpenAPI 3.1 permits this request body and Page 9 requires exact-name
-    confirmation, so the one affected view registers its closed serializer
+    builder. OpenAPI 3.1 permits this request body and protected Department
+    deletion requires exact-name confirmation, so the affected view registers its
+    closed serializer
     explicitly while every other method retains the library implementation.
     """
 
@@ -676,6 +711,15 @@ class WorkforceStructureView(APIView):
                 edition_id=edition_id,
                 at=response_authorized_at,
             )
+            manage_positions = decide(
+                principal=account,
+                capability_code="workforce.manage_structure",
+                resource=resolve_edition_target(
+                    organization_id=organization_id,
+                    edition_id=edition_id,
+                ),
+                at=response_authorized_at,
+            ).allowed
             http_method = cast("str", request.method)
             append_structure_read_audit(
                 actor=account,
@@ -703,6 +747,7 @@ class WorkforceStructureView(APIView):
             "organization_name": snapshot.organization_name,
             "series_name": snapshot.series_name,
             "edition_name": snapshot.edition_name,
+            "can_manage_positions": manage_positions,
             "governance": asdict(snapshot.governance),
             "structure": asdict(snapshot.structure),
         }
@@ -1157,6 +1202,355 @@ class WorkforceDepartmentRetireView(_WorkforceStructureMutationView):
             "aggregate_version": result.resulting_version,
         }
         return Response(WorkforceDepartmentMutationResultSerializer(payload).data)
+
+
+def _position_mutation_response(
+    result: PositionStructureResult,
+    *,
+    created: bool = False,
+) -> Response:
+    payload = {
+        "position_id": result.position_id,
+        "aggregate_version": result.resulting_version,
+    }
+    response_status = (
+        status.HTTP_200_OK
+        if result.replayed or not created
+        else status.HTTP_201_CREATED
+    )
+    return Response(
+        WorkforcePositionMutationResultSerializer(payload).data,
+        status=response_status,
+    )
+
+
+class WorkforcePositionCollectionView(_WorkforceStructureMutationView):
+    """Create governed Positions in one exact edition."""
+
+    @extend_schema(
+        operation_id="workforce_create_position",
+        request=WorkforcePositionCreateSerializer,
+        parameters=[_STRUCTURE_IDEMPOTENCY_PARAMETER],
+        responses={
+            201: WorkforcePositionMutationResultSerializer,
+            200: WorkforcePositionMutationResultSerializer,
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The Position request or idempotency key is invalid."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The mutation route or required authority is unavailable."
+            ),
+            (404, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The exact Department or reporting Position is unavailable."
+            ),
+            (409, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The request conflicts with current structure state."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A canonical command dependency is temporarily unavailable."
+            ),
+        },
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+    ) -> Response:
+        """Create a Position and its private draft volunteer opportunity.
+
+        Parameters
+        ----------
+        request : Request
+            Authenticated strict JSON request with an idempotency header.
+        organization_id : UUID
+            Untrusted organization route identifier.
+        edition_id : UUID
+            Untrusted event-edition route identifier.
+
+        Returns
+        -------
+        Response
+            Minimized Position identifier and resulting structure version.
+        """
+        scope = _authorize_structure_mutation(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        retry_key = _structure_idempotency_key(request)
+        values = _validated_structure_payload(
+            request,
+            serializer_class=WorkforcePositionCreateSerializer,
+        )
+        correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
+        result = _execute_structure_command(
+            lambda: create_position(
+                actor=scope.account,
+                organization_id=organization_id,
+                series_id=scope.series_id,
+                edition_id=edition_id,
+                template_id=cast("UUID", values["template_id"]),
+                department_id=cast("UUID", values["department_id"]),
+                reports_to_id=cast("UUID | None", values["reports_to_id"]),
+                title=cast("str", values["title"]),
+                description=cast("str", values["description"]),
+                headcount=cast("int", values["headcount"]),
+                expected_version=cast("int", values["expected_version"]),
+                reason=cast("str", values["reason"]),
+                retry_key=retry_key,
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+        )
+        return _position_mutation_response(result, created=True)
+
+
+class WorkforcePositionDetailView(_WorkforceStructureMutationView):
+    """Replace the editable details of one exact-edition Position."""
+
+    @extend_schema(
+        operation_id="workforce_update_position",
+        request=WorkforcePositionUpdateSerializer,
+        responses={
+            200: WorkforcePositionMutationResultSerializer,
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The complete Position replacement is invalid."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The mutation route or required authority is unavailable."
+            ),
+            (404, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The exact Position or reporting Position is unavailable."
+            ),
+            (409, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The request conflicts with current structure state."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A canonical command dependency is temporarily unavailable."
+            ),
+        },
+    )
+    def put(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        position_id: UUID,
+    ) -> Response:
+        """Replace editable Position details through the shared command.
+
+        Parameters
+        ----------
+        request : Request
+            Authenticated strict complete-replacement JSON request.
+        organization_id : UUID
+            Untrusted organization route identifier.
+        edition_id : UUID
+            Untrusted event-edition route identifier.
+        position_id : UUID
+            Position identifier resolved after exact-edition authorization.
+
+        Returns
+        -------
+        Response
+            Minimized Position identifier and resulting structure version.
+        """
+        scope = _authorize_structure_mutation(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        values = _validated_structure_payload(
+            request,
+            serializer_class=WorkforcePositionUpdateSerializer,
+        )
+        correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
+        result = _execute_structure_command(
+            lambda: update_position(
+                actor=scope.account,
+                organization_id=organization_id,
+                series_id=scope.series_id,
+                edition_id=edition_id,
+                position_id=position_id,
+                reports_to_id=cast("UUID | None", values["reports_to_id"]),
+                title=cast("str", values["title"]),
+                description=cast("str", values["description"]),
+                headcount=cast("int", values["headcount"]),
+                expected_version=cast("int", values["expected_version"]),
+                reason=cast("str", values["reason"]),
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+        )
+        return _position_mutation_response(result)
+
+
+class WorkforcePositionOpportunityView(_WorkforceStructureMutationView):
+    """Replace the volunteer-opportunity settings paired to one Position."""
+
+    @extend_schema(
+        operation_id="workforce_update_position_opportunity",
+        request=WorkforcePositionOpportunityUpdateSerializer,
+        responses={
+            200: WorkforcePositionMutationResultSerializer,
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The complete opportunity replacement is invalid."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The mutation route or required authority is unavailable."
+            ),
+            (404, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The exact Position is unavailable."
+            ),
+            (409, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The request conflicts with current structure state."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A canonical command dependency is temporarily unavailable."
+            ),
+        },
+    )
+    def put(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        position_id: UUID,
+    ) -> Response:
+        """Replace the applicant-facing opportunity through the shared command.
+
+        Parameters
+        ----------
+        request : Request
+            Authenticated strict complete-replacement JSON request.
+        organization_id : UUID
+            Untrusted organization route identifier.
+        edition_id : UUID
+            Untrusted event-edition route identifier.
+        position_id : UUID
+            Position identifier resolved after exact-edition authorization.
+
+        Returns
+        -------
+        Response
+            Minimized Position identifier and resulting structure version.
+        """
+        scope = _authorize_structure_mutation(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        values = _validated_structure_payload(
+            request,
+            serializer_class=WorkforcePositionOpportunityUpdateSerializer,
+        )
+        correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
+        result = _execute_structure_command(
+            lambda: update_position_opportunity(
+                actor=scope.account,
+                organization_id=organization_id,
+                series_id=scope.series_id,
+                edition_id=edition_id,
+                position_id=position_id,
+                status=cast("str", values["status"]),
+                headline=cast("str", values["headline"]),
+                description=cast("str", values["description"]),
+                applications_open_at=cast(
+                    "datetime | None", values["applications_open_at"]
+                ),
+                applications_close_at=cast(
+                    "datetime | None", values["applications_close_at"]
+                ),
+                visible_when_filled=cast("bool", values["visible_when_filled"]),
+                expected_version=cast("int", values["expected_version"]),
+                reason=cast("str", values["reason"]),
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+        )
+        return _position_mutation_response(result)
+
+
+class WorkforcePositionCloseView(_WorkforceStructureMutationView):
+    """Close one dependency-free Position while preserving its history."""
+
+    @extend_schema(
+        operation_id="workforce_close_position",
+        request=WorkforcePositionCloseSerializer,
+        responses={
+            200: WorkforcePositionMutationResultSerializer,
+            (400, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The Position closure request is invalid."
+            ),
+            (403, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The mutation route or required authority is unavailable."
+            ),
+            (404, PROBLEM_CONTENT_TYPE): _problem_response(
+                "The exact Position is unavailable."
+            ),
+            (409, PROBLEM_CONTENT_TYPE): _problem_response(
+                "Current dependencies or structure state prevent closure."
+            ),
+            (503, PROBLEM_CONTENT_TYPE): _problem_response(
+                "A canonical command dependency is temporarily unavailable."
+            ),
+        },
+    )
+    def post(
+        self,
+        request: Request,
+        organization_id: UUID,
+        edition_id: UUID,
+        position_id: UUID,
+    ) -> Response:
+        """Close the Position and its public opportunity through one command.
+
+        Parameters
+        ----------
+        request : Request
+            Authenticated strict Position-closure JSON request.
+        organization_id : UUID
+            Untrusted organization route identifier.
+        edition_id : UUID
+            Untrusted event-edition route identifier.
+        position_id : UUID
+            Position identifier resolved after exact-edition authorization.
+
+        Returns
+        -------
+        Response
+            Minimized Position identifier and resulting structure version.
+        """
+        scope = _authorize_structure_mutation(
+            request=request,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        values = _validated_structure_payload(
+            request,
+            serializer_class=WorkforcePositionCloseSerializer,
+        )
+        correlation_id = UUID(request.correlation_id)  # type: ignore[attr-defined]
+        result = _execute_structure_command(
+            lambda: close_position(
+                actor=scope.account,
+                organization_id=organization_id,
+                series_id=scope.series_id,
+                edition_id=edition_id,
+                position_id=position_id,
+                expected_version=cast("int", values["expected_version"]),
+                confirmation_name=cast("str", values["confirmation_name"]),
+                reason=cast("str", values["reason"]),
+                correlation_id=correlation_id,
+                request_id=correlation_id,
+                source_channel="api",
+            )
+        )
+        return _position_mutation_response(result)
 
 
 def _opportunity_payload(opportunity: VolunteerOpportunity) -> dict[str, object]:

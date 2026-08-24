@@ -1,4 +1,4 @@
-# Page 4 contract: Create convention series
+# Create convention series contract
 
 - Status: Implemented and backend-verified for platform oversight and scoped
   Executive Board authority; browser rehearsal pending
@@ -21,15 +21,15 @@ authority, participant, registrant, volunteer, or workforce assignee.
 
 ## Placement and navigation
 
-Page 3 adds a **Convention series** section before its complete profile. The
+Organization record adds a **Convention series** section before its complete profile. The
 section lists only series owned by that organization and provides a contextual
 **+ Add series** action. Empty text explains that editions come later.
 
-Page 4 is nested under that organization and links back to its Page 3 record.
+Create convention series is nested under that organization and links back to its Organization record.
 The shared sidebar retains the global **Organizations** row and adds a section
 named for the selected organization. That section links to **Organization
 record** and **Convention series**; the latter keeps its compact adjacent
-**+ Add** action current on Page 4. This is contextual navigation, not a
+**+ Add** action current on Create convention series. This is contextual navigation, not a
 global or cross-tenant Series collection. The desktop sidebar starts at normal
 page padding and the bounded content remains beside it; narrow layouts stack.
 
@@ -53,7 +53,7 @@ may use the same slug.
 The browser contract accepts only these five fields plus CSRF. A forged
 organization, slug, profile version, actor, timestamp, or other undeclared key
 fails with `unknown_input_field`; it is never silently ignored. The same
-closed-input rule applies when the form is reused for Page 5, where the one
+closed-input rule applies when the form is reused for Convention series record, where the one
 additional declared key is the expected profile version.
 
 ## Authorization, lifecycle, privacy, and audit
@@ -80,7 +80,7 @@ explicit public-content publication workflow exists.
   Active, optional fields are blank, and boundaries are explained.
 - **Validation:** field-local errors keep safe submitted values and create
   nothing.
-- **Success:** redirect to Page 3 with a one-time confirmation and the new
+- **Success:** redirect to Organization record with a one-time confirmation and the new
   series row.
 - **Closed parent:** `409` explanation with no creation form or mutation.
 - **Denied:** `403` before lookup and with no organization disclosure.
@@ -93,12 +93,12 @@ explicit public-content publication workflow exists.
 
 The page uses one `h1`, visible parent context, labelled sections, field-local
 errors, text labels for status, visible focus, and an ordinary cancel link.
-Page 3's series table reflows to labelled records at narrow widths. Desktop and
+Organization record's series table reflows to labelled records at narrow widths. Desktop and
 390-pixel layouts must have no horizontal overflow.
 
 ## Acceptance checks
 
-- Page 3 empty and populated organization-scoped series states;
+- Organization record empty and populated organization-scoped series states;
 - contextual record and series destinations, current add route, global
   organization row, and viewport-edge desktop alignment;
 - anonymous redirect, denied-before-lookup, authorized 404, and Closed `409`;

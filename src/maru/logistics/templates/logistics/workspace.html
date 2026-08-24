@@ -1,6 +1,7 @@
 {% extends "admin/base_site.html" %}
 
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="maru-management-page">
@@ -12,6 +13,7 @@
         <p><a href="{% url 'logistics-stage-receiving-page' organization.slug convention_series.slug edition.slug %}">Open Stage Tech receiving</a></p>
       </div>
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     <section class="module" aria-labelledby="logistics-offers-title">
       <h2 id="logistics-offers-title">Equipment offers</h2>

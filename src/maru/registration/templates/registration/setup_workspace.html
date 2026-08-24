@@ -65,16 +65,19 @@
       </p>
     </header>
 
-    <section class="baseline-access-summary" aria-labelledby="registration-access-title">
-      <div>
-        <p class="baseline-kicker" id="registration-access-title">Your effective access</p>
+    <details class="maru-access-summary">
+      <summary id="registration-access-title">
+        <span class="maru-access-summary__label">
+          <strong>Access</strong>
+          <span class="maru-access-summary__scope">{{ registration_access_label }}</span>
+        </span>
+        <span class="maru-access-summary__policy">Registration configuration</span>
+      </summary>
+      <div class="maru-access-summary__body">
         <p class="baseline-access-line">
           <strong>{{ registration_access_label }}</strong>
           <span>allows you to manage registration configuration for this exact edition.</span>
         </p>
-      </div>
-      <details>
-        <summary>Why can I access this?</summary>
         {% if registration_access_label == "Platform oversight" %}
           <p>
             Platform oversight attributes every action to your administrator
@@ -88,8 +91,8 @@
             grant this access.
           </p>
         {% endif %}
-      </details>
-    </section>
+      </div>
+    </details>
 
     {% if not registration_workspace.current_configuration %}
       <section class="baseline-state registration-setup-empty" aria-labelledby="registration-not-configured-title">

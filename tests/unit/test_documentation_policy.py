@@ -12,6 +12,7 @@ from scripts.validate_docs import (
     ethical_content_failures,
     markdown_files,
     navigation_failures,
+    purpose_name_failures,
 )
 
 if TYPE_CHECKING:
@@ -111,6 +112,44 @@ def test_navigation_accepts_hidden_catalogs_and_rejects_orphans(tmp_path: Path) 
     assert len(failures) == 1
     assert "unlisted.md" in failures[0]
     assert "0001-example.md" not in failures[0]
+
+
+def test_purpose_naming_rejects_numbered_surface_labels(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "docs" / "project" / "CURRENT.md",
+        "# Current\n\nOpen Page 9a.1 to continue.\n",
+    )
+
+    failures = purpose_name_failures(tmp_path)
+
+    assert len(failures) == 1
+    assert "docs/project/CURRENT.md:3" in failures[0]
+    assert "purpose name" in failures[0]
+
+
+def test_purpose_naming_preserves_explicit_historical_records(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "docs" / "project" / "CURRENT.md",
+        "# Current\n\nOpen Organization structure to continue.\n",
+    )
+    _write(
+        tmp_path / "docs" / "architecture" / "decisions" / "0001-history.md",
+        "# Historical decision\n\nPage 9 was the accepted delivery label.\n",
+    )
+    _write(
+        tmp_path / "docs" / "checkpoints" / "history.md",
+        "# Checkpoint\n\nPage 9 passed.\n",
+    )
+    _write(
+        tmp_path / "docs" / "project" / "PRODUCTION_CONSOLIDATION.md",
+        "# Frozen ledger\n\nPage 9 remains historical evidence.\n",
+    )
+
+    assert purpose_name_failures(tmp_path) == []
+
+
+def test_current_guidance_uses_purpose_names() -> None:
+    assert purpose_name_failures(ROOT) == []
 
 
 def test_ethical_policy_rejects_real_names_and_live_people_urls(

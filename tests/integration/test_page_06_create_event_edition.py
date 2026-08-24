@@ -89,7 +89,7 @@ def test_creation_page_inherits_visible_locale_defaults_and_has_strict_scope() -
     assert 'name="series_id"' not in content
     assert content.count('aria-current="page"') == 1
     assert "Platform access, not participation" not in content
-    assert '<h2 id="maru-access-heading">Access</h2>' in content
+    assert '<summary id="maru-access-heading">' in content
     assert "does not store its own sharing list" in content
 
 

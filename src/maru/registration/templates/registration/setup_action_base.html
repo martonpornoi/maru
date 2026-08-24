@@ -34,16 +34,19 @@
     </p>
   </header>
 
-  <section class="baseline-access-summary" aria-labelledby="registration-action-access-title">
-    <div>
-      <p class="baseline-kicker" id="registration-action-access-title">Your effective access</p>
+  <details class="maru-access-summary">
+    <summary id="registration-action-access-title">
+      <span class="maru-access-summary__label">
+        <strong>Access</strong>
+        <span class="maru-access-summary__scope">{{ registration_access_label }}</span>
+      </span>
+      <span class="maru-access-summary__policy">Registration change</span>
+    </summary>
+    <div class="maru-access-summary__body">
       <p class="baseline-access-line">
         <strong>{{ registration_access_label }}</strong>
         <span>allows governed configuration changes for this exact edition while its lifecycle permits them.</span>
       </p>
-    </div>
-    <details>
-      <summary>What does this access mean?</summary>
       <p>
         Every write repeats current exact-scope authorization, locks the setup,
         and records one versioned retry-safe command with audit and outbox evidence.
@@ -51,11 +54,16 @@
       {% if registration_access_label == "Platform oversight" %}
         <p>Platform oversight does not make this administrator a convention subject.</p>
       {% endif %}
-    </details>
-  </section>
+    </div>
+  </details>
 
   {% if action_error %}
-    <div class="baseline-state baseline-state--error registration-action-error" role="alert">
+    <div
+      class="baseline-state baseline-state--error registration-action-error"
+      role="alert"
+      tabindex="-1"
+      data-maru-focus-on-load
+    >
       <h2>Registration setup was not changed</h2>
       <p>{{ action_error }}</p>
       {% if reload_required %}<p>{% block registration_reload_link %}{% endblock %}</p>{% endif %}

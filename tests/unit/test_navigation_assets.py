@@ -21,9 +21,29 @@ def test_navigation_filter_covers_every_projected_menu_item() -> None:
 
     assert "[data-navigation-item]" in script
     assert "dataset.navigationSearch" in script
-    assert "event.key === 'Escape'" in script
-    assert "available pages" in script
-    assert "sessionStorage" in script
+    assert "event.key !== 'Escape'" in script
+    assert "technical record" in script
+    assert "sessionStorage.removeItem" in script
+    assert "sessionStorage.setItem" not in script
+    assert "sessionStorage.getItem" not in script
+    assert "dataset.navigationGroupKind === 'advanced'" in script
+
+
+def test_server_rendered_action_errors_receive_keyboard_focus() -> None:
+    script = _static_text("core/navigation.js")
+
+    assert "[data-maru-focus-on-load]" in script
+    assert "requestAnimationFrame(() => focusTarget.focus())" in script
+
+    for template_name in (
+        "registration/setup_action_base.html",
+        "workforce/organization_structure_action_base.html",
+        "workforce/position_action_base.html",
+    ):
+        template = _template_text(template_name)
+        assert 'role="alert"' in template
+        assert 'tabindex="-1"' in template
+        assert "data-maru-focus-on-load" in template
 
 
 def test_navigation_template_has_stable_accessible_text_and_glyphs() -> None:
@@ -32,7 +52,11 @@ def test_navigation_template_has_stable_accessible_text_and_glyphs() -> None:
 
     assert chr(0xC2) not in base_site
 
-    assert 'placeholder="Search menu..."' in sidebar
+    assert 'placeholder="Search tasks and records..."' in sidebar
+    assert "Find a task or record" in sidebar
+    assert "Customize navigation" in sidebar
+    assert 'class="maru-navigation-pin"' in sidebar
+    assert "available pages" not in sidebar
     assert "&#9733;" in sidebar
     assert "&#9734;" in sidebar
     assert chr(0xE2) not in sidebar

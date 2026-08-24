@@ -2,9 +2,11 @@
 {% load i18n static %}
 
 {% block bodyclass %}{{ block.super }} baseline-page baseline-page--form{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
-<main id="content-main" class="baseline-record-page" aria-labelledby="step-up-title">
+<div id="content-main" class="baseline-record-page" aria-labelledby="step-up-title">
   <header class="baseline-record-header">
     <p class="baseline-eyebrow">Account security</p>
     <h1 id="step-up-title">Confirm it is you</h1>
@@ -28,5 +30,5 @@
       </div>
     </form>
   </section>
-</main>
+</div>
 {% endblock %}

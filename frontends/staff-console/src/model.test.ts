@@ -88,6 +88,7 @@ describe("Staff Console model helpers", () => {
 
   it("makes machine lifecycle values readable", () => {
     expect(lifecycleLabel("in-review")).toBe("In Review");
+    expect(lifecycleLabel("payment_pending")).toBe("Payment Pending");
   });
 
   it("uses the current time for the greeting", () => {

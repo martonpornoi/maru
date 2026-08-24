@@ -1,4 +1,4 @@
-# Page 7 contract: Event-edition record
+# Event edition record contract
 
 - Status: Implemented and desktop/390-pixel smoke verified for platform
   oversight and scoped Executive Board visibility; accessibility, complete
@@ -60,7 +60,7 @@ JSON properties above. Unknown or forged fields are rejected instead of
 ignored.
 
 Field errors use the same actionable name/date/time-zone/language/currency
-vocabulary as Page 6. Unknown input uses `unknown_input_field`; concurrency
+vocabulary as Create event edition. Unknown input uses `unknown_input_field`; concurrency
 uses `stale_edition_version` with reload guidance; read-only state uses
 `edition_profile_read_only`; a Closed parent uses `edition_parent_closed`.
 Edition list/autocomplete GETs reject undeclared query parameters, and the

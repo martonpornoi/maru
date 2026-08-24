@@ -1,6 +1,6 @@
 # Activity module
 
-Status: Implemented bounded record-history projection for Pages 5 and 7
+Status: Implemented bounded record-history projection for Convention series record and Event edition record
 Last updated: 2026-08-01
 
 ## Purpose and requirements
@@ -19,7 +19,7 @@ interchangeable products.
 - exact organization ID;
 - exact aggregate type and aggregate ID;
 - the display time zone; and
-- a bounded limit, currently 20 on Pages 5 and 7.
+- a bounded limit, currently 20 on Convention series record and Event edition record.
 
 The caller must already have authorization to view the record. The query asks
 `maru.effects` only for allowlisted domain facts scoped to that organization and
@@ -78,5 +78,5 @@ allowlisting, value non-disclosure, lifecycle wording, and database failure.
 This is M1 record history, not M2's full human activity workspace. It has no
 cross-domain feed, department/resource audience calculation, comments,
 correction/supersession UI, pagination, export, or **Manage access** action.
-Those capabilities must not be inferred from the presence of the Page 5/7
-history block.
+Those capabilities must not be inferred from the history blocks on Convention
+series record or Event edition record.

@@ -24,12 +24,19 @@ from maru.workforce.edition_write_scope import (
 )
 from maru.workforce.models import (
     Department,
+    EditionStructureControl,
     Position,
     PositionAssignment,
     PositionTemplate,
 )
-from maru.workforce.structure_commands import create_department, retire_department
-from tests.factories import AccountFactory, EventEditionFactory, RoleBundleFactory
+from maru.workforce.structure_commands import (
+    StructureDepartmentUnavailableError,
+    close_position,
+    create_department,
+    create_position,
+    retire_department,
+)
+from tests.factories import AccountFactory, EventEditionFactory
 from tests.support.authority import (
     create_provenance_backed_role_bundle,
     grant_board_controllers_edition_capability,
@@ -57,7 +64,12 @@ class _PositionWorld:
 def _world(*, retired: bool = False) -> _PositionWorld:
     edition = EventEditionFactory()
     actor = AccountFactory(is_staff=True, is_superuser=True)
-    role_bundle = RoleBundleFactory(organization=edition.organization)
+    _role_actor, _role_approver, role_bundle = create_provenance_backed_role_bundle(
+        edition.organization,
+        code="operations",
+        name="Operations",
+        capability_codes=("workforce.view_structure",),
+    )
     creation = create_department(
         actor=actor,
         organization_id=edition.organization_id,
@@ -94,6 +106,7 @@ def _world(*, retired: bool = False) -> _PositionWorld:
         description="Synthetic operational position.",
         default_capacity_codes=["volunteer"],
         role_bundle=role_bundle,
+        status=PositionTemplate.Status.PUBLISHED,
         created_by=actor,
     )
     return _PositionWorld(
@@ -105,35 +118,35 @@ def _world(*, retired: bool = False) -> _PositionWorld:
     )
 
 
-def _unsaved_position(world: _PositionWorld, *, code: str) -> Position:
-    return Position(
-        organization=world.edition.organization,
-        edition=world.edition,
-        template=world.template,
-        department=world.department,
-        role_bundle=world.role_bundle,
-        code=code,
-        title="Operations role",
-        description="Synthetic operational position.",
-        capacity_codes=["volunteer"],
-    )
-
-
-def _save_position_with_admin(
+def _create_position(
     world: _PositionWorld,
     *,
-    code: str = "operations-role",
+    title: str = "Operations role",
 ) -> Position:
-    request = RequestFactory().post("/admin/workforce/position/add/")
-    request.user = world.actor
-    position = _unsaved_position(world, code=code)
-    PositionAdmin(Position, admin.site).save_model(
-        request,
-        position,
-        SimpleNamespace(),  # type: ignore[arg-type]
-        change=False,
+    current_version = EditionStructureControl.objects.values_list(
+        "aggregate_version", flat=True
+    ).get(
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
     )
-    return position
+    result = create_position(
+        actor=world.actor,
+        organization_id=world.edition.organization_id,
+        series_id=world.edition.series_id,
+        edition_id=world.edition.id,
+        template_id=world.template.id,
+        department_id=world.department.id,
+        reports_to_id=None,
+        title=title,
+        description="Synthetic operational position.",
+        headcount=1,
+        expected_version=current_version,
+        reason="Create a governed Position for lock-order verification.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    return Position.objects.get(id=result.position_id)
 
 
 def _query_index(sql: list[str], *needles: str) -> int:
@@ -219,36 +232,29 @@ def test_edition_write_scope_rechecks_series_tenant_without_disclosing_labels() 
 
 def test_retired_department_target_is_rejected_before_position_write() -> None:
     world = _world(retired=True)
-    position = _unsaved_position(world, code="retired-target")
-    request = RequestFactory().post("/admin/workforce/position/add/")
-    request.user = world.actor
 
-    with pytest.raises(ValidationError) as error:
-        PositionAdmin(Position, admin.site).save_model(
-            request,
-            position,
-            SimpleNamespace(),  # type: ignore[arg-type]
-            change=False,
-        )
+    with pytest.raises(StructureDepartmentUnavailableError):
+        _create_position(world, title="Retired target")
 
-    assert error.value.code == "workforce_department_retired"
-    assert not Position.objects.filter(code="retired-target").exists()
-    assert not ScopedResourceBinding.objects.filter(resource_id=position.id).exists()
+    assert not Position.objects.filter(edition=world.edition).exists()
+    assert not ScopedResourceBinding.objects.filter(
+        organization=world.edition.organization,
+        edition=world.edition,
+        resource_kind=ScopedResourceBinding.ResourceKind.WORKFORCE_POSITION,
+    ).exists()
 
 
-def test_position_admin_takes_edition_and_department_locks_before_insert() -> None:
+def test_position_command_takes_edition_and_department_locks_before_insert() -> None:
     world = _world()
     request = RequestFactory().post("/admin/workforce/position/add/")
     request.user = world.actor
-    position = _unsaved_position(world, code="ordered-position")
+    position_admin = PositionAdmin(Position, admin.site)
+    assert not position_admin.has_add_permission(request)
+    assert not position_admin.has_change_permission(request)
+    assert not position_admin.has_delete_permission(request)
 
     with CaptureQueriesContext(connection) as captured:
-        PositionAdmin(Position, admin.site).save_model(
-            request,
-            position,
-            SimpleNamespace(),  # type: ignore[arg-type]
-            change=False,
-        )
+        _create_position(world, title="Ordered Position")
 
     sql = [query["sql"] for query in captured.captured_queries]
     mutex = _query_index(sql, "hashtextextended", "pg_advisory_xact_lock")
@@ -260,7 +266,7 @@ def test_position_admin_takes_edition_and_department_locks_before_insert() -> No
 
 def test_assignment_admin_locks_position_before_proposal_insert() -> None:
     world = _world()
-    position = _save_position_with_admin(world)
+    position = _create_position(world)
     request = RequestFactory().post("/admin/workforce/positionassignment/add/")
     request.user = world.actor
     assignment = PositionAssignment(
@@ -292,15 +298,24 @@ def test_activation_locks_scope_before_position_and_writes_no_closed_target(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     world = _world()
-    position = _save_position_with_admin(world)
-    position.status = Position.Status.CLOSED
-    request = RequestFactory().post("/admin/workforce/position/change/")
-    request.user = world.actor
-    PositionAdmin(Position, admin.site).save_model(
-        request,
-        position,
-        SimpleNamespace(),  # type: ignore[arg-type]
-        change=True,
+    position = _create_position(world)
+    current_version = EditionStructureControl.objects.values_list(
+        "aggregate_version", flat=True
+    ).get(
+        organization_id=world.edition.organization_id,
+        edition_id=world.edition.id,
+    )
+    close_position(
+        actor=world.actor,
+        organization_id=world.edition.organization_id,
+        series_id=world.edition.series_id,
+        edition_id=world.edition.id,
+        position_id=position.id,
+        expected_version=current_version,
+        confirmation_name=position.title,
+        reason="Close the governed Position before assignment verification.",
+        correlation_id=uuid4(),
+        source_channel="test",
     )
     monkeypatch.setattr(services, "_require", lambda **_kwargs: frozenset())
 
@@ -334,22 +349,7 @@ def test_assignment_admin_nested_activation_rejoins_held_outer_locks() -> None:
         world.edition,
         "workforce.manage_assignments",
     )
-    _role_actor, _role_approver, assignment_role = create_provenance_backed_role_bundle(
-        world.edition.organization,
-        code="ordered-assignment",
-        name="Ordered assignment",
-        capability_codes=("workforce.view_structure",),
-    )
-    position = _unsaved_position(world, code="nested-activation")
-    position.role_bundle = assignment_role
-    position_request = RequestFactory().post("/admin/workforce/position/add/")
-    position_request.user = world.actor
-    PositionAdmin(Position, admin.site).save_model(
-        position_request,
-        position,
-        SimpleNamespace(),  # type: ignore[arg-type]
-        change=False,
-    )
+    position = _create_position(world, title="Nested activation")
     assignment_request = RequestFactory().post(
         "/admin/workforce/positionassignment/add/"
     )

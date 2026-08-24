@@ -34,6 +34,7 @@ from maru.authorization.policy import (
     resolve_organization_target,
     resolve_owned_target,
 )
+from maru.authorization.provenance import role_bundle_provenance_is_historical
 from maru.events.admin_context import authorized_admin_edition_for_route
 from maru.events.models import EventEdition
 from maru.identity.models import Account
@@ -49,11 +50,19 @@ from maru.workforce.forms import (
     DepartmentRetirementForm,
     DepartmentUpdateForm,
     OnboardingDocumentUploadForm,
+    PositionClosureForm,
+    PositionCreationForm,
+    PositionOpportunityForm,
+    PositionUpdateForm,
     StructureTemplateApplicationForm,
     VolunteerApplicationForm,
 )
 from maru.workforce.models import (
+    EditionStructureCommandReceipt,
     OnboardingDocumentRequest,
+    Position,
+    PositionAssignment,
+    PositionTemplate,
     VolunteerApplication,
     VolunteerOpportunity,
 )
@@ -61,6 +70,7 @@ from maru.workforce.queries import (
     WORKFORCE_STRUCTURE_REQUIRED_FIELDS,
     DepartmentNode,
     EditionStructureProjection,
+    PositionNode,
     project_edition_structure,
 )
 from maru.workforce.services import (
@@ -75,14 +85,19 @@ from maru.workforce.structure_commands import (
     StructureDependencyConflictError,
     StructureLifecycleConflictError,
     StructureLimitConflictError,
+    StructurePositionUnavailableError,
     StructureRetryConflictError,
     StructureStateConflictError,
     StructureVersionConflictError,
     apply_builtin_structure_template,
+    close_position,
     create_department,
+    create_position,
     delete_unused_department,
     retire_department,
     update_department,
+    update_position,
+    update_position_opportunity,
 )
 from maru.workforce.structure_snapshot import (
     StructureSnapshotRead,
@@ -93,6 +108,8 @@ if TYPE_CHECKING:
     from django import forms
 
 logger = logging.getLogger(__name__)
+
+MAX_POSITION_TEMPLATE_CHOICES = 128
 
 
 def _account(request: HttpRequest) -> Account | None:
@@ -712,6 +729,199 @@ def _flatten_departments(
     return tuple(flattened)
 
 
+@dataclass(frozen=True, slots=True)
+class _PositionOverviewItem:
+    position: PositionNode
+    department_name: str
+    opportunity_status: str
+    accepts_applications: bool
+
+
+@dataclass(frozen=True, slots=True)
+class _StructureHistoryItem:
+    action_label: str
+    target_label: str
+    reason: str
+    actor_label: str
+    occurred_at: object
+    resulting_version: int
+
+
+def _flatten_positions(
+    structure: EditionStructureProjection,
+) -> tuple[tuple[PositionNode, DepartmentNode], ...]:
+    return tuple(
+        (position, department)
+        for department, _depth in _flatten_departments(structure.departments)
+        for position in department.positions
+    )
+
+
+def _find_position(
+    structure: EditionStructureProjection,
+    position_id: UUID,
+) -> tuple[PositionNode, DepartmentNode]:
+    match = next(
+        (
+            (position, department)
+            for position, department in _flatten_positions(structure)
+            if position.id == position_id
+        ),
+        None,
+    )
+    if match is None:
+        raise Http404
+    return match
+
+
+def _position_reporting_choices(
+    structure: EditionStructureProjection,
+    *,
+    edited_position_id: UUID | None = None,
+) -> tuple[tuple[str, str], ...]:
+    flattened = _flatten_positions(structure)
+    parent_by_id = {position.id: position.reports_to_id for position, _ in flattened}
+    excluded: set[UUID] = set()
+    if edited_position_id is not None:
+        excluded.add(edited_position_id)
+        for candidate_id, reporting_parent_id in parent_by_id.items():
+            cursor = reporting_parent_id
+            seen: set[UUID] = set()
+            while cursor is not None and cursor not in seen:
+                if cursor == edited_position_id:
+                    excluded.add(candidate_id)
+                    break
+                seen.add(cursor)
+                cursor = parent_by_id.get(cursor)
+    choices = []
+    for position, department in flattened:
+        if position.id in excluded or position.status == Position.Status.CLOSED:
+            continue
+        choices.append(
+            (
+                str(position.id),
+                f"{position.title} — {department.name}",
+            )
+        )
+    return tuple(choices)
+
+
+def _position_department_choices(
+    structure: EditionStructureProjection,
+) -> tuple[tuple[str, str], ...]:
+    return tuple(
+        (str(department.id), department.name)
+        for department, _depth in _flatten_departments(structure.departments)
+        if department.state == "active"
+    )
+
+
+def _position_template_choices(
+    *,
+    organization_id: UUID,
+) -> tuple[tuple[str, str], ...]:
+    templates = tuple(
+        PositionTemplate.objects.select_related("role_bundle")
+        .filter(
+            organization_id=organization_id,
+            status=PositionTemplate.Status.PUBLISHED,
+            role_bundle__authority_issuance__isnull=False,
+        )
+        .order_by("name", "version", "id")[: MAX_POSITION_TEMPLATE_CHOICES + 1]
+    )
+    if len(templates) > MAX_POSITION_TEMPLATE_CHOICES:
+        raise RuntimeError("The Position template selector exceeded its safe bound.")
+    evaluated_at = timezone_now()
+    return tuple(
+        (
+            str(template.id),
+            (
+                f"{template.name} v{template.version} — "
+                f"{template.role_bundle.name}; default headcount "
+                f"{template.default_headcount}"
+            ),
+        )
+        for template in templates
+        if role_bundle_provenance_is_historical(
+            bundle=template.role_bundle,
+            evaluated_at=evaluated_at,
+        )
+    )
+
+
+def _position_record(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    position_id: UUID,
+) -> Position:
+    position = (
+        Position.objects.select_related(
+            "template",
+            "role_bundle",
+            "department",
+            "reports_to",
+            "closed_by",
+        )
+        .filter(
+            id=position_id,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+        .order_by()
+        .first()
+    )
+    if position is None:
+        raise Http404
+    return position
+
+
+def _position_opportunity(position: Position) -> VolunteerOpportunity | None:
+    return (
+        VolunteerOpportunity.objects.filter(position_id=position.id).order_by().first()
+    )
+
+
+def _structure_history_items(
+    *,
+    organization_id: UUID,
+    edition_id: UUID,
+    position_id: UUID | None = None,
+    limit: int = 24,
+) -> tuple[_StructureHistoryItem, ...]:
+    query = EditionStructureCommandReceipt.objects.select_related(
+        "actor",
+        "affected_position",
+    ).filter(
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
+    if position_id is not None:
+        query = query.filter(affected_position_id=position_id)
+    receipts = tuple(query.order_by("-resulting_version", "-id")[:limit])
+    items = []
+    for receipt in receipts:
+        if receipt.affected_position is not None:
+            target_label = receipt.affected_position.title
+        elif receipt.deleted_name_snapshot:
+            target_label = receipt.deleted_name_snapshot
+        elif len(receipt.affected_department_ids) == 1:
+            target_label = "Department structure"
+        else:
+            target_label = "Edition structure"
+        items.append(
+            _StructureHistoryItem(
+                action_label=receipt.get_action_display(),
+                target_label=target_label,
+                reason=receipt.reason,
+                actor_label=receipt.actor.display_name or "Maru account",
+                occurred_at=receipt.created_at,
+                resulting_version=receipt.resulting_version,
+            )
+        )
+    return tuple(items)
+
+
 def _department_tree_items(
     departments: tuple[DepartmentNode, ...],
     *,
@@ -1030,6 +1240,14 @@ def organization_structure(
             ),
             "structure_departments": structure_departments,
             "department_index": _flatten_department_tree_items(structure_departments),
+            "structure_history": (
+                _structure_history_items(
+                    organization_id=organization.id,
+                    edition_id=edition.id,
+                )
+                if can_manage_structure
+                else ()
+            ),
         }
     )
     return TemplateResponse(
@@ -2226,6 +2444,1121 @@ def delete_organization_structure_department(  # noqa: PLR0911
         return _organization_structure_dependency_failure(request)
     messages.success(request, "The unused Department was deleted.")
     return redirect(_structure_overview_location(snapshot))
+
+
+def _position_management_location(
+    snapshot: _OrganizationStructureSnapshot,
+    *,
+    position_id: UUID | None = None,
+) -> str:
+    route_name = (
+        "organization-structure-position"
+        if position_id is not None
+        else "organization-structure-positions"
+    )
+    kwargs: dict[str, object] = dict(_structure_route_kwargs(snapshot))
+    if position_id is not None:
+        kwargs["position_id"] = position_id
+    return reverse(route_name, kwargs=kwargs)
+
+
+def _position_context(
+    request: HttpRequest,
+    *,
+    read: _OrganizationStructurePageRead,
+    page_id: str,
+) -> dict[str, object]:
+    context = _structure_page_context(request, read=read, page_id=page_id)
+    context.update(
+        {
+            "baseline_structure_navigation_current": True,
+            "position_mutations_allowed": _structure_mutations_allowed(read),
+        }
+    )
+    return context
+
+
+def _position_overview_items(
+    read: _OrganizationStructurePageRead,
+) -> tuple[_PositionOverviewItem, ...]:
+    flattened = _flatten_positions(read.snapshot.structure)
+    position_ids = tuple(position.id for position, _department in flattened)
+    opportunities = {
+        opportunity.position_id: opportunity
+        for opportunity in VolunteerOpportunity.objects.filter(
+            position_id__in=position_ids,
+            position__organization_id=read.snapshot.organization.id,
+            position__edition_id=read.snapshot.edition.id,
+        ).order_by("position_id")
+    }
+    evaluated_at = timezone_now()
+    items = []
+    for position, department in flattened:
+        opportunity = opportunities.get(position.id)
+        accepts_applications = bool(
+            opportunity is not None
+            and opportunity.status == VolunteerOpportunity.Status.PUBLISHED
+            and len(position.holders) < position.headcount
+            and (
+                opportunity.applications_open_at is None
+                or opportunity.applications_open_at <= evaluated_at
+            )
+            and (
+                opportunity.applications_close_at is None
+                or opportunity.applications_close_at > evaluated_at
+            )
+        )
+        items.append(
+            _PositionOverviewItem(
+                position=position,
+                department_name=department.name,
+                opportunity_status=(
+                    opportunity.get_status_display()
+                    if opportunity is not None
+                    else "Draft setup required"
+                ),
+                accepts_applications=accepts_applications,
+            )
+        )
+    return tuple(items)
+
+
+def _render_position_management(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> TemplateResponse:
+    read = _load_audited_structure_page(
+        request=request,
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        route_name="organization-structure-positions",
+        require_manage=True,
+    )
+    snapshot = read.snapshot
+    template_choices = _position_template_choices(
+        organization_id=snapshot.organization.id,
+    )
+    department_choices = _position_department_choices(snapshot.structure)
+    context = _position_context(
+        request,
+        read=read,
+        page_id="organization-structure-positions",
+    )
+    context.update(
+        {
+            "title": f"Position management — {snapshot.edition.name}",
+            "positions": _position_overview_items(read),
+            "position_creation_available": bool(
+                _structure_mutations_allowed(read)
+                and template_choices
+                and department_choices
+            ),
+            "has_position_templates": bool(template_choices),
+            "has_position_departments": bool(department_choices),
+            "position_history": _structure_history_items(
+                organization_id=snapshot.organization.id,
+                edition_id=snapshot.edition.id,
+            ),
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/position_management.html",
+        context,
+    )
+
+
+def _render_position_create(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    form: PositionCreationForm | None = None,
+    status: int = 200,
+    action_error: str = "",
+    reload_required: bool = False,
+) -> TemplateResponse:
+    read = _load_audited_structure_page(
+        request=request,
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        route_name="organization-structure-position-create",
+        require_manage=True,
+    )
+    snapshot = read.snapshot
+    template_choices = _position_template_choices(
+        organization_id=snapshot.organization.id,
+    )
+    department_choices = _position_department_choices(snapshot.structure)
+    reporting_choices = _position_reporting_choices(snapshot.structure)
+    if form is None:
+        form = PositionCreationForm(
+            template_choices=template_choices,
+            department_choices=department_choices,
+            reporting_choices=reporting_choices,
+            expected_version=snapshot.structure.aggregate_version,
+        )
+    context = _position_context(
+        request,
+        read=read,
+        page_id="organization-structure-position-create",
+    )
+    context.update(
+        {
+            "title": f"Create Position — {snapshot.edition.name}",
+            "form": form,
+            "action_error": action_error,
+            "reload_required": reload_required,
+            "show_submitted_form": form.is_bound,
+            "position_creation_available": bool(
+                _structure_mutations_allowed(read)
+                and template_choices
+                and department_choices
+            ),
+            "has_position_templates": bool(template_choices),
+            "has_position_departments": bool(department_choices),
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/position_create.html",
+        context,
+        status=status,
+    )
+
+
+def _render_position_detail(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    position_id: UUID,
+    update_form: PositionUpdateForm | None = None,
+    opportunity_form: PositionOpportunityForm | None = None,
+    closure_form: PositionClosureForm | None = None,
+    active_action: str = "",
+    status: int = 200,
+    action_error: str = "",
+    reload_required: bool = False,
+) -> TemplateResponse:
+    read = _load_audited_structure_page(
+        request=request,
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        route_name="organization-structure-position",
+        require_manage=True,
+    )
+    snapshot = read.snapshot
+    projected_position, projected_department = _find_position(
+        snapshot.structure,
+        position_id,
+    )
+    position = _position_record(
+        organization_id=snapshot.organization.id,
+        edition_id=snapshot.edition.id,
+        position_id=position_id,
+    )
+    opportunity = _position_opportunity(position)
+    reporting_choices = _position_reporting_choices(
+        snapshot.structure,
+        edited_position_id=position.id,
+    )
+    if position.status != Position.Status.CLOSED:
+        if update_form is None:
+            update_form = PositionUpdateForm(
+                reporting_choices=reporting_choices,
+                expected_version=snapshot.structure.aggregate_version,
+                initial={
+                    "title": position.title,
+                    "description": position.description,
+                    "headcount": position.headcount,
+                    "reports_to_id": position.reports_to_id,
+                },
+            )
+        if opportunity_form is None:
+            opportunity_form = PositionOpportunityForm(
+                edition_time_zone=snapshot.edition.time_zone,
+                expected_version=snapshot.structure.aggregate_version,
+                initial={
+                    "status": (
+                        opportunity.status
+                        if opportunity is not None
+                        else VolunteerOpportunity.Status.DRAFT
+                    ),
+                    "headline": (
+                        opportunity.headline
+                        if opportunity is not None
+                        else position.title
+                    ),
+                    "description": (
+                        opportunity.description
+                        if opportunity is not None
+                        else position.description
+                    ),
+                    "applications_open_at": (
+                        opportunity.applications_open_at
+                        if opportunity is not None
+                        else None
+                    ),
+                    "applications_close_at": (
+                        opportunity.applications_close_at
+                        if opportunity is not None
+                        else None
+                    ),
+                    "visible_when_filled": (
+                        opportunity.visible_when_filled
+                        if opportunity is not None
+                        else True
+                    ),
+                },
+            )
+        if closure_form is None:
+            closure_form = PositionClosureForm(
+                expected_version=snapshot.structure.aggregate_version,
+                position_title=position.title,
+            )
+    context = _position_context(
+        request,
+        read=read,
+        page_id="organization-structure-position",
+    )
+    context.update(
+        {
+            "title": f"{position.title} — Position management",
+            "position": position,
+            "projected_position": projected_position,
+            "position_department": projected_department,
+            "opportunity": opportunity,
+            "update_form": update_form,
+            "opportunity_form": opportunity_form,
+            "closure_form": closure_form,
+            "active_action": active_action,
+            "action_error": action_error,
+            "reload_required": reload_required,
+            "show_submitted_form": bool(active_action),
+            "open_assignment_count": PositionAssignment.objects.filter(
+                position_id=position.id,
+                organization_id=snapshot.organization.id,
+                edition_id=snapshot.edition.id,
+                status__in=(
+                    PositionAssignment.Status.PROPOSED,
+                    PositionAssignment.Status.ACTIVE,
+                ),
+            ).count(),
+            "application_count": (
+                opportunity.applications.count() if opportunity is not None else 0
+            ),
+            "position_history": _structure_history_items(
+                organization_id=snapshot.organization.id,
+                edition_id=snapshot.edition.id,
+                position_id=position.id,
+            ),
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/position_detail.html",
+        context,
+        status=status,
+    )
+
+
+def _add_position_validation_errors(
+    form: forms.Form,
+    error: ValidationError,
+) -> bool:
+    safe_fields = frozenset(
+        {
+            "template_id",
+            "department_id",
+            "reports_to_id",
+            "position_id",
+            "title",
+            "description",
+            "headcount",
+            "status",
+            "headline",
+            "applications_open_at",
+            "applications_close_at",
+            "visible_when_filled",
+            "expected_version",
+            "confirmation_name",
+            "reason",
+            "retry_key",
+        }
+    )
+    if not hasattr(error, "error_dict") or not error.error_dict:
+        return False
+    if any(
+        field_name not in safe_fields or field_name not in form.fields
+        for field_name in error.error_dict
+    ):
+        return False
+    for field_name, field_errors in error.error_dict.items():
+        for field_error in field_errors:
+            form.add_error(field_name, field_error)
+    return True
+
+
+def _position_conflict_message(error: StructureCommandError) -> str:
+    if isinstance(error, StructureVersionConflictError):
+        return (
+            "The Workforce structure changed after this form was opened. "
+            "Reload the latest Position before trying again."
+        )
+    if isinstance(error, StructureRetryConflictError):
+        return (
+            "This browser retry identifier was already used with different "
+            "Position details. Reload before creating another Position."
+        )
+    if isinstance(error, StructureLifecycleConflictError):
+        return "The edition or organization is now read-only for Position changes."
+    if isinstance(error, StructureDependencyConflictError):
+        return (
+            "Current assignments, direct reports, or scoped authority still "
+            "depend on this Position. Resolve them in their owning workflows first."
+        )
+    if isinstance(error, StructureLimitConflictError):
+        return "The complete Workforce structure reached a safe size or depth limit."
+    return "The Position action no longer matches the current Workforce state."
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_GET
+def organization_structure_positions(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Render the purpose-built Position management overview.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Authenticated browser request with no query parameters.
+    organization_slug : str
+        Untrusted organization route locator.
+    series_slug : str
+        Untrusted convention-series route locator.
+    edition_slug : str
+        Untrusted event-edition route locator.
+
+    Returns
+    -------
+    HttpResponse
+        Private authorized overview or a minimized safe failure response.
+    """
+    actor = _active_admin_account(request)
+    try:
+        _authorize_structure_route(
+            request=request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            require_manage=True,
+        )
+        if request.GET:
+            return _organization_structure_bad_request(request)
+        return _render_position_management(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to load Position management")
+        return _organization_structure_dependency_failure(request)
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_GET
+def organization_structure_position_create(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Render one governed Position creation form.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Authenticated browser request with no query parameters.
+    organization_slug : str
+        Untrusted organization route locator.
+    series_slug : str
+        Untrusted convention-series route locator.
+    edition_slug : str
+        Untrusted event-edition route locator.
+
+    Returns
+    -------
+    HttpResponse
+        Private authorized creation form or a minimized safe failure response.
+    """
+    actor = _active_admin_account(request)
+    try:
+        _authorize_structure_route(
+            request=request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            require_manage=True,
+        )
+        if request.GET:
+            return _organization_structure_bad_request(request)
+        return _render_position_create(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to load Position creation")
+        return _organization_structure_dependency_failure(request)
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_GET
+def organization_structure_position(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    position_id: UUID,
+) -> HttpResponse:
+    """Render one governed Position, its opportunity, and retained history.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Authenticated browser request with no query parameters.
+    organization_slug : str
+        Untrusted organization route locator.
+    series_slug : str
+        Untrusted convention-series route locator.
+    edition_slug : str
+        Untrusted event-edition route locator.
+    position_id : UUID
+        Position identifier resolved only inside the authorized exact edition.
+
+    Returns
+    -------
+    HttpResponse
+        Private authorized detail page or a minimized safe failure response.
+    """
+    actor = _active_admin_account(request)
+    try:
+        _authorize_structure_route(
+            request=request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            require_manage=True,
+        )
+        if request.GET:
+            return _organization_structure_bad_request(request)
+        return _render_position_detail(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+        )
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to load Position detail")
+        return _organization_structure_dependency_failure(request)
+
+
+def _position_post_snapshot(
+    request: HttpRequest,
+    *,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> tuple[Account, _OrganizationStructureSnapshot]:
+    return _preflight_structure_post(
+        request,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+    )
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def create_organization_structure_position(  # noqa: PLR0911
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Create a Position through the shared structure command.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Authenticated CSRF-protected creation request.
+    organization_slug : str
+        Untrusted organization route locator.
+    series_slug : str
+        Untrusted convention-series route locator.
+    edition_slug : str
+        Untrusted event-edition route locator.
+
+    Returns
+    -------
+    HttpResponse
+        Redirect on success or private validation, conflict, or dependency state.
+
+    Raises
+    ------
+    PermissionDenied
+        If fresh command authorization no longer permits the mutation.
+    """
+    try:
+        actor, snapshot = _position_post_snapshot(
+            request,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+    except _StructurePostQueryParametersUnsupportedError:
+        return _organization_structure_bad_request(request)
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to prepare Position creation")
+        return _organization_structure_dependency_failure(request)
+    form = PositionCreationForm(
+        request.POST,
+        template_choices=_position_template_choices(
+            organization_id=snapshot.organization.id
+        ),
+        department_choices=_position_department_choices(snapshot.structure),
+        reporting_choices=_position_reporting_choices(snapshot.structure),
+        expected_version=snapshot.structure.aggregate_version,
+    )
+    if not form.is_valid():
+        return _render_position_create(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            form=form,
+            status=400,
+            action_error="Review the highlighted values. Nothing was created.",
+        )
+    try:
+        result = create_position(
+            actor=actor,
+            organization_id=snapshot.organization.id,
+            series_id=snapshot.series.id,
+            edition_id=snapshot.edition.id,
+            template_id=cast("UUID", form.cleaned_data["template_id"]),
+            department_id=cast("UUID", form.cleaned_data["department_id"]),
+            reports_to_id=cast("UUID | None", form.cleaned_data["reports_to_id"]),
+            title=cast("str", form.cleaned_data["title"]),
+            description=cast("str", form.cleaned_data["description"]),
+            headcount=cast("int", form.cleaned_data["headcount"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except ValidationError as error:
+        if not _add_position_validation_errors(form, error):
+            logger.exception("Position creation returned an internal validation key")
+            return _organization_structure_dependency_failure(request)
+        return _render_position_create(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            form=form,
+            status=400,
+            action_error="Review the highlighted values. Nothing was created.",
+        )
+    except StructureAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except (
+        StructureVersionConflictError,
+        StructureRetryConflictError,
+        StructureLifecycleConflictError,
+        StructureStateConflictError,
+        StructureDependencyConflictError,
+        StructureLimitConflictError,
+    ) as error:
+        return _render_position_create(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            form=form,
+            status=409,
+            action_error=_position_conflict_message(error),
+            reload_required=True,
+        )
+    except (DatabaseError, RuntimeError):
+        logger.exception("Unable to create Position")
+        return _organization_structure_dependency_failure(request)
+    messages.success(
+        request,
+        "Position created with a private draft volunteer opportunity.",
+    )
+    return redirect(
+        _position_management_location(snapshot, position_id=result.position_id)
+    )
+
+
+def _bound_position_detail_failure(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    position_id: UUID,
+    form: PositionUpdateForm | PositionOpportunityForm | PositionClosureForm,
+    active_action: str,
+    status: int,
+    action_error: str,
+    reload_required: bool = False,
+) -> TemplateResponse:
+    kwargs: dict[str, object] = {
+        "update_form": None,
+        "opportunity_form": None,
+        "closure_form": None,
+    }
+    kwargs[f"{active_action}_form"] = form
+    return _render_position_detail(
+        request,
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        position_id=position_id,
+        active_action=active_action,
+        status=status,
+        action_error=action_error,
+        reload_required=reload_required,
+        **kwargs,  # type: ignore[arg-type]
+    )
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def update_organization_structure_position(  # noqa: PLR0911
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    position_id: UUID,
+) -> HttpResponse:
+    """Update one Position through the shared structure command.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Authenticated CSRF-protected complete replacement request.
+    organization_slug : str
+        Untrusted organization route locator.
+    series_slug : str
+        Untrusted convention-series route locator.
+    edition_slug : str
+        Untrusted event-edition route locator.
+    position_id : UUID
+        Position identifier resolved only inside the authorized exact edition.
+
+    Returns
+    -------
+    HttpResponse
+        Redirect on success or private validation, conflict, or dependency state.
+
+    Raises
+    ------
+    Http404
+        If the authorized exact edition has no matching Position.
+    PermissionDenied
+        If fresh command authorization no longer permits the mutation.
+    """
+    try:
+        actor, snapshot = _position_post_snapshot(
+            request,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+    except _StructurePostQueryParametersUnsupportedError:
+        return _organization_structure_bad_request(request)
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to prepare Position update")
+        return _organization_structure_dependency_failure(request)
+    form = PositionUpdateForm(
+        request.POST,
+        reporting_choices=_position_reporting_choices(
+            snapshot.structure,
+            edited_position_id=position_id,
+        ),
+        expected_version=snapshot.structure.aggregate_version,
+    )
+    if not form.is_valid():
+        return _bound_position_detail_failure(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            active_action="update",
+            status=400,
+            action_error="Review the highlighted values. Nothing was changed.",
+        )
+    try:
+        update_position(
+            actor=actor,
+            **_command_scope(snapshot),
+            position_id=position_id,
+            reports_to_id=cast("UUID | None", form.cleaned_data["reports_to_id"]),
+            title=cast("str", form.cleaned_data["title"]),
+            description=cast("str", form.cleaned_data["description"]),
+            headcount=cast("int", form.cleaned_data["headcount"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except StructurePositionUnavailableError as error:
+        raise Http404 from error
+    except ValidationError as error:
+        if not _add_position_validation_errors(form, error):
+            return _organization_structure_dependency_failure(request)
+        return _bound_position_detail_failure(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            active_action="update",
+            status=400,
+            action_error="Review the highlighted values. Nothing was changed.",
+        )
+    except StructureAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except (
+        StructureVersionConflictError,
+        StructureLifecycleConflictError,
+        StructureStateConflictError,
+        StructureDependencyConflictError,
+        StructureLimitConflictError,
+    ) as error:
+        return _bound_position_detail_failure(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            active_action="update",
+            status=409,
+            action_error=_position_conflict_message(error),
+            reload_required=True,
+        )
+    except (DatabaseError, RuntimeError):
+        logger.exception("Unable to update Position")
+        return _organization_structure_dependency_failure(request)
+    messages.success(request, "Position details saved.")
+    return redirect(_position_management_location(snapshot, position_id=position_id))
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def update_organization_structure_position_opportunity(  # noqa: PLR0911
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    position_id: UUID,
+) -> HttpResponse:
+    """Update the volunteer opportunity paired with one Position.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Authenticated CSRF-protected complete replacement request.
+    organization_slug : str
+        Untrusted organization route locator.
+    series_slug : str
+        Untrusted convention-series route locator.
+    edition_slug : str
+        Untrusted event-edition route locator.
+    position_id : UUID
+        Position identifier resolved only inside the authorized exact edition.
+
+    Returns
+    -------
+    HttpResponse
+        Redirect on success or private validation, conflict, or dependency state.
+
+    Raises
+    ------
+    Http404
+        If the authorized exact edition has no matching Position.
+    PermissionDenied
+        If fresh command authorization no longer permits the mutation.
+    """
+    try:
+        actor, snapshot = _position_post_snapshot(
+            request,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+    except _StructurePostQueryParametersUnsupportedError:
+        return _organization_structure_bad_request(request)
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to prepare opportunity update")
+        return _organization_structure_dependency_failure(request)
+    form = PositionOpportunityForm(
+        request.POST,
+        edition_time_zone=snapshot.edition.time_zone,
+        expected_version=snapshot.structure.aggregate_version,
+    )
+    if not form.is_valid():
+        return _bound_position_detail_failure(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            active_action="opportunity",
+            status=400,
+            action_error="Review the highlighted values. Publication was not changed.",
+        )
+    try:
+        update_position_opportunity(
+            actor=actor,
+            **_command_scope(snapshot),
+            position_id=position_id,
+            status=cast("str", form.cleaned_data["status"]),
+            headline=cast("str", form.cleaned_data["headline"]),
+            description=cast("str", form.cleaned_data["description"]),
+            applications_open_at=form.cleaned_data["applications_open_at"],
+            applications_close_at=form.cleaned_data["applications_close_at"],
+            visible_when_filled=cast("bool", form.cleaned_data["visible_when_filled"]),
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except StructurePositionUnavailableError as error:
+        raise Http404 from error
+    except ValidationError as error:
+        if not _add_position_validation_errors(form, error):
+            return _organization_structure_dependency_failure(request)
+        return _bound_position_detail_failure(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            active_action="opportunity",
+            status=400,
+            action_error="Review the highlighted values. Publication was not changed.",
+        )
+    except StructureAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except (
+        StructureVersionConflictError,
+        StructureLifecycleConflictError,
+        StructureStateConflictError,
+        StructureDependencyConflictError,
+        StructureLimitConflictError,
+    ) as error:
+        return _bound_position_detail_failure(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            active_action="opportunity",
+            status=409,
+            action_error=_position_conflict_message(error),
+            reload_required=True,
+        )
+    except (DatabaseError, RuntimeError):
+        logger.exception("Unable to update Position opportunity")
+        return _organization_structure_dependency_failure(request)
+    messages.success(request, "Volunteer opportunity settings saved.")
+    return redirect(_position_management_location(snapshot, position_id=position_id))
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def close_organization_structure_position(  # noqa: PLR0911
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    position_id: UUID,
+) -> HttpResponse:
+    """Close one Position through the dependency-safe shared command.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Authenticated CSRF-protected closure request.
+    organization_slug : str
+        Untrusted organization route locator.
+    series_slug : str
+        Untrusted convention-series route locator.
+    edition_slug : str
+        Untrusted event-edition route locator.
+    position_id : UUID
+        Position identifier resolved only inside the authorized exact edition.
+
+    Returns
+    -------
+    HttpResponse
+        Redirect on success or private validation, conflict, or dependency state.
+
+    Raises
+    ------
+    Http404
+        If the authorized exact edition has no matching Position.
+    PermissionDenied
+        If fresh command authorization no longer permits the mutation.
+    """
+    try:
+        actor, snapshot = _position_post_snapshot(
+            request,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+        position, _department = _find_position(snapshot.structure, position_id)
+    except _StructurePostQueryParametersUnsupportedError:
+        return _organization_structure_bad_request(request)
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to prepare Position closure")
+        return _organization_structure_dependency_failure(request)
+    form = PositionClosureForm(
+        request.POST,
+        expected_version=snapshot.structure.aggregate_version,
+        position_title=position.title,
+    )
+    if not form.is_valid():
+        return _bound_position_detail_failure(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            active_action="closure",
+            status=400,
+            action_error="Review the highlighted values. The Position remains open.",
+        )
+    try:
+        close_position(
+            actor=actor,
+            **_command_scope(snapshot),
+            position_id=position_id,
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            confirmation_name=cast("str", form.cleaned_data["confirmation_name"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except StructurePositionUnavailableError as error:
+        raise Http404 from error
+    except ValidationError as error:
+        if not _add_position_validation_errors(form, error):
+            return _organization_structure_dependency_failure(request)
+        return _bound_position_detail_failure(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            active_action="closure",
+            status=400,
+            action_error="Review the highlighted values. The Position remains open.",
+        )
+    except StructureAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except (
+        StructureVersionConflictError,
+        StructureLifecycleConflictError,
+        StructureStateConflictError,
+        StructureDependencyConflictError,
+        StructureLimitConflictError,
+    ) as error:
+        return _bound_position_detail_failure(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            active_action="closure",
+            status=409,
+            action_error=_position_conflict_message(error),
+            reload_required=True,
+        )
+    except (DatabaseError, RuntimeError):
+        logger.exception("Unable to close Position")
+        return _organization_structure_dependency_failure(request)
+    messages.success(request, "Position closed with its history retained.")
+    return redirect(_position_management_location(snapshot, position_id=position_id))
 
 
 def volunteer_opportunities(

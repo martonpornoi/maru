@@ -14,18 +14,20 @@ from django.test import RequestFactory
 from django.utils import timezone
 
 from maru.authorization.services import AuthorizationDenied
+from maru.events.models import EventEdition
+from maru.identity.models import Account
 from maru.participation.models import ParticipationCapacity
 from maru.workforce.admin import (
     OnboardingDocumentRequestAdmin,
     OnboardingDocumentTypeAdmin,
     PositionAdmin,
-    PositionAdminForm,
     PositionAssignmentAdmin,
     PositionAssignmentAdminForm,
 )
 from maru.workforce.bootstrap import bootstrap_organization_workforce
 from maru.workforce.models import (
     Department,
+    EditionStructureControl,
     OnboardingDocumentRequest,
     OnboardingDocumentType,
     Position,
@@ -39,6 +41,10 @@ from maru.workforce.services import (
     review_onboarding_document,
     submit_volunteer_application,
     upload_onboarding_document,
+)
+from maru.workforce.structure_commands import (
+    create_position,
+    update_position_opportunity,
 )
 from tests.factories import (
     AccountFactory,
@@ -106,6 +112,41 @@ def _model_world() -> tuple[
         )
     )
     return edition, edition.organization, actor, department, template, position
+
+
+def _create_governed_position(
+    *,
+    actor: Account,
+    edition: EventEdition,
+    department: Department,
+    template: PositionTemplate,
+    title: str,
+    headcount: int,
+) -> tuple[Position, int]:
+    current_version = EditionStructureControl.objects.values_list(
+        "aggregate_version", flat=True
+    ).get(
+        organization_id=edition.organization_id,
+        edition_id=edition.id,
+    )
+    result = create_position(
+        actor=actor,
+        organization_id=edition.organization_id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+        template_id=template.id,
+        department_id=department.id,
+        reports_to_id=None,
+        title=title,
+        description=template.description,
+        headcount=headcount,
+        expected_version=current_version,
+        reason="Create a governed Position for the Workforce integration rehearsal.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    return Position.objects.get(id=result.position_id), result.resulting_version
 
 
 def test_workforce_models_reject_invalid_scope_cycles_versions_and_evidence() -> None:  # noqa: PLR0915
@@ -350,43 +391,41 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         edition,
         "workforce.manage_assignments",
     )
-    _actor, _approver, assignment_role = create_provenance_backed_role_bundle(
-        organization,
-        code="registration-lead",
-        name="Registration Lead",
-        capability_codes=(
-            "events.view_basic",
-            "participation.view_staff_summary",
-            "workforce.view_structure",
-            "registration.view_service_summary",
-            "registration.manage_configuration",
-        ),
-    )
     department = create_department_for_test(
         edition=edition,
         name="Registration",
         expected_code="registration",
         actor=controller,
     )
-    template = PositionTemplate.objects.get(
+    starter_template = PositionTemplate.objects.get(
         organization=organization,
         code="registration-lead",
     )
-    position = save_position_for_test(
-        position=Position(
-            organization=organization,
-            edition=edition,
-            template=template,
-            department=department,
-            role_bundle=assignment_role,
-            code="registration-lead",
-            title="Registration Lead",
-            description=template.description,
-            headcount=1,
-            capacity_codes=["staff", "volunteer"],
-            status=Position.Status.OPEN,
-            created_by=controller,
-        )
+    _role_actor, _role_approver, assignment_role = create_provenance_backed_role_bundle(
+        organization,
+        code="registration-lead",
+        name="Registration Lead",
+        capability_codes=tuple(starter_template.role_bundle.capability_codes),
+    )
+    template = PositionTemplate.objects.create(
+        organization=organization,
+        code="registration-lead",
+        version=2,
+        name=starter_template.name,
+        description=starter_template.description,
+        default_headcount=starter_template.default_headcount,
+        default_capacity_codes=starter_template.default_capacity_codes,
+        role_bundle=assignment_role,
+        status=PositionTemplate.Status.PUBLISHED,
+        created_by=controller,
+    )
+    position, position_version = _create_governed_position(
+        actor=controller,
+        edition=edition,
+        department=department,
+        template=template,
+        title="Registration Lead",
+        headcount=1,
     )
     opportunity = VolunteerOpportunity.objects.get(position=position)
     with pytest.raises(ValidationError, match="why this position"):
@@ -403,8 +442,25 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
             motivation="I can help.",
             correlation_id=uuid4(),
         )
-    opportunity.status = VolunteerOpportunity.Status.PUBLISHED
-    opportunity.save()
+    published = update_position_opportunity(
+        actor=controller,
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+        position_id=position.id,
+        status=VolunteerOpportunity.Status.PUBLISHED,
+        headline=opportunity.headline,
+        description=opportunity.description,
+        applications_open_at=None,
+        applications_close_at=None,
+        visible_when_filled=True,
+        expected_version=position_version,
+        reason="Open this governed Position to volunteer applications.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    assert published.resulting_version == position_version + 1
+    opportunity.refresh_from_db()
     inactive = AccountFactory(is_active=False)
     with pytest.raises(ValidationError, match="not accepting"):
         submit_volunteer_application(
@@ -623,7 +679,7 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         )
 
 
-def test_workforce_admin_defaults_reviews_and_activates_with_dual_control(
+def test_workforce_admin_inspection_reviews_and_activates_with_dual_control(
     settings: object,
     tmp_path: Path,
 ) -> None:
@@ -645,49 +701,31 @@ def test_workforce_admin_defaults_reviews_and_activates_with_dual_control(
         edition,
         "workforce.manage_assignments",
     )
-    _actor, _approver, assignment_role = create_provenance_backed_role_bundle(
-        organization,
-        code="registration-lead",
-        name="Registration Lead",
-        capability_codes=(
-            "events.view_basic",
-            "participation.view_staff_summary",
-            "workforce.view_structure",
-            "registration.view_service_summary",
-            "registration.manage_configuration",
-        ),
-    )
     department = Department.objects.get(
         edition=edition,
         code="convention-leadership",
     )
-    template = PositionTemplate.objects.get(
+    starter_template = PositionTemplate.objects.get(
         organization=organization,
         code="registration-lead",
     )
-
-    position_form = PositionAdminForm(
-        data={
-            "organization": organization.id,
-            "edition": edition.id,
-            "template": template.id,
-            "department": department.id,
-            "reports_to": "",
-            "role_bundle": "",
-            "code": "admin-defaulted-role",
-            "title": "Admin Defaulted Role",
-            "description": "",
-            "headcount": 2,
-            "capacity_codes": "",
-            "status": Position.Status.OPEN,
-            "created_by": controller.id,
-        }
+    _role_actor, _role_approver, assignment_role = create_provenance_backed_role_bundle(
+        organization,
+        code="registration-lead",
+        name="Registration Lead",
+        capability_codes=tuple(starter_template.role_bundle.capability_codes),
     )
-    assert position_form.is_valid(), position_form.errors
-    assert position_form.cleaned_data["role_bundle"] == template.role_bundle
-    assert position_form.cleaned_data["description"] == template.description
-    assert (
-        position_form.cleaned_data["capacity_codes"] == template.default_capacity_codes
+    template = PositionTemplate.objects.create(
+        organization=organization,
+        code="registration-lead",
+        version=2,
+        name=starter_template.name,
+        description=starter_template.description,
+        default_headcount=starter_template.default_headcount,
+        default_capacity_codes=starter_template.default_capacity_codes,
+        role_bundle=assignment_role,
+        status=PositionTemplate.Status.PUBLISHED,
+        created_by=controller,
     )
 
     assignment_form = PositionAssignmentAdminForm(
@@ -710,24 +748,17 @@ def test_workforce_admin_defaults_reviews_and_activates_with_dual_control(
     request = RequestFactory().post("/admin/workforce/")
     request.user = controller
     request.correlation_id = str(uuid4())  # type: ignore[attr-defined]
-    position = Position(
-        organization=organization,
+    position_admin = PositionAdmin(Position, admin.site)
+    assert not position_admin.has_add_permission(request)
+    assert not position_admin.has_change_permission(request)
+    assert not position_admin.has_delete_permission(request)
+    position, _position_version = _create_governed_position(
+        actor=controller,
         edition=edition,
-        template=template,
         department=department,
-        role_bundle=assignment_role,
-        code="admin-created-role",
-        title="Admin-created Role",
-        description=template.description,
+        template=template,
+        title="Admin-rehearsal Role",
         headcount=2,
-        capacity_codes=template.default_capacity_codes,
-        status=Position.Status.OPEN,
-    )
-    PositionAdmin(Position, admin.site).save_model(
-        request,
-        position,
-        SimpleNamespace(),  # type: ignore[arg-type]
-        change=False,
     )
     assert position.created_by == controller
 

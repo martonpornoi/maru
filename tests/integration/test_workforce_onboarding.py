@@ -55,7 +55,11 @@ from maru.workforce.services import (
     activate_position_assignment,
     review_onboarding_document,
 )
-from maru.workforce.structure_commands import create_department
+from maru.workforce.structure_commands import (
+    create_department,
+    create_position,
+    update_position_opportunity,
+)
 from tests.factories import (
     AccountFactory,
     AdmissionProductFactory,
@@ -66,10 +70,7 @@ from tests.support.authority import (
     create_provenance_backed_role_bundle,
     grant_board_controllers_edition_capability,
 )
-from tests.workforce_helpers import (
-    create_department_for_test,
-    save_position_for_test,
-)
+from tests.workforce_helpers import create_department_for_test
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -171,10 +172,22 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         action=EditionStructureCommandReceipt.Action.DEPARTMENT_CREATED,
     )
     assert structure.origin == EditionStructureControl.Origin.MANUAL
-    assert structure.aggregate_version == 1
+    assert structure.aggregate_version == 2
     assert receipt.retry_key == bootstrap_correlation
     assert receipt.actor_id == controller.id
     assert receipt.affected_department_ids == [leadership.id]
+    position_receipt = EditionStructureCommandReceipt.objects.get(
+        correlation_id=bootstrap_correlation,
+        action=EditionStructureCommandReceipt.Action.POSITION_CREATED,
+    )
+    assert position_receipt.resulting_version == 2
+    assert (
+        position_receipt.affected_position_id
+        == Position.objects.get(
+            edition=edition,
+            code="convention-chair",
+        ).id
+    )
     assert RoleAssignment.objects.filter(
         organization=organization,
         principal=chair,
@@ -399,7 +412,7 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         description="Attendee-facing convention operations.",
         parent_department_id=leadership.id,
         display_order=10,
-        expected_version=1,
+        expected_version=2,
         reason="Add the attendee operations test Department.",
         retry_key=uuid4(),
         correlation_id=uuid4(),
@@ -410,46 +423,74 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
         organization=organization,
         edition=edition,
     )
-    template = PositionTemplate.objects.get(
+    starter_template = PositionTemplate.objects.get(
         organization=organization,
         code="registration-lead",
         status=PositionTemplate.Status.PUBLISHED,
     )
-    _actor, _approver, assignment_role = create_provenance_backed_role_bundle(
+    _role_actor, _role_approver, assignment_role = create_provenance_backed_role_bundle(
         organization,
         code="registration-lead",
         name="Registration Lead",
-        capability_codes=tuple(template.role_bundle.capability_codes),
+        capability_codes=tuple(starter_template.role_bundle.capability_codes),
+    )
+    template = PositionTemplate.objects.create(
+        organization=organization,
+        code="registration-lead",
+        version=2,
+        name=starter_template.name,
+        description=starter_template.description,
+        default_headcount=starter_template.default_headcount,
+        default_capacity_codes=starter_template.default_capacity_codes,
+        role_bundle=assignment_role,
+        status=PositionTemplate.Status.PUBLISHED,
+        created_by=controller,
     )
     chair_position = Position.objects.get(
         edition=edition,
         code="convention-chair",
     )
-    position = save_position_for_test(
-        position=Position(
-            organization=organization,
-            edition=edition,
-            template=template,
-            department=operations,
-            reports_to=chair_position,
-            role_bundle=assignment_role,
-            code="registration-lead",
-            title="Registration Lead",
-            description=template.description,
-            headcount=1,
-            capacity_codes=template.default_capacity_codes,
-            status=Position.Status.OPEN,
-            created_by=controller,
-        )
+    position_result = create_position(
+        actor=controller,
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+        template_id=template.id,
+        department_id=operations.id,
+        reports_to_id=chair_position.id,
+        title="Registration Lead",
+        description=template.description,
+        headcount=1,
+        expected_version=operations_result.resulting_version,
+        reason="Create the accountable registration Position for this rehearsal.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
     )
+    position = Position.objects.get(id=position_result.position_id)
     PositionDocumentRequirement.objects.create(
         position=position,
         document_type=nda_type,
     )
     opportunity = VolunteerOpportunity.objects.get(position=position)
-    opportunity.status = VolunteerOpportunity.Status.PUBLISHED
-    opportunity.visible_when_filled = True
-    opportunity.save()
+    update_position_opportunity(
+        actor=controller,
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+        position_id=position.id,
+        status=VolunteerOpportunity.Status.PUBLISHED,
+        headline=opportunity.headline,
+        description=opportunity.description,
+        applications_open_at=None,
+        applications_close_at=None,
+        visible_when_filled=True,
+        expected_version=position_result.resulting_version,
+        reason="Publish the registration volunteer opportunity.",
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    opportunity.refresh_from_db()
     opportunities_page = client.get(f"/volunteer/{edition.id}/")
     assert opportunities_page.status_code == 200
     web_applicant = AccountFactory(display_name="Web Applicant")

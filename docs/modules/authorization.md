@@ -74,7 +74,7 @@ self-history, minimized staff participation viewing, capability delegation,
 direct-grant management, immediate authority revocation, role management, and
 security-audit viewing.
 
-Page 9a.0 uses the separate edition-capable
+Organization structure read projection uses the separate edition-capable
 `workforce.view_structure` and `workforce.manage_structure` declarations.
 Manage does not imply view, and a capability stored only at Department or
 resource scope is deliberately too narrow for the complete edition tree.
@@ -193,10 +193,10 @@ and helper references. Authorization `0009` is the convergence leaf and central
 downgrade fence; each owning migration also retains its own active-state fence
 if the recorder row is damaged. Authorization `0010` and workforce `0007`
 extend that same production contract across retired-Department authority and
-the Page 9 structure writer boundary. Readiness now fingerprints 74
+the Organization structure writer boundary. Readiness now fingerprints 74
 security-critical functions, including the complete 19-helper runtime closure
-and all 14 Page 9 trigger helpers, and verifies 93 exact trigger attachments.
-The Page 9 subset is exactly 28 attachments, including statement/row event
+and all 14 Organization structure trigger helpers, and verifies 93 exact trigger attachments.
+The Organization structure subset is exactly 28 attachments, including statement/row event
 types, enabled state, `UPDATE OF` column lists, and deferred timing, on
 PostgreSQL 17. The downgrade-fence subset also includes all eight
 authorization `0010` retired-Department trigger attachments and all three of
@@ -222,11 +222,11 @@ creation and temporary objects, table trigger/truncate/maintenance, explicit
 effective parameter ACLs, non-origin persistent/live trigger settings,
 sequence update, object/column grant options, and an unusable data plane. A
 safe role has database `CONNECT`, schema `USAGE`, ordinary four-operation DML,
-`SELECT`/`INSERT` on Page 9 structure receipts,
-`SELECT`/`INSERT`/`UPDATE` on Page 9 structure controls, and sequence
+`SELECT`/`INSERT` on Organization structure receipts,
+`SELECT`/`INSERT`/`UPDATE` on Organization structure controls, and sequence
 `USAGE`/`SELECT`; materialized views and the exact activation control trio
 (`django_migrations`, marker, and latch) are SELECT-only and deny table- and
-column-level `REFERENCES`. Both Page 9 relations deny `DELETE` and
+column-level `REFERENCES`. Both Organization structure relations deny `DELETE` and
 `REFERENCES`, and receipts additionally deny `UPDATE`.
 Department remains on the ordinary DML plane behind its stopped-writer
 retirement trigger. The current-session proof additionally
@@ -247,7 +247,7 @@ reserved-activation operation guard is pinned too. Only the controlled owner
 mutates the migration recorder, marker, or latch; the reserved
 audit append is valid only as its exact same-transaction companion. The
 credential-free operator SQL is the matching executable grant specification.
-The 14 `SECURITY DEFINER` Page 9 trigger helpers are definition-fingerprinted
+The 14 `SECURITY DEFINER` Organization structure trigger helpers are definition-fingerprinted
 but deliberately absent from this executable allowlist: PostgreSQL invokes
 them only through the 28 pinned triggers, and both `PUBLIC` and the runtime
 role remain unable to call them directly.
@@ -471,7 +471,7 @@ They also prove that Board controllers and platform administrators cannot use
 generic authority commands or the workspace to list, version, share, replace,
 or revoke reserved Executive Board authority.
 
-Page 8 policy, command, and browser-adapter tests cover exact organization
+Representation & access policy, command, and browser-adapter tests cover exact organization
 scope, bounded platform bootstrap, non-platform subjects, two distinct cross-
 approvers, reserved role conflicts, stale/replayed activation and invitations,
 inactive or suspended controllers, immutable role creation, platform exclusion,
@@ -492,7 +492,7 @@ service/device principals,
 asynchronous approval workflow, grant review reminders, purpose binding, and
 policy caching are not implemented. The synchronous independent approver
 argument is a command invariant, not yet an approval inbox or pending request
-state. Page 8 replaces the old operations-only first-controller procedure and
+state. Representation & access replaces the old operations-only first-controller procedure and
 its initial backend security matrix passes. The reusable
 enforcement contracts must be adopted
 and extended with each domain slice; they are not a generic shortcut around

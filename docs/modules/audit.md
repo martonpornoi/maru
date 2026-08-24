@@ -59,7 +59,7 @@ allow, deny, validation error, and safe unexpected-error outcomes. A
 successful audit event and domain event share correlation; the domain event
 uses the audit event as its causation identifier.
 
-Page 9a.0 HTML and API structure reads append
+Organization structure HTML and API reads append
 `workforce.structure.read` after fresh final exact authorization and before
 releasing organization, edition, Department, Position, or holder labels. The
 allow record contains exact actor/organization/edition target, source channel,
@@ -92,7 +92,7 @@ generally executable: `PUBLIC` execution is revoked. Test-only truncation
 requires both a `test_` database name and the dedicated test GUC; production
 settings reject either escape shape.
 
-Pages 5 and 7 do not present `AuditEvent` rows as a human activity feed.
+Convention series record and Event edition record do not present `AuditEvent` rows as a human activity feed.
 Record activity uses allowlisted domain facts and safe identity labels; audit
 remains security/control evidence with separate authorization, purpose, and
 retention. A later cross-domain Activity workspace must preserve that boundary.
@@ -104,7 +104,7 @@ one-time sealing, multiple linked batches, empty reruns, sequence gaps, digest
 and count mismatch, batch immutability, batch-size bounds, command output, and
 command failure. Activation-evidence tests cover ordinary-operation
 pass-through, same-transaction marker/latch binding, fresh-correlation forgery,
-active upgrade, dormant reverse, and fail-closed catalog tampering. Page 9a.0
+active upgrade, dormant reverse, and fail-closed catalog tampering. Organization structure read projection
 tests cover HTML/API source channels, exact minimized metadata, and audit-
 append failure before disclosure.
 

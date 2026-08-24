@@ -24,6 +24,8 @@
     </div>
   </header>
 
+  {% include "core/_baseline_access_summary.html" with access_operation="view the audited platform account inventory and manage invitations" %}
+
   {% if account_inventory_state == "invalid" %}
     <section class="baseline-state baseline-state--error identity-state-panel" role="alert">
       <h2>Review the inventory request</h2>
@@ -159,8 +161,6 @@
       </div>
     </form>
   </section>
-
-  {% include "core/_baseline_access_summary.html" with access_operation="view the audited platform account inventory and manage invitations" %}
 
   <aside class="baseline-boundary" aria-labelledby="account-boundary-title">
     <p class="baseline-kicker">Access boundary</p>

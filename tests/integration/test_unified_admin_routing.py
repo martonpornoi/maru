@@ -54,7 +54,8 @@ def test_admin_home_exposes_searchable_platform_navigation_destinations() -> Non
     content = response.content.decode()
     assert content.count('id="nav-sidebar"') == 1
     assert content.count('id="nav-filter"') == 1
-    assert "<h2>Platform</h2>" in content
+    assert 'data-navigation-group="platform"' in content
+    assert "<span>Platform</span>" in content
     assert (
         'data-navigation-search="organizations find and continue setting up' in content
     )
@@ -168,7 +169,7 @@ def test_platform_navigation_is_hidden_from_ordinary_accounts() -> None:
     assert "Platform administration" not in admin_content
     assert admin_content.count('id="nav-filter"') == 1
     assert 'type="search"' in admin_content
-    assert "Find a page" in admin_content
+    assert "Find a task or record" in admin_content
     assert platform_response.status_code == 403
 
 

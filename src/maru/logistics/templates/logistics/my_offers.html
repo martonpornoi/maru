@@ -4,6 +4,7 @@
 {% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs" aria-current="page">My Maru / Equipment offers</div>{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="maru-management-page">
@@ -15,6 +16,7 @@
         <p><a href="{% url 'my-logistics-offer-index' %}">Back to all equipment-offer editions</a></p>
       </div>
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     <section class="module" aria-labelledby="my-offers-existing">
       <h2 id="my-offers-existing">Submitted offers</h2>

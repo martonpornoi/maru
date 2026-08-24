@@ -1712,6 +1712,7 @@ def administration_workspace(request: HttpRequest) -> HttpResponse:
             **context,
             "title": "Convention work",
             "maru_shell_access": admin_shell_access(request),
+            "maru_shell_access_rendered_by_page": True,
             "selected_admin_edition_id": (
                 str(selected_edition.id) if selected_edition is not None else ""
             ),

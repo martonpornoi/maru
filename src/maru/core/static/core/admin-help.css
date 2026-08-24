@@ -240,6 +240,30 @@ details.maru-navigation-group--collapsible > ul {
   box-sizing: border-box;
 }
 
+.maru-navigation-search-status {
+  margin: 0;
+  color: var(--body-quiet-color);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.maru-navigation-customize {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--hairline-color);
+  color: var(--body-quiet-color);
+  font-size: 0.68rem;
+}
+
+.maru-navigation-customize summary {
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.maru-navigation-customize p {
+  margin: 0.45rem 0 0;
+  line-height: 1.4;
+}
+
 .maru-navigation-group {
   padding: 0.75rem;
   border-bottom: 1px solid var(--hairline-color);
@@ -297,6 +321,17 @@ details.maru-navigation-group--collapsible > ul {
   margin: 0;
 }
 
+.maru-navigation-row > .maru-navigation-pin {
+  display: none;
+}
+
+.maru-navigation-customize[open]
+  + .maru-navigation-groups
+  .maru-navigation-row
+  > .maru-navigation-pin {
+  display: flex;
+}
+
 .maru-navigation-row button {
   min-width: 2rem;
   margin: 0;
@@ -316,6 +351,10 @@ details.maru-navigation-group--collapsible > ul {
   margin: 0;
   padding: 0.9rem 0.75rem;
   color: var(--body-quiet-color);
+}
+
+[data-navigation-group-kind="advanced"] .maru-navigation-description {
+  display: none;
 }
 
 .maru-platform-navigation {
@@ -648,20 +687,19 @@ details.maru-navigation-group--collapsible > ul {
 
 .maru-edition-context {
   order: 3;
-  display: grid;
-  grid-template-areas: "current picker switch";
-  grid-template-columns: minmax(0, 1fr) minmax(12rem, 28rem) auto;
+  position: relative;
+  display: flex;
   flex: none;
-  align-items: end;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.65rem;
   width: 100%;
-  padding-top: 0.7rem;
+  padding-top: 0.45rem;
   border-top: 1px solid rgb(255 255 255 / 18%);
   box-sizing: border-box;
 }
 
 .maru-edition-context-trail {
-  grid-area: current;
   min-width: 0;
   margin: 0;
   color: var(--header-link-color);
@@ -669,9 +707,58 @@ details.maru-navigation-group--collapsible > ul {
   overflow-wrap: anywhere;
 }
 
-.maru-edition-context-trail span {
+.maru-edition-context-trail > span:not(.maru-edition-context-label) {
   padding: 0 0.35rem;
   color: var(--maru-gold-300);
+}
+
+.maru-edition-context-label {
+  margin-right: 0.45rem;
+  color: var(--maru-gold-200);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.maru-edition-context-switcher {
+  flex: none;
+}
+
+.maru-edition-context-switcher > summary {
+  padding: 0.32rem 0.55rem;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 0.35rem;
+  color: var(--header-link-color);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.maru-edition-context-switcher > summary:hover,
+.maru-edition-context-switcher > summary:focus-visible {
+  border-color: var(--maru-gold-300);
+  color: var(--maru-gold-100);
+}
+
+.maru-edition-context-switcher > form {
+  position: absolute;
+  z-index: 45;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.55rem;
+  color: var(--body-fg);
+  background: var(--body-bg);
+  box-shadow: 0 0.6rem 1.5rem rgb(3 13 29 / 22%);
+  box-sizing: border-box;
 }
 
 .maru-personal-home {
@@ -706,16 +793,54 @@ details.maru-navigation-group--collapsible > ul {
   text-transform: uppercase;
 }
 
+.maru-personal-primary,
+.maru-personal-secondary {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.maru-personal-primary h2,
+.maru-personal-secondary h2 {
+  margin: 0;
+  color: var(--body-fg);
+}
+
+.maru-personal-secondary {
+  grid-template-columns: minmax(10rem, 0.45fr) minmax(0, 1fr);
+  align-items: start;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--hairline-color);
+  border-radius: 0.8rem;
+  background: var(--body-bg);
+}
+
+.maru-personal-secondary nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.maru-personal-secondary nav a {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--hairline-color);
+  border-radius: 0.45rem;
+  color: var(--body-fg);
+  background: var(--darkened-bg);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.maru-personal-secondary nav a:hover,
+.maru-personal-secondary nav a:focus-visible {
+  border-color: var(--link-fg);
+  color: var(--link-fg);
+}
+
 .maru-edition-context label {
-  grid-area: picker;
   display: grid;
   min-width: 0;
   gap: 0.25rem;
-  color: var(--header-link-color);
-}
-
-.maru-edition-context > button {
-  grid-area: switch;
+  color: var(--body-fg);
 }
 
 .maru-edition-context label span {
@@ -751,14 +876,6 @@ details.maru-navigation-group--collapsible > ul {
     text-align: left;
   }
 
-  .maru-edition-context {
-    grid-template-areas:
-      "current current"
-      "picker switch";
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-  }
-
   .maru-page-help {
     max-width: 100%;
   }
@@ -766,7 +883,7 @@ details.maru-navigation-group--collapsible > ul {
 
 @media (max-width: 767px) {
   .maru-edition-context {
-    align-items: end;
+    align-items: flex-start;
   }
 
   .maru-edition-context label {
@@ -786,6 +903,10 @@ details.maru-navigation-group--collapsible > ul {
   }
 
   .maru-admin-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .maru-personal-secondary {
     grid-template-columns: 1fr;
   }
 }

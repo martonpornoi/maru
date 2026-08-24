@@ -9,7 +9,16 @@
         const empty = sidebar.querySelector('[data-navigation-empty]');
         const status = document.getElementById('maru-navigation-search-status');
         const openBeforeSearch = new WeakMap();
+        const legacyFilterKey = 'django.admin.navSidebarFilterValue';
         let filtering = false;
+
+        function clearLegacyFilterPersistence() {
+            try {
+                sessionStorage.removeItem(legacyFilterKey);
+            } catch {
+                // Navigation remains page-local when browser storage is unavailable.
+            }
+        }
 
         function normalizeSearchText(value) {
             return value
@@ -26,10 +35,7 @@
             return group.querySelector('[data-navigation-collapsible]');
         }
 
-        function applyFilter(event) {
-            if (event && event.key === 'Escape') {
-                filter.value = '';
-            }
+        function applyFilter() {
             const query = normalizeSearchText(filter.value);
             const queryTerms = query.split(/\s+/).filter(Boolean);
             if (query && !filtering) {
@@ -40,7 +46,8 @@
                     }
                 }
             }
-            let visibleCount = 0;
+            let taskCount = 0;
+            let advancedCount = 0;
             for (const item of items) {
                 const searchText = normalizeSearchText(
                     item.dataset.navigationSearch || item.textContent || ''
@@ -48,7 +55,11 @@
                 const matches = queryTerms.every((term) => searchText.includes(term));
                 item.hidden = !matches;
                 if (matches) {
-                    visibleCount += 1;
+                    if (item.dataset.navigationKind === 'specialist') {
+                        advancedCount += 1;
+                    } else {
+                        taskCount += 1;
+                    }
                 }
             }
             for (const group of groups) {
@@ -57,42 +68,49 @@
                 );
                 const isSearchOnly = group.dataset.navigationSearchOnly === 'true';
                 const isCurrent = group.dataset.navigationCurrent === 'true';
+                const isAdvanced = group.dataset.navigationGroupKind === 'advanced';
                 group.hidden = !hasMatch || (!query && isSearchOnly && !isCurrent);
                 const collapsible = collapsibleFor(group);
                 if (collapsible && query) {
-                    collapsible.open = hasMatch;
+                    collapsible.open = Boolean(
+                        hasMatch &&
+                        (!isAdvanced || isCurrent || openBeforeSearch.get(collapsible))
+                    );
                 } else if (collapsible && filtering && openBeforeSearch.has(collapsible)) {
                     collapsible.open = openBeforeSearch.get(collapsible);
                 }
             }
             filtering = Boolean(query);
+            const visibleCount = taskCount + advancedCount;
             if (empty) {
                 empty.hidden = visibleCount !== 0;
             }
             filter.classList.toggle('no-results', visibleCount === 0);
             if (status) {
+                status.hidden = !query;
                 status.textContent = query
-                    ? `${visibleCount} available page${visibleCount === 1 ? '' : 's'} found.`
-                    : `${items.length} available pages.`;
+                    ? [
+                        `${taskCount} task${taskCount === 1 ? '' : 's'}`,
+                        `${advancedCount} technical record${advancedCount === 1 ? '' : 's'} in Specialist records`,
+                    ].join(' · ')
+                    : '';
             }
-            try {
-                sessionStorage.setItem('django.admin.navSidebarFilterValue', query);
-            } catch {
-                // Navigation still works when browser storage is unavailable.
-            }
+            clearLegacyFilterPersistence();
         }
 
         filter.addEventListener('input', applyFilter);
-        filter.addEventListener('keyup', applyFilter);
-        let storedValue = '';
-        try {
-            storedValue = sessionStorage.getItem('django.admin.navSidebarFilterValue') || '';
-        } catch {
-            // An empty filter is a safe fallback when browser storage is unavailable.
-        }
-        if (storedValue) {
-            filter.value = storedValue;
-        }
+        filter.addEventListener('change', applyFilter);
+        filter.addEventListener('keyup', clearLegacyFilterPersistence);
+        filter.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape' || !filter.value) {
+                return;
+            }
+            event.preventDefault();
+            filter.value = '';
+            applyFilter();
+        });
+        filter.value = '';
+        clearLegacyFilterPersistence();
         applyFilter();
 
         for (const gateway of document.querySelectorAll(
@@ -117,5 +135,12 @@
                 filter.focus();
             });
         }
+    }
+}
+
+{
+    const focusTarget = document.querySelector('[data-maru-focus-on-load]');
+    if (focusTarget instanceof HTMLElement) {
+        requestAnimationFrame(() => focusTarget.focus());
     }
 }

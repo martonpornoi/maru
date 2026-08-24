@@ -45,6 +45,8 @@ def test_step_up_is_authenticated_closed_and_rejects_unsafe_return_urls(
     unsafe = client.get(route, {"next": "https://attacker.example.invalid/collect"})
     assert unsafe.status_code == 200
     assert unsafe.context["form"]["next"].value() == reverse("admin:index")
+    assert unsafe.content.decode().count("<main") == 1
+    assert unsafe.content.decode().count("<h1") == 1
     _assert_private_no_store(unsafe)
 
     unknown_get = client.get(route, {"next": reverse("admin:index"), "debug": "1"})

@@ -3,6 +3,7 @@
 {% block title %}{{ review.summary.partner_name }} &middot; Charity review{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'charity-workspace' organization.slug convention_series.slug edition.slug %}">Charity partners</a> &rsaquo; Review</div>{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="baseline-page">
@@ -11,6 +12,7 @@
       <h1>{{ review.summary.partner_name }}</h1>
       <p>{{ review.summary.responsible_department_name }} &middot; {{ review.summary.status|capfirst }} &middot; {{ review.summary.publication_state|capfirst }} &middot; version {{ review.summary.aggregate_version }}</p>
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     <section class="baseline-panel" aria-labelledby="charity-consequence-title">
       <h2 id="charity-consequence-title">Current consequence</h2>

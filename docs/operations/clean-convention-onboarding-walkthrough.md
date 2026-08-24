@@ -10,7 +10,7 @@ demo database. Use synthetic identities and documents only.
 
 ADR 0039 mounts this shell grammar and backend route/permission tests pass.
 Treat the browser details as preserved evidence until current browser gates
-pass. Use `maru-hands-on-tutorial.md` for the active Page 1–8 journey. This
+pass. Use `maru-hands-on-tutorial.md` for the active platform setup through representation journey. This
 document's broad `bootstrap_convention` step is recovery evidence only after
 ADR 0040 and must not be used for a new Draft organization.
 
@@ -39,11 +39,11 @@ so cleanup can be deliberate after the rehearsal.
 
 The former specialist-record creation route below is retired. Organization,
 series, and membership specialist records are inspection-only because their
-audited commands own mutation. For a supported new organization, follow Pages
-2–8 in the hands-on tutorial instead:
+audited commands own mutation. For a supported new organization, follow the
+organization setup and representation journey in the hands-on tutorial instead:
 
 1. create the Draft Organization at `/admin/platform/organizations/new/`;
-2. establish and activate its Executive Board on Page 8;
+2. establish and activate its Executive Board on Representation & access;
 3. create its Convention Series and Event Edition from the contextual platform
    pages;
 4. create a separate active Convention Chair account at
@@ -64,7 +64,7 @@ remain editable through their ordinary pages.
 
 The former **Establish convention leadership** browser ceremony and
 `/api/v1/management/convention-bootstrap` endpoint are not mounted. Do not look
-for them in Convention work or treat them as an alternate to Page 8.
+for them in Convention work or treat them as an alternate to Representation & access.
 
 The command remains a recovery fallback. If the browser ceremony is
 unavailable, the database assignment and Python invocation must be separate
@@ -85,8 +85,9 @@ The command invokes the preserved audited service and may establish controller/
 Chair authority, leadership department/position, and starter templates only as
 part of an approved legacy reconciliation. Repeating it is expected to fail.
 There is no current browser path. Stop this fresh-database rehearsal here unless
-the operator has explicitly approved that recovery procedure; the active Page
-8 path intentionally does not invent workforce appointments or templates.
+the operator has explicitly approved that recovery procedure; the active
+Representation & access path intentionally does not invent workforce
+appointments or templates.
 
 ## 4. Create and activate the registration form
 

@@ -1,4 +1,4 @@
-# Management page contracts
+# Management surface contracts
 
 **Audience:** Product designers, frontend contributors, backend adapters, and
 reviewers\
@@ -6,15 +6,30 @@ reviewers\
 management surface\
 **Reading time:** 2 minutes to choose a contract
 
-Page contracts define purpose, scope, authorization, navigation, states, and
-evidence for the shared management experience. Their numbering records the
-intended journey; it is not an instruction to read every contract before
-contributing.
+These contracts define purpose, scope, authorization, navigation, states, and
+evidence for the shared management experience. Current guidance always names a
+surface by its human purpose. Numeric filename prefixes preserve established
+document order and incoming links only; they are not product names or user
+journey steps.
 
 Use the [management experience shell](00-management-experience-shell.md) for
-the common navigation and interaction grammar. Open a numbered contract only
-when changing that surface, and compare its status with the
+the common navigation and interaction grammar. Open the purpose-specific
+contract for the surface being changed, and compare its status with the
 [production-consolidation ledger](../../project/PRODUCTION_CONSOLIDATION.md).
+
+## Contracts by purpose
+
+- [Platform administration home](01-platform-administration-home.md)
+- [Create organization](02-create-organization.md)
+- [Organization record](03-organization-record.md)
+- [Create convention series](04-create-convention-series.md)
+- [Convention series record](05-convention-series-record.md)
+- [Create event edition](06-create-event-edition.md)
+- [Event edition record](07-event-edition-record.md)
+- [Representation & access](08-representation-and-access.md)
+- [Organization structure](09-organization-structure.md)
+- [Position management](position-management.md)
+- [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
 :hidden:
@@ -23,4 +38,5 @@ when changing that surface, and compare its status with the
 
 0*
 10-*
+position-management
 ```

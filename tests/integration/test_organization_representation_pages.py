@@ -222,7 +222,9 @@ def test_page_8_uses_the_shared_shell_and_strict_post_only_provisioning() -> Non
     assert 'id="nav-sidebar"' in content
     assert "Representation &amp; access" in content
     assert "Organization record" in content
-    assert "Governance invitations" in content
+    assert "Governance invitations" not in content
+    assert "My Maru" in content
+    assert 'data-navigation-group="personal"' not in content
     assert "Board setup" in content
     assert "Step 1 of 3" in content
     assert "1. Create the Executive Board" in content

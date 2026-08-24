@@ -1,7 +1,7 @@
 # Documentation standards
 
 Status: Baseline  
-Last updated: 2026-08-22
+Last updated: 2026-08-23
 
 Documentation is maintained with the implementation.
 
@@ -45,6 +45,23 @@ Each implemented module documents:
 - Link instead of duplicating normative content.
 - Mark proposed behavior as proposed; do not describe it as implemented.
 - Remove stale instructions in the same change that makes them stale.
+
+### Purpose-first surface names
+
+Living product, module, architecture, security, testing, setup, and operating
+guidance names each management surface by the task a person is trying to
+complete: for example, **Organization structure**, **Position management**, or
+**Registration setup and account onboarding**. Sequential labels built from
+the word "Page" plus an implementation number are history shorthand and must
+not be used as current product vocabulary.
+
+Numeric prefixes on established contract and runbook filenames may remain for
+stable document order and incoming-link compatibility. They do not appear in
+headings, link text, navigation labels, acceptance criteria, or current-state
+prose. Accepted ADRs, append-only checkpoints, and the explicitly frozen rebuild
+and production-consolidation ledgers retain their original wording as historical
+evidence; current indexes and handoffs translate that history into purpose
+names.
 
 ## Contributor site information architecture
 

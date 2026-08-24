@@ -759,8 +759,8 @@ def admin_page_help(
     if not help_text and normalized_path.rstrip("/") == "/admin":
         help_text = (
             "Use this administration home for convention work and specialist "
-            "records. For example: open Registration for attendee service or "
-            "Registration configurations to edit a draft."
+            "records. For example: open Registration desk to help an attendee "
+            "or Registration to edit the convention's setup."
         )
     elif not help_text and normalized_path.rstrip("/") == "/admin/workspace":
         help_text = (

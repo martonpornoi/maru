@@ -43,7 +43,7 @@ the system.
 | [0036](0036-progressive-context-scoped-administration-navigation.md) | Accepted | Progressive global and selected-organization navigation aligned to the viewport edge |
 | [0037](0037-executable-journey-production-consolidation.md) | Accepted | Consolidate the retained domain kernel through executable convention journeys in one management shell; ADR 0039 selects its unified route and visual grammar |
 | [0038](0038-stage-governance-after-edition-spine.md) | Accepted | Stage governance and computed scoped access after the edition workspace record spine |
-| [0039](0039-unified-admin-shell-and-platform-route-space.md) | Accepted | Use the original unified `/admin/` shell grammar and reserve `/admin/platform/` for Pages 1 through 7 |
+| [0039](0039-unified-admin-shell-and-platform-route-space.md) | Accepted | Use the original unified `/admin/` shell grammar and reserve `/admin/platform/` for the organization-to-edition management spine |
 | [0040](0040-explicit-executive-board-representation-lifecycle.md) | Accepted | Establish first organization authority through exact Executive Board invitations, self-acceptance, two-person cross-approval, and atomic Draft-to-Active activation |
 | [0041](0041-exact-department-and-typed-resource-authorization-scope.md) | Accepted | Add exact department and typed-resource scope with trusted resolved targets and no implicit department-tree inheritance |
 | [0042](0042-synthetic-only-educational-fixtures.md) | Partially superseded | Synthetic-only people and offline fixtures remain; ADR 0073 removes the retired adapter and requires repository-owned fictional convention examples |
@@ -51,7 +51,7 @@ the system.
 | [0044](0044-exact-authority-issuance-provenance.md) | Accepted | Pin immutable actor and approver authority sources, propagate controller loss, and preserve a non-cyclic initial Executive Board root |
 | [0045](0045-governance-anchored-copy-on-write-edition-structure.md) | Partially superseded | Governance anchoring, copy-on-write structure, versioning, provenance, and editing remain; ADR 0073 replaces the source-derived starter identity and taxonomy |
 | [0046](0046-nondelegable-runtime-database-login.md) | Accepted | Require a genuine non-delegable PostgreSQL runtime login, select-only cutover controls, and trigger-integrity ACL proof |
-| [0047](0047-governed-registration-setup-and-platform-account-invitations.md) | Accepted | Govern Page 10 registration setup and optional recipient-owned platform account invitations through strict shared commands and staged direct-writer retirement |
+| [0047](0047-governed-registration-setup-and-platform-account-invitations.md) | Accepted | Govern registration setup and optional recipient-owned platform account invitations through strict shared commands and staged direct-writer retirement |
 | [0048](0048-automatic-browser-department-ordering.md) | Accepted | Keep Department sibling order automatic in the browser while preserving explicit bounded API ordering |
 | [0049](0049-coherent-navigation-personal-surface-and-access-preview.md) | Accepted | Flatten selected-edition navigation, add one searchable/pinnable registry and My Maru, and provide capped read-only access preview |
 | [0050](0050-governed-admission-upgrades-capacity-and-edition-commerce.md) | Accepted | Use held exact-delta admission replacements, append-only bounded capacity, strict FIFO offers, and a separate edition catalog |
@@ -79,6 +79,7 @@ the system.
 | [0072](0072-protected-exact-main-sphinx-pages-publication.md) | Accepted | Rebuild contributor docs from exact protected main and deploy generated HTML through a least-privilege Pages environment |
 | [0073](0073-repository-owned-fictional-convention-examples.md) | Accepted | Use repository-owned fictional convention examples and remove real-roster and source-derived taxonomy dependencies from current material |
 | [0074](0074-newcomer-first-curated-sphinx-navigation.md) | Accepted | Present six stable primary documentation hubs and one finite newcomer path while retaining complete searchable catalogs |
+| [0075](0075-governed-position-and-opportunity-management.md) | Accepted | Govern Position and paired-opportunity management through the shared edition structure aggregate and purpose-built owner workflow |
 
 New ADRs use the next four-digit number and contain:
 

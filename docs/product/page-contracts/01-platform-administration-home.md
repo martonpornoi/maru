@@ -1,4 +1,4 @@
-# Page 1 contract: Platform administration home
+# Platform administration home contract
 
 - Status: Implemented in the task-oriented responsive shell and focused-test
   verified; complete browser/accessibility/state-matrix/owner evidence pending
@@ -19,15 +19,15 @@ not a member or participant of any listed convention.
 
 ## Placement and navigation
 
-`/admin/` remains the canonical authenticated shell home. Page 1 lives in the
+`/admin/` remains the canonical authenticated shell home. Platform administration home lives in the
 reserved `/admin/platform/` route space so it cannot collide with Django
-application-label routes. Under ADRs 0049 and 0055, Page 1 participates in one
+application-label routes. Under ADRs 0049 and 0055, Platform administration home participates in one
 permission-filtered registry shared by the authenticated shell. The default
 home and **Platform administration** group prioritize the durable
 **Organizations** destination and current setup work instead of presenting
 every creation command and technical model as an equal choice.
 
-The organization-creation route belongs to Page 2. **Add organization** is a
+The organization-creation route belongs to Create organization. **Add organization** is a
 contextual action beside the inventory and is discoverable through the
 search-only **Actions** group; it is not pinnable or a permanent equal-weight
 sidebar row. Authorized technical records remain searchable behind the
@@ -35,7 +35,7 @@ collapsed **Specialist records** disclosure and the home-page specialist
 gateway. Every render resolves and authorizes each item again. This registry is
 not a convention selector, setup strip, second shell, or link to preserved
 pages. Sign out remains in the existing header. Each inventory organization
-name links to its purpose-built Page 3 record; the inventory itself remains
+name links to its purpose-built Organization record; the inventory itself remains
 read-only.
 
 ## Information and actions
@@ -65,7 +65,7 @@ assignment. Restricted records remain governed by SAF-004.
 ## Page states
 
 - **Empty:** zero organizations, a direct explanation, and the contextual
-  Page 2 **Add organization** primary action.
+  Create organization **Add organization** primary action.
 - **Populated:** stable alphabetical rows with lifecycle and related counts.
 - **Loading:** the page is server-rendered atomically; partial stale rows or a
   decorative indefinite loading state are not rendered.
@@ -109,4 +109,4 @@ all failure states, and owner-led rehearsal remain release evidence.
 - focused and complete automated quality gates; and
 - updated current state, module documentation, and append-only checkpoint.
 
-The owner accepted Page 1 before Page 2 implementation began.
+The owner accepted Platform administration home before Create organization implementation began.

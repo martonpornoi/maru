@@ -27,24 +27,38 @@
     <button type="button" data-navigation-close>Close</button>
   </div>
   <div class="maru-navigation-search">
-    <label for="nav-filter">Find a page</label>
+    <label for="nav-filter">Find a task or record</label>
     <input
       type="search"
       id="nav-filter"
-      placeholder="Search menu..."
+      placeholder="Search tasks and records..."
       aria-describedby="maru-navigation-search-status"
       autocomplete="off"
     >
-    <p id="maru-navigation-search-status" class="visually-hidden" aria-live="polite"></p>
+    <p
+      id="maru-navigation-search-status"
+      class="maru-navigation-search-status"
+      aria-live="polite"
+      hidden
+    ></p>
   </div>
   <p class="maru-navigation-empty" data-navigation-empty hidden>
-    No available page matches that search.
+    No available task or technical record matches that search.
   </p>
+  {% if maru_navigation.groups %}
+    <details class="maru-navigation-customize" data-navigation-customize>
+      <summary>Customize navigation</summary>
+      <p>Pin the destinations you return to most often.</p>
+    </details>
+  {% endif %}
+  <div class="maru-navigation-groups">
   {% for group in maru_navigation.groups %}
     {% if group.collapsed %}
       <details
+        id="nav-{{ group.label|slugify }}"
         class="maru-navigation-group maru-navigation-group--collapsible"
         data-navigation-group="{{ group.label|slugify }}"
+        data-navigation-group-kind="{% if group.label == 'Specialist records' %}advanced{% else %}task{% endif %}"
         data-navigation-search-only="{% if group.search_only %}true{% else %}false{% endif %}"
         data-navigation-current="{% if group.current %}true{% else %}false{% endif %}"
         data-navigation-collapsible
@@ -52,15 +66,13 @@
       >
         <summary>
           <span>{{ group.label }}</span>
-          <span
-            class="maru-navigation-group-count"
-            aria-label="{{ group.items|length }} available pages"
-          >{{ group.items|length }}</span>
         </summary>
     {% else %}
       <section
+        id="nav-{{ group.label|slugify }}"
         class="maru-navigation-group"
         data-navigation-group="{{ group.label|slugify }}"
+        data-navigation-group-kind="{% if group.label == 'Specialist records' %}advanced{% else %}task{% endif %}"
         data-navigation-search-only="{% if group.search_only %}true{% else %}false{% endif %}"
         data-navigation-current="{% if group.current %}true{% else %}false{% endif %}"
       >
@@ -71,6 +83,7 @@
           <li
             class="maru-navigation-item"
             data-navigation-item
+            data-navigation-code="{{ item.code }}"
             data-navigation-search="{{ item.search_text|lower }}"
             {% if item.kind %}data-navigation-kind="{{ item.kind }}"{% endif %}
           >
@@ -88,7 +101,11 @@
                 {% endif %}
               </a>
               {% if item.pinnable %}
-                <form method="post" action="{% url 'update-navigation-pin' %}">
+                <form
+                  class="maru-navigation-pin"
+                  method="post"
+                  action="{% url 'update-navigation-pin' %}"
+                >
                   {% csrf_token %}
                   <input type="hidden" name="destination_code" value="{{ item.code }}">
                   <input type="hidden" name="action" value="{% if item.pinned %}unpin{% else %}pin{% endif %}">
@@ -110,4 +127,5 @@
       </section>
     {% endif %}
   {% endfor %}
+  </div>
 </nav>

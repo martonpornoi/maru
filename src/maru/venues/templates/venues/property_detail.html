@@ -1,7 +1,10 @@
 {% extends "admin/base_site.html" %}
 
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+
 {% block content %}
-  <main id="content" class="maru-management-page">
+  <div id="content-main" class="maru-management-page">
     <p><a href="{% url 'venue-workspace' organization.slug convention_series.slug edition.slug %}">Back to venues and spaces</a></p>
     <header class="maru-page-header">
       <div>
@@ -10,6 +13,7 @@
         <p>{{ property.location_name }} / {{ property.country_code }} / profile version {{ property.aggregate_version }}</p>
       </div>
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     <section class="module" aria-labelledby="property-profile-title">
       <h2 id="property-profile-title">Property and provider facts</h2>
@@ -112,5 +116,5 @@
         {% if room_types %}<details><summary>Add room-night inventory</summary><form method="post" action="{% url 'venue-inventory-set' organization.slug convention_series.slug edition.slug property.id %}">{% csrf_token %}{{ inventory_form.as_p }}<button type="submit">Set inventory</button></form></details>{% endif %}
       {% endif %}
     </section>
-  </main>
+  </div>
 {% endblock %}

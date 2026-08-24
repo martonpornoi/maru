@@ -150,8 +150,8 @@ health never reports the role name, membership, object, credential, or database
 error that caused the denial.
 
 The exact catalog gate also requires workforce
-`0007_structure_write_integrity`. It fingerprints all 14 Page 9
-`SECURITY DEFINER` trigger helpers and matches all 28 Page 9 trigger
+`0007_structure_write_integrity`. It fingerprints all 14 Organization structure
+`SECURITY DEFINER` trigger helpers and matches all 28 Organization structure trigger
 attachments by table, function signature, event/row type, enabled state,
 `UPDATE OF` columns, and deferred timing. A missing migration-recorder row,
 altered helper definition, disabled/replaced trigger, changed update-column

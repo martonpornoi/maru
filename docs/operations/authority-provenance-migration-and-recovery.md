@@ -4,7 +4,7 @@ Status: staged writer and irreversible exact-lineage activation procedure
 Last updated: 2026-08-02
 Scope: ADRs 0044–0046, authorization `0006` through `0010`, audit `0005` and
 `0006`, organizations `0013`, workforce `0005` through `0007`, compatible
-Board/authority/Page 9 writers, count-only readiness, and the one-way
+Board/authority/Organization structure writers, count-only readiness, and the one-way
 activation command
 
 ## Purpose and current boundary
@@ -31,11 +31,11 @@ callers. Authorization `0009` converges those owning migrations with `0008` and
 adds a central reverse fence; each owning migration also refuses an activated
 reverse if that convergence recorder row is lost.
 Authorization `0010` installs the retired-Department authority boundary;
-workforce `0006` adds the Page 9 structure aggregate schema, and workforce
+workforce `0006` adds the Organization structure aggregate schema, and workforce
 `0007` performs its stopped-writer preflight before installing the final write
 barrier, scope mutexes, immutable control/receipt handshake, Department and
 retirement guards, and downgrade fence. Production readiness treats those
-Page 9 guards as part of the same fail-closed catalog contract: 14 function
+Organization structure guards as part of the same fail-closed catalog contract: 14 function
 definitions and 28 exact trigger attachments are pinned, while none of those
 trigger helpers enters the runtime function-execute allowlist.
 
@@ -104,7 +104,7 @@ even when another leaf happened to produce a safe order in an older graph.
 6. Inspect the exact plan and confirm identity `0010`, organizations `0009`
    through `0013`, workforce `0004` and `0005`, authorization `0005` through
    `0009`, workforce `0006`, authorization `0010`, and workforce `0007` are
-   ordered safely. The Page 9 cutover must run only after its authorization
+   ordered safely. The Organization structure cutover must run only after its authorization
    retirement dependency and while every old structure/authority writer is
    stopped:
 
@@ -133,7 +133,7 @@ organizations `0013`, and workforce `0005` through `0007` let it verify the
 complete guard, migration, function-definition, trigger-attachment, and
 least-privilege helper catalog as well as the data. It must report the
 database-completeness and downgrade-fence gates unresolved if workforce
-`0007` is missing or any Page 9 function/trigger fingerprint differs. The same
+`0007` is missing or any Organization structure function/trigger fingerprint differs. The same
 rule covers authorization `0010`: a normal reverse removes its required
 migration record, while partial loss or tampering of any of its eight retired-
 Department trigger attachments or three functions makes both catalog gates
@@ -332,7 +332,7 @@ blocker count alone is not permission to proceed.
    - have effective table `TRIGGER`, `TRUNCATE`, or `MAINTAIN`;
    - have table- or column-level migration-recorder/marker/latch mutation or
      `REFERENCES`,
-     excess Page 9 structure-table mutation or `REFERENCES`, sequence `UPDATE`,
+     excess Organization structure-table mutation or `REFERENCES`, sequence `UPDATE`,
      or a grant option on the database, a non-system schema, relation, column,
      sequence, or function;
    - receive any explicit effective parameter `SET`/`ALTER SYSTEM` ACL; or
@@ -348,7 +348,7 @@ blocker count alone is not permission to proceed.
    `session_replication_role=origin`; otherwise activation is unsafe even when
    the future role's stored ACLs are correct. Never record the role credential
    or database URL.
-   Apply both Page 9 migrations—workforce `0006_edition_structure_schema` and
+   Apply both Organization structure migrations—workforce `0006_edition_structure_schema` and
    `0007_structure_write_integrity`—before reconciling this role. Readiness
    must recognize `0007` and all 14 function plus 28 trigger fingerprints;
    presence of the two tables alone is insufficient.

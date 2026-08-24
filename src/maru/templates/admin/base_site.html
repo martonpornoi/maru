@@ -44,11 +44,6 @@
         My Maru
       </a>
     {% endif %}
-    {% if not maru_personal_surface and maru_shell_access.workspace_available %}
-      <a class="maru-admin-surface" href="{% url 'management-console' %}">
-        Convention work
-      </a>
-    {% endif %}
   </div>
 {% endblock %}
 
@@ -57,17 +52,11 @@
   {% if not maru_personal_surface and not baseline_hide_admin_scoped_navigation %}
     {% admin_edition_context request as maru_edition_context %}
     {% if maru_edition_context.available %}
-      <form
-        class="maru-edition-context"
-        method="post"
-        action="{% url 'admin-edition-context' %}"
-      >
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <div class="maru-edition-context" aria-label="Convention workspace">
         <p
           class="maru-edition-context-trail"
-          aria-label="Current workspace"
         >
+          <span class="maru-edition-context-label">Workspace</span>
           {% if edition %}
             {{ organization.name }} <span aria-hidden="true">/</span>
             {{ convention_series.name }} <span aria-hidden="true">/</span>
@@ -82,32 +71,35 @@
             <strong>All foundation data</strong>
           {% endif %}
         </p>
-        <label class="maru-edition-context-picker" for="maru-edition-context">
-          <span>Change workspace</span>
-          <select id="maru-edition-context" name="edition_id">
-            <option value="">All foundation data</option>
-            {% for edition in maru_edition_context.editions %}
-              <option
-                value="{{ edition.id }}"
-                {% if maru_edition_context.selected and edition.id == maru_edition_context.selected.id %}selected{% endif %}
-              >
-                {{ edition.name }} · {{ edition.organization.name }}
-              </option>
-            {% endfor %}
-          </select>
-        </label>
-        <button type="submit">Switch</button>
-      </form>
+        <details class="maru-edition-context-switcher">
+          <summary>Change</summary>
+          <form method="post" action="{% url 'admin-edition-context' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <label class="maru-edition-context-picker" for="maru-edition-context">
+              <span>Choose a workspace</span>
+              <select id="maru-edition-context" name="edition_id">
+                <option value="">All foundation data</option>
+                {% for edition in maru_edition_context.editions %}
+                  <option
+                    value="{{ edition.id }}"
+                    {% if maru_edition_context.selected and edition.id == maru_edition_context.selected.id %}selected{% endif %}
+                  >
+                    {{ edition.name }} · {{ edition.organization.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </label>
+            <button type="submit">Switch</button>
+          </form>
+        </details>
+      </div>
     {% endif %}
   {% endif %}
 {% endblock %}
 
 {% block messages %}
   {{ block.super }}
-  {% if not is_popup %}
-    {% maru_page_access as maru_page_access_summary %}
-    {% include "core/_page_access_summary.html" with maru_page_access=maru_page_access_summary only %}
-  {% endif %}
 {% endblock %}
 
 {% block content_title %}
@@ -116,6 +108,15 @@
   {% if maru_page_help %}
     <p class="maru-page-help">{{ maru_page_help }}</p>
   {% endif %}
+{% endblock %}
+
+{% block content_subtitle %}
+  {{ block.super }}
+  {% block maru_page_access %}
+    {% if not is_popup and not maru_shell_access_rendered_by_page %}
+      {% include "core/_page_access_mount.html" %}
+    {% endif %}
+  {% endblock %}
 {% endblock %}
 
 {% block extrabody %}
@@ -137,6 +138,11 @@
       const toggle = originalToggle.cloneNode(true);
       originalToggle.replaceWith(toggle);
       const drawerWidth = window.matchMedia("(max-width: 1100px)");
+      const drawerBackground = [
+        document.getElementById("header"),
+        document.querySelector(".breadcrumbs"),
+        document.getElementById("content-start"),
+      ].filter((element) => element instanceof HTMLElement);
       const focusableSelector = [
         "a[href]",
         "button:not([disabled])",
@@ -175,6 +181,17 @@
             !element.closest("[hidden]") && element.getClientRects().length > 0,
         );
 
+      const setDrawerBackgroundHidden = (hidden) => {
+        drawerBackground.forEach((element) => {
+          element.inert = hidden;
+          if (hidden) {
+            element.setAttribute("aria-hidden", "true");
+          } else {
+            element.removeAttribute("aria-hidden");
+          }
+        });
+      };
+
       const setExpanded = (expanded, { focusDrawer = false, persist = true } = {}) => {
         main.classList.toggle("shifted", expanded);
         toggle.setAttribute("aria-expanded", String(expanded));
@@ -185,12 +202,15 @@
           sidebar.inert = !expanded;
           backdrop.hidden = !expanded;
           document.body.classList.toggle("maru-navigation-drawer-open", expanded);
+          setDrawerBackgroundHidden(expanded);
           toggle.setAttribute(
             "aria-label",
             expanded ? "Navigation open" : "Open navigation",
           );
           if (expanded && focusDrawer) {
-            window.requestAnimationFrame(() => closeButton.focus());
+            // Run after the activating click finishes so the browser does not
+            // restore focus to the trigger after we enter the modal drawer.
+            window.setTimeout(() => closeButton.focus(), 0);
           }
           return;
         }
@@ -199,6 +219,7 @@
         sidebar.inert = false;
         backdrop.hidden = true;
         document.body.classList.remove("maru-navigation-drawer-open");
+        setDrawerBackgroundHidden(false);
         toggle.setAttribute(
           "aria-label",
           expanded ? "Collapse navigation" : "Expand navigation",

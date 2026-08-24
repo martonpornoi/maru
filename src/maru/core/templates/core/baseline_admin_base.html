@@ -1,5 +1,5 @@
 {% extends baseline_admin_parent_template|default:"core/baseline_admin_standalone.html" %}
-{% load static page_access %}
+{% load static %}
 
 {% block title %}{% block baseline_page_title %}Administration · Maru{% endblock %}{% endblock %}
 
@@ -56,9 +56,6 @@
         {% endfor %}
       </div>
     {% endif %}
-
-    {% maru_page_access as maru_page_access_summary %}
-    {% include "core/_page_access_summary.html" with maru_page_access=maru_page_access_summary only %}
 
     {% block baseline_content %}{% endblock %}
 

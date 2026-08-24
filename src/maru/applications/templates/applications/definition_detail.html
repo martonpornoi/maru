@@ -1,6 +1,8 @@
 {% extends "admin/base_site.html" %}
 
 {% block title %}{{ definition.name }} &middot; Applications{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     <a href="{% url 'application-definition-workspace' edition.organization_id edition.id %}">Applications</a>
@@ -15,6 +17,7 @@
       <h1>{{ definition.name }}</h1>
       <p>{{ definition.description }}</p>
     </header>
+    {% include "core/_page_access_mount.html" %}
     <section class="module">
       <h2>Lifecycle and provenance</h2>
       <dl>

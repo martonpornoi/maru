@@ -51,6 +51,11 @@ def test_workflows_are_embedded_under_the_original_admin_shell() -> None:
     assert "/static/staff-console/app.js" in content
     assert "csrf-token" in content
     assert "Convention work" in content
+    assert "Workforce" in content
+    assert f"{reverse('management-console')}?view=workforce" in content
+    assert "maru-embedded-page-access-template" not in content
+    assert '<details class="maru-access-summary' not in content
+    assert response.context["maru_shell_access_rendered_by_page"] is True
     assert content.count('aria-label="Administration"') == 1
     assert 'aria-label="Management Console"' not in content
 
@@ -119,6 +124,7 @@ def test_ordinary_staff_with_a_workspace_can_open_admin_workspace() -> None:
     content = response.content.decode()
     assert "/static/staff-console/app.js" in content
     assert 'id="maru-admin-context-form"' in content
+    assert '<input type="hidden" name="edition_id"' in content
     assert f'action="{reverse("admin-edition-context")}"' in content
 
 

@@ -321,6 +321,10 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
         DEPARTMENT_UPDATED = "department_updated", "Department updated"
         DEPARTMENT_RETIRED = "department_retired", "Department retired"
         DEPARTMENT_DELETED = "department_deleted", "Department deleted"
+        POSITION_CREATED = "position_created", "Position created"
+        POSITION_UPDATED = "position_updated", "Position updated"
+        POSITION_CLOSED = "position_closed", "Position closed"
+        OPPORTUNITY_UPDATED = "opportunity_updated", "Opportunity updated"
 
     structure = models.ForeignKey(
         EditionStructureControl,
@@ -356,6 +360,14 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
         models.UUIDField(),
         default=list,
         size=MAX_STRUCTURE_AFFECTED_DEPARTMENTS,
+    )
+    affected_position = models.ForeignKey(
+        "workforce.Position",
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="structure_command_receipts",
     )
     retry_key = models.UUIDField(null=True, blank=True)
     request_digest = models.CharField(
@@ -422,6 +434,10 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
                 fields=("edition", "action", "created_at"),
                 name="wrk_receipt_action_idx",
             ),
+            models.Index(
+                fields=("affected_position", "resulting_version"),
+                name="wrk_receipt_position_ver_idx",
+            ),
         ]
 
     def clean(self) -> None:
@@ -457,6 +473,7 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
         uses_retry = self.action in {
             self.Action.TEMPLATE_APPLIED,
             self.Action.DEPARTMENT_CREATED,
+            self.Action.POSITION_CREATED,
         }
         has_retry_key = self.retry_key is not None
         has_request_digest = bool(self.request_digest)
@@ -464,7 +481,8 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
             not uses_retry and (has_retry_key or has_request_digest)
         ):
             raise ValidationError(
-                "Only template and Department creation receipts use retry evidence."
+                "Only template, Department, and Position creation receipts use "
+                "retry evidence."
             )
         is_template = self.action == self.Action.TEMPLATE_APPLIED
         template_field_presence = (
@@ -494,6 +512,10 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
             self.Action.DEPARTMENT_UPDATED: 1,
             self.Action.DEPARTMENT_RETIRED: 1,
             self.Action.DEPARTMENT_DELETED: 1,
+            self.Action.POSITION_CREATED: 1,
+            self.Action.POSITION_UPDATED: 1,
+            self.Action.POSITION_CLOSED: 1,
+            self.Action.OPPORTUNITY_UPDATED: 1,
         }
         expected_affected_count = affected_count_by_action.get(self.action)
         if expected_affected_count is not None and (
@@ -504,6 +526,16 @@ class EditionStructureCommandReceipt(UUIDTimeStampedModel):
             )
         if len(self.affected_department_ids) != len(set(self.affected_department_ids)):
             raise ValidationError("Affected Department identifiers must be unique.")
+        is_position_action = self.action in {
+            self.Action.POSITION_CREATED,
+            self.Action.POSITION_UPDATED,
+            self.Action.POSITION_CLOSED,
+            self.Action.OPPORTUNITY_UPDATED,
+        }
+        if is_position_action != (self.affected_position_id is not None):
+            raise ValidationError(
+                "Only Position and opportunity commands name an affected Position."
+            )
         if len(self.changed_fields) != len(set(self.changed_fields)):
             raise ValidationError("Changed field names must be unique.")
         if not self.changed_fields:
@@ -869,6 +901,25 @@ class Position(UUIDTimeStampedModel):
         on_delete=models.PROTECT,
         related_name="workforce_positions_created",
     )
+    created_in_structure_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    last_changed_in_structure_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    closed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_positions_closed",
+    )
 
     class Meta:
         """Configure Django's declarative class metadata."""
@@ -878,7 +929,30 @@ class Position(UUIDTimeStampedModel):
             models.UniqueConstraint(
                 fields=("edition", "code"),
                 name="workforce_position_edition_code_unique",
-            )
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(created_in_structure_version__isnull=True)
+                    | models.Q(
+                        created_in_structure_version__gt=0,
+                        last_changed_in_structure_version__gte=models.F(
+                            "created_in_structure_version"
+                        ),
+                    )
+                ),
+                name="workforce_position_structure_versions_consistent",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(closed_at__isnull=True, closed_by__isnull=True)
+                    | models.Q(
+                        status="closed",
+                        closed_at__isnull=False,
+                        closed_by__isnull=False,
+                    )
+                ),
+                name="workforce_position_closure_evidence_complete",
+            ),
         ]
 
     def clean(self) -> None:  # noqa: PLR0912
@@ -902,6 +976,14 @@ class Position(UUIDTimeStampedModel):
         if self.template_id and self.template.organization_id != self.organization_id:
             raise ValidationError(
                 {"template": "The template must belong to this organization."}
+            )
+        if (
+            self.template_id
+            and self.role_bundle_id
+            and self.template.role_bundle_id != self.role_bundle_id
+        ):
+            raise ValidationError(
+                {"role_bundle": "The role bundle must match the Position template."}
             )
         if (
             self.role_bundle_id
@@ -941,6 +1023,18 @@ class Position(UUIDTimeStampedModel):
             raise ValidationError({"capacity_codes": "Capacity codes must be unique."})
         for code in codes:
             validate_capacity_code(str(code))
+        if self.created_in_structure_version is not None and (
+            self.last_changed_in_structure_version is None
+            or self.last_changed_in_structure_version
+            < self.created_in_structure_version
+        ):
+            raise ValidationError(
+                "Position structure-version evidence must be complete."
+            )
+        if (self.closed_at is None) != (self.closed_by_id is None):
+            raise ValidationError("Position closure evidence must be complete.")
+        if self.closed_at is not None and self.status != self.Status.CLOSED:
+            raise ValidationError("Only a closed Position may retain closure evidence.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Validate and persist the record.
@@ -1080,11 +1174,35 @@ class VolunteerOpportunity(UUIDTimeStampedModel):
     applications_open_at = models.DateTimeField(null=True, blank=True)
     applications_close_at = models.DateTimeField(null=True, blank=True)
     visible_when_filled = models.BooleanField(default=True)
+    created_in_structure_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    last_changed_in_structure_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
 
     class Meta:
         """Configure Django's declarative class metadata."""
 
         ordering = ("position__edition_id", "position__title", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(created_in_structure_version__isnull=True)
+                    | models.Q(
+                        created_in_structure_version__gt=0,
+                        last_changed_in_structure_version__gte=models.F(
+                            "created_in_structure_version"
+                        ),
+                    )
+                ),
+                name="workforce_opportunity_structure_versions_consistent",
+            )
+        ]
 
     @property
     def active_assignment_count(self) -> int:
@@ -1143,6 +1261,14 @@ class VolunteerOpportunity(UUIDTimeStampedModel):
         ):
             raise ValidationError(
                 {"applications_close_at": "Closing must be after opening."}
+            )
+        if self.created_in_structure_version is not None and (
+            self.last_changed_in_structure_version is None
+            or self.last_changed_in_structure_version
+            < self.created_in_structure_version
+        ):
+            raise ValidationError(
+                "Opportunity structure-version evidence must be complete."
             )
 
     def save(self, *args: Any, **kwargs: Any) -> None:

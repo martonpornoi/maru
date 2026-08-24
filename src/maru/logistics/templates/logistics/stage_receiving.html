@@ -1,6 +1,7 @@
 {% extends "admin/base_site.html" %}
 
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="maru-management-page">
@@ -11,6 +12,7 @@
         <p>Sealed and completed receiving manifests with box counts, contents, and direct receiving actions.</p>
       </div>
     </header>
+    {% include "core/_page_access_mount.html" %}
     {% if manifests %}
       {% for entry in manifests %}
         <section class="module">

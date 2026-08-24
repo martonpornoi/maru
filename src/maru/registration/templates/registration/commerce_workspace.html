@@ -3,6 +3,7 @@
 {% block title %}Registration commerce · {{ edition.name }}{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Administration</a> › Registration commerce</div>{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="baseline-page registration-commerce-page">
@@ -11,6 +12,7 @@
       <h1>Registration commerce</h1>
       <p>{{ edition.name }} · command version {{ control_version }}</p>
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     <section class="baseline-panel">
       <div class="baseline-panel-heading"><div><p class="baseline-kicker">Overall admission</p><h2>Capacity</h2></div><span class="baseline-count">{{ overall_occupied }} occupied / {{ overall_effective_capacity }} effective / {{ overall_hard_ceiling }} ceiling</span></div>

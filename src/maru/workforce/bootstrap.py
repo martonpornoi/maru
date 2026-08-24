@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from uuid import uuid5
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -11,7 +12,6 @@ from django.utils import timezone
 
 from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
-from maru.authorization.bindings import ensure_workforce_position_binding
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.models import CapabilityGrant, RoleAssignment, RoleBundle
 from maru.events.models import EventEdition
@@ -27,7 +27,7 @@ from maru.workforce.models import (
     PositionAssignment,
     PositionTemplate,
 )
-from maru.workforce.structure_commands import create_department
+from maru.workforce.structure_commands import create_department, create_position
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -416,25 +416,30 @@ def bootstrap_organization_workforce(
         organization=organization,
         edition=edition,
     )
-    lock_active_department_write_target(
-        scope=scope,
+    position_result = create_position(
+        actor=controller,
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+        template_id=templates["convention-chair"].id,
         department_id=leadership.id,
-    )
-    chair_position = Position.objects.create(
-        organization=organization,
-        edition=edition,
-        template=templates["convention-chair"],
-        department=leadership,
-        role_bundle=roles["convention-chair"],
-        code="convention-chair",
+        reports_to_id=None,
         title="Convention Chair",
         description=templates["convention-chair"].description,
         headcount=1,
-        capacity_codes=["staff", "volunteer"],
-        status=Position.Status.FILLED,
-        created_by=controller,
+        expected_version=structure_result.resulting_version,
+        reason=f"Initial convention Position: {normalized_reason}"[:500],
+        retry_key=uuid5(correlation_id, "bootstrap-convention-chair-position"),
+        correlation_id=correlation_id,
+        request_id=correlation_id,
+        source_channel=source_channel,
+        initial_authority_bootstrap=True,
     )
-    ensure_workforce_position_binding(position=chair_position)
+    chair_position = Position.objects.get(
+        id=position_result.position_id,
+        organization=organization,
+        edition=edition,
+    )
     chair_role_assignment = RoleAssignment.objects.get(
         organization=organization,
         edition=edition,
@@ -458,6 +463,8 @@ def bootstrap_organization_workforce(
         role_assignment=chair_role_assignment,
         participation_capacity=chair_capacity,
     )
+    chair_position.status = Position.Status.FILLED
+    chair_position.save(update_fields=("status", "updated_at"))
     append_audit(
         AuditRecord(
             principal_kind="account",

@@ -1,0 +1,3 @@
+{% load page_access %}
+{% maru_page_access as maru_page_access_summary %}
+{% include "core/_page_access_summary.html" with maru_page_access=maru_page_access_summary only %}

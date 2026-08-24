@@ -1,6 +1,6 @@
 # Registration module
 
-Status: Registration domains implemented; governed Page 10 definition builder mounted; lifecycle corrective candidates pending independent review; adapters and writer cutover remain open
+Status: Registration domains implemented; governed Registration setup and account onboarding definition builder mounted; lifecycle corrective candidates pending independent review; adapters and writer cutover remain open
 Last updated: 2026-08-03
 
 ## Purpose and requirements
@@ -49,8 +49,8 @@ An organizer can create a registration configuration draft:
 
 Every copy creates independent edition-owned question and product records. It
 retains source provenance, starts in `review required`, and cannot become active
-until an authorized organizer records a review note for imported content. Page
-10 review evidence is authoritative only when an exact review receipt matches
+until an authorized organizer records a review note for imported content.
+Registration setup review evidence is authoritative only when an exact review receipt matches
 the current setup version and freshly recomputed content digest; the legacy
 `review_required` field remains display compatibility, not proof. Activation
 freezes the selected version and refuses to retire an already-active version
@@ -95,7 +95,7 @@ The configuration owns the default payment window, overall waitlist switch, and
 automatic FIFO promotion switch. Volunteer, early-bird, and normal prices are
 separate immutable offers.
 
-The purpose-built Page 10 builder is the current coherent organizer surface.
+The purpose-built Registration setup and account onboarding builder is the current coherent organizer surface.
 It uses the shared `/admin/` shell and exposes explicit create, edit, bounded
 move, and non-cascading remove actions for draft sections, questions, and
 products, plus explicit minor-policy and versioned profile-definition pages.
@@ -121,7 +121,7 @@ question, product, and minor-policy variants. Profile field commands use their
 own closed update/move/retire variants. API mutations require a canonical UUID
 `Idempotency-Key` header and never accept a retry key in JSON.
 
-### Page 10 configuration lifecycle core
+### Registration setup and account onboarding configuration lifecycle core
 
 The working tree contains a second corrective candidate for the exact-scope
 setup-start, reusable-template publication, configuration preview, explicit
@@ -187,7 +187,7 @@ complete.
   rows remain honest compatibility evidence and cannot masquerade as complete
   published sources.
 
-### Page 10 profile-definition lifecycle core
+### Registration setup and account onboarding profile-definition lifecycle core
 
 The working tree contains an independently accepted exact-scope command core
 for profile-extension approval, activation, successor creation, and retirement.
@@ -251,7 +251,7 @@ close raw legacy mutation paths before deployment.
 
 Legacy bootstrap inspection/editing remains present at the following model
 administration paths until the accepted direct-writer retirement gate is
-implemented. It is not the canonical Page 10 workflow:
+implemented. It is not the canonical Registration setup and account onboarding workflow:
 
 ```text
 /admin/identity/account/
@@ -754,7 +754,7 @@ silently dropped.
 
 Integration coverage includes:
 
-- Page 10 preview non-mutation and sensitive-read audit failure, complete
+- Registration setup and account onboarding preview non-mutation and sensitive-read audit failure, complete
   validation issue projection, zero-question review/activation, exact
   blank/template/prior source digests, receipt-derived review invalidation,
   replay/conflict behavior, rollback at receipt/audit/outbox boundaries, and

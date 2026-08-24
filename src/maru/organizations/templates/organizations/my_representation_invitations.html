@@ -14,15 +14,21 @@
     </p>
   </header>
 
-  <section class="baseline-access-summary" aria-labelledby="effective-access-title">
-    <div>
-      <p class="baseline-kicker" id="effective-access-title">Effective access</p>
+  <details class="maru-access-summary">
+    <summary id="effective-access-title">
+      <span class="maru-access-summary__label">
+        <strong>Access</strong>
+        <span class="maru-access-summary__scope">Your account</span>
+      </span>
+      <span class="maru-access-summary__policy">Personal invitations</span>
+    </summary>
+    <div class="maru-access-summary__body">
       <p class="baseline-access-line">
         <strong>Only this authenticated account</strong>
         <span>may see and answer its invitations here.</span>
       </p>
     </div>
-  </section>
+  </details>
 
   {% if invitation_action_error %}
     <div class="baseline-state baseline-state--error" role="alert">

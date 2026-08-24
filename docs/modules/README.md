@@ -3,14 +3,17 @@
 Only modules with executable behavior appear here.
 
 ADR 0030 retained these backend modules while the controlled interface mounted
-Sign in and Pages 1–7. ADR 0039 now integrates that spine, Convention work,
-and specialist records into one `/admin/` shell, ADR 0040 implements Page 8
-Executive Board activation, and Page 9 mounts the canonical bounded
+Sign in and the platform setup record journey. ADR 0039 now integrates that spine, Convention work,
+and specialist records into one `/admin/` shell, ADR 0040 implements Representation & access
+Executive Board activation, and Organization structure mounts the canonical bounded
 Organization structure workflow. Its read uses the implemented edition
-aggregate/version fence and one complete retry. Page 9a.1's workforce
+aggregate/version fence and one complete retry. Department management's workforce
 `0006`/`0007` stopped-writer database boundary, immutable template application,
 Department command core, repository-owned writer reconciliation, and pinned
-runtime trigger catalog are also implemented and focused-verified. The
+runtime trigger catalog are also implemented and focused-verified. ADR 0075
+and Workforce `0010` add purpose-built Position creation, operational editing,
+opportunity publication, protected closure, exact command receipts, and
+inspection-only specialist records. The
 2026-08-11 canonical current-tree gate passed 4,067 of 4,067 tests at 90.78
 percent total branch-aware coverage. A bounded authenticated read-only Logistics
 journey also passed at 1,920 and 390 CSS pixels. Broader mutation-role browser

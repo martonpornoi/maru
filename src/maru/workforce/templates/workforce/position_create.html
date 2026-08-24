@@ -1,0 +1,72 @@
+{% extends "workforce/position_action_base.html" %}
+
+{% block position_action_title %}Create Position{% endblock %}
+{% block position_action_breadcrumb %}Create Position{% endblock %}
+{% block position_action_heading %}Create Position{% endblock %}
+{% block position_action_intro %}
+  Define one responsibility in {{ edition.name }}. Maru pins its approved
+  template and role bundle, creates its exact resource binding, and starts its
+  applicant-facing opportunity as a private draft.
+{% endblock %}
+{% block position_reload_link %}
+  <a href="{% url 'organization-structure-position-create' organization.slug convention_series.slug edition.slug %}">Reload the latest Position form</a>
+{% endblock %}
+
+{% block position_action_content %}
+  {% if not has_position_templates or not has_position_departments %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>Position creation needs one more prerequisite</h2>
+      {% if not has_position_departments %}
+        <p>Create an active Department in this edition first.</p>
+      {% endif %}
+      {% if not has_position_templates %}
+        <p>Add or reconcile a published Position template with an independently approved role bundle.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if form.non_field_errors or form.expected_version.errors or form.retry_key.errors %}
+    <div class="baseline-errors" role="alert">
+      {{ form.non_field_errors }}
+      {{ form.expected_version.errors }}
+      {{ form.retry_key.errors }}
+    </div>
+  {% endif %}
+  <form
+    method="post"
+    action="{% url 'create-organization-structure-position' organization.slug convention_series.slug edition.slug %}"
+    class="baseline-form workforce-structure-form"
+    novalidate
+  >
+    {% csrf_token %}
+    {{ form.expected_version }}
+    {{ form.retry_key }}
+    <section class="baseline-panel baseline-form-panel" aria-labelledby="position-create-meaning-title">
+      <div class="baseline-section-heading">
+        <p class="baseline-kicker">Meaning and exact scope</p>
+        <h2 id="position-create-meaning-title">Template, Department, and reporting line</h2>
+        <p>
+          Template and Department become immutable because they define the
+          Position's future authority meaning and exact resource scope.
+        </p>
+      </div>
+      {% include "core/_baseline_form_field.html" with field=form.template_id %}
+      {% include "core/_baseline_form_field.html" with field=form.department_id %}
+      {% include "core/_baseline_form_field.html" with field=form.reports_to_id %}
+    </section>
+    <section class="baseline-panel baseline-form-panel" aria-labelledby="position-create-details-title">
+      <div class="baseline-section-heading">
+        <p class="baseline-kicker">Human-readable responsibility</p>
+        <h2 id="position-create-details-title">Title, purpose, and headcount</h2>
+      </div>
+      {% include "core/_baseline_form_field.html" with field=form.title %}
+      {% include "core/_baseline_form_field.html" with field=form.description %}
+      {% include "core/_baseline_form_field.html" with field=form.headcount %}
+      {% include "core/_baseline_form_field.html" with field=form.reason %}
+    </section>
+    <div class="baseline-form-actions workforce-structure-primary-actions">
+      <button type="submit"{% if reload_required or not position_creation_available %} disabled aria-disabled="true"{% endif %}>Create Position</button>
+      <a class="baseline-secondary-link" href="{% url 'organization-structure-positions' organization.slug convention_series.slug edition.slug %}">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

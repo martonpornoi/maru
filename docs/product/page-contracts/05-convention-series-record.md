@@ -1,4 +1,4 @@
-# Page 5 contract: Convention-series record
+# Convention series record contract
 
 - Status: Implemented and backend-verified for platform oversight and scoped
   Executive Board authority; owner/browser rehearsal and visual-state
@@ -22,15 +22,15 @@ participation, registration, a department position, or a convention role.
 
 ## Placement and navigation
 
-The organization record links every listed series name to Page 5. The shared
+The organization record links every listed series name to Convention series record. The shared
 sidebar retains **Organizations** and the selected organization section, then
 adds a section named for the selected series with:
 
-- **Series record**, current on Page 5; and
+- **Series record**, current on Convention series record; and
 - **Convention editions** with an adjacent **+ Add** action when the
   organization is not Closed and the series is Active.
 
-The editions destination anchors the edition inventory on Page 5. It is not a
+The editions destination anchors the edition inventory on Convention series record. It is not a
 global cross-tenant collection. A series or edition route must resolve beneath
 the exact organization in its URL or return 404.
 
@@ -39,7 +39,7 @@ the exact organization in its URL or return 404.
 The record shows the series name, immutable slug, parent organization,
 availability, profile version, timestamps, and complete editable brand
 profile. The edition inventory shows only editions belonging to the selected
-series, including name, lifecycle, dates, and a link to Page 7. Empty and
+series, including name, lifecycle, dates, and a link to Event edition record. Empty and
 populated states use the same section.
 
 Recent activity is a bounded, value-minimized projection of allowlisted domain

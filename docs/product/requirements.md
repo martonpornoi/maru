@@ -304,10 +304,36 @@ architecture documents, implementation issues, tests, and release notes.
   retirement, but they continue to block hard deletion, and no new binding or
   current authority may target a retired Department. Retirement must first end
   every active assignment whose term has not ended and every unclosed authority
-  term that is effective now or scheduled for later. Position editing is a
-  later substep unless its immutable role-bundle,
-  typed-resource, dual-control, lifecycle, and recovery implications are
-  explicitly satisfied.
+  term that is effective now or scheduled for later. Position management is
+  governed separately by HR-012; assignment activation remains subject to its
+  immutable role-bundle, typed-resource, dual-control, lifecycle, and recovery
+  requirements.
+- **HR-012 — Versioned Position and opportunity management:** An authorized
+  edition structure manager must be able to create, maintain, publish, and
+  close Positions through strict tenant- and edition-scoped HTML and API
+  workflows backed by the same application services. Creation must select one
+  published organization-owned Position template with historical role-bundle
+  provenance, one active Department, an optional acyclic same-edition reporting
+  Position, an explicit purpose, and bounded headcount. It must atomically
+  create the Position, its private draft volunteer opportunity, and its exact
+  typed resource binding. The separately governed legacy authority-recovery
+  bootstrap may relax only the historical-provenance lookup for its exact first
+  Convention Chair while retaining the same command evidence and exposing no
+  browser or API override. Organization, edition, Department, template, role
+  bundle, code, capacity mapping, creator, and creation version are immutable;
+  title, purpose, headcount, and reporting line may change only while the
+  Position is current. Publishing the paired opportunity may open a planned
+  Position but must never create an application, assignment, participation, or
+  access grant. Every mutation must advance the shared edition structure
+  aggregate once and retain actor, reason, changed fields, audit, domain event,
+  and outbox evidence; the reason must be directly inspectable in the Position
+  workflow. Closure requires exact-title confirmation, is one-way, preserves
+  all history, closes any nonfinal opportunity, and must fail while proposed or
+  active assignments, current direct reports, or current/future scoped
+  authority depend on the Position. Generic Position and opportunity model
+  forms remain inspection-only once this workflow is mounted. An internally
+  consistent legacy Position may begin governed history at its first real
+  change without inventing a creation version, actor, or receipt.
 
 ### Programme, shifts, and timetable planning
 
@@ -418,7 +444,7 @@ architecture documents, implementation issues, tests, and release notes.
   tasks, respect model permissions, and must not imply that navigation order
   grants authority or proves setup completion. It must not occupy the global
   administration header or repeat on every record page. For a new Draft
-  organization it must direct the operator to Page 8's explicit Executive
+  organization it must direct the operator to Representation & access's explicit Executive
   Board handoff rather than silently creating organization, edition, workforce,
   or participation authority. A legacy non-Draft organization without
   representation requires a separately approved reconciliation procedure. The
@@ -467,7 +493,7 @@ architecture documents, implementation issues, tests, and release notes.
   read-only with a safe error when the inventory is unavailable. It must not
   introduce a convention selector, setup strip, unfinished link, or
   convention-owned data.
-- **UX-015 — Minimal organization creation:** Page 2 of the controlled rebuild
+- **UX-015 — Minimal organization creation:** Create organization of the controlled rebuild
   must let an active platform administrator create a draft organization from
   its name alone. Maru generates a collision-safe stable slug and applies
   code-owned locale defaults. Creation is atomic and audited and must not create
@@ -475,11 +501,11 @@ architecture documents, implementation issues, tests, and release notes.
   an edition, or participation. Validation remains on the form, a successful
   creation returns to the organization inventory, and database failure leaves
   no partial organization. Name remains the only required operator-supplied
-  value even when Page 2 also accepts the optional complete profile in UX-016.
-- **UX-016 — Complete organization setup and navigation:** Page 1 and Page 2
+  value even when Create organization also accepts the optional complete profile in UX-016.
+- **UX-016 — Complete organization setup and navigation:** Platform administration home and Create organization
   must share a persistent Platform administration side navigation containing
   **Organizations** and **+ Add**, with the current destination identified.
-  Page 2 must let the platform administrator complete public identity, legal
+  Create organization must let the platform administrator complete public identity, legal
   identity and address, representative and registration references, contact
   channels, additional imprint wording, primary country, default languages,
   and default time zone during initial creation. Only organization name is
@@ -503,7 +529,7 @@ architecture documents, implementation issues, tests, and release notes.
   granting the platform administrator convention participation.
 - **UX-018 — Organization-scoped convention-series creation:** An organization
   record must show its convention series and a contextual action to create one
-  beneath that organization. Page 4 must require only the recurring public
+  beneath that organization. Create convention series must require only the recurring public
   brand name; description, website, public contact email, and initial
   active/inactive availability are optional or safely defaulted. The parent
   organization and collision-safe bounded slug are code-owned. Creation must
@@ -536,7 +562,10 @@ architecture documents, implementation issues, tests, and release notes.
   audited assignments in context, while denied users receive an explanation
   that does not disclose protected principals. Platform administration does
   not imply convention participation, and restricted-case access continues to
-  require its separate reasoned or break-glass policy.
+  require its separate reasoned or break-glass policy. The compact summary
+  belongs directly after the page heading, stays understandable while
+  collapsed, and expands in place for the permitted actions and authority
+  source; it must not become duplicated global chrome or a second page title.
 - **UX-021 — Convention-series record:** Every convention series listed on its
   organization record must link to one scoped record page. The page shows
   stable organization and slug identity, active/inactive availability, the
@@ -608,7 +637,7 @@ architecture documents, implementation issues, tests, and release notes.
   explicit and leave no partial tree. Ready, Live, Closing, Archived, and
   Cancelled editions are read-only until a separately accepted structural
   change-control workflow permits otherwise.
-- **UX-026 — Registration setup and account onboarding:** Page 10 must expose
+- **UX-026 — Registration setup and account onboarding:** Registration setup and account onboarding must expose
   one edition-scoped **Registration** workspace in the shared `/admin/` shell
   and one platform-scoped **Accounts** inventory with an adjacent **Invite**
   action for active platform administrators. The registration workspace guides
@@ -633,7 +662,11 @@ architecture documents, implementation issues, tests, and release notes.
   disappear without disclosure. `/my/` is the canonical authenticated personal
   surface for registrations, payments, profile, applications, orders, and
   other self-owned relationships. It shares Maru's identity and navigation
-  grammar without presenting an attendee as an administrator.
+  grammar without presenting an attendee as an administrator. Personal and
+  administrative destinations remain separate surfaces with one explicit
+  switch between them; neither surface may leak the other surface's pins or
+  menu hierarchy. Pin controls are progressive customization rather than
+  permanent row-level clutter.
 - **UX-028 — Read-only access preview:** An authorized access manager may
   evaluate one exact existing person or one immutable role-bundle version at
   one resolved scope. Preview must not replace the request principal, create a
@@ -648,14 +681,28 @@ architecture documents, implementation issues, tests, and release notes.
   durable tasks while retaining every authorized specialist destination behind
   one progressively disclosed gateway and searchable registry. Search must use
   code-owned labels, descriptions, and stable task keywords rather than hidden
-  record values. Creation commands belong beside their owning resource. Common
-  tasks must be reachable from the relevant home in no more than two navigation
-  decisions without a direct URL. The shell and converted journeys must have no
+  record values. Search results must distinguish task matches from technical
+  records and lead with the task count; technical records remain collapsed
+  until requested. Creation commands belong beside their owning resource.
+  Planned capabilities may have one truthful, non-interactive roadmap home but
+  must not appear as dead links or imply availability. Common tasks must be
+  reachable from the relevant home in no more than two navigation decisions
+  without a direct URL. The shell and converted journeys must have no
   page-level horizontal overflow at 320, 390, 768, 958, 1,024, 1,280, or 1,920
   CSS pixels or at 200 percent zoom; only explicitly labelled data regions may
   scroll. Intermediate and narrow navigation must provide a labelled overlay
   drawer with backdrop, close control, `aria-expanded` and `aria-controls`,
   Escape-to-close, focus containment and return, and background scroll lock.
+  While the drawer is open, background chrome and content must be inert and
+  hidden from the accessibility tree. High-frequency narrow-screen record
+  lists should become labelled cards when preserving row context is more useful
+  than horizontal table scrolling. An embedded client must synchronize its
+  selected organization/edition context with the host shell before releasing
+  scoped record content and must not render a second competing selector.
+  A detail drawer that blocks interaction with the page must expose labelled
+  modal-dialog semantics, move focus inside, contain keyboard focus, close on
+  Escape, isolate and scroll-lock the background, and return focus to its
+  opener.
   Empty, populated, denied, validation, stale, dependency-failure, and success
   states require keyboard, automated-accessibility, and rendered evidence
   before broad browser acceptance is claimed.
@@ -804,7 +851,7 @@ architecture documents, implementation issues, tests, and release notes.
 - **REG-024 — Governed registration setup:** Registration configuration,
   reusable template versions, sections, questions, products, ordering, minor
   policy, and post-submission profile-extension definitions must be changed
-  only through purpose-built commands once the Page 10 writer migration is
+  only through purpose-built commands once the Registration setup and account onboarding writer migration is
   activated. Each command must resolve and lock the exact organization and
   edition, enforce lifecycle and exact capabilities, reject unknown or
   client-owned scope/evidence fields, require a positive expected aggregate

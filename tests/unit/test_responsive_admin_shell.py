@@ -32,6 +32,11 @@ def test_sidebar_drawer_has_accessible_controls_and_interaction_contract() -> No
     assert "returnFocus.focus()" in shell
     assert "maru-navigation-drawer-open" in shell
     assert "sidebar.inert = !expanded" in shell
+    assert 'document.getElementById("content-start")' in shell
+    assert "setDrawerBackgroundHidden(expanded)" in shell
+    assert 'element.setAttribute("aria-hidden", "true")' in shell
+    assert "element.inert = hidden" in shell
+    assert "window.setTimeout(() => closeButton.focus(), 0)" in shell
 
 
 def test_shell_collapses_before_phone_width_without_forcing_content_overflow() -> None:
@@ -48,7 +53,27 @@ def test_shell_collapses_before_phone_width_without_forcing_content_overflow() -
     context = shell.split(".maru-edition-context {", maxsplit=1)[1].split(
         "}", maxsplit=1
     )[0]
-    assert "grid-template-columns: minmax(0, 1fr) minmax(12rem, 28rem) auto;" in (
-        context
-    )
+    assert "display: flex;" in context
+    assert "justify-content: space-between;" in context
     assert "flex: 1 0 100%;" not in context
+    switcher = shell.split(".maru-edition-context-switcher > form {", maxsplit=1)[
+        1
+    ].split("}", maxsplit=1)[0]
+    assert "position: absolute;" in switcher
+    assert "width: min(28rem, calc(100vw - 2rem));" in switcher
+
+
+def test_management_page_fragments_do_not_nest_main_landmarks() -> None:
+    template_root = Path(__file__).resolve().parents[2] / "src/maru"
+    management_parents = (
+        '{% extends "admin/base_site.html" %}',
+        '{% extends "core/baseline_admin_base.html" %}',
+        "{% extends baseline_admin_parent_template %}",
+    )
+
+    for path in template_root.rglob("*.html"):
+        if path.name == "baseline_admin_base.html":
+            continue
+        source = path.read_text(encoding="utf-8")
+        if any(parent in source for parent in management_parents):
+            assert "<main" not in source, path

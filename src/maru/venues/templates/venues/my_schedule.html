@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="maru-personal-home">
@@ -16,6 +17,7 @@
       <h1>{{ edition.name }} schedule</h1>
       <p>Only approved public event times and attendee-safe venue details appear here.</p>
     </header>
+    {% include "core/_page_access_mount.html" %}
     {% if items %}
       <ol class="maru-activity-list">
         {% for item in items %}

@@ -26,7 +26,7 @@ representation subject, organization member, role or capability principal,
 participant, registrant, volunteer, or workforce assignee.
 
 The old public-roster rehearsal and browser/API Quick Start paths are retired.
-Do not use `bootstrap_convention` as a substitute for Page 8. The preserved
+Do not use `bootstrap_convention` as a substitute for Representation & access. The preserved
 operator service is legacy recovery evidence only and requires a separately
 approved reconciliation plan.
 
@@ -173,7 +173,7 @@ Then use synthetic accounts in an isolated organization to verify:
    approved by another controller;
 7. the platform administrator has no convention relationship or authority
    principal row;
-8. Page 8's sensitive appointment-directory read and a denied privileged
+8. Representation & access's sensitive appointment-directory read and a denied privileged
    action both create value-minimized audit evidence; and
 9. a second demo seed is idempotent.
 
@@ -285,7 +285,7 @@ backup, infrastructure, identities, policies, or operators are ready.
 - preflight JSON and approved reconciliation decisions;
 - backup/PITR marker and isolated restore result;
 - migration output and postflight JSON;
-- synthetic Page 8 correlation identifiers and bounded invariant counts;
+- synthetic Representation & access correlation identifiers and bounded invariant counts;
 - worker/readiness observations; and
 - any incident, fix-forward, or restore decision.
 

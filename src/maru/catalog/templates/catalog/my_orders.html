@@ -4,10 +4,12 @@
 {% block bodyclass %}{{ block.super }} maru-personal-surface{% endblock %}
 {% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-maru-home' %}">My Maru</a> › Orders</div>{% endblock %}
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="baseline-page">
     <header class="baseline-page-heading"><p class="baseline-kicker">{{ edition.name }}</p><h1>Your catalog orders</h1></header>
+    {% include "core/_page_access_mount.html" %}
     {% for order in orders %}
       <section class="baseline-panel">
         <div class="baseline-panel-heading"><h2>{{ order.reference }}</h2><span class="baseline-count">{{ order.get_status_display }}</span></div>

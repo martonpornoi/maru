@@ -25,6 +25,7 @@ For present implementation status, use the
 | [0072](0072-protected-exact-main-sphinx-pages-publication.md) | Accepted | Publish warning-fatal Sphinx output from protected `main` through a least-privilege Pages boundary. |
 | [0073](0073-repository-owned-fictional-convention-examples.md) | Accepted | Keep current examples in Maru's fictional namespace and prohibit real convention rosters or copied organization charts as example data. |
 | [0074](0074-newcomer-first-curated-sphinx-navigation.md) | Accepted | Present exactly six primary hubs, one five-step newcomer route, and complete maintained material behind reachable catalogs. |
+| [0075](0075-governed-position-and-opportunity-management.md) | Accepted | Manage Positions and paired volunteer opportunities through the versioned edition structure boundary and a purpose-oriented owner workflow. |
 
 ADR 0073 partially supersedes the example-data and source-derived-template
 parts of [ADR 0042](0042-synthetic-only-educational-fixtures.md) and

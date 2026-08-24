@@ -10,7 +10,7 @@ Maru is an API-first modular monolith. One Django deployment may host multiple
 organizations and event editions, while separate clients consume versioned
 APIs.
 
-ADR 0030 reduced HTML to a controlled rebuild. Pages 1–7 then implemented
+ADR 0030 reduced HTML to a controlled rebuild. The platform setup record journey then implemented
 organization inventory/creation/record management, convention-series
 creation/record, and event-edition creation/record/context for explicitly
 classified platform administrators. HTML and API edition writes share
@@ -278,7 +278,7 @@ The production release separately requires exact provenance after cutover; a
 restored database without the exact marker then denies organizer authority and
 fails public readiness instead of silently falling back to compatibility.
 
-Pages 1–8 remain server-rendered adapters over current module services. Django
+the platform setup and representation journey remain server-rendered adapters over current module services. Django
 model administration does not become an authoritative write path for audited
 cross-domain operations merely because it supplies the shell and specialist
 record grammar. Explicit platform routes resolve before `admin.site.urls`, and

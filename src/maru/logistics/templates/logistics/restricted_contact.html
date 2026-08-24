@@ -1,6 +1,7 @@
 {% extends "admin/base_site.html" %}
 
 {% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 
 {% block content %}
   <div id="content-main" class="maru-management-page">
@@ -11,6 +12,7 @@
         <p>This purpose-bound read was audited and this page expires from normal navigation.</p>
       </div>
     </header>
+    {% include "core/_page_access_mount.html" %}
     <section class="module">
       <dl>
         <dt>Label</dt><dd>{{ contact.label }}</dd>

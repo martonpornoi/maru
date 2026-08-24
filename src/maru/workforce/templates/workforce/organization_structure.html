@@ -83,6 +83,49 @@
       </p>
     </header>
 
+    <details class="maru-access-summary">
+      <summary id="structure-access-title">
+        <span class="maru-access-summary__label">
+          <strong>Access</strong>
+          <span class="maru-access-summary__scope">{{ structure_access_label }}</span>
+        </span>
+        <span class="maru-access-summary__policy">
+          {% if can_manage_structure %}View and manage{% else %}View only{% endif %}
+        </span>
+      </summary>
+      <div class="maru-access-summary__body">
+        <p class="baseline-access-line">
+          <strong>{{ structure_access_label }}</strong>
+          <span>allows you to view this exact edition's complete operational hierarchy.</span>
+        </p>
+        {% if can_manage_structure %}
+          <p class="baseline-access-line">
+            <strong>Structure manager</strong>
+            <span>may use the audited Department controls as each management slice becomes available.</span>
+          </p>
+        {% endif %}
+        {% if structure_access_label == "Platform oversight" %}
+          <p>
+            Your platform-administrator classification provides explicit
+            oversight. It did not make you a member, participant, controller,
+            volunteer, or workforce assignee.
+          </p>
+        {% else %}
+          <p>
+            Your current exact edition grant or immutable scoped role includes
+            <strong>View workforce structure</strong>. Selected navigation and
+            Department ancestry do not grant this access.
+          </p>
+        {% endif %}
+        {% if can_manage_structure %}
+          <p>
+            Management is a separate current decision. It does not follow from
+            merely viewing this page or from Executive Board status.
+          </p>
+        {% endif %}
+      </div>
+    </details>
+
     <section class="baseline-panel" aria-labelledby="structure-control-title">
       <div class="baseline-panel-heading">
         <div>
@@ -138,6 +181,12 @@
             class="workforce-structure-action"
             href="{% url 'organization-structure-department-create' organization.slug convention_series.slug edition.slug %}"
           >Create Department</a>
+          {% if structure.departments %}
+            <a
+              class="workforce-structure-action workforce-structure-action--secondary"
+              href="{% url 'organization-structure-positions' organization.slug convention_series.slug edition.slug %}"
+            >Manage Positions</a>
+          {% endif %}
           {% if template_application_available %}
             <a
               class="workforce-structure-action workforce-structure-action--secondary"
@@ -150,45 +199,12 @@
           <h3>Structure changes are read-only</h3>
           <p>{{ structure_mutation_blocked_reason }}</p>
         </div>
+        {% if structure.state == "complete" and structure.departments %}
+          <p>
+            <a href="{% url 'organization-structure-positions' organization.slug convention_series.slug edition.slug %}">Review read-only Position management</a>
+          </p>
+        {% endif %}
       {% endif %}
-    </section>
-
-    <section class="baseline-access-summary" aria-labelledby="structure-access-title">
-      <div>
-        <p class="baseline-kicker" id="structure-access-title">Your effective access</p>
-        <p class="baseline-access-line">
-          <strong>{{ structure_access_label }}</strong>
-          <span>allows you to view this exact edition's complete operational hierarchy.</span>
-        </p>
-        {% if can_manage_structure %}
-          <p class="baseline-access-line">
-            <strong>Structure manager</strong>
-            <span>may use the audited Department controls as each management slice becomes available.</span>
-          </p>
-        {% endif %}
-      </div>
-      <details>
-        <summary>Why can I access this?</summary>
-        {% if structure_access_label == "Platform oversight" %}
-          <p>
-            Your platform-administrator classification provides explicit
-            oversight. It did not make you a member, participant, controller,
-            volunteer, or workforce assignee.
-          </p>
-        {% else %}
-          <p>
-            Your current exact edition grant or immutable scoped role includes
-            <strong>View workforce structure</strong>. Selected navigation and
-            Department ancestry do not grant this access.
-          </p>
-        {% endif %}
-        {% if can_manage_structure %}
-          <p>
-            Management is a separate current decision. It does not follow from
-            merely viewing this page or from Executive Board status.
-          </p>
-        {% endif %}
-      </details>
     </section>
 
     <section class="baseline-panel" aria-labelledby="governance-anchor-title">
@@ -265,6 +281,37 @@
             {% include "workforce/_organization_structure_branch.html" with departments=structure_departments organization=organization convention_series=convention_series edition=edition show_management=structure_mutations_allowed only %}
           </ol>
         </div>
+      </section>
+    {% endif %}
+
+    {% if can_manage_structure %}
+      <section class="baseline-panel workforce-history-panel" aria-labelledby="structure-history-title">
+        <div class="baseline-panel-heading">
+          <div>
+            <p class="baseline-kicker">Directly inspectable rationale</p>
+            <h2 id="structure-history-title">Recent structure changes</h2>
+          </div>
+          <span class="baseline-count">Newest first</span>
+        </div>
+        {% if structure_history %}
+          <ol class="workforce-history-list">
+            {% for item in structure_history %}
+              <li>
+                <div>
+                  <strong>{{ item.action_label }} · {{ item.target_label }}</strong>
+                  <span>Version {{ item.resulting_version }} · {{ item.occurred_at|date:"SHORT_DATETIME_FORMAT" }}</span>
+                </div>
+                <p>{{ item.reason }}</p>
+                <small>Recorded by {{ item.actor_label }}</small>
+              </li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          <div class="baseline-state">
+            <h3>No retained structure changes yet</h3>
+            <p>The first governed Department or Position change will record its reason here.</p>
+          </div>
+        {% endif %}
       </section>
     {% endif %}
 

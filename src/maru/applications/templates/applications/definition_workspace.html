@@ -1,6 +1,8 @@
 {% extends "admin/base_site.html" %}
 
 {% block title %}Applications &middot; {{ edition.name }}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     {{ edition.organization.name }} &rsaquo; {{ edition.name }} &rsaquo; Applications
@@ -17,6 +19,7 @@
         Registration remains its own one-per-attendee workflow.
       </p>
     </header>
+    {% include "core/_page_access_mount.html" %}
 
     <section class="module">
       <h2>Definition versions</h2>
