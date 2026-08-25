@@ -98,6 +98,13 @@ personal projection exposes only suitable work and the person's own retained
 commitments. It excludes other people, organizer identity and rationale,
 private planning reasons, and exact Availability values.
 
+Browser mutation adapters sometimes load the protected organizer projection
+to validate or rerender a submitted form. Those sensitive reads retain the
+actual `POST` method in minimized audit evidence. The acceptance rehearsal
+found and corrected the former audit-helper mismatch that rejected valid
+creation POSTs after authorization; POST is now explicitly supported without
+changing projection, authorization, or disclosure rules.
+
 A person may withdraw a Claim or Confirmation while planning is open. The
 control requires affirmative confirmation and deliberately asks for no reason.
 The receipt and organizer history retain only the fixed fact **The person
@@ -149,11 +156,19 @@ Completed locally:
   commands, browser adapters, strict API, projections, raw database guards,
   demo data, navigation, existing Assignment and Availability behavior, and
   responsive shell/style contracts;
-- an additional 73 cross-cutting regressions pass after reconciling the four
-  registered Shift specialist records with their human-readable help, the two
-  Shift domain facts with the closed internal-event worker registry, and the
-  Organization structure API's expected final Shift authorization checks and
-  shared projection instant;
+- the expanded post-review acceptance set passes all 116 focused and
+  cross-cutting regressions in 168.13 seconds. Its 62 Shift cases exercise
+  strict text, interval, UUID and safety input, stable API translation,
+  complete API and browser lifecycles, stale and incomplete form recovery,
+  reasonless self-withdrawal, concurrency, projections, and database guards;
+  the remainder covers the four registered Shift specialist records, two
+  Shift domain facts, and Organization structure's final authorization checks
+  and shared projection instant;
+- GitHub Actions run `32884436911` passes all eight PostgreSQL shards and every
+  substantive job after the stale acceptance contracts were repaired. Its
+  combined gate then exposed 89.09 percent branch-aware coverage. Replaying the
+  added tests over the exact nine hosted fragments produces 89.66 percent,
+  displayed as the configured 90 percent gate, pending the next hosted run;
 - the expanded runtime-role, exact function-fingerprint, trigger-attachment,
   authority-provenance, Organization structure, and retired-Department
   readiness gate passes all 453 cases in 863.84 seconds;

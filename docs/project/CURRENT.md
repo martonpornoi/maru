@@ -82,7 +82,10 @@ The complete implementation and verification record is in the
 - Organizer reads require independent `workforce.view_shifts` authority and a
   complete field ceiling. They are bounded to 1,024 demands and 4,096
   commitments, use a repeatable read-only snapshot, reauthorize before
-  disclosure, and persist minimized sensitive-read evidence.
+  disclosure, and persist minimized sensitive-read evidence. Browser POST
+  adapters that load the protected projection for validation or rerendering
+  now retain the actual POST method in that evidence instead of rejecting the
+  valid workflow.
 - Workforce migration `0013_shift_journey` installs aggregate, receipt,
   exact-scope, state-evidence, capacity, work/rest-overlap, protected-deletion,
   Position-dependency, and downgrade guards. Authorization migration
@@ -139,10 +142,19 @@ Completed locally:
   commands, browser adapters, strict API, projections, raw database guards,
   demo data, navigation, existing Assignment and Availability behavior, and
   responsive shell/style contracts;
-- an additional 73 cross-cutting regressions pass after reconciling the Shift
-  journey with the specialist-admin help registry, the closed internal-event
-  worker registry, and Organization structure's final Shift authorization
-  checks and single-instant projection contract;
+- the expanded post-review acceptance set passes all 116 focused and
+  cross-cutting regressions in 168.13 seconds. It covers 62 Shift command,
+  strict-input, API, browser, privacy, recovery, concurrency, projection, and
+  database cases plus the specialist-admin help registry, closed
+  internal-event worker registry, and Organization structure's final Shift
+  authorization checks and single-instant projection contract;
+- GitHub Actions run `32884436911` passes every substantive job and all eight
+  PostgreSQL shards after the stale acceptance contracts were reconciled. Its
+  newly reachable combined-coverage gate exposed the remaining acceptance gap
+  at 89.09 percent; overlaying the added tests on those exact nine hosted
+  coverage fragments now produces 89.66 percent branch-aware coverage,
+  displayed as the configured 90 percent threshold, pending hosted
+  confirmation;
 - a real two-connection PostgreSQL claim race proves capacity cannot be
   oversubscribed;
 - the expanded runtime-role, exact function-fingerprint, trigger-attachment,

@@ -9,7 +9,7 @@ from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import PolicyDecision
 from maru.identity.models import Account
 
-_SHIFT_AUDIT_HTTP_METHODS = frozenset({"GET", "HEAD"})
+_SHIFT_AUDIT_HTTP_METHODS = frozenset({"GET", "HEAD", "POST"})
 
 
 def append_shift_read_audit(
@@ -41,7 +41,8 @@ def append_shift_read_audit(
     route_name : str
         Stable browser or API route name.
     http_method : str
-        Supported read method, either ``GET`` or ``HEAD``.
+        Supported request method that released or loaded the protected
+        projection: ``GET``, ``HEAD``, or mutation-adjacent ``POST``.
     source_channel : str
         Registered trusted adapter channel.
     occurred_at : datetime
@@ -55,12 +56,13 @@ def append_shift_read_audit(
     Raises
     ------
     ValueError
-        If the policy decision is denied or the method is not a safe read.
+        If the policy decision is denied or the method cannot load the
+        protected Shift projection.
     """
     if not decision.allowed:
         raise ValueError("A denied Shift decision cannot produce an allow audit.")
     if http_method not in _SHIFT_AUDIT_HTTP_METHODS:
-        raise ValueError("Use a supported Shift read method.")
+        raise ValueError("Use a supported Shift projection request method.")
     obligations = frozenset(decision.obligations) | {"audit_sensitive_read"}
     return append_audit(
         AuditRecord(

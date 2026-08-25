@@ -112,7 +112,10 @@ Shift field ceiling. Mutation requires `workforce.manage_shifts`. Reads are
 bounded to 1,024 demands and 4,096 commitments, return complete or fail with a
 generic unavailable state, run in one repeatable read-only snapshot, repeat
 full authorization at response time, and persist a minimized sensitive-read
-audit before disclosure.
+audit before disclosure. Browser mutation adapters that must load this same
+protected projection to validate or rerender a submitted form retain `POST` as
+the request method in sensitive-read evidence; the audit boundary accepts it
+without weakening projection, authorization, or disclosure checks.
 
 Confirmation is independent from the claimant and freshly rechecks Position,
 Availability plan version and covering period, overlap, and rest. Capacity is

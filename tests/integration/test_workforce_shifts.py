@@ -28,6 +28,7 @@ from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
 from maru.effects.models import DomainEvent
+from maru.workforce import shift_views
 from maru.workforce.assignment_commands import (
     approve_position_assignment,
     propose_position_assignment,
@@ -50,6 +51,7 @@ from maru.workforce.shift_commands import (
     ShiftCapacityConflictError,
     ShiftOverlapConflictError,
     ShiftStateConflictError,
+    ShiftVersionConflictError,
     cancel_shift_demand,
     claim_shift,
     complete_shift_demand,
@@ -569,6 +571,76 @@ def _personal_url(world: _ShiftWorld, name: str, **kwargs: UUID) -> str:
     return _organizer_url(world, name, **kwargs)
 
 
+def _api_url(world: _ShiftWorld, name: str, **kwargs: UUID) -> str:
+    return reverse(
+        name,
+        kwargs={
+            "organization_id": world.edition.organization_id,
+            "edition_id": world.edition.id,
+            **kwargs,
+        },
+    )
+
+
+def _api_demand_payload(
+    world: _ShiftWorld,
+    *,
+    title: str,
+    expected_version: int | None = None,
+) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "position_id": str(world.position.id),
+        "title": title,
+        "location_label": "Operations desk B",
+        "briefing": "Receive handover, answer radio calls, and record open issues.",
+        "supervision_note": "Check in with the Operations lead before starting.",
+        "starts_at": "2030-08-01T09:00:00+02:00",
+        "ends_at": "2030-08-01T13:00:00+02:00",
+        "required_headcount": 1,
+        "break_minutes": 30,
+        "minimum_rest_minutes": 60,
+        "reason": "Keep the published operating plan accurate and reviewable.",
+    }
+    if expected_version is not None:
+        payload["expected_version"] = expected_version
+    return payload
+
+
+def _web_demand_payload(
+    world: _ShiftWorld,
+    *,
+    title: str,
+    expected_version: int,
+) -> dict[str, str]:
+    return {
+        "position_id": str(world.position.id),
+        "title": title,
+        "location_label": "Operations desk C",
+        "briefing": "Receive handover, answer radio calls, and record open issues.",
+        "supervision_note": "Check in with the Operations lead before starting.",
+        "starts_at": "2030-08-01T09:00",
+        "ends_at": "2030-08-01T13:00",
+        "required_headcount": "1",
+        "break_minutes": "30",
+        "minimum_rest_minutes": "60",
+        "reason": "Keep the browser-managed operating plan reviewable.",
+        "expected_version": str(expected_version),
+        "retry_key": str(uuid4()),
+    }
+
+
+def _web_reason_payload(*, expected_version: int, reason: str) -> dict[str, str]:
+    return {
+        "expected_version": str(expected_version),
+        "retry_key": str(uuid4()),
+        "reason": reason,
+    }
+
+
+def _raise_shift_version_conflict(**_kwargs: object) -> None:
+    raise ShiftVersionConflictError
+
+
 def test_browser_and_api_keep_personal_and_organizer_shift_views_separate() -> None:
     world = _shift_world()
     demand = _create_demand(world)
@@ -667,6 +739,573 @@ def test_browser_and_api_keep_personal_and_organizer_shift_views_separate() -> N
     commitment.refresh_from_db()
     assert commitment.removal_kind == ShiftCommitment.RemovalKind.WITHDRAWN
     assert private_reason not in commitment.removal_reason
+
+
+def test_strict_api_supports_the_complete_shift_management_journey() -> None:
+    world = _shift_world()
+    organizer = APIClient()
+    organizer.force_authenticate(world.planner)
+    collection_url = _api_url(world, "api-workforce-shifts")
+
+    created = organizer.post(
+        collection_url,
+        _api_demand_payload(world, title="API operations desk"),
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+
+    assert created.status_code == 201
+    demand = ShiftDemand.objects.get(pk=created.json()["id"])
+    detail_url = _api_url(world, "api-workforce-shift", demand_id=demand.id)
+    detail = organizer.get(detail_url)
+    assert detail.status_code == 200
+    assert detail.json()["title"] == "API operations desk"
+
+    updated = organizer.put(
+        detail_url,
+        _api_demand_payload(
+            world,
+            title="Updated API operations desk",
+            expected_version=demand.command_version,
+        ),
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert updated.status_code == 200
+    demand.refresh_from_db()
+    assert demand.title == "Updated API operations desk"
+
+    opened = organizer.post(
+        _api_url(world, "api-workforce-shift-open", demand_id=demand.id),
+        {
+            "expected_version": demand.command_version,
+            "reason": "Publish reviewed coverage for suitable people.",
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert opened.status_code == 200
+    demand.refresh_from_db()
+
+    person = APIClient()
+    person.force_authenticate(world.person)
+    personal = person.get(_api_url(world, "api-workforce-my-shifts"))
+    assert personal.status_code == 200
+    assert personal.json()["suitable"][0]["id"] == str(demand.id)
+    claimed = person.post(
+        _api_url(world, "api-workforce-shift-claim", demand_id=demand.id),
+        {"expected_version": demand.command_version},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert claimed.status_code == 200
+    commitment = ShiftCommitment.objects.get(pk=claimed.json()["id"])
+
+    confirmed = organizer.post(
+        _api_url(
+            world,
+            "api-workforce-shift-confirm",
+            commitment_id=commitment.id,
+        ),
+        {
+            "expected_version": commitment.command_version,
+            "reason": "Confirm current qualification and shared Availability.",
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert confirmed.status_code == 200
+    commitment.refresh_from_db()
+    demand.refresh_from_db()
+
+    locked = organizer.post(
+        _api_url(world, "api-workforce-shift-lock", demand_id=demand.id),
+        {
+            "expected_version": demand.command_version,
+            "allow_understaffed": False,
+            "reason": "Lock complete and current accountable coverage.",
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert locked.status_code == 200
+    demand.refresh_from_db()
+    reopened = organizer.post(
+        _api_url(world, "api-workforce-shift-reopen", demand_id=demand.id),
+        {
+            "expected_version": demand.command_version,
+            "reason": "Reopen coverage to reflect an operating change.",
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert reopened.status_code == 200
+    demand.refresh_from_db()
+    commitment.refresh_from_db()
+
+    removed = organizer.post(
+        _api_url(
+            world,
+            "api-workforce-shift-remove",
+            commitment_id=commitment.id,
+        ),
+        {
+            "expected_version": commitment.command_version,
+            "reason": "Remove coverage because the operating plan changed.",
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert removed.status_code == 200
+    demand.refresh_from_db()
+    cancelled = organizer.post(
+        _api_url(world, "api-workforce-shift-cancel", demand_id=demand.id),
+        {
+            "expected_version": demand.command_version,
+            "reason": "The operating desk is no longer required.",
+        },
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == ShiftDemand.Status.CANCELLED
+
+
+def test_strict_api_completes_ended_locked_shift() -> None:
+    world = _shift_world()
+    organizer = APIClient()
+    organizer.force_authenticate(world.planner)
+    completing = _create_demand(
+        world,
+        title="API completion desk",
+        starts_at="2030-08-01T14:00:00+02:00",
+        ends_at="2030-08-01T16:00:00+02:00",
+    )
+    _open(world, completing)
+    completing_claim = _claim(world, completing)
+    completing_commitment = ShiftCommitment.objects.get(
+        pk=completing_claim.commitment_id
+    )
+    _confirm(world, completing_commitment)
+    completing.refresh_from_db()
+    lock_shift_demand(
+        actor=world.planner,
+        organization_id=world.edition.organization_id,
+        series_id=world.edition.series_id,
+        edition_id=world.edition.id,
+        demand_id=completing.id,
+        expected_version=completing.command_version,
+        allow_understaffed=False,
+        reason="Lock the final reviewed coverage.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+    completing.refresh_from_db()
+    with time_machine.travel("2030-08-01T16:30:00+02:00"):
+        completed = organizer.post(
+            _api_url(
+                world,
+                "api-workforce-shift-complete",
+                demand_id=completing.id,
+            ),
+            {
+                "expected_version": completing.command_version,
+                "reason": "The work ended and its handover was recorded.",
+            },
+            format="json",
+            HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+        )
+    assert completed.status_code == 200
+    assert completed.json()["status"] == ShiftDemand.Status.COMPLETED
+
+
+def test_browser_forms_support_the_complete_shift_management_journey() -> None:
+    world = _shift_world()
+    organizer = Client()
+    organizer.force_login(world.planner)
+    planning_url = _organizer_url(world, "organization-workforce-shifts")
+
+    planning = organizer.get(planning_url)
+    assert planning.status_code == 200
+    assert "Create a Shift draft" in strip_tags(planning.content.decode())
+
+    created = organizer.post(
+        _organizer_url(world, "create-organization-workforce-shift"),
+        _web_demand_payload(
+            world,
+            title="Browser operations desk",
+            expected_version=0,
+        ),
+        follow=True,
+    )
+    assert created.status_code == 200
+    assert "Draft Shift created" in strip_tags(created.content.decode())
+    demand = ShiftDemand.objects.get(title="Browser operations desk")
+
+    updated = organizer.post(
+        _organizer_url(
+            world,
+            "update-organization-workforce-shift",
+            demand_id=demand.id,
+        ),
+        _web_demand_payload(
+            world,
+            title="Updated browser operations desk",
+            expected_version=demand.command_version,
+        ),
+        follow=True,
+    )
+    assert updated.status_code == 200
+    assert "Draft Shift updated" in strip_tags(updated.content.decode())
+    demand.refresh_from_db()
+
+    opened = organizer.post(
+        _organizer_url(
+            world,
+            "open-organization-workforce-shift",
+            demand_id=demand.id,
+        ),
+        _web_reason_payload(
+            expected_version=demand.command_version,
+            reason="Publish reviewed work for suitable people.",
+        ),
+        follow=True,
+    )
+    assert opened.status_code == 200
+    assert "Shift opened for claims" in strip_tags(opened.content.decode())
+    demand.refresh_from_db()
+
+    person = Client()
+    person.force_login(world.person)
+    claimed = person.post(
+        _personal_url(
+            world,
+            "claim-my-workforce-shift",
+            demand_id=demand.id,
+        ),
+        {
+            "expected_version": str(demand.command_version),
+            "retry_key": str(uuid4()),
+        },
+        follow=True,
+    )
+    assert claimed.status_code == 200
+    assert "Shift claimed" in strip_tags(claimed.content.decode())
+    commitment = ShiftCommitment.objects.get(demand=demand)
+
+    confirmed = organizer.post(
+        _organizer_url(
+            world,
+            "confirm-organization-workforce-shift-commitment",
+            demand_id=demand.id,
+            commitment_id=commitment.id,
+        ),
+        _web_reason_payload(
+            expected_version=commitment.command_version,
+            reason="Confirm current qualification and shared Availability.",
+        ),
+        follow=True,
+    )
+    assert confirmed.status_code == 200
+    assert "Shift claim confirmed" in strip_tags(confirmed.content.decode())
+    commitment.refresh_from_db()
+    demand.refresh_from_db()
+
+    locked = organizer.post(
+        _organizer_url(
+            world,
+            "lock-organization-workforce-shift",
+            demand_id=demand.id,
+        ),
+        _web_reason_payload(
+            expected_version=demand.command_version,
+            reason="Lock complete and current accountable coverage.",
+        ),
+        follow=True,
+    )
+    assert locked.status_code == 200
+    assert "Shift coverage locked" in strip_tags(locked.content.decode())
+    demand.refresh_from_db()
+
+    reopened = organizer.post(
+        _organizer_url(
+            world,
+            "reopen-organization-workforce-shift",
+            demand_id=demand.id,
+        ),
+        _web_reason_payload(
+            expected_version=demand.command_version,
+            reason="Reopen coverage after the operating plan changed.",
+        ),
+        follow=True,
+    )
+    assert reopened.status_code == 200
+    assert "Shift reopened" in strip_tags(reopened.content.decode())
+    commitment.refresh_from_db()
+    demand.refresh_from_db()
+
+    removed = organizer.post(
+        _organizer_url(
+            world,
+            "remove-organization-workforce-shift-commitment",
+            demand_id=demand.id,
+            commitment_id=commitment.id,
+        ),
+        _web_reason_payload(
+            expected_version=commitment.command_version,
+            reason="Remove coverage because the operating plan changed.",
+        ),
+        follow=True,
+    )
+    assert removed.status_code == 200
+    assert "Shift claim removed" in strip_tags(removed.content.decode())
+    demand.refresh_from_db()
+
+    cancelled = organizer.post(
+        _organizer_url(
+            world,
+            "cancel-organization-workforce-shift",
+            demand_id=demand.id,
+        ),
+        _web_reason_payload(
+            expected_version=demand.command_version,
+            reason="The operating desk is no longer required.",
+        ),
+        follow=True,
+    )
+    assert cancelled.status_code == 200
+    assert "Shift cancelled" in strip_tags(cancelled.content.decode())
+    demand.refresh_from_db()
+    assert demand.status == ShiftDemand.Status.CANCELLED
+
+
+def test_browser_person_can_withdraw_claim_without_explanation() -> None:
+    world = _shift_world()
+    person = Client()
+    person.force_login(world.person)
+    withdrawable = _create_demand(
+        world,
+        title="Browser withdrawal desk",
+        starts_at="2030-08-01T14:00:00+02:00",
+        ends_at="2030-08-01T16:00:00+02:00",
+    )
+    _open(world, withdrawable)
+    withdrawal_claim = _claim(world, withdrawable)
+    withdrawing = ShiftCommitment.objects.get(pk=withdrawal_claim.commitment_id)
+    withdrawn = person.post(
+        _personal_url(
+            world,
+            "withdraw-my-workforce-shift",
+            commitment_id=withdrawing.id,
+        ),
+        {
+            "expected_version": str(withdrawing.command_version),
+            "retry_key": str(uuid4()),
+            "confirm": "on",
+        },
+        follow=True,
+    )
+    assert withdrawn.status_code == 200
+    assert "commitment was withdrawn" in strip_tags(withdrawn.content.decode())
+
+
+def test_browser_shift_failures_remain_recoverable_and_action_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    world = _shift_world()
+    organizer = Client()
+    organizer.force_login(world.planner)
+    create_url = _organizer_url(world, "create-organization-workforce-shift")
+
+    invalid_create = organizer.post(create_url, {})
+    assert invalid_create.status_code == 400
+    assert "Nothing was created" in strip_tags(invalid_create.content.decode())
+
+    original_create = shift_views.create_shift_demand
+
+    monkeypatch.setattr(
+        shift_views,
+        "create_shift_demand",
+        _raise_shift_version_conflict,
+    )
+    conflicted_create = organizer.post(
+        create_url,
+        _web_demand_payload(
+            world,
+            title="Concurrent browser Shift",
+            expected_version=0,
+        ),
+    )
+    assert conflicted_create.status_code == 409
+    assert "The Shift was not created" in strip_tags(conflicted_create.content.decode())
+    monkeypatch.setattr(shift_views, "create_shift_demand", original_create)
+
+    demand = _create_demand(world, title="Recoverable browser Shift")
+    update_url = _organizer_url(
+        world,
+        "update-organization-workforce-shift",
+        demand_id=demand.id,
+    )
+    invalid_update = organizer.post(update_url, {})
+    assert invalid_update.status_code == 400
+    assert "Nothing changed" in strip_tags(invalid_update.content.decode())
+
+    original_update = shift_views.update_shift_demand
+    monkeypatch.setattr(
+        shift_views,
+        "update_shift_demand",
+        _raise_shift_version_conflict,
+    )
+    conflicted_update = organizer.post(
+        update_url,
+        _web_demand_payload(
+            world,
+            title="Stale browser Shift",
+            expected_version=demand.command_version,
+        ),
+    )
+    assert conflicted_update.status_code == 409
+    assert "draft was not changed" in strip_tags(conflicted_update.content.decode())
+    monkeypatch.setattr(shift_views, "update_shift_demand", original_update)
+
+    open_url = _organizer_url(
+        world,
+        "open-organization-workforce-shift",
+        demand_id=demand.id,
+    )
+    invalid_open = organizer.post(open_url, {}, follow=True)
+    assert invalid_open.status_code == 200
+    assert "action was incomplete" in strip_tags(invalid_open.content.decode())
+
+    original_open = shift_views.open_shift_demand
+    monkeypatch.setattr(
+        shift_views,
+        "open_shift_demand",
+        _raise_shift_version_conflict,
+    )
+    conflicted_open = organizer.post(
+        open_url,
+        _web_reason_payload(
+            expected_version=demand.command_version,
+            reason="Attempt a stale transition without losing recovery guidance.",
+        ),
+        follow=True,
+    )
+    assert conflicted_open.status_code == 200
+    assert "changed. Reload it" in strip_tags(conflicted_open.content.decode())
+    monkeypatch.setattr(shift_views, "open_shift_demand", original_open)
+
+    _open(world, demand)
+    claimed = _claim(world, demand)
+    commitment = ShiftCommitment.objects.get(pk=claimed.commitment_id)
+    confirm_url = _organizer_url(
+        world,
+        "confirm-organization-workforce-shift-commitment",
+        demand_id=demand.id,
+        commitment_id=commitment.id,
+    )
+    invalid_confirm = organizer.post(confirm_url, {}, follow=True)
+    assert invalid_confirm.status_code == 200
+    assert "coverage action was incomplete" in strip_tags(
+        invalid_confirm.content.decode()
+    )
+
+    original_confirm = shift_views.confirm_shift_commitment
+    monkeypatch.setattr(
+        shift_views,
+        "confirm_shift_commitment",
+        _raise_shift_version_conflict,
+    )
+    conflicted_confirm = organizer.post(
+        confirm_url,
+        _web_reason_payload(
+            expected_version=commitment.command_version,
+            reason="Attempt a stale confirmation through the browser adapter.",
+        ),
+        follow=True,
+    )
+    assert conflicted_confirm.status_code == 200
+    assert "changed. Reload it" in strip_tags(conflicted_confirm.content.decode())
+    monkeypatch.setattr(
+        shift_views,
+        "confirm_shift_commitment",
+        original_confirm,
+    )
+
+
+def test_browser_personal_shift_failures_remain_private_and_recoverable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    world = _shift_world()
+    demand = _create_demand(world, title="Personal recovery Shift")
+    _open(world, demand)
+    claimed = _claim(world, demand)
+    commitment = ShiftCommitment.objects.get(pk=claimed.commitment_id)
+    person = Client()
+    person.force_login(world.person)
+    personal_url = _personal_url(world, "my-workforce-shifts")
+    assert person.get(personal_url, {"unexpected": "value"}).status_code == 400
+
+    second = _create_demand(
+        world,
+        title="Second recoverable Shift",
+        starts_at="2030-08-01T14:00:00+02:00",
+        ends_at="2030-08-01T16:00:00+02:00",
+    )
+    _open(world, second)
+    claim_url = _personal_url(
+        world,
+        "claim-my-workforce-shift",
+        demand_id=second.id,
+    )
+    invalid_claim = person.post(claim_url, {})
+    assert invalid_claim.status_code == 400
+    assert "Reload this Shift" in strip_tags(invalid_claim.content.decode())
+
+    original_claim = shift_views.claim_shift
+    monkeypatch.setattr(
+        shift_views,
+        "claim_shift",
+        _raise_shift_version_conflict,
+    )
+    conflicted_claim = person.post(
+        claim_url,
+        {
+            "expected_version": str(second.command_version),
+            "retry_key": str(uuid4()),
+        },
+    )
+    assert conflicted_claim.status_code == 409
+    assert "This Shift was not claimed" in strip_tags(conflicted_claim.content.decode())
+    monkeypatch.setattr(shift_views, "claim_shift", original_claim)
+
+    withdraw_url = _personal_url(
+        world,
+        "withdraw-my-workforce-shift",
+        commitment_id=commitment.id,
+    )
+    invalid_withdraw = person.post(withdraw_url, {})
+    assert invalid_withdraw.status_code == 400
+    assert "Confirm the withdrawal" in strip_tags(invalid_withdraw.content.decode())
+
+    monkeypatch.setattr(
+        shift_views,
+        "withdraw_shift_claim",
+        _raise_shift_version_conflict,
+    )
+    conflicted_withdraw = person.post(
+        withdraw_url,
+        {
+            "expected_version": str(commitment.command_version),
+            "retry_key": str(uuid4()),
+            "confirm": "on",
+        },
+    )
+    assert conflicted_withdraw.status_code == 409
+    assert "commitment was not withdrawn" in strip_tags(
+        conflicted_withdraw.content.decode()
+    )
 
 
 def test_locked_shift_page_offers_completion_only_after_work_ends() -> None:
