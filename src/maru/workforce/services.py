@@ -139,6 +139,7 @@ def _audit(
     authorization_target: ResolvedAuthorizationTarget | None,
     changed_fields: tuple[str, ...] = (),
     source_channel: str = "api",
+    request_id: UUID | None = None,
 ) -> AuditEvent:
     return append_audit(
         AuditRecord(
@@ -154,7 +155,7 @@ def _audit(
             outcome=AuditEvent.Outcome.ALLOW,
             reason_code=reason_code,
             correlation_id=correlation_id,
-            request_id=correlation_id,
+            request_id=request_id or correlation_id,
             source_channel=source_channel,
             obligations=tuple(
                 sorted(
@@ -584,6 +585,9 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
     reason: str,
     correlation_id: UUID,
     proposed_assignment_id: UUID | None = None,
+    assignment_command_version: int | None = None,
+    source_channel: str = "service",
+    request_id: UUID | None = None,
 ) -> PositionAssignment:
     """Activate position assignment.
 
@@ -607,6 +611,12 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
         The correlation identifier for audit tracing.
     proposed_assignment_id : UUID | None, default=None
         The identifier of the proposed assignment.
+    assignment_command_version : int | None, default=None
+        Resulting governed assignment version, or ``None`` for legacy callers.
+    source_channel : str, default='service'
+        Closed channel code identifying the calling adapter.
+    request_id : UUID | None, default=None
+        Incoming request identifier, or the correlation identifier when absent.
 
     Returns
     -------
@@ -719,6 +729,14 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
                 raise ValidationError(
                     "The proposed workforce assignment is unavailable.",
                     code="workforce_assignment_unavailable",
+                )
+            if (
+                proposed_assignment.effective_from != effective_from
+                or proposed_assignment.expires_at != expires_at
+            ):
+                raise ValidationError(
+                    "Approval cannot rewrite the proposal's effective interval.",
+                    code="assignment_interval_changed",
                 )
         required_type_ids = set(
             position.document_requirements.values_list("document_type_id", flat=True)
@@ -839,6 +857,9 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
                 proposed_by=actor,
                 approved_by=approver,
                 reason=normalized_reason,
+                decision_by=approver,
+                decision_at=timezone.now(),
+                decision_reason=normalized_reason,
                 role_assignment=role_assignment,
                 participation_capacity=position_capacity,
             )
@@ -853,7 +874,10 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
             assignment.effective_from = effective_from
             assignment.expires_at = expires_at
             assignment.approved_by = approver
-            assignment.reason = normalized_reason
+            assignment.decision_by = approver
+            assignment.decision_at = timezone.now()
+            assignment.decision_reason = normalized_reason
+            assignment.command_version = assignment_command_version
             assignment.role_assignment = role_assignment
             assignment.participation_capacity = position_capacity
             assignment.save()
@@ -864,7 +888,7 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
             else Position.Status.OPEN
         )
         position.save(update_fields=("status", "updated_at"))
-        audit = _audit(
+        _audit(
             actor=actor,
             capability_code=MANAGE_ASSIGNMENTS,
             operation="workforce.position_assignment.activate",
@@ -876,9 +900,10 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
             reason_code="assignment_activated",
             authorization_target=resolve_owned_target(resource=assignment),
             changed_fields=("assignment", "role_assignment", "participation_capacity"),
-            source_channel="admin",
+            source_channel=source_channel,
+            request_id=request_id,
         )
-        _audit(
+        approval_audit = _audit(
             actor=approver,
             capability_code=MANAGE_ASSIGNMENTS,
             operation="workforce.position_assignment.approve",
@@ -890,7 +915,8 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
             reason_code="independent_approval",
             authorization_target=resolve_owned_target(resource=assignment),
             changed_fields=("assignment_approval",),
-            source_channel="admin",
+            source_channel=source_channel,
+            request_id=request_id,
         )
         publish_domain_event(
             DomainEventRecord(
@@ -900,16 +926,16 @@ def activate_position_assignment(  # noqa: PLR0912, PLR0915
                 event_edition_id=position.edition_id,
                 aggregate_type="workforce.position_assignment",
                 aggregate_id=assignment.id,
-                aggregate_version=1,
+                aggregate_version=assignment.command_version or 1,
                 payload={
                     "position_code": position.code,
                     "role_code": position.role_bundle.code,
                     "status": assignment.status,
                 },
                 correlation_id=correlation_id,
-                causation_id=audit.id,
+                causation_id=approval_audit.id,
                 actor_kind="account",
-                actor_id=actor.id,
+                actor_id=approver.id,
                 retention_class="workforce-operational",
             ),
             workload_pool="core",

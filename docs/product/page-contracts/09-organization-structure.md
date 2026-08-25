@@ -167,15 +167,16 @@ approved headcount, vacancies, and current minimized holders. **Open structure**
 returns to this canonical route for Department management.
 
 The view places the current projection in the operational sequence **Structure
--> Positions -> Assignments -> Availability -> Shifts**. The first three stages
-describe records that already exist. Availability and Shifts are visibly
-labelled **Not available yet**, expose no controls, and do not infer person-owned
-availability or fabricate a rota from Positions. Authorized managers receive
-purpose-built Position management links; a view-only organizer retains the
-minimized projection. Owner accounts without Django staff/model access receive
-no specialist PositionAssignment link; authorized staff may receive one clearly
-labelled temporary assignment-record link while its owner-safe proposal and
-approval workflow remains unimplemented.
+-> Positions -> Assignments -> Availability -> Shifts**. The first four stages
+now have purpose-built continuations. Availability never derives from an
+assignment: its separate organizer projection contains only deliberately
+shared current person-owned periods and consequences. Shifts remain visibly
+labelled **Not available yet**, expose no controls, and are never fabricated
+from Positions or Availability. Authorized managers receive Position,
+Assignment, and Availability links only when their fresh action hints permit
+them; a view-only organizer retains the minimized structure projection. Owner
+accounts receive no specialist PositionAssignment or PersonAvailability link.
+Every purpose-built destination authorizes its own exact scope again.
 
 This view inherits the GET projection's complete-or-empty ceiling, fresh final
 authorization, audit-before-disclosure, tenant/edition isolation, minimized
@@ -548,8 +549,8 @@ invents template provenance for legacy rows.
 ## Explicit non-goals
 
 - Creating or changing Positions and volunteer opportunities; these belong to
-  the Position management contract. Assigning people remains a later
-  independently approved workflow.
+  the Position management contract. Proposing, independently deciding, and
+  ending assignments belong to the Assignment management contract.
 - Provisioning, changing, or publishing Executive Board appointments.
 - Inferring access from Department nesting or editing CapabilityGrants and
   RoleAssignments as page-local ACL entries.

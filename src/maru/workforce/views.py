@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import TYPE_CHECKING, cast
+from urllib.parse import urlencode
 from uuid import UUID
 
 from django.contrib import admin, messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import DatabaseError
+from django.db import DatabaseError, models
 from django.http import FileResponse, Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -33,23 +36,80 @@ from maru.authorization.policy import (
     resolve_edition_target,
     resolve_organization_target,
     resolve_owned_target,
+    resolve_self_target,
 )
 from maru.authorization.provenance import role_bundle_provenance_is_historical
 from maru.events.admin_context import authorized_admin_edition_for_route
 from maru.events.models import EventEdition
 from maru.identity.models import Account
+from maru.identity.queries import account_display_labels
+from maru.identity.services import require_recent_step_up
 from maru.organizations.models import ConventionSeries, Organization
 from maru.organizations.queries import (
     ExecutiveBoardAnchor,
     executive_board_governance_anchor,
 )
+from maru.workforce.assignment_commands import (
+    AssignmentAuthorizationDeniedError,
+    AssignmentCandidateUnavailableError,
+    AssignmentCommandError,
+    AssignmentHeadcountConflictError,
+    AssignmentLifecycleConflictError,
+    AssignmentReadinessConflictError,
+    AssignmentRetryConflictError,
+    AssignmentUnavailableError,
+    AssignmentVersionConflictError,
+    approve_position_assignment,
+    end_position_assignment,
+    propose_position_assignment,
+    reject_position_assignment,
+)
+from maru.workforce.assignment_queries import (
+    AssignmentReadLimitExceededError,
+    assignment_history_items,
+    assignment_overview_items,
+    assignment_readiness,
+    known_assignment_candidates,
+    my_assignment_items,
+)
+from maru.workforce.availability_audit import append_availability_read_audit
+from maru.workforce.availability_commands import (
+    AvailabilityAuthorizationDeniedError,
+    AvailabilityCommandError,
+    AvailabilityLifecycleConflictError,
+    AvailabilityRelationshipRequiredError,
+    AvailabilityRetryConflictError,
+    AvailabilityStateConflictError,
+    AvailabilityVersionConflictError,
+    authorize_person_availability_command,
+    save_person_availability,
+    withdraw_person_availability,
+)
+from maru.workforce.availability_queries import (
+    AVAILABILITY_ORGANIZER_REQUIRED_FIELDS,
+    AvailabilityProjectionIntegrityError,
+    AvailabilityReadLimitExceededError,
+    OrganizerAvailabilityOverview,
+    PersonAvailabilityProjection,
+    load_organizer_availability_overview,
+    load_person_availability,
+    my_availability_scope_items,
+    person_can_edit_availability,
+    person_has_availability_relationship,
+)
 from maru.workforce.forms import (
+    AssignmentDecisionForm,
+    AvailabilityCommandForm,
+    AvailabilityWindowFormSet,
+    AvailabilityWithdrawForm,
+    BaseAvailabilityWindowFormSet,
     DepartmentCreationForm,
     DepartmentDeletionForm,
     DepartmentParentChoices,
     DepartmentRetirementForm,
     DepartmentUpdateForm,
     OnboardingDocumentUploadForm,
+    PositionAssignmentProposalForm,
     PositionClosureForm,
     PositionCreationForm,
     PositionOpportunityForm,
@@ -60,6 +120,7 @@ from maru.workforce.forms import (
 from maru.workforce.models import (
     EditionStructureCommandReceipt,
     OnboardingDocumentRequest,
+    PersonAvailabilityPlan,
     Position,
     PositionAssignment,
     PositionTemplate,
@@ -102,14 +163,29 @@ from maru.workforce.structure_commands import (
 from maru.workforce.structure_snapshot import (
     StructureSnapshotRead,
     load_version_fenced_snapshot,
+    repeatable_read_only_snapshot,
 )
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from django import forms
 
 logger = logging.getLogger(__name__)
 
 MAX_POSITION_TEMPLATE_CHOICES = 128
+MAX_PERSONAL_ASSIGNMENT_SCOPES = 1_024
+_AVAILABILITY_WINDOW_FIELD = re.compile(
+    r"windows-(?:0|[1-9][0-9]*)-(?:starts_at|ends_at|preference|DELETE)\Z"
+)
+_AVAILABILITY_MANAGEMENT_FIELDS = frozenset(
+    {
+        "windows-TOTAL_FORMS",
+        "windows-INITIAL_FORMS",
+        "windows-MIN_NUM_FORMS",
+        "windows-MAX_NUM_FORMS",
+    }
+)
 
 
 def _account(request: HttpRequest) -> Account | None:
@@ -199,7 +275,7 @@ def _load_organization_structure_snapshot(
     series_slug: str,
     edition_slug: str,
 ) -> StructureSnapshotRead[_OrganizationStructureSnapshot]:
-    """Compose every Page 9 label and relationship in one MVCC snapshot.
+    """Compose every Organization structure label in one MVCC snapshot.
 
     Parameters
     ----------
@@ -2469,10 +2545,50 @@ def _position_context(
     page_id: str,
 ) -> dict[str, object]:
     context = _structure_page_context(request, read=read, page_id=page_id)
+    actor = _account(request)
+    target = resolve_edition_target(
+        organization_id=read.snapshot.organization.id,
+        edition_id=read.snapshot.edition.id,
+    )
+    can_manage_assignments = bool(
+        actor is not None
+        and decide(
+            principal=actor,
+            capability_code="workforce.manage_assignments",
+            resource=target,
+        ).allowed
+    )
+    can_issue_assignment_authority = bool(
+        can_manage_assignments
+        and actor is not None
+        and decide(
+            principal=actor,
+            capability_code="authorization.manage_roles",
+            resource=target,
+        ).allowed
+    )
+    availability_decision = (
+        decide(
+            principal=actor,
+            capability_code="workforce.view_availability",
+            resource=target,
+            requested_fields=AVAILABILITY_ORGANIZER_REQUIRED_FIELDS,
+        )
+        if actor is not None
+        else None
+    )
+    can_view_availability = bool(
+        availability_decision is not None
+        and availability_decision.allowed
+        and availability_decision.fields == AVAILABILITY_ORGANIZER_REQUIRED_FIELDS
+    )
     context.update(
         {
             "baseline_structure_navigation_current": True,
             "position_mutations_allowed": _structure_mutations_allowed(read),
+            "can_manage_assignments": can_manage_assignments,
+            "can_issue_assignment_authority": can_issue_assignment_authority,
+            "can_view_availability": can_view_availability,
         }
     )
     return context
@@ -3559,6 +3675,2294 @@ def close_organization_structure_position(  # noqa: PLR0911
         return _organization_structure_dependency_failure(request)
     messages.success(request, "Position closed with its history retained.")
     return redirect(_position_management_location(snapshot, position_id=position_id))
+
+
+@dataclass(frozen=True, slots=True)
+class _AssignmentPageRead:
+    """Authorized structure context plus assignment-control decisions."""
+
+    structure_read: _OrganizationStructurePageRead
+    manage_decision: PolicyDecision
+    role_decision: PolicyDecision
+    revoke_decision: PolicyDecision
+
+    @property
+    def snapshot(self) -> _OrganizationStructureSnapshot:
+        """Return the shared exact-edition snapshot."""
+        return self.structure_read.snapshot
+
+    @property
+    def can_issue_authority(self) -> bool:
+        """Return whether the actor can propose or decide authority issuance."""
+        return self.role_decision.allowed
+
+    @property
+    def can_end_authority(self) -> bool:
+        """Return whether the actor can revoke an active assignment's authority."""
+        return self.revoke_decision.allowed
+
+
+def _load_assignment_page(
+    *,
+    request: HttpRequest,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    route_name: str,
+    require_role_control: bool = False,
+    require_revoke: bool = False,
+) -> _AssignmentPageRead:
+    """Authorize and audit assignment access before protected labels.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming browser request carrying correlation and route evidence.
+    actor : Account
+        Active account requesting Assignment management.
+    organization_slug : str
+        Untrusted organization route locator.
+    series_slug : str
+        Untrusted convention-series route locator.
+    edition_slug : str
+        Untrusted event-edition route locator.
+    route_name : str
+        Stable fallback route name for read-audit evidence.
+    require_role_control : bool, default=False
+        Whether current role-management authority is mandatory.
+    require_revoke : bool, default=False
+        Whether current authority-revocation capability is mandatory.
+
+    Returns
+    -------
+    _AssignmentPageRead
+        Authorized exact-edition snapshot and current action decisions.
+
+    Raises
+    ------
+    PermissionDenied
+        If required assignment, role-management, or revocation authority is
+        unavailable.
+    """
+    structure_read = _load_audited_structure_page(
+        request=request,
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        route_name=route_name,
+        require_manage=False,
+    )
+    snapshot = structure_read.snapshot
+    target = resolve_edition_target(
+        organization_id=snapshot.organization.id,
+        edition_id=snapshot.edition.id,
+    )
+    evaluated_at = timezone_now()
+    manage_decision = decide(
+        principal=actor,
+        capability_code="workforce.manage_assignments",
+        resource=target,
+        at=evaluated_at,
+    )
+    role_decision = decide(
+        principal=actor,
+        capability_code="authorization.manage_roles",
+        resource=target,
+        at=evaluated_at,
+    )
+    revoke_decision = decide(
+        principal=actor,
+        capability_code="authorization.revoke",
+        resource=target,
+        at=evaluated_at,
+    )
+    if (
+        not manage_decision.allowed
+        or (require_role_control and not role_decision.allowed)
+        or (require_revoke and not revoke_decision.allowed)
+    ):
+        raise PermissionDenied
+    route = (
+        request.resolver_match.url_name
+        if request.resolver_match is not None and request.resolver_match.url_name
+        else route_name
+    )
+    append_audit(
+        AuditRecord(
+            principal_kind="account",
+            principal_id=actor.id,
+            principal_context_id=None,
+            organization_id=snapshot.organization.id,
+            event_edition_id=snapshot.edition.id,
+            capability_code="workforce.manage_assignments",
+            operation="workforce.position_assignment.view",
+            target_type="events.event_edition",
+            target_id=snapshot.edition.id,
+            outcome=AuditEvent.Outcome.ALLOW,
+            reason_code=manage_decision.reason_code,
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+            obligations=tuple(sorted(manage_decision.obligations)),
+            changed_fields=(),
+            safe_metadata={"policy_version": POLICY_VERSION, "route_name": route},
+            retention_class="workforce-restricted",
+        ),
+        occurred_at=evaluated_at,
+    )
+    return _AssignmentPageRead(
+        structure_read=structure_read,
+        manage_decision=manage_decision,
+        role_decision=role_decision,
+        revoke_decision=revoke_decision,
+    )
+
+
+def _assignment_page_context(
+    request: HttpRequest,
+    *,
+    read: _AssignmentPageRead,
+    page_id: str,
+) -> dict[str, object]:
+    context = _position_context(
+        request,
+        read=read.structure_read,
+        page_id=page_id,
+    )
+    context.update(
+        {
+            "can_manage_assignments": True,
+            "can_issue_assignment_authority": read.can_issue_authority,
+            "can_end_assignment_authority": read.can_end_authority,
+            "assignment_access_label": _structure_access_label(read.manage_decision),
+        }
+    )
+    return context
+
+
+def _assignment_route_kwargs(
+    snapshot: _OrganizationStructureSnapshot,
+) -> dict[str, object]:
+    return {
+        "organization_slug": snapshot.organization.slug,
+        "series_slug": snapshot.series.slug,
+        "edition_slug": snapshot.edition.slug,
+    }
+
+
+def _assignment_location(
+    snapshot: _OrganizationStructureSnapshot,
+    *,
+    assignment_id: UUID | None = None,
+) -> str:
+    kwargs = _assignment_route_kwargs(snapshot)
+    if assignment_id is None:
+        return reverse("organization-workforce-assignments", kwargs=kwargs)
+    kwargs["assignment_id"] = assignment_id
+    return reverse("organization-workforce-assignment", kwargs=kwargs)
+
+
+def _assignment_lifecycle_allows(
+    read: _AssignmentPageRead,
+    *,
+    cleanup: bool = False,
+) -> bool:
+    permitted = {
+        EventEdition.Lifecycle.DRAFT,
+        EventEdition.Lifecycle.PREPARING,
+        EventEdition.Lifecycle.READY,
+        EventEdition.Lifecycle.LIVE,
+    }
+    if cleanup:
+        permitted.add(EventEdition.Lifecycle.CLOSING)
+    return bool(
+        read.snapshot.organization.lifecycle
+        in {Organization.Lifecycle.DRAFT, Organization.Lifecycle.ACTIVE}
+        and read.snapshot.edition.lifecycle in permitted
+    )
+
+
+def _default_assignment_effective_from() -> datetime:
+    """Return the next whole minute so authority never starts in the past.
+
+    Returns
+    -------
+    datetime
+        Aware next whole-minute proposal default.
+    """
+    return (timezone_now() + timedelta(minutes=1)).replace(second=0, microsecond=0)
+
+
+def _assignment_record(
+    *,
+    read: _AssignmentPageRead,
+    assignment_id: UUID,
+) -> PositionAssignment:
+    assignment = (
+        PositionAssignment.objects.select_related(
+            "account",
+            "position",
+            "position__department",
+            "position__template",
+            "position__role_bundle",
+            "proposed_by",
+            "approved_by",
+            "decision_by",
+            "ended_by",
+            "role_assignment",
+        )
+        .filter(
+            id=assignment_id,
+            organization_id=read.snapshot.organization.id,
+            edition_id=read.snapshot.edition.id,
+        )
+        .order_by()
+        .first()
+    )
+    if assignment is None:
+        raise Http404
+    return assignment
+
+
+def _render_assignment_overview(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> TemplateResponse:
+    read = _load_assignment_page(
+        request=request,
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        route_name="organization-workforce-assignments",
+    )
+    context = _assignment_page_context(
+        request,
+        read=read,
+        page_id="organization-workforce-assignments",
+    )
+    context.update(
+        {
+            "title": f"Assignments — {read.snapshot.edition.name}",
+            "assignments": assignment_overview_items(
+                organization_id=read.snapshot.organization.id,
+                edition_id=read.snapshot.edition.id,
+                actor=actor,
+            ),
+            "assignment_actions_allowed": _assignment_lifecycle_allows(read),
+            "assignment_cleanup_allowed": _assignment_lifecycle_allows(
+                read,
+                cleanup=True,
+            ),
+            "positions": _position_overview_items(read.structure_read),
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/assignment_management.html",
+        context,
+    )
+
+
+def _render_assignment_proposal(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    position_id: UUID,
+    form: PositionAssignmentProposalForm | None = None,
+    status: int = 200,
+    action_error: str = "",
+    reload_required: bool = False,
+) -> TemplateResponse:
+    read = _load_assignment_page(
+        request=request,
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        route_name="organization-workforce-assignment-proposal",
+        require_role_control=True,
+    )
+    projected_position, _department = _find_position(
+        read.snapshot.structure,
+        position_id,
+    )
+    position = _position_record(
+        organization_id=read.snapshot.organization.id,
+        edition_id=read.snapshot.edition.id,
+        position_id=position_id,
+    )
+    candidates = known_assignment_candidates(position=position)
+    choices = tuple(
+        (str(candidate.account_id), candidate.choice_label) for candidate in candidates
+    )
+    if form is None:
+        form = PositionAssignmentProposalForm(
+            candidate_choices=choices,
+            zone_name=read.snapshot.edition.time_zone,
+            default_effective_from=_default_assignment_effective_from(),
+        )
+    open_assignment_count = PositionAssignment.objects.filter(
+        position=position,
+        status__in=(
+            PositionAssignment.Status.PROPOSED,
+            PositionAssignment.Status.ACTIVE,
+        ),
+    ).count()
+    proposal_available = bool(
+        _assignment_lifecycle_allows(read)
+        and position.status != Position.Status.CLOSED
+        and open_assignment_count < position.headcount
+        and candidates
+    )
+    context = _assignment_page_context(
+        request,
+        read=read,
+        page_id="organization-workforce-assignment-proposal",
+    )
+    context.update(
+        {
+            "title": f"Propose assignment — {position.title}",
+            "position": position,
+            "projected_position": projected_position,
+            "candidates": candidates,
+            "form": form,
+            "proposal_available": proposal_available,
+            "open_assignment_count": open_assignment_count,
+            "action_error": action_error,
+            "reload_required": reload_required,
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/assignment_proposal.html",
+        context,
+        status=status,
+    )
+
+
+def _render_assignment_detail(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    assignment_id: UUID,
+    approve_form: AssignmentDecisionForm | None = None,
+    reject_form: AssignmentDecisionForm | None = None,
+    end_form: AssignmentDecisionForm | None = None,
+    active_action: str = "",
+    status: int = 200,
+    action_error: str = "",
+    reload_required: bool = False,
+) -> TemplateResponse:
+    read = _load_assignment_page(
+        request=request,
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        route_name="organization-workforce-assignment",
+    )
+    assignment = _assignment_record(read=read, assignment_id=assignment_id)
+    version = assignment.command_version or 1
+    if approve_form is None:
+        approve_form = AssignmentDecisionForm(
+            expected_version=version,
+            action_code="approve",
+        )
+    if reject_form is None:
+        reject_form = AssignmentDecisionForm(
+            expected_version=version,
+            action_code="reject",
+        )
+    if end_form is None:
+        end_form = AssignmentDecisionForm(
+            expected_version=version,
+            action_code="end",
+        )
+    labels = account_display_labels(
+        {
+            assignment.account_id,
+            assignment.proposed_by_id,
+            *(
+                (assignment.decision_by_id,)
+                if assignment.decision_by_id is not None
+                else ()
+            ),
+            *((assignment.ended_by_id,) if assignment.ended_by_id is not None else ()),
+        }
+    )
+    readiness = assignment_readiness(
+        position=assignment.position,
+        account_id=assignment.account_id,
+    )
+    proposal_open = assignment.status == PositionAssignment.Status.PROPOSED
+    can_decide = bool(
+        proposal_open
+        and read.can_issue_authority
+        and assignment.proposed_by_id != actor.id
+        and _assignment_lifecycle_allows(read, cleanup=True)
+    )
+    can_approve = bool(can_decide and _assignment_lifecycle_allows(read))
+    can_end = bool(
+        assignment.status == PositionAssignment.Status.ACTIVE
+        and read.can_end_authority
+        and _assignment_lifecycle_allows(read, cleanup=True)
+    )
+    context = _assignment_page_context(
+        request,
+        read=read,
+        page_id="organization-workforce-assignment",
+    )
+    context.update(
+        {
+            "title": f"{assignment.position.title} assignment",
+            "assignment": assignment,
+            "account_label": labels.get(assignment.account_id, "Maru account"),
+            "proposer_label": labels.get(
+                assignment.proposed_by_id,
+                "Maru account",
+            ),
+            "decider_label": (
+                labels.get(assignment.decision_by_id)
+                if assignment.decision_by_id is not None
+                else None
+            ),
+            "ender_label": (
+                labels.get(assignment.ended_by_id)
+                if assignment.ended_by_id is not None
+                else None
+            ),
+            "readiness": readiness,
+            "history": assignment_history_items(assignment=assignment),
+            "approve_form": approve_form,
+            "reject_form": reject_form,
+            "end_form": end_form,
+            "can_decide_assignment": can_decide,
+            "can_approve_assignment": can_approve and readiness.ready,
+            "can_end_assignment": can_end,
+            "is_proposer": assignment.proposed_by_id == actor.id,
+            "active_action": active_action,
+            "action_error": action_error,
+            "reload_required": reload_required,
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/assignment_detail.html",
+        context,
+        status=status,
+    )
+
+
+def _assignment_conflict_message(  # noqa: PLR0911
+    error: AssignmentCommandError,
+) -> str:
+    if isinstance(error, AssignmentVersionConflictError):
+        return (
+            "This assignment changed after the page was opened. Reload its "
+            "latest state before trying again."
+        )
+    if isinstance(error, AssignmentRetryConflictError):
+        return (
+            "This retry identifier was already used for a different assignment "
+            "action. Reload before trying again."
+        )
+    if isinstance(error, AssignmentLifecycleConflictError):
+        return "The edition or organization is now read-only for this action."
+    if isinstance(error, AssignmentHeadcountConflictError):
+        return "This Position has reached its approved headcount."
+    if isinstance(error, AssignmentReadinessConflictError):
+        return (
+            "Required onboarding items are not all approved yet. Review readiness "
+            "before approving."
+        )
+    if isinstance(error, AssignmentCandidateUnavailableError):
+        return (
+            "That person is no longer an active, known candidate in this scope. "
+            "Reload the candidate list."
+        )
+    return "The action no longer matches the assignment's current state."
+
+
+def _add_assignment_validation_errors(
+    form: forms.BaseForm,
+    error: ValidationError,
+) -> bool:
+    if not hasattr(error, "error_dict"):
+        form.add_error(None, "Review the submitted assignment details.")
+        return True
+    known_fields = {"account_id", "effective_from", "expires_at", "reason"}
+    known_fields.update({"expected_version", "retry_key"})
+    if set(error.error_dict) - known_fields:
+        return False
+    for field_name, field_errors in error.error_dict.items():
+        for field_error in field_errors:
+            form.add_error(field_name, field_error)
+    return True
+
+
+def _assignment_step_up_redirect(
+    *,
+    return_to: str,
+) -> HttpResponse:
+    response = redirect(
+        f"{reverse('account-step-up')}?{urlencode({'next': return_to})}"
+    )
+    response["Cache-Control"] = "private, no-store"
+    response["Pragma"] = "no-cache"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+def _require_assignment_step_up(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    return_to: str,
+) -> HttpResponse | None:
+    """Require recent authentication for assignment decisions or ending.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming decision request whose body remains unread.
+    actor : Account
+        Current authorized assignment controller.
+    return_to : str
+        Local assignment URL restored after successful step-up.
+
+    Returns
+    -------
+    HttpResponse | None
+        A private redirect to step-up when required, otherwise ``None``.
+    """
+    try:
+        require_recent_step_up(account=actor, request=request)
+    except ValidationError:
+        return _assignment_step_up_redirect(return_to=return_to)
+    return None
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_GET
+def organization_workforce_assignments(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Render the purpose-built assignment queue for one exact edition.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated browser request.
+    organization_slug : str
+        Organization locator from the persisted route chain.
+    series_slug : str
+        Convention-series locator from the persisted route chain.
+    edition_slug : str
+        Event-edition locator from the persisted route chain.
+
+    Returns
+    -------
+    HttpResponse
+        Private assignment queue or a bounded failure response.
+    """
+    actor = _active_admin_account(request)
+    try:
+        if request.GET:
+            return _organization_structure_bad_request(request)
+        return _render_assignment_overview(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+    except (AssignmentReadLimitExceededError, DatabaseError, RuntimeError):
+        logger.exception("Unable to load Workforce assignments")
+        return _organization_structure_dependency_failure(request)
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_GET
+def organization_workforce_assignment_proposal(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    position_id: UUID,
+) -> HttpResponse:
+    """Render a closed-candidate assignment proposal form.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated browser request.
+    organization_slug : str
+        Organization locator from the persisted route chain.
+    series_slug : str
+        Convention-series locator from the persisted route chain.
+    edition_slug : str
+        Event-edition locator from the persisted route chain.
+    position_id : UUID
+        Exact Position receiving a proposed person.
+
+    Returns
+    -------
+    HttpResponse
+        Private proposal form or a bounded failure response.
+    """
+    actor = _active_admin_account(request)
+    try:
+        if request.GET:
+            return _organization_structure_bad_request(request)
+        return _render_assignment_proposal(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+        )
+    except (AssignmentReadLimitExceededError, DatabaseError, RuntimeError):
+        logger.exception("Unable to load assignment proposal")
+        return _organization_structure_dependency_failure(request)
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def propose_organization_workforce_assignment(  # noqa: PLR0911
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    position_id: UUID,
+) -> HttpResponse:
+    """Create a non-authoritative assignment proposal.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated browser request with closed proposal input.
+    organization_slug : str
+        Organization locator from the persisted route chain.
+    series_slug : str
+        Convention-series locator from the persisted route chain.
+    edition_slug : str
+        Event-edition locator from the persisted route chain.
+    position_id : UUID
+        Exact Position receiving the proposal.
+
+    Returns
+    -------
+    HttpResponse
+        Redirect after success or a private validation, conflict, or failure
+        response.
+
+    Raises
+    ------
+    Http404
+        If an authorized request names an unavailable Position.
+    PermissionDenied
+        If current assignment or role-management authority is unavailable.
+    """
+    actor = _active_admin_account(request)
+    try:
+        read = _load_assignment_page(
+            request=request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            route_name="propose-organization-workforce-assignment",
+            require_role_control=True,
+        )
+        if request.GET:
+            return _organization_structure_bad_request(request)
+        position = _position_record(
+            organization_id=read.snapshot.organization.id,
+            edition_id=read.snapshot.edition.id,
+            position_id=position_id,
+        )
+        candidates = known_assignment_candidates(position=position)
+    except Http404:
+        raise
+    except (AssignmentReadLimitExceededError, DatabaseError, RuntimeError):
+        logger.exception("Unable to prepare assignment proposal")
+        return _organization_structure_dependency_failure(request)
+    form = PositionAssignmentProposalForm(
+        request.POST,
+        candidate_choices=tuple(
+            (str(candidate.account_id), candidate.choice_label)
+            for candidate in candidates
+        ),
+        zone_name=read.snapshot.edition.time_zone,
+        default_effective_from=_default_assignment_effective_from(),
+    )
+    if not form.is_valid():
+        return _render_assignment_proposal(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            status=400,
+            action_error="Review the highlighted values. Nothing was proposed.",
+        )
+    try:
+        result = propose_position_assignment(
+            actor=actor,
+            organization_id=read.snapshot.organization.id,
+            series_id=read.snapshot.series.id,
+            edition_id=read.snapshot.edition.id,
+            position_id=position_id,
+            account_id=cast("UUID", form.cleaned_data["account_id"]),
+            effective_from=cast("datetime", form.cleaned_data["effective_from"]),
+            expires_at=cast("datetime | None", form.cleaned_data["expires_at"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except ValidationError as error:
+        if not _add_assignment_validation_errors(form, error):
+            logger.exception("Assignment proposal returned an internal field key")
+            return _organization_structure_dependency_failure(request)
+        return _render_assignment_proposal(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            status=400,
+            action_error="Review the highlighted values. Nothing was proposed.",
+        )
+    except AssignmentAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except AssignmentUnavailableError as error:
+        raise Http404 from error
+    except AssignmentCommandError as error:
+        return _render_assignment_proposal(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            position_id=position_id,
+            form=form,
+            status=409,
+            action_error=_assignment_conflict_message(error),
+            reload_required=True,
+        )
+    except (DatabaseError, RuntimeError):
+        logger.exception("Unable to propose Workforce assignment")
+        return _organization_structure_dependency_failure(request)
+    messages.success(
+        request,
+        "Assignment proposed. A different authorized controller must decide it.",
+    )
+    return redirect(
+        _assignment_location(
+            read.snapshot,
+            assignment_id=result.assignment_id,
+        )
+    )
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_GET
+def organization_workforce_assignment(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    assignment_id: UUID,
+) -> HttpResponse:
+    """Render one assignment's state, readiness, and retained history.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated browser request.
+    organization_slug : str
+        Organization locator from the persisted route chain.
+    series_slug : str
+        Convention-series locator from the persisted route chain.
+    edition_slug : str
+        Event-edition locator from the persisted route chain.
+    assignment_id : UUID
+        Exact assignment to inspect.
+
+    Returns
+    -------
+    HttpResponse
+        Private assignment detail or a bounded failure response.
+    """
+    actor = _active_admin_account(request)
+    try:
+        if request.GET:
+            return _organization_structure_bad_request(request)
+        return _render_assignment_detail(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            assignment_id=assignment_id,
+        )
+    except (AssignmentReadLimitExceededError, DatabaseError, RuntimeError):
+        logger.exception("Unable to load Workforce assignment")
+        return _organization_structure_dependency_failure(request)
+
+
+def _assignment_decision_post(  # noqa: PLR0911
+    request: HttpRequest,
+    *,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    assignment_id: UUID,
+    action: str,
+) -> HttpResponse:
+    actor = _active_admin_account(request)
+    require_revoke = action == "end"
+    try:
+        read = _load_assignment_page(
+            request=request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            route_name=f"{action}-organization-workforce-assignment",
+            require_role_control=not require_revoke,
+            require_revoke=require_revoke,
+        )
+        if request.GET:
+            return _organization_structure_bad_request(request)
+        assignment = _assignment_record(read=read, assignment_id=assignment_id)
+    except Http404:
+        raise
+    except (AssignmentReadLimitExceededError, DatabaseError, RuntimeError):
+        logger.exception("Unable to prepare assignment %s", action)
+        return _organization_structure_dependency_failure(request)
+    return_to = _assignment_location(
+        read.snapshot,
+        assignment_id=assignment.id,
+    )
+    step_up_response = _require_assignment_step_up(
+        request,
+        actor=actor,
+        return_to=return_to,
+    )
+    if step_up_response is not None:
+        return step_up_response
+    form = AssignmentDecisionForm(
+        request.POST,
+        expected_version=assignment.command_version or 1,
+        action_code=action,
+    )
+    if not form.is_valid():
+        return _render_assignment_detail(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            assignment_id=assignment.id,
+            approve_form=form if action == "approve" else None,
+            reject_form=form if action == "reject" else None,
+            end_form=form if action == "end" else None,
+            active_action=action,
+            status=400,
+            action_error="Review the highlighted values. Nothing was changed.",
+        )
+    commands = {
+        "approve": approve_position_assignment,
+        "reject": reject_position_assignment,
+        "end": end_position_assignment,
+    }
+    command = commands[action]
+    try:
+        result = command(
+            actor=actor,
+            organization_id=read.snapshot.organization.id,
+            series_id=read.snapshot.series.id,
+            edition_id=read.snapshot.edition.id,
+            assignment_id=assignment.id,
+            expected_version=cast("int", form.cleaned_data["expected_version"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except ValidationError as error:
+        if not _add_assignment_validation_errors(form, error):
+            logger.exception("Assignment %s returned an internal field key", action)
+            return _organization_structure_dependency_failure(request)
+        return _render_assignment_detail(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            assignment_id=assignment.id,
+            approve_form=form if action == "approve" else None,
+            reject_form=form if action == "reject" else None,
+            end_form=form if action == "end" else None,
+            active_action=action,
+            status=400,
+            action_error="Review the highlighted values. Nothing was changed.",
+        )
+    except AssignmentAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except AssignmentUnavailableError as error:
+        raise Http404 from error
+    except AssignmentCommandError as error:
+        return _render_assignment_detail(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            assignment_id=assignment.id,
+            approve_form=form if action == "approve" else None,
+            reject_form=form if action == "reject" else None,
+            end_form=form if action == "end" else None,
+            active_action=action,
+            status=409,
+            action_error=_assignment_conflict_message(error),
+            reload_required=True,
+        )
+    except (DatabaseError, RuntimeError):
+        logger.exception("Unable to %s Workforce assignment", action)
+        return _organization_structure_dependency_failure(request)
+    messages.success(
+        request,
+        {
+            "approve": "Assignment approved and its scoped authority is active.",
+            "reject": "Assignment proposal rejected with its history retained.",
+            "end": "Assignment and its scoped authority ended.",
+        }[action],
+    )
+    return redirect(
+        _assignment_location(
+            read.snapshot,
+            assignment_id=result.assignment_id,
+        )
+    )
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def approve_organization_workforce_assignment(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    assignment_id: UUID,
+) -> HttpResponse:
+    """Approve one proposal after current authorization and fresh step-up.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated browser decision request.
+    organization_slug : str
+        Organization locator from the persisted route chain.
+    series_slug : str
+        Convention-series locator from the persisted route chain.
+    edition_slug : str
+        Event-edition locator from the persisted route chain.
+    assignment_id : UUID
+        Proposed assignment to approve.
+
+    Returns
+    -------
+    HttpResponse
+        Step-up redirect, action result redirect, or private failure response.
+    """
+    return _assignment_decision_post(
+        request,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        assignment_id=assignment_id,
+        action="approve",
+    )
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def reject_organization_workforce_assignment(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    assignment_id: UUID,
+) -> HttpResponse:
+    """Reject one proposal after current authorization and fresh step-up.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated browser decision request.
+    organization_slug : str
+        Organization locator from the persisted route chain.
+    series_slug : str
+        Convention-series locator from the persisted route chain.
+    edition_slug : str
+        Event-edition locator from the persisted route chain.
+    assignment_id : UUID
+        Proposed assignment to reject.
+
+    Returns
+    -------
+    HttpResponse
+        Step-up redirect, action result redirect, or private failure response.
+    """
+    return _assignment_decision_post(
+        request,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        assignment_id=assignment_id,
+        action="reject",
+    )
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def end_organization_workforce_assignment(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    assignment_id: UUID,
+) -> HttpResponse:
+    """End one active assignment after authorization and fresh step-up.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated browser ending request.
+    organization_slug : str
+        Organization locator from the persisted route chain.
+    series_slug : str
+        Convention-series locator from the persisted route chain.
+    edition_slug : str
+        Event-edition locator from the persisted route chain.
+    assignment_id : UUID
+        Active assignment to end.
+
+    Returns
+    -------
+    HttpResponse
+        Step-up redirect, action result redirect, or private failure response.
+    """
+    return _assignment_decision_post(
+        request,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        assignment_id=assignment_id,
+        action="end",
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _PersonalAvailabilityPage:
+    """One authorized owner-facing exact-edition Availability projection."""
+
+    organization: Organization
+    series: ConventionSeries
+    edition: EventEdition
+    projection: PersonAvailabilityProjection
+    can_edit: bool
+
+
+def _personal_availability_state_response(
+    request: HttpRequest,
+    *,
+    status: int,
+    message: str,
+) -> TemplateResponse:
+    """Render a private, name-free Availability failure state.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming personal-surface request.
+    status : int
+        HTTP status for the bounded state.
+    message : str
+        Safe explanation shown without edition or Position labels.
+
+    Returns
+    -------
+    TemplateResponse
+        Private personal Availability state response.
+    """
+    context = admin.site.each_context(request)
+    context.update(
+        {
+            "title": "My availability",
+            "has_permission": True,
+            "maru_personal_surface": True,
+            "availability_state_message": message,
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/my_availability.html",
+        context,
+        status=status,
+    )
+
+
+def _personal_availability_page(
+    *,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    require_edit: bool,
+) -> _PersonalAvailabilityPage:
+    """Resolve relationship and policy before loading scoped display labels.
+
+    Parameters
+    ----------
+    actor : Account
+        Authenticated person who owns any returned plan.
+    organization_slug : str
+        Organization locator from the route.
+    series_slug : str
+        Convention-series locator from the route.
+    edition_slug : str
+        Exact event-edition locator from the route.
+    require_edit : bool
+        Whether an open assignment must permit replacement.
+
+    Returns
+    -------
+    _PersonalAvailabilityPage
+        Authorized exact-edition context and owner-visible projection.
+
+    Raises
+    ------
+    Http404
+        If the persisted route chain does not exist.
+    PermissionDenied
+        If the person has no retained exact-edition relationship.
+    AvailabilityRelationshipRequiredError
+        If replacement was requested without an open assignment.
+    """
+    scope = (
+        EventEdition.objects.filter(
+            organization__slug__iexact=organization_slug,
+            series__slug__iexact=series_slug,
+            series__organization_id=models.F("organization_id"),
+            slug__iexact=edition_slug,
+        )
+        .order_by("id")
+        .values("id", "organization_id", "series_id")
+        .first()
+    )
+    if scope is None:
+        raise Http404
+    organization_id = scope["organization_id"]
+    edition_id = scope["id"]
+    authorize_person_availability_command(
+        actor=actor,
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
+    if not person_has_availability_relationship(
+        account=actor,
+        organization_id=organization_id,
+        edition_id=edition_id,
+    ):
+        raise PermissionDenied
+    can_edit = person_can_edit_availability(
+        account=actor,
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
+    if require_edit and not can_edit:
+        raise AvailabilityRelationshipRequiredError
+    with repeatable_read_only_snapshot():
+        edition = EventEdition.objects.select_related("organization", "series").get(
+            id=edition_id,
+            organization_id=organization_id,
+            series_id=scope["series_id"],
+        )
+        projection = load_person_availability(
+            account=actor,
+            organization_id=organization_id,
+            edition_id=edition_id,
+        )
+    authorize_person_availability_command(
+        actor=actor,
+        organization_id=organization_id,
+        edition_id=edition_id,
+    )
+    return _PersonalAvailabilityPage(
+        organization=edition.organization,
+        series=edition.series,
+        edition=edition,
+        projection=projection,
+        can_edit=can_edit,
+    )
+
+
+def _availability_period_initial(
+    projection: PersonAvailabilityProjection,
+) -> tuple[dict[str, str], ...]:
+    """Convert local aware periods to minute-precision browser controls.
+
+    Parameters
+    ----------
+    projection : PersonAvailabilityProjection
+        Current owner-visible plan projection.
+
+    Returns
+    -------
+    tuple[dict[str, str], ...]
+        Local form initial values in canonical period order.
+    """
+    return tuple(
+        {
+            "starts_at": window.starts_at.strftime("%Y-%m-%dT%H:%M"),
+            "ends_at": window.ends_at.strftime("%Y-%m-%dT%H:%M"),
+            "preference": window.preference,
+        }
+        for window in projection.windows
+    )
+
+
+def _personal_availability_context(
+    request: HttpRequest,
+    *,
+    page: _PersonalAvailabilityPage,
+    command_form: AvailabilityCommandForm | None = None,
+    window_formset: BaseAvailabilityWindowFormSet | None = None,
+    withdraw_form: AvailabilityWithdrawForm | None = None,
+    action_error: str = "",
+    reload_required: bool = False,
+) -> dict[str, object]:
+    """Compose a single owner-facing Availability workspace context.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming personal-surface request.
+    page : _PersonalAvailabilityPage
+        Authorized owner context and current projection.
+    command_form : AvailabilityCommandForm | None, default=None
+        Optional bound replacement command form.
+    window_formset : BaseAvailabilityWindowFormSet | None, default=None
+        Optional bound repeatable-period formset.
+    withdraw_form : AvailabilityWithdrawForm | None, default=None
+        Optional bound withdrawal form.
+    action_error : str, default=""
+        Safe action-local failure guidance.
+    reload_required : bool, default=False
+        Whether stale state requires a fresh page load.
+
+    Returns
+    -------
+    dict[str, object]
+        Private template context for the unified personal page.
+    """
+    version = page.projection.version
+    if command_form is None:
+        command_form = AvailabilityCommandForm(expected_version=version)
+    if window_formset is None:
+        window_formset = AvailabilityWindowFormSet(
+            prefix="windows",
+            initial=_availability_period_initial(page.projection),
+            starts_on=page.edition.starts_on,
+            ends_on=page.edition.ends_on,
+            time_zone=page.edition.time_zone,
+        )
+    if withdraw_form is None and page.projection.plan is not None:
+        withdraw_form = AvailabilityWithdrawForm(expected_version=version)
+    can_withdraw = bool(
+        page.projection.plan is not None
+        and page.projection.plan.status != PersonAvailabilityPlan.Status.WITHDRAWN
+        and page.organization.lifecycle
+        in {Organization.Lifecycle.DRAFT, Organization.Lifecycle.ACTIVE}
+        and page.edition.lifecycle
+        in {
+            EventEdition.Lifecycle.DRAFT,
+            EventEdition.Lifecycle.PREPARING,
+            EventEdition.Lifecycle.READY,
+            EventEdition.Lifecycle.LIVE,
+            EventEdition.Lifecycle.CLOSING,
+        }
+    )
+    context = admin.site.each_context(request)
+    context.update(
+        {
+            "title": f"My availability — {page.edition.name}",
+            "has_permission": True,
+            "maru_personal_surface": True,
+            "organization": page.organization,
+            "convention_series": page.series,
+            "edition": page.edition,
+            "availability": page.projection,
+            "command_form": command_form,
+            "window_formset": window_formset,
+            "withdraw_form": withdraw_form,
+            "can_edit_availability": page.can_edit,
+            "can_withdraw_availability": can_withdraw,
+            "action_error": action_error,
+            "reload_required": reload_required,
+        }
+    )
+    return context
+
+
+def _render_personal_availability(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+    command_form: AvailabilityCommandForm | None = None,
+    window_formset: BaseAvailabilityWindowFormSet | None = None,
+    withdraw_form: AvailabilityWithdrawForm | None = None,
+    status: int = 200,
+    action_error: str = "",
+    reload_required: bool = False,
+) -> TemplateResponse:
+    """Render one authorized personal Availability workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming personal-surface request.
+    actor : Account
+        Authenticated person who owns the projection.
+    organization_slug : str
+        Organization locator from the route.
+    series_slug : str
+        Convention-series locator from the route.
+    edition_slug : str
+        Exact event-edition locator from the route.
+    command_form : AvailabilityCommandForm | None, default=None
+        Optional bound replacement command form.
+    window_formset : BaseAvailabilityWindowFormSet | None, default=None
+        Optional bound repeatable-period formset.
+    withdraw_form : AvailabilityWithdrawForm | None, default=None
+        Optional bound withdrawal form.
+    status : int, default=200
+        HTTP status for the rendered response.
+    action_error : str, default=""
+        Safe action-local failure guidance.
+    reload_required : bool, default=False
+        Whether stale state requires a fresh page load.
+
+    Returns
+    -------
+    TemplateResponse
+        Private owner workspace response.
+    """
+    page = _personal_availability_page(
+        actor=actor,
+        organization_slug=organization_slug,
+        series_slug=series_slug,
+        edition_slug=edition_slug,
+        require_edit=False,
+    )
+    return TemplateResponse(
+        request,
+        "workforce/my_availability.html",
+        _personal_availability_context(
+            request,
+            page=page,
+            command_form=command_form,
+            window_formset=window_formset,
+            withdraw_form=withdraw_form,
+            action_error=action_error,
+            reload_required=reload_required,
+        ),
+        status=status,
+    )
+
+
+def _availability_post_keys_are_supported(request: HttpRequest) -> bool:
+    """Return whether the complete formset POST uses only closed fields.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming replacement request.
+
+    Returns
+    -------
+    bool
+        ``True`` only when every key and multiplicity is supported.
+    """
+    command_fields = frozenset(
+        {"csrfmiddlewaretoken", "expected_version", "retry_key", "status"}
+    )
+    for field_name in request.POST:
+        if (
+            field_name not in command_fields
+            and field_name not in _AVAILABILITY_MANAGEMENT_FIELDS
+            and _AVAILABILITY_WINDOW_FIELD.fullmatch(field_name) is None
+        ):
+            return False
+        if len(request.POST.getlist(field_name)) != 1:
+            return False
+    return True
+
+
+def _bound_availability_forms(
+    request: HttpRequest,
+    *,
+    page: _PersonalAvailabilityPage,
+) -> tuple[AvailabilityCommandForm, BaseAvailabilityWindowFormSet]:
+    """Bind strict command fields separately from repeatable period fields.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming replacement request.
+    page : _PersonalAvailabilityPage
+        Authorized edition context used for horizon and version binding.
+
+    Returns
+    -------
+    tuple[AvailabilityCommandForm, BaseAvailabilityWindowFormSet]
+        Bound command and complete-period forms.
+    """
+    command_form = AvailabilityCommandForm(
+        {
+            "expected_version": request.POST.get("expected_version", ""),
+            "retry_key": request.POST.get("retry_key", ""),
+            "status": request.POST.get("status", ""),
+        },
+        expected_version=page.projection.version,
+    )
+    window_formset = AvailabilityWindowFormSet(
+        request.POST,
+        prefix="windows",
+        starts_on=page.edition.starts_on,
+        ends_on=page.edition.ends_on,
+        time_zone=page.edition.time_zone,
+    )
+    return command_form, window_formset
+
+
+def _availability_conflict_message(error: AvailabilityCommandError) -> str:
+    """Map current-state conflicts to owner-facing recovery guidance.
+
+    Parameters
+    ----------
+    error : AvailabilityCommandError
+        Current-state conflict from the canonical command boundary.
+
+    Returns
+    -------
+    str
+        Safe concise recovery guidance.
+    """
+    if isinstance(error, AvailabilityVersionConflictError):
+        return "Your availability changed after this page opened. Reload and try again."
+    if isinstance(error, AvailabilityRetryConflictError):
+        return (
+            "This retry key was already used for different availability. "
+            "Reload and try again."
+        )
+    if isinstance(error, AvailabilityLifecycleConflictError):
+        return "Availability is read-only in the current organization or edition state."
+    if isinstance(error, AvailabilityRelationshipRequiredError):
+        return "An open proposed or active Position is required to change availability."
+    return "This action no longer matches your current availability state."
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_GET
+def my_workforce_availability(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Render one person's private exact-edition Availability workspace.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated personal-surface request.
+    organization_slug : str
+        Organization locator from the route.
+    series_slug : str
+        Convention-series locator from the route.
+    edition_slug : str
+        Exact event-edition locator from the route.
+
+    Returns
+    -------
+    HttpResponse
+        Private workspace or bounded safe failure response.
+
+    Raises
+    ------
+    PermissionDenied
+        If no active person or exact self authority is available.
+    """
+    actor = _account(request)
+    if actor is None or not actor.is_active:
+        raise PermissionDenied
+    if request.GET:
+        return _personal_availability_state_response(
+            request,
+            status=400,
+            message="This page does not accept filters or other URL parameters.",
+        )
+    try:
+        return _render_personal_availability(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+    except AvailabilityAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to load personal Workforce availability")
+        return _personal_availability_state_response(
+            request,
+            status=503,
+            message="Your availability is temporarily unavailable. Please try again.",
+        )
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def save_my_workforce_availability(  # noqa: PLR0911, PLR0912
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Replace the signed-in person's complete current Availability plan.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated replacement request.
+    organization_slug : str
+        Organization locator from the route.
+    series_slug : str
+        Convention-series locator from the route.
+    edition_slug : str
+        Exact event-edition locator from the route.
+
+    Returns
+    -------
+    HttpResponse
+        Redirect after success or private validation, conflict, or failure state.
+
+    Raises
+    ------
+    PermissionDenied
+        If person, scope, relationship, or self authority is unavailable.
+    """
+    actor = _account(request)
+    if actor is None or not actor.is_active:
+        raise PermissionDenied
+    try:
+        page = _personal_availability_page(
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            require_edit=True,
+        )
+    except AvailabilityAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except AvailabilityRelationshipRequiredError as error:
+        raise PermissionDenied from error
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to authorize personal availability replacement")
+        return _personal_availability_state_response(
+            request,
+            status=503,
+            message="Your availability is temporarily unavailable. Please try again.",
+        )
+    if request.GET:
+        return _personal_availability_state_response(
+            request,
+            status=400,
+            message="This action does not accept URL parameters.",
+        )
+    command_form, window_formset = _bound_availability_forms(request, page=page)
+    supported = _availability_post_keys_are_supported(request)
+    if not supported:
+        command_form.add_error(None, "Remove unsupported or repeated form fields.")
+    if not command_form.is_valid() or not window_formset.is_valid() or not supported:
+        return TemplateResponse(
+            request,
+            "workforce/my_availability.html",
+            _personal_availability_context(
+                request,
+                page=page,
+                command_form=command_form,
+                window_formset=window_formset,
+                action_error="Review the highlighted periods. Nothing was changed.",
+            ),
+            status=400,
+        )
+    try:
+        result = save_person_availability(
+            actor=actor,
+            organization_id=page.organization.id,
+            edition_id=page.edition.id,
+            expected_version=int(command_form.cleaned_data["expected_version"]),
+            status=str(command_form.cleaned_data["status"]),
+            windows=window_formset.windows,
+            retry_key=cast("UUID", command_form.cleaned_data["retry_key"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except ValidationError as error:
+        if hasattr(error, "error_dict"):
+            for field_name, field_errors in error.error_dict.items():
+                target = field_name if field_name in command_form.fields else None
+                for field_error in field_errors:
+                    command_form.add_error(target, field_error)
+        else:
+            command_form.add_error(None, "Review the submitted availability.")
+        return TemplateResponse(
+            request,
+            "workforce/my_availability.html",
+            _personal_availability_context(
+                request,
+                page=page,
+                command_form=command_form,
+                window_formset=window_formset,
+                action_error="Review the highlighted periods. Nothing was changed.",
+            ),
+            status=400,
+        )
+    except AvailabilityAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except (
+        AvailabilityVersionConflictError,
+        AvailabilityRetryConflictError,
+        AvailabilityLifecycleConflictError,
+        AvailabilityRelationshipRequiredError,
+        AvailabilityStateConflictError,
+    ) as error:
+        return _render_personal_availability(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            command_form=command_form,
+            window_formset=window_formset,
+            status=409,
+            action_error=_availability_conflict_message(error),
+            reload_required=True,
+        )
+    except (DatabaseError, AvailabilityCommandError, RuntimeError):
+        logger.exception("Unable to save personal Workforce availability")
+        return _personal_availability_state_response(
+            request,
+            status=503,
+            message="Your availability was not changed. Please try again.",
+        )
+    messages.success(
+        request,
+        (
+            "Your private availability draft was saved."
+            if result.status == PersonAvailabilityPlan.Status.DRAFT
+            else "Your current availability was shared with organizers."
+        ),
+    )
+    return redirect(
+        reverse(
+            "my-workforce-availability",
+            kwargs={
+                "organization_slug": page.organization.slug,
+                "series_slug": page.series.slug,
+                "edition_slug": page.edition.slug,
+            },
+        )
+    )
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def withdraw_my_workforce_availability(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Withdraw a plan and immediately delete its current exact periods.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated withdrawal request.
+    organization_slug : str
+        Organization locator from the route.
+    series_slug : str
+        Convention-series locator from the route.
+    edition_slug : str
+        Exact event-edition locator from the route.
+
+    Returns
+    -------
+    HttpResponse
+        Redirect after success or private validation, conflict, or failure state.
+
+    Raises
+    ------
+    PermissionDenied
+        If person, scope, relationship, or self authority is unavailable.
+    """
+    actor = _account(request)
+    if actor is None or not actor.is_active:
+        raise PermissionDenied
+    try:
+        page = _personal_availability_page(
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            require_edit=False,
+        )
+    except AvailabilityAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to authorize personal availability withdrawal")
+        return _personal_availability_state_response(
+            request,
+            status=503,
+            message="Your availability is temporarily unavailable. Please try again.",
+        )
+    form = AvailabilityWithdrawForm(
+        request.POST,
+        expected_version=max(1, page.projection.version),
+    )
+    if request.GET or not form.is_valid():
+        return TemplateResponse(
+            request,
+            "workforce/my_availability.html",
+            _personal_availability_context(
+                request,
+                page=page,
+                withdraw_form=form,
+                action_error="Confirm the withdrawal. Nothing was changed.",
+            ),
+            status=400,
+        )
+    try:
+        withdraw_person_availability(
+            actor=actor,
+            organization_id=page.organization.id,
+            edition_id=page.edition.id,
+            expected_version=int(form.cleaned_data["expected_version"]),
+            retry_key=cast("UUID", form.cleaned_data["retry_key"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except AvailabilityAuthorizationDeniedError as error:
+        raise PermissionDenied from error
+    except (
+        AvailabilityVersionConflictError,
+        AvailabilityRetryConflictError,
+        AvailabilityLifecycleConflictError,
+        AvailabilityStateConflictError,
+    ) as error:
+        return _render_personal_availability(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            withdraw_form=form,
+            status=409,
+            action_error=_availability_conflict_message(error),
+            reload_required=True,
+        )
+    except (DatabaseError, AvailabilityCommandError, RuntimeError, ValidationError):
+        logger.exception("Unable to withdraw personal Workforce availability")
+        return _personal_availability_state_response(
+            request,
+            status=503,
+            message="Your availability was not withdrawn. Please try again.",
+        )
+    messages.success(request, "Your exact availability periods were removed.")
+    return redirect(
+        reverse(
+            "my-workforce-availability",
+            kwargs={
+                "organization_slug": page.organization.slug,
+                "series_slug": page.series.slug,
+                "edition_slug": page.edition.slug,
+            },
+        )
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _OrganizerAvailabilityPage:
+    """One authorized organizer Availability projection and policy decision."""
+
+    organization: Organization
+    series: ConventionSeries
+    edition: EventEdition
+    decision: PolicyDecision
+    overview: OrganizerAvailabilityOverview
+
+
+def _authorize_organizer_availability(
+    *,
+    actor: Account,
+    organization_id: UUID,
+    edition_id: UUID,
+    at: datetime,
+) -> PolicyDecision:
+    """Require the complete organizer Availability field projection.
+
+    Parameters
+    ----------
+    actor : Account
+        Authenticated organizer.
+    organization_id : UUID
+        Exact owning organization.
+    edition_id : UUID
+        Exact event edition.
+    at : datetime
+        Policy evaluation instant.
+
+    Returns
+    -------
+    PolicyDecision
+        Allowed decision with the complete field ceiling.
+
+    Raises
+    ------
+    PermissionDenied
+        If capability or any required projection field is absent.
+    """
+    decision = decide(
+        principal=actor,
+        capability_code="workforce.view_availability",
+        resource=resolve_edition_target(
+            organization_id=organization_id,
+            edition_id=edition_id,
+        ),
+        requested_fields=AVAILABILITY_ORGANIZER_REQUIRED_FIELDS,
+        at=at,
+    )
+    if not decision.allowed:
+        raise PermissionDenied
+    try:
+        require_complete_projection(
+            required_fields=AVAILABILITY_ORGANIZER_REQUIRED_FIELDS,
+            permitted_fields=decision.fields,
+        )
+    except FieldProjectionDeniedError as error:
+        raise PermissionDenied from error
+    return decision
+
+
+def _load_organizer_availability_page(
+    *,
+    request: HttpRequest,
+    actor: Account,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> _OrganizerAvailabilityPage:
+    """Load one coherent minimized projection, reauthorize, then audit it.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming organizer request carrying route and correlation context.
+    actor : Account
+        Authenticated organizer.
+    organization_slug : str
+        Organization locator from the route.
+    series_slug : str
+        Convention-series locator from the route.
+    edition_slug : str
+        Exact event-edition locator from the route.
+
+    Returns
+    -------
+    _OrganizerAvailabilityPage
+        Audited exact-edition organizer projection and decision.
+    """
+    with repeatable_read_only_snapshot():
+        organization, series, edition = authorized_admin_edition_for_route(
+            request=request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            capability_code="workforce.view_availability",
+        )
+        _authorize_organizer_availability(
+            actor=actor,
+            organization_id=organization.id,
+            edition_id=edition.id,
+            at=timezone_now(),
+        )
+        overview = load_organizer_availability_overview(edition=edition)
+    response_authorized_at = timezone_now()
+    decision = _authorize_organizer_availability(
+        actor=actor,
+        organization_id=organization.id,
+        edition_id=edition.id,
+        at=response_authorized_at,
+    )
+    route_name = (
+        request.resolver_match.url_name
+        if request.resolver_match is not None and request.resolver_match.url_name
+        else "organization-workforce-availability"
+    )
+    append_availability_read_audit(
+        actor=actor,
+        organization_id=organization.id,
+        edition_id=edition.id,
+        decision=decision,
+        correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+        route_name=route_name,
+        http_method=cast("str", request.method),
+        source_channel="web",
+        occurred_at=response_authorized_at,
+    )
+    return _OrganizerAvailabilityPage(
+        organization=organization,
+        series=series,
+        edition=edition,
+        decision=decision,
+        overview=overview,
+    )
+
+
+def _organizer_availability_context(
+    request: HttpRequest,
+    *,
+    actor: Account,
+    page: _OrganizerAvailabilityPage,
+) -> dict[str, object]:
+    """Compose the shared management shell without broadening disclosure.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming organizer request.
+    actor : Account
+        Authenticated organizer.
+    page : _OrganizerAvailabilityPage
+        Audited exact-edition projection.
+
+    Returns
+    -------
+    dict[str, object]
+        Unified administration-shell template context.
+    """
+    edition_target = resolve_edition_target(
+        organization_id=page.organization.id,
+        edition_id=page.edition.id,
+    )
+    organization_target = _required_organization_target(
+        organization_id=page.organization.id
+    )
+    context = admin.site.each_context(request)
+    context.update(
+        {
+            "title": f"Availability — {page.edition.name}",
+            "has_permission": True,
+            "baseline_admin_parent_template": "admin/base_site.html",
+            "baseline_use_admin_shell": True,
+            "baseline_page_id": "organization-workforce-availability",
+            "baseline_page_class": "",
+            "baseline_can_view_organization": decide(
+                principal=actor,
+                capability_code="organizations.view_basic",
+                resource=organization_target,
+            ).allowed,
+            "baseline_can_manage_representation": False,
+            "baseline_can_create_series": False,
+            "baseline_can_create_edition": False,
+            "baseline_can_view_edition": decide(
+                principal=actor,
+                capability_code="events.view_basic",
+                resource=edition_target,
+            ).allowed,
+            "baseline_can_view_structure": decide(
+                principal=actor,
+                capability_code="workforce.view_structure",
+                resource=edition_target,
+            ).allowed,
+            "baseline_can_manage_structure": False,
+            "baseline_can_manage_registration": False,
+            "baseline_structure_navigation_current": True,
+            "organization": page.organization,
+            "convention_series": page.series,
+            "edition": page.edition,
+            "availability_overview": page.overview,
+            "availability_access_label": _structure_access_label(page.decision),
+        }
+    )
+    return context
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_GET
+def organization_workforce_availability(
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Render shared current availability for open-assignment people.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated organizer request.
+    organization_slug : str
+        Organization locator from the route.
+    series_slug : str
+        Convention-series locator from the route.
+    edition_slug : str
+        Exact event-edition locator from the route.
+
+    Returns
+    -------
+    HttpResponse
+        Audited organizer projection or bounded safe failure response.
+    """
+    actor = _active_admin_account(request)
+    if request.GET:
+        return _organization_structure_bad_request(request)
+    try:
+        page = _load_organizer_availability_page(
+            request=request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+        context = _organizer_availability_context(request, actor=actor, page=page)
+    except (AvailabilityReadLimitExceededError, AvailabilityProjectionIntegrityError):
+        logger.exception("Unable to produce a complete organizer Availability view")
+        return _organization_structure_dependency_failure(request)
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to load organizer Workforce availability")
+        return _organization_structure_dependency_failure(request)
+    return TemplateResponse(
+        request,
+        "workforce/availability_management.html",
+        context,
+    )
+
+
+def _my_workforce_state_response(
+    request: HttpRequest,
+    *,
+    status: int,
+    message: str,
+) -> TemplateResponse:
+    """Render a personal, name-free unavailable or invalid-request state.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming personal-surface request.
+    status : int
+        HTTP status for the bounded state.
+    message : str
+        Safe explanation shown without assignment labels.
+
+    Returns
+    -------
+    TemplateResponse
+        Private personal Workforce state response.
+    """
+    context = admin.site.each_context(request)
+    context.update(
+        {
+            "title": "My Workforce",
+            "has_permission": True,
+            "maru_personal_surface": True,
+            "assignments": (),
+            "availability_scopes": (),
+            "workforce_state_message": message,
+        }
+    )
+    return TemplateResponse(
+        request,
+        "workforce/my_assignments.html",
+        context,
+        status=status,
+    )
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_GET
+def my_workforce_assignments(request: HttpRequest) -> HttpResponse:
+    """Render the signed-in person's reason-minimized assignment history.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Incoming authenticated personal-surface request.
+
+    Returns
+    -------
+    HttpResponse
+        Private personal assignments or a bounded invalid/unavailable state.
+
+    Raises
+    ------
+    PermissionDenied
+        If no active account backs the authenticated session.
+    """
+    actor = _account(request)
+    if actor is None or not actor.is_active:
+        raise PermissionDenied
+    if request.GET:
+        return _my_workforce_state_response(
+            request,
+            status=400,
+            message="This page does not accept filters or other URL parameters.",
+        )
+    try:
+        assignment_scope_rows = tuple(
+            PositionAssignment.objects.filter(account=actor)
+            .order_by("organization_id", "edition_id")
+            .values_list("organization_id", "edition_id")
+            .distinct()[: MAX_PERSONAL_ASSIGNMENT_SCOPES + 1]
+        )
+        plan_scope_rows = tuple(
+            PersonAvailabilityPlan.objects.filter(account=actor)
+            .order_by("organization_id", "edition_id")
+            .values_list("organization_id", "edition_id")
+            .distinct()[: MAX_PERSONAL_ASSIGNMENT_SCOPES + 1]
+        )
+        if (
+            len(assignment_scope_rows) > MAX_PERSONAL_ASSIGNMENT_SCOPES
+            or len(plan_scope_rows) > MAX_PERSONAL_ASSIGNMENT_SCOPES
+        ):
+            return _my_workforce_state_response(
+                request,
+                status=503,
+                message=(
+                    "Your Workforce information is temporarily unavailable. "
+                    "Please try again shortly."
+                ),
+            )
+        scope_rows = tuple(sorted(set(assignment_scope_rows) | set(plan_scope_rows)))
+        if len(scope_rows) > MAX_PERSONAL_ASSIGNMENT_SCOPES:
+            return _my_workforce_state_response(
+                request,
+                status=503,
+                message=(
+                    "Your Workforce information is temporarily unavailable. "
+                    "Please try again shortly."
+                ),
+            )
+        permitted_scopes = set()
+        for organization_id, edition_id in scope_rows:
+            target = resolve_self_target(
+                principal=actor,
+                organization_id=organization_id,
+                edition_id=edition_id,
+            )
+            decision = decide(
+                principal=actor,
+                capability_code="workforce.view_self",
+                resource=target,
+                requested_fields=frozenset({"assignments", "availability"}),
+            )
+            if decision.allowed and decision.fields == frozenset(
+                {"assignments", "availability"}
+            ):
+                permitted_scopes.add((organization_id, edition_id))
+        assignments = my_assignment_items(
+            account=actor,
+            permitted_scopes=frozenset(permitted_scopes),
+        )
+        availability_scopes = my_availability_scope_items(
+            account=actor,
+            permitted_scopes=frozenset(permitted_scopes),
+        )
+    except (
+        AssignmentReadLimitExceededError,
+        AvailabilityReadLimitExceededError,
+        DatabaseError,
+        RuntimeError,
+    ):
+        logger.exception("Unable to load personal Workforce assignments")
+        return _my_workforce_state_response(
+            request,
+            status=503,
+            message=(
+                "Your Workforce information is temporarily unavailable. "
+                "Please try again shortly."
+            ),
+        )
+    context = admin.site.each_context(request)
+    context.update(
+        {
+            "title": "My Workforce",
+            "has_permission": True,
+            "maru_personal_surface": True,
+            "assignments": assignments,
+            "availability_scopes": availability_scopes,
+        }
+    )
+    return TemplateResponse(request, "workforce/my_assignments.html", context)
 
 
 def volunteer_opportunities(

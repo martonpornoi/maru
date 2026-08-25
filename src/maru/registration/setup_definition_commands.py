@@ -1,4 +1,4 @@
-"""Governed Page 10 commands for registration-definition records.
+"""Governed commands for Registration definition records.
 
 The browser and API adapters are intentionally thin.  Every mutation in this
 module resolves the exact edition authority before parsing caller-controlled

@@ -1,0 +1,59 @@
+{% extends "workforce/assignment_action_base.html" %}
+
+{% block assignment_action_title %}Propose assignment · {{ position.title }}{% endblock %}
+{% block assignment_action_breadcrumb %}Propose for {{ position.title }}{% endblock %}
+{% block assignment_action_heading %}Propose a person for {{ position.title }}{% endblock %}
+{% block assignment_action_intro %}Reserve approved headcount for a known person and record the intended dates. This proposal does not grant a role, access, or active participation.{% endblock %}
+{% block assignment_action_meta %}<span>Open records: <strong>{{ open_assignment_count }} of {{ position.headcount }}</strong></span>{% endblock %}
+{% block assignment_reload_link %}<a href="{% url 'organization-workforce-assignment-proposal' organization.slug convention_series.slug edition.slug position.id %}">Reload candidates and readiness</a>{% endblock %}
+
+{% block assignment_action_content %}
+  <section class="baseline-panel" aria-labelledby="assignment-position-summary-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">Approved responsibility</p><h2 id="assignment-position-summary-title">{{ position.title }}</h2></div><span class="baseline-count">{{ position.get_status_display }}</span></div>
+    <dl class="workforce-position-summary">
+      <div><dt>Department</dt><dd>{{ position.department.name }}</dd></div>
+      <div><dt>Approved headcount</dt><dd>{{ projected_position.holders|length }} active; {{ open_assignment_count }} active or proposed</dd></div>
+      <div><dt>Role meaning</dt><dd>{{ position.role_bundle.name }} v{{ position.role_bundle.version }}</dd></div>
+      <div><dt>Participation labels</dt><dd>{{ position.capacity_codes|join:", " }}</dd></div>
+    </dl>
+  </section>
+
+  {% if proposal_available %}
+    {% if form.non_field_errors %}<div class="baseline-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    <form method="post" action="{% url 'propose-organization-workforce-assignment' organization.slug convention_series.slug edition.slug position.id %}" class="baseline-form workforce-structure-form" novalidate>
+      {% csrf_token %}
+      {{ form.retry_key }}
+      {% if form.retry_key.errors %}<div class="baseline-errors" role="alert"><p>Reload this page before submitting the proposal.</p>{{ form.retry_key.errors }}</div>{% endif %}
+      <section class="baseline-panel baseline-form-panel" aria-labelledby="assignment-proposal-form-title">
+        <div class="baseline-section-heading"><p class="baseline-kicker">Step 1 of 2</p><h2 id="assignment-proposal-form-title">Proposal details</h2><p>A different eligible controller must later approve or reject this exact proposal.</p></div>
+        {% include "core/_baseline_form_field.html" with field=form.account_id %}
+        <div class="workforce-form-grid">
+          {% include "core/_baseline_form_field.html" with field=form.effective_from %}
+          {% include "core/_baseline_form_field.html" with field=form.expires_at %}
+        </div>
+        {% include "core/_baseline_form_field.html" with field=form.reason %}
+      </section>
+      <div class="baseline-form-actions workforce-structure-primary-actions"><button type="submit"{% if reload_required %} disabled aria-disabled="true"{% endif %}>Record proposal</button></div>
+    </form>
+  {% else %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      {% if position.status == "closed" %}<h2>This Position is closed</h2><p>Closed Positions cannot receive assignment proposals.</p>
+      {% elif open_assignment_count >= position.headcount %}<h2>Approved headcount is reserved</h2><p>End or reject an open assignment, or govern a headcount change from Position management.</p>
+      {% elif not candidates %}<h2>No known person is available</h2><p>A person must first have an active organization relationship, edition participation, Position application, onboarding request, or retained Workforce history. Maru does not expose a global account search here.</p>
+      {% else %}<h2>Proposals are read-only</h2><p>New assignments are available from Draft through Live.</p>{% endif %}
+    </div>
+  {% endif %}
+
+  <section class="baseline-panel" aria-labelledby="candidate-readiness-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">Before you propose</p><h2 id="candidate-readiness-title">Known people and onboarding readiness</h2></div><span class="baseline-count">{{ candidates|length }} available</span></div>
+    {% if candidates %}
+      <ul class="workforce-assignment-candidate-list">
+        {% for candidate in candidates %}
+          <li><div><strong>{{ candidate.display_name }}</strong><span>{{ candidate.known_via|join:", " }}</span></div><span>{% if candidate.readiness.ready %}Ready for approval{% else %}{{ candidate.readiness.approved_count }} of {{ candidate.readiness.requirements|length }} onboarding items approved{% endif %}</span></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="baseline-state"><h3>No selectable people</h3><p>Connect the person to the organization or edition through an owned workflow first.</p></div>
+    {% endif %}
+  </section>
+{% endblock %}

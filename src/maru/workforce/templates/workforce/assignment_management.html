@@ -1,0 +1,139 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'workforce/organization_structure.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}Workforce assignments · {{ edition.name }} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if baseline_can_view_organization %}<a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>{% else %}{{ organization.name }}{% endif %}
+  &rsaquo; {{ convention_series.name }}
+  &rsaquo; {{ edition.name }}
+  &rsaquo; <a href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}">Organization structure</a>
+  &rsaquo; Assignments
+{% endblock %}
+
+{% block baseline_content %}
+  <a class="baseline-back-link" href="{% url 'organization-structure-positions' organization.slug convention_series.slug edition.slug %}">← Position management</a>
+
+  <header class="baseline-page-heading baseline-page-heading--with-action">
+    <div>
+      <p class="baseline-kicker">{{ edition.name }} · Workforce</p>
+      <h1>Workforce assignments</h1>
+      <p class="baseline-intro">
+        Move a known person from a Position proposal through independent
+        approval, active responsibility, and a retained ending—without hiding
+        readiness or authority changes in generic records.
+      </p>
+      <p class="baseline-record-meta">
+        <span>{{ assignments|length }} assignment{{ assignments|length|pluralize }}</span>
+        <span>Edition lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+      </p>
+    </div>
+    <a class="workforce-structure-action workforce-structure-action--secondary" href="{% url 'organization-structure-positions' organization.slug convention_series.slug edition.slug %}">Choose a Position</a>
+  </header>
+
+  <details class="maru-access-summary">
+    <summary>
+      <span class="maru-access-summary__label"><strong>Access</strong><span class="maru-access-summary__scope">{{ assignment_access_label }}</span></span>
+      <span class="maru-access-summary__policy">Private staffing state</span>
+    </summary>
+    <div class="maru-access-summary__body">
+      <p>Reasons and onboarding readiness are restricted organizer information. Assigned people see their own state, dates, and onboarding actions—not administrative rationale.</p>
+    </div>
+  </details>
+
+  {% if not can_issue_assignment_authority %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>Assignment review only</h2>
+      <p>You can inspect staffing records, but proposing or deciding authority also requires the scoped role-management capability.</p>
+    </div>
+  {% elif not assignment_actions_allowed %}
+    <div class="baseline-state baseline-state--warning" role="status">
+      <h2>New assignments are read-only</h2>
+      <p>New proposals and approvals are available from Draft through Live. Rejection and ending remain available while the edition is Closing.</p>
+    </div>
+  {% endif %}
+
+  <section class="baseline-panel" aria-labelledby="assignment-queue-title">
+    <div class="baseline-panel-heading">
+      <div>
+        <p class="baseline-kicker">Current and retained staffing</p>
+        <h2 id="assignment-queue-title">Assignment queue</h2>
+      </div>
+      <span class="baseline-count">Newest decisions on each record</span>
+    </div>
+    {% if assignments %}
+      <ul class="workforce-assignment-list">
+        {% for item in assignments %}
+          <li>
+            <div class="workforce-position-management-heading">
+              <div>
+                <p class="baseline-kicker">{{ item.assignment.position.department.name }}</p>
+                <h3>{{ item.account_label }} · {{ item.assignment.position.title }}</h3>
+              </div>
+              <span class="baseline-count">{{ item.state_label }}</span>
+            </div>
+            <dl class="workforce-position-facts">
+              <div><dt>Intended start</dt><dd>{{ item.assignment.effective_from|date:"SHORT_DATETIME_FORMAT" }}</dd></div>
+              <div><dt>Onboarding</dt><dd>{% if item.readiness.ready %}Ready{% else %}{{ item.readiness.approved_count }} of {{ item.readiness.requirements|length }} approved{% endif %}</dd></div>
+            </dl>
+            {% if item.needs_another_approver %}<p class="workforce-assignment-note">You proposed this. Another eligible controller must decide it.</p>{% endif %}
+            <p class="workforce-structure-node-action"><a href="{% url 'organization-workforce-assignment' organization.slug convention_series.slug edition.slug item.assignment.id %}">Review assignment</a></p>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="baseline-state">
+        <h3>No assignment records yet</h3>
+        <p>Choose a Position below to propose a known person. The proposal reserves headcount but grants no authority.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="baseline-panel" aria-labelledby="assignment-position-title">
+    <div class="baseline-panel-heading">
+      <div><p class="baseline-kicker">Start from responsibility</p><h2 id="assignment-position-title">Positions</h2></div>
+      <span class="baseline-count">{{ positions|length }} total</span>
+    </div>
+    {% if positions %}
+      <ul class="workforce-position-management-list">
+        {% for item in positions %}
+          <li>
+            <div class="workforce-position-management-heading">
+              <div><p class="baseline-kicker">{{ item.department_name }}</p><h3>{{ item.position.title }}</h3></div>
+              <span class="baseline-count">{{ item.position.holders|length }} / {{ item.position.headcount }} active</span>
+            </div>
+            <p>{{ item.position.description }}</p>
+            <div class="workforce-structure-actions">
+              <a class="workforce-structure-action workforce-structure-action--secondary" href="{% url 'organization-structure-position' organization.slug convention_series.slug edition.slug item.position.id %}">Position details</a>
+              {% if can_issue_assignment_authority and assignment_actions_allowed and item.position.status != "closed" %}
+                <a class="workforce-structure-action" href="{% url 'organization-workforce-assignment-proposal' organization.slug convention_series.slug edition.slug item.position.id %}">Propose a person</a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="baseline-state"><h3>Create a Position first</h3><p>Assignments must inherit an approved Position's role meaning and headcount.</p></div>
+    {% endif %}
+  </section>
+
+  <section class="baseline-panel workforce-next-stage" aria-labelledby="workforce-next-stage-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">Journey continuity</p><h2 id="workforce-next-stage-title">What follows an active assignment</h2></div></div>
+    <div class="workforce-stage-grid">
+      <div>
+        <strong>Availability</strong>
+        {% if can_view_availability %}
+          <span>Available now: review current periods deliberately shared by people with open assignments.</span>
+          <a href="{% url 'organization-workforce-availability' organization.slug convention_series.slug edition.slug %}">Review Workforce availability</a>
+        {% else %}
+          <span>A separate audited capability is required to view shared personal planning periods.</span>
+        {% endif %}
+      </div>
+      <div><strong>Shifts</strong><span>Planned after availability: schedule active Position holders into published work.</span></div>
+    </div>
+  </section>
+{% endblock %}

@@ -1,4 +1,4 @@
-"""Server-rendered Page 10 adapters for platform account invitations."""
+"""Server-rendered adapters for platform account invitations."""
 
 from __future__ import annotations
 
@@ -1130,7 +1130,7 @@ def resolve_platform_identity_delivery_as_delivered_view(  # noqa: PLR0911
     invitation_id: UUID,
     delivery_id: UUID,
 ) -> HttpResponse:
-    """Record an externally confirmed provider acceptance through Page 10.
+    """Record an externally confirmed account-invitation delivery.
 
     Parameters
     ----------

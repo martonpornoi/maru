@@ -214,6 +214,9 @@
 }
 
 .workforce-position-management-list,
+.workforce-assignment-list,
+.workforce-assignment-candidate-list,
+.workforce-assignment-readiness-list,
 .workforce-history-list {
   margin: 0;
   padding: 0;
@@ -221,6 +224,7 @@
 }
 
 .workforce-position-management-list > li,
+.workforce-assignment-list > li,
 .workforce-history-list > li {
   padding: 1.25rem 1.5rem;
   border-top: 1px solid #e5e0d7;
@@ -290,6 +294,252 @@
   gap: 1rem;
 }
 
+.workforce-assignment-note {
+  padding-left: 0.75rem;
+  border-left: 0.25rem solid #b9822e;
+  color: #4f5c70;
+}
+
+.workforce-assignment-candidate-list,
+.workforce-assignment-readiness-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workforce-assignment-candidate-list > li,
+.workforce-assignment-readiness-list > li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e0d7;
+}
+
+.workforce-assignment-candidate-list > li > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.workforce-assignment-candidate-list span,
+.workforce-assignment-readiness-list span {
+  color: #68758a;
+}
+
+.workforce-assignment-decision-grid,
+.workforce-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.workforce-assignment-decision-grid > form,
+.workforce-stage-grid > div {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid #e5e0d7;
+  border-radius: 0.25rem;
+  background: #fbfaf7;
+}
+
+.workforce-assignment-decision-grid h3 {
+  margin-top: 0;
+}
+
+.workforce-stage-grid {
+  padding: 1.25rem 1.5rem;
+}
+
+.workforce-stage-grid > div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.workforce-stage-grid span {
+  color: #68758a;
+}
+
+.workforce-availability-page {
+  max-width: 78rem;
+}
+
+.workforce-availability-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.workforce-availability-heading > div {
+  min-width: 0;
+  max-width: 70ch;
+}
+
+.workforce-availability-state {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0.15rem 0.7rem;
+  border: 1px solid #c8d2df;
+  border-radius: 999px;
+  background: #f4f7fa;
+  color: #344257;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.workforce-availability-state--shared {
+  border-color: #7dbd98;
+  background: #eef8f1;
+  color: #185d35;
+}
+
+.workforce-availability-state--unavailable,
+.workforce-availability-state--withdrawn {
+  border-color: #c8a772;
+  background: #fff8e9;
+  color: #6a4710;
+}
+
+.workforce-availability-state--draft,
+.workforce-availability-state--not_shared,
+.workforce-availability-state--not_started {
+  border-color: #a9b7ca;
+  background: #f4f7fa;
+  color: #344257;
+}
+
+.workforce-availability-explainer,
+.workforce-availability-editor,
+.workforce-availability-withdraw {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+}
+
+.workforce-availability-periods {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.workforce-availability-period {
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #d9dfe7;
+  border-radius: 0.35rem;
+  background: #fbfcfe;
+}
+
+.workforce-availability-period legend {
+  padding: 0 0.35rem;
+  color: #071b3a;
+  font-weight: 700;
+}
+
+.workforce-availability-period-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.workforce-availability-period-grid input,
+.workforce-availability-period-grid select {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.workforce-availability-remove-control {
+  margin-top: 0.75rem;
+}
+
+.workforce-availability-period--removed {
+  border-style: dashed;
+  opacity: 0.72;
+}
+
+.workforce-availability-primary-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.workforce-secondary-button {
+  border-color: #6c7787 !important;
+  background: #fff !important;
+  color: #28374d !important;
+}
+
+.workforce-availability-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.workforce-availability-summary > div {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #e5e0d7;
+  border-radius: 0.25rem;
+  background: #fbfaf7;
+}
+
+.workforce-availability-summary dt {
+  color: #68758a;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.workforce-availability-summary dd {
+  margin: 0.3rem 0 0;
+  color: #071b3a;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.workforce-availability-people,
+.workforce-availability-position-list,
+.workforce-availability-window-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workforce-availability-people > li {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e0d7;
+}
+
+.workforce-availability-position-list,
+.workforce-availability-window-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.workforce-availability-position-list > li,
+.workforce-availability-window-list > li {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #e5e0d7;
+  border-radius: 0.25rem;
+  background: #fbfaf7;
+}
+
+.workforce-availability-position-list span,
+.workforce-availability-window-list span {
+  color: #68758a;
+}
+
 @media (max-width: 52rem) {
   .workforce-structure-actions {
     align-items: stretch;
@@ -302,6 +552,17 @@
   }
 
   .workforce-structure-record-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workforce-assignment-candidate-list > li,
+  .workforce-assignment-readiness-list > li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .workforce-assignment-decision-grid,
+  .workforce-stage-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -340,7 +601,22 @@
 
   .workforce-position-facts,
   .workforce-position-summary,
-  .workforce-form-grid {
+  .workforce-form-grid,
+  .workforce-availability-period-grid,
+  .workforce-availability-summary {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workforce-availability-heading {
+    flex-direction: column;
+  }
+
+  .workforce-availability-primary-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workforce-availability-primary-actions button {
+    width: 100%;
   }
 }

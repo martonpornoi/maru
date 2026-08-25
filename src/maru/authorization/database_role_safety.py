@@ -75,14 +75,17 @@ RUNTIME_DATABASE_SELECT_ONLY_RELATIONS: Final[tuple[str, ...]] = (
     "public.identity_platforminvitationretentionpolicycontrol",
 )
 
-# Page 9 structure evidence is append-only at runtime.  The separately
-# credentialed migration/cutover owner retains recovery authority. Page 10's
+# Organization structure evidence is append-only at runtime. The separately
+# credentialed migration/cutover owner retains recovery authority. Registration
+# setup and account onboarding's
 # transitions, command receipts, and reconciliation receipts use the same
 # profile. Delivery attempt/late-outcome provider references and current
 # retention assessments have narrowly trigger-guarded v9 updates and become
 # terminal when the safe result is disposed.
 RUNTIME_DATABASE_SELECT_INSERT_RELATIONS: Final[tuple[str, ...]] = (
     "public.workforce_editionstructurecommandreceipt",
+    "public.workforce_positionassignmentcommandreceipt",
+    "public.workforce_personavailabilitycommandreceipt",
     "public.registration_registrationprofileextensionvaluerevision",
     "public.registration_registrationprofileextensionvaluecommandreceipt",
     "public.applications_applicationfilereceipt",
@@ -128,19 +131,21 @@ RUNTIME_DATABASE_SELECT_INSERT_RELATIONS: Final[tuple[str, ...]] = (
     "public.logistics_logisticsdiscrepancy",
 )
 
-# Page 10 seeds its singleton account-inventory control in the migration. The
+# Account onboarding seeds its singleton account-inventory control in migration. The
 # runtime may only read and advance it; INSERT and DELETE remain owner-only.
 RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
     "public.identity_platformaccountinventorycontrol",
 )
 
-# The Page 9 optimistic-concurrency aggregate, Page 10 invitation/delivery
+# The Organization structure aggregate, account invitation/delivery
 # aggregates, and retained Applications/Charity/Catalog/Venue aggregates may
 # be created and advanced, but runtime commands never delete them.
 # IdentityChallenge is shared with recovery and verification; every current
 # writer creates or advances it and its retention remains controlled.
 RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
     "public.workforce_editionstructurecontrol",
+    "public.workforce_positionassignment",
+    "public.workforce_personavailabilityplan",
     "public.registration_registrationprofileextensionvaluecontrol",
     "public.applications_applicationdefinition",
     "public.applications_applicationsubmission",
@@ -180,6 +185,14 @@ RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS: Final[tuple[str, ...]] = (
     "public.logistics_logisticscurrentstate",
     "public.logistics_logisticseditioncontrol",
     "public.logistics_offlinescanbatch",
+)
+
+# Current Availability periods are full-replacement children. Runtime commands
+# may insert a new set and delete the prior set, but never update a period in
+# place; exact command evidence and deferred aggregate triggers validate the
+# final set at commit.
+RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS: Final[tuple[str, ...]] = (
+    "public.workforce_personavailabilitywindow",
 )
 
 _RUNTIME_DATABASE_ROLE_RESULT_FIELD_COUNT: Final = 25
@@ -295,6 +308,15 @@ required_limited_relation(
         TRUE,
         TRUE,
         FALSE,
+        TRUE
+      FROM pg_catalog.unnest(%s::text[]) AS required(identity)
+    UNION ALL
+    SELECT
+        required.identity,
+        pg_catalog.to_regclass(required.identity),
+        TRUE,
+        FALSE,
+        TRUE,
         TRUE
       FROM pg_catalog.unnest(%s::text[]) AS required(identity)
 ),
@@ -1024,6 +1046,7 @@ def probe_runtime_database_role_safety(
                 list(RUNTIME_DATABASE_SELECT_INSERT_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
                 list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
+                list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
                 list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2),
             ],
         )

@@ -10175,6 +10175,622 @@ paths:
               schema:
                 $ref: '#/components/schemas/VenueCommandResult'
           description: ''
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/assignments/{assignment_id}/approve:
+    post:
+      operationId: workforce_approve_position_assignment
+      description: |-
+        Approve a proposal after fresh authentication.
+
+        Parameters
+        ----------
+        request : Request
+            Incoming authenticated approval request.
+        organization_id : UUID
+            Organization identifier from the route.
+        edition_id : UUID
+            Exact event edition identifier from the route.
+        assignment_id : UUID
+            Proposed assignment identifier.
+
+        Returns
+        -------
+        Response
+            Minimized activated assignment result.
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        description: A canonical lower-case hyphenated UUID. Repeating the same request
+          with the same key returns HTTP 200 and the original minimized result.
+        required: true
+      - in: path
+        name: assignment_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceAssignmentDecision'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceAssignmentMutationResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The closed decision request or idempotency key is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: Fresh authentication or required scoped authority is unavailable.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The exact assignment is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The decision conflicts with assignment state, readiness, or
+            headcount.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical command dependency is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/assignments/{assignment_id}/end:
+    post:
+      operationId: workforce_end_position_assignment
+      description: |-
+        End responsibility and authority after fresh authentication.
+
+        Parameters
+        ----------
+        request : Request
+            Incoming authenticated ending request.
+        organization_id : UUID
+            Organization identifier from the route.
+        edition_id : UUID
+            Exact event edition identifier from the route.
+        assignment_id : UUID
+            Active assignment identifier.
+
+        Returns
+        -------
+        Response
+            Minimized ended assignment result.
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        description: A canonical lower-case hyphenated UUID. Repeating the same request
+          with the same key returns HTTP 200 and the original minimized result.
+        required: true
+      - in: path
+        name: assignment_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceAssignmentDecision'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceAssignmentMutationResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The closed decision request or idempotency key is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: Fresh authentication or required scoped authority is unavailable.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The exact assignment is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The decision conflicts with assignment state, readiness, or
+            headcount.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical command dependency is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/assignments/{assignment_id}/reject:
+    post:
+      operationId: workforce_reject_position_assignment
+      description: |-
+        Reject a proposal after fresh authentication.
+
+        Parameters
+        ----------
+        request : Request
+            Incoming authenticated rejection request.
+        organization_id : UUID
+            Organization identifier from the route.
+        edition_id : UUID
+            Exact event edition identifier from the route.
+        assignment_id : UUID
+            Proposed assignment identifier.
+
+        Returns
+        -------
+        Response
+            Minimized rejected assignment result.
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        description: A canonical lower-case hyphenated UUID. Repeating the same request
+          with the same key returns HTTP 200 and the original minimized result.
+        required: true
+      - in: path
+        name: assignment_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceAssignmentDecision'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceAssignmentMutationResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The closed decision request or idempotency key is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: Fresh authentication or required scoped authority is unavailable.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The exact assignment is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The decision conflicts with assignment state, readiness, or
+            headcount.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical command dependency is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/availability:
+    get:
+      operationId: workforce_retrieve_availability
+      description: |-
+        Return current owner-shared planning consequences and periods.
+
+        Parameters
+        ----------
+        request : Request
+            Authenticated organizer request.
+        organization_id : UUID
+            Organization identifier from the route.
+        edition_id : UUID
+            Exact event edition identifier from the route.
+
+        Returns
+        -------
+        Response
+            Audited minimized organizer Availability projection.
+
+        Raises
+        ------
+        PermissionDenied
+            If the exact edition is unavailable after authorization.
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceOrganizerAvailability'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The Availability query contains unsupported input.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The caller cannot view this edition's Availability.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The complete Availability projection is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/availability/me:
+    get:
+      operationId: workforce_retrieve_my_availability
+      description: |-
+        Return the owner's current plan, including a private draft.
+
+        Parameters
+        ----------
+        request : Request
+            Authenticated owner request.
+        organization_id : UUID
+            Organization identifier from the route.
+        edition_id : UUID
+            Exact event edition identifier from the route.
+
+        Returns
+        -------
+        Response
+            Private current Availability projection.
+
+        Raises
+        ------
+        PermissionDenied
+            If current self authority disappears before disclosure.
+      parameters:
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceMyAvailability'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The Availability query contains unsupported input.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The exact person-owned Availability route is unavailable.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: Current Availability is temporarily unavailable.
+    put:
+      operationId: workforce_replace_my_availability
+      description: |-
+        Replace all current periods as a private draft or shared plan.
+
+        Parameters
+        ----------
+        request : Request
+            Authenticated owner request with closed replacement input.
+        organization_id : UUID
+            Organization identifier from the route.
+        edition_id : UUID
+            Exact event edition identifier from the route.
+
+        Returns
+        -------
+        Response
+            Minimized replacement result.
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        description: A canonical lower-case hyphenated UUID. Repeating the same request
+          with the same key returns HTTP 200 and the original minimized result.
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceAvailabilityReplace'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceAvailabilityMutationResult'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceAvailabilityMutationResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The closed Availability request or idempotency key is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The exact person-owned Availability route is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The request conflicts with current Availability state.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical Availability dependency is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/availability/me/withdraw:
+    post:
+      operationId: workforce_withdraw_my_availability
+      description: |-
+        Withdraw current exact periods while retaining minimized evidence.
+
+        Parameters
+        ----------
+        request : Request
+            Authenticated owner request with closed withdrawal input.
+        organization_id : UUID
+            Organization identifier from the route.
+        edition_id : UUID
+            Exact event edition identifier from the route.
+
+        Returns
+        -------
+        Response
+            Minimized withdrawn-plan result.
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        description: A canonical lower-case hyphenated UUID. Repeating the same request
+          with the same key returns HTTP 200 and the original minimized result.
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceAvailabilityWithdraw'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceAvailabilityMutationResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The closed Availability request or idempotency key is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The exact person-owned Availability route is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The request conflicts with current Availability state.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical Availability dependency is temporarily unavailable.
   /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/departments:
     post:
       operationId: workforce_create_department
@@ -10928,6 +11544,113 @@ paths:
               schema:
                 $ref: '#/components/schemas/WorkforceProblem'
           description: The request conflicts with current structure state.
+        '503':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: A canonical command dependency is temporarily unavailable.
+  /api/v1/organizations/{organization_id}/editions/{edition_id}/workforce/positions/{position_id}/assignments:
+    post:
+      operationId: workforce_propose_position_assignment
+      description: |-
+        Record a proposal without issuing role authority.
+
+        Parameters
+        ----------
+        request : Request
+            Incoming authenticated proposal request.
+        organization_id : UUID
+            Organization identifier from the route.
+        edition_id : UUID
+            Exact event edition identifier from the route.
+        position_id : UUID
+            Position identifier receiving the proposal.
+
+        Returns
+        -------
+        Response
+            Minimized assignment command result with creation or replay status.
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        description: A canonical lower-case hyphenated UUID. Repeating the same request
+          with the same key returns HTTP 200 and the original minimized result.
+        required: true
+      - in: path
+        name: edition_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      - in: path
+        name: position_id
+        schema:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        required: true
+      tags:
+      - organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkforceAssignmentProposal'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceAssignmentMutationResult'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkforceAssignmentMutationResult'
+          description: ''
+        '400':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The closed proposal request or idempotency key is invalid.
+        '403':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The route or required assignment and role authority is unavailable.
+        '404':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: The Position or known person is unavailable.
+        '409':
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/WorkforceProblem'
+          description: Headcount, lifecycle, or current assignment state prevents
+            proposal.
         '503':
           content:
             application/problem+json:
@@ -15837,6 +16560,18 @@ components:
       description: |-
         * `loan` - Loan
         * `rental` - Rental
+    AssignmentStatusEnum:
+      enum:
+      - proposed
+      - active
+      - rejected
+      - ended
+      type: string
+      description: |-
+        * `proposed` - Proposed
+        * `active` - Active
+        * `rejected` - Rejected
+        * `ended` - Ended
     AttendanceLabel:
       type: object
       description: Serialize and validate attendance label data.
@@ -20969,7 +21704,7 @@ components:
       additionalProperties: false
     PlatformAccountInventoryInvitation:
       type: object
-      description: Mark the fixed Page 10 response envelope as closed in OpenAPI.
+      description: Mark the fixed invitation response envelope as closed in OpenAPI.
       properties:
         id:
           type: string
@@ -20999,7 +21734,7 @@ components:
       additionalProperties: false
     PlatformAccountInventoryItem:
       type: object
-      description: Mark the fixed Page 10 response envelope as closed in OpenAPI.
+      description: Mark the fixed invitation response envelope as closed in OpenAPI.
       properties:
         id:
           type: string
@@ -21037,7 +21772,7 @@ components:
       additionalProperties: false
     PlatformAccountInvitationAccount:
       type: object
-      description: Mark the fixed Page 10 response envelope as closed in OpenAPI.
+      description: Mark the fixed invitation response envelope as closed in OpenAPI.
       properties:
         id:
           type: string
@@ -21080,7 +21815,7 @@ components:
       additionalProperties: false
     PlatformAccountInvitationActor:
       type: object
-      description: Mark the fixed Page 10 response envelope as closed in OpenAPI.
+      description: Mark the fixed invitation response envelope as closed in OpenAPI.
       properties:
         id:
           type:
@@ -21127,7 +21862,7 @@ components:
       additionalProperties: false
     PlatformAccountInvitationDelivery:
       type: object
-      description: Mark the fixed Page 10 response envelope as closed in OpenAPI.
+      description: Mark the fixed invitation response envelope as closed in OpenAPI.
       properties:
         status:
           $ref: '#/components/schemas/Status3cfEnum'
@@ -21168,7 +21903,7 @@ components:
       additionalProperties: false
     PlatformAccountInvitationDeliveryAttempt:
       type: object
-      description: Mark the fixed Page 10 response envelope as closed in OpenAPI.
+      description: Mark the fixed invitation response envelope as closed in OpenAPI.
       properties:
         attempt_number:
           type: integer
@@ -21307,7 +22042,7 @@ components:
       additionalProperties: false
     PlatformAccountInvitationTransition:
       type: object
-      description: Mark the fixed Page 10 response envelope as closed in OpenAPI.
+      description: Mark the fixed invitation response envelope as closed in OpenAPI.
       properties:
         version:
           type: integer
@@ -21425,6 +22160,14 @@ components:
         * `proposed` - Proposed
         * `approved` - Approved
         * `rejected` - Rejected
+    PreferenceEnum:
+      enum:
+      - available
+      - preferred
+      type: string
+      description: |-
+        * `available` - Available
+        * `preferred` - Preferred
     ProfileExtensionField:
       type: object
       description: Serialize and validate profile extension field data.
@@ -26074,6 +26817,18 @@ components:
         * `accepted` - Accepted
         * `revoked` - Revoked
         * `expired` - Expired
+    StatusF85Enum:
+      enum:
+      - proposed
+      - active
+      - rejected
+      - ended
+      type: string
+      description: |-
+        * `proposed` - Proposed
+        * `active` - Active
+        * `rejected` - Rejected
+        * `ended` - Ended
     StepUp:
       type: object
       description: Serialize and validate step up data.
@@ -27447,6 +28202,163 @@ components:
           maxLength: 500
       required:
       - reason
+    WorkforceAssignmentDecision:
+      type: object
+      description: Closed input shared by approval, rejection, and ending commands.
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          maxLength: 240
+      required:
+      - expected_version
+      - reason
+      additionalProperties: false
+    WorkforceAssignmentMutationResult:
+      type: object
+      description: Serialize one minimized assignment command result.
+      properties:
+        assignment_id:
+          type: string
+          format: uuid
+        assignment_version:
+          type: integer
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/StatusF85Enum'
+      required:
+      - assignment_id
+      - assignment_version
+      - status
+    WorkforceAssignmentProposal:
+      type: object
+      description: Closed input for one non-authoritative Position assignment proposal.
+      properties:
+        account_id:
+          type: string
+          format: uuid
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        effective_from:
+          type: string
+          format: date-time
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        reason:
+          type: string
+          maxLength: 240
+      required:
+      - account_id
+      - effective_from
+      - expires_at
+      - reason
+      additionalProperties: false
+    WorkforceAvailabilityMutationResult:
+      type: object
+      description: Serialize minimized person-availability command evidence.
+      properties:
+        plan_id:
+          type: string
+          format: uuid
+        availability_version:
+          type: integer
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/WorkforceAvailabilityMutationResultStatusEnum'
+        window_count:
+          type: integer
+          maximum: 64
+          minimum: 0
+      required:
+      - availability_version
+      - plan_id
+      - status
+      - window_count
+    WorkforceAvailabilityMutationResultStatusEnum:
+      enum:
+      - draft
+      - submitted
+      - withdrawn
+      type: string
+      description: |-
+        * `draft` - Private draft
+        * `submitted` - Shared with organizers
+        * `withdrawn` - Withdrawn
+    WorkforceAvailabilityReplace:
+      type: object
+      description: Parse one complete owner-controlled availability replacement.
+      properties:
+        expected_version:
+          type: integer
+          minimum: 0
+        status:
+          $ref: '#/components/schemas/WorkforceAvailabilityReplaceStatusEnum'
+        windows:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkforceAvailabilityWindowWrite'
+      required:
+      - expected_version
+      - status
+      - windows
+      additionalProperties: false
+    WorkforceAvailabilityReplaceStatusEnum:
+      enum:
+      - draft
+      - submitted
+      type: string
+      description: |-
+        * `draft` - draft
+        * `submitted` - submitted
+    WorkforceAvailabilityWindow:
+      type: object
+      description: Serialize one owner-shared current period.
+      properties:
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        preference:
+          $ref: '#/components/schemas/PreferenceEnum'
+        preference_label:
+          type: string
+      required:
+      - ends_at
+      - preference
+      - preference_label
+      - starts_at
+    WorkforceAvailabilityWindowWrite:
+      type: object
+      description: Parse one closed exact availability-period object.
+      properties:
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        preference:
+          $ref: '#/components/schemas/PreferenceEnum'
+      required:
+      - ends_at
+      - preference
+      - starts_at
+    WorkforceAvailabilityWithdraw:
+      type: object
+      description: Parse an owner availability withdrawal command.
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+      required:
+      - expected_version
+      additionalProperties: false
     WorkforceDepartmentCreate:
       type: object
       description: Closed API input for one idempotent Department creation.
@@ -27560,6 +28472,161 @@ components:
       - parent_department_id
       - reason
       additionalProperties: false
+    WorkforceMyAvailability:
+      type: object
+      description: Serialize the current person's exact-edition Availability workspace.
+      properties:
+        organization_name:
+          type: string
+        series_name:
+          type: string
+        edition_name:
+          type: string
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        time_zone:
+          type: string
+        state:
+          $ref: '#/components/schemas/WorkforceMyAvailabilityStateEnum'
+        state_label:
+          type: string
+        availability_version:
+          type: integer
+          minimum: 0
+        can_edit:
+          type: boolean
+        windows:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkforceAvailabilityWindow'
+      required:
+      - availability_version
+      - can_edit
+      - edition_name
+      - ends_on
+      - organization_name
+      - series_name
+      - starts_on
+      - state
+      - state_label
+      - time_zone
+      - windows
+    WorkforceMyAvailabilityStateEnum:
+      enum:
+      - not_started
+      - draft
+      - shared
+      - unavailable
+      - withdrawn
+      type: string
+      description: |-
+        * `not_started` - not_started
+        * `draft` - draft
+        * `shared` - shared
+        * `unavailable` - unavailable
+        * `withdrawn` - withdrawn
+    WorkforceOrganizerAvailability:
+      type: object
+      description: Serialize the complete minimized organizer Availability projection.
+      properties:
+        organization_name:
+          type: string
+        series_name:
+          type: string
+        edition_name:
+          type: string
+        time_zone:
+          type: string
+        shared_count:
+          type: integer
+          minimum: 0
+        unavailable_count:
+          type: integer
+          minimum: 0
+        not_shared_count:
+          type: integer
+          minimum: 0
+        withdrawn_count:
+          type: integer
+          minimum: 0
+        people:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkforceOrganizerAvailabilityPerson'
+      required:
+      - edition_name
+      - not_shared_count
+      - organization_name
+      - people
+      - series_name
+      - shared_count
+      - time_zone
+      - unavailable_count
+      - withdrawn_count
+    WorkforceOrganizerAvailabilityPerson:
+      type: object
+      description: Serialize one minimized organizer availability row.
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        account_label:
+          type: string
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkforceOrganizerAvailabilityPosition'
+        state:
+          $ref: '#/components/schemas/WorkforceOrganizerAvailabilityPersonStateEnum'
+        state_label:
+          type: string
+        shared_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        windows:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkforceAvailabilityWindow'
+      required:
+      - account_id
+      - account_label
+      - positions
+      - shared_at
+      - state
+      - state_label
+      - windows
+    WorkforceOrganizerAvailabilityPersonStateEnum:
+      enum:
+      - not_shared
+      - shared
+      - unavailable
+      - withdrawn
+      type: string
+      description: |-
+        * `not_shared` - not_shared
+        * `shared` - shared
+        * `unavailable` - unavailable
+        * `withdrawn` - withdrawn
+    WorkforceOrganizerAvailabilityPosition:
+      type: object
+      description: Serialize one open responsibility without private assignment rationale.
+      properties:
+        department_name:
+          type: string
+        position_title:
+          type: string
+        assignment_status:
+          $ref: '#/components/schemas/AssignmentStatusEnum'
+      required:
+      - assignment_status
+      - department_name
+      - position_title
     WorkforcePositionClose:
       type: object
       description: Closed input for dependency-safe, history-preserving Position closure.
@@ -27763,12 +28830,18 @@ components:
           type: string
         can_manage_positions:
           type: boolean
+        can_manage_assignments:
+          type: boolean
+        can_view_availability:
+          type: boolean
         governance:
           $ref: '#/components/schemas/WorkforceStructureGovernance'
         structure:
           $ref: '#/components/schemas/WorkforceStructureProjection'
       required:
+      - can_manage_assignments
       - can_manage_positions
+      - can_view_availability
       - edition_name
       - governance
       - organization_name

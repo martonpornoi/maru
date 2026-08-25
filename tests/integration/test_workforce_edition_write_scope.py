@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from types import SimpleNamespace
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
@@ -18,6 +17,10 @@ from django.utils import timezone
 from maru.authorization.models import RoleBundle, ScopedResourceBinding
 from maru.workforce import services
 from maru.workforce.admin import PositionAdmin, PositionAssignmentAdmin
+from maru.workforce.assignment_commands import (
+    approve_position_assignment,
+    propose_position_assignment,
+)
 from maru.workforce.edition_write_scope import (
     LockedWorkforceEditionWriteScope,
     lock_workforce_edition_write_scope,
@@ -36,7 +39,7 @@ from maru.workforce.structure_commands import (
     create_position,
     retire_department,
 )
-from tests.factories import AccountFactory, EventEditionFactory
+from tests.factories import AccountFactory, EventEditionFactory, ParticipationFactory
 from tests.support.authority import (
     create_provenance_backed_role_bundle,
     grant_board_controllers_edition_capability,
@@ -264,34 +267,17 @@ def test_position_command_takes_edition_and_department_locks_before_insert() -> 
     assert mutex < department < insert < binding
 
 
-def test_assignment_admin_locks_position_before_proposal_insert() -> None:
+def test_assignment_admin_is_inspection_only() -> None:
     world = _world()
-    position = _create_position(world)
-    request = RequestFactory().post("/admin/workforce/positionassignment/add/")
+    _create_position(world)
+    request = RequestFactory().get("/admin/workforce/positionassignment/")
     request.user = world.actor
-    assignment = PositionAssignment(
-        position=position,
-        account=AccountFactory(),
-        effective_from=timezone.now(),
-        reason="Synthetic proposal.",
-    )
+    assignment_admin = PositionAssignmentAdmin(PositionAssignment, admin.site)
 
-    with CaptureQueriesContext(connection) as captured:
-        PositionAssignmentAdmin(PositionAssignment, admin.site).save_model(
-            request,
-            assignment,
-            SimpleNamespace(cleaned_data={"activate_now": False}),  # type: ignore[arg-type]
-            change=False,
-        )
-
-    sql = [query["sql"] for query in captured.captured_queries]
-    mutex = _query_index(sql, "hashtextextended", "pg_advisory_xact_lock")
-    department = _query_index(sql, "workforce_department", "for update")
-    position_lock = _query_index(sql, "workforce_position", "for update")
-    insert = _query_index(sql, 'insert into "workforce_positionassignment"')
-    assert mutex < department < position_lock < insert
-    assignment.refresh_from_db()
-    assert assignment.status == PositionAssignment.Status.PROPOSED
+    assert assignment_admin.has_view_permission(request)
+    assert not assignment_admin.has_add_permission(request)
+    assert not assignment_admin.has_change_permission(request)
+    assert not assignment_admin.has_delete_permission(request)
 
 
 def test_activation_locks_scope_before_position_and_writes_no_closed_target(
@@ -343,39 +329,88 @@ def test_activation_locks_scope_before_position_and_writes_no_closed_target(
     assert not PositionAssignment.objects.filter(position=position).exists()
 
 
-def test_assignment_admin_nested_activation_rejoins_held_outer_locks() -> None:
+def test_assignment_commands_rejoin_held_outer_locks() -> None:
     world = _world()
-    actor, approver = grant_board_controllers_edition_capability(
-        world.edition,
+    actor: Account | None = None
+    approver: Account | None = None
+    for capability_code in (
+        "workforce.view_structure",
         "workforce.manage_assignments",
-    )
+        "authorization.manage_roles",
+    ):
+        actor, approver = grant_board_controllers_edition_capability(
+            world.edition,
+            capability_code,
+        )
+    assert actor is not None
+    assert approver is not None
     position = _create_position(world, title="Nested activation")
-    assignment_request = RequestFactory().post(
-        "/admin/workforce/positionassignment/add/"
-    )
-    assignment_request.user = actor
-    assignment_request.correlation_id = str(uuid4())  # type: ignore[attr-defined]
-    assignment = PositionAssignment(
-        position=position,
-        account=AccountFactory(),
-        effective_from=timezone.now(),
-        reason="Exercise nested activation ordering.",
+    candidate = AccountFactory()
+    ParticipationFactory(
+        account=candidate,
+        organization=world.edition.organization,
+        edition=world.edition,
     )
 
-    with CaptureQueriesContext(connection) as captured:
-        PositionAssignmentAdmin(PositionAssignment, admin.site).save_model(
-            assignment_request,
-            assignment,
-            SimpleNamespace(
-                cleaned_data={"activate_now": True, "approved_by": approver}
-            ),  # type: ignore[arg-type]
-            change=False,
+    with CaptureQueriesContext(connection) as proposal_queries:
+        proposal = propose_position_assignment(
+            actor=actor,
+            organization_id=world.edition.organization_id,
+            series_id=world.edition.series_id,
+            edition_id=world.edition.id,
+            position_id=position.id,
+            account_id=candidate.id,
+            effective_from=timezone.now(),
+            expires_at=None,
+            reason="Exercise governed proposal ordering.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
         )
+
+    proposal_sql = [query["sql"] for query in proposal_queries.captured_queries]
+    proposal_mutex = _query_index(
+        proposal_sql,
+        "hashtextextended",
+        "pg_advisory_xact_lock",
+    )
+    proposal_department = _query_index(
+        proposal_sql,
+        "workforce_department",
+        "for update",
+    )
+    proposal_position = _query_index(
+        proposal_sql,
+        "workforce_position",
+        "for update",
+    )
+    proposal_insert = _query_index(
+        proposal_sql,
+        'insert into "workforce_positionassignment"',
+    )
+    assert proposal_mutex < proposal_department < proposal_position < proposal_insert
+
+    with CaptureQueriesContext(connection) as captured:
+        result = approve_position_assignment(
+            actor=approver,
+            organization_id=world.edition.organization_id,
+            series_id=world.edition.series_id,
+            edition_id=world.edition.id,
+            assignment_id=proposal.assignment_id,
+            expected_version=proposal.resulting_version,
+            reason="Approve through a different current controller.",
+            retry_key=uuid4(),
+            correlation_id=uuid4(),
+            source_channel="test",
+        )
+
+    assignment = PositionAssignment.objects.get(pk=result.assignment_id)
+    assert assignment.status == PositionAssignment.Status.ACTIVE
+    assert assignment.approved_by == approver
 
     sql = [query["sql"] for query in captured.captured_queries]
     mutexes = _query_indices(sql, "hashtextextended", "pg_advisory_xact_lock")
     assert len(mutexes) >= 2
-    proposal_insert = _query_index(sql, 'insert into "workforce_positionassignment"')
     nested_assignment_locks = [
         index
         for index in _query_indices(
@@ -387,10 +422,5 @@ def test_assignment_admin_nested_activation_rejoins_held_outer_locks() -> None:
     ]
     role_insert = _query_index(sql, 'insert into "authorization_roleassignment"')
     assignment_update = _query_index(sql, 'update "workforce_positionassignment"')
-    assert mutexes[0] < proposal_insert < mutexes[1]
-    # The first lock freezes the current active set for headcount/deactivation
-    # races; the second locks the exact proposal before authority is issued.
     assert len(nested_assignment_locks) >= 2
     assert mutexes[1] < nested_assignment_locks[-1] < role_insert < assignment_update
-    assignment.refresh_from_db()
-    assert assignment.status == PositionAssignment.Status.ACTIVE

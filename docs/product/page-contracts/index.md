@@ -29,6 +29,8 @@ contract for the surface being changed, and compare its status with the
 - [Representation & access](08-representation-and-access.md)
 - [Organization structure](09-organization-structure.md)
 - [Position management](position-management.md)
+- [Assignment management](assignment-management.md)
+- [Availability management](availability-management.md)
 - [Registration setup and account onboarding](10-registration-setup-and-account-invitations.md)
 
 ```{toctree}
@@ -39,4 +41,6 @@ contract for the surface being changed, and compare its status with the
 0*
 10-*
 position-management
+assignment-management
+availability-management
 ```

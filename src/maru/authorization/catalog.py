@@ -1109,13 +1109,48 @@ CAPABILITY_DEFINITIONS = (
         obligations=frozenset({"reason", "audit", "approval"}),
     ),
     Capability(
+        code="workforce.view_availability",
+        description=(
+            "View deliberately shared current availability for people with open "
+            "assignments in one edition."
+        ),
+        maximum_scope=ScopeLevel.EDITION,
+        delegable=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        field_ceiling=frozenset(
+            {
+                "availability_consequences",
+                "availability_windows",
+                "holder_display_labels",
+            }
+        ),
+        obligations=frozenset({"audit_sensitive_read"}),
+    ),
+    Capability(
         code="workforce.view_self",
-        description="View one's own applications, requested documents, and positions.",
+        description=(
+            "View one's own applications, requested documents, positions, and "
+            "availability."
+        ),
         maximum_scope=ScopeLevel.RESOURCE,
         persistable=False,
         allow_self=True,
         sensitivity_ceiling=Sensitivity.RESTRICTED,
-        field_ceiling=frozenset({"applications", "document_requests", "assignments"}),
+        field_ceiling=frozenset(
+            {"applications", "document_requests", "assignments", "availability"}
+        ),
+    ),
+    Capability(
+        code="workforce.manage_self_availability",
+        description=(
+            "Save, share, replace, or withdraw one's own edition availability."
+        ),
+        maximum_scope=ScopeLevel.RESOURCE,
+        persistable=False,
+        allow_self=True,
+        sensitivity_ceiling=Sensitivity.PERSONAL,
+        field_ceiling=frozenset({"availability"}),
+        obligations=frozenset({"audit"}),
     ),
     Capability(
         code="workforce.apply_self",
@@ -1132,7 +1167,7 @@ CAPABILITIES = {definition.code: definition for definition in CAPABILITY_DEFINIT
 if len(CAPABILITIES) != len(CAPABILITY_DEFINITIONS):
     raise RuntimeError("Capability codes must be unique")
 
-POLICY_VERSION = "2026-08-09.7"
+POLICY_VERSION = "2026-08-25.1"
 
 
 def capability(code: str) -> Capability | None:

@@ -31,8 +31,8 @@ administrators may exercise explicit oversight as attributed actors. A
 view-only organizer continues to see the minimized Position projection in
 Workforce and Organization structure but receives no mutation form.
 
-This is not an assignment-approval inbox, person directory, availability form,
-shift planner, generic access editor, or generic model form.
+This is not the separate Assignment management queue, a person directory,
+availability form, shift planner, generic access editor, or generic model form.
 
 ## Placement and navigation
 
@@ -252,8 +252,9 @@ release gate.
 
 ## Deliberate non-goals
 
-This slice does not add Position-template authoring, assignment proposal or
-independent approval, onboarding-document review, person availability, shift
-demand/claim/confirmation, timekeeping, notification, or bulk operations.
-Assignment records remain a temporary staff-only specialist workflow until a
-separate owner-safe dual-control journey is accepted.
+This slice does not add Position-template authoring, onboarding-document
+review, person availability, shift demand/claim/confirmation, timekeeping,
+notification, or bulk operations. Assignment proposal, independent decision,
+and retained ending are governed by the separate
+[Assignment management contract](assignment-management.md); they do not become
+Position edits.

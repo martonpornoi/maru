@@ -45,6 +45,10 @@ from maru.workforce.models import (
     Department,
     EditionStructureCommandReceipt,
     EditionStructureControl,
+    PersonAvailabilityCommandReceipt,
+    PersonAvailabilityPlan,
+    PersonAvailabilityWindow,
+    PositionAssignmentCommandReceipt,
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -68,9 +72,9 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert result["totals"]["participations"] >= 150
     assert result["totals"]["participation_capacities"] >= 400
     assert result["totals"]["lifecycle_transitions"] == 12
-    assert result["totals"]["audit_events"] == 34
-    assert result["totals"]["domain_events"] == 30
-    assert result["totals"]["outbox_messages"] == 30
+    assert result["totals"]["audit_events"] == 38
+    assert result["totals"]["domain_events"] == 34
+    assert result["totals"]["outbox_messages"] == 34
     assert result["totals"]["registration_templates"] == 2
     assert result["totals"]["registration_configurations"] == 8
     assert result["totals"]["registration_setup_controls"] == 6
@@ -84,6 +88,25 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert RegistrationSection.objects.count() == 24
     assert AttendeeRegistrationProfile.objects.count() == 16
     assert AttendeeFursuit.objects.count() == 4
+    assert (
+        PositionAssignmentCommandReceipt.objects.filter(
+            action=PositionAssignmentCommandReceipt.Action.PROPOSED
+        ).count()
+        == 2
+    )
+    assert (
+        PersonAvailabilityPlan.objects.filter(
+            status=PersonAvailabilityPlan.Status.SUBMITTED
+        ).count()
+        == 2
+    )
+    assert PersonAvailabilityWindow.objects.count() == 4
+    assert (
+        PersonAvailabilityCommandReceipt.objects.filter(
+            action=PersonAvailabilityCommandReceipt.Action.SUBMITTED
+        ).count()
+        == 2
+    )
 
     assert Organization.objects.count() == 2
     assert (

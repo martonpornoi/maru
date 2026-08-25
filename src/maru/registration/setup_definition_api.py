@@ -1,4 +1,4 @@
-"""Canonical strict v1 API adapters for Page 10 definition commands."""
+"""Canonical strict v1 API adapters for Registration definition commands."""
 
 from __future__ import annotations
 

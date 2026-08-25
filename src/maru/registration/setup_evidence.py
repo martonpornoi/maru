@@ -1,4 +1,4 @@
-"""Shared exact replay validation for Page 10 setup command evidence."""
+"""Shared exact replay validation for Registration setup command evidence."""
 
 from __future__ import annotations
 

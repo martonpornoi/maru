@@ -1,4 +1,4 @@
-"""Closed browser forms for the governed Page 10 registration workspace."""
+"""Closed browser forms for the governed Registration setup workspace."""
 
 from __future__ import annotations
 

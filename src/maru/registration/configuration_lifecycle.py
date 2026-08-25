@@ -1,9 +1,9 @@
-"""Page 10 registration-configuration validation, preview, review, and activation.
+"""Registration configuration validation, preview, review, and activation.
 
 The legacy ``review_required`` column is retained for display compatibility while
-the Page 10 writer migration is additive.  Authoritative review state is derived
-from the current setup aggregate version, the exact reviewed receipt, and the
-fresh configuration content digest.
+the Registration setup writer migration is additive. Authoritative review state
+is derived from the current setup aggregate version, the exact reviewed receipt,
+and the fresh configuration content digest.
 """
 
 from __future__ import annotations

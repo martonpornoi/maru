@@ -1,0 +1,86 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'workforce/organization_structure.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}{% block assignment_action_title %}Workforce assignments{% endblock %} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if baseline_can_view_organization %}
+    <a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>
+  {% else %}
+    {{ organization.name }}
+  {% endif %}
+  &rsaquo; {{ convention_series.name }}
+  &rsaquo; {{ edition.name }}
+  &rsaquo; <a href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}">Organization structure</a>
+  &rsaquo; <a href="{% url 'organization-workforce-assignments' organization.slug convention_series.slug edition.slug %}">Assignments</a>
+  &rsaquo; {% block assignment_action_breadcrumb %}Manage{% endblock %}
+{% endblock %}
+
+{% block baseline_content %}
+  <a
+    class="baseline-back-link"
+    href="{% url 'organization-workforce-assignments' organization.slug convention_series.slug edition.slug %}"
+  >← Workforce assignments</a>
+
+  <header class="baseline-page-heading">
+    <p class="baseline-kicker">{{ edition.name }} · Workforce</p>
+    <h1>{% block assignment_action_heading %}Manage assignment{% endblock %}</h1>
+    <p class="baseline-intro">{% block assignment_action_intro %}{% endblock %}</p>
+    <p class="baseline-record-meta">
+      <span>Edition lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+      {% block assignment_action_meta %}{% endblock %}
+    </p>
+  </header>
+
+  <details class="maru-access-summary">
+    <summary>
+      <span class="maru-access-summary__label">
+        <strong>Access</strong>
+        <span class="maru-access-summary__scope">{{ assignment_access_label }}</span>
+      </span>
+      <span class="maru-access-summary__policy">Assignment records</span>
+    </summary>
+    <div class="maru-access-summary__body">
+      <p class="baseline-access-line">
+        <strong>Workforce assignment manager</strong>
+        <span>allows audited access to private staffing state and reasons in this exact edition.</span>
+      </p>
+      <p>
+        A proposal grants no access. Approval requires another current controller
+        who can both manage assignments and issue role authority. Ending also
+        requires current revocation authority.
+      </p>
+    </div>
+  </details>
+
+  {% if action_error %}
+    <div
+      class="baseline-state baseline-state--error workforce-structure-action-error"
+      role="alert"
+      tabindex="-1"
+      data-maru-focus-on-load
+    >
+      <h2>The assignment was not changed</h2>
+      <p>{{ action_error }}</p>
+      {% if reload_required %}
+        <p>{% block assignment_reload_link %}{% endblock %}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% block assignment_action_content %}{% endblock %}
+
+  <aside class="baseline-boundary" aria-labelledby="assignment-authority-boundary-title">
+    <p class="baseline-kicker">Authority boundary</p>
+    <h2 id="assignment-authority-boundary-title">Responsibility and access move together only after approval</h2>
+    <p>
+      The Position supplies approved role meaning and capacity labels. A second
+      controller's approval activates the scoped role and participation evidence
+      in one transaction; rejection and ending preserve the full organizer history.
+    </p>
+  </aside>
+{% endblock %}

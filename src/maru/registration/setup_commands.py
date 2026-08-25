@@ -1,4 +1,4 @@
-"""Canonical Page 10 command for starting one edition registration setup."""
+"""Canonical command for starting one edition Registration setup."""
 
 from __future__ import annotations
 

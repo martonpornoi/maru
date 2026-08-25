@@ -407,7 +407,7 @@ def validate_exact_confirmation(value: str, *, expected: str) -> str:
 
 
 def validate_department_display_order(value: int) -> int:
-    """Accept only a strict integer in the Page 9 display-order range.
+    """Accept only a strict integer in the structure display-order range.
 
     Parameters
     ----------

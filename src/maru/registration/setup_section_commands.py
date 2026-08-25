@@ -1,4 +1,4 @@
-"""Canonical Page 10 commands for draft registration sections."""
+"""Canonical commands for draft Registration setup sections."""
 
 from __future__ import annotations
 

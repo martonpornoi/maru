@@ -411,8 +411,9 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
         "workforce",
         "department",
     ): (
-        "Use this page to build the convention's team structure. "
-        "For example: create Registration, Security, or Fursuit Support."
+        "Use this read-only specialist page to inspect retained Department "
+        "records. Manage current Departments through Organization structure. "
+        "For example: verify which parent Department owns Registration."
     ),
     (
         "workforce",
@@ -425,8 +426,9 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
         "workforce",
         "position",
     ): (
-        "Use this page to define edition-specific jobs and reporting lines. "
-        "For example: create a Registration Lead position under Operations."
+        "Use this read-only specialist page to inspect retained Position "
+        "records. Manage current responsibilities through Position management. "
+        "For example: verify the approved headcount for Registration Lead."
     ),
     (
         "workforce",
@@ -446,17 +448,51 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
         "workforce",
         "positionassignment",
     ): (
-        "Use this page to place one or more people into convention positions. "
-        "For example: assign two volunteers to a role that allows multiple "
-        "holders."
+        "Use this read-only specialist page to inspect retained assignment "
+        "records. Propose, decide, or end current assignments through Assignment "
+        "management. For example: verify whether a proposal is still awaiting "
+        "an independent decision."
+    ),
+    (
+        "workforce",
+        "positionassignmentcommandreceipt",
+    ): (
+        "Use this read-only specialist page to inspect immutable Assignment "
+        "command evidence. For example: verify the recorded reason and version "
+        "for an independently approved assignment."
+    ),
+    (
+        "workforce",
+        "personavailabilityplan",
+    ): (
+        "Use this restricted read-only specialist page to inspect current "
+        "person-owned Availability state. People manage their own plans through "
+        "My Workforce. For example: verify that a shared plan uses the edition's "
+        "time zone without changing it for the person."
+    ),
+    (
+        "workforce",
+        "personavailabilitywindow",
+    ): (
+        "Use this restricted read-only specialist page to inspect current exact "
+        "Availability periods when operationally necessary. For example: verify "
+        "that a current Preferred period stays inside the edition dates."
+    ),
+    (
+        "workforce",
+        "personavailabilitycommandreceipt",
+    ): (
+        "Use this restricted read-only specialist page to inspect minimized "
+        "Availability command evidence, not superseded exact times. For example: "
+        "verify that a person deliberately shared or withdrew a plan version."
     ),
     (
         "workforce",
         "volunteeropportunity",
     ): (
-        "Use this page to publish or retain a volunteer opening tied to a "
-        "position. For example: keep the role description visible after the "
-        "current vacancy is filled."
+        "Use this read-only specialist page to inspect a retained volunteer "
+        "opening. Publish or close current opportunities through Position "
+        "management. For example: verify whether a filled role remains visible."
     ),
     (
         "workforce",

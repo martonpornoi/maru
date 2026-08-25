@@ -11,6 +11,7 @@ from maru.organizations.models import (
     Organization,
     OrganizationMembership,
     OrganizationRepresentation,
+    RepresentationAppointment,
 )
 
 ExecutiveBoardState = Literal[
@@ -118,3 +119,58 @@ def memberships_for_account(
         .select_related("organization")
         .order_by("organization__name", "organization_id")
     )
+
+
+def known_organization_person_account_ids(
+    *,
+    organization_id: UUID,
+    limit: int,
+) -> tuple[UUID, ...]:
+    """Return a bounded set of accounts with a current organization relation.
+
+    Workforce and other owning modules may use this identifier-only query only
+    after authorizing their own restricted workflow.  It deliberately returns
+    no identity label or contact field; Identity remains responsible for the
+    final active-person projection.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        Organization whose current memberships or Board appointments are known.
+    limit : int
+        Hard upper bound for the complete result.
+
+    Returns
+    -------
+    tuple[UUID, ...]
+        Stable account identifiers from current organization relationships.
+
+    Raises
+    ------
+    RuntimeError
+        If the complete relationship set exceeds the caller's safe bound.
+    """
+    membership_ids = OrganizationMembership.objects.filter(
+        organization_id=organization_id,
+        state__in=(
+            OrganizationMembership.State.INVITED,
+            OrganizationMembership.State.ACTIVE,
+        ),
+    ).values_list("account_id", flat=True)
+    appointment_ids = RepresentationAppointment.objects.filter(
+        representation__organization_id=organization_id,
+        state__in=(
+            RepresentationAppointment.State.INVITED,
+            RepresentationAppointment.State.ACCEPTED,
+            RepresentationAppointment.State.ACTIVE,
+        ),
+    ).values_list("account_id", flat=True)
+    account_ids = tuple(
+        sorted(
+            set(membership_ids).union(appointment_ids),
+            key=str,
+        )
+    )
+    if len(account_ids) > limit:
+        raise RuntimeError("The organization person relationship limit was exceeded.")
+    return account_ids

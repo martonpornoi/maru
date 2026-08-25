@@ -4,16 +4,27 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, cast, override
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from django import forms
+from django.forms import BaseFormSet, formset_factory
 
 from maru.core.forms import (
     CanonicalUUIDField,
     StrictBase10IntegerField,
     StrictInputForm,
+)
+from maru.workforce.assignment_inputs import (
+    MAX_ASSIGNMENT_REASON_LENGTH,
+    normalize_assignment_reason,
+    validate_assignment_interval,
+)
+from maru.workforce.availability_inputs import (
+    MAX_AVAILABILITY_WINDOWS,
+    AvailabilityWindowInput,
+    normalize_availability_windows,
 )
 from maru.workforce.models import VolunteerOpportunity
 from maru.workforce.structure_inputs import (
@@ -44,6 +55,7 @@ DepartmentParentChoices = tuple[tuple[str, str], ...]
 PositionTemplateChoices = tuple[tuple[str, str], ...]
 PositionDepartmentChoices = tuple[tuple[str, str], ...]
 PositionReportingChoices = tuple[tuple[str, str], ...]
+AssignmentCandidateChoices = tuple[tuple[str, str], ...]
 _DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M"
 _LOCAL_DATE_TIME = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}\Z")
 
@@ -1088,6 +1100,422 @@ class PositionClosureForm(_StructureReasonForm):
                 expected=self.position_title,
             ),
         )
+
+
+class _AssignmentReasonForm(StrictInputForm):
+    """Normalize a private, inspectable assignment command rationale."""
+
+    reason = forms.CharField(
+        label="Reason",
+        strip=False,
+        help_text=(
+            "Explain this staffing decision for other authorized organizers. "
+            "The person assigned can see their status, but not this private reason."
+        ),
+        widget=forms.Textarea(
+            attrs={"rows": 3, "maxlength": MAX_ASSIGNMENT_REASON_LENGTH}
+        ),
+    )
+
+    def clean_reason(self) -> str:
+        """Return the normalized retained rationale.
+
+        Returns
+        -------
+        str
+            Normalized private assignment-command reason.
+        """
+        return _field_local_result(
+            "reason",
+            lambda: normalize_assignment_reason(str(self.cleaned_data["reason"])),
+        )
+
+
+class PositionAssignmentProposalForm(_AssignmentReasonForm):
+    """Collect a non-authoritative proposal for one known person."""
+
+    account_id = PositionUUIDChoiceField(
+        label="Person",
+        choices=(),
+        help_text=(
+            "Choose an active person already connected to this organization or "
+            "edition. Maru shows onboarding readiness before approval."
+        ),
+    )
+    effective_from = WorkforceEditionLocalDateTimeField(
+        label="Effective from",
+        help_text="The intended start in the event edition's local time zone.",
+    )
+    expires_at = WorkforceEditionLocalDateTimeField(
+        label="Ends at",
+        required=False,
+        help_text="Optional authority end time in the event edition's local time zone.",
+    )
+    retry_key = CanonicalUUIDField(widget=forms.HiddenInput)
+
+    def __init__(
+        self,
+        *args: Any,
+        candidate_choices: AssignmentCandidateChoices,
+        zone_name: str,
+        default_effective_from: datetime,
+        retry_key: UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Bind a closed candidate allowlist and edition-local time controls.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the form implementation.
+        candidate_choices : AssignmentCandidateChoices
+            Bounded known-person values and human labels.
+        zone_name : str
+            Persisted IANA time zone for the selected edition.
+        default_effective_from : datetime
+            Default aware start converted for browser display.
+        retry_key : UUID | None, default=None
+            Stable retry key to retain across a failed submission.
+        **kwargs : Any
+            Keyword arguments forwarded to the form implementation.
+
+        Raises
+        ------
+        TypeError
+            If a declared candidate or time field no longer uses its required
+            closed field implementation.
+        """
+        kwargs.setdefault("auto_id", "id_assignment_proposal_%s")
+        initial = dict(kwargs.pop("initial", {}) or {})
+        initial.setdefault("effective_from", default_effective_from)
+        initial.setdefault("retry_key", retry_key or uuid4())
+        kwargs["initial"] = initial
+        super().__init__(*args, **kwargs)
+        candidate_field = self.fields["account_id"]
+        if not isinstance(candidate_field, PositionUUIDChoiceField):
+            raise TypeError("The assignment candidate selector contract changed.")
+        candidate_field.set_choices(candidate_choices)
+        for field_name in ("effective_from", "expires_at"):
+            field = self.fields[field_name]
+            if not isinstance(field, WorkforceEditionLocalDateTimeField):
+                raise TypeError("The assignment time-field contract changed.")
+            field.set_zone(zone_name)
+
+    def clean(self) -> dict[str, Any]:
+        """Require an ordered, timezone-aware proposed interval.
+
+        Returns
+        -------
+        dict[str, Any]
+            Cleaned values with interval errors attached to their owning field.
+        """
+        cleaned = super().clean() or {}
+        effective_from = cleaned.get("effective_from")
+        expires_at = cleaned.get("expires_at")
+        if isinstance(effective_from, datetime):
+            try:
+                validate_assignment_interval(
+                    effective_from=effective_from,
+                    expires_at=expires_at,
+                )
+            except forms.ValidationError as error:
+                field_errors = getattr(error, "error_dict", {})
+                for field_name, errors in field_errors.items():
+                    self.add_error(field_name, errors)
+        return cleaned
+
+
+class AssignmentDecisionForm(_AssignmentReasonForm):
+    """Collect one fresh, optimistic assignment decision or ending command."""
+
+    expected_version = StrictBase10IntegerField(
+        min_value=1,
+        widget=forms.HiddenInput,
+    )
+    retry_key = CanonicalUUIDField(widget=forms.HiddenInput)
+
+    def __init__(
+        self,
+        *args: Any,
+        expected_version: int,
+        action_code: str,
+        retry_key: UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Bind the current version and a command-specific fresh retry key.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the form implementation.
+        expected_version : int
+            Assignment version shown to the decision maker.
+        action_code : str
+            Stable action used to make field identifiers unique on the page.
+        retry_key : UUID | None, default=None
+            Stable retry key to retain across a failed submission.
+        **kwargs : Any
+            Keyword arguments forwarded to the form implementation.
+        """
+        kwargs.setdefault("auto_id", f"id_assignment_{action_code}_%s")
+        initial = dict(kwargs.pop("initial", {}) or {})
+        initial.setdefault("expected_version", expected_version)
+        initial.setdefault("retry_key", retry_key or uuid4())
+        kwargs["initial"] = initial
+        super().__init__(*args, **kwargs)
+
+
+class AvailabilityCommandForm(StrictInputForm):
+    """Collect the version, retry key, and explicit owner sharing intent."""
+
+    expected_version = StrictBase10IntegerField(min_value=0, widget=forms.HiddenInput)
+    retry_key = CanonicalUUIDField(widget=forms.HiddenInput)
+    status = forms.ChoiceField(
+        choices=(
+            ("draft", "Save private draft"),
+            ("submitted", "Share with organizers"),
+        ),
+        widget=forms.HiddenInput,
+    )
+
+    def __init__(
+        self,
+        *args: Any,
+        expected_version: int,
+        retry_key: UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Bind the current optimistic version and a stable browser retry key.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the form implementation.
+        expected_version : int
+            Current plan version, or zero before first save.
+        retry_key : UUID | None, default=None
+            Optional key retained while validation is corrected.
+        **kwargs : Any
+            Keyword arguments forwarded to the form implementation.
+        """
+        kwargs.setdefault("auto_id", "id_availability_command_%s")
+        initial = dict(kwargs.pop("initial", {}) or {})
+        initial.setdefault("expected_version", expected_version)
+        initial.setdefault("retry_key", retry_key or uuid4())
+        kwargs["initial"] = initial
+        super().__init__(*args, **kwargs)
+
+
+class AvailabilityWindowForm(forms.Form):
+    """Collect one optional exact local availability period."""
+
+    starts_at = WorkforceEditionLocalDateTimeField(
+        label="Starts",
+        required=False,
+        help_text="Inclusive start in the edition's local time zone.",
+    )
+    ends_at = WorkforceEditionLocalDateTimeField(
+        label="Ends",
+        required=False,
+        help_text="Exclusive end in the edition's local time zone.",
+    )
+    preference = forms.ChoiceField(
+        label="Planning preference",
+        required=False,
+        choices=(
+            ("available", "Available"),
+            ("preferred", "Preferred"),
+        ),
+        initial="available",
+        help_text="Preferred is a soft planning signal, not a shift commitment.",
+    )
+
+    def __init__(
+        self,
+        *args: Any,
+        zone_name: str,
+        **kwargs: Any,
+    ) -> None:
+        """Apply the exact edition IANA time zone to both local controls.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django.
+        zone_name : str
+            Persisted edition IANA time zone.
+        **kwargs : Any
+            Keyword arguments forwarded to Django.
+
+        Raises
+        ------
+        TypeError
+            If a declared date-time field loses the strict local-time parser.
+        """
+        super().__init__(*args, **kwargs)
+        for field_name in ("starts_at", "ends_at"):
+            field = self.fields[field_name]
+            if not isinstance(field, WorkforceEditionLocalDateTimeField):
+                raise TypeError("The availability time-field contract changed.")
+            field.set_zone(zone_name)
+
+    def clean(self) -> dict[str, Any]:
+        """Reject partial rows while allowing one unused progressive row.
+
+        Returns
+        -------
+        dict[str, Any]
+            Cleaned optional interval values.
+        """
+        cleaned = super().clean() or {}
+        if cleaned.get("DELETE"):
+            return cleaned
+        starts_at = cleaned.get("starts_at")
+        ends_at = cleaned.get("ends_at")
+        if starts_at is None and ends_at is None:
+            return cleaned
+        if starts_at is None:
+            self.add_error("starts_at", "Enter the start of this period.")
+        if ends_at is None:
+            self.add_error("ends_at", "Enter the end of this period.")
+        if starts_at is not None and ends_at is not None and starts_at >= ends_at:
+            self.add_error("ends_at", "The end must be after the start.")
+        if not cleaned.get("preference"):
+            cleaned["preference"] = "available"
+        return cleaned
+
+
+class BaseAvailabilityWindowFormSet(BaseFormSet):  # type: ignore[type-arg]
+    """Validate the complete repeatable current availability period set."""
+
+    def __init__(
+        self,
+        *args: Any,
+        starts_on: Any,
+        ends_on: Any,
+        time_zone: str,
+        **kwargs: Any,
+    ) -> None:
+        """Bind edition horizon and local time parsing to every row.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django's formset.
+        starts_on : Any
+            First local edition date.
+        ends_on : Any
+            Last local edition date.
+        time_zone : str
+            Persisted edition IANA time zone.
+        **kwargs : Any
+            Keyword arguments forwarded to Django's formset.
+        """
+        self.edition_starts_on = starts_on
+        self.edition_ends_on = ends_on
+        self.edition_time_zone = time_zone
+        form_kwargs = dict(kwargs.pop("form_kwargs", {}) or {})
+        form_kwargs["zone_name"] = time_zone
+        kwargs["form_kwargs"] = form_kwargs
+        super().__init__(*args, **kwargs)
+
+    def clean(self) -> None:
+        """Apply complete-set horizon and overlap validation.
+
+        Raises
+        ------
+        forms.ValidationError
+            If the complete current set violates an interval invariant.
+        """
+        super().clean()
+        if any(form.errors for form in self.forms):
+            return
+        try:
+            normalize_availability_windows(
+                self.windows,
+                starts_on=self.edition_starts_on,
+                ends_on=self.edition_ends_on,
+                time_zone=self.edition_time_zone,
+            )
+        except forms.ValidationError as error:
+            raise forms.ValidationError(error.messages, code=error.code) from error
+
+    @property
+    def windows(self) -> tuple[AvailabilityWindowInput, ...]:
+        """Return complete nonblank, nondeleted rows as domain inputs.
+
+        Returns
+        -------
+        tuple[AvailabilityWindowInput, ...]
+            Current user-entered availability periods.
+        """
+        windows: list[AvailabilityWindowInput] = []
+        for form in self.forms:
+            if not hasattr(form, "cleaned_data") or form.cleaned_data.get("DELETE"):
+                continue
+            starts_at = form.cleaned_data.get("starts_at")
+            ends_at = form.cleaned_data.get("ends_at")
+            if not isinstance(starts_at, datetime) or not isinstance(ends_at, datetime):
+                continue
+            windows.append(
+                AvailabilityWindowInput(
+                    starts_at=starts_at,
+                    ends_at=ends_at,
+                    preference=str(form.cleaned_data.get("preference") or "available"),
+                )
+            )
+        return tuple(windows)
+
+
+AvailabilityWindowFormSet = cast(
+    "type[BaseAvailabilityWindowFormSet]",
+    formset_factory(
+        AvailabilityWindowForm,
+        formset=BaseAvailabilityWindowFormSet,
+        extra=1,
+        can_delete=True,
+        max_num=MAX_AVAILABILITY_WINDOWS,
+        validate_max=True,
+    ),
+)
+
+
+class AvailabilityWithdrawForm(StrictInputForm):
+    """Collect an explicit destructive-to-current-times withdrawal confirmation."""
+
+    expected_version = StrictBase10IntegerField(min_value=1, widget=forms.HiddenInput)
+    retry_key = CanonicalUUIDField(widget=forms.HiddenInput)
+    confirm = forms.BooleanField(
+        label="Remove my exact periods and show this plan as withdrawn",
+        required=True,
+    )
+
+    def __init__(
+        self,
+        *args: Any,
+        expected_version: int,
+        retry_key: UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Bind current version and stable retry evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django.
+        expected_version : int
+            Current positive plan version.
+        retry_key : UUID | None, default=None
+            Optional stable browser retry UUID.
+        **kwargs : Any
+            Keyword arguments forwarded to Django.
+        """
+        kwargs.setdefault("auto_id", "id_availability_withdraw_%s")
+        initial = dict(kwargs.pop("initial", {}) or {})
+        initial.setdefault("expected_version", expected_version)
+        initial.setdefault("retry_key", retry_key or uuid4())
+        kwargs["initial"] = initial
+        super().__init__(*args, **kwargs)
 
 
 class VolunteerApplicationForm(forms.Form):

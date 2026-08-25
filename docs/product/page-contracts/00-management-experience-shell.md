@@ -146,12 +146,14 @@ purpose-built links only and is never directed into a specialist Django model
 screen they cannot open; independently authorized Django staff may still use
 clearly labelled temporary Position and assignment record links.
 
-Availability and Shifts are labelled **Not available yet** and have no controls
-or fabricated data. Availability is described as a future person-owned input,
-not something inferred from assignment. Shift demand, claim, confirmation,
-overlap, completion, and locking remain an unimplemented HR-009/SCH-001/SCH-005
-transactional contract. This placement is product orientation, not a new model,
-writer, permission, or scheduling source of truth.
+Availability is an implemented person-owned continuation. A person may keep a
+private draft or deliberately share one complete exact-edition statement;
+independently authorized organizers receive only the minimized current
+planning consequence. It is never inferred from assignment. Shifts remain
+labelled **Not available yet** and have no controls or fabricated data. Shift
+demand, claim, confirmation, overlap, completion, and locking remain an
+unimplemented HR-009/SCH-001/SCH-005 transactional contract. This placement
+orients the journey without treating Availability as a schedule commitment.
 
 ## First continuous journey
 

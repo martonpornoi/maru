@@ -1,4 +1,4 @@
-"""Public transaction boundaries for Page 9 workforce-structure writers."""
+"""Public transaction boundaries for Organization structure writers."""
 
 from __future__ import annotations
 
@@ -17,12 +17,12 @@ _EDITION_STRUCTURE_LOCK_NAMESPACE = "maru.workforce.department"
 def _require_atomic_transaction() -> None:
     if connection.get_autocommit() or not connection.in_atomic_block:
         raise TransactionManagementError(
-            "Page 9 structure writer locks require an atomic transaction."
+            "Organization structure writer locks require an atomic transaction."
         )
 
 
 def lock_page_9_structure_writer_boundary() -> None:
-    """Join the global Page 9 writer generation before narrower locks."""
+    """Join the global Organization structure writer generation before locks."""
     _require_atomic_transaction()
     with connection.cursor() as cursor:
         cursor.execute(

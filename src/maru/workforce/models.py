@@ -5,27 +5,54 @@ from __future__ import annotations
 from typing import Any
 
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import ArrayField, DateTimeRangeField
+from django.contrib.postgres.fields.ranges import RangeOperators
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
-from django.db.models import Q
+from django.db.models import F, Func, Q, Value
 from django.utils import timezone
 
 from maru.core.models import UUIDTimeStampedModel
 from maru.core.validators import validate_lowercase_slug
 from maru.identity.policies import validate_convention_subject
 from maru.participation.models import validate_capacity_code
+from maru.workforce.availability_inputs import (
+    MAX_AVAILABILITY_WINDOWS,
+    AvailabilityWindowInput,
+    normalize_availability_windows,
+)
 
 MAX_ONBOARDING_DOCUMENT_BYTES = 10 * 1024 * 1024
 MAX_STRUCTURE_CHANGED_FIELDS = 16
 MAX_STRUCTURE_AFFECTED_DEPARTMENTS = 256
+ASSIGNMENT_PROPOSAL_VERSION = 1
+ASSIGNMENT_DECISION_VERSION = 2
+ASSIGNMENT_END_VERSION = 3
 
 _SHA256_VALIDATOR = RegexValidator(
     regex=r"^[0-9a-f]{64}$",
     message="Use a lowercase SHA-256 digest.",
     code="invalid_structure_digest",
 )
+
+
+def _half_open_availability_interval() -> Func:
+    """Return the PostgreSQL range expression used for overlap exclusion.
+
+    Returns
+    -------
+    Func
+        Half-open ``tstzrange`` expression over the model's interval columns.
+    """
+    return Func(
+        F("starts_at"),
+        F("ends_at"),
+        Value("[)"),
+        function="TSTZRANGE",
+        output_field=DateTimeRangeField(),
+    )
 
 
 def onboarding_document_path(
@@ -1537,6 +1564,7 @@ class PositionAssignment(UUIDTimeStampedModel):
 
         PROPOSED = "proposed", "Proposed"
         ACTIVE = "active", "Active"
+        REJECTED = "rejected", "Rejected"
         ENDED = "ended", "Ended"
 
     position = models.ForeignKey(
@@ -1579,6 +1607,21 @@ class PositionAssignment(UUIDTimeStampedModel):
         related_name="workforce_assignments_approved",
     )
     reason = models.CharField(max_length=500)
+    command_version = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    decision_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_assignments_decided",
+    )
+    decision_at = models.DateTimeField(null=True, blank=True, editable=False)
+    decision_reason = models.CharField(max_length=240, blank=True, editable=False)
     role_assignment = models.OneToOneField(
         "authorization.RoleAssignment",
         null=True,
@@ -1594,6 +1637,15 @@ class PositionAssignment(UUIDTimeStampedModel):
         related_name="workforce_assignments",
     )
     ended_at = models.DateTimeField(null=True, blank=True)
+    ended_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.PROTECT,
+        related_name="workforce_assignments_ended",
+    )
+    end_reason = models.CharField(max_length=240, blank=True, editable=False)
 
     class Meta:
         """Configure Django's declarative class metadata."""
@@ -1604,7 +1656,14 @@ class PositionAssignment(UUIDTimeStampedModel):
                 fields=("position", "account"),
                 condition=Q(status__in=("proposed", "active")),
                 name="workforce_one_open_assignment_per_position_account",
-            )
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(command_version__isnull=True)
+                    | models.Q(command_version__gt=0)
+                ),
+                name="workforce_assignment_command_version_positive",
+            ),
         ]
 
     def clean(self) -> None:
@@ -1637,6 +1696,66 @@ class PositionAssignment(UUIDTimeStampedModel):
             raise ValidationError(
                 "Active assignments require approval, role, and capacity evidence."
             )
+        if self.command_version is not None:
+            has_decision = bool(
+                self.decision_by_id
+                and self.decision_at
+                and self.decision_reason.strip()
+            )
+            has_any_decision = bool(
+                self.decision_by_id or self.decision_at or self.decision_reason
+            )
+            if self.status == self.Status.PROPOSED and (
+                self.command_version != 1
+                or self.approved_by_id
+                or self.role_assignment_id
+                or self.participation_capacity_id
+                or has_any_decision
+                or self.ended_at
+                or self.ended_by_id
+                or self.end_reason
+            ):
+                raise ValidationError(
+                    "A governed proposal cannot contain decision or ending evidence."
+                )
+            if self.status == self.Status.REJECTED and (
+                self.command_version < ASSIGNMENT_DECISION_VERSION
+                or not has_decision
+                or self.approved_by_id
+                or self.role_assignment_id
+                or self.participation_capacity_id
+                or self.ended_at
+                or self.ended_by_id
+                or self.end_reason
+            ):
+                raise ValidationError(
+                    "A rejected assignment requires only complete decision evidence."
+                )
+            if self.status in {self.Status.ACTIVE, self.Status.ENDED} and (
+                self.command_version < ASSIGNMENT_DECISION_VERSION
+                or not has_decision
+                or self.decision_by_id != self.approved_by_id
+                or not self.approved_by_id
+                or not self.role_assignment_id
+                or not self.participation_capacity_id
+            ):
+                raise ValidationError(
+                    "A governed active assignment requires complete approval evidence."
+                )
+            has_end = bool(
+                self.ended_at and self.ended_by_id and self.end_reason.strip()
+            )
+            has_any_end = bool(self.ended_at or self.ended_by_id or self.end_reason)
+            if self.status == self.Status.ACTIVE and has_any_end:
+                raise ValidationError(
+                    "An active assignment cannot contain ending evidence."
+                )
+            if self.status == self.Status.ENDED and (
+                self.command_version < ASSIGNMENT_END_VERSION or not has_end
+            ):
+                raise ValidationError(
+                    "A governed ended assignment requires complete ending evidence."
+                )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Validate and persist the record.
@@ -1686,3 +1805,594 @@ class PositionAssignment(UUIDTimeStampedModel):
             A human-readable label for the record.
         """
         return f"{self.account} — {self.position.title}"
+
+
+class PositionAssignmentCommandReceipt(UUIDTimeStampedModel):
+    """Immutable reason and retry evidence for one assignment state change."""
+
+    class Action(models.TextChoices):
+        """Enumerate supported assignment command actions."""
+
+        PROPOSED = "proposed", "Assignment proposed"
+        APPROVED = "approved", "Assignment approved"
+        REJECTED = "rejected", "Assignment rejected"
+        ENDED = "ended", "Assignment ended"
+
+    assignment = models.ForeignKey(
+        PositionAssignment,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="workforce_assignment_command_receipts",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="workforce_assignment_command_receipts",
+    )
+    position = models.ForeignKey(
+        Position,
+        on_delete=models.PROTECT,
+        related_name="assignment_command_receipts",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="workforce_assignment_commands_acted",
+    )
+    action = models.CharField(max_length=16, choices=Action)
+    resulting_version = models.PositiveBigIntegerField()
+    reason = models.CharField(max_length=240)
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(max_length=32)
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        ordering = ("assignment_id", "resulting_version", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("assignment", "resulting_version"),
+                name="workforce_assignment_receipt_version_unique",
+            ),
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"),
+                name="workforce_assignment_retry_key_unique",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(resulting_version__gt=0),
+                name="workforce_assignment_receipt_version_positive",
+            ),
+            models.CheckConstraint(
+                condition=(~models.Q(reason="") & ~models.Q(source_channel="")),
+                name="workforce_assignment_receipt_evidence_nonblank",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "action", "created_at"),
+                name="wrk_assignment_action_idx",
+            ),
+            models.Index(
+                fields=("position", "created_at"),
+                name="wrk_assignment_pos_idx",
+            ),
+        ]
+
+    def clean(self) -> None:
+        """Validate exact scope and command-version evidence.
+
+        Raises
+        ------
+        ValidationError
+            If the receipt does not match its resulting assignment or lacks
+            required retained evidence.
+        """
+        super().clean()
+        assignment = self.assignment if self.assignment_id else None
+        if assignment is None or (
+            assignment.organization_id != self.organization_id
+            or assignment.edition_id != self.edition_id
+            or assignment.position_id != self.position_id
+            or assignment.command_version != self.resulting_version
+        ):
+            raise ValidationError(
+                "The assignment receipt must match its resulting assignment state."
+            )
+        if self.edition_id and self.edition.organization_id != self.organization_id:
+            raise ValidationError("The assignment receipt must match its edition.")
+        if not self.reason.strip() or not self.source_channel.strip():
+            raise ValidationError(
+                "An assignment command requires a retained reason and source."
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and insert this append-only command receipt.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the model implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the model implementation.
+
+        Raises
+        ------
+        ValidationError
+            If an update is attempted or receipt evidence is invalid.
+        """
+        if not self._state.adding:
+            raise ValidationError(
+                "Assignment command receipts are immutable.",
+                code="immutable_assignment_command_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse deletion of retained assignment command evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments that would otherwise reach model deletion.
+        **kwargs : Any
+            Keyword arguments that would otherwise reach model deletion.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Unreachable Django deletion counts retained for method compatibility.
+
+        Raises
+        ------
+        ValidationError
+            Always, because assignment command evidence is immutable.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Assignment command receipts are immutable.",
+            code="immutable_assignment_command_receipt",
+        )
+
+
+class PersonAvailabilityPlan(UUIDTimeStampedModel):
+    """One person's current edition availability statement."""
+
+    class Status(models.TextChoices):
+        """Enumerate owner-controlled disclosure states."""
+
+        DRAFT = "draft", "Private draft"
+        SUBMITTED = "submitted", "Shared with organizers"
+        WITHDRAWN = "withdrawn", "Withdrawn"
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="person_availability_plans",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="person_availability_plans",
+    )
+    account = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="workforce_availability_plans",
+    )
+    status = models.CharField(max_length=16, choices=Status)
+    time_zone = models.CharField(max_length=63)
+    command_version = models.PositiveBigIntegerField(editable=False)
+    window_count = models.PositiveSmallIntegerField(default=0, editable=False)
+    window_set_digest = models.CharField(
+        max_length=64,
+        validators=(_SHA256_VALIDATOR,),
+        editable=False,
+    )
+    submitted_at = models.DateTimeField(null=True, blank=True, editable=False)
+    withdrawn_at = models.DateTimeField(null=True, blank=True, editable=False)
+
+    class Meta:
+        """Configure the one-plan-per-person edition aggregate."""
+
+        ordering = ("edition_id", "account_id", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("organization", "edition", "account"),
+                name="workforce_avail_plan_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(command_version__gt=0),
+                name="workforce_avail_version_pos",
+            ),
+            models.CheckConstraint(
+                condition=Q(window_count__lte=MAX_AVAILABILITY_WINDOWS),
+                name="workforce_avail_count_bound",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        status="draft",
+                        submitted_at__isnull=True,
+                        withdrawn_at__isnull=True,
+                    )
+                    | Q(
+                        status="submitted",
+                        submitted_at__isnull=False,
+                        withdrawn_at__isnull=True,
+                    )
+                    | Q(
+                        status="withdrawn",
+                        submitted_at__isnull=True,
+                        withdrawn_at__isnull=False,
+                        window_count=0,
+                    )
+                ),
+                name="workforce_avail_state_evidence",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "status"),
+                name="wrk_avail_plan_state_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Validate person, scope, and state evidence.
+
+        Raises
+        ------
+        ValidationError
+            If person, tenant, version, count, or lifecycle evidence is invalid.
+        """
+        super().clean()
+        if self.account_id:
+            validate_convention_subject(self.account)
+        if self.edition_id and self.edition.organization_id != self.organization_id:
+            raise ValidationError("The availability plan must match its edition.")
+        if self.command_version < 1:
+            raise ValidationError(
+                {"command_version": "Availability version must be positive."}
+            )
+        if self.window_count > MAX_AVAILABILITY_WINDOWS:
+            raise ValidationError(
+                {"window_count": "The availability period limit was exceeded."}
+            )
+        if self.status == self.Status.DRAFT and (
+            self.submitted_at is not None or self.withdrawn_at is not None
+        ):
+            raise ValidationError("A private draft cannot contain sharing evidence.")
+        if self.status == self.Status.SUBMITTED and (
+            self.submitted_at is None or self.withdrawn_at is not None
+        ):
+            raise ValidationError("A shared plan requires complete sharing evidence.")
+        if self.status == self.Status.WITHDRAWN and (
+            self.submitted_at is not None
+            or self.withdrawn_at is None
+            or self.window_count != 0
+        ):
+            raise ValidationError(
+                "A withdrawn plan must remove every current exact period."
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the governed current plan.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django.
+        **kwargs : Any
+            Keyword arguments forwarded to Django.
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse deletion outside the approved retention workflow.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional deletion arguments.
+        **kwargs : Any
+            Keyword deletion arguments.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Unreachable framework-compatible deletion result.
+
+        Raises
+        ------
+        ValidationError
+            Always, because ordinary commands retain the minimized plan shell.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Availability plans require the approved retention workflow.",
+            code="protected_person_availability_plan",
+        )
+
+
+class PersonAvailabilityWindow(UUIDTimeStampedModel):
+    """One current exact available or preferred interval in a person's plan."""
+
+    class Preference(models.TextChoices):
+        """Enumerate supported planning signals."""
+
+        AVAILABLE = "available", "Available"
+        PREFERRED = "preferred", "Preferred"
+
+    plan = models.ForeignKey(
+        PersonAvailabilityPlan,
+        on_delete=models.CASCADE,
+        related_name="windows",
+    )
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+    preference = models.CharField(max_length=16, choices=Preference)
+    created_by_version = models.PositiveBigIntegerField(editable=False)
+
+    class Meta:
+        """Order and constrain current half-open availability intervals."""
+
+        ordering = ("plan_id", "starts_at", "ends_at", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(ends_at__gt=F("starts_at")),
+                name="workforce_avail_window_order",
+            ),
+            models.CheckConstraint(
+                condition=Q(created_by_version__gt=0),
+                name="workforce_avail_window_ver",
+            ),
+            ExclusionConstraint(
+                name="workforce_avail_no_overlap",
+                expressions=(
+                    ("plan", RangeOperators.EQUAL),
+                    (_half_open_availability_interval(), RangeOperators.OVERLAPS),
+                ),
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("plan", "starts_at"),
+                name="wrk_avail_window_start_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Validate the plan version and exact edition calendar horizon.
+
+        Raises
+        ------
+        ValidationError
+            If the period is stale or outside the canonical interval contract.
+        """
+        super().clean()
+        if self.plan_id and self.created_by_version != self.plan.command_version:
+            raise ValidationError(
+                "An availability period must belong to the current plan version."
+            )
+        if self.plan_id:
+            normalize_availability_windows(
+                (
+                    AvailabilityWindowInput(
+                        starts_at=self.starts_at,
+                        ends_at=self.ends_at,
+                        preference=self.preference,
+                    ),
+                ),
+                starts_on=self.plan.edition.starts_on,
+                ends_on=self.plan.edition.ends_on,
+                time_zone=self.plan.time_zone,
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist one current period.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django.
+        **kwargs : Any
+            Keyword arguments forwarded to Django.
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse an isolated period deletion outside a plan replacement.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional deletion arguments.
+        **kwargs : Any
+            Keyword deletion arguments.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Unreachable framework-compatible deletion result.
+
+        Raises
+        ------
+        ValidationError
+            Always, because the complete plan is the command boundary.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Replace or withdraw the complete availability plan.",
+            code="protected_person_availability_window",
+        )
+
+
+class PersonAvailabilityCommandReceipt(UUIDTimeStampedModel):
+    """Immutable minimized evidence for one owner availability command."""
+
+    class Action(models.TextChoices):
+        """Enumerate complete-plan command actions."""
+
+        DRAFT_SAVED = "draft_saved", "Private draft saved"
+        SUBMITTED = "submitted", "Availability shared"
+        WITHDRAWN = "withdrawn", "Availability withdrawn"
+
+    plan = models.ForeignKey(
+        PersonAvailabilityPlan,
+        on_delete=models.PROTECT,
+        related_name="command_receipts",
+    )
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="person_availability_command_receipts",
+    )
+    edition = models.ForeignKey(
+        "events.EventEdition",
+        on_delete=models.PROTECT,
+        related_name="person_availability_command_receipts",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="workforce_availability_commands_acted",
+    )
+    action = models.CharField(max_length=16, choices=Action)
+    resulting_version = models.PositiveBigIntegerField()
+    resulting_status = models.CharField(
+        max_length=16,
+        choices=PersonAvailabilityPlan.Status,
+    )
+    window_count = models.PositiveSmallIntegerField()
+    window_set_digest = models.CharField(
+        max_length=64,
+        validators=(_SHA256_VALIDATOR,),
+    )
+    retry_key = models.UUIDField()
+    request_digest = models.CharField(max_length=64, validators=(_SHA256_VALIDATOR,))
+    correlation_id = models.UUIDField()
+    source_channel = models.CharField(max_length=32)
+
+    class Meta:
+        """Keep one exact receipt per plan version and owner retry key."""
+
+        ordering = ("plan_id", "resulting_version", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("plan", "resulting_version"),
+                name="workforce_avail_receipt_ver",
+            ),
+            models.UniqueConstraint(
+                fields=("edition", "actor", "retry_key"),
+                name="workforce_avail_retry_unique",
+            ),
+            models.CheckConstraint(
+                condition=Q(resulting_version__gt=0),
+                name="workforce_avail_receipt_pos",
+            ),
+            models.CheckConstraint(
+                condition=Q(window_count__lte=MAX_AVAILABILITY_WINDOWS),
+                name="workforce_avail_receipt_cnt",
+            ),
+            models.CheckConstraint(
+                condition=~Q(source_channel=""),
+                name="workforce_avail_source_set",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("organization", "edition", "action", "created_at"),
+                name="wrk_avail_action_idx",
+            )
+        ]
+
+    def clean(self) -> None:
+        """Validate that minimized evidence matches its resulting plan.
+
+        Raises
+        ------
+        ValidationError
+            If actor, scope, state, version, count, or digest does not match.
+        """
+        super().clean()
+        plan = self.plan if self.plan_id else None
+        if plan is None or (
+            plan.organization_id != self.organization_id
+            or plan.edition_id != self.edition_id
+            or plan.account_id != self.actor_id
+            or plan.command_version != self.resulting_version
+            or plan.status != self.resulting_status
+            or plan.window_count != self.window_count
+            or plan.window_set_digest != self.window_set_digest
+        ):
+            raise ValidationError(
+                "Availability command evidence must match its resulting plan."
+            )
+        actions_by_status: dict[str, str] = {
+            PersonAvailabilityPlan.Status.DRAFT: self.Action.DRAFT_SAVED,
+            PersonAvailabilityPlan.Status.SUBMITTED: self.Action.SUBMITTED,
+            PersonAvailabilityPlan.Status.WITHDRAWN: self.Action.WITHDRAWN,
+        }
+        expected_action = actions_by_status[plan.status]
+        if self.action != expected_action or not self.source_channel.strip():
+            raise ValidationError(
+                "Availability command action or source does not match the plan."
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and insert append-only command evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to Django.
+        **kwargs : Any
+            Keyword arguments forwarded to Django.
+
+        Raises
+        ------
+        ValidationError
+            If an existing receipt is mutated.
+        """
+        if not self._state.adding:
+            raise ValidationError(
+                "Availability command receipts are immutable.",
+                code="immutable_availability_command_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse deletion of minimized command evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional deletion arguments.
+        **kwargs : Any
+            Keyword deletion arguments.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Unreachable framework-compatible deletion result.
+
+        Raises
+        ------
+        ValidationError
+            Always, because command evidence is append-only.
+        """
+        del args, kwargs
+        raise ValidationError(
+            "Availability command receipts are immutable.",
+            code="immutable_availability_command_receipt",
+        )

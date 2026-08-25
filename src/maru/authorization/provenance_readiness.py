@@ -112,6 +112,7 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0009_runtime_executable_function_contract"),
     ("authorization", "0010_retired_department_authority_guards"),
     ("authorization", "0011_registration_profile_extension_capabilities"),
+    ("authorization", "0017_workforce_availability_capability"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("workforce", "0005_runtime_executable_function_hardening"),
     ("workforce", "0006_edition_structure_schema"),
@@ -119,6 +120,8 @@ _ACTIVATION_MIGRATIONS = (
     ("workforce", "0008_department_fk_contract_successor"),
     ("workforce", "0009_reconcile_fictional_structure_template"),
     ("workforce", "0010_position_structure_commands"),
+    ("workforce", "0011_owner_assignment_commands"),
+    ("workforce", "0012_person_owned_availability"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -178,6 +181,7 @@ class _CutoverState:
 
 
 _ROW_AFTER_INSERT = 1 | 4
+_ROW_AFTER_INSERT_DELETE = 1 | 4 | 8
 _ROW_AFTER_UPDATE = 1 | 16
 _ROW_AFTER_INSERT_UPDATE = 1 | 4 | 16
 _ROW_AFTER_INSERT_UPDATE_DELETE = 1 | 4 | 8 | 16
@@ -626,6 +630,20 @@ _TRIGGER_CONTRACTS = (
         _ROW_BEFORE_INSERT_UPDATE_DELETE,
     ),
     _TriggerContract(
+        "workforce_assignment_command_receipt_guard",
+        "workforce_positionassignmentcommandreceipt",
+        "maru_guard_assignment_command_receipt()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "workforce_assignment_command_evidence",
+        "workforce_positionassignment",
+        "maru_assert_assignment_command_evidence()",
+        _ROW_AFTER_INSERT_UPDATE,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
         "aa_workforce_page9_department_barrier",
         "workforce_department",
         "maru_workforce_page9_writer_barrier()",
@@ -851,6 +869,72 @@ _TRIGGER_CONTRACTS = (
         deferrable=True,
         initially_deferred=True,
     ),
+    _TriggerContract(
+        "workforce_availability_plan_guard",
+        "workforce_personavailabilityplan",
+        "maru_guard_workforce_availability_plan()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "workforce_idn011_availability_subject_guard",
+        "workforce_personavailabilityplan",
+        "maru_guard_workforce_idn011_subject()",
+        _ROW_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "workforce_availability_window_guard",
+        "workforce_personavailabilitywindow",
+        "maru_guard_workforce_availability_window()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "workforce_availability_receipt_guard",
+        "workforce_personavailabilitycommandreceipt",
+        "maru_guard_workforce_availability_receipt()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "workforce_availability_plan_evidence_guard",
+        "workforce_personavailabilityplan",
+        "maru_deferred_validate_workforce_availability()",
+        _ROW_AFTER_INSERT_UPDATE,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "workforce_availability_window_evidence_guard",
+        "workforce_personavailabilitywindow",
+        "maru_deferred_validate_workforce_availability()",
+        _ROW_AFTER_INSERT_DELETE,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "workforce_availability_receipt_evidence_guard",
+        "workforce_personavailabilitycommandreceipt",
+        "maru_deferred_validate_workforce_availability()",
+        _ROW_AFTER_INSERT,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "workforce_availability_plan_truncate_guard",
+        "workforce_personavailabilityplan",
+        "maru_refuse_workforce_availability_truncate()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "workforce_availability_window_truncate_guard",
+        "workforce_personavailabilitywindow",
+        "maru_refuse_workforce_availability_truncate()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "workforce_availability_receipt_truncate_guard",
+        "workforce_personavailabilitycommandreceipt",
+        "maru_refuse_workforce_availability_truncate()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
 )
 
 _CORE_FUNCTIONS = (
@@ -870,6 +954,15 @@ _CORE_FUNCTIONS = (
     "maru_deferred_validate_board_organization()",
     "maru_guard_workforce_position()",
     "maru_guard_workforce_assignment()",
+    "maru_guard_assignment_command_receipt()",
+    "maru_assert_assignment_command_evidence()",
+    "maru_guard_workforce_idn011_subject()",
+    "maru_deferred_validate_workforce_idn011_account()",
+    "maru_guard_workforce_availability_plan()",
+    "maru_guard_workforce_availability_window()",
+    "maru_guard_workforce_availability_receipt()",
+    "maru_deferred_validate_workforce_availability()",
+    "maru_refuse_workforce_availability_truncate()",
     "maru_authorization_capability_min_scope(text)",
     "maru_authorization_scope_rank(uuid,uuid,uuid)",
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)",
@@ -995,10 +1088,37 @@ _FUNCTION_DEFINITION_SHA256 = {
         "1dda9acafc97a1c2e682d5cd75127cde2064022bfbfc686677140ac1ec6baad6"
     ),
     "maru_guard_workforce_assignment()": (
-        "49970385f303dbce1c2f3134a06dfdae94db6a306582d7a8bb225e6ad6bb2eca"
+        "951383463b93672dc404341fd22bf0e156b9a27a97551b8837fb1aefdfe9da9f"
+    ),
+    "maru_guard_assignment_command_receipt()": (
+        "a95e7fd1e33287b9265ec3c166e887fd4b149f834a311e32c751b4a8f98bc95f"
+    ),
+    "maru_assert_assignment_command_evidence()": (
+        "f864c32702b4075c4cb25523e882a9439b23b4992bc348bf8b1e58979a8bd635"
+    ),
+    "maru_guard_workforce_idn011_subject()": (
+        "fe50fc124dc27998a2c15445d2ed1f9df4d6d9851e5934aca726ac4156665888"
+    ),
+    "maru_deferred_validate_workforce_idn011_account()": (
+        "247b6dc138681c570d317741154c43dfa09d64ad96727f1058c6ae5457351f69"
+    ),
+    "maru_guard_workforce_availability_plan()": (
+        "3db3bf43915c9c2d498377040a439aabc345a7579ac30db1c67e24ac326ebf24"
+    ),
+    "maru_guard_workforce_availability_window()": (
+        "6422f3aff3455269491666fb05a00e052fa47eee1713cba71e2d809d56ba8b4e"
+    ),
+    "maru_guard_workforce_availability_receipt()": (
+        "d567cdaae6ac1006e5b3c09bccfca7ade5f3922ceaecd4923168d2affbdfabfa"
+    ),
+    "maru_deferred_validate_workforce_availability()": (
+        "93c8e3097700010e909fb680c482de33e4c8cb800c7469f0d7e707caf8641a5e"
+    ),
+    "maru_refuse_workforce_availability_truncate()": (
+        "a112c685757df9cbceaaeec8c77e3ef15ff24c47918dd73a81dcbb6b6319e7d7"
     ),
     "maru_authorization_capability_min_scope(text)": (
-        "d3b1413dbc598953038ba3acfa8c6339eb0a0b75f143b3d5cabf9e8c00fd581e"
+        "0e54bc9e6c4176deb8136b2fef28f08bb7bb42208163f42b032107d3219172dc"
     ),
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)": (
         "093a2f3a81a16d7a09bc782c23711aa4b108274ee7a9baf8fa955e52d82cc481"
@@ -1229,6 +1349,18 @@ _DOWNGRADE_FENCE_TRIGGER_NAMES = frozenset(
         "organizations_parent_deferred_board_integrity",
         "workforce_position_guard",
         "workforce_assignment_guard",
+        "workforce_assignment_command_receipt_guard",
+        "workforce_assignment_command_evidence",
+        "workforce_availability_plan_guard",
+        "workforce_idn011_availability_subject_guard",
+        "workforce_availability_window_guard",
+        "workforce_availability_receipt_guard",
+        "workforce_availability_plan_evidence_guard",
+        "workforce_availability_window_evidence_guard",
+        "workforce_availability_receipt_evidence_guard",
+        "workforce_availability_plan_truncate_guard",
+        "workforce_availability_window_truncate_guard",
+        "workforce_availability_receipt_truncate_guard",
         "aa_workforce_page9_department_barrier",
         "aa_workforce_page9_control_barrier",
         "aa_workforce_page9_receipt_barrier",
@@ -1285,6 +1417,15 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_deferred_validate_board_organization()",
         "maru_guard_workforce_position()",
         "maru_guard_workforce_assignment()",
+        "maru_guard_assignment_command_receipt()",
+        "maru_assert_assignment_command_evidence()",
+        "maru_guard_workforce_idn011_subject()",
+        "maru_deferred_validate_workforce_idn011_account()",
+        "maru_guard_workforce_availability_plan()",
+        "maru_guard_workforce_availability_window()",
+        "maru_guard_workforce_availability_receipt()",
+        "maru_deferred_validate_workforce_availability()",
+        "maru_refuse_workforce_availability_truncate()",
         "maru_authorization_capability_min_scope(text)",
         "maru_authorization_scope_rank(uuid,uuid,uuid)",
         "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)",

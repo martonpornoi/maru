@@ -1,0 +1,115 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static tz %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'workforce/organization_structure.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}Workforce availability · {{ edition.name }} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if baseline_can_view_organization %}<a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>{% else %}{{ organization.name }}{% endif %}
+  &rsaquo; {{ convention_series.name }}
+  &rsaquo; {{ edition.name }}
+  {% if baseline_can_view_structure %}&rsaquo; <a href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}">Organization structure</a>{% endif %}
+  &rsaquo; Availability
+{% endblock %}
+
+{% block baseline_content %}
+  {% timezone edition.time_zone %}
+  <a class="baseline-back-link" href="{% url 'organization-workforce-assignments' organization.slug convention_series.slug edition.slug %}">← Workforce assignments</a>
+
+  <header class="baseline-page-heading baseline-page-heading--with-action">
+    <div>
+      <p class="baseline-kicker">{{ edition.name }} · Workforce</p>
+      <h1>Workforce availability</h1>
+      <p class="baseline-intro">Review only the current planning information that assigned people deliberately shared for this edition.</p>
+      <p class="baseline-record-meta">
+        <span>Time zone: <strong>{{ edition.time_zone }}</strong></span>
+        <span>{{ availability_overview.people|length }} person{{ availability_overview.people|length|pluralize }} with an open assignment</span>
+      </p>
+    </div>
+    <a class="workforce-structure-action workforce-structure-action--secondary" href="{% url 'organization-workforce-assignments' organization.slug convention_series.slug edition.slug %}">Manage assignments</a>
+  </header>
+
+  <details class="maru-access-summary">
+    <summary>
+      <span class="maru-access-summary__label"><strong>Access</strong><span class="maru-access-summary__scope">{{ availability_access_label }}</span></span>
+      <span class="maru-access-summary__policy">Audited personal planning data</span>
+    </summary>
+    <div class="maru-access-summary__body">
+      <p>This page requires a separate Availability-view capability. Every read is audited. Private drafts, prior periods, personal notes, and assignment reasons are not included.</p>
+    </div>
+  </details>
+
+  <section class="baseline-panel" aria-labelledby="availability-summary-title">
+    <div class="baseline-panel-heading">
+      <div><p class="baseline-kicker">Current disclosure state</p><h2 id="availability-summary-title">Planning summary</h2></div>
+      <span class="baseline-count">Current statements only</span>
+    </div>
+    <dl class="workforce-availability-summary">
+      <div><dt>Shared periods</dt><dd>{{ availability_overview.shared_count }}</dd></div>
+      <div><dt>Not available</dt><dd>{{ availability_overview.unavailable_count }}</dd></div>
+      <div><dt>Not shared</dt><dd>{{ availability_overview.not_shared_count }}</dd></div>
+      <div><dt>Withdrawn</dt><dd>{{ availability_overview.withdrawn_count }}</dd></div>
+    </dl>
+    <p class="help">“Not shared” deliberately combines people who have not started with people who have a private draft. Do not infer availability from either state.</p>
+  </section>
+
+  <section class="baseline-panel" aria-labelledby="availability-people-title">
+    <div class="baseline-panel-heading">
+      <div><p class="baseline-kicker">Open Position relationships</p><h2 id="availability-people-title">People and current periods</h2></div>
+      <span class="baseline-count">{{ availability_overview.people|length }} total</span>
+    </div>
+    {% if availability_overview.people %}
+      <ul class="workforce-availability-people">
+        {% for item in availability_overview.people %}
+          <li>
+            <div class="workforce-position-management-heading">
+              <div>
+                <p class="baseline-kicker">Assigned person</p>
+                <h3>{{ item.account_label }}</h3>
+              </div>
+              <span class="workforce-availability-state workforce-availability-state--{{ item.state }}">{{ item.state_label }}</span>
+            </div>
+            <ul class="workforce-availability-position-list" aria-label="Open Positions for {{ item.account_label }}">
+              {% for position in item.positions %}
+                <li><strong>{{ position.position_title }}</strong><span>{{ position.department_name }} · {{ position.assignment_status }}</span></li>
+              {% endfor %}
+            </ul>
+            {% if item.state == "shared" %}
+              <p class="help">Shared {{ item.shared_at|date:"SHORT_DATETIME_FORMAT" }}. Time outside these periods is unavailable.</p>
+              <ul class="workforce-availability-window-list" aria-label="Shared availability for {{ item.account_label }}">
+                {% for window in item.windows %}
+                  <li>
+                    <strong>{{ window.starts_at|date:"D, M j, H:i" }}–{{ window.ends_at|date:"D, M j, H:i" }}</strong>
+                    <span>{{ window.preference_label }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% elif item.state == "unavailable" %}
+              <p>This person explicitly shared that they are not available for this edition.</p>
+            {% elif item.state == "withdrawn" %}
+              <p>The person withdrew their plan. No exact periods remain available to organizers.</p>
+            {% else %}
+              <p>No availability has been shared. A private draft, if one exists, is intentionally indistinguishable here.</p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="baseline-state">
+        <h3>No open assignments</h3>
+        <p>Availability appears only for people with a proposed or active Position in this edition.</p>
+        <p><a href="{% url 'organization-workforce-assignments' organization.slug convention_series.slug edition.slug %}">Review Workforce assignments</a></p>
+      </div>
+    {% endif %}
+  </section>
+
+  <aside class="baseline-boundary" aria-labelledby="availability-planning-boundary-title">
+    <p class="baseline-kicker">Next planning stage</p>
+    <h2 id="availability-planning-boundary-title">Availability still does not assign work</h2>
+    <p>Use these current periods as an input when shift planning is introduced. A future shift must identify a Position, place, start, end, and publication state; it must never be inferred from this page.</p>
+  </aside>
+  {% endtimezone %}
+{% endblock %}

@@ -1,4 +1,4 @@
-"""Atomic platform account-invitation commands for Page 10."""
+"""Atomic commands for platform account invitations."""
 
 from __future__ import annotations
 

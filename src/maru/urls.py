@@ -227,9 +227,16 @@ from maru.workforce.api import (
     MyOnboardingDocumentUploadView,
     MyVolunteerApplicationCreateView,
     PublicVolunteerOpportunityListView,
+    WorkforceAssignmentApproveView,
+    WorkforceAssignmentEndView,
+    WorkforceAssignmentProposalView,
+    WorkforceAssignmentRejectView,
     WorkforceDepartmentCollectionView,
     WorkforceDepartmentDetailView,
     WorkforceDepartmentRetireView,
+    WorkforceMyAvailabilityView,
+    WorkforceMyAvailabilityWithdrawView,
+    WorkforceOrganizerAvailabilityView,
     WorkforcePositionCloseView,
     WorkforcePositionCollectionView,
     WorkforcePositionDetailView,
@@ -240,12 +247,16 @@ from maru.workforce.api import (
 from maru.workforce.views import (
     apply_for_opportunity,
     apply_organization_structure_template,
+    approve_organization_workforce_assignment,
     close_organization_structure_position,
     create_organization_structure_department,
     create_organization_structure_position,
     delete_organization_structure_department,
     download_onboarding_document,
+    end_organization_workforce_assignment,
     my_onboarding_documents,
+    my_workforce_assignments,
+    my_workforce_availability,
     organization_structure,
     organization_structure_department,
     organization_structure_department_create,
@@ -253,12 +264,20 @@ from maru.workforce.views import (
     organization_structure_position_create,
     organization_structure_positions,
     organization_structure_template_application,
+    organization_workforce_assignment,
+    organization_workforce_assignment_proposal,
+    organization_workforce_assignments,
+    organization_workforce_availability,
+    propose_organization_workforce_assignment,
+    reject_organization_workforce_assignment,
     retire_organization_structure_department,
+    save_my_workforce_availability,
     update_organization_structure_department,
     update_organization_structure_position,
     update_organization_structure_position_opportunity,
     upload_onboarding_document_view,
     volunteer_opportunities,
+    withdraw_my_workforce_availability,
 )
 
 urlpatterns: list[URLPattern | URLResolver] = [
@@ -271,6 +290,35 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("", include("maru.logistics.urls")),
     path("", platform_home, name="platform-home"),
     path("my/", my_maru_home, name="my-maru-home"),
+    path(
+        "my/workforce/",
+        my_workforce_assignments,
+        name="my-workforce-assignments",
+    ),
+    path(
+        (
+            "my/workforce/<slug:organization_slug>/<slug:series_slug>/"
+            "<slug:edition_slug>/availability/"
+        ),
+        my_workforce_availability,
+        name="my-workforce-availability",
+    ),
+    path(
+        (
+            "my/workforce/<slug:organization_slug>/<slug:series_slug>/"
+            "<slug:edition_slug>/availability/save/"
+        ),
+        save_my_workforce_availability,
+        name="save-my-workforce-availability",
+    ),
+    path(
+        (
+            "my/workforce/<slug:organization_slug>/<slug:series_slug>/"
+            "<slug:edition_slug>/availability/withdraw/"
+        ),
+        withdraw_my_workforce_availability,
+        name="withdraw-my-workforce-availability",
+    ),
     path(
         "my/navigation/pins/",
         update_navigation_pin,
@@ -489,6 +537,76 @@ urlpatterns: list[URLPattern | URLResolver] = [
         "admin/platform/organizations/<slug:organization_slug>/series/new/",
         baseline_create_convention_series,
         name="baseline-create-convention-series",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "positions/<uuid:position_id>/assignments/new/"
+        ),
+        organization_workforce_assignment_proposal,
+        name="organization-workforce-assignment-proposal",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "positions/<uuid:position_id>/assignments/propose/"
+        ),
+        propose_organization_workforce_assignment,
+        name="propose-organization-workforce-assignment",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "assignments/<uuid:assignment_id>/approve/"
+        ),
+        approve_organization_workforce_assignment,
+        name="approve-organization-workforce-assignment",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "assignments/<uuid:assignment_id>/reject/"
+        ),
+        reject_organization_workforce_assignment,
+        name="reject-organization-workforce-assignment",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "assignments/<uuid:assignment_id>/end/"
+        ),
+        end_organization_workforce_assignment,
+        name="end-organization-workforce-assignment",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/"
+            "assignments/<uuid:assignment_id>/"
+        ),
+        organization_workforce_assignment,
+        name="organization-workforce-assignment",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/assignments/"
+        ),
+        organization_workforce_assignments,
+        name="organization-workforce-assignments",
+    ),
+    path(
+        (
+            "admin/platform/organizations/<slug:organization_slug>/series/"
+            "<slug:series_slug>/editions/<slug:edition_slug>/structure/availability/"
+        ),
+        organization_workforce_availability,
+        name="organization-workforce-availability",
     ),
     path(
         (
@@ -1037,6 +1155,66 @@ urlpatterns: list[URLPattern | URLResolver] = [
         ),
         WorkforcePositionCollectionView.as_view(),
         name="api-workforce-positions",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/positions/"
+            "<uuid:position_id>/assignments"
+        ),
+        WorkforceAssignmentProposalView.as_view(),
+        name="api-workforce-position-assignments",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/availability/me"
+        ),
+        WorkforceMyAvailabilityView.as_view(),
+        name="api-workforce-my-availability",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/availability/me/withdraw"
+        ),
+        WorkforceMyAvailabilityWithdrawView.as_view(),
+        name="api-workforce-my-availability-withdraw",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/availability"
+        ),
+        WorkforceOrganizerAvailabilityView.as_view(),
+        name="api-workforce-availability",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/assignments/"
+            "<uuid:assignment_id>/approve"
+        ),
+        WorkforceAssignmentApproveView.as_view(),
+        name="api-workforce-assignment-approve",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/assignments/"
+            "<uuid:assignment_id>/reject"
+        ),
+        WorkforceAssignmentRejectView.as_view(),
+        name="api-workforce-assignment-reject",
+    ),
+    path(
+        (
+            "api/v1/organizations/<uuid:organization_id>/"
+            "editions/<uuid:edition_id>/workforce/assignments/"
+            "<uuid:assignment_id>/end"
+        ),
+        WorkforceAssignmentEndView.as_view(),
+        name="api-workforce-assignment-end",
     ),
     path(
         (
