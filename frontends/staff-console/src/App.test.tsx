@@ -194,6 +194,8 @@ const workforceStructure = {
   can_manage_positions: true,
   can_manage_assignments: true,
   can_view_availability: true,
+  can_view_shifts: true,
+  can_manage_shifts: true,
   governance: {
     kind: "governance",
     label: "Executive Board",
@@ -693,7 +695,7 @@ describe("Management Console", () => {
     await user.click(screen.getByRole("button", { name: "Workforce" }));
     expect(
       await screen.findByText(
-        "Use this page to understand how departments become staffed positions and, later, workable shifts.",
+        "Use this page to understand how departments become staffed positions, shared availability, and workable shifts.",
       ),
     ).toBeInTheDocument();
 
@@ -830,8 +832,8 @@ describe("Management Console", () => {
       ).toBeInTheDocument();
     }
     expect(
-      within(journey as HTMLElement).getAllByText("Not available yet"),
-    ).toHaveLength(1);
+      within(journey as HTMLElement).queryByText("Not available yet"),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Registration Lead" }),
     ).toBeInTheDocument();
@@ -860,6 +862,12 @@ describe("Management Console", () => {
     ).toHaveAttribute(
       "href",
       "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/availability/",
+    );
+    expect(
+      within(journey as HTMLElement).getByRole("link", { name: "Plan shifts" }),
+    ).toHaveAttribute(
+      "href",
+      "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/shifts/",
     );
     expect(
       screen.getByRole("link", { name: "Manage Registration Lead" }),

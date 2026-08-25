@@ -263,6 +263,20 @@ function workforceAvailabilityPath(edition: EditionContext): string {
   ].join("/");
 }
 
+function workforceShiftsPath(edition: EditionContext): string {
+  return [
+    "/admin/platform/organizations",
+    encodeURIComponent(edition.organization_slug),
+    "series",
+    encodeURIComponent(edition.series_slug),
+    "editions",
+    encodeURIComponent(edition.edition_slug),
+    "structure",
+    "shifts",
+    "",
+  ].join("/");
+}
+
 function workforceWorkspacePath(): string {
   return "/admin/workspace/?view=workforce";
 }
@@ -2483,8 +2497,8 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
           <p className="eyebrow">Teams &amp; volunteer operations</p>
           <h1>Workforce</h1>
           <PageHelp
-            purpose="Use this page to understand how departments become staffed positions and, later, workable shifts."
-            examples="review a vacant position, confirm its active holder, or see what must exist before shift planning"
+            purpose="Use this page to understand how departments become staffed positions, shared availability, and workable shifts."
+            examples="review a vacancy, confirm its active holder, or plan a Shift from current assignments and deliberately shared availability"
           />
         </div>
         {workspace?.structure.state === "complete" && (
@@ -2551,8 +2565,8 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
               </div>
               <p className="muted-copy workforce-journey-intro">
                 Each stage depends on the one before it. Maru shows implemented
-                records as working steps and labels future stages plainly
-                instead of presenting dead controls.
+                records as working steps and labels unavailable continuations
+                plainly instead of presenting dead controls.
               </p>
               <ol className="workforce-journey">
                 <li>
@@ -2655,21 +2669,26 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                     </a>
                   )}
                 </li>
-                <li className="planned-step">
+                <li className={workspace.can_view_shifts ? undefined : "planned-step"}>
                   <span className="workforce-step-number" aria-hidden="true">
                     5
                   </span>
                   <div>
-                    <span className="workforce-step-state planned">
-                      Not available yet
+                    <span className={`workforce-step-state ${workspace.can_view_shifts ? "ready" : "planned"}`}>
+                      {workspace.can_view_shifts ? "Available" : "Access required"}
                     </span>
                     <h3>Shifts</h3>
                     <p>
-                      Shift demand, claims, confirmation, overlap checks,
-                      completion, and locking require their own transactional
-                      contract. Maru does not pretend that Positions are shifts.
+                      Position demand becomes published work, person-owned claims,
+                      independently confirmed coverage, and an explicit lock.
+                      Availability is checked without assigning anyone automatically.
                     </p>
                   </div>
+                  {workspace.can_view_shifts && (
+                    <a className="secondary-button" href={workforceShiftsPath(edition)}>
+                      {workspace.can_manage_shifts ? "Plan shifts" : "Review shifts"}
+                    </a>
+                  )}
                 </li>
               </ol>
             </section>
@@ -2833,6 +2852,18 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
                     <small>
                       Review only current periods deliberately shared by people
                       with open assignments
+                    </small>
+                  </span>
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )}
+              {workspace.can_view_shifts && (
+                <a className="form-link-card" href={workforceShiftsPath(edition)}>
+                  <span className="form-card-icon" aria-hidden="true">S</span>
+                  <span>
+                    <strong>Shift planning</strong>
+                    <small>
+                      Publish demand, review claims, confirm coverage, and lock work
                     </small>
                   </span>
                   <span aria-hidden="true">↗</span>
@@ -3322,7 +3353,7 @@ function RegistrationOperationsView({ edition }: { edition: EditionContext }) {
               <a
                 href={workforceWorkspacePath()}
               >
-                Continue to Workforce: positions, assignments, and future shifts ↗
+                Continue to Workforce: positions, assignments, availability, and shifts ↗
               </a>
             </div>
           )}

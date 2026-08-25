@@ -256,6 +256,24 @@ def _personal_items(request: HttpRequest) -> list[NavigationItem]:
             ),
         ),
         NavigationItem(
+            code="my.workforce",
+            label="My Workforce",
+            url=reverse("my-workforce-assignments"),
+            section="Work",
+            description="Review your Positions, Availability, and Shifts.",
+            keywords=("staff", "volunteer", "assignments", "rota", "crew"),
+            current=_route_is(
+                request,
+                "my-workforce-assignments",
+                "my-workforce-availability",
+                "save-my-workforce-availability",
+                "withdraw-my-workforce-availability",
+                "my-workforce-shifts",
+                "claim-my-workforce-shift",
+                "withdraw-my-workforce-shift",
+            ),
+        ),
+        NavigationItem(
             code="my.schedule",
             label="My schedule",
             url=reverse("my-maru-schedule-index"),
@@ -327,8 +345,7 @@ def _management_items(request: HttpRequest) -> list[NavigationItem]:
             label="Workforce",
             view="workforce",
             description=(
-                "Review Departments, Positions, assignments, and the path to "
-                "availability and shifts."
+                "Review Departments, Positions, assignments, Availability, and Shifts."
             ),
             keywords=(
                 "staff",

@@ -21,3 +21,12 @@ def test_single_select_keeps_enough_height_for_its_selected_label() -> None:
     declarations = select_rule.group("body")
     assert "height: auto;" in declarations
     assert "min-height: 2.75rem;" in declarations
+
+
+def test_unified_admin_content_headings_use_body_contrast() -> None:
+    baseline = _static_path("core/baseline.css").read_text(encoding="utf-8")
+
+    assert ".baseline-unified-admin .baseline-panel h3," in baseline
+    assert ".baseline-unified-admin .baseline-panel h4 {" in baseline
+    assert "color: var(--body-fg);" in baseline
+    assert ".baseline-unified-admin .baseline-panel-heading h3," in baseline

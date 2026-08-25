@@ -82,6 +82,7 @@ the system.
 | [0075](0075-governed-position-and-opportunity-management.md) | Accepted | Govern Position and paired-opportunity management through the shared edition structure aggregate and purpose-built owner workflow |
 | [0076](0076-owner-safe-position-assignment-lifecycle.md) | Accepted | Govern Position assignments through relationship-bounded proposals, independent stepped-up decisions, retained ending, and shared command evidence |
 | [0077](0077-person-owned-workforce-availability.md) | Accepted | Keep edition availability person-owned, explicitly shared, interval-based, privacy-minimized, and separate from shift commitments |
+| [0078](0078-governed-workforce-shift-journey.md) | Accepted | Govern demand, personal claims, independent confirmation, transactional coverage, and retained completion as one Workforce Shift journey |
 
 New ADRs use the next four-digit number and contain:
 

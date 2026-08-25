@@ -1,0 +1,109 @@
+{% extends "core/baseline_admin_base.html" %}
+{% load static tz %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'workforce/organization_structure.css' %}">
+{% endblock %}
+
+{% block baseline_page_title %}Shift planning · {{ edition.name }} · Maru{% endblock %}
+{% block baseline_breadcrumbs %}
+  {% if baseline_can_view_organization %}<a href="{% url 'baseline-organization-record' organization.slug %}">{{ organization.name }}</a>{% else %}{{ organization.name }}{% endif %}
+  &rsaquo; {{ convention_series.name }}
+  &rsaquo; {{ edition.name }}
+  &rsaquo; <a href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}">Organization structure</a>
+  &rsaquo; Shift planning
+{% endblock %}
+
+{% block baseline_content %}
+  {% timezone edition.time_zone %}
+  <a class="baseline-back-link" href="{% url 'organization-workforce-availability' organization.slug convention_series.slug edition.slug %}">← Workforce availability</a>
+
+  <header class="baseline-page-heading baseline-page-heading--with-action">
+    <div>
+      <p class="baseline-kicker">{{ edition.name }} · Workforce</p>
+      <h1>Shift planning</h1>
+      <p class="baseline-intro">Turn a Position’s staffing need into published work, person-owned claims, confirmed coverage, and a deliberate lock. Availability is checked; it never assigns anyone automatically.</p>
+      <p class="baseline-record-meta">
+        <span>{{ shift_overview.open_count }} open</span>
+        <span>{{ shift_overview.locked_count }} locked</span>
+        <span>{{ shift_overview.attention_count }} needing attention</span>
+      </p>
+    </div>
+    {% if can_manage_shifts %}<a class="workforce-structure-action" href="#create-shift">Create a Shift</a>{% endif %}
+  </header>
+
+  <details class="maru-access-summary">
+    <summary><span class="maru-access-summary__label"><strong>Access</strong><span class="maru-access-summary__scope">{{ shift_access_label }}</span></span><span class="maru-access-summary__policy">Private staffing state</span></summary>
+    <div class="maru-access-summary__body"><p>Names, claims, and current suitability are shown only to scoped Shift planners and this read is audited. People see only their own commitments.</p></div>
+  </details>
+
+  {% if action_error %}<div class="baseline-errors" role="alert"><h2>Shift not saved</h2><p>{{ action_error }}</p>{{ demand_form.non_field_errors }}</div>{% endif %}
+
+  <section class="baseline-panel" aria-labelledby="shift-demand-title">
+    <div class="baseline-panel-heading">
+      <div><p class="baseline-kicker">Demand and coverage</p><h2 id="shift-demand-title">Planned Shifts</h2></div>
+      <span class="baseline-count">{{ shift_overview.demands|length }} total</span>
+    </div>
+    {% if shift_overview.demands %}
+      <ul class="workforce-position-management-list">
+        {% for item in shift_overview.demands %}
+          <li>
+            <div class="workforce-position-management-heading">
+              <div><p class="baseline-kicker">{{ item.department_name }} · {{ item.position_title }}</p><h3>{{ item.demand.title }}</h3></div>
+              <span class="baseline-count">{{ item.demand.get_status_display }}</span>
+            </div>
+            <dl class="workforce-position-facts">
+              <div><dt>When</dt><dd>{{ item.demand.starts_at|date:"D, M j, H:i" }}–{{ item.demand.ends_at|date:"H:i" }}</dd></div>
+              <div><dt>Report to</dt><dd>{{ item.demand.location_label }}</dd></div>
+              <div><dt>Coverage</dt><dd>{{ item.active_count }} claimed · {{ item.confirmed_count }} confirmed · {{ item.demand.required_headcount }} needed</dd></div>
+              <div><dt>Rest after</dt><dd>{{ item.demand.minimum_rest_minutes }} minutes</dd></div>
+            </dl>
+            {% if item.demand.status == "open" and item.claimed_count %}<p class="workforce-assignment-note">{{ item.claimed_count }} claim{{ item.claimed_count|pluralize }} waiting for organizer confirmation.</p>{% endif %}
+            {% if item.demand.status == "open" and item.remaining_count %}<p class="help">{{ item.remaining_count }} place{{ item.remaining_count|pluralize }} remain{{ item.remaining_count|pluralize:",s" }} available to suitable Position holders.</p>{% endif %}
+            <p class="workforce-structure-node-action"><a href="{% url 'organization-workforce-shift' organization.slug convention_series.slug edition.slug item.demand.id %}">Review Shift and coverage</a></p>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="baseline-state"><h3>No Shift demand yet</h3><p>Create the first draft from a Position. Nothing reaches people until you explicitly open claims.</p></div>
+    {% endif %}
+  </section>
+
+  {% if can_manage_shifts %}
+    <details id="create-shift" class="workforce-structure-command-disclosure"{% if action_error %} open{% endif %}>
+      <summary>Create a Shift draft</summary>
+      <section class="baseline-panel" aria-labelledby="create-shift-title">
+        <div class="baseline-section-heading"><p class="baseline-kicker">Plan before publishing</p><h2 id="create-shift-title">New Shift demand</h2><p>Choose the Position first, then give people one clear time, place, briefing, break, and rest expectation.</p></div>
+        <form method="post" action="{% url 'create-organization-workforce-shift' organization.slug convention_series.slug edition.slug %}" class="baseline-form" novalidate>
+          {% csrf_token %}{{ demand_form.expected_version }}{{ demand_form.retry_key }}
+          {% include "core/_baseline_form_field.html" with field=demand_form.position_id %}
+          {% include "core/_baseline_form_field.html" with field=demand_form.title %}
+          {% include "core/_baseline_form_field.html" with field=demand_form.location_label %}
+          <div class="workforce-assignment-decision-grid">
+            {% include "core/_baseline_form_field.html" with field=demand_form.starts_at %}
+            {% include "core/_baseline_form_field.html" with field=demand_form.ends_at %}
+          </div>
+          <div class="workforce-assignment-decision-grid">
+            {% include "core/_baseline_form_field.html" with field=demand_form.required_headcount %}
+            {% include "core/_baseline_form_field.html" with field=demand_form.break_minutes %}
+            {% include "core/_baseline_form_field.html" with field=demand_form.minimum_rest_minutes %}
+          </div>
+          {% include "core/_baseline_form_field.html" with field=demand_form.briefing %}
+          {% include "core/_baseline_form_field.html" with field=demand_form.supervision_note %}
+          {% include "core/_baseline_form_field.html" with field=demand_form.reason %}
+          <div class="baseline-form-actions"><button type="submit">Create draft</button></div>
+        </form>
+      </section>
+    </details>
+  {% else %}
+    <div class="baseline-state baseline-state--warning"><h2>Shift planning is read-only</h2><p>You can inspect demand and coverage, but current Shift-management authority is required to change it.</p></div>
+  {% endif %}
+
+  <aside class="baseline-boundary" aria-labelledby="shift-boundary-title">
+    <p class="baseline-kicker">Honest boundary</p>
+    <h2 id="shift-boundary-title">This is staffed work, not yet the shared event timetable</h2>
+    <p>Shifts now have a real place in Workforce. Programme sessions, venue reservations, attendee-facing publication, check-in, timekeeping, and handover records remain future shared-schedule work; this page does not imitate them.</p>
+  </aside>
+  {% endtimezone %}
+{% endblock %}

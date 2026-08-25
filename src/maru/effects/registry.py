@@ -616,6 +616,48 @@ def _validate_workforce_availability_changed(payload: dict[str, object]) -> None
         )
 
 
+def _validate_workforce_shift_demand_changed(payload: dict[str, object]) -> None:
+    """Validate a minimized Shift-demand state change.
+
+    Parameters
+    ----------
+    payload : dict[str, object]
+        Candidate event payload containing only the resulting demand status.
+
+    Raises
+    ------
+    ValidationError
+        If the payload shape or status is not registered.
+    """
+    _require_exact_string_fields(payload, fields=frozenset({"status"}))
+    if payload["status"] not in {"draft", "open", "locked", "completed", "cancelled"}:
+        raise ValidationError(
+            "Shift demand event status is not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
+def _validate_workforce_shift_commitment_changed(payload: dict[str, object]) -> None:
+    """Validate a minimized Shift-commitment state change.
+
+    Parameters
+    ----------
+    payload : dict[str, object]
+        Candidate event payload containing only the resulting commitment status.
+
+    Raises
+    ------
+    ValidationError
+        If the payload shape or status is not registered.
+    """
+    _require_exact_string_fields(payload, fields=frozenset({"status"}))
+    if payload["status"] not in {"claimed", "confirmed", "removed", "completed"}:
+        raise ValidationError(
+            "Shift commitment event status is not registered.",
+            code="invalid_domain_event_payload",
+        )
+
+
 _WORKFORCE_STRUCTURE_ACTIONS = frozenset(
     {
         "template_applied",
@@ -1085,6 +1127,18 @@ EVENT_DEFINITIONS = (
             "A person replaced, shared, or withdrew current edition availability."
         ),
         validator=_validate_workforce_availability_changed,
+    ),
+    EventDefinition(
+        name="workforce.shift_demand.changed.v1",
+        schema_version=1,
+        description="A governed Shift-demand lifecycle or definition changed.",
+        validator=_validate_workforce_shift_demand_changed,
+    ),
+    EventDefinition(
+        name="workforce.shift_commitment.changed.v1",
+        schema_version=1,
+        description="A person-owned Shift commitment changed retained state.",
+        validator=_validate_workforce_shift_commitment_changed,
     ),
     EventDefinition(
         name="workforce.structure.changed.v1",

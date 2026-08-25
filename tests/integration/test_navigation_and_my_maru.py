@@ -51,9 +51,43 @@ def test_default_login_enters_the_focused_my_maru_surface() -> None:
     assert content.count('value="my.registrations"') == 1
     assert content.count('value="my.catalog"') == 1
     assert content.count('value="my.schedule"') == 1
+    assert content.count('value="my.workforce"') == 1
     assert content.count('value="my.equipment_offers"') == 1
     assert "Administration</strong>" not in content
     assert "Catalog commerce" not in content
+
+
+def test_my_workforce_is_searchable_pinnable_and_current_across_its_journey() -> None:
+    account = AccountFactory()
+    client = _client(account)
+
+    index = client.get(reverse("my-workforce-assignments"))
+
+    assert index.status_code == 200
+    content = index.content.decode()
+    assert content.count('value="my.workforce"') == 1
+    assert 'data-navigation-search="my workforce review your positions' in content
+    assert "Availability, and Shifts." in content
+    assert 'data-navigation-current="true"' in content
+
+    pinned = client.post(
+        reverse("update-navigation-pin"),
+        {
+            "destination_code": "my.workforce",
+            "action": "pin",
+            "next": reverse("my-workforce-assignments"),
+        },
+    )
+
+    assert pinned.status_code == 302
+    assert pinned["Location"] == reverse("my-workforce-assignments")
+    assert NavigationPin.objects.filter(
+        account=account,
+        destination_code="my.workforce",
+    ).exists()
+    pinned_content = client.get(reverse("my-workforce-assignments")).content.decode()
+    assert pinned_content.count('value="my.workforce"') == 1
+    assert 'aria-label="Unpin My Workforce"' in pinned_content
 
 
 def test_admin_navigation_is_task_first_searchable_and_keeps_explicit_context() -> None:

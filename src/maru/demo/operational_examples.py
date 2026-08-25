@@ -10,6 +10,7 @@ from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
 
 from django.db import transaction
+from django.utils import timezone
 
 from maru.accreditation.models import (
     Credential,
@@ -19,7 +20,9 @@ from maru.accreditation.models import (
     RelayDevice,
 )
 from maru.authorization.bindings import ensure_workforce_position_binding
-from maru.authorization.models import RoleBundle
+from maru.authorization.commands import create_role_bundle_version
+from maru.authorization.models import RoleAssignment, RoleBundle
+from maru.authorization.policy import resolve_organization_target
 from maru.communications.models import (
     NotificationDelivery,
     NotificationMessage,
@@ -65,7 +68,10 @@ from maru.registration.models import (
     SettlementAllocation,
     SettlementBatch,
 )
-from maru.workforce.assignment_commands import propose_position_assignment
+from maru.workforce.assignment_commands import (
+    approve_position_assignment,
+    propose_position_assignment,
+)
 from maru.workforce.availability_commands import save_person_availability
 from maru.workforce.availability_inputs import AvailabilityWindowInput
 from maru.workforce.edition_write_scope import (
@@ -75,6 +81,7 @@ from maru.workforce.edition_write_scope import (
 from maru.workforce.models import (
     Department,
     EditionStructureCommandReceipt,
+    EditionStructureControl,
     OnboardingDocumentRequest,
     OnboardingDocumentType,
     PersonAvailabilityPlan,
@@ -84,10 +91,20 @@ from maru.workforce.models import (
     PositionAssignmentCommandReceipt,
     PositionDocumentRequirement,
     PositionTemplate,
+    ShiftDemand,
+    ShiftDemandCommandReceipt,
     VolunteerApplication,
     VolunteerOpportunity,
 )
-from maru.workforce.structure_commands import create_department
+from maru.workforce.shift_commands import (
+    create_shift_demand,
+    open_shift_demand,
+)
+from maru.workforce.structure_commands import (
+    create_department,
+    create_position,
+    update_position_opportunity,
+)
 
 if TYPE_CHECKING:
     from maru.organizations.models import Organization
@@ -137,6 +154,73 @@ def _own(
     own(kind, record.id, created=created)  # type: ignore[attr-defined]
 
 
+def _seed_shift_worker_role(
+    *,
+    convention_key: str,
+    organization: Organization,
+    accounts: dict[str, Account],
+    own: OwnRecord,
+) -> RoleBundle:
+    """Return one provenance-backed role used by the synthetic Shift journey.
+
+    Parameters
+    ----------
+    convention_key : str
+        Stable convention key used to derive command correlation identifiers.
+    organization : Organization
+        Organization that owns the immutable role version.
+    accounts : dict[str, Account]
+        Synthetic persona accounts providing independent role controllers.
+    own : OwnRecord
+        Collector for deterministic demo ownership and creation counts.
+
+    Returns
+    -------
+    RoleBundle
+        The existing or newly created Shift-worker role bundle.
+
+    Raises
+    ------
+    RuntimeError
+        If the stable role has an unexpected shape or the organization target
+        cannot be resolved.
+    """
+    capability_codes = ("events.view_basic", "workforce.view_structure")
+    role = RoleBundle.objects.filter(
+        organization=organization,
+        code="demo-shift-worker",
+        version=1,
+    ).first()
+    created = False
+    if role is None:
+        target = resolve_organization_target(organization_id=organization.id)
+        if target is None:
+            raise RuntimeError("Synthetic Shift-worker organization is unavailable.")
+        role = create_role_bundle_version(
+            actor=accounts["board-chair"],
+            approver=accounts["board-vice-chair"],
+            target=target,
+            code="demo-shift-worker",
+            name="Shift Worker (Demo)",
+            capability_codes=capability_codes,
+            reason=(
+                "Create the independently approved synthetic role used to "
+                "demonstrate Position assignment and Shift eligibility."
+            ),
+            correlation_id=_id("workforce-shift-worker-role", convention_key),
+            request_id=_id("workforce-shift-worker-role-request", convention_key),
+            source_channel="demo_seed",
+        )
+        created = True
+    if (
+        role.name != "Shift Worker (Demo)"
+        or tuple(role.capability_codes) != capability_codes
+    ):
+        raise RuntimeError("Stable demo Shift-worker role shape conflicts.")
+    _own(own, "role_bundles", role, created=created)
+    return role
+
+
 def _seed_governed_assignment_example(
     *,
     convention_key: str,
@@ -147,7 +231,7 @@ def _seed_governed_assignment_example(
     legacy_assignment_id: UUID,
     own: OwnRecord,
     happened_at: datetime,
-) -> None:
+) -> PositionAssignment:
     """Seed one current command-backed proposal without rewriting legacy evidence.
 
     Parameters
@@ -167,15 +251,33 @@ def _seed_governed_assignment_example(
     own : OwnRecord
         Collector for deterministic demo ownership and creation counts.
     happened_at : datetime
-        Stable synthetic baseline used for the proposed effective time.
+        Stable synthetic baseline retained for fixtures whose authority began
+        before that point.
 
     Raises
     ------
     RuntimeError
         If a retained legacy assignment conflicts with its stable demo scope.
+
+    Returns
+    -------
+    PositionAssignment
+        The retained legacy row or current command-backed Assignment.
     """
-    chair = accounts["convention-chair"]
+    proposer = accounts["board-chair"]
+    approver = accounts["board-vice-chair"]
     assigned = accounts["registration-volunteer"]
+    controller_starts = tuple(
+        RoleAssignment.objects.filter(
+            organization=organization,
+            principal_id__in=(proposer.id, approver.id),
+            role_bundle__code="executive-board",
+            revoked_at__isnull=True,
+        ).values_list("effective_from", flat=True)
+    )
+    if len(controller_starts) != 2:  # noqa: PLR2004 - dual control invariant
+        raise RuntimeError("Synthetic Assignment controllers are unavailable.")
+    effective_from = max(happened_at + timedelta(days=14), *controller_starts)
     governed_candidate = assigned
     governed_retry_key = _id("workforce-assignment-proposal-retry", convention_key)
     legacy_assignment = PositionAssignment.objects.filter(
@@ -211,13 +313,13 @@ def _seed_governed_assignment_example(
         )
 
     assignment_result = propose_position_assignment(
-        actor=chair,
+        actor=proposer,
         organization_id=organization.id,
         series_id=edition.series_id,
         edition_id=edition.id,
         position_id=position.id,
         account_id=governed_candidate.id,
-        effective_from=happened_at + timedelta(days=14),
+        effective_from=effective_from,
         expires_at=None,
         reason="Propose a synthetic Registration assignment for independent review.",
         retry_key=governed_retry_key,
@@ -241,6 +343,40 @@ def _seed_governed_assignment_example(
         assignment_receipt,
         created=not assignment_result.replayed,
     )
+    if legacy_assignment is None:
+        approval_result = approve_position_assignment(
+            actor=approver,
+            organization_id=organization.id,
+            series_id=edition.series_id,
+            edition_id=edition.id,
+            assignment_id=assignment.id,
+            expected_version=assignment_result.resulting_version,
+            reason=(
+                "Independently approve the synthetic, prerequisite-complete "
+                "Registration assignment."
+            ),
+            retry_key=_id("workforce-assignment-approval-retry", convention_key),
+            correlation_id=_id(
+                "workforce-assignment-approval-correlation",
+                convention_key,
+            ),
+            request_id=_id(
+                "workforce-assignment-approval-request",
+                convention_key,
+            ),
+            source_channel="demo_seed",
+        )
+        assignment = PositionAssignment.objects.get(pk=approval_result.assignment_id)
+        approval_receipt = PositionAssignmentCommandReceipt.objects.get(
+            pk=approval_result.receipt_id
+        )
+        _own(
+            own,
+            "workforce_assignment_command_receipts",
+            approval_receipt,
+            created=not approval_result.replayed,
+        )
+    return legacy_assignment or assignment
 
 
 def _seed_availability_example(
@@ -339,6 +475,108 @@ def _seed_availability_example(
         )
 
 
+def _seed_shift_example(
+    *,
+    convention_key: str,
+    organization: Organization,
+    edition: EventEdition,
+    position: Position,
+    planner: Account,
+    own: OwnRecord,
+) -> None:
+    """Seed one open staffing need without inventing historical commitments.
+
+    Parameters
+    ----------
+    convention_key : str
+        Stable synthetic-convention key used to derive retry identifiers.
+    organization : Organization
+        Organization that owns the synthetic Shift.
+    edition : EventEdition
+        Exact edition whose local dates and time zone define the Shift.
+    position : Position
+        Governed Position whose holders may claim the Shift.
+    planner : Account
+        Synthetic organizer authorized to create and publish the demand.
+    own : OwnRecord
+        Fixture ownership recorder used for safe idempotent reconciliation.
+    """
+    edition_zone = ZoneInfo(edition.time_zone)
+    starts_at = datetime(
+        edition.starts_on.year,
+        edition.starts_on.month,
+        edition.starts_on.day,
+        9,
+        30,
+        tzinfo=edition_zone,
+    )
+    create_result = create_shift_demand(
+        actor=planner,
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+        position_id=position.id,
+        title="Opening-day Registration desk",
+        location_label="Registration desk A",
+        briefing=(
+            "Welcome arriving attendees, answer routine registration questions, "
+            "and route exceptions to the Registration lead."
+        ),
+        supervision_note="Check in with the Registration lead before opening.",
+        starts_at=starts_at,
+        ends_at=starts_at + timedelta(hours=3),
+        required_headcount=2,
+        break_minutes=20,
+        minimum_rest_minutes=60,
+        reason=("Create a synthetic opening-day staffing need for the Shift journey."),
+        retry_key=_id("workforce-shift-create-retry", convention_key),
+        correlation_id=_id("workforce-shift-create-correlation", convention_key),
+        request_id=_id("workforce-shift-create-request", convention_key),
+        source_channel="demo_seed",
+    )
+    demand = ShiftDemand.objects.get(pk=create_result.demand_id)
+    _own(
+        own,
+        "workforce_shift_demands",
+        demand,
+        created=not create_result.replayed,
+    )
+    create_receipt = ShiftDemandCommandReceipt.objects.get(pk=create_result.receipt_id)
+    _own(
+        own,
+        "workforce_shift_demand_command_receipts",
+        create_receipt,
+        created=not create_result.replayed,
+    )
+
+    # The synthetic editions have fixed dates so the fixture remains stable and
+    # idempotent. Once one of those dates has passed, retain an honest draft for
+    # organizer inspection instead of manufacturing an already-ended open Shift.
+    if timezone.now() >= demand.ends_at:
+        return
+
+    open_result = open_shift_demand(
+        actor=planner,
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+        demand_id=demand.id,
+        expected_version=create_result.resulting_version,
+        reason="Publish the reviewed synthetic work to matching Position holders.",
+        retry_key=_id("workforce-shift-open-retry", convention_key),
+        correlation_id=_id("workforce-shift-open-correlation", convention_key),
+        request_id=_id("workforce-shift-open-request", convention_key),
+        source_channel="demo_seed",
+    )
+    open_receipt = ShiftDemandCommandReceipt.objects.get(pk=open_result.receipt_id)
+    _own(
+        own,
+        "workforce_shift_demand_command_receipts",
+        open_receipt,
+        created=not open_result.replayed,
+    )
+
+
 @transaction.atomic
 def seed_workforce_examples(  # noqa: PLR0915
     *,
@@ -376,15 +614,16 @@ def seed_workforce_examples(  # noqa: PLR0915
     registration_lead = accounts["registration-lead"]
     applicant = accounts["volunteer-applicant"]
     assigned = accounts["registration-volunteer"]
+    role = _seed_shift_worker_role(
+        convention_key=convention_key,
+        organization=organization,
+        accounts=accounts,
+        own=own,
+    )
     scope = lock_workforce_edition_write_scope(
         organization_id=organization.id,
         series_id=edition.series_id,
         edition_id=edition.id,
-    )
-    role = RoleBundle.objects.get(
-        organization=organization,
-        code="demo-staff",
-        version=1,
     )
     legacy_department_id = _id("workforce-department", convention_key)
     department = Department.objects.filter(pk=legacy_department_id).first()
@@ -473,45 +712,89 @@ def seed_workforce_examples(  # noqa: PLR0915
         scope=scope,
         department_id=department.id,
     )
-    position_id = _id("workforce-position", convention_key)
+    legacy_position_id = _id("workforce-position", convention_key)
     assignment_id = _id("workforce-position-assignment", convention_key)
-    if edition.lifecycle not in {
-        EventEdition.Lifecycle.DRAFT,
-        EventEdition.Lifecycle.PREPARING,
-    } and (
-        not Position.objects.filter(pk=position_id).exists()
-        or not PositionAssignment.objects.filter(
-            position_id=position_id,
+    position_retry_key = _id("workforce-position-retry", convention_key)
+    position_receipt = EditionStructureCommandReceipt.objects.filter(
+        organization=organization,
+        edition=edition,
+        actor=chair,
+        retry_key=position_retry_key,
+        action=EditionStructureCommandReceipt.Action.POSITION_CREATED,
+    ).first()
+    legacy_position = Position.objects.filter(pk=legacy_position_id).first()
+    retained_position_id = (
+        legacy_position.id
+        if legacy_position is not None
+        else (
+            position_receipt.affected_position_id
+            if position_receipt is not None
+            else None
+        )
+    )
+    position_missing = legacy_position is None and position_receipt is None
+    assignment_missing = retained_position_id is None or not (
+        PositionAssignment.objects.filter(
+            position_id=retained_position_id,
             organization=organization,
             edition=edition,
         ).exists()
-    ):
+    )
+    if edition.lifecycle not in {
+        EventEdition.Lifecycle.DRAFT,
+        EventEdition.Lifecycle.PREPARING,
+    } and (position_missing or assignment_missing):
         raise RuntimeError(
             "Synthetic workforce examples must be created before the edition "
             "leaves Draft or Preparing."
         )
-    position, position_created = Position.objects.get_or_create(
-        id=position_id,
-        defaults={
-            "organization": organization,
-            "edition": edition,
-            "template": template,
-            "department": department,
-            "role_bundle": role,
-            "code": "registration-team-member",
-            "title": "Registration Team Member",
-            "description": template.description,
-            "headcount": 12,
-            "capacity_codes": ["staff", "volunteer", "registration"],
-            "status": Position.Status.OPEN,
-            "created_by": chair,
-        },
-    )
+    position_created = False
+    if legacy_position is not None:
+        position = legacy_position
+        expected_position_code = "registration-team-member"
+    elif position_receipt is not None:
+        if position_receipt.affected_position_id is None:
+            raise RuntimeError("Synthetic Position receipt has no target.")
+        receipt_position = Position.objects.filter(
+            pk=position_receipt.affected_position_id
+        ).first()
+        if receipt_position is None:
+            raise RuntimeError("Synthetic Position receipt target is unavailable.")
+        position = receipt_position
+        expected_position_code = "registration-team"
+    else:
+        position_result = create_position(
+            actor=chair,
+            organization_id=organization.id,
+            series_id=edition.series_id,
+            edition_id=edition.id,
+            template_id=template.id,
+            department_id=department.id,
+            reports_to_id=None,
+            title="Registration Team Member",
+            description=template.description,
+            headcount=12,
+            expected_version=EditionStructureControl.objects.get(
+                organization=organization,
+                edition=edition,
+            ).aggregate_version,
+            reason="Create the synthetic Registration workforce Position.",
+            retry_key=position_retry_key,
+            correlation_id=_id(
+                "workforce-position-correlation",
+                convention_key,
+            ),
+            request_id=_id("workforce-position-request", convention_key),
+            source_channel="demo_seed",
+        )
+        position = Position.objects.get(pk=position_result.position_id)
+        position_created = not position_result.replayed
+        expected_position_code = "registration-team"
     _own(own, "workforce_positions", position, created=position_created)
     ensure_workforce_position_binding(position=position)
     position_scope = (
         Position.objects.select_for_update()
-        .filter(id=position_id)
+        .filter(id=position.id)
         .order_by()
         .values_list(
             "organization_id",
@@ -529,7 +812,7 @@ def seed_workforce_examples(  # noqa: PLR0915
         department.id,
         template.id,
         role.id,
-        "registration-team-member",
+        expected_position_code,
     ):
         raise RuntimeError("Stable demo workforce Position scope conflicts.")
     requirement, created = PositionDocumentRequirement.objects.get_or_create(
@@ -541,22 +824,43 @@ def seed_workforce_examples(  # noqa: PLR0915
     )
     _own(own, "workforce_position_documents", requirement, created=created)
 
-    opportunity_id = _id("workforce-opportunity", convention_key)
     opportunity = VolunteerOpportunity.objects.get(position=position)
-    if opportunity.id != opportunity_id:
-        if VolunteerOpportunity.objects.filter(id=opportunity_id).exists():
-            raise RuntimeError("Stable demo workforce opportunity ID is in use.")
-        VolunteerOpportunity.objects.filter(id=opportunity.id).update(id=opportunity_id)
-    opportunity = VolunteerOpportunity.objects.get(id=opportunity_id)
-    VolunteerOpportunity.objects.filter(id=opportunity.id).update(
-        status=VolunteerOpportunity.Status.PUBLISHED,
-        headline="Join the Registration Team",
-        description=(
-            "Help attendees before the event and at Front Desk. The listing "
-            "remains visible after all places are filled."
-        ),
-        visible_when_filled=True,
+    opportunity_description = (
+        "Help attendees before the event and at Front Desk. The listing "
+        "remains visible after all places are filled."
     )
+    if (
+        opportunity.status != VolunteerOpportunity.Status.PUBLISHED
+        or opportunity.headline != "Join the Registration Team"
+        or opportunity.description != opportunity_description
+        or opportunity.applications_open_at is not None
+        or opportunity.applications_close_at is not None
+        or not opportunity.visible_when_filled
+    ):
+        update_position_opportunity(
+            actor=chair,
+            organization_id=organization.id,
+            series_id=edition.series_id,
+            edition_id=edition.id,
+            position_id=position.id,
+            status=VolunteerOpportunity.Status.PUBLISHED,
+            headline="Join the Registration Team",
+            description=opportunity_description,
+            applications_open_at=None,
+            applications_close_at=None,
+            visible_when_filled=True,
+            expected_version=EditionStructureControl.objects.get(
+                organization=organization,
+                edition=edition,
+            ).aggregate_version,
+            reason="Publish the synthetic Registration volunteer opportunity.",
+            correlation_id=_id(
+                "workforce-opportunity-correlation",
+                convention_key,
+            ),
+            request_id=_id("workforce-opportunity-request", convention_key),
+            source_channel="demo_seed",
+        )
     opportunity.refresh_from_db()
     _own(
         own,
@@ -595,6 +899,33 @@ def seed_workforce_examples(  # noqa: PLR0915
         },
     )
     _own(own, "workforce_document_requests", document_request, created=created)
+    approved_request, created = OnboardingDocumentRequest.objects.get_or_create(
+        id=_id("workforce-approved-document-request", convention_key),
+        defaults={
+            "organization": organization,
+            "edition": edition,
+            "document_type": document_type,
+            "account": assigned,
+            "status": OnboardingDocumentRequest.Status.APPROVED,
+            "instructions": (
+                "Synthetic fixture approval only; no real document is collected."
+            ),
+            "requested_by": chair,
+            "requested_at": happened_at,
+            "submitted_at": happened_at + timedelta(hours=1),
+            "reviewed_by": accounts["board-chair"],
+            "reviewed_at": happened_at + timedelta(hours=2),
+            "review_reason": (
+                "Synthetic prerequisite evidence for the complete Shift example."
+            ),
+        },
+    )
+    _own(
+        own,
+        "workforce_document_requests",
+        approved_request,
+        created=created,
+    )
     _seed_governed_assignment_example(
         convention_key=convention_key,
         organization=organization,
@@ -610,6 +941,14 @@ def seed_workforce_examples(  # noqa: PLR0915
         organization=organization,
         edition=edition,
         assigned=assigned,
+        own=own,
+    )
+    _seed_shift_example(
+        convention_key=convention_key,
+        organization=organization,
+        edition=edition,
+        position=position,
+        planner=chair,
         own=own,
     )
 

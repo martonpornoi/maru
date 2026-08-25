@@ -165,7 +165,9 @@ purpose-built editor from the
 [Availability management](availability-management.md) contract. Editing
 requires a current proposed or active assignment; an existing plan remains
 reviewable and withdrawable after that open relationship ends. Shifts remain a
-truthful future continuation with no interactive control.
+separate continuation: [My shifts](shift-planning-and-my-shifts.md) uses only a
+current active exact-Position assignment as the first qualification fact, and
+never turns the assignment itself into scheduled work.
 
 The personal route accepts no query parameters, is private and non-cacheable,
 and returns a generic state when its complete bounded projection is unavailable.

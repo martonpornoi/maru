@@ -135,36 +135,49 @@ GRANT SELECT, INSERT, UPDATE ON TABLE
     public.workforce_editionstructurecontrol
     TO maru_runtime;
 
--- Position-assignment and person-owned Availability receipts are append-only
--- runtime evidence. Their parent aggregates may be created and advanced by
--- guarded commands, but never deleted. Current Availability periods are a
+-- Position-assignment, person-owned Availability, Shift-demand, and
+-- Shift-commitment receipts are append-only runtime evidence. Their parent
+-- aggregates may be created and advanced by guarded commands, but never
+-- deleted. Current Availability periods are a
 -- complete replacement set: runtime may insert the new set and delete the old
 -- set, but cannot update an individual period in place. Database triggers
 -- require the exact final aggregate, period, and receipt evidence at commit.
 REVOKE UPDATE, DELETE, REFERENCES ON TABLE
     public.workforce_positionassignmentcommandreceipt,
-    public.workforce_personavailabilitycommandreceipt
+    public.workforce_personavailabilitycommandreceipt,
+    public.workforce_shiftdemandcommandreceipt,
+    public.workforce_shiftcommitmentcommandreceipt
     FROM maru_runtime;
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.workforce_positionassignmentcommandreceipt,
-    public.workforce_personavailabilitycommandreceipt
+    public.workforce_personavailabilitycommandreceipt,
+    public.workforce_shiftdemandcommandreceipt,
+    public.workforce_shiftcommitmentcommandreceipt
     FROM PUBLIC;
 GRANT SELECT, INSERT ON TABLE
     public.workforce_positionassignmentcommandreceipt,
-    public.workforce_personavailabilitycommandreceipt
+    public.workforce_personavailabilitycommandreceipt,
+    public.workforce_shiftdemandcommandreceipt,
+    public.workforce_shiftcommitmentcommandreceipt
     TO maru_runtime;
 
 REVOKE DELETE, REFERENCES ON TABLE
     public.workforce_positionassignment,
-    public.workforce_personavailabilityplan
+    public.workforce_personavailabilityplan,
+    public.workforce_shiftdemand,
+    public.workforce_shiftcommitment
     FROM maru_runtime;
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
     public.workforce_positionassignment,
-    public.workforce_personavailabilityplan
+    public.workforce_personavailabilityplan,
+    public.workforce_shiftdemand,
+    public.workforce_shiftcommitment
     FROM PUBLIC;
 GRANT SELECT, INSERT, UPDATE ON TABLE
     public.workforce_positionassignment,
-    public.workforce_personavailabilityplan
+    public.workforce_personavailabilityplan,
+    public.workforce_shiftdemand,
+    public.workforce_shiftcommitment
     TO maru_runtime;
 
 REVOKE UPDATE, REFERENCES ON TABLE

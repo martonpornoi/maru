@@ -124,6 +124,7 @@ from maru.workforce.models import (
     Position,
     PositionAssignment,
     PositionTemplate,
+    ShiftCommitment,
     VolunteerApplication,
     VolunteerOpportunity,
 )
@@ -137,6 +138,10 @@ from maru.workforce.queries import (
 from maru.workforce.services import (
     submit_volunteer_application,
     upload_onboarding_document,
+)
+from maru.workforce.shift_queries import (
+    ShiftReadLimitExceededError,
+    my_shift_scope_items,
 )
 from maru.workforce.structure_audit import append_structure_read_audit
 from maru.workforce.structure_commands import (
@@ -2582,6 +2587,14 @@ def _position_context(
         and availability_decision.allowed
         and availability_decision.fields == AVAILABILITY_ORGANIZER_REQUIRED_FIELDS
     )
+    can_view_shifts = bool(
+        actor is not None
+        and decide(
+            principal=actor,
+            capability_code="workforce.view_shifts",
+            resource=target,
+        ).allowed
+    )
     context.update(
         {
             "baseline_structure_navigation_current": True,
@@ -2589,6 +2602,7 @@ def _position_context(
             "can_manage_assignments": can_manage_assignments,
             "can_issue_assignment_authority": can_issue_assignment_authority,
             "can_view_availability": can_view_availability,
+            "can_view_shifts": can_view_shifts,
         }
     )
     return context
@@ -5749,6 +5763,11 @@ def _organizer_availability_context(
             "edition": page.edition,
             "availability_overview": page.overview,
             "availability_access_label": _structure_access_label(page.decision),
+            "can_view_shifts": decide(
+                principal=actor,
+                capability_code="workforce.view_shifts",
+                resource=edition_target,
+            ).allowed,
         }
     )
     return context
@@ -5836,6 +5855,7 @@ def _my_workforce_state_response(
             "maru_personal_surface": True,
             "assignments": (),
             "availability_scopes": (),
+            "shift_scopes": (),
             "workforce_state_message": message,
         }
     )
@@ -5890,9 +5910,16 @@ def my_workforce_assignments(request: HttpRequest) -> HttpResponse:
             .values_list("organization_id", "edition_id")
             .distinct()[: MAX_PERSONAL_ASSIGNMENT_SCOPES + 1]
         )
+        commitment_scope_rows = tuple(
+            ShiftCommitment.objects.filter(account=actor)
+            .order_by("organization_id", "edition_id")
+            .values_list("organization_id", "edition_id")
+            .distinct()[: MAX_PERSONAL_ASSIGNMENT_SCOPES + 1]
+        )
         if (
             len(assignment_scope_rows) > MAX_PERSONAL_ASSIGNMENT_SCOPES
             or len(plan_scope_rows) > MAX_PERSONAL_ASSIGNMENT_SCOPES
+            or len(commitment_scope_rows) > MAX_PERSONAL_ASSIGNMENT_SCOPES
         ):
             return _my_workforce_state_response(
                 request,
@@ -5902,7 +5929,13 @@ def my_workforce_assignments(request: HttpRequest) -> HttpResponse:
                     "Please try again shortly."
                 ),
             )
-        scope_rows = tuple(sorted(set(assignment_scope_rows) | set(plan_scope_rows)))
+        scope_rows = tuple(
+            sorted(
+                set(assignment_scope_rows)
+                | set(plan_scope_rows)
+                | set(commitment_scope_rows)
+            )
+        )
         if len(scope_rows) > MAX_PERSONAL_ASSIGNMENT_SCOPES:
             return _my_workforce_state_response(
                 request,
@@ -5923,10 +5956,10 @@ def my_workforce_assignments(request: HttpRequest) -> HttpResponse:
                 principal=actor,
                 capability_code="workforce.view_self",
                 resource=target,
-                requested_fields=frozenset({"assignments", "availability"}),
+                requested_fields=frozenset({"assignments", "availability", "shifts"}),
             )
             if decision.allowed and decision.fields == frozenset(
-                {"assignments", "availability"}
+                {"assignments", "availability", "shifts"}
             ):
                 permitted_scopes.add((organization_id, edition_id))
         assignments = my_assignment_items(
@@ -5937,9 +5970,14 @@ def my_workforce_assignments(request: HttpRequest) -> HttpResponse:
             account=actor,
             permitted_scopes=frozenset(permitted_scopes),
         )
+        shift_scopes = my_shift_scope_items(
+            account=actor,
+            permitted_scopes=frozenset(permitted_scopes),
+        )
     except (
         AssignmentReadLimitExceededError,
         AvailabilityReadLimitExceededError,
+        ShiftReadLimitExceededError,
         DatabaseError,
         RuntimeError,
     ):
@@ -5960,6 +5998,7 @@ def my_workforce_assignments(request: HttpRequest) -> HttpResponse:
             "maru_personal_surface": True,
             "assignments": assignments,
             "availability_scopes": availability_scopes,
+            "shift_scopes": shift_scopes,
         }
     )
     return TemplateResponse(request, "workforce/my_assignments.html", context)

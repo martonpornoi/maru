@@ -60,9 +60,10 @@ settings do not expose its management command.
   session revocation, abuse limiting, organizer restriction and appeal;
 - media-safety, privacy-request, historical-correction, retention, and disposal
   evidence;
-- one command-backed current Position proposal per organizer plus one deliberately
-  shared person-owned Availability plan with two edition-local periods and
-  immutable minimized command evidence;
+- one command-backed current Position proposal per organizer, one deliberately
+  shared person-owned Availability plan with two edition-local periods, and
+  one governed opening-day Shift demand with immutable minimized command
+  evidence;
 - credential issue/event, relay device, signed offline manifest, offline
   conflict, readiness gates, closure manifest, and archive amendment; and
 - authorized lifecycle and configuration transitions with correlated audit,
@@ -70,20 +71,25 @@ settings do not expose its management command.
 
 The current-edition Workforce examples are seeded before lifecycle progression.
 Each fresh Department is created through the Organization structure command
-with a deterministic retry key and immutable receipt. Its Position is created
-beneath the canonical edition mutex and active-Department lock and receives its
-typed resource binding. The synthetic chair then proposes a known person through
-the governed Assignment command, and the assigned synthetic person deliberately
-shares two Availability periods through the owner command. These operations
-produce the same immutable audit, event, outbox, and minimized receipt evidence
-as their browser and API adapters.
+with a deterministic retry key and immutable receipt. Its Position and public
+opportunity are created through their governed commands beneath the canonical
+edition mutex and active-Department lock, and the Position receives its typed
+resource binding. The synthetic chair then proposes a known person through the
+governed Assignment command, and the assigned synthetic person deliberately
+shares two Availability periods through the owner command. Finally, the chair
+creates the opening-day Shift demand and opens it only while it is future work.
+These operations produce the same immutable audit, event, outbox, and minimized
+receipt evidence as their browser and API adapters.
 
-A rerun replays deterministic Department and Assignment evidence and preserves
-an existing person-owned Availability plan rather than overwriting later demo
-exploration. Complete examples remain verifiable after the edition becomes
-read-only, but the fixture refuses to create a missing Position or assignment
-after Draft/Preparing. Existing legacy demo Department identifiers and
-pre-command Assignment rows are preserved for upgrade compatibility; a current
+A rerun replays deterministic Department, Position, opportunity, Assignment,
+and Shift evidence and preserves an existing person-owned Availability plan
+rather than overwriting later demo exploration. A future fixed-date demand is
+opened for suitable claims. Once that date has ended, the fixture preserves an
+honest organizer-visible draft instead of manufacturing expired published
+work. Complete examples remain verifiable after the edition becomes read-only,
+but the fixture refuses to create a missing Position or assignment after
+Draft/Preparing. Existing legacy demo Department identifiers and pre-command
+Assignment rows are preserved for upgrade compatibility; a current
 command-backed proposal is added without inventing historical evidence for the
 legacy row.
 
@@ -191,9 +197,9 @@ capacities, and executable authority:
   authority merely because of their capacity label.
 
 Direct model creation remains explicitly limited to synthetic bootstrap data
-for aggregates that still lack audited commands. Department creation uses the
-Organization structure command, lifecycle changes use the implemented events service, and
-Position/assignment writes use the shared edition write scope.
+for aggregates that still lack audited commands. Department, Position,
+opportunity, Assignment, Availability, and Shift examples use their canonical
+commands; lifecycle changes use the implemented events service.
 
 ## Tests and observability
 
@@ -214,8 +220,9 @@ The integration test runs the command twice and verifies:
 - familiar Convention work access groups, current assignments, exact-person
   display, chair revocation authority, and independent approval authority;
 - password authentication;
-- deterministic Department-command receipt replay, Organization structure versions,
-  Position bindings, idempotency after the editable lifecycle; and
+- deterministic Department, Position, opportunity, Assignment, Availability,
+  and Shift command evidence, Organization structure versions, Position
+  bindings, and idempotency after the editable lifecycle; and
 - refusal under production settings.
 
 The command reports created rows separately from fixture totals. Lifecycle
@@ -224,11 +231,13 @@ implemented.
 
 ## Limitations
 
-Qualifications, availability, shifts, programme items, dealer tables,
-accommodation, cases, assets, and lost-and-found belong to later vertical
-slices. The fixture includes the implemented departments, positions,
-opportunities, applications, onboarding agreements, and position assignments,
-and uses durable capacity codes for other not-yet-implemented domains.
+Qualifications, programme items, dealer tables, accommodation, cases, assets,
+and lost-and-found belong to later vertical slices. The fixture includes the
+implemented departments, positions, opportunities, applications, onboarding
+agreements, position assignments, person-owned Availability, and governed
+Shift demand. It starts with no synthetic claim so a human can rehearse the
+person-owned claim and independent organizer decision themselves, and uses
+durable capacity codes for other not-yet-implemented domains.
 Provider, mail, media, credential, and offline records are intentionally inert
 synthetic evidence: `.invalid` hosts, disabled provider accounts, hashed
 placeholder tokens, and no reusable secret or real stored image are included.

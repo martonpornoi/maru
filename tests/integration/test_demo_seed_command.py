@@ -9,6 +9,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import Client
 from django.urls import reverse
+from django.utils import timezone
 
 from maru.authorization.models import RoleBundle, ScopedResourceBinding
 from maru.authorization.policy import decide, resolve_edition_target
@@ -48,7 +49,13 @@ from maru.workforce.models import (
     PersonAvailabilityCommandReceipt,
     PersonAvailabilityPlan,
     PersonAvailabilityWindow,
+    Position,
     PositionAssignmentCommandReceipt,
+    ShiftCommitment,
+    ShiftCommitmentCommandReceipt,
+    ShiftDemand,
+    ShiftDemandCommandReceipt,
+    VolunteerOpportunity,
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.integration]
@@ -66,15 +73,18 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert result["totals"]["organizations"] == 2
     assert result["totals"]["convention_series"] == 2
     assert result["totals"]["event_editions"] == 6
-    assert result["totals"]["role_bundles"] == 30
-    assert result["totals"]["role_assignments"] == 162
+    assert result["totals"]["role_bundles"] == 32
+    assert result["totals"]["role_assignments"] == 164
     assert result["totals"]["capability_grants"] == 66
     assert result["totals"]["participations"] >= 150
     assert result["totals"]["participation_capacities"] >= 400
     assert result["totals"]["lifecycle_transitions"] == 12
-    assert result["totals"]["audit_events"] == 38
-    assert result["totals"]["domain_events"] == 34
-    assert result["totals"]["outbox_messages"] == 34
+    open_shift_count = ShiftDemand.objects.filter(
+        status=ShiftDemand.Status.OPEN
+    ).count()
+    assert result["totals"]["audit_events"] == 56 + open_shift_count
+    assert result["totals"]["domain_events"] == 46 + open_shift_count
+    assert result["totals"]["outbox_messages"] == 46 + open_shift_count
     assert result["totals"]["registration_templates"] == 2
     assert result["totals"]["registration_configurations"] == 8
     assert result["totals"]["registration_setup_controls"] == 6
@@ -95,6 +105,39 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         == 2
     )
     assert (
+        Position.objects.filter(
+            created_in_structure_version__isnull=False,
+            last_changed_in_structure_version__isnull=False,
+        ).count()
+        == 2
+    )
+    assert (
+        VolunteerOpportunity.objects.filter(
+            status=VolunteerOpportunity.Status.PUBLISHED,
+            created_in_structure_version__isnull=False,
+            last_changed_in_structure_version__isnull=False,
+        ).count()
+        == 2
+    )
+    assert (
+        EditionStructureCommandReceipt.objects.filter(
+            action=EditionStructureCommandReceipt.Action.POSITION_CREATED,
+        ).count()
+        == 2
+    )
+    assert (
+        EditionStructureCommandReceipt.objects.filter(
+            action=EditionStructureCommandReceipt.Action.OPPORTUNITY_UPDATED,
+        ).count()
+        == 2
+    )
+    assert (
+        PositionAssignmentCommandReceipt.objects.filter(
+            action=PositionAssignmentCommandReceipt.Action.APPROVED
+        ).count()
+        == 2
+    )
+    assert (
         PersonAvailabilityPlan.objects.filter(
             status=PersonAvailabilityPlan.Status.SUBMITTED
         ).count()
@@ -107,6 +150,14 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         ).count()
         == 2
     )
+    assert ShiftDemand.objects.count() == 2
+    assert (
+        open_shift_count
+        == ShiftDemand.objects.filter(ends_at__gt=timezone.now()).count()
+    )
+    assert ShiftDemandCommandReceipt.objects.count() == 2 + open_shift_count
+    assert ShiftCommitment.objects.count() == 0
+    assert ShiftCommitmentCommandReceipt.objects.count() == 0
 
     assert Organization.objects.count() == 2
     assert (
@@ -150,7 +201,7 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
     assert (
         EditionStructureControl.objects.filter(
             origin=EditionStructureControl.Origin.MANUAL,
-            aggregate_version=1,
+            aggregate_version=3,
         ).count()
         == 2
     )
@@ -329,7 +380,14 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
         >= 2
     )
 
-    operational_evidence_models = {PlatformInvitationSchedulerRun}
+    # The fixed 2026 demo schedule may predate the newly governed Assignment's
+    # authority interval. Keep the open demand visible, but do not invent a
+    # backdated person commitment merely to populate an admin table.
+    operational_evidence_models = {
+        PlatformInvitationSchedulerRun,
+        ShiftCommitment,
+        ShiftCommitmentCommandReceipt,
+    }
     empty_admin_models = [
         model._meta.label
         for model in admin.site._registry
@@ -371,6 +429,8 @@ def test_demo_seed_is_comprehensive_and_idempotent() -> None:  # noqa: PLR0915
             key: Account.objects.get(email=f"marucon.{key}@demo.maru.invalid")
             for key in (
                 "convention-chair",
+                "board-chair",
+                "board-vice-chair",
                 "registration-lead",
                 "registration-volunteer",
                 "volunteer-applicant",

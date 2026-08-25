@@ -128,6 +128,7 @@ from maru.workforce.services import (
     submit_volunteer_application,
     upload_onboarding_document,
 )
+from maru.workforce.shift_queries import SHIFT_ORGANIZER_REQUIRED_FIELDS
 from maru.workforce.structure_audit import append_structure_read_audit
 from maru.workforce.structure_commands import (
     BuiltinStructureTemplateResult,
@@ -1081,6 +1082,26 @@ class WorkforceStructureView(APIView):
                 view_availability.allowed
                 and view_availability.fields == AVAILABILITY_ORGANIZER_REQUIRED_FIELDS
             )
+            view_shifts = decide(
+                principal=account,
+                capability_code="workforce.view_shifts",
+                resource=assignment_target,
+                requested_fields=SHIFT_ORGANIZER_REQUIRED_FIELDS,
+                at=response_authorized_at,
+            )
+            can_view_shifts = bool(
+                view_shifts.allowed
+                and view_shifts.fields == SHIFT_ORGANIZER_REQUIRED_FIELDS
+            )
+            can_manage_shifts = bool(
+                can_view_shifts
+                and decide(
+                    principal=account,
+                    capability_code="workforce.manage_shifts",
+                    resource=assignment_target,
+                    at=response_authorized_at,
+                ).allowed
+            )
             http_method = cast("str", request.method)
             append_structure_read_audit(
                 actor=account,
@@ -1111,6 +1132,8 @@ class WorkforceStructureView(APIView):
             "can_manage_positions": manage_positions,
             "can_manage_assignments": manage_assignments,
             "can_view_availability": can_view_availability,
+            "can_view_shifts": can_view_shifts,
+            "can_manage_shifts": can_manage_shifts,
             "governance": asdict(snapshot.governance),
             "structure": asdict(snapshot.structure),
         }

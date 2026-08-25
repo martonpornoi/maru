@@ -452,7 +452,7 @@ details.maru-navigation-group--collapsible > ul {
   gap: 0.7rem;
 }
 
-.maru-admin-workspace-grid a {
+.maru-admin-workspace-grid > a {
   display: grid;
   gap: 0.25rem;
   min-height: 5rem;
@@ -464,10 +464,51 @@ details.maru-navigation-group--collapsible > ul {
   text-decoration: none;
 }
 
-.maru-admin-workspace-grid a:hover,
-.maru-admin-workspace-grid a:focus-visible {
+.maru-admin-workspace-grid > a:hover,
+.maru-admin-workspace-grid > a:focus-visible {
   border-color: var(--link-fg);
   box-shadow: 0 0.35rem 1rem rgb(3 13 29 / 10%);
+}
+
+.maru-admin-workspace-grid > article {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--maru-attendee-border);
+  border-radius: 0.55rem;
+  background: var(--body-bg);
+}
+
+.maru-admin-workspace-grid > article > h3,
+.maru-admin-workspace-grid > article > p {
+  margin: 0;
+}
+
+.maru-admin-workspace-grid > article > span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.maru-admin-workspace-grid > article > a {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 2.75rem;
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--maru-attendee-border);
+  border-radius: 0.45rem;
+  color: var(--link-fg);
+  background: var(--darkened-bg);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.maru-admin-workspace-grid > article > a:hover,
+.maru-admin-workspace-grid > article > a:focus-visible {
+  border-color: var(--link-fg);
 }
 
 .maru-admin-workspace-grid strong {

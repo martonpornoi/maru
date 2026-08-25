@@ -3,16 +3,17 @@
 Status: Position, hierarchy, opportunity, agreement, authority onboarding,
 ADR 0041 containment, version-fenced Department and Position management, and
 the owner-safe Position assignment lifecycle with shared strict HTML/API
-commands, person-owned deliberately shared Availability, and stopped-writer
-database enforcement are implemented in the canonical current tree; shifts,
-complete rendered accessibility, post-edition Availability disposal, recovery,
-deployment, and production acceptance remain gated
+commands, person-owned deliberately shared Availability, and governed Shift
+demand through commitment completion with stopped-writer database enforcement
+are implemented in the canonical current tree; complete rendered
+accessibility, post-edition Availability disposal, recovery, deployment, and
+production acceptance remain gated
 Last updated: 2026-08-25
 
 ## Purpose and requirements
 
-`maru.workforce` owns the executable HR-007, HR-008, HR-010, HR-011, HR-012,
-HR-013, and HR-014 slices defined by ADRs 0019, 0028, 0075, 0076, and 0077,
+`maru.workforce` owns the executable HR-007 through HR-014 slices defined by
+ADRs 0019, 0028, 0075, 0076, 0077, and 0078,
 plus IDN-011's non-participation boundary. It turns an edition responsibility
 into explicit structure and person-controlled planning input:
 
@@ -24,6 +25,7 @@ department hierarchy
   -> independently approved position assignment
   -> exact role-bundle version and participation capacities
   -> private or deliberately shared person-owned availability
+  -> Position demand, personal claim, independent confirmation, and locked coverage
 ```
 
 It does not infer access from a job title, an application, a registration
@@ -212,7 +214,7 @@ presents five dependent stages:
 Structure -> Positions -> Assignments -> Availability -> Shifts
 ```
 
-The first four stages summarize implemented records: active Departments,
+All five stages summarize implemented records: active Departments,
 Position purpose/reporting/state, approved headcount, vacancies, minimized
 current holders, governed assignments, and deliberately shared current
 Availability. **Open structure**
@@ -222,16 +224,22 @@ a fresh exact-edition policy decision permits it. **Manage assignments** opens
 the separate queue only when the same fresh projection confirms both assignment
 and role authority. **Review availability** opens the minimized organizer page
 only after the separate exact-edition Availability capability and field ceiling
-pass. Every destination authorizes again. Public opportunities, the assigned
-person's **My Workforce** assignment and Availability views, and their
-onboarding documents remain separate continuation paths. Non-staff organizers
-are never sent to specialist assignment or Availability records.
+pass. **Plan shifts** or **Review shifts** opens the governed organizer
+projection only after its own Shift action hint passes. Every destination
+authorizes again. Public opportunities, the assigned person's **My Workforce**
+assignment, Availability, and **My shifts** views, and their onboarding
+documents remain separate continuation paths. Non-staff organizers are never
+sent to specialist Assignment, Availability, or Shift model records.
 
-Shifts remain a deliberately noninteractive **Not available yet** step. No
-assignment is treated as Availability, and no Position or Availability period
-is treated as a Shift. Its placement preserves the HR-009/SCH-001/SCH-005
-dependency without creating demand, commitment, publication, or schedule state
-before that transactional contract is accepted.
+The Shift journey follows
+[ADR 0078](../architecture/decisions/0078-governed-workforce-shift-journey.md)
+and the
+[Shift planning and My shifts](../product/page-contracts/shift-planning-and-my-shifts.md)
+contract. No assignment is treated as Availability, and no Position or
+Availability period is treated as a commitment. Exact Position assignment is
+the first qualification baseline; broader qualifications, maximum hours,
+lone-work, accommodations, check-in, timekeeping, notifications, and schedule
+publication remain separate work.
 
 ### Built-in reference and independent copy
 
@@ -594,6 +602,28 @@ current shared consequence, and submitted periods. Draft and absent remain
 indistinguishable. Inputs are closed, query parameters are unsupported, and
 the strict `400`/name-free `403`/`409`/`503` boundary applies.
 
+Mounted Shift planning and My shifts API surface:
+
+```text
+GET|POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/shifts
+GET|PUT  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/shifts/<demand_id>
+POST     /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/shifts/<demand_id>/<open|lock|reopen|complete|cancel>
+POST     /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/shift-commitments/<commitment_id>/<confirm|remove>
+GET      /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/shifts/me
+POST     /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/shifts/<demand_id>/claim
+POST     /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/shift-commitments/<commitment_id>/withdraw
+```
+
+The organizer list is a bounded complete, audited snapshot with current
+coverage counts, people labels, suitability consequences, and current decision
+rationale. Demand writes and organizer actions require reasoned versioned
+input. Claim accepts only the current demand version. Person withdrawal
+requires the current commitment version and affirmative confirmation and never
+collects an explanation. Every mutation requires a canonical
+`Idempotency-Key`; inputs use exact JSON primitive types and offset-bearing
+demand timestamps. The full `400`/name-free `403`/authorized-target `404`/`409`/
+generic `503` boundary is documented in the purpose-specific page contract.
+
 The structure GET now returns the bounded complete-tree and minimized
 governance-anchor response used by Organization structure read projection. It accepts no query parameters.
 OpenAPI declares its `200` response and typed RFC 9457 `400`, `403`, and `503`
@@ -626,13 +656,17 @@ Specialist records:
 /admin/workforce/onboardingdocumenttype/
 /admin/workforce/onboardingdocumentrequest/
 /admin/workforce/positionassignment/
+/admin/workforce/shiftdemand/
+/admin/workforce/shiftdemandcommandreceipt/
+/admin/workforce/shiftcommitment/
+/admin/workforce/shiftcommitmentcommandreceipt/
 ```
 
 These specialist routes are not the accepted product mutation contract. The
 shared commands and migration fences are active, so Department, Position,
 Volunteer opportunity, and PositionAssignment records are inspection-only
 here. Managers use the strict Organization structure, Position management, and
-Assignment management HTML/API adapters.
+Assignment management, Shift planning, and My shifts HTML/API adapters.
 
 ## Database integrity and recovery
 
@@ -694,10 +728,10 @@ Board, people, Positions, assignments, authority, or template provenance from
 names. Its preflight and database triggers enforce exact scope, bounded acyclic
 hierarchy, one aggregate version step per evidenced command, immutable source
 and retry receipts, non-cascading retirement/deletion rules, and fix-forward
-downgrade behavior. Production readiness fingerprints all 19 Organization
-structure and assignment trigger functions plus the five Availability guard,
-evidence, and truncate functions and their exact attachments, requires the
-current Workforce migration recorder chain through `0012`, and verifies the
+downgrade behavior. Production readiness fingerprints all Organization
+structure, Assignment, Availability, and Shift guard, evidence, and truncate
+functions and their exact attachments, requires the current Workforce migration
+recorder chain through `0013`, and verifies the
 exact 13-reference Department FK inventory;
 the runtime login cannot invoke those helpers directly, disable them, or
 bypass their stopped-writer protocol. Reversing `0008` restores the exact
@@ -749,7 +783,36 @@ fingerprinted. The migration ensures `btree_gist` without claiming ownership
 of an extension already used by Venue constraints, and its downgrade fence
 refuses removal after durable Availability data exists.
 
+Workforce `0013_shift_journey` adds versioned Shift demand and person-owned
+commitment aggregates plus immutable exact-version receipts. PostgreSQL checks
+exact organization/edition/Position/assignment/Availability scope, person
+subject kind, immutable published work, legal state transitions, complete
+actor/time/reason evidence, one active claim per person and demand, and one
+non-overlapping person work/rest envelope. Deferred checks require exact
+command evidence; deletion and truncate remain protected. A complementary
+Position trigger blocks closure while draft, open, or locked demand exists,
+and the demand guard takes a Position lock so raw concurrent creation cannot
+race closure. Runtime readiness fingerprints every function and attachment;
+the downgrade fence refuses removal once durable demand, commitment, or receipt
+evidence exists.
+
 ## Workforce verification
+
+The 2026-08-25 Shift focus covers draft creation and immutability, open/lock/
+reopen/complete/cancel transitions, personal suitability and minimization,
+claim/withdraw, independent confirmation/removal, stale Availability review,
+transactional capacity, overlap and post-Shift rest, explicit underfill,
+ended-work boundaries, directly inspectable organizer rationale, strict API
+primitive and timestamp input, idempotent receipts, audited bounded snapshots,
+tenant and person isolation, fixed privacy-minimized withdrawal evidence,
+Position closure protection, raw database tampering, runtime ACL/readiness, and
+query-count ceilings. A 77-test focused Workforce/navigation/style regression
+passes on freshly migrated PostgreSQL test databases. The expanded runtime-
+role, exact function-fingerprint, trigger-attachment, authority-provenance,
+Organization structure, and retired-Department readiness gate passes all 453
+cases. OpenAPI/generated client, Staff Console, whole-tree quality, migration
+recovery, and authenticated rendered evidence are recorded in the current
+checkpoint rather than inferred here.
 
 The 2026-08-25 Availability focus covers private draft isolation, deliberate
 sharing, explicit zero-period unavailability, withdrawal after assignment
@@ -791,8 +854,8 @@ had one H1, one `main`, no duplicate identifiers, and no horizontal overflow.
 Frontend tests cover the populated journey, non-staff link boundary,
 non-disclosing `403`, and automated axe analysis. Position command, API, and
 HTML tests separately cover the manager mutation role. The owner-safe
-assignment and Availability continuations are now implemented; Shifts remain
-truthfully unavailable.
+Assignment, Availability, and Shift continuations are now implemented as
+distinct workflows.
 
 The Position management focus covers normalized idempotent creation, paired
 opportunity and typed binding, immutable provenance, complete updates,
@@ -853,14 +916,16 @@ recovery, deployment, authority cutover, or production operation.
 
 ## Current limitations
 
-Qualifications, shifts, time records, assignment replacement and bulk UX,
-approval notifications, onboarding-review orchestration, Availability
+General qualifications, maximum-hours/lone-work/accommodation policy,
+check-in, time records, schedule publication, assignment replacement and bulk
+UX, approval notifications, onboarding-review orchestration, Availability
 post-edition disposal automation, and document download through the REST API
 remain work. Organization structure, Position management, Assignment
-management, and Availability management use bounded reads, shared strict
+management, Availability management, and Shift planning use bounded reads, shared strict
 commands, stopped-writer migrations, and the runtime trigger catalog. The
 focused owner journeys and automated tests do not replace the complete
 width/zoom, screen-reader, failure, two-human mutation-role, ordinary
 production-authority reconciliation, real cutover, or representative
 restore/PITR evidence. An assignment is responsibility and authority evidence;
-it still does not imply availability or a scheduled shift.
+Availability is person-owned planning input; neither implies a scheduled
+Shift.

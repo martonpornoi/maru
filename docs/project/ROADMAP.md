@@ -125,7 +125,7 @@ one H1 plus one page-local computed **Access** disclosure. Attendee service is
 now **Registration desk** with a searchable/filterable/paginated queue before
 configuration; canonical edition setup is **Registration**, and capacity
 policy is **Capacity & waitlist**. Setup guide uses exact purpose-built routes
-and gives Programme, shifts, inbox, and live operations one truthful
+and gives Programme, inbox, and live operations one truthful
 non-interactive roadmap home. The 390-pixel desk renders labelled attendee
 cards without page overflow. Synthetic demo editions receive honest legacy
 setup controls so the canonical reader works without fabricating Registration setup and account onboarding
@@ -136,9 +136,8 @@ contexts, gives person/attendee/access drawers one modal keyboard contract, and
 connects Registration to one durable **Workforce** destination. Workforce reads
 the existing exact-edition bounded structure projection and presents Structure,
 Positions, Assignments, Availability, and Shifts as one dependent sequence.
-The first four stages now have current purpose-built records or continuations;
-Shifts remain a truthful noninteractive placement. Non-staff owners are not
-sent to inaccessible Django records.
+All five stages now have current purpose-built records or continuations.
+Non-staff owners are not sent to inaccessible Django model records.
 
 ADR 0075 and HR-012 now complete the next Workforce slice: **Position
 management** is a purpose-built, owner-facing exact-edition workflow. One
@@ -148,7 +147,8 @@ aggregate version, audit/event/outbox evidence, and retained organizer reason.
 Authorized managers may completely replace operational Position details,
 publish or close the opportunity, and close an unused Position through shared
 HTML/API commands. Closure is one-way and refuses assignments, direct reports,
-or current/future Position-scoped authority. Migration `0010` makes specialist
+unfinished Shift demand, or current/future Position-scoped authority. Migration
+`0010` makes specialist
 Position and opportunity records inspection-only in practice by rejecting
 direct mutation without exact command receipts. The preserved recovery
 bootstrap uses the same Position command under one exact initial-Chair
@@ -182,15 +182,32 @@ withdrawal deletes current exact periods, and migrations `0017`/`0012` add the
 capability, minimized receipts, database interval/evidence guards, runtime ACL
 profile, and fix-forward boundary.
 
+ADR 0078 and HR-009 now complete the first **Shift planning** and **My shifts**
+journey. An organizer creates immutable-after-publication Position demand with
+time, place, briefing, headcount, break, rest, and supervision expectations. A
+person sees only currently suitable unfinished work and their own retained
+claims and commitments; withdrawal requires confirmation but no personal
+explanation. A different organizer confirms after fresh Position,
+Availability-version, overlap, rest, and capacity checks. Coverage locks only
+after every active claim is current and confirmed, and underfill requires an
+explicit reasoned acceptance. Reopen, cancellation, and post-end completion
+retain truthful evidence. Migrations `0018`/`0013` add exact capabilities,
+strict shared commands, immutable receipts, audit/event/outbox evidence,
+PostgreSQL capacity/rest and state guards, Position closure protection, runtime
+ACLs, and fix-forward recovery.
+
 The complete authenticated width/zoom, keyboard, automated-accessibility,
 screen-reader, owner, and visual-state matrix remains required, as does
 task-oriented conversion of Venues, Logistics, and other recurring management
-journeys. The next highest-impact Workforce outcome is transactional Shifts,
-but only after demand, suitability, commitment, overlap, rest, publication,
-completion, locking, and recovery contracts are accepted. Availability also
-still needs an organization-approved post-edition disposal policy and worker.
-Focused two-human Assignment and person-owner Availability rehearsals must
-precede treating either workflow as release evidence.
+journeys. The next highest-impact Workforce outcomes are a full Shift
+mutation-role/accessibility rehearsal and then explicit check-in, late/absent
+coverage escalation, handover, and actual-time boundaries; general
+qualifications, maximum-hours, lone-work, accommodation, notification, and
+schedule-publication contracts must not be inferred from the first Shift
+slice. Availability also still needs an organization-approved post-edition
+disposal policy and worker. Focused two-human Assignment, person-owner
+Availability, and Shift claimant/reviewer rehearsals must precede treating
+those workflows as release evidence.
 
 The 2026-08-11 canonical repository acceptance supersedes those earlier
 focused counts as the current whole-tree gate: Ruff formatting/lint over 624

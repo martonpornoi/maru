@@ -2,8 +2,8 @@
 
 Status: API-backed workflow mounted in the focused unified shell with shared
 page framing, an owner-rehearsed Registration desk, accessible modal drawers,
-and a Workforce journey linked to purpose-built Position, Assignment, and
-Availability management; complete mutation-role, width/zoom, deployment, and
+and a Workforce journey linked to purpose-built Position, Assignment,
+Availability, and Shift management; complete mutation-role, width/zoom, deployment, and
 production evidence remains gated
 Last updated: 2026-08-25
 
@@ -83,9 +83,8 @@ public clients may use independent seasonal themes.
 - **Workforce**, which reads that exact Organization structure projection and connects
   Structure, Positions, Assignments, Availability, and Shifts in one ordered
   owner-safe journey; authorized managers continue into purpose-built Position
-  creation/edit/opportunity/closure, Assignment management, and the audited
-  current Availability projection, while Shifts remain explicitly unavailable
-  and have no controls;
+  creation/edit/opportunity/closure, Assignment management, the audited current
+  Availability projection, and purpose-built Shift planning or review;
 - People search, capacity/status filters, bounded pagination, and counts;
 - a side person workspace that preserves the current list and filter context;
 - one shared modal-drawer interaction for person, attendee, and access detail,
@@ -114,9 +113,8 @@ public clients may use independent seasonal themes.
   reduced-motion treatment, and responsive navigation; and
 - one setup-guide **Planned capabilities** panel for Programme & schedule,
   Team inbox, and Live operations, each labelled **Not available yet** and
-  rendered without a dead link. Shifts occupy the same truthful state inside
-  Workforce, where their prerequisites are visible; Availability has an
-  implemented capability-scoped continuation.
+  rendered without a dead link. Availability and Shifts instead have
+  independently authorized implemented continuations inside Workforce.
 
 The initial host uses the built-in local email/password verifier. It is a
 bootstrap identity path, not the production identity-provider or recovery
@@ -142,6 +140,8 @@ The frontend generates TypeScript types from checked-in `openapi.yaml` and uses:
 - the person-owned Availability read/replace/withdraw and capability-scoped
   organizer Availability projection documented in
   [`workforce.md`](workforce.md); and
+- the organizer Shift demand/coverage and person-owned claim/withdraw routes
+  documented in [`workforce.md`](workforce.md); and
 - the existing session/CSRF boundary.
 
 The API remains authoritative. Client navigation and denial states improve
@@ -199,8 +199,8 @@ without manual scope, reviewer, or timestamp fields. Workforce tests cover all
 five stages, current positions and active holders, exact structure routing,
 non-staff specialist-link exclusion, non-disclosing denial, and automated axe
 analysis for both the Registration and Workforce views. The structure contract
-also exposes independent Assignment and Availability action hints while each
-destination authorizes again.
+also exposes independent Assignment, Availability, and Shift action hints while
+each destination authorizes again.
 Backend tests cover session login, anonymous redirect, staff field
 minimization, tenant/edition isolation, unknown targets, registration
 lifecycle, report denial, CSV minimization/formula neutralization, and
@@ -279,6 +279,7 @@ draft content is edited in specialist records until complete visual builders
 exist. Department management belongs to the server-rendered Organization
 structure workflow, not a return to the retired React destination. Workforce
 uses the strict projection for orientation and links authorized managers to
-server-rendered Position, Assignment, and organizer Availability management.
-Person-owned Availability is implemented in My Workforce; transactional Shifts
-remain incomplete, as does the wider Convention work operating surface.
+server-rendered Position, Assignment, organizer Availability, and Shift
+planning. Person-owned Availability and My shifts are implemented in My
+Workforce; check-in, timekeeping, wider scheduling, and the broader Convention
+work operating surface remain incomplete.

@@ -63,6 +63,16 @@ def test_shell_collapses_before_phone_width_without_forcing_content_overflow() -
     assert "width: min(28rem, calc(100vw - 2rem));" in switcher
 
 
+def test_personal_workspace_articles_keep_compact_continuation_links() -> None:
+    shell = _static_text("core/admin-help.css")
+
+    assert ".maru-admin-workspace-grid > article {" in shell
+    assert ".maru-admin-workspace-grid > article > span {" in shell
+    assert ".maru-admin-workspace-grid > article > a {" in shell
+    assert "min-height: 2.75rem;" in shell
+    assert ".maru-admin-workspace-grid a {" not in shell
+
+
 def test_management_page_fragments_do_not_nest_main_landmarks() -> None:
     template_root = Path(__file__).resolve().parents[2] / "src/maru"
     management_parents = (

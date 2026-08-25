@@ -90,8 +90,10 @@ technical results collapsed. Row-level pin controls appear only after the user
 opens **Customize navigation**.
 
 My Maru and Administration resolve independent authorized item sets and pins.
-The personal home prioritizes registration, applications, and schedule, then
-groups lower-frequency self-service links under **More from Maru**. Accounts
+The personal home prioritizes registration, applications, schedule, and **My
+Workforce**, then groups lower-frequency self-service links under **More from
+Maru**. My Workforce remains searchable and pinnable from its Positions,
+Availability, and Shifts continuations. Accounts
 with organizer or platform authority receive one explicit Administration/My
 Maru switch; the personal menu never reproduces Platform or Specialist records.
 
@@ -201,9 +203,10 @@ their routes or permission boundaries.
 The durable **Workforce** task reads the existing exact-edition structure
 projection and connects Structure, Positions, Assignments, Availability, and
 Shifts. It does not create another Department writer; authorized managers reach
-purpose-built Position, Assignment, and current shared Availability
-workspaces. Shifts remain labelled and noninteractive until their separate
-transactional contract exists.
+purpose-built Position, Assignment, current shared Availability, and governed
+Shift workspaces. Shift planning and **My shifts** keep demand, suitability,
+personal claims, organizer confirmation, withdrawal, locking, cancellation,
+and completion inside the dedicated Workforce transaction boundary.
 Django's `nav_sidebar.js` expects one `#nav-filter` even when no model directory
 is available. The custom sidebar preserves that DOM contract and hides the
 filter for scoped accounts with no Specialist records instead of removing it.
@@ -318,8 +321,11 @@ behavior contracts, collapsed/searchable specialist access, search-only
 actions, natural task keywords, the task-first home, User accounts
 presentation, invitation next steps, Board progress, personal/admin separation,
 compact page-access placement, Registration task naming, the owner-visible
-Workforce destination, and embedded context synchronization. Authenticated
-rendered
+Workforce destination, the personal **My Workforce** destination and pin, and
+embedded context synchronization. The first Shift journey also passes an
+authenticated owner-and-volunteer desktop and 390 CSS-pixel rehearsal,
+including drawer isolation and focus return, one H1 and one `main`, no duplicate
+identifiers, and no horizontal overflow. Authenticated rendered
 checks at 320, 390, 768, 958, 1,024, 1,280, and 1,920 CSS pixels plus 200
 percent zoom, keyboard/automated accessibility, complete visual states, and
 owner evidence remain required.
@@ -330,10 +336,11 @@ Complete computed effective access, invitation notification discovery,
 metrics/tracing export, error capture, rate limiting, and a public status
 service remain. The task-oriented shell/home and User accounts-to-Board flow
 now include shared framing, Registration-desk orientation, the owner-safe
-Workforce journey, governed Position management, and owner-safe Assignment
-management plus person-owned Availability; Venues, Logistics, Shifts, and
-other specialist journeys are not yet certified against the same complete
-state and browser matrix. Representation &
+Workforce journey, governed Position management, owner-safe Assignment
+management, person-owned Availability, and the first end-to-end Shift journey;
+Venues, Logistics, broader scheduling, and other specialist journeys are not
+yet certified against the same complete state and browser matrix.
+Representation &
 access's root-representation
 explanation is only the
 first policy-derived slice; Organization structure adds a current principal-specific structure

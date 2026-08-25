@@ -113,6 +113,7 @@ _ACTIVATION_MIGRATIONS = (
     ("authorization", "0010_retired_department_authority_guards"),
     ("authorization", "0011_registration_profile_extension_capabilities"),
     ("authorization", "0017_workforce_availability_capability"),
+    ("authorization", "0018_workforce_shift_capabilities"),
     ("organizations", "0013_runtime_executable_function_hardening"),
     ("workforce", "0005_runtime_executable_function_hardening"),
     ("workforce", "0006_edition_structure_schema"),
@@ -122,6 +123,7 @@ _ACTIVATION_MIGRATIONS = (
     ("workforce", "0010_position_structure_commands"),
     ("workforce", "0011_owner_assignment_commands"),
     ("workforce", "0012_person_owned_availability"),
+    ("workforce", "0013_shift_journey"),
 )
 _ACTIVATION_AUDIT_INDEX = "authorization_provenance_activation_audit_unique"
 _SUPPORTED_DATABASE_SCHEMA = "public"
@@ -935,6 +937,99 @@ _TRIGGER_CONTRACTS = (
         "maru_refuse_workforce_availability_truncate()",
         _STATEMENT_BEFORE_TRUNCATE,
     ),
+    _TriggerContract(
+        "workforce_shift_demand_guard",
+        "workforce_shiftdemand",
+        "maru_guard_workforce_shift_demand()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "aa0_workforce_shift_position_dependency_guard",
+        "workforce_position",
+        "maru_guard_workforce_shift_position_dependency()",
+        _ROW_BEFORE_UPDATE,
+        columns=("status",),
+    ),
+    _TriggerContract(
+        "workforce_shift_demand_receipt_guard",
+        "workforce_shiftdemandcommandreceipt",
+        "maru_guard_workforce_shift_demand_receipt()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "workforce_shift_commitment_guard",
+        "workforce_shiftcommitment",
+        "maru_guard_workforce_shift_commitment()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "workforce_idn011_shift_subject_guard",
+        "workforce_shiftcommitment",
+        "maru_guard_workforce_idn011_subject()",
+        _ROW_BEFORE_INSERT_UPDATE,
+    ),
+    _TriggerContract(
+        "workforce_shift_commitment_receipt_guard",
+        "workforce_shiftcommitmentcommandreceipt",
+        "maru_guard_workforce_shift_commitment_receipt()",
+        _ROW_BEFORE_INSERT_UPDATE_DELETE,
+    ),
+    _TriggerContract(
+        "workforce_shift_demand_evidence_guard",
+        "workforce_shiftdemand",
+        "maru_deferred_validate_workforce_shift_demand()",
+        _ROW_AFTER_INSERT_UPDATE,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "workforce_shift_demand_receipt_evidence_guard",
+        "workforce_shiftdemandcommandreceipt",
+        "maru_deferred_validate_workforce_shift_demand()",
+        _ROW_AFTER_INSERT,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "workforce_shift_commitment_evidence_guard",
+        "workforce_shiftcommitment",
+        "maru_deferred_validate_workforce_shift_commitment()",
+        _ROW_AFTER_INSERT_UPDATE,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "workforce_shift_commitment_receipt_evidence_guard",
+        "workforce_shiftcommitmentcommandreceipt",
+        "maru_deferred_validate_workforce_shift_commitment()",
+        _ROW_AFTER_INSERT,
+        deferrable=True,
+        initially_deferred=True,
+    ),
+    _TriggerContract(
+        "workforce_shift_demand_truncate_guard",
+        "workforce_shiftdemand",
+        "maru_refuse_workforce_shift_truncate()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "workforce_shift_demand_receipt_truncate_guard",
+        "workforce_shiftdemandcommandreceipt",
+        "maru_refuse_workforce_shift_truncate()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "workforce_shift_commitment_truncate_guard",
+        "workforce_shiftcommitment",
+        "maru_refuse_workforce_shift_truncate()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
+    _TriggerContract(
+        "workforce_shift_commitment_receipt_truncate_guard",
+        "workforce_shiftcommitmentcommandreceipt",
+        "maru_refuse_workforce_shift_truncate()",
+        _STATEMENT_BEFORE_TRUNCATE,
+    ),
 )
 
 _CORE_FUNCTIONS = (
@@ -963,6 +1058,14 @@ _CORE_FUNCTIONS = (
     "maru_guard_workforce_availability_receipt()",
     "maru_deferred_validate_workforce_availability()",
     "maru_refuse_workforce_availability_truncate()",
+    "maru_guard_workforce_shift_demand()",
+    "maru_guard_workforce_shift_position_dependency()",
+    "maru_guard_workforce_shift_demand_receipt()",
+    "maru_guard_workforce_shift_commitment()",
+    "maru_guard_workforce_shift_commitment_receipt()",
+    "maru_deferred_validate_workforce_shift_demand()",
+    "maru_deferred_validate_workforce_shift_commitment()",
+    "maru_refuse_workforce_shift_truncate()",
     "maru_authorization_capability_min_scope(text)",
     "maru_authorization_scope_rank(uuid,uuid,uuid)",
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)",
@@ -1100,7 +1203,7 @@ _FUNCTION_DEFINITION_SHA256 = {
         "fe50fc124dc27998a2c15445d2ed1f9df4d6d9851e5934aca726ac4156665888"
     ),
     "maru_deferred_validate_workforce_idn011_account()": (
-        "247b6dc138681c570d317741154c43dfa09d64ad96727f1058c6ae5457351f69"
+        "4d4f0ee2e92aef6250573067d0500271acccde3e2347ee167c743a7f0248d1e8"
     ),
     "maru_guard_workforce_availability_plan()": (
         "3db3bf43915c9c2d498377040a439aabc345a7579ac30db1c67e24ac326ebf24"
@@ -1117,8 +1220,32 @@ _FUNCTION_DEFINITION_SHA256 = {
     "maru_refuse_workforce_availability_truncate()": (
         "a112c685757df9cbceaaeec8c77e3ef15ff24c47918dd73a81dcbb6b6319e7d7"
     ),
+    "maru_guard_workforce_shift_demand()": (
+        "d0dd49f63c110577b7bf381a96260b07f5e0463e30c4e2bddb553a9ab466c6b2"
+    ),
+    "maru_guard_workforce_shift_position_dependency()": (
+        "fe7f9967596a15461e5dcce30fd2f48f1c146d93b769e88d3d990ca724772301"
+    ),
+    "maru_guard_workforce_shift_demand_receipt()": (
+        "6616cd6dcd935257ca7ec748aba445c69345aeeb3db4868afcb5388c76611bc5"
+    ),
+    "maru_guard_workforce_shift_commitment()": (
+        "f2467073f7636c2a871695e8d8bb5214a7b72cabee46fab37548ce063fa06a96"
+    ),
+    "maru_guard_workforce_shift_commitment_receipt()": (
+        "f775baaf634c31c7b26bb685498cdd2ceecfafc83970f3947caca6c727cb7f10"
+    ),
+    "maru_deferred_validate_workforce_shift_demand()": (
+        "6d3939d3e42d940dbde50a56210a0c1d705f880a93736ac3ce971f71d781d467"
+    ),
+    "maru_deferred_validate_workforce_shift_commitment()": (
+        "534f40a776a3676879f66b7eaafde3f83bdef031c1376b16f000156a1366498c"
+    ),
+    "maru_refuse_workforce_shift_truncate()": (
+        "1d4ef9c453acc221e452c08d09a8d9f45c70618e3c2ea0c7fbcdfb8781d7bece"
+    ),
     "maru_authorization_capability_min_scope(text)": (
-        "0e54bc9e6c4176deb8136b2fef28f08bb7bb42208163f42b032107d3219172dc"
+        "f8f7e8cf1ace85ab818df2e4fc57451152e8c9487fc23591484d6b9d22fc5ac0"
     ),
     "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)": (
         "093a2f3a81a16d7a09bc782c23711aa4b108274ee7a9baf8fa955e52d82cc481"
@@ -1361,6 +1488,20 @@ _DOWNGRADE_FENCE_TRIGGER_NAMES = frozenset(
         "workforce_availability_plan_truncate_guard",
         "workforce_availability_window_truncate_guard",
         "workforce_availability_receipt_truncate_guard",
+        "workforce_shift_demand_guard",
+        "aa0_workforce_shift_position_dependency_guard",
+        "workforce_shift_demand_receipt_guard",
+        "workforce_shift_commitment_guard",
+        "workforce_idn011_shift_subject_guard",
+        "workforce_shift_commitment_receipt_guard",
+        "workforce_shift_demand_evidence_guard",
+        "workforce_shift_demand_receipt_evidence_guard",
+        "workforce_shift_commitment_evidence_guard",
+        "workforce_shift_commitment_receipt_evidence_guard",
+        "workforce_shift_demand_truncate_guard",
+        "workforce_shift_demand_receipt_truncate_guard",
+        "workforce_shift_commitment_truncate_guard",
+        "workforce_shift_commitment_receipt_truncate_guard",
         "aa_workforce_page9_department_barrier",
         "aa_workforce_page9_control_barrier",
         "aa_workforce_page9_receipt_barrier",
@@ -1426,6 +1567,14 @@ _DOWNGRADE_FENCE_FUNCTIONS = frozenset(
         "maru_guard_workforce_availability_receipt()",
         "maru_deferred_validate_workforce_availability()",
         "maru_refuse_workforce_availability_truncate()",
+        "maru_guard_workforce_shift_demand()",
+        "maru_guard_workforce_shift_position_dependency()",
+        "maru_guard_workforce_shift_demand_receipt()",
+        "maru_guard_workforce_shift_commitment()",
+        "maru_guard_workforce_shift_commitment_receipt()",
+        "maru_deferred_validate_workforce_shift_demand()",
+        "maru_deferred_validate_workforce_shift_commitment()",
+        "maru_refuse_workforce_shift_truncate()",
         "maru_authorization_capability_min_scope(text)",
         "maru_authorization_scope_rank(uuid,uuid,uuid)",
         "maru_authorization_scope_contains(uuid,uuid,uuid,uuid,uuid,uuid,uuid,uuid)",

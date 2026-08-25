@@ -11,271 +11,223 @@ concise handoff.
 
 ## Latest working outcome
 
-The current branch now carries one coherent owner-facing Workforce planning
-journey through deliberate Availability sharing:
+The current feature branch completes the first coherent Workforce journey from
+structure through accountable scheduled work:
 
 ```text
 Organization structure
   -> Position management
-  -> Assignment proposal
-  -> independent approval or rejection
-  -> personal Availability draft or deliberate sharing
-  -> minimized organizer Availability planning view
+  -> Assignment proposal and independent decision
+  -> person-owned deliberate Availability sharing
+  -> organizer Shift demand and publication
+  -> suitable personal work and claim
+  -> independent confirmation
+  -> locked coverage
+  -> completed work record
 ```
 
-Shifts retain a truthful next-stage place but are not yet interactive. The
-unified management shell, Registration-to-Workforce handoff, purpose-based page
-names, owner-safe Assignment lifecycle, and contributor-documentation baseline
-remain intact.
+The Shift outcome is governed by [ADR 0078](../architecture/decisions/0078-governed-workforce-shift-journey.md),
+HR-009, and the
+[Shift planning and My shifts contract](../product/page-contracts/shift-planning-and-my-shifts.md).
+The complete implementation and verification record is in the
+[2026-08-25 Shift checkpoint](../checkpoints/2026-08-25-governed-workforce-shift-journey.md).
 
-### Availability belongs to the person
+### The journey now makes sense to both sides
 
-- [ADR 0077](../architecture/decisions/0077-person-owned-workforce-availability.md),
-  HR-014, and the
-  [Availability management contract](../product/page-contracts/availability-management.md)
-  define one plan per person, organization, and edition. An open proposed or
-  active Position relationship permits creation and replacement; the existing
-  owner may still read or withdraw a plan after that open relationship ends.
-- **My Workforce** now shows one Availability continuation per related edition.
-  The personal page distinguishes Not started, Private draft, Shared with
-  organizers, Not available for this edition, and Withdrawn. It explains that
-  periods are complete planning input rather than shifts or promises.
-- The owner may replace up to 64 explicit non-overlapping half-open periods as
-  a private draft or a deliberately submitted plan. A submitted empty set means
-  explicitly unavailable; absence of a submitted plan remains unknown.
-- Browser input uses the edition's IANA time zone and rejects daylight-saving
-  gaps and folds. API timestamps require `Z` or an explicit numeric offset.
-  Preferred is a soft planning signal only.
-- Withdrawal requires explicit confirmation and deletes every current exact
-  period immediately. Superseded exact periods are also removed rather than
-  retained as calendar history.
+- **Shift planning** lets an exactly authorized organizer create private
+  Position demand with time, place, briefing, headcount, break, rest, and
+  supervision expectations; publish it; review claims; confirm or remove them
+  with reasons; lock, reopen, complete, or cancel coverage; and inspect reason
+  history in the same workflow.
+- **My shifts** shows one person only suitable unfinished work and their own
+  retained claims and commitments. It includes operational instructions and
+  current suitability warnings but excludes other people, organizer identity
+  and rationale, private planning reasons, and exact Availability values.
+- A person may withdraw an active open commitment with an affirmative checkbox
+  and no explanation. Organizer history retains only the fixed fact that the
+  person withdrew; Maru does not collect a private free-text reason.
+- A claim is not a confirmation. Confirmation independently rechecks the exact
+  Position assignment, current submitted Availability version and covering
+  period, overlap, required rest, and transactional capacity.
+- Coverage locks only when every active claim is current and confirmed.
+  Underfilled locking needs an explicit acknowledgement and retained rationale.
+  Completion is offered only after locked work ends.
 
-### Organizers receive a separate minimized projection
+### Navigation and page framing are unified
 
-- `workforce.view_availability` is an exact-edition, delegable, persistable
-  capability with a complete field ceiling for shared consequences, current
-  windows, and operational display labels. It is independent from structure or
-  assignment management.
-- **Workforce availability** starts only from people with proposed or active
-  assignments. It returns their display label, current Department/Position
-  labels, assignment state, submitted consequence, and current submitted
-  periods. It excludes drafts, prior periods, reasons, notes, onboarding,
-  applications, authority provenance, unrelated people, and private HR data.
-- Absent and private-draft plans both appear as **Not shared**, so an organizer
-  cannot infer whether a person has started. Submitted zero-period plans appear
-  as **Not available**; withdrawal exposes only its consequence.
-- Every visible period and sharing timestamp is rendered in the edition's
-  stated IANA time zone. The authenticated rehearsal caught and corrected an
-  organizer-page UTC rendering defect before handoff.
-- The organizer projection is bounded and complete-or-unavailable. It uses one
-  repeatable read-only snapshot, repeats full authorization at response time,
-  and appends a value-minimized sensitive-read audit before disclosure.
-- The Staff Console exposes **Availability** only when the fresh structure API
-  includes `can_view_availability`; otherwise it says **Access required**.
-  Every destination authorizes independently.
+- The durable organizer sequence is **Structure**, **Positions**,
+  **Assignments**, **Availability**, and **Shifts**. Staff Console action hints
+  reveal only currently available continuations; each destination authorizes
+  again.
+- **My Workforce** is now a first-class personal Work destination. It is
+  searchable, pinnable, and remains current across Positions, Availability,
+  and Shifts rather than appearing only as a continuation from Administration.
+- Purpose names are canonical user language. Numeric prefixes remain only in a
+  few historical filenames, test module names, and accepted ADR chronology;
+  they are not presented as product page names.
+- All new pages retain one H1 and the host's single `main` landmark, ordinary
+  links/forms, edition-local times, visible text state, and responsive stacking.
+  The rehearsal corrected low-contrast card headings, oversized narrow action
+  cards, singular coverage grammar, and premature completion affordance.
 
-### Shared strict commands and database ownership
+### Commands, privacy, and database ownership are explicit
 
-- Browser and versioned API adapters call the same save and withdrawal
-  commands. They authorize exact relationship or capability before parsing
-  private input or loading names, reject unknown top-level and nested fields,
-  require optimistic versions, and use UUID idempotency keys.
-- Each committed command writes the current plan, complete current period set,
-  immutable minimized receipt, audit, registered domain event, and outbox in
-  one transaction. Receipts, audits, and events retain state/count/digests and
-  command provenance but no exact times or free text.
-- Authorization migration `0017_workforce_availability_capability` preserves
-  the database scope catalog while adding the organizer capability and the
-  relationship-derived self capability.
-- Workforce migration `0012_person_owned_availability` adds one-plan scope and
-  person-kind checks, current-version period guards, PostgreSQL interval
-  exclusion, replacement-only period writes, deferred exact receipt/final-set
-  evidence, protected deletion/truncate, IDN-011 enforcement, and a downgrade
-  fence. Its extension operation does not claim ownership of the existing
-  `btree_gist` installation used by other modules.
-- Runtime ACLs permit select/insert/update on the plan, select/insert on
-  receipts, and select/insert/delete but not update on replacement-only period
-  rows. All new guard functions and trigger attachments are included in
-  provenance readiness and are not directly executable by the runtime login.
-
-### Assignment and unified framing remain in place
-
-- [ADR 0076](../architecture/decisions/0076-owner-safe-position-assignment-lifecycle.md)
-  and HR-013 continue to govern relationship-bounded proposal, genuinely
-  independent stepped-up approval/rejection, retained ending, linked role and
-  participation evidence, headcount, and directly inspectable organizer
-  reasons.
-- **Workforce assignments** remains the bounded organizer queue; **My
-  Workforce** remains a separate reason-minimized subject view. Availability
-  does not reinterpret assignment dates or authority.
-- A fresh synthetic demo now reaches these mounted surfaces with one genuinely
-  command-backed Assignment proposal and one deliberately shared two-period
-  Availability plan per organizer. Reruns preserve later owner edits and retain
-  pre-command demo assignments without fabricating historical receipts.
-- Administration continues to lead with durable Convention work and
-  progressively disclose Organizations, Platform, and Specialist records. My
-  Maru and Administration retain independent navigation projections and pins.
-- Converted pages use one H1 and the host's single main landmark. Availability
-  uses labelled fieldsets, text state labels, ordinary keyboard-operable
-  controls, action-local alert errors, and responsive stacking within the same
-  shell grammar.
-- Living documentation names every surface by human purpose. Numeric filename
-  prefixes remain only for stable ordering and incoming links, never as page or
-  journey names.
+- Browser and strict versioned API adapters call the same demand and commitment
+  commands. They authorize before parsing private input or loading names,
+  reject unknown fields and type coercion, require optimistic versions, and
+  use UUID idempotency keys.
+- Each committed mutation writes aggregate state, immutable minimized receipt,
+  audit, registered domain event, and outbox message atomically. Organizer
+  reasons are directly inspectable where the decision is made.
+- Organizer reads require independent `workforce.view_shifts` authority and a
+  complete field ceiling. They are bounded to 1,024 demands and 4,096
+  commitments, use a repeatable read-only snapshot, reauthorize before
+  disclosure, and persist minimized sensitive-read evidence.
+- Workforce migration `0013_shift_journey` installs aggregate, receipt,
+  exact-scope, state-evidence, capacity, work/rest-overlap, protected-deletion,
+  Position-dependency, and downgrade guards. Authorization migration
+  `0018_workforce_shift_capabilities` installs the exact capability scope.
+- Runtime ACL and provenance readiness include every new relation, function
+  fingerprint, and exact trigger attachment while withholding direct guard-
+  function execution from the runtime login.
 
 ## Established repository and product baseline
 
 - PR #15, **Curate newcomer documentation and fictional examples**, merged to
   protected `main` as exact commit `2b78934` on 2026-08-23. GitHub Pages run
-  `32624208484` deployed that commit successfully; the old pending statements
-  are reconciled.
-- Protected public collaboration retains pull requests, squash-only history,
+  `32624208484` deployed it successfully; the former pending documentation is
+  reconciled.
+- Protected collaboration retains pull requests, squash-only history,
   no-bypass `PR gate`, resolved conversations, immutable Action pinning,
   Dependabot security updates, dependency review, secret scanning, push
   protection, private vulnerability reporting, managed CodeQL, and
   protected-main Pages publication.
-- Repository-owned examples use MaruCon, MaruDance, synthetic people, and
-  reserved contact domains. The fixture identifier remains
-  `maru-fictional-two-convention-v6`; the immutable Workforce starter remains
-  `marucon-reference@1`.
-- Maru retains one administration shell, deny-by-default scoped authorization,
-  audit and outbox evidence, governed organization/edition/workforce records,
-  Registration and profile slices, typed applications, catalog and admission
-  commerce, charity, venue, and bounded Logistics capabilities. Consult the
-  production-consolidation ledger before treating any slice as complete.
+- Repository-owned examples use only MaruCon, MaruDance, synthetic people, and
+  reserved contact domains. The demo fixture now creates its Position,
+  opportunity, Assignment, Availability, and Shift through governed commands
+  and leaves the Shift unclaimed for a human rehearsal.
+- Organization structure, Position management, Assignment management, and
+  Availability management retain ADRs 0075 through 0077 and their existing
+  authorization, privacy, evidence, and database boundaries. A Shift does not
+  reinterpret those facts.
 
 ## Decisions
 
-- ADR 0077 accepts explicit current intervals, complete replacement, deliberate
-  owner sharing, draft isolation, minimized organizer reads, immediate exact-
-  period withdrawal, and separation from Shift commitments.
-- Unknown, explicitly unavailable, shared, and withdrawn are different facts.
-  No assignment, registration answer, profile field, or organizer action may
-  imply or overwrite Availability.
-- Organizer reads need a separate capability and audit. Structure or Assignment
-  authority alone is insufficient; a frontend action hint never grants access.
-- Exact superseded periods have insufficient audit value to justify retained
-  calendar history. Immutable keyed digests and count-only command evidence
-  prove the transition without preserving old values.
-- The code does not invent a jurisdiction-independent post-edition retention
-  duration. An approved organization policy, legal-hold behavior, and disposal
-  worker remain a deployment gate.
-- Availability is not a Shift. HR-009 and SCH-001/SCH-005 still need demand,
-  suitability, claim, confirmation, removal, overlap/rest, publication,
-  completion, locking, and recovery decisions before scheduling gains controls.
+- ADR 0078 accepts explicit Position demand and retained commitment aggregates,
+  independent person claim and organizer confirmation, transactional capacity,
+  work-plus-rest overlap exclusion, stale-evidence review, explicit underfill,
+  locked coverage, post-end completion, cancellation, and fix-forward recovery.
+- Availability is planning input, not a promise or reservation. Position
+  Assignment is responsibility and authority, not scheduled time. Preferred
+  Availability affects ordering only.
+- Self-withdrawal deliberately collects no reason. Required administrative
+  rationale remains visible in organizer workflows; routine personal privacy is
+  not traded for unnecessary audit text.
+- The first Shift slice does not silently invent qualifications, maximum-hours,
+  lone-working or accommodation policy, public schedule publication,
+  notifications, recurrence, check-in, timekeeping, handover acceptance, or
+  automatic replacement staffing.
 - Purpose names such as **Organization structure**, **Position management**,
-  **Assignment management**, **Availability management**, and **Registration
-  setup and account onboarding** are canonical user language.
+  **Assignment management**, **Availability management**, **Shift planning**,
+  **My Workforce**, and **My shifts** are canonical user language.
 
 ## Verification for this working outcome
 
-Completed locally so far:
+Completed locally:
 
-- all five Availability command/browser-adapter/API/database integration cases
-  pass, covering draft privacy, sharing, explicit unavailability, withdrawal,
-  retries, scope, authorization-before-parsing, read audit, and raw guards;
-- all 271 PostgreSQL runtime-role integration cases pass across the updated
-  period replacement ACL profile and provisioning artifact;
-- the canonical unit suite passes 1,998 tests, including interval, DST,
-  formset, navigation, and single-landmark regressions;
-- the focused Assignment/Availability/Workforce regression selection passes
-  after updating the structure decision-call contract for the new independent
-  action hint;
-- the three hosted PostgreSQL shard failures exposed by the first PR run were
-  reproduced and corrected locally: specialist help now covers every registered
-  Workforce record, raw Position Assignment add remains denied in favor of
-  Assignment management, and the synthetic fixture exercises current Assignment
-  and Availability commands. The complete affected admin-usability, clean
-  Workforce onboarding, and demo-seed files pass 21 tests in 80.03 seconds;
-- Staff Console Vitest passes 28 tests; generated TypeScript API types, strict
-  type checking, and the production Vite build pass, with generated host assets
-  refreshed;
-- OpenAPI regenerates and validates with zero schema errors. Its 20 current
+- 77 focused unit and integration regressions pass across Shift lifecycle,
+  commands, browser adapters, strict API, projections, raw database guards,
+  demo data, navigation, existing Assignment and Availability behavior, and
+  responsive shell/style contracts;
+- a real two-connection PostgreSQL claim race proves capacity cannot be
+  oversubscribed;
+- the expanded runtime-role, exact function-fingerprint, trigger-attachment,
+  authority-provenance, Organization structure, and retired-Department
+  readiness gate passes all 453 cases in 863.84 seconds;
+- Staff Console generated API types, strict TypeScript checking, all 28 Vitest
+  component/accessibility tests, and the production Vite build pass, with host
+  assets refreshed;
+- OpenAPI regenerates and validates with zero schema errors. Its 23 existing
   deterministic enum-name warnings remain visible;
+- repeating OpenAPI generation, TypeScript client generation, and the
+  production Staff Console build leaves all six generated contract and host
+  artifacts byte-for-byte unchanged;
 - Django system check passes with only the expected local `identity.W001`
-  invitation-encryption warning; migration `0012` applies, reverses while
-  unused without touching the shared PostgreSQL extension, reapplies, and
-  `makemigrations --check` reports no drift;
-- whole-tree Ruff lint, strict mypy over 361 source files, and Ruff formatting
-  for source/tests pass;
-- documentation policy passes across 328 Markdown files and 204 unique
-  requirement identifiers; full PyDocLint and the semantic Python-docstring
-  validator pass across 371 source files;
-- warning-fatal Sphinx/AutoAPI completes successfully;
-- a second OpenAPI, generated TypeScript, and production Staff Console build
-  leaves all six drift-controlled contract and host assets byte-for-byte
-  unchanged; and
-- an authenticated fictional owner/platform-oversight rehearsal passes at
-  desktop and 390-by-844 narrow width. It covers explicit empty submission,
-  dynamic-row keyboard focus, private draft isolation, deliberate sharing of
-  two periods, organizer minimization, audited read evidence, edition-local
-  rendering, one H1/main landmark, no duplicate IDs, and no horizontal
-  overflow. Withdrawal is present with explicit confirmation and is covered by
-  integration tests; it was not destructively activated against the retained
-  shared demo state.
+  invitation-encryption warning, and `makemigrations --check` reports no drift;
+- a fresh disposable PostgreSQL database applies all migrations, reverses the
+  unused Shift schema and capability migrations, and reapplies them. A durable
+  synthetic Shift then refuses downgrade at the intended fix-forward fence and
+  leaves migration `0013` applied;
+- whole-tree Ruff lint and formatting pass, and strict mypy reports no issues
+  across 369 source files;
+- documentation policy passes across 331 Markdown files and 204 requirement
+  identifiers; full PyDocLint passes; the semantic Python-docstring validator
+  passes 379 source files;
+- warning-fatal Sphinx/AutoAPI builds the complete contributor site
+  successfully; and
+- an authenticated synthetic owner-and-volunteer browser rehearsal passes at
+  1,280 and 390 CSS pixels. It covers discovery, claim, independent
+  confirmation, explicit underfilled lock, pre-end completion guidance, reopen,
+  reasonless self-withdrawal, minimized retained history, drawer background
+  isolation, Escape/focus return, one H1 and one `main`, no duplicate IDs, no
+  inspected unlabeled controls, no horizontal overflow, and no console warning
+  or error.
 
 The latest canonical whole-tree acceptance on protected `main` remains 4,067
 tests in 15,558.23 seconds at 90.78 percent branch-aware coverage. It predates
-this branch and must not be represented as certification of Assignment or
-Availability.
+this feature branch and must not be represented as certification of the new
+Shift journey.
 
 ## Known risks and incomplete work
 
-- The complete UX-029 matrix remains a release gate: 320, 390, 768, 958, 1,024,
-  1,280, and 1,920 CSS-pixel states, 200 percent zoom, complete keyboard paths,
-  representative screen-reader behavior, and every empty, failure, stale,
-  read-only, disclosure, and mutation-role state.
-- A destructive live withdrawal rehearsal still belongs in a disposable
-  synthetic browser dataset. Automated browser-adapter, API, command, audit,
-  and database tests already cover exact-period deletion and the minimized
-  withdrawn consequence.
-- A real two-human owner rehearsal must still operate Assignment approval from
-  distinct authenticated accounts and cover step-up return behavior. Automated
-  separate-session tests are strong implementation evidence, not owner
+- UX-029 remains a release gate at 320, 768, 958, 1,024, and 1,920 CSS pixels,
+  200 percent zoom, complete keyboard paths, representative screen readers,
+  reduced motion, and every empty, failure, stale, read-only, disclosure, and
+  mutation-role state.
+- A two-human owner rehearsal must still cover stepped-up Assignment and Shift
+  decisions with distinct real accounts. Synthetic browser sessions and
+  automated session separation are strong implementation evidence, not owner
   acceptance.
-- Exact Availability periods have no deployed post-edition disposal worker or
-  approved organization policy yet. Production personal-data readiness remains
-  blocked on that explicit retention decision and recovery rehearsal.
-- Qualifications, Shifts, time records, assignment replacement/bulk operation,
-  notifications, calendar import, recurrence helpers, and onboarding-review
-  orchestration remain absent. Programme, inbox, and live operations are still
-  planned product areas rather than available capabilities.
-- Registration setup has a substantial lifecycle core, but writer retirement,
-  readiness activation, complete builder parity, representative recovery and
-  concurrency, and production cutover remain open.
-- Representative deployment, stopped-writer cutover, restore/PITR, worker
-  supervision, provider certification, load, telemetry, privacy, finance,
-  safeguarding, operator training, and external acceptance remain production
-  gates.
+- General qualifications, maximum-hours and lone-working policy,
+  accommodation-sensitive decisions, schedule publication and change
+  acknowledgement, notifications, recurrence, check-in, lateness or absence
+  escalation, actual time, handover acceptance, and replacement staffing remain
+  absent.
+- Exact Availability periods still need an approved organization-specific
+  post-edition retention policy, legal-hold behavior, disposal worker,
+  observability, and representative recovery before production personal data.
+- Registration writer retirement and readiness activation, task-oriented Venue
+  and Logistics conversion, deployment, stopped-writer cutover, restore/PITR,
+  worker supervision, provider certification, load, telemetry, privacy,
+  safeguarding, training, and external acceptance remain production gates.
 
 ## Smallest sensible next actions
 
-1. Complete UX-029's remaining widths, zoom, assistive-technology, error, stale,
-   and read-only states, including destructive withdrawal in a disposable
-   synthetic browser dataset.
-2. Accept the Shift contract before implementation: demand, qualification,
-   suitability, claim, independent confirmation, removal, capacity,
-   overlap/rest, publication, completion, locking, current-Availability version
-   comparison, and recovery.
-3. Implement the smallest complete Shift journey from Position demand through
-   personal suitable work and organizer coverage, without turning Availability
-   into a commitment.
-4. Define and rehearse the organization-approved post-edition Availability
-   disposal policy, legal holds, worker observability, restore/PITR, and
-   fix-forward behavior.
-5. Finish UX-029's broader Registration, Organization structure, Position,
-   Assignment, and Availability role/state matrix.
-6. Apply the same page frame and task orientation to Venues and Logistics,
-   prioritizing receiving, custody, schedules, and exceptions over model nouns.
+1. Complete the Shift mutation-role and UX-029 acceptance matrix, prioritizing
+   distinct claimant/confirmer accounts, stale evidence, full capacity,
+   underfill, denied/read-only states, 200 percent zoom, and a representative
+   screen reader.
+2. Accept the next scheduling contract before implementation: check-in,
+   late/absent escalation, handover, actual-time boundaries, and the exact line
+   between an internal commitment and a published personal schedule.
+3. Define and rehearse the organization-approved Availability disposal policy,
+   legal holds, worker observability, restore/PITR, and fix-forward behavior.
+4. Apply the same task-oriented page frame to Venues and Logistics, prioritizing
+   receiving, custody, physical-space schedules, and exceptions over model
+   inventories.
+5. Finish Registration writer retirement, readiness activation, representative
+   recovery/concurrency, and production cutover without creating a second setup
+   path.
 
 ## Resume instructions
 
 Read `AGENTS.md`, this file, `ROADMAP.md`, the production-consolidation ledger,
-the management-shell, Organization structure, Position management, Assignment
-management, Availability management, and Registration setup contracts, and
-ADRs 0019/0028/0039/0049/0055/0075/0076/0077. Use only synthetic data. Preserve
-organization and edition scope, authorize before disclosure, keep My Maru
-separate from Administration, keep draft and absent Availability
-indistinguishable to organizers, and do not confuse a visible destination,
-selected context, local demo record, passing browser rehearsal, or merged code
-with authority cutover, release, or production approval.
+the management-shell, Position, Assignment, Availability, and Shift page
+contracts, and ADRs 0019/0028/0039/0041/0049/0055/0075 through 0078. Use only
+synthetic data. Preserve exact organization and edition scope, authorization
+before disclosure, My Maru/Administration separation, private Availability,
+independent confirmation, privacy-minimized self-withdrawal, canonical lock
+order, immutable command evidence, runtime-role containment, and fix-forward
+recovery. Do not confuse a visible destination, passing local rehearsal, or
+focused test gate with authority cutover, release acceptance, or production
+readiness.

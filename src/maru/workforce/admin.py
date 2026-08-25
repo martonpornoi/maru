@@ -30,6 +30,10 @@ from maru.workforce.models import (
     PositionAssignment,
     PositionAssignmentCommandReceipt,
     PositionTemplate,
+    ShiftCommitment,
+    ShiftCommitmentCommandReceipt,
+    ShiftDemand,
+    ShiftDemandCommandReceipt,
     VolunteerApplication,
     VolunteerOpportunity,
 )
@@ -684,6 +688,93 @@ class PersonAvailabilityCommandReceiptAdmin(_AvailabilityReadOnlyAdmin):
         "id",
         "created_at",
         "updated_at",
+    )
+
+
+@admin.register(ShiftDemand)
+class ShiftDemandAdmin(_AvailabilityReadOnlyAdmin):
+    """Inspect governed Shift demand outside its purpose-built workflow."""
+
+    edition_context_lookup = "edition_id"
+    list_display = (
+        "title",
+        "position",
+        "edition",
+        "starts_at",
+        "required_headcount",
+        "status",
+        "command_version",
+    )
+    list_filter = ("organization", "edition", "status", "position")
+    search_fields = ("title", "location_label", "position__title")
+    readonly_fields = tuple(
+        field.name
+        for field in ShiftDemand._meta.concrete_fields  # noqa: SLF001
+    )
+
+
+@admin.register(ShiftDemandCommandReceipt)
+class ShiftDemandCommandReceiptAdmin(_AvailabilityReadOnlyAdmin):
+    """Inspect immutable Shift-demand command evidence."""
+
+    edition_context_lookup = "edition_id"
+    list_display = (
+        "demand",
+        "action",
+        "resulting_version",
+        "actor",
+        "created_at",
+    )
+    list_filter = ("organization", "edition", "action")
+    search_fields = ("demand__title", "actor__display_name", "reason")
+    readonly_fields = tuple(
+        field.name
+        for field in ShiftDemandCommandReceipt._meta.concrete_fields  # noqa: SLF001
+    )
+
+
+@admin.register(ShiftCommitment)
+class ShiftCommitmentAdmin(_AvailabilityReadOnlyAdmin):
+    """Inspect retained Shift claims and confirmations without offering writes."""
+
+    edition_context_lookup = "edition_id"
+    list_display = (
+        "account",
+        "demand",
+        "edition",
+        "status",
+        "starts_at",
+        "command_version",
+    )
+    list_filter = ("organization", "edition", "status", "demand")
+    search_fields = ("account__display_name", "demand__title")
+    readonly_fields = tuple(
+        field.name
+        for field in ShiftCommitment._meta.concrete_fields  # noqa: SLF001
+    )
+
+
+@admin.register(ShiftCommitmentCommandReceipt)
+class ShiftCommitmentCommandReceiptAdmin(_AvailabilityReadOnlyAdmin):
+    """Inspect immutable Shift-commitment command evidence."""
+
+    edition_context_lookup = "edition_id"
+    list_display = (
+        "commitment",
+        "action",
+        "resulting_version",
+        "actor",
+        "created_at",
+    )
+    list_filter = ("organization", "edition", "action")
+    search_fields = (
+        "commitment__demand__title",
+        "actor__display_name",
+        "reason",
+    )
+    readonly_fields = tuple(
+        field.name
+        for field in ShiftCommitmentCommandReceipt._meta.concrete_fields  # noqa: SLF001
     )
 
 
