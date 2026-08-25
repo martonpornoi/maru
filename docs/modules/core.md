@@ -2,9 +2,10 @@
 
 Status: Implemented backend foundation, focused responsive `/admin/` hierarchy,
 shared management-page frame, Representation & access governance integration,
-and Organization structure/Department management; broader journey,
-accessibility, and owner gates remain
-Last updated: 2026-08-23
+and Organization structure/Department management with Position, Assignment,
+and Availability continuations; broader journey, accessibility, and owner gates
+remain
+Last updated: 2026-08-25
 
 ## Purpose and requirements
 
@@ -200,8 +201,9 @@ their routes or permission boundaries.
 The durable **Workforce** task reads the existing exact-edition structure
 projection and connects Structure, Positions, Assignments, Availability, and
 Shifts. It does not create another Department writer; authorized managers reach
-the purpose-built Position workspace, and unavailable future stages remain
-labelled and noninteractive.
+purpose-built Position, Assignment, and current shared Availability
+workspaces. Shifts remain labelled and noninteractive until their separate
+transactional contract exists.
 Django's `nav_sidebar.js` expects one `#nav-filter` even when no model directory
 is available. The custom sidebar preserves that DOM contract and hides the
 filter for scoped accounts with no Specialist records instead of removing it.
@@ -328,15 +330,16 @@ Complete computed effective access, invitation notification discovery,
 metrics/tracing export, error capture, rate limiting, and a public status
 service remain. The task-oriented shell/home and User accounts-to-Board flow
 now include shared framing, Registration-desk orientation, the owner-safe
-Workforce read journey, and governed Position management; assignments, Venues,
-Logistics, and other
-specialist journeys are not yet certified against the same complete state and
-browser matrix. Representation & access's root-representation
+Workforce journey, governed Position management, and owner-safe Assignment
+management plus person-owned Availability; Venues, Logistics, Shifts, and
+other specialist journeys are not yet certified against the same complete
+state and browser matrix. Representation &
+access's root-representation
 explanation is only the
 first policy-derived slice; Organization structure adds a current principal-specific structure
 view/manage summary but not named relationship disclosure or the complete
 department/resource/field explanation. Department and Position management use
-the structure version fence and strict adapters; assignment approval and the
-computed access explanation remain separate. The unified shell,
-Representation & access, and Organization structure are implemented backend
-milestones, not production-ready release claims.
+the structure version fence and strict adapters; Assignment management uses its
+own versioned dual-control commands, while the complete computed access
+explanation remains separate. These are implemented backend milestones, not
+production-ready release claims.

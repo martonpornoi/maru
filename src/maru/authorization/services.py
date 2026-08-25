@@ -544,7 +544,7 @@ def delegate_capability(  # noqa: DOC503, PLR0915 - bare re-raise preserves orig
 
     try:
         with transaction.atomic():
-            # Every authority writer enters the shared Page 9/provenance/
+            # Every authority writer enters the shared structure/provenance/
             # retirement boundary before taking tenant or target row locks.
             # Keeping this legacy delegation path in the same order as the
             # newer command services prevents a Department editor and a

@@ -192,6 +192,8 @@ const workforceStructure = {
   series_name: "MaruCon",
   edition_name: "MaruCon 2026",
   can_manage_positions: true,
+  can_manage_assignments: true,
+  can_view_availability: true,
   governance: {
     kind: "governance",
     label: "Executive Board",
@@ -829,7 +831,7 @@ describe("Management Console", () => {
     }
     expect(
       within(journey as HTMLElement).getAllByText("Not available yet"),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
     expect(
       screen.getByRole("heading", { name: "Registration Lead" }),
     ).toBeInTheDocument();
@@ -846,6 +848,18 @@ describe("Management Console", () => {
     ).toHaveAttribute(
       "href",
       "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/positions/",
+    );
+    expect(
+      screen.getByRole("link", { name: "Manage assignments" }),
+    ).toHaveAttribute(
+      "href",
+      "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/assignments/",
+    );
+    expect(
+      screen.getByRole("link", { name: "Review availability" }),
+    ).toHaveAttribute(
+      "href",
+      "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/availability/",
     );
     expect(
       screen.getByRole("link", { name: "Manage Registration Lead" }),
@@ -890,7 +904,7 @@ describe("Management Console", () => {
     expect(screen.queryByText(/active Department/)).not.toBeInTheDocument();
   });
 
-  it("gives a non-staff owner Position management without specialist records", async () => {
+  it("gives a non-staff owner purpose workspaces without specialist records", async () => {
     const originalFetch = vi.mocked(fetch).getMockImplementation();
     vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init) => {
       if (String(input) === "/api/v1/me/context") {
@@ -923,8 +937,11 @@ describe("Management Console", () => {
       screen.queryByRole("link", { name: /Assignment records/ }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Position management is available here/),
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: /Assignment management/ }),
+    ).toHaveAttribute(
+      "href",
+      "/admin/platform/organizations/maru-community-events-demo/series/marucon/editions/marucon-2026/structure/assignments/",
+    );
   });
 
   it("fails closed when the role cannot view Workforce structure", async () => {

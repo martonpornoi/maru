@@ -22,7 +22,6 @@ from maru.workforce.admin import (
     OnboardingDocumentTypeAdmin,
     PositionAdmin,
     PositionAssignmentAdmin,
-    PositionAssignmentAdminForm,
 )
 from maru.workforce.bootstrap import bootstrap_organization_workforce
 from maru.workforce.models import (
@@ -626,8 +625,8 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         account=person,
         actor=authority_actor,
         approver=authority_approver,
-        effective_from=timezone.now(),
-        expires_at=None,
+        effective_from=proposed.effective_from,
+        expires_at=proposed.expires_at,
         reason="Approved registration lead.",
         correlation_id=uuid4(),
         proposed_assignment_id=proposed.id,
@@ -679,7 +678,7 @@ def test_workforce_services_fail_closed_and_activate_proposed_assignment() -> No
         )
 
 
-def test_workforce_admin_inspection_reviews_and_activates_with_dual_control(
+def test_workforce_admin_inspection_and_onboarding_review(
     settings: object,
     tmp_path: Path,
 ) -> None:
@@ -696,10 +695,6 @@ def test_workforce_admin_inspection_reviews_and_activates_with_dual_control(
         chair=chair,
         reason="Verify the organizer admin workflow.",
         correlation_id=uuid4(),
-    )
-    authority_actor, authority_approver = grant_board_controllers_edition_capability(
-        edition,
-        "workforce.manage_assignments",
     )
     department = Department.objects.get(
         edition=edition,
@@ -727,23 +722,6 @@ def test_workforce_admin_inspection_reviews_and_activates_with_dual_control(
         status=PositionTemplate.Status.PUBLISHED,
         created_by=controller,
     )
-
-    assignment_form = PositionAssignmentAdminForm(
-        data={
-            "position": Position.objects.get(
-                edition=edition,
-                code="convention-chair",
-            ).id,
-            "account": candidate.id,
-            "effective_from": timezone.now().isoformat(),
-            "expires_at": "",
-            "approved_by": "",
-            "reason": "Exercise independent approval validation.",
-            "activate_now": "on",
-        }
-    )
-    assert not assignment_form.is_valid()
-    assert "approved_by" in assignment_form.errors
 
     request = RequestFactory().post("/admin/workforce/")
     request.user = controller
@@ -828,30 +806,10 @@ def test_workforce_admin_inspection_reviews_and_activates_with_dual_control(
     )
     assert document_request.status == OnboardingDocumentRequest.Status.APPROVED
 
-    request.user = authority_actor
-    assignment = PositionAssignment(
-        position=position,
-        account=candidate,
-        effective_from=timezone.now(),
-        reason="Approved agreement and organizer appointment.",
-    )
     assignment_admin = PositionAssignmentAdmin(PositionAssignment, admin.site)
-    assignment_admin.save_model(
-        request,
-        assignment,
-        SimpleNamespace(
-            cleaned_data={
-                "activate_now": True,
-                "approved_by": authority_approver,
-            }
-        ),  # type: ignore[arg-type]
-        change=False,
-    )
-    assignment.refresh_from_db()
-    assert assignment.status == PositionAssignment.Status.ACTIVE
-    assignment_admin.save_model(
-        request,
-        assignment,
-        SimpleNamespace(cleaned_data={"activate_now": False}),  # type: ignore[arg-type]
-        change=True,
-    )
+    request.user = controller
+    assert assignment_admin.has_view_permission(request)
+    assert not assignment_admin.has_add_permission(request)
+    assert not assignment_admin.has_change_permission(request)
+    assert not assignment_admin.has_delete_permission(request)
+    assert position.created_by == controller

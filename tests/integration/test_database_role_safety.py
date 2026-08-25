@@ -19,6 +19,7 @@ from rest_framework.test import APIClient
 from maru.authorization.activation import activate_authority_provenance
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2,
+    RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
     RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
@@ -319,6 +320,24 @@ def _provision_runtime_role(
             )
             cursor.execute(
                 sql.SQL("GRANT SELECT, INSERT, UPDATE ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" TO ")
+                + role
+            )
+        for identity in RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS:
+            cursor.execute(
+                sql.SQL("REVOKE UPDATE, REFERENCES ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" FROM ")
+                + role
+            )
+            cursor.execute(
+                sql.SQL("REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE ")
+                + sql.SQL(identity)
+                + sql.SQL(" FROM PUBLIC")
+            )
+            cursor.execute(
+                sql.SQL("GRANT SELECT, INSERT, DELETE ON TABLE ")
                 + sql.SQL(identity)
                 + sql.SQL(" TO ")
                 + role
@@ -634,6 +653,11 @@ def _assert_structure_relation_privileges(*, role_name: str) -> None:
             role_name=role_name,
             identity=identity,
         ) == (True, True, True, False, False, False, False, False)
+    for identity in RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS:
+        assert _table_privilege_matrix(
+            role_name=role_name,
+            identity=identity,
+        ) == (True, True, False, True, False, False, False, False)
     department_privileges = _table_privilege_matrix(
         role_name=role_name,
         identity="public.workforce_department",
@@ -1382,6 +1406,8 @@ def test_missing_required_relation_dml_is_rejected() -> None:
         (RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS[0], "UPDATE"),
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "INSERT"),
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "UPDATE"),
+        (RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS[0], "INSERT"),
+        (RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS[0], "DELETE"),
     ],
 )
 def test_missing_required_structure_relation_privilege_is_rejected(
@@ -1423,6 +1449,10 @@ def test_missing_required_structure_relation_privilege_is_rejected(
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "DELETE", False),
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "REFERENCES", False),
         (RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS[0], "REFERENCES", True),
+        (RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS[0], "UPDATE", False),
+        (RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS[0], "UPDATE", True),
+        (RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS[0], "REFERENCES", False),
+        (RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS[0], "REFERENCES", True),
     ],
 )
 def test_forbidden_structure_relation_privilege_is_rejected(
@@ -1479,6 +1509,7 @@ def test_forbidden_structure_relation_privilege_is_rejected(
         *RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
         *RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS,
         *RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
+        *RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     ],
 )
 @pytest.mark.parametrize("privilege", ["TRIGGER", "TRUNCATE"])

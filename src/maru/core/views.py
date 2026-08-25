@@ -1767,7 +1767,7 @@ def liveness(request: Request) -> Response:
 
 
 def _append_invitation_runtime_readiness(dependencies: dict[str, str]) -> bool:
-    """Append one value-safe Page 10 dependency when production requires it.
+    """Append one value-safe account-onboarding dependency when required.
 
     Parameters
     ----------
@@ -1777,7 +1777,7 @@ def _append_invitation_runtime_readiness(dependencies: dict[str, str]) -> bool:
     Returns
     -------
     bool
-        `True` when Append one value-safe Page 10 dependency when production
+        `True` when one account-onboarding dependency was appended when
         requires it; otherwise `False`.
     """
     if not bool(getattr(settings, "IDENTITY_INVITATION_ENCRYPTION_REQUIRED", False)):

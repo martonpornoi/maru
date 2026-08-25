@@ -74,6 +74,7 @@ COMMON_WORKFORCE = (
     "workforce.manage_applications",
     "workforce.manage_documents",
     "workforce.manage_assignments",
+    "workforce.view_availability",
 )
 REGISTRATION_TEAM = (
     *COMMON_VIEW,

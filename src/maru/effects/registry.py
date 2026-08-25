@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 PayloadValidator = Callable[[dict[str, object]], None]
 MAX_EVENT_PAYLOAD_TEXT_LENGTH = 240
 MAX_EVENT_CODE_LENGTH = 80
+MAX_WORKFORCE_AVAILABILITY_WINDOWS = 64
 
 
 @dataclass(frozen=True, slots=True)
@@ -574,6 +575,47 @@ def _validate_workforce_assignment_activated(payload: dict[str, object]) -> None
     )
 
 
+def _validate_workforce_assignment_changed(payload: dict[str, object]) -> None:
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"position_code", "status"}),
+    )
+
+
+def _validate_workforce_availability_changed(payload: dict[str, object]) -> None:
+    """Validate a minimized availability fact without accepting exact times.
+
+    Parameters
+    ----------
+    payload : dict[str, object]
+        Candidate state and count-only domain-event payload.
+
+    Raises
+    ------
+    ValidationError
+        If fields, state, or the bounded decimal count is invalid.
+    """
+    _require_exact_string_fields(
+        payload,
+        fields=frozenset({"status", "window_count"}),
+    )
+    if payload["status"] not in {"draft", "submitted", "withdrawn"}:
+        raise ValidationError(
+            "Availability event status is not registered.",
+            code="invalid_domain_event_payload",
+        )
+    window_count = payload["window_count"]
+    if (
+        not isinstance(window_count, str)
+        or re.fullmatch(r"0|[1-9][0-9]?", window_count) is None
+        or int(window_count) > MAX_WORKFORCE_AVAILABILITY_WINDOWS
+    ):
+        raise ValidationError(
+            "Availability event count is invalid.",
+            code="invalid_domain_event_payload",
+        )
+
+
 _WORKFORCE_STRUCTURE_ACTIONS = frozenset(
     {
         "template_applied",
@@ -1017,6 +1059,32 @@ EVENT_DEFINITIONS = (
         schema_version=1,
         description="A dual-controlled position assignment activated scoped access.",
         validator=_validate_workforce_assignment_activated,
+    ),
+    EventDefinition(
+        name="workforce.position_assignment.proposed.v1",
+        schema_version=1,
+        description="A controller proposed a known person for a Position.",
+        validator=_validate_workforce_assignment_changed,
+    ),
+    EventDefinition(
+        name="workforce.position_assignment.rejected.v1",
+        schema_version=1,
+        description="A distinct controller rejected a Position assignment proposal.",
+        validator=_validate_workforce_assignment_changed,
+    ),
+    EventDefinition(
+        name="workforce.position_assignment.ended.v1",
+        schema_version=1,
+        description="A controller ended a Position assignment and linked authority.",
+        validator=_validate_workforce_assignment_changed,
+    ),
+    EventDefinition(
+        name="workforce.person_availability.changed.v1",
+        schema_version=1,
+        description=(
+            "A person replaced, shared, or withdrew current edition availability."
+        ),
+        validator=_validate_workforce_availability_changed,
     ),
     EventDefinition(
         name="workforce.structure.changed.v1",

@@ -1,10 +1,11 @@
 # Experience and information architecture
 
-Status: Focused unified shell, Representation & access handoff, shared page frame, owner-rehearsed
-Registration desk, Workforce journey, and governed Position management locally verified;
-complete mutation-role, state-matrix, width/zoom, and release accessibility
-evidence pending
-Last updated: 2026-08-23
+Status: Focused unified shell, Representation & access handoff, shared page
+frame, owner-rehearsed Registration desk and Workforce journey, and governed
+Position, Assignment, and person-owned Availability management locally
+verified; complete mutation-role, state-matrix, width/zoom, and release
+accessibility evidence pending
+Last updated: 2026-08-25
 
 ## Current executable experience
 
@@ -352,13 +353,26 @@ publication is a distinct applicant-facing action, and protected closure names
 its dependencies instead of silently deleting assignments, reports, or access.
 Each Position retains its directly inspectable organizer reasons.
 
-Availability and Shifts occupy explicit, noninteractive future stages. The UI
-states that availability will be person-owned and that the shift lifecycle must
-cover demand, claims, confirmation, overlap, completion, and locking. It does
-not infer availability from appointments or present Positions as scheduled
-work. Assignment proposal and truly independent approval remain the next
-Workforce workflow; non-staff owners see no inaccessible specialist links in
-their place.
+Assignment management continues from a Position into a relationship-bounded
+known-person proposal, visible onboarding readiness, and a genuinely different
+controller's stepped-up approval or rejection. Proposal reserves headcount but
+grants nothing; approval atomically activates role and participation evidence;
+ending revokes linked authority and retains its reason. **My Workforce** gives
+the subject a separate reason-minimized state and dates view. Non-staff owners
+see purpose-built continuations rather than inaccessible specialist links.
+
+Availability is now a person-owned continuation in **My Workforce** and a
+separately capability-scoped organizer projection. A person may keep a private
+draft, explicitly share their complete exact-edition periods, report an empty
+set as unavailable, or withdraw current exact periods. Organizers see only
+open-assignment people, operational Position labels, current shared
+consequences, and submitted periods; absent and draft plans are both **Not
+shared**. The UI does not infer Availability from assignments.
+
+Shifts remain an explicit noninteractive future stage. Their contract must
+cover demand, suitability, claims, confirmation, removal, overlap and rest,
+publication, completion, locking, and recovery. Neither Positions nor
+Availability are presented as scheduled work.
 
 The implemented Reports destination starts with one purpose-built
 registration preset: attendance totals, country and attendee-level

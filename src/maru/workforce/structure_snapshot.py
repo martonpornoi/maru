@@ -1,4 +1,4 @@
-"""Version-fenced, read-only snapshots for the Page 9 structure projection."""
+"""Version-fenced snapshots for the Organization structure projection."""
 
 from __future__ import annotations
 

@@ -1,0 +1,201 @@
+{% extends "admin/base_site.html" %}
+{% load static tz %}
+
+{% block title %}{% if edition %}My availability · {{ edition.name }}{% else %}My availability{% endif %}{% endblock %}
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'workforce/organization_structure.css' %}">
+{% endblock %}
+{% block extrahead %}
+  {{ block.super }}
+  <script src="{% static 'workforce/availability.js' %}" defer></script>
+{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'my-maru-home' %}">My Maru</a>
+    &rsaquo; <a href="{% url 'my-workforce-assignments' %}">Workforce</a>
+    &rsaquo; Availability
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="maru-personal-home workforce-availability-page">
+    {% if availability_state_message %}
+      <header>
+        <p class="maru-personal-kicker">Your conventions</p>
+        <h1>My availability</h1>
+      </header>
+      <div class="baseline-state baseline-state--warning" role="alert">
+        <h2>Availability is not available</h2>
+        <p>{{ availability_state_message }}</p>
+        <p><a href="{% url 'my-workforce-assignments' %}">Return to My Workforce</a></p>
+      </div>
+    {% else %}
+      {% timezone edition.time_zone %}
+      <header class="workforce-availability-heading">
+        <div>
+          <p class="maru-personal-kicker">{{ edition.name }} · Workforce</p>
+          <h1>My availability</h1>
+          <p>
+            Tell organizers when they may plan work for your current Position.
+            These periods are planning input—not assigned shifts or a promise
+            that you will work every minute shown.
+          </p>
+        </div>
+        <span class="workforce-availability-state workforce-availability-state--{{ availability.state }}">{{ availability.state_label }}</span>
+      </header>
+
+      {% include "core/_page_access_mount.html" %}
+
+      {% if action_error %}
+        <div class="baseline-state baseline-state--error" role="alert" tabindex="-1" data-maru-focus-on-load>
+          <h2>Your availability was not changed</h2>
+          <p>{{ action_error }}</p>
+          {% if reload_required %}
+            <p><a href="{% url 'my-workforce-availability' organization.slug convention_series.slug edition.slug %}">Reload the latest availability</a></p>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <section class="module workforce-availability-explainer" aria-labelledby="availability-meaning-title">
+        <h2 id="availability-meaning-title">What organizers will understand</h2>
+        <div class="workforce-stage-grid">
+          <div>
+            <strong>Private draft</strong>
+            <span>Only you can see the periods until you choose Share with organizers.</span>
+          </div>
+          <div>
+            <strong>Shared periods</strong>
+            <span>Organizers treat the periods as your complete current availability; time outside them is unavailable.</span>
+          </div>
+          <div>
+            <strong>No shared periods</strong>
+            <span>Sharing an empty list explicitly tells organizers that you are not available for this edition.</span>
+          </div>
+        </div>
+        <p class="help">Edition dates: {{ edition.starts_on|date:"DATE_FORMAT" }}–{{ edition.ends_on|date:"DATE_FORMAT" }} · Time zone: <strong>{{ edition.time_zone }}</strong></p>
+      </section>
+
+      {% if can_edit_availability %}
+        <form
+          method="post"
+          action="{% url 'save-my-workforce-availability' organization.slug convention_series.slug edition.slug %}"
+          class="baseline-form workforce-availability-form"
+          novalidate
+          data-availability-form
+        >
+          {% csrf_token %}
+          {{ command_form.expected_version }}
+          {{ command_form.retry_key }}
+          {{ window_formset.management_form }}
+          {% if command_form.non_field_errors or command_form.expected_version.errors or command_form.retry_key.errors or command_form.status.errors or window_formset.non_form_errors %}
+            <div class="baseline-errors" role="alert">
+              {{ command_form.non_field_errors }}
+              {{ command_form.expected_version.errors }}
+              {{ command_form.retry_key.errors }}
+              {{ command_form.status.errors }}
+              {{ window_formset.non_form_errors }}
+            </div>
+          {% endif %}
+
+          <section class="module workforce-availability-editor" aria-labelledby="availability-periods-title">
+            <div class="baseline-panel-heading">
+              <div>
+                <p class="maru-personal-kicker">Complete replacement</p>
+                <h2 id="availability-periods-title">Periods I can work</h2>
+              </div>
+              <span class="baseline-count">Up to 64 periods</span>
+            </div>
+            <p>
+              Add non-overlapping periods in {{ edition.time_zone }}. Use
+              Preferred as a soft signal for especially good times; it does not
+              override other planning constraints.
+            </p>
+            <div class="workforce-availability-periods" data-availability-rows>
+              {% for period_form in window_formset.forms %}
+                <fieldset class="workforce-availability-period" data-availability-row>
+                  <legend>Period <span data-period-number>{{ forloop.counter }}</span></legend>
+                  {% if period_form.non_field_errors %}<div class="baseline-errors" role="alert">{{ period_form.non_field_errors }}</div>{% endif %}
+                  <div class="workforce-availability-period-grid">
+                    {% include "core/_baseline_form_field.html" with field=period_form.starts_at %}
+                    {% include "core/_baseline_form_field.html" with field=period_form.ends_at %}
+                    {% include "core/_baseline_form_field.html" with field=period_form.preference %}
+                  </div>
+                  <div class="workforce-availability-remove-control">
+                    <span hidden>{{ period_form.DELETE }}</span>
+                    <button type="button" class="workforce-structure-action workforce-structure-action--secondary" data-remove-period>Remove this period</button>
+                  </div>
+                </fieldset>
+              {% endfor %}
+            </div>
+            <button type="button" class="workforce-structure-action workforce-structure-action--secondary" data-add-period>Add another period</button>
+            <template data-availability-empty-form>
+              <fieldset class="workforce-availability-period" data-availability-row>
+                <legend>Period <span data-period-number></span></legend>
+                <div class="workforce-availability-period-grid">
+                  {% include "core/_baseline_form_field.html" with field=window_formset.empty_form.starts_at %}
+                  {% include "core/_baseline_form_field.html" with field=window_formset.empty_form.ends_at %}
+                  {% include "core/_baseline_form_field.html" with field=window_formset.empty_form.preference %}
+                </div>
+                <div class="workforce-availability-remove-control">
+                  <span hidden>{{ window_formset.empty_form.DELETE }}</span>
+                  <button type="button" class="workforce-structure-action workforce-structure-action--secondary" data-remove-period>Remove this period</button>
+                </div>
+              </fieldset>
+            </template>
+          </section>
+
+          <div class="baseline-form-actions workforce-availability-primary-actions">
+            <button type="submit" name="status" value="submitted">Share with organizers</button>
+            <button type="submit" name="status" value="draft" class="button workforce-secondary-button">Save private draft</button>
+          </div>
+          <p class="help">Saving replaces your complete current list. Nothing is shared unless you choose Share with organizers.</p>
+        </form>
+      {% else %}
+        <section class="module" aria-labelledby="availability-read-only-title">
+          <h2 id="availability-read-only-title">Current plan</h2>
+          <div class="baseline-state baseline-state--warning" role="status">
+            <h3>Availability is read-only</h3>
+            <p>You can still review or withdraw your plan, but changing periods requires a proposed or active Position in this edition.</p>
+          </div>
+          {% if availability.windows %}
+            <ul class="workforce-availability-window-list">
+              {% for window in availability.windows %}
+                <li><strong>{{ window.starts_at|date:"SHORT_DATETIME_FORMAT" }}–{{ window.ends_at|date:"SHORT_DATETIME_FORMAT" }}</strong><span>{{ window.preference_label }}</span></li>
+              {% endfor %}
+            </ul>
+          {% elif availability.state == "unavailable" %}
+            <p>You shared that you are not available for this edition.</p>
+          {% else %}
+            <p>No current periods are retained.</p>
+          {% endif %}
+        </section>
+      {% endif %}
+
+      {% if can_withdraw_availability and withdraw_form %}
+        <section class="module workforce-availability-withdraw" aria-labelledby="availability-withdraw-title">
+          <h2 id="availability-withdraw-title">Withdraw this plan</h2>
+          <p>Withdrawal immediately removes every exact current period. Organizers will see only that the plan was withdrawn.</p>
+          <form method="post" action="{% url 'withdraw-my-workforce-availability' organization.slug convention_series.slug edition.slug %}" class="baseline-form" novalidate>
+            {% csrf_token %}
+            {{ withdraw_form.expected_version }}
+            {{ withdraw_form.retry_key }}
+            {% if withdraw_form.non_field_errors or withdraw_form.expected_version.errors or withdraw_form.retry_key.errors %}<div class="baseline-errors" role="alert">{{ withdraw_form.non_field_errors }}{{ withdraw_form.expected_version.errors }}{{ withdraw_form.retry_key.errors }}</div>{% endif %}
+            {% include "core/_baseline_form_field.html" with field=withdraw_form.confirm %}
+            <div class="baseline-form-actions"><button type="submit" class="deletelink">Withdraw and remove exact periods</button></div>
+          </form>
+        </section>
+      {% endif %}
+
+      <aside class="baseline-boundary" aria-labelledby="availability-boundary-title">
+        <p class="maru-personal-kicker">Planning boundary</p>
+        <h2 id="availability-boundary-title">Availability is not a shift</h2>
+        <p>An organizer still needs to create and publish a specific shift before work is assigned. Availability does not clock time, confirm attendance, or expose why a period does or does not work for you.</p>
+      </aside>
+      {% endtimezone %}
+    {% endif %}
+  </div>
+{% endblock %}
+{% block sidebar %}{% endblock %}

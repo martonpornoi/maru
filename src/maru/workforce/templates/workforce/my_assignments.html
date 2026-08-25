@@ -1,0 +1,61 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}My Workforce{% endblock %}
+{% block content_title %}{% endblock %}
+{% block maru_page_access %}{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'my-maru-home' %}">My Maru</a> &rsaquo; Workforce</div>{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="maru-personal-home">
+    <header>
+      <p class="maru-personal-kicker">Your conventions</p>
+      <h1>My Workforce</h1>
+      <p>See responsibilities proposed or assigned to this account, their dates, and any onboarding action still needed.</p>
+    </header>
+    {% include "core/_page_access_mount.html" %}
+    {% if workforce_state_message %}<ul class="messagelist"><li class="warning" role="alert">{{ workforce_state_message }}</li></ul>{% endif %}
+    <section class="module" aria-labelledby="my-workforce-assignments-title">
+      <h2 id="my-workforce-assignments-title">Positions</h2>
+      {% if assignments %}
+        <div class="maru-admin-workspace-grid">
+          {% for item in assignments %}
+            <article>
+              <strong>{{ item.assignment.position.title }}</strong>
+              <span>{{ item.assignment.edition.name }} · {{ item.assignment.organization.name }}</span>
+              <span>Status: {{ item.state_label }}</span>
+              <span>Starts {{ item.assignment.effective_from|date:"SHORT_DATETIME_FORMAT" }}{% if item.assignment.expires_at %} · ends {{ item.assignment.expires_at|date:"SHORT_DATETIME_FORMAT" }}{% endif %}</span>
+              {% if item.assignment.status == "proposed" %}<span>An organizer has proposed this responsibility; it does not grant access until independently approved.</span>{% endif %}
+              {% if item.assignment.status == "active" %}<a href="{% url 'workforce-my-documents' item.assignment.edition.id %}">Review onboarding documents</a>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No Workforce assignment is related to this account yet.</p>
+      {% endif %}
+    </section>
+    <section class="module" aria-labelledby="my-workforce-availability-title">
+      <h2 id="my-workforce-availability-title">Availability</h2>
+      <p>Share when organizers may plan work for each edition. Availability is private until you deliberately share it, and it never creates a shift.</p>
+      {% if availability_scopes %}
+        <div class="maru-admin-workspace-grid">
+          {% for item in availability_scopes %}
+            <article>
+              <strong>{{ item.edition_name }}</strong>
+              <span>{{ item.organization_name }} · {{ item.time_zone }}</span>
+              <span>Status: {{ item.state_label }}</span>
+              {% if item.position_titles %}<span>Open Positions: {{ item.position_titles|join:", " }}</span>{% else %}<span>No proposed or active Position remains; review or withdrawal only.</span>{% endif %}
+              <a href="{% url 'my-workforce-availability' item.organization_slug item.series_slug item.edition_slug %}">{% if item.can_edit %}Set availability{% else %}Review availability{% endif %}</a>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>Availability will appear after a Position is proposed for this account.</p>
+      {% endif %}
+    </section>
+    <section class="module" aria-labelledby="my-workforce-shifts-title">
+      <h2 id="my-workforce-shifts-title">Shifts</h2>
+      <p>Published work times will appear here when shift planning is introduced. Maru does not infer a shift from an assignment or availability period.</p>
+    </section>
+  </div>
+{% endblock %}
+{% block sidebar %}{% endblock %}

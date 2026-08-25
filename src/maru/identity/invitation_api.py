@@ -1,4 +1,4 @@
-"""Strict versioned API adapters for Page 10 account invitations."""
+"""Strict versioned API adapters for platform account invitations."""
 
 from __future__ import annotations
 

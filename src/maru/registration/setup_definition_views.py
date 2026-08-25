@@ -1,4 +1,4 @@
-"""Same-shell HTML adapters for governed Page 10 definition commands."""
+"""Same-shell HTML adapters for governed Registration definition commands."""
 
 from __future__ import annotations
 

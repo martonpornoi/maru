@@ -1,4 +1,4 @@
-"""Same-shell browser adapters for governed Page 10 registration setup."""
+"""Same-shell browser adapters for governed Registration setup."""
 
 from __future__ import annotations
 

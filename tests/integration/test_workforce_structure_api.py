@@ -973,6 +973,9 @@ def test_denial_precedes_name_queries_and_success_rechecks_view_and_manage() -> 
         "workforce.view_structure",
         "workforce.view_structure",
         "workforce.manage_structure",
+        "workforce.manage_assignments",
+        "authorization.manage_roles",
+        "workforce.view_availability",
     ]
 
 
@@ -1188,6 +1191,9 @@ def test_api_uses_one_projection_instant_and_fresh_final_authorization() -> None
     assert projector.call_args.kwargs["at"] == projection_at
     assert [call.kwargs["at"] for call in policy.call_args_list] == [
         projection_at,
+        response_check_at,
+        response_check_at,
+        response_check_at,
         response_check_at,
         response_check_at,
     ]

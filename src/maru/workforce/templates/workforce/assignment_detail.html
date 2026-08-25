@@ -1,0 +1,92 @@
+{% extends "workforce/assignment_action_base.html" %}
+
+{% block assignment_action_title %}{{ account_label }} · {{ assignment.position.title }}{% endblock %}
+{% block assignment_action_breadcrumb %}{{ account_label }} · {{ assignment.position.title }}{% endblock %}
+{% block assignment_action_heading %}{{ account_label }} · {{ assignment.position.title }}{% endblock %}
+{% block assignment_action_intro %}Review the person's exact responsibility, onboarding readiness, independent-control state, and retained organizer reasons before taking action.{% endblock %}
+{% block assignment_action_meta %}<span>Status: <strong>{{ assignment.get_status_display }}</strong></span><span>Version: <strong>{{ assignment.command_version|default:"Legacy" }}</strong></span>{% endblock %}
+{% block assignment_reload_link %}<a href="{% url 'organization-workforce-assignment' organization.slug convention_series.slug edition.slug assignment.id %}">Reload the latest assignment</a>{% endblock %}
+
+{% block assignment_action_content %}
+  <section class="baseline-panel" aria-labelledby="assignment-summary-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">Current state</p><h2 id="assignment-summary-title">Responsibility and dates</h2></div><span class="baseline-count">{{ assignment.get_status_display }}</span></div>
+    <dl class="workforce-position-summary">
+      <div><dt>Person</dt><dd>{{ account_label }}</dd></div>
+      <div><dt>Position</dt><dd>{{ assignment.position.title }}</dd></div>
+      <div><dt>Department</dt><dd>{{ assignment.position.department.name }}</dd></div>
+      <div><dt>Effective from</dt><dd>{{ assignment.effective_from|date:"SHORT_DATETIME_FORMAT" }}</dd></div>
+      <div><dt>Ends at</dt><dd>{% if assignment.expires_at %}{{ assignment.expires_at|date:"SHORT_DATETIME_FORMAT" }}{% else %}No planned end{% endif %}</dd></div>
+      <div><dt>Proposed by</dt><dd>{{ proposer_label }}</dd></div>
+      {% if decider_label %}<div><dt>Decided by</dt><dd>{{ decider_label }} · {{ assignment.decision_at|date:"SHORT_DATETIME_FORMAT" }}</dd></div>{% endif %}
+      {% if ender_label %}<div><dt>Ended by</dt><dd>{{ ender_label }} · {{ assignment.ended_at|date:"SHORT_DATETIME_FORMAT" }}</dd></div>{% endif %}
+    </dl>
+    {% if is_proposer and assignment.status == "proposed" %}<div class="baseline-state" role="status"><h3>Waiting for another controller</h3><p>You cannot approve or reject your own proposal. Share this assignment with another currently eligible controller.</p></div>{% endif %}
+  </section>
+
+  <section class="baseline-panel" aria-labelledby="assignment-readiness-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">Approval prerequisite</p><h2 id="assignment-readiness-title">Onboarding readiness</h2></div><span class="baseline-count">{% if readiness.ready %}Ready{% else %}Not ready{% endif %}</span></div>
+    {% if readiness.requirements %}
+      <ul class="workforce-assignment-readiness-list">
+        {% for requirement in readiness.requirements %}<li><strong>{{ requirement.name }}</strong><span>{{ requirement.status_label }}</span></li>{% endfor %}
+      </ul>
+    {% else %}
+      <div class="baseline-state"><h3>No onboarding documents required</h3><p>This Position has no document prerequisite. Independent approval and current authority are still required.</p></div>
+    {% endif %}
+  </section>
+
+  {% if assignment.status == "proposed" %}
+    {% if can_decide_assignment %}
+      <section class="baseline-panel" aria-labelledby="assignment-decision-title">
+        <div class="baseline-section-heading"><p class="baseline-kicker">Step 2 of 2</p><h2 id="assignment-decision-title">Independent decision</h2><p>Both actions require a fresh sign-in check. Approval activates the Position's scoped role and participation capacity atomically.</p></div>
+        <div class="workforce-assignment-decision-grid">
+          <form method="post" action="{% url 'approve-organization-workforce-assignment' organization.slug convention_series.slug edition.slug assignment.id %}" class="baseline-form" novalidate>
+            {% csrf_token %}{{ approve_form.expected_version }}{{ approve_form.retry_key }}
+            <h3>Approve assignment</h3>
+            {% if approve_form.non_field_errors or approve_form.expected_version.errors or approve_form.retry_key.errors %}<div class="baseline-errors" role="alert"><p>Reload the assignment before approving.</p>{{ approve_form.non_field_errors }}{{ approve_form.expected_version.errors }}{{ approve_form.retry_key.errors }}</div>{% endif %}
+            {% if not readiness.ready %}<p class="baseline-form-help">Approval stays unavailable until every required onboarding item is approved.</p>{% endif %}
+            {% include "core/_baseline_form_field.html" with field=approve_form.reason %}
+            <div class="baseline-form-actions"><button type="submit"{% if not can_approve_assignment or reload_required %} disabled aria-disabled="true"{% endif %}>Approve and activate</button></div>
+          </form>
+          <form method="post" action="{% url 'reject-organization-workforce-assignment' organization.slug convention_series.slug edition.slug assignment.id %}" class="baseline-form baseline-danger-form" novalidate>
+            {% csrf_token %}{{ reject_form.expected_version }}{{ reject_form.retry_key }}
+            <h3>Reject proposal</h3>
+            {% if reject_form.non_field_errors or reject_form.expected_version.errors or reject_form.retry_key.errors %}<div class="baseline-errors" role="alert"><p>Reload the assignment before rejecting.</p>{{ reject_form.non_field_errors }}{{ reject_form.expected_version.errors }}{{ reject_form.retry_key.errors }}</div>{% endif %}
+            <p>Rejection grants nothing and preserves the proposal and decision reasons.</p>
+            {% include "core/_baseline_form_field.html" with field=reject_form.reason %}
+            <div class="baseline-form-actions"><button type="submit"{% if reload_required %} disabled aria-disabled="true"{% endif %}>Reject proposal</button></div>
+          </form>
+        </div>
+      </section>
+    {% elif not is_proposer %}
+      <div class="baseline-state baseline-state--warning" role="status"><h2>Decision authority unavailable</h2><p>Deciding requires current Workforce assignment and role-management authority in this edition.</p></div>
+    {% endif %}
+  {% elif assignment.status == "active" %}
+    {% if can_end_assignment %}
+      <details class="workforce-structure-command-disclosure workforce-structure-command-disclosure--danger"{% if active_action == "end" %} open{% endif %}>
+        <summary>End assignment and authority</summary>
+        <section class="baseline-danger-zone" aria-labelledby="assignment-end-title">
+          <div class="baseline-section-heading"><p class="baseline-kicker">Retained ending</p><h2 id="assignment-end-title">End this assignment</h2><p>This revokes the linked role immediately and completes Position capacities that no other active assignment still needs. History is not deleted.</p></div>
+          <form method="post" action="{% url 'end-organization-workforce-assignment' organization.slug convention_series.slug edition.slug assignment.id %}" class="baseline-form baseline-danger-form" novalidate>
+            {% csrf_token %}{{ end_form.expected_version }}{{ end_form.retry_key }}
+            {% if end_form.non_field_errors or end_form.expected_version.errors or end_form.retry_key.errors %}<div class="baseline-errors" role="alert"><p>Reload the assignment before ending it.</p>{{ end_form.non_field_errors }}{{ end_form.expected_version.errors }}{{ end_form.retry_key.errors }}</div>{% endif %}
+            {% include "core/_baseline_form_field.html" with field=end_form.reason %}
+            <div class="baseline-form-actions"><button type="submit"{% if reload_required %} disabled aria-disabled="true"{% endif %}>End assignment and revoke authority</button></div>
+          </form>
+        </section>
+      </details>
+    {% else %}
+      <div class="baseline-state baseline-state--warning" role="status"><h2>Ending authority unavailable</h2><p>You can inspect this active assignment, but ending it also requires current role-revocation authority.</p></div>
+    {% endif %}
+  {% endif %}
+
+  <section class="baseline-panel workforce-history-panel" aria-labelledby="assignment-history-title">
+    <div class="baseline-panel-heading"><div><p class="baseline-kicker">Authorized organizers only</p><h2 id="assignment-history-title">Assignment decision history</h2></div><span class="baseline-count">Newest first</span></div>
+    {% if history %}
+      <ol class="workforce-history-list">
+        {% for item in history %}<li><div><strong>{{ item.action_label }}</strong><span>Version {{ item.resulting_version }} · {{ item.occurred_at|date:"SHORT_DATETIME_FORMAT" }}</span></div><p>{{ item.reason }}</p><small>Recorded by {{ item.actor_label }}</small></li>{% endfor %}
+      </ol>
+    {% else %}
+      <div class="baseline-state"><h3>Legacy assignment</h3><p>This record predates the purpose-built command history. Its current state remains inspectable, but no reason receipt was invented.</p></div>
+    {% endif %}
+  </section>
+{% endblock %}

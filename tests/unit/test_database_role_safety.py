@@ -7,6 +7,7 @@ from maru.authorization import provenance_readiness
 from maru.authorization.database_role_safety import (
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V1,
     RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2,
+    RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
     RUNTIME_DATABASE_SELECT_ONLY_RELATIONS,
@@ -35,6 +36,8 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_RELATIONS == (
         "public.workforce_editionstructurecommandreceipt",
+        "public.workforce_positionassignmentcommandreceipt",
+        "public.workforce_personavailabilitycommandreceipt",
         "public.registration_registrationprofileextensionvaluerevision",
         "public.registration_registrationprofileextensionvaluecommandreceipt",
         "public.applications_applicationfilereceipt",
@@ -84,6 +87,8 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
     )
     assert RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS == (
         "public.workforce_editionstructurecontrol",
+        "public.workforce_positionassignment",
+        "public.workforce_personavailabilityplan",
         "public.registration_registrationprofileextensionvaluecontrol",
         "public.applications_applicationdefinition",
         "public.applications_applicationsubmission",
@@ -124,11 +129,15 @@ def test_runtime_relation_privilege_profiles_are_exact_and_disjoint() -> None:
         "public.logistics_logisticseditioncontrol",
         "public.logistics_offlinescanbatch",
     )
+    assert RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS == (
+        "public.workforce_personavailabilitywindow",
+    )
     profiles = (
         set(RUNTIME_DATABASE_SELECT_ONLY_RELATIONS),
         set(RUNTIME_DATABASE_SELECT_INSERT_RELATIONS),
         set(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
         set(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
+        set(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
     )
     assert all(
         not left & right
@@ -289,6 +298,7 @@ def test_probe_binds_the_role_and_required_function_identities(
         list(RUNTIME_DATABASE_SELECT_INSERT_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS),
         list(RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS),
+        list(RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS),
         list(RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2),
     ]
     configured_connections.__getitem__.assert_called_once_with("security")
@@ -323,6 +333,7 @@ def test_probe_query_covers_identity_integrity_and_nondelegation_boundaries(
         *RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
         *RUNTIME_DATABASE_SELECT_UPDATE_RELATIONS,
         *RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
+        *RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     ):
         assert identity not in query
 

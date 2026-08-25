@@ -2091,7 +2091,7 @@ class _DemoSeeder:
         """Expose directly seeded registration setup through the canonical reader.
 
         The demonstration configuration still uses the documented compatibility
-        writer while Page 10's writer cutover remains incomplete.  Mirror the
+        writer while Registration setup writer cutover remains incomplete. Mirror the
         migration backfill boundary honestly: the aggregate is readable, but it
         retains legacy origin and unknown provenance rather than inventing a
         source digest, actor, or command receipt.

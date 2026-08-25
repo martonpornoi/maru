@@ -1,4 +1,4 @@
-"""Report Page 10 invitation readiness without exposing identity data."""
+"""Report platform invitation readiness without exposing identity data."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ class Command(BaseCommand):
     """Execute the Django management command."""
 
     help = (
-        "Inspect Page 10's additive database contract and the still-separate "
+        "Inspect the account-invitation database contract and the still-separate "
         "production cutover gates. The report contains no account data."
     )
 

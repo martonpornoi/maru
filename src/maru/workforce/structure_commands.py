@@ -151,7 +151,7 @@ def _automatic_sibling_display_order(
 
 
 class StructureCommandError(RuntimeError):
-    """Base for stable, adapter-safe Page 9 command failures."""
+    """Base for stable, adapter-safe Organization structure failures."""
 
     reason_code = "structure_command_failed"
 

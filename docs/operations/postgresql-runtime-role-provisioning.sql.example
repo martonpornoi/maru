@@ -135,6 +135,48 @@ GRANT SELECT, INSERT, UPDATE ON TABLE
     public.workforce_editionstructurecontrol
     TO maru_runtime;
 
+-- Position-assignment and person-owned Availability receipts are append-only
+-- runtime evidence. Their parent aggregates may be created and advanced by
+-- guarded commands, but never deleted. Current Availability periods are a
+-- complete replacement set: runtime may insert the new set and delete the old
+-- set, but cannot update an individual period in place. Database triggers
+-- require the exact final aggregate, period, and receipt evidence at commit.
+REVOKE UPDATE, DELETE, REFERENCES ON TABLE
+    public.workforce_positionassignmentcommandreceipt,
+    public.workforce_personavailabilitycommandreceipt
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.workforce_positionassignmentcommandreceipt,
+    public.workforce_personavailabilitycommandreceipt
+    FROM PUBLIC;
+GRANT SELECT, INSERT ON TABLE
+    public.workforce_positionassignmentcommandreceipt,
+    public.workforce_personavailabilitycommandreceipt
+    TO maru_runtime;
+
+REVOKE DELETE, REFERENCES ON TABLE
+    public.workforce_positionassignment,
+    public.workforce_personavailabilityplan
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.workforce_positionassignment,
+    public.workforce_personavailabilityplan
+    FROM PUBLIC;
+GRANT SELECT, INSERT, UPDATE ON TABLE
+    public.workforce_positionassignment,
+    public.workforce_personavailabilityplan
+    TO maru_runtime;
+
+REVOKE UPDATE, REFERENCES ON TABLE
+    public.workforce_personavailabilitywindow
+    FROM maru_runtime;
+REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.workforce_personavailabilitywindow
+    FROM PUBLIC;
+GRANT SELECT, INSERT, DELETE ON TABLE
+    public.workforce_personavailabilitywindow
+    TO maru_runtime;
+
 -- Registration setup and account onboarding profile-value revisions and command receipts are append-only runtime
 -- evidence. Their per-registration/stable-key control may be created and
 -- advanced but never deleted or referenced by the application login. Keep

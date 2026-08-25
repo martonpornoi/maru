@@ -136,9 +136,9 @@ contexts, gives person/attendee/access drawers one modal keyboard contract, and
 connects Registration to one durable **Workforce** destination. Workforce reads
 the existing exact-edition bounded structure projection and presents Structure,
 Positions, Assignments, Availability, and Shifts as one dependent sequence.
-The first three stages show current records; the last two are truthful
-noninteractive placements. Non-staff owners are not sent to inaccessible Django
-records.
+The first four stages now have current purpose-built records or continuations;
+Shifts remain a truthful noninteractive placement. Non-staff owners are not
+sent to inaccessible Django records.
 
 ADR 0075 and HR-012 now complete the next Workforce slice: **Position
 management** is a purpose-built, owner-facing exact-edition workflow. One
@@ -150,19 +150,47 @@ publish or close the opportunity, and close an unused Position through shared
 HTML/API commands. Closure is one-way and refuses assignments, direct reports,
 or current/future Position-scoped authority. Migration `0010` makes specialist
 Position and opportunity records inspection-only in practice by rejecting
-direct mutation without exact command receipts. Assignment proposal and truly
-independent approval are now the next Workforce product outcome. The preserved
-recovery bootstrap uses the same Position command under one exact initial-Chair
+direct mutation without exact command receipts. The preserved recovery
+bootstrap uses the same Position command under one exact initial-Chair
 provenance exception, and internally consistent legacy rows begin evidence at
 their first real governed change without fabricated creation history.
+
+ADR 0076 and HR-013 now complete the owner-safe **Assignment management**
+continuation. A relationship-bounded known person may be proposed for a current
+Position with an effective interval, directly inspectable reason, onboarding
+readiness, and reserved headcount but no authority. A genuinely different
+currently authorized controller must use a fresh authenticated session to
+approve or reject. Approval rechecks onboarding, headcount, lifecycle,
+RoleBundle provenance, and both controllers before atomically activating the
+linked role and participation capacities. Ending requires fresh revocation
+authority and atomically revokes the role, completes only unused capacities,
+and retains history. Shared strict HTML/API commands, immutable receipts, and
+Workforce migration `0011` enforce the same lifecycle; **My Workforce** gives
+the subject a reason-minimized personal state view.
+
+ADR 0077 and HR-014 now complete the person-owned **Availability management**
+continuation. A person with a proposed or active Position may keep a private
+draft or deliberately share a complete exact-edition set of non-overlapping
+available or preferred periods. Unknown, explicitly unavailable, shared, and
+withdrawn states remain distinct. Browser input uses the edition IANA time zone
+and rejects ambiguous or nonexistent minutes; strict API input carries an
+offset. An independently capability-authorized organizer sees only people with
+open assignments, operational Position labels, current shared consequences,
+and submitted periods; absent and draft plans are both **Not shared**. Shared
+commands replace the complete set with optimistic versions and idempotency,
+withdrawal deletes current exact periods, and migrations `0017`/`0012` add the
+capability, minimized receipts, database interval/evidence guards, runtime ACL
+profile, and fix-forward boundary.
 
 The complete authenticated width/zoom, keyboard, automated-accessibility,
 screen-reader, owner, and visual-state matrix remains required, as does
 task-oriented conversion of Venues, Logistics, and other recurring management
-journeys. The next highest-impact outcome is the owner-safe Assignment journey
-from a current Position through onboarding prerequisites, proposal, separate
-approval, and activation; person-owned Availability and transactional Shifts
-follow only after their privacy and scheduling contracts are accepted.
+journeys. The next highest-impact Workforce outcome is transactional Shifts,
+but only after demand, suitability, commitment, overlap, rest, publication,
+completion, locking, and recovery contracts are accepted. Availability also
+still needs an organization-approved post-edition disposal policy and worker.
+Focused two-human Assignment and person-owner Availability rehearsals must
+precede treating either workflow as release evidence.
 
 The 2026-08-11 canonical repository acceptance supersedes those earlier
 focused counts as the current whole-tree gate: Ruff formatting/lint over 624
@@ -531,9 +559,11 @@ and coverage gate passes; authenticated responsive acceptance is still pending.
 Position management now provides purpose-built creation, complete operational
 editing, volunteer-opportunity publication, protected one-way closure, direct
 reason history, shared strict HTML/API commands, and database-enforced command
-evidence. Qualifications, person-owned availability, shifts, work records,
-purpose-built independent assignment approval, and the programme/schedule side
-of this phase remain.
+evidence. Assignment management now provides relationship-bounded proposal,
+separate stepped-up approval or rejection, atomic activation, retained ending,
+subject self-service, shared strict HTML/API commands, and database-enforced
+command evidence. Qualifications, person-owned availability, shifts, work
+records, notifications, and the programme/schedule side of this phase remain.
 
 ADR 0051 now supplies a bounded typed Applications studio with immutable
 platform starters copied into edition-owned drafts, closed field vocabularies,

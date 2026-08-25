@@ -41,6 +41,29 @@
     {% endif %}
   </section>
 
+  {% if can_manage_assignments %}
+    <section class="baseline-panel" aria-labelledby="position-assignment-journey-title">
+      <div class="baseline-panel-heading">
+        <div>
+          <p class="baseline-kicker">People and authority</p>
+          <h2 id="position-assignment-journey-title">Assignments</h2>
+        </div>
+        <span class="baseline-count">{{ open_assignment_count }} open</span>
+      </div>
+      <div class="baseline-state">
+        <h3>Staff from this responsibility</h3>
+        <p>
+          A proposal reserves headcount but grants no access. Another current
+          controller must approve it after all required onboarding items are ready.
+        </p>
+        <div class="workforce-structure-actions">
+          <a class="workforce-structure-action workforce-structure-action--secondary" href="{% url 'organization-workforce-assignments' organization.slug convention_series.slug edition.slug %}">Review all assignments</a>
+          {% if can_issue_assignment_authority and position.status != "closed" %}<a class="workforce-structure-action" href="{% url 'organization-workforce-assignment-proposal' organization.slug convention_series.slug edition.slug position.id %}">Propose a person</a>{% endif %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
   {% if update_form %}
     {% if update_form.non_field_errors or update_form.expected_version.errors %}
       <div class="baseline-errors" role="alert">{{ update_form.non_field_errors }}{{ update_form.expected_version.errors }}</div>

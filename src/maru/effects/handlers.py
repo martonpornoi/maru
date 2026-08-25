@@ -63,6 +63,10 @@ ACKNOWLEDGED_INTERNAL_EVENTS = frozenset(
         "workforce.application.submitted.v1",
         "workforce.document.reviewed.v1",
         "workforce.position_assignment.activated.v1",
+        "workforce.position_assignment.proposed.v1",
+        "workforce.position_assignment.rejected.v1",
+        "workforce.position_assignment.ended.v1",
+        "workforce.person_availability.changed.v1",
         "workforce.structure.changed.v1",
     }
 )

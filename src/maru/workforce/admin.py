@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, cast, override
+from typing import TYPE_CHECKING, ClassVar, cast, override
 from uuid import UUID
 
-from django import forms
 from django.contrib import admin
 from django.core.exceptions import ValidationError
-from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
@@ -25,20 +23,22 @@ from maru.workforce.models import (
     Department,
     OnboardingDocumentRequest,
     OnboardingDocumentType,
+    PersonAvailabilityCommandReceipt,
+    PersonAvailabilityPlan,
+    PersonAvailabilityWindow,
     Position,
     PositionAssignment,
+    PositionAssignmentCommandReceipt,
     PositionTemplate,
     VolunteerApplication,
     VolunteerOpportunity,
 )
-from maru.workforce.services import (
-    activate_position_assignment,
-    review_onboarding_document,
-)
+from maru.workforce.services import review_onboarding_document
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from django import forms
     from django.http import HttpRequest
     from django.utils.safestring import SafeString
 
@@ -150,139 +150,9 @@ def _lock_position_admin_target(
     return scope
 
 
-def _lock_assignment_admin_target(
-    *,
-    assignment: PositionAssignment,
-    change: bool,
-) -> PositionAssignment | None:
-    if change:
-        reference = (
-            PositionAssignment.objects.filter(id=assignment.id)
-            .order_by()
-            .values_list(
-                "organization_id",
-                "edition__series_id",
-                "edition_id",
-                "position_id",
-                "position__department_id",
-            )
-            .first()
-        )
-    else:
-        reference = (
-            Position.objects.filter(id=assignment.position_id)
-            .order_by()
-            .values_list(
-                "organization_id",
-                "edition__series_id",
-                "edition_id",
-                "id",
-                "department_id",
-            )
-            .first()
-        )
-    if reference is None:
-        raise ValidationError(
-            "The workforce assignment target is unavailable.",
-            code="workforce_assignment_unavailable",
-        )
-    organization_id, series_id, edition_id, position_id, department_id = reference
-    scope = lock_workforce_edition_write_scope(
-        organization_id=organization_id,
-        series_id=series_id,
-        edition_id=edition_id,
-    )
-    lock_active_department_write_target(
-        scope=scope,
-        department_id=department_id,
-    )
-    position_scope = (
-        Position.objects.select_for_update()
-        .filter(id=position_id)
-        .order_by()
-        .values_list("organization_id", "edition_id", "department_id")
-        .first()
-    )
-    if position_scope != (
-        scope.organization_id,
-        scope.edition_id,
-        department_id,
-    ):
-        raise ValidationError(
-            "The workforce assignment target is unavailable.",
-            code="workforce_assignment_unavailable",
-        )
-    if assignment.position_id != position_id:
-        raise ValidationError(
-            "A workforce assignment cannot move to another Position.",
-            code="workforce_assignment_position_immutable",
-        )
-    if not change:
-        return None
-    locked_assignment = (
-        PositionAssignment.objects.select_for_update()
-        .filter(
-            id=assignment.id,
-            organization_id=scope.organization_id,
-            edition_id=scope.edition_id,
-            position_id=position_id,
-        )
-        .order_by()
-        .first()
-    )
-    if locked_assignment is None:
-        raise ValidationError(
-            "The workforce assignment target is unavailable.",
-            code="workforce_assignment_unavailable",
-        )
-    return locked_assignment
-
-
-class PositionAssignmentAdminForm(forms.ModelForm):  # type: ignore[type-arg]
-    """Collect and validate position assignment admin input."""
-
-    activate_now = forms.BooleanField(
-        required=False,
-        label="Activate immediately after independent approval",
-        help_text=(
-            "Maru checks headcount, approved agreements, both controllers' "
-            "authority, and then creates the scoped role and capacity."
-        ),
-    )
-
-    class Meta:
-        """Configure Django's declarative class metadata."""
-
-        model = PositionAssignment
-        fields = (
-            "position",
-            "account",
-            "effective_from",
-            "expires_at",
-            "approved_by",
-            "reason",
-        )
-
-    def clean(self) -> dict[str, Any]:
-        """Validate and normalize the record.
-
-        Returns
-        -------
-        dict[str, Any]
-            A mapping containing the resolved clean data.
-        """
-        cleaned = super().clean() or {}
-        if cleaned.get("activate_now") and not cleaned.get("approved_by"):
-            self.add_error(
-                "approved_by",
-                "Choose the distinct controller who independently approved this.",
-            )
-        return cleaned
-
-
 @admin.register(Department)
 class DepartmentAdmin(EditionContextAdmin):
-    """Inspection-only legacy registry; Page 9 owns every Department mutation."""
+    """Inspection-only registry; Organization structure owns every mutation."""
 
     edition_context_lookup = "edition_id"
     list_display = ("name", "edition", "parent", "display_order")
@@ -580,9 +450,8 @@ class OnboardingDocumentRequestAdmin(EditionContextAdmin):
 
 @admin.register(PositionAssignment)
 class PositionAssignmentAdmin(EditionContextAdmin):
-    """Configure Django administration for position assignment."""
+    """Inspect retained records; the purpose-built assignment journey owns writes."""
 
-    form = PositionAssignmentAdminForm
     edition_context_lookup = "edition_id"
     list_display = (
         "account",
@@ -600,56 +469,222 @@ class PositionAssignmentAdmin(EditionContextAdmin):
         "position__title",
         "position__code",
     )
-    autocomplete_fields = ("position", "account", "approved_by")
     readonly_fields = (
+        "position",
         "organization",
         "edition",
+        "account",
         "status",
+        "effective_from",
+        "expires_at",
         "proposed_by",
+        "approved_by",
+        "reason",
+        "command_version",
+        "decision_by",
+        "decision_at",
+        "decision_reason",
         "role_assignment",
         "participation_capacity",
         "ended_at",
+        "ended_by",
+        "end_reason",
         "id",
         "created_at",
         "updated_at",
     )
 
     @override
-    @transaction.atomic
-    def save_model(
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        del request
+        return False
+
+    @override
+    def has_change_permission(
         self,
         request: HttpRequest,
-        obj: PositionAssignment,
-        form: forms.ModelForm,  # type: ignore[type-arg]
-        change: bool,
-    ) -> None:
-        actor = cast("Account", request.user)
-        previous = _lock_assignment_admin_target(assignment=obj, change=change)
-        if previous is not None and previous.status == PositionAssignment.Status.ACTIVE:
-            obj.__dict__.update(previous.__dict__)
-            return
-        obj.organization = obj.position.organization
-        obj.edition = obj.position.edition
-        if not change:
-            obj.proposed_by = actor
-            obj.status = PositionAssignment.Status.PROPOSED
-            super().save_model(request, obj, form, change)
-        if bool(form.cleaned_data.get("activate_now")):
-            approved_by = cast("Account", form.cleaned_data["approved_by"])
-            activated = activate_position_assignment(
-                position_id=obj.position_id,
-                account=obj.account,
-                actor=actor,
-                approver=approved_by,
-                effective_from=obj.effective_from,
-                expires_at=obj.expires_at,
-                reason=obj.reason,
-                correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
-                proposed_assignment_id=obj.id,
-            )
-            obj.__dict__.update(activated.__dict__)
-        elif change:
-            super().save_model(request, obj, form, change)
+        obj: PositionAssignment | None = None,
+    ) -> bool:
+        del request, obj
+        return False
+
+    @override
+    def has_delete_permission(
+        self,
+        request: HttpRequest,
+        obj: PositionAssignment | None = None,
+    ) -> bool:
+        del request, obj
+        return False
+
+
+@admin.register(PositionAssignmentCommandReceipt)
+class PositionAssignmentCommandReceiptAdmin(EditionContextAdmin):
+    """Inspect immutable assignment command evidence without offering writes."""
+
+    edition_context_lookup = "edition_id"
+    list_display = (
+        "assignment",
+        "action",
+        "resulting_version",
+        "actor",
+        "edition",
+        "created_at",
+    )
+    list_filter = ("organization", "edition", "action")
+    search_fields = ("assignment__position__title", "actor__display_name", "reason")
+    readonly_fields = (
+        "assignment",
+        "organization",
+        "edition",
+        "position",
+        "actor",
+        "action",
+        "resulting_version",
+        "reason",
+        "retry_key",
+        "request_digest",
+        "correlation_id",
+        "source_channel",
+        "id",
+        "created_at",
+        "updated_at",
+    )
+
+    @override
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        del request
+        return False
+
+    @override
+    def has_change_permission(
+        self,
+        request: HttpRequest,
+        obj: PositionAssignmentCommandReceipt | None = None,
+    ) -> bool:
+        del request, obj
+        return False
+
+    @override
+    def has_delete_permission(
+        self,
+        request: HttpRequest,
+        obj: PositionAssignmentCommandReceipt | None = None,
+    ) -> bool:
+        del request, obj
+        return False
+
+
+class _AvailabilityReadOnlyAdmin(EditionContextAdmin):
+    """Keep Availability storage inspectable but outside ordinary write paths."""
+
+    @override
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        del request
+        return False
+
+    @override
+    def has_change_permission(self, request: HttpRequest, obj: object = None) -> bool:
+        del request, obj
+        return False
+
+    @override
+    def has_delete_permission(self, request: HttpRequest, obj: object = None) -> bool:
+        del request, obj
+        return False
+
+
+@admin.register(PersonAvailabilityPlan)
+class PersonAvailabilityPlanAdmin(_AvailabilityReadOnlyAdmin):
+    """Inspect current plan state without offering organizer edits."""
+
+    edition_context_lookup = "edition_id"
+    list_display = (
+        "account",
+        "edition",
+        "status",
+        "window_count",
+        "command_version",
+        "updated_at",
+    )
+    list_filter = ("organization", "edition", "status")
+    search_fields = ("account__display_name",)
+    readonly_fields = (
+        "organization",
+        "edition",
+        "account",
+        "status",
+        "time_zone",
+        "command_version",
+        "window_count",
+        "window_set_digest",
+        "submitted_at",
+        "withdrawn_at",
+        "id",
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(PersonAvailabilityWindow)
+class PersonAvailabilityWindowAdmin(_AvailabilityReadOnlyAdmin):
+    """Inspect exact current periods only through specialist administration."""
+
+    edition_context_lookup = "plan__edition_id"
+    list_display = (
+        "plan",
+        "starts_at",
+        "ends_at",
+        "preference",
+        "created_by_version",
+    )
+    list_filter = ("plan__organization", "plan__edition", "preference")
+    search_fields = ("plan__account__display_name",)
+    readonly_fields = (
+        "plan",
+        "starts_at",
+        "ends_at",
+        "preference",
+        "created_by_version",
+        "id",
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(PersonAvailabilityCommandReceipt)
+class PersonAvailabilityCommandReceiptAdmin(_AvailabilityReadOnlyAdmin):
+    """Inspect minimized immutable Availability command evidence."""
+
+    edition_context_lookup = "edition_id"
+    list_display = (
+        "plan",
+        "action",
+        "resulting_version",
+        "window_count",
+        "actor",
+        "created_at",
+    )
+    list_filter = ("organization", "edition", "action")
+    search_fields = ("actor__display_name",)
+    readonly_fields = (
+        "plan",
+        "organization",
+        "edition",
+        "actor",
+        "action",
+        "resulting_version",
+        "resulting_status",
+        "window_count",
+        "window_set_digest",
+        "retry_key",
+        "request_digest",
+        "correlation_id",
+        "source_channel",
+        "id",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(VolunteerOpportunity)

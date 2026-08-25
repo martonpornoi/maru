@@ -47,6 +47,12 @@
     {% endif %}
   </header>
 
+  {% if can_manage_assignments %}
+    <nav class="workforce-structure-actions" aria-label="Position and assignment workflow">
+      <a class="workforce-structure-action workforce-structure-action--secondary" href="{% url 'organization-workforce-assignments' organization.slug convention_series.slug edition.slug %}">Review Workforce assignments</a>
+    </nav>
+  {% endif %}
+
   <section class="baseline-panel" aria-labelledby="position-list-title">
     <div class="baseline-panel-heading">
       <div>
@@ -90,6 +96,11 @@
             <p class="workforce-structure-node-action">
               <a href="{% url 'organization-structure-position' organization.slug convention_series.slug edition.slug item.position.id %}">Manage {{ item.position.title }}</a>
             </p>
+            {% if can_issue_assignment_authority and item.position.status != "closed" %}
+              <p class="workforce-structure-node-action">
+                <a href="{% url 'organization-workforce-assignment-proposal' organization.slug convention_series.slug edition.slug item.position.id %}">Propose a person for {{ item.position.title }}</a>
+              </p>
+            {% endif %}
           </li>
         {% endfor %}
       </ul>

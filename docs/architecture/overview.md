@@ -1,8 +1,9 @@
 # Architecture overview
 
-Status: Target architecture with locally verified unified `/admin/` shell,
-initial Executive Board representation, and database subject boundary
-Last updated: 2026-08-01
+Status: Target architecture with a locally verified unified `/admin/` shell,
+scoped authorization, governed structure, Position, Assignment, and
+person-owned Availability workflows, and database subject and writer boundaries
+Last updated: 2026-08-25
 
 ## System shape
 
@@ -40,10 +41,15 @@ migration, local restore-drill, sensitive-read/denial audit, and responsive
 browser evidence pass; the final consolidated suite/coverage gate remains
 pending.
 
-ADR 0041 accepts the next authorization lattice—organization → edition → exact
-department → exact typed resource—with trusted server-resolved targets and no
-implicit hierarchy inheritance. It is an implementation contract, not current
-capability: department/resource grants and assignments are not yet persisted.
+ADR 0041 accepts and now implements the authorization lattice—organization ->
+edition -> exact Department -> exact typed resource—with trusted server-
+resolved targets and no implicit hierarchy inheritance. Department/resource
+grants and governed Position assignments are persisted with provenance and
+database guards; ADRs 0075 and 0076 expose their Position and Assignment
+management continuations without making Workforce the owner of authorization.
+ADR 0077 adds one person-owned exact-edition Availability plan, deliberate
+sharing, a minimized independently authorized organizer projection, and
+current-period database enforcement while keeping Shift commitments separate.
 ADR 0042 makes every repository fixture and tutorial synthetic and deletes the
 old public-roster rehearsal path. ADR 0043 adds audited platform emergency
 containment across all of one controller's organizations. Database guards in

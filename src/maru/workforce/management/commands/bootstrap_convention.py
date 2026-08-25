@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
     help = (
         "Recovery-only one-time bootstrap for an empty active organization's "
-        "Draft or Preparing edition, convention chair, Page 9 leadership "
+        "Draft or Preparing edition, convention chair, Organization structure "
         "Department, and position templates."
     )
 

@@ -235,6 +235,34 @@ function workforcePositionsPath(
   return segments.join("/");
 }
 
+function workforceAssignmentsPath(edition: EditionContext): string {
+  return [
+    "/admin/platform/organizations",
+    encodeURIComponent(edition.organization_slug),
+    "series",
+    encodeURIComponent(edition.series_slug),
+    "editions",
+    encodeURIComponent(edition.edition_slug),
+    "structure",
+    "assignments",
+    "",
+  ].join("/");
+}
+
+function workforceAvailabilityPath(edition: EditionContext): string {
+  return [
+    "/admin/platform/organizations",
+    encodeURIComponent(edition.organization_slug),
+    "series",
+    encodeURIComponent(edition.series_slug),
+    "editions",
+    encodeURIComponent(edition.edition_slug),
+    "structure",
+    "availability",
+    "",
+  ].join("/");
+}
+
 function workforceWorkspacePath(): string {
   return "/admin/workspace/?view=workforce";
 }
@@ -2396,13 +2424,7 @@ function positionOccupancy(position: WorkforceStructurePosition): string {
   return `${position.holders.length} of ${position.headcount} assigned`;
 }
 
-function WorkforceView({
-  edition,
-  canAccessAdvancedRecords,
-}: {
-  edition: EditionContext;
-  canAccessAdvancedRecords: boolean;
-}) {
+function WorkforceView({ edition }: { edition: EditionContext }) {
   const [workspace, setWorkspace] = useState<WorkforceStructureWorkspace>();
   const [denied, setDenied] = useState(false);
   const [error, setError] = useState<string>();
@@ -2598,26 +2620,40 @@ function WorkforceView({
                   </div>
                   <a
                     className="secondary-button"
-                    href="#workforce-positions-title"
+                    href={
+                      workspace.can_manage_assignments
+                        ? workforceAssignmentsPath(edition)
+                        : "#workforce-positions-title"
+                    }
                   >
-                    Review assignments
+                    {workspace.can_manage_assignments
+                      ? "Manage assignments"
+                      : "Review active holders"}
                   </a>
                 </li>
-                <li className="planned-step">
+                <li className={workspace.can_view_availability ? undefined : "planned-step"}>
                   <span className="workforce-step-number" aria-hidden="true">
                     4
                   </span>
                   <div>
-                    <span className="workforce-step-state planned">
-                      Not available yet
+                    <span className={`workforce-step-state ${workspace.can_view_availability ? "ready" : "planned"}`}>
+                      {workspace.can_view_availability ? "Available" : "Access required"}
                     </span>
                     <h3>Availability</h3>
                     <p>
-                      This will be a person-owned statement of workable windows,
-                      constraints, and rest needs. No availability is inferred
-                      from an assignment or collected by this page today.
+                      Assigned people own their current workable periods and
+                      decide when to share them. Private drafts remain hidden,
+                      and no availability is inferred from an assignment.
                     </p>
                   </div>
+                  {workspace.can_view_availability && (
+                    <a
+                      className="secondary-button"
+                      href={workforceAvailabilityPath(edition)}
+                    >
+                      Review availability
+                    </a>
+                  )}
                 </li>
                 <li className="planned-step">
                   <span className="workforce-step-number" aria-hidden="true">
@@ -2770,6 +2806,38 @@ function WorkforceView({
                   <span aria-hidden="true">↗</span>
                 </a>
               )}
+              {workspace.can_manage_assignments && (
+                <a
+                  className="form-link-card"
+                  href={workforceAssignmentsPath(edition)}
+                >
+                  <span className="form-card-icon" aria-hidden="true">A</span>
+                  <span>
+                    <strong>Assignment management</strong>
+                    <small>
+                      Propose known people, review onboarding readiness, and
+                      make independently controlled decisions
+                    </small>
+                  </span>
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )}
+              {workspace.can_view_availability && (
+                <a
+                  className="form-link-card"
+                  href={workforceAvailabilityPath(edition)}
+                >
+                  <span className="form-card-icon" aria-hidden="true">◷</span>
+                  <span>
+                    <strong>Availability planning</strong>
+                    <small>
+                      Review only current periods deliberately shared by people
+                      with open assignments
+                    </small>
+                  </span>
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )}
               <a className="form-link-card" href={`/volunteer/${edition.edition_id}/`}>
                 <span className="form-card-icon" aria-hidden="true">♡</span>
                 <span>
@@ -2789,24 +2857,11 @@ function WorkforceView({
                 </span>
                 <span aria-hidden="true">↗</span>
               </a>
-              {canAccessAdvancedRecords && (
-                <a
-                  className="form-link-card"
-                  href={`/admin/workforce/positionassignment/?edition__id__exact=${edition.edition_id}`}
-                >
-                  <span className="form-card-icon" aria-hidden="true">A</span>
-                  <span>
-                    <strong>Assignment records</strong>
-                    <small>Use the protected specialist activation workflow</small>
-                  </span>
-                  <span aria-hidden="true">↗</span>
-                </a>
-              )}
             </div>
-            {!canAccessAdvancedRecords && (
+            {!workspace.can_manage_assignments && (
               <p className="privacy-note workforce-owner-boundary">
                 {workspace.can_manage_positions
-                  ? "Position management is available here without staff-only access. Assignment proposal and independent activation still need their purpose-built organizer journey, so Maru does not link this account to the specialist record screen."
+                  ? "Position management is available, but assignment decisions also require current scoped assignment and role authority."
                   : "This workspace is safe for viewing. Position editing and assignment activation require additional authority, so Maru does not link this account to inaccessible specialist screens."}
               </p>
             )}
@@ -5182,10 +5237,7 @@ export default function App({
         />
       )}
       {destination === "workforce" && (
-        <WorkforceView
-          edition={edition}
-          canAccessAdvancedRecords={context.can_access_advanced_records}
-        />
+        <WorkforceView edition={edition} />
       )}
       {destination === "commerce" && (
         <RegistrationOperationsView edition={edition} />

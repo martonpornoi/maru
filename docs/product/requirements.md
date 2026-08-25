@@ -334,6 +334,52 @@ architecture documents, implementation issues, tests, and release notes.
   forms remain inspection-only once this workflow is mounted. An internally
   consistent legacy Position may begin governed history at its first real
   change without inventing a creation version, actor, or receipt.
+- **HR-013 — Governed Position assignment lifecycle:** An authorized exact-
+  edition manager must be able to propose one active known person for a current
+  Position, inspect that person's Position-specific onboarding readiness, and
+  retain a reason and effective interval without granting authority. The known-
+  person selector must be bounded to an existing organization, edition,
+  application, onboarding, or Workforce relationship and must not become a
+  general account directory. A proposal reserves approved headcount but creates
+  no participation, RoleAssignment, capability, or schedule commitment.
+  Approval or rejection requires a different currently authorized controller,
+  fresh step-up authentication, a reason, and the exact current assignment
+  version. Approval must recheck lifecycle, headcount, immutable RoleBundle
+  provenance, current proposer and approver authority, candidate identity, and
+  every required onboarding document under one transaction, then activate the
+  linked role and participation capacities. Ending an active assignment
+  requires fresh step-up authentication and revocation authority, retains its
+  reason, revokes the linked role, and completes only capacities no longer
+  needed by another active assignment. HTML and API adapters must share strict,
+  idempotent commands with authorization before input parsing, immutable
+  receipts, audit and registered domain-event evidence, optimistic assignment
+  versions, and stopped-writer database enforcement. The assigned person may
+  see their own Position, Department, state, interval, and available next
+  actions, but not organizer reasons, controller identities, other candidates,
+  or other people's assignments.
+- **HR-014 — Person-owned edition availability:** A person with a proposed or
+  active Position assignment must be able to keep a private draft and
+  deliberately share their complete workable time windows for that exact
+  edition. No assignment, application, registration answer, profile value, or
+  organizer action may imply or overwrite availability. A submitted plan with
+  no windows means explicitly not available; no submitted plan means unknown.
+  Each window is an aware, non-overlapping interval inside the edition's local
+  calendar horizon and is either available or preferred. Browser entry must
+  use the edition's IANA time zone and reject ambiguous or nonexistent local
+  minutes; API entry must carry an explicit offset. The owner may replace the
+  complete plan optimistically, save it as a private draft, share it, or
+  withdraw it. Withdrawal must remove current exact windows immediately while
+  retaining only minimized command evidence. An independently capability-
+  authorized organizer may see only open-assignment people, operational
+  Position labels, the shared consequence, and submitted windows; draft
+  content, notes, prior windows, unrelated people, and private HR data remain
+  excluded. Organizer reads require a minimized sensitive-read audit before
+  disclosure. HTML and API adapters must share strict idempotent commands,
+  immutable receipts, audit and registered domain-event evidence, optimistic
+  plan versions, tenant and edition isolation, bounded complete projections,
+  and database enforcement. Exact windows are C2 current operational data;
+  their post-edition disposal period must come from an approved organization
+  retention policy rather than a code constant.
 
 ### Programme, shifts, and timetable planning
 

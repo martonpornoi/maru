@@ -1,18 +1,20 @@
 # Workforce module
 
 Status: Position, hierarchy, opportunity, agreement, authority onboarding,
-ADR 0041 containment, and version-fenced Department and Position management
-with shared strict HTML/API commands and stopped-writer database enforcement
-are implemented in the canonical current tree; assignment approval,
-availability, shifts, complete rendered accessibility, recovery, deployment,
-and production acceptance remain gated
-Last updated: 2026-08-23
+ADR 0041 containment, version-fenced Department and Position management, and
+the owner-safe Position assignment lifecycle with shared strict HTML/API
+commands, person-owned deliberately shared Availability, and stopped-writer
+database enforcement are implemented in the canonical current tree; shifts,
+complete rendered accessibility, post-edition Availability disposal, recovery,
+deployment, and production acceptance remain gated
+Last updated: 2026-08-25
 
 ## Purpose and requirements
 
-`maru.workforce` owns the executable HR-007, HR-008, HR-010, HR-011, and HR-012
-slices defined by ADRs 0019, 0028, and 0075, plus IDN-011's non-participation
-boundary. It turns an edition responsibility into explicit structure:
+`maru.workforce` owns the executable HR-007, HR-008, HR-010, HR-011, HR-012,
+HR-013, and HR-014 slices defined by ADRs 0019, 0028, 0075, 0076, and 0077,
+plus IDN-011's non-participation boundary. It turns an edition responsibility
+into explicit structure and person-controlled planning input:
 
 ```text
 department hierarchy
@@ -21,6 +23,7 @@ department hierarchy
   -> application and requested agreement evidence
   -> independently approved position assignment
   -> exact role-bundle version and participation capacities
+  -> private or deliberately shared person-owned availability
 ```
 
 It does not infer access from a job title, an application, a registration
@@ -30,9 +33,9 @@ answer, an uploaded file, or a profile label. Authority remains owned by
 
 A platform administrator may initiate or review bootstrap work as an attributed
 actor, but cannot be the subject of a volunteer application, onboarding request,
-or position assignment. Model validation and PostgreSQL reject the
-platform-only subject classification without rejecting `reviewed_by`,
-`requested_by`, `proposed_by`, or `approved_by` actor provenance.
+position assignment, or Availability plan. Model validation and PostgreSQL
+reject the platform-only subject classification without rejecting
+`reviewed_by`, `requested_by`, `proposed_by`, or `approved_by` actor provenance.
 
 ## Legacy empty-organization bootstrap
 
@@ -209,22 +212,26 @@ presents five dependent stages:
 Structure -> Positions -> Assignments -> Availability -> Shifts
 ```
 
-The first three stages summarize implemented records: active Departments,
-Position purpose/reporting/state, approved headcount, vacancies, and minimized
-current holders. **Open structure** reaches Department management; **Manage
-positions**, **Create Position**, and per-Position **Manage** actions reach the
-purpose-built Position workspace when a fresh exact-edition policy decision
-permits it. Public opportunities and the signed-in person's onboarding
-documents remain separate continuation links. Non-staff organizers receive no
-link to Django PositionAssignment records they cannot access; Django staff with
-independent model permission may still receive a clearly labelled temporary
-assignment-record link.
+The first four stages summarize implemented records: active Departments,
+Position purpose/reporting/state, approved headcount, vacancies, minimized
+current holders, governed assignments, and deliberately shared current
+Availability. **Open structure**
+reaches Department management; **Manage positions**, **Create Position**, and
+per-Position **Manage** actions reach the purpose-built Position workspace when
+a fresh exact-edition policy decision permits it. **Manage assignments** opens
+the separate queue only when the same fresh projection confirms both assignment
+and role authority. **Review availability** opens the minimized organizer page
+only after the separate exact-edition Availability capability and field ceiling
+pass. Every destination authorizes again. Public opportunities, the assigned
+person's **My Workforce** assignment and Availability views, and their
+onboarding documents remain separate continuation paths. Non-staff organizers
+are never sent to specialist assignment or Availability records.
 
-Availability and Shifts are deliberately noninteractive **Not available yet**
-steps. No assignment is treated as availability, and no Position is treated as
-a shift. Their placement records the intended HR-009/SCH-001/SCH-005 sequence
-without adding a model, writer, authority, or schedule projection before those
-transactional contracts are accepted.
+Shifts remain a deliberately noninteractive **Not available yet** step. No
+assignment is treated as Availability, and no Position or Availability period
+is treated as a Shift. Its placement preserves the HR-009/SCH-001/SCH-005
+dependency without creating demand, commitment, publication, or schedule state
+before that transactional contract is accepted.
 
 ### Built-in reference and independent copy
 
@@ -386,8 +393,8 @@ An older deterministic demo Department is preserved as legacy data rather than
 renamed or replaced.
 
 An application is an expression of interest only. Accepting or reviewing it
-does not grant a role, capacity, or access. Position management deliberately
-ends before assignment proposal and independent approval.
+does not grant a role, capacity, or access. Assignment proposal and independent
+decision are the separately governed HR-013 workflow described below.
 
 ## Reviewed onboarding documents
 
@@ -411,26 +418,83 @@ receive a replacement; a new agreement version needs a new request.
 
 ## Assignment and authority
 
-Position activation requires:
+ADR 0076 and HR-013 mount one purpose-built **Assignment management** workspace
+for a complete retained lifecycle:
 
-- a non-closed position below its headcount;
-- every document type attached to the position approved for the recipient;
-- two distinct controllers who both hold
-  `workforce.manage_assignments` and `authorization.manage_roles`;
-- an explicit reason and effective interval; and
-- the recipient, role bundle, organization, and edition to agree.
+```text
+known person -> proposed -> independently approved -> active -> ended
+                         \-> independently rejected
+```
+
+The queue and detail routes require `workforce.view_structure` and
+`workforce.manage_assignments` at the exact edition. A proposal or decision
+also requires `authorization.manage_roles`; ending requires
+`authorization.revoke`. The route is resolved and authorized before any
+name-bearing lookup, idempotency header, or body parsing. Platform oversight is
+explicit and attributed, but a platform-only account cannot be the subject.
+
+### Relationship-bounded proposal
+
+A manager starts from one current Position and may select only an active person
+already known through an organization relationship, non-cancelled edition
+participation, a current Position application, an onboarding request, or
+retained Workforce history. The complete set is capped at 512, contains no
+arbitrary account lookup, and excludes anyone who already has a proposed or
+active assignment for that Position. Each choice shows its relationship source
+and the current status of only that Position's required onboarding documents.
+
+The proposal records a normalized reason, aware effective start, optional later
+ending, immutable version-1 receipt, audit, and registered proposed event. It
+reserves one approved headcount place so concurrent intent cannot exceed the
+Position, but creates no participation, capacity, RoleAssignment, capability,
+or shift. Incomplete onboarding is therefore visible and allowed at proposal
+time; it remains a hard approval blocker.
+
+Browser times use the edition's IANA time zone and reject ambiguous or
+nonexistent local minutes. Strict API timestamps require `Z` or an explicit
+numeric UTC offset.
+
+### Independent approval or rejection
+
+Approval and rejection derive the decision maker from a separately
+authenticated session. They never accept an approver identifier. The decision
+maker must differ from the proposer, hold current assignment and role authority,
+and complete fresh step-up authentication before input parsing.
+
+Approval rechecks all of the following under the canonical edition,
+Department, Position, and assignment locks:
+
+- exact organization, series, edition, and current lifecycle;
+- open Position and approved headcount;
+- active person subject and unchanged proposal interval;
+- every current Position onboarding requirement;
+- immutable RoleBundle and typed-resource provenance; and
+- both the original proposer and current approver's live authority.
 
 The transaction invokes the authorization module's dual-control role command,
-activates the person's edition participation, adds the configured
-`staff`/`volunteer` capacities and a stable `position.<position-code>`
-capacity, records the position assignment, updates filled/open state, writes
-both controller audits, and publishes a registered domain event. A failure
-rolls the whole operation back.
+activates edition participation, adds the configured capacity codes and stable
+`position.<position-code>` capacity, changes the assignment to active, updates
+Position occupancy, and persists decision, audit, event, outbox, and exact
+receipt evidence. Failure rolls everything back. Rejection instead creates a
+final retained decision, frees reserved headcount, and grants nothing.
 
-The current position-assignment Advanced-record form identifies the second
-controller and checks their live authority. A production approval inbox with a
-separate approver session and step-up remains future work; selecting an
-identity in the local rehearsal must not be represented as that future UX.
+### Retained ending
+
+Ending an active assignment requires current assignment and revocation
+authority, fresh step-up, the exact assignment version, and a reason. One
+transaction revokes the linked RoleAssignment through `maru.authorization`,
+marks the assignment ended, completes only Position-specific and configured
+participation capacities no other active assignment for that person needs,
+recalculates Position occupancy, and writes immutable command, audit, event,
+and outbox evidence. An intended expiry does not silently revoke authority; an
+overdue active record is shown as **Expired — ending required** until this
+command succeeds.
+
+The organizer detail presents newest-first reasons, versions, times, and actor
+labels. **My Workforce** separately shows a person only their own Position,
+Department, organization, edition, state, and dates. It omits reasons,
+controller identities, authority provenance, candidates, and other people's
+records. PositionAssignment specialist administration is inspection-only.
 
 ## Interfaces
 
@@ -441,6 +505,12 @@ Reference web routes:
 /admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/positions/
 /admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/positions/new/
 /admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/positions/<position-id>/
+/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/assignments/
+/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/positions/<position-id>/assignments/new/
+/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/assignments/<assignment-id>/
+/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/structure/availability/
+/my/workforce/
+/my/workforce/<organization-slug>/<series-slug>/<edition-slug>/availability/
 /volunteer/<edition_id>/
 /volunteer/<edition_id>/<opportunity_id>/apply/
 /volunteer/<edition_id>/documents/
@@ -484,6 +554,46 @@ Position or relationship is `404`, validation is `400`, state/version/retry or
 dependency conflict is `409`, and an unavailable canonical dependency is
 `503`. Responses expose only `position_id` and resulting structure version.
 
+Mounted Assignment management API surface:
+
+```text
+POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/positions/<position_id>/assignments
+POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/assignments/<assignment_id>/approve
+POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/assignments/<assignment_id>/reject
+POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/assignments/<assignment_id>/end
+```
+
+Every Assignment mutation requires a canonical `Idempotency-Key`. Proposal
+returns `201` on first success and `200` on replay; decisions return `200`.
+Proposal contains one known `account_id`, aware effective interval, and reason.
+Decision input contains only `expected_version` and reason. Approval, rejection,
+and ending require fresh step-up before input parsing. Responses expose only
+assignment identifier, version, status, and replay state. The same strict
+`400`/`403`/`404`/`409`/`503` disclosure boundary as Position management
+applies, with readiness, headcount, stale assignment version, and lifecycle
+represented as conflicts.
+
+Mounted Availability management API surface:
+
+```text
+GET  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/availability/me
+PUT  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/availability/me
+POST /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/availability/me/withdraw
+GET  /api/v1/organizations/<organization_id>/editions/<edition_id>/workforce/availability
+```
+
+The owner GET includes the owner's private draft and current editability. PUT
+replaces the complete current period set as either private draft or submitted
+and requires a canonical `Idempotency-Key`, an optimistic expected version,
+and aware timestamps with an explicit offset. POST withdraws the plan and
+deletes every exact current period under the same retry and version contract.
+The organizer GET requires the independent complete
+`workforce.view_availability` field ceiling, audits the read before disclosure,
+and projects only open-assignment people, operational Position context, the
+current shared consequence, and submitted periods. Draft and absent remain
+indistinguishable. Inputs are closed, query parameters are unsupported, and
+the strict `400`/name-free `403`/`409`/`503` boundary applies.
+
 The structure GET now returns the bounded complete-tree and minimized
 governance-anchor response used by Organization structure read projection. It accepts no query parameters.
 OpenAPI declares its `200` response and typed RFC 9457 `400`, `403`, and `503`
@@ -519,11 +629,10 @@ Specialist records:
 ```
 
 These specialist routes are not the accepted product mutation contract. The
-shared commands and migration fences are active, so Department, Position, and
-Volunteer opportunity records are inspection-only here. Managers use the
-strict Organization structure and Position management HTML/API adapters.
-PositionAssignment remains a temporary staff/model-permission-gated specialist
-workflow until separate proposal and independent-approval pages are accepted.
+shared commands and migration fences are active, so Department, Position,
+Volunteer opportunity, and PositionAssignment records are inspection-only
+here. Managers use the strict Organization structure, Position management, and
+Assignment management HTML/API adapters.
 
 ## Database integrity and recovery
 
@@ -586,9 +695,10 @@ names. Its preflight and database triggers enforce exact scope, bounded acyclic
 hierarchy, one aggregate version step per evidenced command, immutable source
 and retry receipts, non-cascading retirement/deletion rules, and fix-forward
 downgrade behavior. Production readiness fingerprints all 19 Organization
-structure trigger functions and all 33 exact attachments, requires the current Workforce
-migration recorder chain through `0010`, and verifies the exact 13-reference
-Department FK inventory;
+structure and assignment trigger functions plus the five Availability guard,
+evidence, and truncate functions and their exact attachments, requires the
+current Workforce migration recorder chain through `0012`, and verifies the
+exact 13-reference Department FK inventory;
 the runtime login cannot invoke those helpers directly, disable them, or
 bypass their stopped-writer protocol. Reversing `0008` restores the exact
 `0007` helper, which safely refuses deletion while any successor reference is
@@ -610,7 +720,67 @@ evidence. After live Position writes, recovery fixes forward or restores the
 complete database to a mutually consistent pre-write point; it does not reverse
 this guard independently.
 
-## Organization structure verification
+Workforce `0011_owner_assignment_commands` adds assignment versions, explicit
+rejection, decision and ending evidence, and immutable
+`PositionAssignmentCommandReceipt` rows. The stopped-writer guard allows only
+`proposed -> active`, `proposed -> rejected`, and `active -> ended`, with an
+exact next-version receipt and state-specific actor, reason, role, capacity, and
+time evidence. It rejects direct deletion; immutable Position, scope, person,
+proposer, interval, and linked-authority mutation; skipped or reversed states;
+and receipt update, deletion, or truncation. Existing internally consistent
+legacy assignments remain readable without invented command versions or
+reasons. Runtime readiness fingerprints the assignment row guard, receipt
+guard, deferred evidence assertion, and exact trigger attachments, and confirms
+that the runtime role cannot invoke or bypass them. After governed assignment
+writes, recovery fixes forward or restores the complete database to a mutually
+consistent pre-write point; `0011` is not independently reversible in live use.
+
+Workforce `0012_person_owned_availability` adds one optimistic current plan per
+person and edition, non-overlapping half-open current periods, and immutable
+minimized `PersonAvailabilityCommandReceipt` rows. Draft and submitted writes
+require a proposed or active exact-edition assignment; withdrawal remains
+possible for an existing owner after that relationship ends and deletes every
+current exact period. PostgreSQL rejects platform-account ownership, scope or
+time-zone mismatch, stale period versions, interval overlap or horizon escape,
+isolated period mutation, plan deletion, malformed receipts, missing final
+evidence, and destructive truncate outside the narrow test reset. Trigger
+functions are not runtime-executable and their definitions and attachments are
+fingerprinted. The migration ensures `btree_gist` without claiming ownership
+of an extension already used by Venue constraints, and its downgrade fence
+refuses removal after durable Availability data exists.
+
+## Workforce verification
+
+The 2026-08-25 Availability focus covers private draft isolation, deliberate
+sharing, explicit zero-period unavailability, withdrawal after assignment
+closure, current-period deletion, retry replay/conflict, optimistic versions,
+DST gaps and folds, offset-required API input, overlap and horizon rejection,
+owner and organizer minimization, tenant and edition isolation, authorization
+before parsing, audited organizer reads, no-cache HTML/API responses, and raw
+database evidence, replacement, subject-kind, receipt, and truncate guards.
+All five end-to-end command/browser-adapter/API/database cases pass, strict
+interval/formset unit cases pass, the complete 271-case runtime database-role
+suite passes after adding the exact period write profile, and a fresh database
+applies the corrected migration contract. The OpenAPI/TypeScript contract,
+Staff Console component suite, strict mypy, and repository-wide Ruff checks
+also pass. The visual and complete UX-029 evidence is recorded separately and
+does not remove the deployment retention gate.
+
+The 2026-08-24 Assignment management focus covers relationship-bounded
+candidates, incomplete-readiness proposal, headcount reservation, a genuinely
+different decision actor, approval-time authority and onboarding rechecks,
+strict lifecycle and assignment versions, retry replay/conflict, atomic
+role/participation activation, rejection, linked-role revocation, shared-
+capacity retention, Position occupancy, retained reasons, subject-view
+minimization, authorization and step-up before parsing, cross-edition isolation,
+private HTML, strict API objects and methods, raw database-write rejection,
+immutable receipts, exact trigger readiness, and runtime-role containment. All
+five end-to-end command/browser-adapter/API/database cases pass in 71.28
+seconds, including a separate authenticated proposer and approver; the direct
+lifecycle case passes again in 54.01 seconds. The focused executable
+database-role and hardening gate passes 264 tests. A fresh two-human visual
+browser rehearsal and the complete UX-029 state matrix remain acceptance work,
+not outcomes inferred from those automated cases.
 
 The 2026-08-23 owner rehearsal adds focused evidence for the read journey: the
 non-staff convention chair reached Workforce from Registration, retained the
@@ -620,8 +790,9 @@ and followed **Open structure** to canonical Department management. The 390 CSS-
 had one H1, one `main`, no duplicate identifiers, and no horizontal overflow.
 Frontend tests cover the populated journey, non-staff link boundary,
 non-disclosing `403`, and automated axe analysis. Position command, API, and
-HTML tests separately cover the manager mutation role; the owner-safe
-assignment journey and last two stages remain unimplemented.
+HTML tests separately cover the manager mutation role. The owner-safe
+assignment and Availability continuations are now implemented; Shifts remain
+truthfully unavailable.
 
 The Position management focus covers normalized idempotent creation, paired
 opportunity and typed binding, immutable provenance, complete updates,
@@ -682,15 +853,14 @@ recovery, deployment, authority cutover, or production operation.
 
 ## Current limitations
 
-Qualifications, person-owned availability, shifts, time records, assignment
-proposal/ending/replacement UX, approval notifications, document download
-through the REST API, and a separately authenticated approval inbox remain
-work. Organization structure and Position management use the implemented
-aggregate/version fence, bounded retry, shared commands, stopped-writer
-migrations, and runtime trigger catalog. The focused owner read walkthrough and
-automated Position mutation journey pass, but the complete width/zoom,
-screen-reader, failure, and mutation-role matrix, ordinary production authority
-reconciliation, real cutover, and representative restore/PITR evidence remain
-open. The implemented assignment domain continues to prove the safe path from
-a known person and reviewed agreement to scoped working access; its temporary
-specialist form is not the accepted owner experience.
+Qualifications, shifts, time records, assignment replacement and bulk UX,
+approval notifications, onboarding-review orchestration, Availability
+post-edition disposal automation, and document download through the REST API
+remain work. Organization structure, Position management, Assignment
+management, and Availability management use bounded reads, shared strict
+commands, stopped-writer migrations, and the runtime trigger catalog. The
+focused owner journeys and automated tests do not replace the complete
+width/zoom, screen-reader, failure, two-human mutation-role, ordinary
+production-authority reconciliation, real cutover, or representative
+restore/PITR evidence. An assignment is responsibility and authority evidence;
+it still does not imply availability or a scheduled shift.

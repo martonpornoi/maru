@@ -1,4 +1,4 @@
-"""Canonical Page 10 request and registration-definition digests."""
+"""Canonical Registration setup request and definition digests."""
 
 from __future__ import annotations
 

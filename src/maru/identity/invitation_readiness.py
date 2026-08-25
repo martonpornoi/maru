@@ -1,4 +1,4 @@
-"""Value-minimized readiness for Page 10's additive invitation boundary.
+"""Value-minimized readiness for the account-invitation boundary.
 
 Identity migrations ``0011`` through ``0018`` install the additive invitation,
 reconciliation, token-digest-key, hardened delivery-integrity, scheduler

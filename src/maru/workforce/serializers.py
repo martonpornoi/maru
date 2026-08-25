@@ -10,7 +10,24 @@ from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema_field
 from rest_framework import serializers
 
-from maru.workforce.models import Position, VolunteerOpportunity
+from maru.core.api_input import reject_unknown_fields
+from maru.workforce.assignment_inputs import (
+    MAX_ASSIGNMENT_REASON_LENGTH,
+    normalize_assignment_reason,
+    validate_assignment_interval,
+)
+from maru.workforce.availability_inputs import (
+    MAX_AVAILABILITY_WINDOWS,
+    AvailabilityWindowInput,
+    normalize_availability_windows,
+)
+from maru.workforce.models import (
+    PersonAvailabilityPlan,
+    PersonAvailabilityWindow,
+    Position,
+    PositionAssignment,
+    VolunteerOpportunity,
+)
 from maru.workforce.structure_inputs import (
     CANONICAL_UUID_PATTERN,
     MAX_DEPARTMENT_DESCRIPTION_LENGTH,
@@ -35,6 +52,8 @@ from maru.workforce.structure_templates import MARUCON_REFERENCE_V1
 if TYPE_CHECKING:
     from drf_spectacular.openapi import AutoSchema
     from drf_spectacular.utils import Direction
+
+    from maru.events.models import EventEdition
 
 _EXPLICIT_OFFSET_DATE_TIME = re.compile(r".+(?:[zZ]|[+-][0-9]{2}:[0-9]{2})\Z")
 
@@ -121,6 +140,17 @@ class _NormalizedStructureReasonField(_StrictStructureTextField):
             return normalize_structure_reason(raw)
         except DjangoValidationError as error:
             _raise_serializer_validation(error, fallback="structure_reason_invalid")
+
+
+class _NormalizedAssignmentReasonField(_StrictStructureTextField):
+    """Normalize one private assignment command rationale."""
+
+    def to_internal_value(self, data: object) -> str:
+        raw = super().to_internal_value(data)
+        try:
+            return normalize_assignment_reason(raw)
+        except DjangoValidationError as error:
+            _raise_serializer_validation(error, fallback="assignment_reason_invalid")
 
 
 class _NormalizedPositionTitleField(_StrictStructureTextField):
@@ -418,6 +448,8 @@ class WorkforceStructureSerializer(serializers.Serializer[dict[str, object]]):
     series_name = serializers.CharField()
     edition_name = serializers.CharField()
     can_manage_positions = serializers.BooleanField()
+    can_manage_assignments = serializers.BooleanField()
+    can_view_availability = serializers.BooleanField()
     governance = WorkforceStructureGovernanceSerializer()
     structure = WorkforceStructureProjectionSerializer()
 
@@ -620,6 +652,241 @@ class WorkforcePositionCloseSerializer(_ClosedStructureRequestSerializer):
     )
 
 
+class WorkforceAssignmentProposalSerializer(_ClosedStructureRequestSerializer):
+    """Closed input for one non-authoritative Position assignment proposal."""
+
+    account_id = _CanonicalStructureUUIDField()
+    effective_from = _AwareStructureDateTimeField()
+    expires_at = _AwareStructureDateTimeField(allow_null=True)
+    reason = _NormalizedAssignmentReasonField(
+        max_length=MAX_ASSIGNMENT_REASON_LENGTH,
+        trim_whitespace=False,
+    )
+
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Require an ordered, timezone-aware intended assignment interval.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            Strictly parsed proposal values.
+
+        Returns
+        -------
+        dict[str, object]
+            Validated proposal values with an ordered aware interval.
+        """
+        try:
+            validate_assignment_interval(
+                effective_from=cast("datetime", attrs["effective_from"]),
+                expires_at=cast("datetime | None", attrs["expires_at"]),
+            )
+        except DjangoValidationError as error:
+            _raise_serializer_validation(
+                error,
+                fallback="assignment_interval_invalid",
+            )
+        return attrs
+
+
+class WorkforceAssignmentDecisionSerializer(_ClosedStructureRequestSerializer):
+    """Closed input shared by approval, rejection, and ending commands."""
+
+    expected_version = _StrictStructureIntegerField(min_value=1)
+    reason = _NormalizedAssignmentReasonField(
+        max_length=MAX_ASSIGNMENT_REASON_LENGTH,
+        trim_whitespace=False,
+    )
+
+
+class WorkforceAvailabilityWindowWriteSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    """Parse one closed exact availability-period object."""
+
+    starts_at = _AwareStructureDateTimeField()
+    ends_at = _AwareStructureDateTimeField()
+    preference = _StrictStructureChoiceField(
+        choices=PersonAvailabilityWindow.Preference.choices
+    )
+
+    def to_internal_value(self, data: object) -> dict[str, object]:
+        """Reject undeclared nested keys before normal field parsing.
+
+        Parameters
+        ----------
+        data : object
+            Candidate nested Availability period object.
+
+        Returns
+        -------
+        dict[str, object]
+            Parsed declared period fields.
+        """
+        reject_unknown_fields(
+            data,
+            allowed_fields=frozenset({"starts_at", "ends_at", "preference"}),
+        )
+        return cast("dict[str, object]", super().to_internal_value(data))
+
+
+class WorkforceAvailabilityReplaceSerializer(_ClosedStructureRequestSerializer):
+    """Parse one complete owner-controlled availability replacement."""
+
+    expected_version = _StrictStructureIntegerField(min_value=0)
+    status = _StrictStructureChoiceField(
+        choices=(
+            PersonAvailabilityPlan.Status.DRAFT,
+            PersonAvailabilityPlan.Status.SUBMITTED,
+        )
+    )
+    windows: serializers.ListSerializer[dict[str, object]] = serializers.ListSerializer(
+        child=WorkforceAvailabilityWindowWriteSerializer(),
+        allow_empty=True,
+        max_length=MAX_AVAILABILITY_WINDOWS,
+    )
+
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Apply the exact edition horizon and overlap contract.
+
+        Parameters
+        ----------
+        attrs : dict[str, object]
+            Parsed complete replacement input.
+
+        Returns
+        -------
+        dict[str, object]
+            Input with canonical normalized period objects.
+
+        Raises
+        ------
+        RuntimeError
+            If the adapter omits its exact edition validation context.
+        """
+        edition_value = self.context.get("edition")
+        if not all(
+            hasattr(edition_value, attribute)
+            for attribute in ("starts_on", "ends_on", "time_zone")
+        ):
+            raise RuntimeError("Availability validation requires an exact edition.")
+        edition = cast("EventEdition", edition_value)
+        inputs = tuple(
+            AvailabilityWindowInput(
+                starts_at=cast("datetime", item["starts_at"]),
+                ends_at=cast("datetime", item["ends_at"]),
+                preference=cast("str", item["preference"]),
+            )
+            for item in cast("list[dict[str, object]]", attrs["windows"])
+        )
+        try:
+            attrs["windows"] = normalize_availability_windows(
+                inputs,
+                starts_on=edition.starts_on,
+                ends_on=edition.ends_on,
+                time_zone=edition.time_zone,
+            )
+        except DjangoValidationError as error:
+            _raise_serializer_validation(
+                error,
+                fallback="availability_windows_invalid",
+            )
+        return attrs
+
+
+class WorkforceAvailabilityWithdrawSerializer(_ClosedStructureRequestSerializer):
+    """Parse an owner availability withdrawal command."""
+
+    expected_version = _StrictStructureIntegerField(min_value=1)
+
+
+class WorkforceAvailabilityMutationResultSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    """Serialize minimized person-availability command evidence."""
+
+    plan_id = serializers.UUIDField()
+    availability_version = serializers.IntegerField(min_value=1)
+    status = serializers.ChoiceField(choices=PersonAvailabilityPlan.Status.choices)
+    window_count = serializers.IntegerField(
+        min_value=0,
+        max_value=MAX_AVAILABILITY_WINDOWS,
+    )
+
+
+class WorkforceAvailabilityWindowSerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize one owner-shared current period."""
+
+    starts_at = serializers.DateTimeField()
+    ends_at = serializers.DateTimeField()
+    preference = serializers.ChoiceField(
+        choices=PersonAvailabilityWindow.Preference.choices
+    )
+    preference_label = serializers.CharField()
+
+
+class WorkforceMyAvailabilitySerializer(serializers.Serializer[dict[str, object]]):
+    """Serialize the current person's exact-edition Availability workspace."""
+
+    organization_name = serializers.CharField()
+    series_name = serializers.CharField()
+    edition_name = serializers.CharField()
+    starts_on = serializers.DateField()
+    ends_on = serializers.DateField()
+    time_zone = serializers.CharField()
+    state = serializers.ChoiceField(
+        choices=("not_started", "draft", "shared", "unavailable", "withdrawn")
+    )
+    state_label = serializers.CharField()
+    availability_version = serializers.IntegerField(min_value=0)
+    can_edit = serializers.BooleanField()
+    windows = WorkforceAvailabilityWindowSerializer(many=True)
+
+
+class WorkforceOrganizerAvailabilityPositionSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    """Serialize one open responsibility without private assignment rationale."""
+
+    department_name = serializers.CharField()
+    position_title = serializers.CharField()
+    assignment_status = serializers.ChoiceField(
+        choices=PositionAssignment.Status.choices
+    )
+
+
+class WorkforceOrganizerAvailabilityPersonSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    """Serialize one minimized organizer availability row."""
+
+    account_id = serializers.UUIDField()
+    account_label = serializers.CharField()
+    positions = WorkforceOrganizerAvailabilityPositionSerializer(many=True)
+    state = serializers.ChoiceField(
+        choices=("not_shared", "shared", "unavailable", "withdrawn")
+    )
+    state_label = serializers.CharField()
+    shared_at = serializers.DateTimeField(allow_null=True)
+    windows = WorkforceAvailabilityWindowSerializer(many=True)
+
+
+class WorkforceOrganizerAvailabilitySerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    """Serialize the complete minimized organizer Availability projection."""
+
+    organization_name = serializers.CharField()
+    series_name = serializers.CharField()
+    edition_name = serializers.CharField()
+    time_zone = serializers.CharField()
+    shared_count = serializers.IntegerField(min_value=0)
+    unavailable_count = serializers.IntegerField(min_value=0)
+    not_shared_count = serializers.IntegerField(min_value=0)
+    withdrawn_count = serializers.IntegerField(min_value=0)
+    people = WorkforceOrganizerAvailabilityPersonSerializer(many=True)
+
+
 class WorkforceStructureTemplateMutationResultSerializer(
     serializers.Serializer[dict[str, object]]
 ):
@@ -644,6 +911,16 @@ class WorkforcePositionMutationResultSerializer(
 
     position_id = serializers.UUIDField()
     aggregate_version = serializers.IntegerField(min_value=1)
+
+
+class WorkforceAssignmentMutationResultSerializer(
+    serializers.Serializer[dict[str, object]]
+):
+    """Serialize one minimized assignment command result."""
+
+    assignment_id = serializers.UUIDField()
+    assignment_version = serializers.IntegerField(min_value=1)
+    status = serializers.ChoiceField(choices=PositionAssignment.Status.choices)
 
 
 class VolunteerOpportunitySerializer(serializers.Serializer[dict[str, object]]):

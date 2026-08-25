@@ -1,4 +1,4 @@
-"""Closed Page 10 API contracts for platform account invitations."""
+"""Closed API contracts for platform account invitations."""
 
 from __future__ import annotations
 
@@ -182,7 +182,7 @@ class _NormalizedAccountInventorySearchField(_StrictInvitationTextField):
 
 
 class _InvitationClosedSerializer(serializers.Serializer[dict[str, object]]):
-    """Reject undeclared Page 10 invitation request properties."""
+    """Reject undeclared platform invitation request properties."""
 
     reflect_unknown_field_names = True
 
@@ -232,7 +232,7 @@ class _InvitationClosedRequestSchema(OpenApiSerializerExtension):
 
 
 class _InvitationClosedResponseSerializer(serializers.Serializer[dict[str, object]]):
-    """Mark the fixed Page 10 response envelope as closed in OpenAPI."""
+    """Mark the fixed invitation response envelope as closed in OpenAPI."""
 
 
 class _InvitationClosedResponseSchema(OpenApiSerializerExtension):

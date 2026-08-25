@@ -868,7 +868,7 @@ def activate_executive_board(
     _require_platform_administrator(actor)
     normalized_reason = _normalized_reason(reason)
     # Representation activation writes organization-scoped RoleAssignments.
-    # Join the same global order as ordinary authority and Page 9 writers
+    # Join the same global order as ordinary authority and structure writers
     # before taking subject, representation, or organization locks.
     lock_retired_department_authority_boundaries()
     activation_subject_ids = list(

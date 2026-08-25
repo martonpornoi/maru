@@ -1,4 +1,4 @@
-"""Bounded, exact-scope Page 10 registration setup-start projection."""
+"""Bounded, exact-scope Registration setup-start projection."""
 
 from __future__ import annotations
 
