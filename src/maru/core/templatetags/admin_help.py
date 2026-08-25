@@ -488,6 +488,38 @@ MODEL_PAGE_HELP: dict[tuple[str, str], str] = {
     ),
     (
         "workforce",
+        "shiftdemand",
+    ): (
+        "Use this restricted read-only specialist page to inspect retained Shift "
+        "planning records. Plan and operate current work through Shift planning. "
+        "For example: verify whether a Registration Desk Shift is open for claims."
+    ),
+    (
+        "workforce",
+        "shiftdemandcommandreceipt",
+    ): (
+        "Use this restricted read-only specialist page to inspect immutable Shift-"
+        "planning command evidence. For example: verify who locked a Shift and the "
+        "reason recorded for that exact version."
+    ),
+    (
+        "workforce",
+        "shiftcommitment",
+    ): (
+        "Use this restricted read-only specialist page to inspect retained Shift "
+        "claims and confirmations. Manage current staffing through Shift planning. "
+        "For example: verify whether a volunteer's claim is awaiting confirmation."
+    ),
+    (
+        "workforce",
+        "shiftcommitmentcommandreceipt",
+    ): (
+        "Use this restricted read-only specialist page to inspect immutable Shift-"
+        "commitment command evidence. For example: verify who confirmed or removed "
+        "a volunteer and the reason recorded for that exact version."
+    ),
+    (
+        "workforce",
         "volunteeropportunity",
     ): (
         "Use this read-only specialist page to inspect a retained volunteer "

@@ -139,6 +139,10 @@ Completed locally:
   commands, browser adapters, strict API, projections, raw database guards,
   demo data, navigation, existing Assignment and Availability behavior, and
   responsive shell/style contracts;
+- an additional 73 cross-cutting regressions pass after reconciling the Shift
+  journey with the specialist-admin help registry, the closed internal-event
+  worker registry, and Organization structure's final Shift authorization
+  checks and single-instant projection contract;
 - a real two-connection PostgreSQL claim race proves capacity cannot be
   oversubscribed;
 - the expanded runtime-role, exact function-fingerprint, trigger-attachment,

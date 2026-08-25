@@ -149,6 +149,11 @@ Completed locally:
   commands, browser adapters, strict API, projections, raw database guards,
   demo data, navigation, existing Assignment and Availability behavior, and
   responsive shell/style contracts;
+- an additional 73 cross-cutting regressions pass after reconciling the four
+  registered Shift specialist records with their human-readable help, the two
+  Shift domain facts with the closed internal-event worker registry, and the
+  Organization structure API's expected final Shift authorization checks and
+  shared projection instant;
 - the expanded runtime-role, exact function-fingerprint, trigger-attachment,
   authority-provenance, Organization structure, and retired-Department
   readiness gate passes all 453 cases in 863.84 seconds;
