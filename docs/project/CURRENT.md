@@ -108,6 +108,10 @@ remain intact.
 - **Workforce assignments** remains the bounded organizer queue; **My
   Workforce** remains a separate reason-minimized subject view. Availability
   does not reinterpret assignment dates or authority.
+- A fresh synthetic demo now reaches these mounted surfaces with one genuinely
+  command-backed Assignment proposal and one deliberately shared two-period
+  Availability plan per organizer. Reruns preserve later owner edits and retain
+  pre-command demo assignments without fabricating historical receipts.
 - Administration continues to lead with durable Convention work and
   progressively disclose Organizations, Platform, and Specialist records. My
   Maru and Administration retain independent navigation projections and pins.
@@ -177,6 +181,12 @@ Completed locally so far:
 - the focused Assignment/Availability/Workforce regression selection passes
   after updating the structure decision-call contract for the new independent
   action hint;
+- the three hosted PostgreSQL shard failures exposed by the first PR run were
+  reproduced and corrected locally: specialist help now covers every registered
+  Workforce record, raw Position Assignment add remains denied in favor of
+  Assignment management, and the synthetic fixture exercises current Assignment
+  and Availability commands. The complete affected admin-usability, clean
+  Workforce onboarding, and demo-seed files pass 21 tests in 80.03 seconds;
 - Staff Console Vitest passes 28 tests; generated TypeScript API types, strict
   type checking, and the production Vite build pass, with generated host assets
   refreshed;

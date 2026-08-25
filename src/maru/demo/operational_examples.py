@@ -7,6 +7,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Protocol
 from uuid import UUID, uuid5
+from zoneinfo import ZoneInfo
 
 from django.db import transaction
 
@@ -64,6 +65,9 @@ from maru.registration.models import (
     SettlementAllocation,
     SettlementBatch,
 )
+from maru.workforce.assignment_commands import propose_position_assignment
+from maru.workforce.availability_commands import save_person_availability
+from maru.workforce.availability_inputs import AvailabilityWindowInput
 from maru.workforce.edition_write_scope import (
     lock_active_department_write_target,
     lock_workforce_edition_write_scope,
@@ -73,8 +77,11 @@ from maru.workforce.models import (
     EditionStructureCommandReceipt,
     OnboardingDocumentRequest,
     OnboardingDocumentType,
+    PersonAvailabilityPlan,
+    PersonAvailabilityWindow,
     Position,
     PositionAssignment,
+    PositionAssignmentCommandReceipt,
     PositionDocumentRequirement,
     PositionTemplate,
     VolunteerApplication,
@@ -128,6 +135,208 @@ def _own(
     created: bool,
 ) -> None:
     own(kind, record.id, created=created)  # type: ignore[attr-defined]
+
+
+def _seed_governed_assignment_example(
+    *,
+    convention_key: str,
+    organization: Organization,
+    edition: EventEdition,
+    accounts: dict[str, Account],
+    position: Position,
+    legacy_assignment_id: UUID,
+    own: OwnRecord,
+    happened_at: datetime,
+) -> None:
+    """Seed one current command-backed proposal without rewriting legacy evidence.
+
+    Parameters
+    ----------
+    convention_key : str
+        Stable convention key used to derive idempotency evidence.
+    organization : Organization
+        Organization that owns the synthetic Position.
+    edition : EventEdition
+        Exact editable edition receiving the proposal.
+    accounts : dict[str, Account]
+        Synthetic persona accounts required by the Assignment example.
+    position : Position
+        Current Position receiving the proposal.
+    legacy_assignment_id : UUID
+        Stable identifier used by demo fixtures predating governed commands.
+    own : OwnRecord
+        Collector for deterministic demo ownership and creation counts.
+    happened_at : datetime
+        Stable synthetic baseline used for the proposed effective time.
+
+    Raises
+    ------
+    RuntimeError
+        If a retained legacy assignment conflicts with its stable demo scope.
+    """
+    chair = accounts["convention-chair"]
+    assigned = accounts["registration-volunteer"]
+    governed_candidate = assigned
+    governed_retry_key = _id("workforce-assignment-proposal-retry", convention_key)
+    legacy_assignment = PositionAssignment.objects.filter(
+        id=legacy_assignment_id
+    ).first()
+    if legacy_assignment is not None:
+        legacy_scope = (
+            legacy_assignment.position_id,
+            legacy_assignment.organization_id,
+            legacy_assignment.edition_id,
+            legacy_assignment.account_id,
+        )
+        if legacy_scope != (
+            position.id,
+            organization.id,
+            edition.id,
+            assigned.id,
+        ):
+            raise RuntimeError("Stable demo workforce assignment scope conflicts.")
+        # Preserve fixtures created before governed Assignment commands existed.
+        # A second synthetic proposal demonstrates the current command path
+        # without inventing evidence for that legacy row.
+        _own(
+            own,
+            "workforce_position_assignments",
+            legacy_assignment,
+            created=False,
+        )
+        governed_candidate = accounts["volunteer-applicant"]
+        governed_retry_key = _id(
+            "workforce-assignment-proposal-retry-v2",
+            convention_key,
+        )
+
+    assignment_result = propose_position_assignment(
+        actor=chair,
+        organization_id=organization.id,
+        series_id=edition.series_id,
+        edition_id=edition.id,
+        position_id=position.id,
+        account_id=governed_candidate.id,
+        effective_from=happened_at + timedelta(days=14),
+        expires_at=None,
+        reason="Propose a synthetic Registration assignment for independent review.",
+        retry_key=governed_retry_key,
+        correlation_id=_id("workforce-assignment-proposal-correlation", convention_key),
+        request_id=_id("workforce-assignment-proposal-request", convention_key),
+        source_channel="demo_seed",
+    )
+    assignment = PositionAssignment.objects.get(pk=assignment_result.assignment_id)
+    assignment_receipt = PositionAssignmentCommandReceipt.objects.get(
+        pk=assignment_result.receipt_id
+    )
+    _own(
+        own,
+        "workforce_position_assignments",
+        assignment,
+        created=not assignment_result.replayed,
+    )
+    _own(
+        own,
+        "workforce_assignment_command_receipts",
+        assignment_receipt,
+        created=not assignment_result.replayed,
+    )
+
+
+def _seed_availability_example(
+    *,
+    convention_key: str,
+    organization: Organization,
+    edition: EventEdition,
+    assigned: Account,
+    own: OwnRecord,
+) -> None:
+    """Seed one shared owner plan while preserving later person-made changes.
+
+    Parameters
+    ----------
+    convention_key : str
+        Stable convention key used to derive idempotency evidence.
+    organization : Organization
+        Organization that owns the synthetic Availability scope.
+    edition : EventEdition
+        Exact edition whose local calendar bounds the periods.
+    assigned : Account
+        Synthetic person with an open Position relationship.
+    own : OwnRecord
+        Collector for deterministic demo ownership and creation counts.
+    """
+    availability_plan = PersonAvailabilityPlan.objects.filter(
+        organization=organization,
+        edition=edition,
+        account=assigned,
+    ).first()
+    availability_created = False
+    created_receipt_id: UUID | None = None
+    if availability_plan is None:
+        edition_zone = ZoneInfo(edition.time_zone)
+        first_period_start = datetime(
+            edition.starts_on.year,
+            edition.starts_on.month,
+            edition.starts_on.day,
+            9,
+            tzinfo=edition_zone,
+        )
+        availability_result = save_person_availability(
+            actor=assigned,
+            organization_id=organization.id,
+            edition_id=edition.id,
+            expected_version=0,
+            status=PersonAvailabilityPlan.Status.SUBMITTED,
+            windows=(
+                AvailabilityWindowInput(
+                    starts_at=first_period_start,
+                    ends_at=first_period_start + timedelta(hours=4),
+                    preference=PersonAvailabilityWindow.Preference.PREFERRED,
+                ),
+                AvailabilityWindowInput(
+                    starts_at=first_period_start + timedelta(days=1, hours=5),
+                    ends_at=first_period_start + timedelta(days=1, hours=11),
+                    preference=PersonAvailabilityWindow.Preference.AVAILABLE,
+                ),
+            ),
+            retry_key=_id("workforce-availability-submit-retry", convention_key),
+            correlation_id=_id(
+                "workforce-availability-submit-correlation",
+                convention_key,
+            ),
+            request_id=_id("workforce-availability-submit-request", convention_key),
+            source_channel="demo_seed",
+        )
+        availability_plan = PersonAvailabilityPlan.objects.get(
+            pk=availability_result.plan_id
+        )
+        availability_created = not availability_result.replayed
+        created_receipt_id = availability_result.receipt_id
+
+    _own(
+        own,
+        "workforce_availability_plans",
+        availability_plan,
+        created=availability_created,
+    )
+    for window in availability_plan.windows.order_by("starts_at", "id"):
+        _own(
+            own,
+            "workforce_availability_windows",
+            window,
+            created=availability_created,
+        )
+    for receipt in availability_plan.command_receipts.order_by(
+        "resulting_version",
+        "id",
+    ):
+        _own(
+            own,
+            "workforce_availability_command_receipts",
+            receipt,
+            created=(receipt.id == created_receipt_id),
+        )
 
 
 @transaction.atomic
@@ -271,7 +480,11 @@ def seed_workforce_examples(  # noqa: PLR0915
         EventEdition.Lifecycle.PREPARING,
     } and (
         not Position.objects.filter(pk=position_id).exists()
-        or not PositionAssignment.objects.filter(pk=assignment_id).exists()
+        or not PositionAssignment.objects.filter(
+            position_id=position_id,
+            organization=organization,
+            edition=edition,
+        ).exists()
     ):
         raise RuntimeError(
             "Synthetic workforce examples must be created before the edition "
@@ -382,39 +595,23 @@ def seed_workforce_examples(  # noqa: PLR0915
         },
     )
     _own(own, "workforce_document_requests", document_request, created=created)
-    assignment_scope = (
-        PositionAssignment.objects.select_for_update()
-        .filter(id=assignment_id)
-        .order_by()
-        .values_list(
-            "position_id",
-            "organization_id",
-            "edition_id",
-            "account_id",
-        )
-        .first()
+    _seed_governed_assignment_example(
+        convention_key=convention_key,
+        organization=organization,
+        edition=edition,
+        accounts=accounts,
+        position=position,
+        legacy_assignment_id=assignment_id,
+        own=own,
+        happened_at=happened_at,
     )
-    if assignment_scope is not None and assignment_scope != (
-        position.id,
-        scope.organization_id,
-        scope.edition_id,
-        assigned.id,
-    ):
-        raise RuntimeError("Stable demo workforce assignment scope conflicts.")
-    assignment, created = PositionAssignment.objects.get_or_create(
-        id=assignment_id,
-        defaults={
-            "position": position,
-            "organization": organization,
-            "edition": edition,
-            "account": assigned,
-            "status": PositionAssignment.Status.PROPOSED,
-            "effective_from": happened_at + timedelta(days=14),
-            "proposed_by": registration_lead,
-            "reason": ("Synthetic assignment awaiting independent approval and NDA."),
-        },
+    _seed_availability_example(
+        convention_key=convention_key,
+        organization=organization,
+        edition=edition,
+        assigned=assigned,
+        own=own,
     )
-    _own(own, "workforce_position_assignments", assignment, created=created)
 
 
 def seed_operational_examples(  # noqa: PLR0915

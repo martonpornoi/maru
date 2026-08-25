@@ -1,7 +1,7 @@
 # Synthetic demonstration data
 
 Status: Implemented repository-owned fictional fixture; roster importer removed
-Last updated: 2026-08-22
+Last updated: 2026-08-25
 
 ## Purpose and requirements
 
@@ -60,20 +60,32 @@ settings do not expose its management command.
   session revocation, abuse limiting, organizer restriction and appeal;
 - media-safety, privacy-request, historical-correction, retention, and disposal
   evidence;
+- one command-backed current Position proposal per organizer plus one deliberately
+  shared person-owned Availability plan with two edition-local periods and
+  immutable minimized command evidence;
 - credential issue/event, relay device, signed offline manifest, offline
   conflict, readiness gates, closure manifest, and archive amendment; and
 - authorized lifecycle and configuration transitions with correlated audit,
   domain-event, and outbox records.
 
-The current-edition workforce examples are seeded before lifecycle
-progression. Each fresh Department is created through the Organization structure command with
-a deterministic retry key and immutable receipt; its Position and assignment
-are then written beneath the canonical edition mutex and active-Department
-lock, and the Position receives its typed resource binding. A rerun replays
-that receipt rather than writing the Department directly. Complete examples
-remain verifiable after the edition becomes read-only, but the fixture refuses
-to create a missing Position or assignment after Draft/Preparing. Existing
-legacy demo Department identifiers are preserved for upgrade compatibility.
+The current-edition Workforce examples are seeded before lifecycle progression.
+Each fresh Department is created through the Organization structure command
+with a deterministic retry key and immutable receipt. Its Position is created
+beneath the canonical edition mutex and active-Department lock and receives its
+typed resource binding. The synthetic chair then proposes a known person through
+the governed Assignment command, and the assigned synthetic person deliberately
+shares two Availability periods through the owner command. These operations
+produce the same immutable audit, event, outbox, and minimized receipt evidence
+as their browser and API adapters.
+
+A rerun replays deterministic Department and Assignment evidence and preserves
+an existing person-owned Availability plan rather than overwriting later demo
+exploration. Complete examples remain verifiable after the edition becomes
+read-only, but the fixture refuses to create a missing Position or assignment
+after Draft/Preparing. Existing legacy demo Department identifiers and
+pre-command Assignment rows are preserved for upgrade compatibility; a current
+command-backed proposal is added without inventing historical evidence for the
+legacy row.
 
 Every ordinary Maru data model registered under `/admin/` has at least one
 deterministic example after seeding. Operational liveness evidence is the

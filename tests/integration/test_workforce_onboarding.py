@@ -584,7 +584,19 @@ def test_clean_organizer_rehearsal_activates_reviewed_position_authority(  # noq
     )
     assert document_admin.status_code == 200
     assignment_add = admin_client.get(reverse("admin:workforce_positionassignment_add"))
-    assert assignment_add.status_code == 200
+    assert assignment_add.status_code == 403
+    assignment_management = admin_client.get(
+        reverse(
+            "organization-workforce-assignments",
+            kwargs={
+                "organization_slug": organization.slug,
+                "series_slug": edition.series.slug,
+                "edition_slug": edition.slug,
+            },
+        )
+    )
+    assert assignment_management.status_code == 200
+    assert b"Workforce assignments" in assignment_management.content
 
 
 def test_workforce_database_guard_rejects_cross_organization_scope() -> None:
