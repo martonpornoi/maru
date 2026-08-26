@@ -1446,6 +1446,18 @@ architecture documents, implementation issues, tests, and release notes.
   attribution for software, standards, dependencies, licenses, security
   advisories, or an organizer's authorized use of its own identity in a
   governed deployment.
+- **NFR-013 — Progressive modular adoption:** An organization must be able to
+  adopt one complete Maru workflow without enabling registration, payments,
+  attendance, or unrelated modules. Each adoption profile must declare its
+  required shared foundations, enabled destinations, purpose-specific roles
+  and accounts, records and side effects, integration and coexistence
+  boundaries, import/export/print/manual fallbacks, and upgrade or removal
+  behavior. Unadopted modules must not create records, navigation,
+  notifications, authority, or operational dependencies. A purpose-specific
+  account such as a bidder, event host, volunteer, or communications operator
+  must not imply attendance, purchase, payment, or broader participation and
+  data collection. Cross-module automation may begin only after deliberate
+  adoption of every participating capability.
 
 ## Explicit non-goals
 

@@ -42,6 +42,7 @@ FULL_INTEGRATION_PREFIXES = (
     "src/maru/identity/",
 )
 PROTECTED_DELETION_PREFIXES = (
+    ".agents/",
     ".github/",
     ".githooks/",
     "docs/architecture/decisions/",
@@ -493,7 +494,7 @@ def _is_documentation_related(path: str) -> bool:
     bool
         ``True`` when Sphinx checks are relevant.
     """
-    return path.startswith("docs/") or path.endswith(".md")
+    return path.startswith((".agents/", "docs/")) or path.endswith(".md")
 
 
 def _is_security_related(path: str) -> bool:

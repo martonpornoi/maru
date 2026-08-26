@@ -1,7 +1,7 @@
 # Documentation standards
 
 Status: Baseline  
-Last updated: 2026-08-23
+Last updated: 2026-08-26
 
 Documentation is maintained with the implementation.
 
@@ -19,6 +19,8 @@ Documentation is maintained with the implementation.
 - **Release notes:** User-visible behavior, breaking changes, migrations, and
   known limitations.
 - **Checkpoints:** Concise current handoff and append-only milestone records.
+- **Agent workflow support:** Always-on repository instructions plus focused,
+  progressively disclosed playbooks for repeatable contributor work.
 
 ## Module README template
 
@@ -62,6 +64,39 @@ prose. Accepted ADRs, append-only checkpoints, and the explicitly frozen rebuild
 and production-consolidation ledgers retain their original wording as historical
 evidence; current indexes and handoffs translate that history into purpose
 names.
+
+## Agent workflow documentation
+
+Repository-root `AGENTS.md` owns always-on working, safety, reading-order, and
+definition-of-done instructions. `.agents/skills/<name>/SKILL.md` owns one
+focused reusable workflow whose frontmatter description says both when to use
+it and when not to use it. Larger details belong in references linked directly
+from that entrypoint so unrelated work does not load them.
+
+A repository skill must:
+
+- use a lowercase hyphenated directory and matching frontmatter name;
+- stay procedural and link to current project, requirement, ADR, module, and
+  operating truth instead of copying a status snapshot;
+- include `agents/openai.yaml` with quoted display metadata and a default
+  prompt that invokes the skill explicitly;
+- expose every Markdown reference through `SKILL.md` and contain no unfinished
+  scaffold placeholder or separate skill README; and
+- preserve request authority: a playbook cannot authorize implementation,
+  external mutation, merge, release, deployment, or production-data access.
+
+The curated catalog is documented in the
+[agent-assisted workflow guide](../development/agent-workflows.md). Changes to
+the catalog require an intentional documentation-policy update and tests. Run
+the deterministic gate with:
+
+```powershell
+uv run python scripts/validate_docs.py
+```
+
+Skills supplement human-readable project documentation; they never replace a
+stable requirement, accepted ADR, role guide, runbook, current-state handoff,
+checkpoint, code review, or acceptance evidence.
 
 ## Contributor site information architecture
 

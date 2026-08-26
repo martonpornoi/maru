@@ -6,9 +6,11 @@ import hashlib
 from typing import TYPE_CHECKING
 
 from scripts.validate_docs import (
+    EXPECTED_AGENT_SKILLS,
     PROHIBITED_CONVENTION_NAME_FINGERPRINTS,
     ROOT,
     ROOT_HUB_DOCNAMES,
+    agent_skill_failures,
     ethical_content_failures,
     markdown_files,
     navigation_failures,
@@ -37,10 +39,80 @@ def _minimal_documentation_tree(tmp_path: Path) -> Path:
     return docs_root
 
 
+def _write_agent_skill(root: Path, name: str) -> None:
+    skill_root = root / ".agents" / "skills" / name
+    _write(
+        skill_root / "SKILL.md",
+        "---\n"
+        f"name: {name}\n"
+        f'description: "Use {name} for one focused Maru workflow."\n'
+        "---\n\n"
+        f"# {name}\n\n"
+        "Read [the focused reference](references/focused.md).\n",
+    )
+    _write(
+        skill_root / "references" / "focused.md",
+        "# Focused reference\n\nFollow the maintained contract.\n",
+    )
+    metadata = (
+        "interface:\n"
+        f'  display_name: "{name}"\n'
+        '  short_description: "Run one focused Maru workflow safely"\n'
+        f'  default_prompt: "Use ${name} for this Maru task."\n'
+    )
+    _write(skill_root / "agents" / "openai.yaml", metadata)
+
+
+def _minimal_agent_skill_tree(root: Path) -> None:
+    for name in EXPECTED_AGENT_SKILLS:
+        _write_agent_skill(root, name)
+
+
 def test_navigation_accepts_six_explicit_ordered_hubs(tmp_path: Path) -> None:
     docs_root = _minimal_documentation_tree(tmp_path)
 
     assert navigation_failures(docs_root) == []
+
+
+def test_repository_agent_skills_satisfy_the_curated_policy() -> None:
+    assert agent_skill_failures(ROOT) == []
+
+
+def test_agent_skill_policy_accepts_focused_discoverable_skills(
+    tmp_path: Path,
+) -> None:
+    _minimal_agent_skill_tree(tmp_path)
+
+    assert agent_skill_failures(tmp_path) == []
+
+
+def test_agent_skill_policy_rejects_drift_and_unreachable_detail(
+    tmp_path: Path,
+) -> None:
+    _minimal_agent_skill_tree(tmp_path)
+    skill_name = EXPECTED_AGENT_SKILLS[0]
+    skill_root = tmp_path / ".agents" / "skills" / skill_name
+    skill_path = skill_root / "SKILL.md"
+    skill_path.write_text(
+        skill_path.read_text(encoding="utf-8").replace(
+            f"name: {skill_name}", "name: wrong-skill"
+        ),
+        encoding="utf-8",
+    )
+    _write(skill_root / "references" / "orphan.md", "# Unreachable detail\n")
+    metadata_path = skill_root / "agents" / "openai.yaml"
+    metadata_path.write_text(
+        metadata_path.read_text(encoding="utf-8").replace(
+            f"Use ${skill_name}", "Use this workflow"
+        ),
+        encoding="utf-8",
+    )
+
+    failures = agent_skill_failures(tmp_path)
+
+    assert any("frontmatter name" in failure for failure in failures)
+    assert any("orphan.md" in failure for failure in failures)
+    assert any("default_prompt" in failure for failure in failures)
 
 
 def test_homepage_routes_remain_semantic_and_responsive() -> None:

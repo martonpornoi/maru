@@ -1,7 +1,7 @@
 # Development setup
 
 Status: Production-consolidation M1.1/M2.1 locally migrated and smoke-verified
-Last updated: 2026-08-22
+Last updated: 2026-08-26
 
 ## Prerequisites
 
@@ -13,6 +13,14 @@ Last updated: 2026-08-22
 
 The system `python` on some Windows machines may be older. Verify the selected
 interpreter with `uv python find` and do not run Maru on Python 3.9.
+
+## Contributor orientation
+
+Before material work, follow the reading order in repository-root `AGENTS.md`.
+Contributors using Codex or another compatible coding agent should also read the
+[agent-assisted workflow guide](agent-workflows.md). Repository skills improve
+routing and consistency; they do not replace requirements, review, tests, or
+the protected pull-request gate.
 
 ## First setup
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maru Change Map"
+  short_description: "Map contracts and risks before Maru changes"
+  default_prompt: "Use $maru-change-map to map this Maru change before implementation."

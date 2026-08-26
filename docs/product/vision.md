@@ -1,7 +1,7 @@
 # Product vision
 
 Status: Baseline  
-Last updated: 2026-07-26
+Last updated: 2026-08-26
 
 ## The promise
 
@@ -48,6 +48,21 @@ merely places unrelated tools behind one menu.
 One login and one data model do not require one enormous interface. Attendee
 web, administration, mobile, kiosk, signage, and on-site relay are projections of
 the same authorized source of truth.
+
+### Earn trust through progressive adoption
+
+An organization may begin with one complete workflow that solves a current
+problem: Workforce, programme and event submissions, communications, a charity
+auction, or registration without payments. Maru must coexist with incumbent
+systems and provide the imports, exports, print paths, manual fallbacks, and
+clear boundaries needed to make that first adoption reversible and credible.
+
+Using one capability must not silently enable another. A volunteer, event host,
+bidder, or communications operator account does not imply attendance,
+registration, a purchase, payment tracking, or unrelated data collection.
+Cross-module benefits appear only when the organization deliberately adopts the
+next workflow. Reliability earns that expansion; product architecture must not
+demand it upfront.
 
 ### One source of truth, not one point of failure
 
@@ -109,6 +124,9 @@ A new capability may enter Maru only if it satisfies these rules:
    copy and paste.
 6. It defines degraded behavior and export or portability.
 7. It can be hidden when an organizer does not use it.
+8. It can be the organization's only adopted Maru workflow without creating
+   records, navigation, authority, notifications, or dependencies in unrelated
+   capabilities.
 
 An external specialist service may remain behind an adapter when recreating it
 would add risk without improving the user journey. Users should still encounter

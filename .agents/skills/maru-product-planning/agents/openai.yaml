@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maru Product Planning"
+  short_description: "Prioritize complete, adoptable Maru journeys"
+  default_prompt: "Use $maru-product-planning to prioritize the next Maru product outcome."

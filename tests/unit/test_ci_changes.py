@@ -21,6 +21,10 @@ def _change(path: str, status: str = "M") -> ChangedFile:
     ("changes", "expected"),
     [
         (("docs/quality/testing-strategy.md",), (True, False, False, "none")),
+        (
+            (".agents/skills/maru-pr-delivery/agents/openai.yaml",),
+            (True, False, False, "none"),
+        ),
         (("frontends/staff-console/src/main.tsx",), (False, True, False, "none")),
         (
             ("src/maru/core/static/staff-console/app.js",),
@@ -145,6 +149,9 @@ def test_classifier_flags_protected_and_mass_deletions() -> None:
     checkpoint = classify_changes(
         (_change("docs/checkpoints/2026-08-21-example.md", "D"),)
     )
+    agent_skill = classify_changes(
+        (_change(".agents/skills/maru-change-map/SKILL.md", "D"),)
+    )
     requirements = classify_changes((_change("docs/product/requirements.md", "D"),))
     third_party_notices = classify_changes((_change("THIRD_PARTY_NOTICES.md", "D"),))
     mass = classify_changes(
@@ -162,6 +169,8 @@ def test_classifier_flags_protected_and_mass_deletions() -> None:
     assert frontend_source.integration == "full"
     assert checkpoint.destructive
     assert checkpoint.integration == "full"
+    assert agent_skill.destructive
+    assert agent_skill.integration == "full"
     assert requirements.destructive
     assert requirements.integration == "full"
     assert third_party_notices.destructive

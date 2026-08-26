@@ -1,6 +1,6 @@
 # Current project state
 
-Last updated: 2026-08-25
+Last updated: 2026-08-26
 Phase: Production consolidation and management-experience recovery.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
@@ -11,8 +11,33 @@ concise handoff.
 
 ## Latest working outcome
 
-The current feature branch completes the first coherent Workforce journey from
-structure through accountable scheduled work:
+The current feature branch adds a repository-owned contributor support layer;
+it changes no Maru runtime behavior or database schema.
+
+- Root `AGENTS.md` remains the always-on contract and now routes four focused
+  playbooks: material change mapping, product planning, browser rehearsal, and
+  protected pull-request delivery.
+- Each `.agents/skills/` entry has a narrow selection description, optional
+  progressively disclosed references, and human-facing Codex metadata. Skills
+  retain procedure only and cannot override requirements, ADRs, current state,
+  review, acceptance, or the authority of the user's request.
+- Documentation policy validates the exact curated catalog, metadata,
+  placeholders, and reachable references. `.agents/` changes enter
+  documentation acceptance and skill deletion is protected review scope.
+- The human [agent-assisted workflow guide](../development/agent-workflows.md)
+  explains selection, sequencing, privacy, authority, and maintenance.
+- NFR-013 and the product vision now make progressive modular adoption a
+  durable product rule: one complete workflow may be adopted without
+  registration, payments, attendance, or unrelated side effects.
+
+ADR 0079 records the support boundary. The complete implementation and
+verification record is in the
+[2026-08-26 repository agent workflow checkpoint](../checkpoints/2026-08-26-repository-agent-workflow-support.md).
+
+## Current product baseline
+
+Protected `main` contains the first coherent Workforce journey from structure
+through accountable scheduled work:
 
 ```text
 Organization structure
@@ -94,8 +119,12 @@ The complete implementation and verification record is in the
   fingerprint, and exact trigger attachment while withholding direct guard-
   function execution from the runtime login.
 
-## Established repository and product baseline
+## Established repository and delivery baseline
 
+- PR #18 merged the governed Workforce Shift journey to protected `main` as
+  exact squash commit `c4e04fe` on 2026-08-26. GitHub Actions run
+  `32897740582` passed all eight PostgreSQL shards, combined coverage, the full
+  acceptance jobs, and the stable `PR gate` for its exact head.
 - PR #15, **Curate newcomer documentation and fictional examples**, merged to
   protected `main` as exact commit `2b78934` on 2026-08-23. GitHub Pages run
   `32624208484` deployed it successfully; the former pending documentation is
@@ -116,6 +145,12 @@ The complete implementation and verification record is in the
 
 ## Decisions
 
+- ADR 0079 accepts one concise always-on `AGENTS.md` contract plus four focused,
+  repository-scoped skills with progressive disclosure, user-facing metadata,
+  deterministic validation, protected deletion, and human guidance.
+- NFR-013 makes progressive modular adoption mandatory. A purpose-specific
+  volunteer, event-host, bidder, or communications account does not imply
+  attendance, registration, purchase, payment, or unrelated data collection.
 - ADR 0078 accepts explicit Position demand and retained commitment aggregates,
   independent person claim and organizer confirmation, transactional capacity,
   work-plus-rest overlap exclusion, stale-evidence review, explicit underfill,
@@ -136,7 +171,36 @@ The complete implementation and verification record is in the
 
 ## Verification for this working outcome
 
+### Repository support branch
+
 Completed locally:
+
+- the upstream skill-creator quick validator accepts all four repository skill
+  packages;
+- documentation policy passes across 343 Markdown files, four repository
+  skills, and 205 unique requirement identifiers;
+- all 68 documentation-policy and change-classifier tests pass;
+- whole-tree Ruff lint and formatting pass;
+- strict mypy reports no issues across 369 source files;
+- full PyDocLint passes and the semantic Python-docstring validator passes 379
+  source files;
+- warning-fatal Sphinx/AutoAPI builds the complete contributor portal,
+  including the new guide, ADR, checkpoint, and generated reference;
+- `git diff --check` passes; and
+- no runtime behavior, model, migration, API, generated client, or database
+  permission changed, so runtime and migration rehearsals are not applicable to
+  this branch.
+
+The 68 focused tests cover the complete changed executable surface. The
+`ci_changes.py` update deliberately routes `.agents/` changes to documentation
+acceptance and skill deletion to protected destructive-change review. Because
+that classifier is part of repository automation, the exact pull-request head
+will still require the complete fail-closed hosted acceptance selected by the
+protected workflow.
+
+### Merged Shift implementation evidence
+
+Completed locally before merge:
 
 - 77 focused unit and integration regressions pass across Shift lifecycle,
   commands, browser adapters, strict API, projections, raw database guards,
@@ -148,13 +212,10 @@ Completed locally:
   database cases plus the specialist-admin help registry, closed
   internal-event worker registry, and Organization structure's final Shift
   authorization checks and single-instant projection contract;
-- GitHub Actions run `32884436911` passes every substantive job and all eight
-  PostgreSQL shards after the stale acceptance contracts were reconciled. Its
-  newly reachable combined-coverage gate exposed the remaining acceptance gap
-  at 89.09 percent; overlaying the added tests on those exact nine hosted
-  coverage fragments now produces 89.66 percent branch-aware coverage,
-  displayed as the configured 90 percent threshold, pending hosted
-  confirmation;
+- GitHub Actions run `32897740582` passes every substantive job, all eight
+  PostgreSQL shards, combined branch-aware coverage, and the stable `PR gate`
+  for the exact Shift pull-request head after the earlier acceptance gaps were
+  corrected;
 - a real two-connection PostgreSQL claim race proves capacity cannot be
   oversubscribed;
 - the expanded runtime-role, exact function-fingerprint, trigger-attachment,
@@ -189,13 +250,20 @@ Completed locally:
   inspected unlabeled controls, no horizontal overflow, and no console warning
   or error.
 
-The latest canonical whole-tree acceptance on protected `main` remains 4,067
-tests in 15,558.23 seconds at 90.78 percent branch-aware coverage. It predates
-this feature branch and must not be represented as certification of the new
-Shift journey.
+The merged Shift journey's authoritative hosted evidence is run `32897740582`.
+That result certifies the exact PR #18 head; it does not certify this repository
+support branch, a deployment, or production readiness.
 
 ## Known risks and incomplete work
 
+- Repository skills are procedural aids, not an independent source of product
+  truth or evidence. Their routing and format need review when the upstream
+  skill interface changes, and a newly opened session may be needed to observe
+  a catalog change in every client.
+- NFR-013 is now accepted product intent, but no zero-configuration adoption
+  profile, activation control, coexistence contract, or removal rehearsal is
+  implemented yet. Existing module navigation must not be mistaken for proven
+  standalone adoption.
 - UX-029 remains a release gate at 320, 768, 958, 1,024, and 1,920 CSS pixels,
   200 percent zoom, complete keyboard paths, representative screen readers,
   reduced motion, and every empty, failure, stale, read-only, disclosure, and
@@ -219,31 +287,36 @@ Shift journey.
 
 ## Smallest sensible next actions
 
-1. Complete the Shift mutation-role and UX-029 acceptance matrix, prioritizing
+1. Define and rehearse the first **Workforce-only** adoption profile: minimum
+   identity, organization and edition setup; imports; visible destinations;
+   purpose-specific accounts; exports and print/manual fallback; coexistence;
+   removal; and proof that Registration, payments, and attendance stay absent.
+2. Complete the Shift mutation-role and UX-029 acceptance matrix, prioritizing
    distinct claimant/confirmer accounts, stale evidence, full capacity,
    underfill, denied/read-only states, 200 percent zoom, and a representative
    screen reader.
-2. Accept the next scheduling contract before implementation: check-in,
+3. Accept the next scheduling contract before implementation: check-in,
    late/absent escalation, handover, actual-time boundaries, and the exact line
    between an internal commitment and a published personal schedule.
-3. Define and rehearse the organization-approved Availability disposal policy,
+4. Contract the next standalone profiles by partner need: Programme and event
+   submissions, Communications publishing, Charity art auction, and
+   Registration without payments.
+5. Define and rehearse the organization-approved Availability disposal policy,
    legal holds, worker observability, restore/PITR, and fix-forward behavior.
-4. Apply the same task-oriented page frame to Venues and Logistics, prioritizing
-   receiving, custody, physical-space schedules, and exceptions over model
-   inventories.
-5. Finish Registration writer retirement, readiness activation, representative
-   recovery/concurrency, and production cutover without creating a second setup
-   path.
 
 ## Resume instructions
 
-Read `AGENTS.md`, this file, `ROADMAP.md`, the production-consolidation ledger,
+Read `AGENTS.md`, the
+[agent-assisted workflow guide](../development/agent-workflows.md), this file,
+`ROADMAP.md`, the production-consolidation ledger,
 the management-shell, Position, Assignment, Availability, and Shift page
-contracts, and ADRs 0019/0028/0039/0041/0049/0055/0075 through 0078. Use only
+contracts, and ADRs 0019/0028/0039/0041/0049/0055/0075 through 0079. Use only
 synthetic data. Preserve exact organization and edition scope, authorization
 before disclosure, My Maru/Administration separation, private Availability,
 independent confirmation, privacy-minimized self-withdrawal, canonical lock
 order, immutable command evidence, runtime-role containment, and fix-forward
-recovery. Do not confuse a visible destination, passing local rehearsal, or
-focused test gate with authority cutover, release acceptance, or production
-readiness.
+recovery. Apply NFR-013 so one adopted workflow does not create unrelated
+participation, payment, navigation, notification, or authority side effects.
+Do not confuse a visible destination, passing local rehearsal, focused test
+gate, or selected skill with authority cutover, release acceptance, or
+production readiness.
