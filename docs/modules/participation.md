@@ -1,12 +1,15 @@
 # Participation module
 
-Status: Implemented V01 kernel and initial staff projection  
-Last updated: 2026-08-01
+Status: Implemented V01 kernel, initial staff projection, and purpose-bounded
+edition-context projection that does not manufacture Participation
+Last updated: 2026-08-26
 
 ## Purpose and requirements
 
-`maru.participation` owns a person's relationship with an edition and durable
-capacity labels for IDN-003, IDN-011, and ARC-001 through ARC-004.
+`maru.participation` owns a person's explicit relationship with an edition and
+durable capacity labels for IDN-003, IDN-011, IDN-014, EVT-006, NFR-013, and
+ARC-001 through ARC-004. It does not own account existence or generic edition
+authority.
 
 ## Owned data and invariants
 
@@ -41,8 +44,12 @@ reclassification guards before a final count-only existing-data preflight; see
 - `GET /api/v1/organizations/{organization_id}/editions/{edition_id}/participations/{account_id}`
 
 Both endpoints use only `request.user`; no client-supplied account or tenant
-scope can broaden them. The context endpoint combines only that account's
-memberships, participations, and capacity projections.
+scope can broaden them. The context endpoint combines that account's explicit
+relationships and currently authorized edition targets. Authority may expose a
+purpose-bounded Workforce-only workspace with `not_participating` status,
+immutable adoption profile, adopted modules, and available destinations without
+creating a Participation or capacity row. Platform administrators remain
+separately classified and receive the same profile boundary.
 
 The staff list and detail require `participation.view_staff_summary`, establish
 organization and edition from trusted route scope, constrain the queryset
@@ -58,6 +65,12 @@ existing same-account, same-edition participation and cannot assign capacities.
 The attendee registration profile renders active and proposed capacities as
 authoritative convention roles, such as a volunteer department, rather than
 letting the attendee self-assert them.
+
+Workforce-only setup, Maru-operator activation, account sign-in, edition-
+context selection, Position assignment, Availability, and Shift operations do
+not create Participation. Full-convention Position assignment retains its
+historical capacity-projection behavior. Volunteer responsibility in a bounded
+profile therefore remains distinct from attendee registration and attendance.
 
 ## Permission and sensitivity
 
@@ -105,3 +118,6 @@ capacity administration outside bootstrap, archive correction, retention
 execution, and staff mutations are not implemented. The new edition
 registration profile is purpose-specific and does not yet replace the broader
 opt-in public participation history planned here.
+The context API currently carries adopted-destination projection for the shared
+shell; it is not a general profile-management command and must continue to
+resolve policy server-side on every request.

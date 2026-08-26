@@ -11,6 +11,7 @@ from maru.core.validators import (
     validate_language_codes,
     validate_time_zone,
 )
+from maru.events.adoption import ADOPTION_PROFILE_CHOICES, AdoptionProfileCode
 from maru.events.models import (
     MAX_EDITION_SPAN_DAYS,
     EditionClosureManifest,
@@ -50,6 +51,8 @@ class EditionBasicSerializer(serializers.ModelSerializer[EventEdition]):
             "name",
             "lifecycle",
             "aggregate_version",
+            "adoption_profile_code",
+            "adoption_profile_version",
             "time_zone",
             "language_codes",
             "currency_codes",
@@ -225,6 +228,10 @@ class EditionCreateRequestSerializer(EditionDetailsRequestSerializer):
     """Serialize and validate edition create request data."""
 
     series_id = serializers.UUIDField()
+    adoption_profile_code = serializers.ChoiceField(
+        choices=ADOPTION_PROFILE_CHOICES,
+        default=AdoptionProfileCode.FULL_CONVENTION,
+    )
 
 
 class EditionUpdateRequestSerializer(EditionDetailsRequestSerializer):

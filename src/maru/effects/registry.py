@@ -72,7 +72,14 @@ def _validate_edition_lifecycle_transitioned(payload: dict[str, object]) -> None
 def _validate_edition_created(payload: dict[str, object]) -> None:
     _require_exact_string_fields(
         payload,
-        fields=frozenset({"aggregate_version", "lifecycle"}),
+        fields=frozenset(
+            {
+                "aggregate_version",
+                "adoption_profile_code",
+                "adoption_profile_version",
+                "lifecycle",
+            }
+        ),
     )
 
 
@@ -115,7 +122,7 @@ def _validate_organization_representation_changed(payload: dict[str, object]) ->
     action = payload["action"]
     if (
         not isinstance(action, str)
-        or payload["representation_code"] != "executive_board"
+        or payload["representation_code"] not in {"executive_board", "maru_operators"}
         or expected_states.get(action) != payload["state"]
     ):
         raise ValidationError(

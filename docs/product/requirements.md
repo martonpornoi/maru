@@ -88,25 +88,32 @@ architecture documents, implementation issues, tests, and release notes.
   Platform oversight must not silently create any of those relationships, and
   restricted case access remains subject to SAF-004 rather than following from
   platform-administrator status.
-- **IDN-012 — Organization representation:** Every organization must have an
-  Executive Board as its accountable representation root before the
-  organization can move from Draft to Active. Initial provisioning must be a
-  reasoned platform operation that creates no platform-administrator
-  membership, appointment, grant, participation, registration, or workforce
-  relationship. Controllers must be exact existing active person accounts with
-  verified email, must accept their own versioned invitations, and must remain
-  eligible at activation. Activation requires at least two distinct accepted
-  controllers, no unanswered controller invitation, current aggregate state,
-  exact organization confirmation, and cross-approved assignments to one
-  immutable root-role version; it atomically activates the representation,
-  memberships, appointments, authority, and organization or changes nothing.
-  Only active Executive Board authority and explicit platform oversight may
-  modify organization properties. Appointment replacement, ending,
-  suspension, and reactivation must be reasoned commands that preserve prior
-  terms and immediate revocation rather than editable status fields. Existing
-  non-Draft organizations without representation require explicit migration
-  reconciliation and must never receive inferred real-person assignments.
-  A reasoned platform emergency containment may start from any open Board
+- **IDN-012 — Truthful accountable organization representation:** Every
+  organization must have exactly one truthful, code-owned accountable
+  representation root before it can move from Draft to Active. An Executive
+  Board representation is used only when those controllers really hold that
+  constitutional role. A bounded adoption may instead use Maru operators:
+  people accountable for operating Maru and its adopted capabilities, without
+  claiming a legal or executive office. The representation type and root-role
+  definition are immutable after provisioning; existing Executive Board
+  organizations and their history remain Executive Board records. Initial
+  provisioning must be a reasoned platform operation that creates no platform-
+  administrator membership, appointment, grant, participation, registration,
+  or workforce relationship. Controllers must be exact existing active person
+  accounts with verified email, must accept their own versioned invitations,
+  and must remain eligible at activation. Every representation type uses the
+  same two-person, independent-acceptance, current-version, exact-organization-
+  confirmation, atomic-activation, audit, provenance, containment, and recovery
+  controls. Activation cross-approves assignments to the representation type's
+  one immutable purpose-matched root-role version and otherwise changes
+  nothing. Only current accountable representation authority and explicit
+  platform oversight may modify organization properties. Appointment
+  replacement, ending, suspension, and reactivation must be reasoned commands
+  that preserve prior terms and immediate revocation rather than editable
+  status fields. Existing non-Draft organizations without representation
+  require explicit migration reconciliation and must never receive inferred
+  real-person assignments. A reasoned platform emergency containment may start
+  from any open Executive Board
   invitation or term. Before globally deactivating the person and revoking
   sessions, it must atomically close every Invited, Accepted, or Active Board
   appointment for that account across organizations, end matching Board
@@ -115,9 +122,10 @@ architecture documents, implementation issues, tests, and release notes.
   its representation and organization must be Suspended and all local Board
   root authority ended. Historical activated-and-ended approvers remain valid
   provenance but never current authority. The representation is the
-  organization governance anchor, not an edition Department, Position, generic
-  group, or workforce assignment; a structure projection may place operational
-  departments visually beneath it but must not mirror it into those records.
+  organization accountability anchor, not an edition Department, Position,
+  generic group, or workforce assignment; a structure projection may place
+  operational departments visually beneath it but must not mirror it into
+  those records.
 - **IDN-013 — Platform-issued account invitations:** An active platform
   administrator may reserve and invite a person account as an optional identity
   onboarding convenience, independently of public registration. The command
@@ -133,6 +141,14 @@ architecture documents, implementation issues, tests, and release notes.
   authority, participation, registration, application, onboarding, workforce,
   or other convention relationship. Fixtures, tests, and tutorials may use
   only deterministic synthetic identities and reserved example domains.
+- **IDN-014 — Purpose-bounded accounts and workspaces:** An active person
+  account may receive authority or self-service access for one adopted purpose
+  without an edition Participation row, attendee registration, payment,
+  attendance, public profile, or broader convention relationship. Context,
+  navigation, invitations, access groups, and APIs must derive only the
+  destinations and fields needed for that purpose. Adding another purpose is a
+  deliberate relationship or adoption action, never an inference from account
+  existence, login, volunteer work, bidding, hosting, or communications work.
 
 ### Multi-convention and event editions
 
@@ -159,6 +175,15 @@ architecture documents, implementation issues, tests, and release notes.
   formats, and local policy configuration. Persist IANA time-zone identifiers,
   ISO language/country codes, and currency codes rather than display labels;
   show human-readable names and UTC/DST offsets at data-entry boundaries.
+- **EVT-006 — Immutable edition adoption profile:** Every new edition must
+  store one versioned, code-owned adoption profile describing its enabled
+  module namespaces and visible destinations. The profile is immutable for the
+  edition and enforced before platform policy, direct grants, role assignments,
+  API disclosure, navigation, or background side effects. Expanding beyond a
+  Maru-operator organization's bounded profile requires an explicit platform-
+  administrator setup decision; it cannot follow from ordinary operator
+  authority. Existing editions retain the full-convention profile during the
+  additive migration.
 
 ### Archival history
 
@@ -640,9 +665,10 @@ architecture documents, implementation issues, tests, and release notes.
 - **UX-022 — Series-scoped edition creation:** A selected active convention
   series beneath a non-Closed organization must provide one edition-creation
   page. The organization and series are trusted route scope; name, start date,
-  end date, time zone, languages, and currencies are bounded and validated,
-  with locale defaults inherited visibly from the organization. Maru creates a
-  collision-safe slug, Draft lifecycle, aggregate version, actor attribution,
+  end date, time zone, languages, currencies, and one supported adoption
+  profile are bounded and validated, with locale defaults inherited visibly
+  from the organization. Maru creates a collision-safe slug, Draft lifecycle,
+  immutable profile code and version, aggregate version, actor attribution,
   idempotency receipt, audit event, and minimized domain event in one
   transaction. The browser carries a hidden UUID retry key; the API requires a
   UUID `Idempotency-Key` request header and rejects that key in JSON. A retry
@@ -653,8 +679,9 @@ architecture documents, implementation issues, tests, and release notes.
 - **UX-023 — Edition record and workspace context:** A created edition must
   redirect to a scoped record page reachable through organization, series, and
   edition navigation. The page shows lifecycle, stable identity, dates, locale,
-  currencies, parent records, access summary, latest meaningful update, and
-  human activity. Draft and Preparing profile fields may be updated through an
+  currencies when relevant, immutable adoption profile and boundary, parent
+  records, access summary, latest meaningful update, and human activity. Draft
+  and Preparing profile fields may be updated through an
   expected-aggregate-version command; Ready, Live, Closing, Archived, and Cancelled
   profiles are read-only until an explicit lifecycle/change-control workflow
   permits otherwise. Saving cannot directly change lifecycle, slug, parent,
@@ -662,8 +689,9 @@ architecture documents, implementation issues, tests, and release notes.
   selected route establishes display context only and never grants access.
 - **UX-024 — Representation and access handoff:** A selected organization must
   expose one **Representation & access** page in the shared administration
-  navigation. It must explain the purpose and current state of the Executive
-  Board, show platform oversight separately from convention authority, and
+  navigation. It must explain the truthful purpose, type, and current state of
+  the accountable representation, show platform oversight separately from
+  convention authority, and
   guide the initial sequence of provision, exact-account invitation,
   invitee-owned accept or decline, and two-person activation. Managers may see
   bounded appointment identity and exact email only inside their authorized
@@ -681,9 +709,10 @@ architecture documents, implementation issues, tests, and release notes.
 - **UX-025 — Edition organization-structure page:** A selected edition must
   expose one **Organization structure** destination beneath that edition in the
   shared administration navigation. Its responsive hierarchy places the
-  minimized Executive Board governance anchor above the edition-owned Helper
-  Board and nested Departments, while clearly distinguishing representation,
-  operational reporting, and software authority. The header and navigation
+  minimized accountable-representation anchor above the edition-owned Helper
+  Board and nested Departments, while clearly distinguishing organizational
+  accountability, operational reporting, and software authority. The header
+  and navigation
   must derive view and edit explanations from the exact current policy
   decision; platform oversight remains non-participating, department-only
   authority does not reveal the complete edition tree, and hidden people or
@@ -767,6 +796,29 @@ architecture documents, implementation issues, tests, and release notes.
   Empty, populated, denied, validation, stale, dependency-failure, and success
   states require keyboard, automated-accessibility, and rendered evidence
   before broad browser acceptance is claimed.
+- **UX-030 — Guided Workforce-only adoption:** An active platform
+  administrator must be able to establish a Workforce-only edition through one
+  **Set up Workforce** workflow that reuses an existing organization or series
+  when available. New input is limited to organization name, convention name,
+  edition name, dates, and IANA time zone; language defaults to `en` and the
+  internal `XXX` no-currency sentinel is not presented as a payment choice.
+  The idempotent atomic outcome creates or reuses only Organization →
+  Convention series → Event edition, stores the immutable Workforce-only
+  profile and append-only setup receipt, and reuses an existing accountable
+  representation or provisions truthful Maru operators. It creates no
+  participation, attendee Registration, payment, attendance, application,
+  venue, charity, catalog, Logistics, or Communications record. The resulting
+  shell exposes the Workforce journey from Structure through Positions,
+  assignments, Availability, and Shifts; unadopted destinations, groups, and
+  planned capability pressure remain absent. When the first active Department
+  exists but no profile-compatible Position template does, an accountable
+  operator may create one code-owned Volunteer starter only with a different
+  accountable operator's approval and a retained reason. The starter defines
+  basic event and Workforce visibility, creates no Position or person
+  relationship, and cannot carry an unadopted capability. Exact-edition deep
+  links, public volunteer pages, and personal My Workforce pages must retain
+  that same purpose focus even when no prior workspace selection exists. Two
+  distinct operator invitees must still accept before initial activation.
 
 ### Registration, orders, and attendee service
 

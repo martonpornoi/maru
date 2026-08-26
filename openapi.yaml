@@ -16506,6 +16506,14 @@ components:
         * `completed` - Completed
         * `expired` - Expired
         * `cancelled` - Cancelled
+    AdoptionProfileCodeEnum:
+      enum:
+      - full_convention
+      - workforce_only
+      type: string
+      description: |-
+        * `full_convention` - Full convention
+        * `workforce_only` - Workforce only
     ApplicationAnswerProjection:
       type: object
       description: Serialize and validate application answer projection data.
@@ -19148,6 +19156,12 @@ components:
         aggregate_version:
           type: integer
           readOnly: true
+        adoption_profile_code:
+          type: string
+          readOnly: true
+        adoption_profile_version:
+          type: integer
+          readOnly: true
         time_zone:
           type: string
           readOnly: true
@@ -19172,6 +19186,8 @@ components:
           format: date
           readOnly: true
       required:
+      - adoption_profile_code
+      - adoption_profile_version
       - aggregate_version
       - currency_codes
       - ends_on
@@ -19275,6 +19291,27 @@ components:
           type: string
         lifecycle:
           $ref: '#/components/schemas/EditionLifecycleEnum'
+        adoption_profile_code:
+          allOf:
+          - $ref: '#/components/schemas/AdoptionProfileCodeEnum'
+          readOnly: true
+        adoption_profile_version:
+          type: integer
+          minimum: 1
+          readOnly: true
+        adoption_profile_label:
+          type: string
+          readOnly: true
+        adopted_modules:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        available_destinations:
+          type: array
+          items:
+            type: string
+          readOnly: true
         time_zone:
           type: string
         language_codes:
@@ -19299,20 +19336,13 @@ components:
             $ref: '#/components/schemas/CapacityContext'
         can_transition:
           type: boolean
-          description: |-
-            Return can transition.
-
-            Parameters
-            ----------
-            obj : Participation
-                The model instance being validated or presented.
-
-            Returns
-            -------
-            bool
-                `True` when Return can transition; otherwise `False`.
           readOnly: true
       required:
+      - adopted_modules
+      - adoption_profile_code
+      - adoption_profile_label
+      - adoption_profile_version
+      - available_destinations
       - can_transition
       - capacities
       - currency_codes
@@ -19363,6 +19393,10 @@ components:
         series_id:
           type: string
           format: uuid
+        adoption_profile_code:
+          allOf:
+          - $ref: '#/components/schemas/AdoptionProfileCodeEnum'
+          default: full_convention
       required:
       - currency_codes
       - ends_on
@@ -30176,11 +30210,14 @@ components:
           $ref: '#/components/schemas/WorkforceStructureGovernanceKindEnum'
         label:
           type: string
+        purpose:
+          type: string
         state:
           $ref: '#/components/schemas/WorkforceStructureGovernanceStateEnum'
       required:
       - kind
       - label
+      - purpose
       - state
     WorkforceStructureGovernanceKindEnum:
       enum:

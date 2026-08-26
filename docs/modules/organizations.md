@@ -1,18 +1,19 @@
 # Organizations module
 
-Status: Implemented tenant, brand, localization, the organization and
-convention-series record journey, initial Representation & access Executive
-Board lifecycle, emergency containment, minimized Organization structure
-governance-anchor query, and the repository-verified User accounts-to-Board presentation;
+Status: Implemented tenant, brand, localization, organization and convention-
+series records, truthful Executive Board or Maru-operator Representation &
+access lifecycle, Board emergency containment, minimized Organization
+structure accountability anchor, and account-to-representation handoff;
 complete rendered owner acceptance remains open and mounted Department
-mutations remain workforce-owned
-Last updated: 2026-08-15
+mutations remain Workforce-owned
+Last updated: 2026-08-26
 
 ## Purpose and requirements
 
-`maru.organizations` owns tenant structure and recurring-series continuity for
-IDN-002, IDN-004, IDN-005, IDN-009, IDN-011, IDN-012, EVT-001, EVT-003,
-EVT-005, HR-011, UX-014 through UX-021, UX-024, UX-025, and UX-029.
+`maru.organizations` owns tenant structure, truthful accountable
+representation, and recurring-series continuity for IDN-002, IDN-004, IDN-005,
+IDN-009, IDN-011, IDN-012, IDN-014, EVT-001, EVT-003, EVT-005, HR-011,
+UX-014 through UX-021, UX-024, UX-025, UX-029, UX-030, and NFR-013.
 
 ## Owned data and invariants
 
@@ -27,11 +28,12 @@ EVT-005, HR-011, UX-014 through UX-021, UX-024, UX-025, and UX-029.
 - `OrganizationMembership`: one organizer-owned account relationship with
   invited, active, suspended, or ended state.
 - `OrganizationRepresentation`: the one accountable organization-level
-  representation root. The first and currently fixed type is Executive Board,
-  with Provisioning, Active, and reserved Suspended states plus a positive
-  aggregate version and reasoned provisioning/activation provenance. It is
-  never an edition Department, Position, generic group, or workforce
-  assignment.
+  representation root. Its immutable code-owned type is Executive Board for a
+  real constitutional Board or Maru operators for people accountable only for
+  operating bounded Maru capabilities. Both use Provisioning, Active, and
+  reserved Suspended states plus a positive aggregate version and reasoned
+  provisioning/activation provenance. It is never an edition Department,
+  Position, generic group, or workforce assignment.
 - `RepresentationAppointment`: one exact person account's versioned Controller
   invitation and accepted term in that representation, separately linked to
   the organization membership and eventual root role assignment.
@@ -40,20 +42,25 @@ A platform administrator is not an organizer relationship. Membership
 validation rejects that account classification while still allowing the
 administrator to be attributed as the actor of later platform provisioning.
 
-ADR 0040 makes Draft-to-Active an explicit representation handoff. Provisioning
+ADR 0040 makes Draft-to-Active an explicit representation handoff. ADR 0080
+generalizes its truthful representation type without weakening its controls.
+Provisioning
 creates no person relationship for the platform operator. An invitation may
 create an invited membership for the exact active, verified person account but
 grants no authority. Initial activation requires at least two distinct accepted
 controllers, no unanswered invitation, current aggregate state, and an atomic
-change of appointments, memberships, scoped assignments, representation, and
-organization. ADR 0043 adds one platform-only emergency containment path: it
+change of appointments, memberships, purpose-matched scoped assignments,
+representation, and organization. Existing Board records remain Board records;
+Maru operators never imply a legal office or edition Participation. ADR 0043
+adds one platform-only Executive Board emergency containment path: it
 closes a person's open Board relationships across every organization, revokes
 sessions and authority, deactivates the account, and suspends any Board that
 loses its two-controller quorum. Routine expiry, replacement, voluntary ending,
 reactivation, and quorum recovery are not implemented.
 
-ADR 0045 permits Organization structure to show a minimized Executive Board governance anchor
-above an edition's Convention Coordination Department. This is presentation
+ADR 0045 permits Organization structure to show a minimized accountable-
+representation anchor above an edition's Convention Coordination Department.
+This is presentation
 composition, not a stored parent edge or cross-module write. `maru.organizations` remains the
 only owner of representation state and appointments; `maru.workforce` remains
 the owner of Departments, Positions, and structure-template application. The
@@ -63,8 +70,8 @@ authority.
 
 Organization structure now implements that read composition. The public organizations query
 accepts one already-authorized organization identifier and returns exactly a
-`governance` discriminator, the fixed **Executive Board** label, and the
-truthful `absent`, `provisioning`, `active`, or `suspended` state. It never
+`governance` discriminator, the truthful code-owned representation label and
+purpose, and the `absent`, `provisioning`, `active`, or `suspended` state. It never
 returns a representation identifier, appointment, controller, membership,
 reason, count, or authority record. Organization structure authorizes the exact edition before
 calling it and repeats fresh authorization before releasing the composed
@@ -120,15 +127,19 @@ non-browser clients.
   the expected profile version, writes only changed brand fields, and commits
   minimized audit plus `organizations.convention_series.updated.v1` and its
   outbox delivery together.
-- `provision_executive_board(...)`, the initial platform-only Draft command
-  that creates the fixed representation root without enrolling its actor.
+- `provision_representation(...)`, the initial platform-only Draft command that
+  creates one selected code-owned representation root without enrolling its
+  actor. `provision_executive_board(...)` and
+  `provision_maru_operators(...)` are compatibility/purpose wrappers.
 - `invite_representation_controller(...)`, the exact-account, reasoned,
   organization-scoped invitation command that creates no authority.
 - `respond_to_representation_invitation(...)`, the version-checked self command
   through which only the exact invitee accepts or declines.
-- `activate_executive_board(...)`, the platform-only, aggregate-version-checked
-  transaction that establishes two-or-more-controller cross-approved root
-  authority and changes both representation and organization to Active.
+- `activate_representation(...)`, the platform-only, aggregate-version-checked
+  transaction that establishes two-or-more-controller cross-approved,
+  purpose-matched root authority and changes both representation and
+  organization to Active. `activate_executive_board(...)` remains the Board
+  compatibility wrapper.
 - `emergency_remove_executive_board_controller(...)`, the platform-only,
   reasoned global containment command that locks every open Board relationship
   for one person, revokes sessions and root authority, suspends Boards that lose
@@ -142,7 +153,7 @@ non-browser clients.
   complete profile replacement.
 
 Generic unscoped organization APIs remain absent. Create organization remains platform-only;
-Organization record, Create convention series, and Convention series record are exact-organization workflows whose Board-authority
+Organization record, Create convention series, and Convention series record are exact-organization workflows whose accountable-representation authority
 browser paths have backend route and policy coverage. Existing series
 APIs remain platform-administrator adapters until their separate API policy and
 projection contract changes. These record operations create no membership,
@@ -164,10 +175,11 @@ the existing cross-approval and quorum rules. Focused HTML coverage verifies
 this handoff; the full authenticated width/zoom, keyboard, screen-reader,
 state, and owner matrix remains open.
 
-ADR 0045's public, minimized `executive_board_governance_anchor(...)` query
-for Organization structure resolves the exact organization and returns only the
-fixed representation label and truthful absent, Provisioning, Active, or
-Suspended state. It returns no appointment, email, membership, reason,
+ADR 0080's neutral `organization_governance_anchor(...)` query supersedes the
+Board-specific query name for current callers; the old wrapper remains
+compatible. Organization structure resolves the exact organization and returns
+only the representation label, purpose, and truthful absent, Provisioning,
+Active, or Suspended state. It returns no appointment, email, membership, reason,
 controller count, role assignment, or authority provenance. The Organization structure adapters
 compose that query with workforce's edition-owned structure projection; the
 workforce module does not save organization models. The bounded read query and

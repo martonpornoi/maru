@@ -270,6 +270,7 @@ non-origin trigger settings, sequence `UPDATE`, and database/schema/relation/
 column/sequence/function grant options. It must positively retain database
 `CONNECT`, schema `USAGE`, four-operation DML on ordinary runtime relations,
 `SELECT`/`INSERT` on Organization structure command receipts,
+`SELECT`/`INSERT` on Workforce adoption setup receipts,
 `SELECT`/`INSERT`/`UPDATE` on Organization structure controls,
 `SELECT`/`INSERT` on Registration setup and account onboarding invitation transitions, receipts, delivery
 attempts, late outcomes, reconciliation receipts, scheduler heartbeats, and
@@ -278,9 +279,10 @@ retention receipts, `SELECT`/`UPDATE` on its seeded inventory control,
 `SELECT`/`INSERT`/`UPDATE` on identity challenges, invitations, deliveries, and
 retention holds, sequence `USAGE`/`SELECT`, SELECT-only materialized-view and
 activation-control reads with no table- or column-level `REFERENCES`,
-and the exact versioned 19-function v2 policy/trigger-helper execute closure.
-The two Organization structure relations deny `REFERENCES`; receipts additionally deny
-`UPDATE`, while both deny `DELETE`. Department remains on the ordinary DML
+and the exact versioned 21-function v3 policy/trigger-helper execute closure.
+The Workforce adoption and Organization structure receipts deny `UPDATE`,
+`DELETE`, and `REFERENCES`; the structure control denies `DELETE` and
+`REFERENCES`. Department remains on the ordinary DML
 plane because its stopped-writer retirement trigger, not a table-wide ACL
 revoke, enforces that lifecycle boundary.
 Every Registration setup and account onboarding restricted relation denies `DELETE` and `REFERENCES`; its

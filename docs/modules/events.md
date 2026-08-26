@@ -1,24 +1,27 @@
 # Events module
 
-Status: Implemented edition aggregate, shared creation/profile commands,
-Create event edition and Event edition record, authorized lifecycle kernel,
-and scoped unified-shell context
-Last updated: 2026-08-01
+Status: Implemented edition aggregate, immutable full-convention and
+Workforce-only adoption profiles, guided Workforce setup, shared
+creation/profile commands, Event edition record, authorized lifecycle kernel,
+and profile-scoped unified-shell context
+Last updated: 2026-08-26
 
 ## Purpose and requirements
 
-`maru.events` owns edition identity and lifecycle for EVT-002 through EVT-005,
-ARC-003, UX-009, UX-022, and UX-023.
+`maru.events` owns edition identity, adoption profile, and lifecycle for EVT-002
+through EVT-006, ARC-003, UX-009, UX-022, UX-023, UX-030, and NFR-013.
 
 ## Owned data and invariants
 
 - organization and convention-series scope;
+- immutable code-owned adoption-profile code and version;
 - case-insensitively series-scoped slug and display name;
 - IANA time zone, ordered language/currency codes, and date range;
 - draft, preparing, ready, live, closing, archived, and cancelled states;
 - one monotonic aggregate version across profile and lifecycle commands;
 - a separate monotonic lifecycle-history version;
 - immutable actor/series/idempotency receipts for creation retries;
+- append-only, scope-validated Workforce-adoption setup receipts;
 - reasoned, append-only lifecycle transition history; and
 - archive amendments.
 
@@ -34,6 +37,11 @@ archived, an edition cannot be updated or deleted through normal model, bulk
 ORM, or SQL paths
 governed by the application database role.
 
+Existing editions migrate additively to `full_convention@1`. A new edition
+chooses `full_convention@1` or `workforce_only@1`; its profile cannot be
+changed by model save, bulk ORM, or direct SQL. Workforce-only stores `XXX` as
+an internal no-currency sentinel and rejects later currency configuration.
+
 ## Commands and API
 
 `create_event_edition(...)` is the canonical HTML/API creation command. It
@@ -44,12 +52,31 @@ receipt, minimized audit, `events.edition.created.v1`, and outbox delivery
 commit together. A repeated actor/series/key with the same normalized payload
 returns the first edition; a changed payload conflicts.
 
+Creation also validates and persists the requested adoption profile. A Maru-
+operator organization may create only Workforce-only editions through ordinary
+operator authority; creating a full-convention edition requires explicit
+platform oversight. Existing Executive Board organizations retain the normal
+full-convention path.
+
+`set_up_workforce_adoption(...)` is the atomic, idempotent platform workflow
+for UX-030. It creates or reuses Organization → Convention series → Event
+edition, provisions truthful Maru operators only when no representation exists,
+stores one append-only setup receipt, and creates no Participation,
+Registration, payment, attendance, or unrelated module record. An Active
+organization without accountable representation fails before partial child
+creation.
+
 `update_event_edition(...)` requires `events.change_profile` at exact edition
 scope. It locks organization, series, and edition, compares the expected
 aggregate version, permits only Draft/Preparing beneath a non-Closed
 organization, writes actual changes only, and publishes
 `events.edition.details_updated.v1` atomically with audit/outbox. No-op updates
 advance nothing.
+
+The profile catalog is the code-owned source for adopted module namespaces,
+labels, and primary destination. Authorization uses it before platform policy
+or stored authority; navigation and API projections are explanatory consumers,
+not enforcement substitutes.
 
 `platform_editions()` is the explicit C1 identity query used only after a
 platform-administrator boundary has been established. The preserved context
@@ -80,6 +107,9 @@ edition lifecycle.
 - `GET /api/v1/organizations/{organization_id}/editions/autocomplete`
 - `POST /api/v1/organizations/{organization_id}/editions/{edition_id}/transition`
 - `POST /api/v1/organizations/{organization_id}/editions/bulk-transition`
+
+The guided Workforce-only setup is intentionally an HTML platform operation at
+`/admin/platform/setup/workforce/`; no public setup API is declared yet.
 
 The list supports bounded page size, exact lifecycle filter, and literal
 name/slug search. Organization scope is required for count/list/search;
@@ -141,8 +171,9 @@ selection is display/query context, creates no authority or participation, and
 is not performed automatically after creation.
 
 The effective-access summary separates active platform oversight from
-organization-scoped Board view and exact-edition profile authority. It remains
-provisional until M2 adds department/resource/field scope.
+organization-scoped accountable-representation view and exact-edition profile
+authority. Platform oversight is still denied an unadopted exact-edition
+module.
 
 Edition lists show convention name, organization, series, lifecycle, dates,
 time zone, and aggregate version with search and scope filters. Lifecycle is
@@ -172,6 +203,10 @@ freeze capability grants, role assignments, memberships, participation,
 registration, audit, domain-event, and outbox counts across each action,
 including when `events.view_basic` comes from the canonical Executive Board
 assignment.
+
+For Workforce-only, the record presents the immutable adoption boundary,
+suppresses the irrelevant currency editor, and explains that Registration,
+payments, and attendee Participation were not adopted.
 
 ## Failure and concurrency
 

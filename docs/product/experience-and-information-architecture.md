@@ -1,11 +1,12 @@
 # Experience and information architecture
 
-Status: Focused unified shell, Representation & access handoff, shared page
-frame, owner-rehearsed Registration desk and Workforce journey, and governed
-Position, Assignment, and person-owned Availability management locally
-verified; complete mutation-role, state-matrix, width/zoom, and release
-accessibility evidence pending
-Last updated: 2026-08-25
+Status: Focused unified shell, truthful Representation & access handoff,
+guided Workforce-only adoption, profile-scoped navigation, owner-rehearsed
+Registration desk for full-convention editions, and governed Position,
+Assignment, Availability, and Shift management locally verified; complete
+mutation-role, state-matrix, width/zoom, and release accessibility evidence
+pending
+Last updated: 2026-08-26
 
 ## Current executable experience
 
@@ -22,22 +23,27 @@ is:
 2. Enter the permission-filtered shared shell at `/admin/`.
 3. Open API-backed Convention work at `/admin/workspace/` or
    permission-filtered specialist records through the same sidebar.
-4. Open the active-platform-administrator-only organization inventory at
+4. To adopt only volunteer management, open
+   `/admin/platform/setup/workforce/`, reuse the highest existing foundation,
+   and supply only the missing organization/convention identity plus edition
+   name, dates, and time zone.
+5. Open the active-platform-administrator-only organization inventory at
    `/admin/platform/organizations/`.
-5. Create a complete optional Draft organization at
+6. Create a complete optional Draft organization at
    `/admin/platform/organizations/new/`.
-6. Maintain its profile and nested convention-series inventory at
+7. Maintain its profile and nested convention-series inventory at
    `/admin/platform/organizations/<slug>/`.
-7. Open Representation & access at
-   `/admin/platform/organizations/<slug>/representation/`, provision the fixed
-   Executive Board root, invite at least two exact existing verified person
-   accounts, let each answer their own invitation, and activate the organization
-   under cross-approval.
-8. Create a series at
+8. Open Representation & access at
+   `/admin/platform/organizations/<slug>/representation/`, provision the
+   truthful Executive Board or Maru-operator root, invite at least two exact
+   existing verified person accounts, let each answer their own invitation, and
+   activate the organization under cross-approval.
+9. Create a series at
    `/admin/platform/organizations/<slug>/series/new/` and maintain it at the
    nested series record.
-9. Create an idempotent Draft edition below that series and revisit its nested
-   record/activity page, with explicit POST-only working-context selection.
+10. Create an idempotent Draft edition below that series, deliberately choose
+    its immutable adoption profile, and revisit its nested record/activity page
+    with explicit POST-only working-context selection.
 
 The shared Platform administration section remains one **Organizations** row
 with adjacent compact **+ Add**. Convention series stays nested beneath its
@@ -46,8 +52,28 @@ explain that the administrator operates Maru but does not participate in a
 convention. Series creation requires only the recurring brand name, keeps
 organization and slug code-owned, and does not create a dated edition or people
 relationship. Edition creation likewise creates identity and evidence only.
-Representation & access is the explicit exception that creates invited/active Board relationships
-for the exact people who accept; it never enrolls the platform administrator.
+Representation & access is the explicit exception that creates invited/active
+accountable-operator relationships for the exact people who accept; it never
+enrolls the platform administrator or claims a Board title that is not real.
+
+For `workforce_only@1`, the shell releases Today, Workforce, purpose-matched
+Setup, Security, and one explicit specialist-record disclosure. It omits People
+attendance, Registration, payments, Reports and badges, and unrelated planned
+module pressure. The complete owner path is Structure → Positions →
+assignments → Availability → Shifts. A Workforce account and assignment do not
+manufacture Participation or attendance. Backend policy applies the same
+boundary before platform oversight or stored grants, so this is not merely menu
+customization.
+
+An exact Workforce-only edition in the current route drives both the menu and
+workspace selector even when the session has no saved edition context. A fresh
+organization can create one independently approved, code-owned Volunteer
+Position starter after its first Department; this supplies minimal reusable
+role meaning without granting access or creating a Position or person record.
+Public volunteer pages use a Volunteer-only shell that disclaims attendee
+Registration, attendance, and payment. Personal Workforce routes focus the
+Personal and Work groups on My Maru and My Workforce rather than advertising
+unadopted or unrelated personal workflows.
 
 The `platform` segment is reserved for purpose-built platform pages and avoids
 collisions with Django application-label routes. The administration home,
@@ -62,15 +88,16 @@ staff accounts to reach only their scoped the organization-scoped setup and repr
 invitees see only their own governance invitations. Specialist model records
 remain separately Django staff/model-permission gated.
 
-Current backend tests verify changed default routes, navigation, scoped shell
-access, Representation & access's initial lifecycle, bounded sensitive reads and denials, and
-database-level platform-subject exclusion. The focused recovery pass also
+Current backend tests verify changed default routes, profile-scoped navigation,
+scoped shell access, both Representation & access types, bounded sensitive
+reads and denials, assignment evidence matched to adoption, and database-level
+platform-subject exclusion. The focused recovery pass also
 verifies task-first search and pin customization, separate personal and
 administrative registries, one compact context control, one page-local access
 summary, purpose-built setup links, and a queue-first Registration desk.
 The current owner pass also verifies one host-owned selected-edition context,
 modal detail-drawer focus/Escape behavior, and a Workforce sequence over the
-existing structure projection. Frontend type checking, 28 Vitest tests,
+existing structure projection. Frontend type checking, 29 Vitest tests,
 production build, local populated/
 fresh migration and restore evidence, desktop/390-pixel browser review, and
 the 1,100/1,101-pixel drawer breakpoint pass. A final broad suite and complete
@@ -224,6 +251,13 @@ The current personal home separates its high-frequency **Start here** tasks
 contains only Personal and Work destinations; Platform and Specialist records
 remain on Administration. An authorized person may switch surfaces explicitly,
 but pins and navigation groups do not cross that boundary.
+
+Inside a Workforce-only personal journey, purpose focus takes precedence over
+the broad future-state home catalog: My Maru and My Workforce remain available,
+while Registration & tickets, Shop & orders, My applications, My schedule, and
+Equipment offers are absent. A non-staff organizer with administrative
+authority sees the explicit label **Convention workspace** for that surface;
+the link does not imply platform employment or Django staff status.
 
 ### Home
 

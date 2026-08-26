@@ -17,9 +17,10 @@ from rest_framework.test import APIClient
 
 from maru.audit.models import AuditEvent
 from maru.effects.models import DomainEvent
+from maru.events.adoption import AdoptionProfileCode
 from maru.identity.models import AccountSession
 from maru.identity.services import session_key_digest
-from maru.participation.models import ParticipationCapacity
+from maru.participation.models import Participation, ParticipationCapacity
 from maru.workforce.assignment_commands import (
     AssignmentAuthorizationDeniedError,
     AssignmentCandidateUnavailableError,
@@ -40,7 +41,12 @@ from maru.workforce.models import (
     PositionDocumentRequirement,
     PositionTemplate,
 )
-from tests.factories import AccountFactory, EventEditionFactory, ParticipationFactory
+from tests.factories import (
+    AccountFactory,
+    EventEditionFactory,
+    OrganizationMembershipFactory,
+    ParticipationFactory,
+)
 from tests.support.authority import (
     create_provenance_backed_role_bundle,
     grant_board_controllers_edition_capability,
@@ -67,8 +73,12 @@ class _AssignmentWorld:
     position: Position
 
 
-def _assignment_world(*, headcount: int = 1) -> _AssignmentWorld:
-    edition = EventEditionFactory()
+def _assignment_world(
+    *,
+    headcount: int = 1,
+    adoption_profile_code: str = AdoptionProfileCode.FULL_CONVENTION,
+) -> _AssignmentWorld:
+    edition = EventEditionFactory(adoption_profile_code=adoption_profile_code)
     proposer: Account | None = None
     approver: Account | None = None
     for capability_code in (
@@ -362,6 +372,94 @@ def test_assignment_journey_preserves_dual_control_authority_and_history() -> No
     )
     assert len(self_items) == 1
     assert self_items[0].state_label == "Ended"
+
+
+def test_workforce_only_assignment_never_creates_participation_evidence() -> None:
+    world = _assignment_world(
+        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+    )
+    candidate = AccountFactory()
+    OrganizationMembershipFactory(
+        organization=world.edition.organization,
+        account=candidate,
+        relationship_label="Workforce volunteer",
+    )
+    assert not Participation.objects.filter(
+        account=candidate,
+        edition=world.edition,
+    ).exists()
+
+    browser = Client()
+    browser.force_login(world.proposer)
+    proposal_page = browser.get(
+        _browser_url(
+            "organization-workforce-assignment-proposal",
+            world,
+            position_id=world.position.id,
+        )
+    )
+    proposal_content = proposal_page.content.decode()
+    assert proposal_page.status_code == 200
+    assert "Workforce labels" in proposal_content
+    assert "Participation labels" not in proposal_content
+    assert "creates no active Workforce assignment" in proposal_content
+
+    proposed = _propose(world, candidate=candidate)
+    approved = approve_position_assignment(
+        actor=world.approver,
+        organization_id=world.edition.organization_id,
+        series_id=world.edition.series_id,
+        edition_id=world.edition.id,
+        assignment_id=proposed.assignment_id,
+        expected_version=1,
+        reason="A second controller verified this Workforce responsibility.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+
+    assignment = PositionAssignment.objects.get(pk=approved.assignment_id)
+    assert assignment.status == PositionAssignment.Status.ACTIVE
+    assert assignment.role_assignment_id is not None
+    assert assignment.participation_capacity_id is None
+    assert not Participation.objects.filter(
+        account=candidate,
+        edition=world.edition,
+    ).exists()
+
+    personal = Client()
+    personal.force_login(candidate)
+    personal_page = personal.get(reverse("my-workforce-assignments"))
+    personal_content = personal_page.content.decode()
+    assert personal_page.status_code == 200
+    assert "My Workforce" in personal_content
+    assert "Registration &amp; tickets" not in personal_content
+    assert "Shop &amp; orders" not in personal_content
+    assert "My schedule" not in personal_content
+    assert "Equipment offers" not in personal_content
+    assert "Convention workspace" in personal_content
+    assert ">Administration<" not in personal_content
+
+    ended = end_position_assignment(
+        actor=world.proposer,
+        organization_id=world.edition.organization_id,
+        series_id=world.edition.series_id,
+        edition_id=world.edition.id,
+        assignment_id=assignment.id,
+        expected_version=2,
+        reason="The bounded Workforce responsibility ended.",
+        retry_key=uuid4(),
+        correlation_id=uuid4(),
+        source_channel="test",
+    )
+
+    assignment.refresh_from_db()
+    assert ended.status == PositionAssignment.Status.ENDED
+    assert assignment.participation_capacity_id is None
+    assert not Participation.objects.filter(
+        account=candidate,
+        edition=world.edition,
+    ).exists()
 
 
 def test_readiness_candidate_and_headcount_conflicts_do_not_partially_write() -> None:

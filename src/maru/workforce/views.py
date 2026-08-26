@@ -40,14 +40,18 @@ from maru.authorization.policy import (
 )
 from maru.authorization.provenance import role_bundle_provenance_is_historical
 from maru.events.admin_context import authorized_admin_edition_for_route
+from maru.events.adoption import (
+    AdoptionProfileCode,
+    profile_allows_capabilities,
+)
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.identity.queries import account_display_labels
 from maru.identity.services import require_recent_step_up
 from maru.organizations.models import ConventionSeries, Organization
 from maru.organizations.queries import (
-    ExecutiveBoardAnchor,
-    executive_board_governance_anchor,
+    OrganizationGovernanceAnchor,
+    organization_governance_anchor,
 )
 from maru.workforce.assignment_commands import (
     AssignmentAuthorizationDeniedError,
@@ -116,6 +120,7 @@ from maru.workforce.forms import (
     PositionUpdateForm,
     StructureTemplateApplicationForm,
     VolunteerApplicationForm,
+    WorkforceStarterTemplateForm,
 )
 from maru.workforce.models import (
     EditionStructureCommandReceipt,
@@ -142,6 +147,11 @@ from maru.workforce.services import (
 from maru.workforce.shift_queries import (
     ShiftReadLimitExceededError,
     my_shift_scope_items,
+)
+from maru.workforce.starter_templates import (
+    WorkforceStarterTemplateConflictError,
+    can_provision_workforce_starter_template,
+    provision_workforce_starter_template,
 )
 from maru.workforce.structure_audit import append_structure_read_audit
 from maru.workforce.structure_commands import (
@@ -227,7 +237,7 @@ class _OrganizationStructureSnapshot:
     organization: Organization
     series: ConventionSeries
     edition: EventEdition
-    governance: ExecutiveBoardAnchor
+    governance: OrganizationGovernanceAnchor
     structure: EditionStructureProjection
     can_manage_structure: bool
     can_view_organization: bool
@@ -380,7 +390,7 @@ def _load_organization_structure_snapshot(
         resource=edition_target,
         at=evaluated_at,
     ).allowed
-    governance = executive_board_governance_anchor(
+    governance = organization_governance_anchor(
         organization_id=organization.id,
     )
     structure = project_edition_structure(
@@ -900,6 +910,7 @@ def _position_department_choices(
 def _position_template_choices(
     *,
     organization_id: UUID,
+    adoption_profile_code: str,
 ) -> tuple[tuple[str, str], ...]:
     templates = tuple(
         PositionTemplate.objects.select_related("role_bundle")
@@ -923,9 +934,15 @@ def _position_template_choices(
             ),
         )
         for template in templates
-        if role_bundle_provenance_is_historical(
-            bundle=template.role_bundle,
-            evaluated_at=evaluated_at,
+        if (
+            profile_allows_capabilities(
+                adoption_profile_code,
+                template.role_bundle.capability_codes,
+            )
+            and role_bundle_provenance_is_historical(
+                bundle=template.role_bundle,
+                evaluated_at=evaluated_at,
+            )
         )
     )
 
@@ -2660,6 +2677,9 @@ def _render_position_management(
     organization_slug: str,
     series_slug: str,
     edition_slug: str,
+    starter_template_form: WorkforceStarterTemplateForm | None = None,
+    status: int = 200,
+    action_error: str = "",
 ) -> TemplateResponse:
     read = _load_audited_structure_page(
         request=request,
@@ -2673,8 +2693,24 @@ def _render_position_management(
     snapshot = read.snapshot
     template_choices = _position_template_choices(
         organization_id=snapshot.organization.id,
+        adoption_profile_code=snapshot.edition.adoption_profile_code,
     )
     department_choices = _position_department_choices(snapshot.structure)
+    workforce_only = (
+        snapshot.edition.adoption_profile_code == AdoptionProfileCode.WORKFORCE_ONLY
+    )
+    starter_template_available = bool(
+        workforce_only
+        and not template_choices
+        and department_choices
+        and _structure_mutations_allowed(read)
+        and can_provision_workforce_starter_template(
+            actor=actor,
+            edition=snapshot.edition,
+        )
+    )
+    if starter_template_form is None and starter_template_available:
+        starter_template_form = WorkforceStarterTemplateForm()
     context = _position_context(
         request,
         read=read,
@@ -2691,6 +2727,10 @@ def _render_position_management(
             ),
             "has_position_templates": bool(template_choices),
             "has_position_departments": bool(department_choices),
+            "workforce_only_profile": workforce_only,
+            "starter_template_available": starter_template_available,
+            "starter_template_form": starter_template_form,
+            "action_error": action_error,
             "position_history": _structure_history_items(
                 organization_id=snapshot.organization.id,
                 edition_id=snapshot.edition.id,
@@ -2701,6 +2741,7 @@ def _render_position_management(
         request,
         "workforce/position_management.html",
         context,
+        status=status,
     )
 
 
@@ -2728,6 +2769,7 @@ def _render_position_create(
     snapshot = read.snapshot
     template_choices = _position_template_choices(
         organization_id=snapshot.organization.id,
+        adoption_profile_code=snapshot.edition.adoption_profile_code,
     )
     department_choices = _position_department_choices(snapshot.structure)
     reporting_choices = _position_reporting_choices(snapshot.structure)
@@ -3018,6 +3060,138 @@ def organization_structure_positions(
         return _organization_structure_dependency_failure(request)
 
 
+def _add_starter_template_validation_errors(
+    form: WorkforceStarterTemplateForm,
+    error: ValidationError,
+) -> bool:
+    safe_fields = frozenset({"approver_email", "reason"})
+    if not hasattr(error, "error_dict") or not error.error_dict:
+        return False
+    if any(
+        field_name not in safe_fields or field_name not in form.fields
+        for field_name in error.error_dict
+    ):
+        return False
+    for field_name, field_errors in error.error_dict.items():
+        for field_error in field_errors:
+            form.add_error(field_name, field_error)
+    return True
+
+
+@never_cache
+@login_required(login_url="staff-login")
+@require_POST
+def create_workforce_starter_position_template(  # noqa: PLR0911
+    request: HttpRequest,
+    organization_slug: str,
+    series_slug: str,
+    edition_slug: str,
+) -> HttpResponse:
+    """Create the safe Workforce-only Volunteer template under dual control.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        Authenticated CSRF-protected starter-template request.
+    organization_slug : str
+        Untrusted organization route locator.
+    series_slug : str
+        Untrusted convention-series route locator.
+    edition_slug : str
+        Untrusted event-edition route locator.
+
+    Returns
+    -------
+    HttpResponse
+        Redirect to Position creation or a private safe failure state.
+    """
+    try:
+        actor, snapshot = _position_post_snapshot(
+            request,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+        )
+    except _StructurePostQueryParametersUnsupportedError:
+        return _organization_structure_bad_request(request)
+    except (DatabaseError, RuntimeError, ValidationError):
+        logger.exception("Unable to prepare the Workforce starter template")
+        return _organization_structure_dependency_failure(request)
+
+    form = WorkforceStarterTemplateForm(request.POST)
+    if not form.is_valid():
+        return _render_position_management(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            starter_template_form=form,
+            status=400,
+            action_error="Review the highlighted values. Nothing was created.",
+        )
+    try:
+        provision_workforce_starter_template(
+            actor=actor,
+            organization_id=snapshot.organization.id,
+            series_id=snapshot.series.id,
+            edition_id=snapshot.edition.id,
+            approver_email=cast("str", form.cleaned_data["approver_email"]),
+            reason=cast("str", form.cleaned_data["reason"]),
+            correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            request_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
+            source_channel="web",
+        )
+    except WorkforceStarterTemplateConflictError:
+        return _render_position_management(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            starter_template_form=form,
+            status=409,
+            action_error=(
+                "The reserved Volunteer starter already has another retained "
+                "meaning. Reconcile it through accountable role management before "
+                "creating a Position."
+            ),
+        )
+    except ValidationError as error:
+        if not _add_starter_template_validation_errors(form, error):
+            logger.exception(
+                "Workforce starter creation returned an internal validation key"
+            )
+            return _organization_structure_dependency_failure(request)
+        return _render_position_management(
+            request,
+            actor=actor,
+            organization_slug=organization_slug,
+            series_slug=series_slug,
+            edition_slug=edition_slug,
+            starter_template_form=form,
+            status=400,
+            action_error="Review the highlighted values. Nothing was created.",
+        )
+    except (DatabaseError, RuntimeError):
+        logger.exception("Unable to create the Workforce starter template")
+        return _organization_structure_dependency_failure(request)
+
+    messages.success(
+        request,
+        (
+            "The safe Workforce volunteer starter was published under "
+            "independent approval."
+        ),
+    )
+    return redirect(
+        reverse(
+            "organization-structure-position-create",
+            args=(organization_slug, series_slug, edition_slug),
+        )
+    )
+
+
 @never_cache
 @login_required(login_url="staff-login")
 @require_GET
@@ -3186,7 +3360,8 @@ def create_organization_structure_position(  # noqa: PLR0911
     form = PositionCreationForm(
         request.POST,
         template_choices=_position_template_choices(
-            organization_id=snapshot.organization.id
+            organization_id=snapshot.organization.id,
+            adoption_profile_code=snapshot.edition.adoption_profile_code,
         ),
         department_choices=_position_department_choices(snapshot.structure),
         reporting_choices=_position_reporting_choices(snapshot.structure),

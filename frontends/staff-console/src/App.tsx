@@ -550,6 +550,7 @@ function Sidebar({
   canAccessAdvancedRecords: boolean;
   onOpenAccess: () => void;
 }) {
+  const available = new Set(edition.available_destinations);
   return (
     <aside className="sidebar">
       <a className="brand" href="/admin/" aria-label="Maru administration home">
@@ -574,35 +575,41 @@ function Sidebar({
           >
             <Icon>◌</Icon> Today
           </button>
-          <button
-            className={
-              destination === "my-registration" ? "nav-item active" : "nav-item"
-            }
-            aria-current={destination === "my-registration" ? "page" : undefined}
-            onClick={() => onNavigate("my-registration")}
-          >
-            <Icon>◇</Icon> My registration
-          </button>
+          {available.has("my-registration") && (
+            <button
+              className={
+                destination === "my-registration" ? "nav-item active" : "nav-item"
+              }
+              aria-current={destination === "my-registration" ? "page" : undefined}
+              onClick={() => onNavigate("my-registration")}
+            >
+              <Icon>◇</Icon> My registration
+            </button>
+          )}
         </details>
 
         <details className="nav-section" open>
           <summary>People &amp; access</summary>
-          <button
-            className={destination === "people" ? "nav-item active" : "nav-item"}
-            aria-current={destination === "people" ? "page" : undefined}
-            onClick={() => onNavigate("people")}
-          >
-            <Icon>◎</Icon> People
-          </button>
-          <button
-            className={
-              destination === "workforce" ? "nav-item active" : "nav-item"
-            }
-            aria-current={destination === "workforce" ? "page" : undefined}
-            onClick={() => onNavigate("workforce")}
-          >
-            <Icon>⌘</Icon> Workforce
-          </button>
+          {available.has("people") && (
+            <button
+              className={destination === "people" ? "nav-item active" : "nav-item"}
+              aria-current={destination === "people" ? "page" : undefined}
+              onClick={() => onNavigate("people")}
+            >
+              <Icon>◎</Icon> People
+            </button>
+          )}
+          {available.has("workforce") && (
+            <button
+              className={
+                destination === "workforce" ? "nav-item active" : "nav-item"
+              }
+              aria-current={destination === "workforce" ? "page" : undefined}
+              onClick={() => onNavigate("workforce")}
+            >
+              <Icon>⌘</Icon> Workforce
+            </button>
+          )}
           {canManageAccess && (
             <button className="nav-item" onClick={onOpenAccess}>
               <Icon>⌁</Icon> Access
@@ -610,8 +617,10 @@ function Sidebar({
           )}
         </details>
 
+        {(available.has("commerce") || available.has("reports")) && (
         <details className="nav-section" open>
           <summary>Registration &amp; attendees</summary>
+          {available.has("commerce") && (
           <button
             className={destination === "commerce" ? "nav-item active" : "nav-item"}
             aria-current={destination === "commerce" ? "page" : undefined}
@@ -619,6 +628,8 @@ function Sidebar({
           >
             <Icon>▣</Icon> Registration desk
           </button>
+          )}
+          {available.has("reports") && (
           <button
             className={destination === "reports" ? "nav-item active" : "nav-item"}
             aria-current={destination === "reports" ? "page" : undefined}
@@ -626,10 +637,13 @@ function Sidebar({
           >
             <Icon>▥</Icon> Reports &amp; badges
           </button>
+          )}
         </details>
+        )}
 
         <details className="nav-section">
           <summary>Convention setup</summary>
+          {available.has("setup") && (
           <button
             className={destination === "setup" ? "nav-item active" : "nav-item"}
             aria-current={destination === "setup" ? "page" : undefined}
@@ -637,8 +651,9 @@ function Sidebar({
           >
             <Icon>✓</Icon> Setup guide
           </button>
+          )}
           {canAccessAdvancedRecords && (
-            <a className="nav-item" href="/admin/">
+            <a className="nav-item" href="/admin/?records=open#maru-specialist-heading">
               <Icon>↗</Icon> Specialist records
             </a>
           )}
@@ -655,6 +670,7 @@ function Sidebar({
           </button>
         </details>
 
+        {edition.adoption_profile_code === "full_convention" && (
         <details className="nav-section planned">
           <summary>Planned modules</summary>
           {upcomingDestinations.map((label) => (
@@ -669,6 +685,7 @@ function Sidebar({
             </span>
           ))}
         </details>
+        )}
       </nav>
 
       <div className="sidebar-foot">
@@ -835,6 +852,7 @@ function TodayView({
   const countdown = daysUntil(edition.starts_on);
   const roleCounts = capacityCounts(people?.results ?? []).slice(0, 6);
   const firstName = context.display_name.trim().split(" ")[0] || "there";
+  const workforceOnly = edition.adoption_profile_code === "workforce_only";
 
   return (
     <div className="view">
@@ -876,14 +894,26 @@ function TodayView({
 
       <section className="metric-grid" aria-label="Edition summary">
         <article>
-          <span className="metric-label">People in edition</span>
-          <strong>{peopleDenied ? "—" : people?.count ?? "…"}</strong>
-          <small>{peopleDenied ? "Restricted for your role" : "Current records"}</small>
+          <span className="metric-label">
+            {workforceOnly ? "Adoption profile" : "People in edition"}
+          </span>
+          <strong>
+            {workforceOnly
+              ? edition.adoption_profile_label
+              : peopleDenied ? "—" : people?.count ?? "…"}
+          </strong>
+          <small>
+            {workforceOnly
+              ? "Volunteer operations only"
+              : peopleDenied ? "Restricted for your role" : "Current records"}
+          </small>
         </article>
         <article>
-          <span className="metric-label">Role types</span>
-          <strong>{peopleDenied ? "—" : roleCounts.length}</strong>
-          <small>Across this result set</small>
+          <span className="metric-label">
+            {workforceOnly ? "Local time" : "Role types"}
+          </span>
+          <strong>{workforceOnly ? edition.time_zone : peopleDenied ? "—" : roleCounts.length}</strong>
+          <small>{workforceOnly ? "Used for Availability and Shifts" : "Across this result set"}</small>
         </article>
         <article>
           <span className="metric-label">Languages</span>
@@ -891,9 +921,17 @@ function TodayView({
           <small>{edition.language_codes.join(" · ").toUpperCase()}</small>
         </article>
         <article>
-          <span className="metric-label">Currencies</span>
-          <strong>{edition.currency_codes.length}</strong>
-          <small>{edition.currency_codes.join(" · ")}</small>
+          <span className="metric-label">
+            {workforceOnly ? "Workspace" : "Currency"}
+          </span>
+          <strong>
+            {workforceOnly ? "Workforce" : edition.currency_codes.length}
+          </strong>
+          <small>
+            {workforceOnly
+              ? "No attendee or payment setup"
+              : edition.currency_codes.join(" · ")}
+          </small>
         </article>
       </section>
 
@@ -902,13 +940,21 @@ function TodayView({
           <div className="panel-heading">
             <div>
               <p className="section-kicker">Action center</p>
-              <h2 id="attention-heading">What needs attention</h2>
+              <h2 id="attention-heading">
+                {workforceOnly ? "Workforce next steps" : "What needs attention"}
+              </h2>
             </div>
             <span className="quiet-badge">
-              {actionsDenied ? "Restricted" : `${actions.length} open`}
+              {workforceOnly ? "Focused" : actionsDenied ? "Restricted" : `${actions.length} open`}
             </span>
           </div>
-          {actionsDenied ? (
+          {workforceOnly ? (
+            <p className="muted-copy">
+              Continue in Workforce to build Structure and Positions, then add
+              assignments, Availability, and Shifts. Registration and payment
+              queues are intentionally absent from this workspace.
+            </p>
+          ) : actionsDenied ? (
             <p className="muted-copy">
               No assigned-work projection is available for this role.
             </p>
@@ -979,35 +1025,46 @@ function TodayView({
       <section className="forms-section" aria-labelledby="forms-heading">
         <div className="panel-heading">
           <div>
-            <p className="section-kicker">Published workflows</p>
-            <h2 id="forms-heading">Forms</h2>
+            <p className="section-kicker">
+              {workforceOnly ? "Workforce entry points" : "Published workflows"}
+            </p>
+            <h2 id="forms-heading">
+              {workforceOnly ? "Workforce forms" : "Forms"}
+            </h2>
             <p className="muted-copy">
-              Registration, applications, and document requests for this
-              convention stay together here. Newly published forms will appear
-              in this section.
+              {workforceOnly
+                ? "Volunteer applications and onboarding documents stay together here without creating attendee registration or payment work."
+                : "Registration, applications, and document requests for this convention stay together here. Newly published forms will appear in this section."}
             </p>
           </div>
         </div>
         <div className="form-card-grid">
-          <button className="form-link-card" onClick={() => onNavigate("my-registration")}>
-            <span className="form-card-icon" aria-hidden="true">◇</span>
-            <span>
-              <strong>Attendee registration</strong>
-              <small>Open your registration and payment status</small>
-            </span>
-            <span aria-hidden="true">→</span>
-          </button>
-          <a
-            className="form-link-card"
-            href={`/admin/registration-assist/${edition.edition_id}/`}
-          >
-            <span className="form-card-icon" aria-hidden="true">+</span>
-            <span>
-              <strong>Registration staff intake</strong>
-              <small>Add an attendee outside public opening hours</small>
-            </span>
-            <span aria-hidden="true">↗</span>
-          </a>
+          {!workforceOnly && (
+            <>
+              <button
+                className="form-link-card"
+                onClick={() => onNavigate("my-registration")}
+              >
+                <span className="form-card-icon" aria-hidden="true">◇</span>
+                <span>
+                  <strong>Attendee registration</strong>
+                  <small>Open your registration and payment status</small>
+                </span>
+                <span aria-hidden="true">→</span>
+              </button>
+              <a
+                className="form-link-card"
+                href={`/admin/registration-assist/${edition.edition_id}/`}
+              >
+                <span className="form-card-icon" aria-hidden="true">+</span>
+                <span>
+                  <strong>Registration staff intake</strong>
+                  <small>Add an attendee outside public opening hours</small>
+                </span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </>
+          )}
           <a
             className="form-link-card"
             href={`/volunteer/${edition.edition_id}/`}
@@ -2903,8 +2960,9 @@ function WorkforceView({ edition }: { edition: EditionContext }) {
               <p className="section-kicker">Authority boundary</p>
               <h2 id="workforce-boundary-title">Appointment is not ordinary access</h2>
               <p>
-                A Workforce assignment can require documents, headcount, a
-                distinct approver, a scoped role, and participation capacity.
+                {edition.adoption_profile_code === "workforce_only"
+                  ? "A Workforce assignment can require documents, headcount, a distinct approver, and a scoped role. In this focused workspace it creates no attendee Registration, attendance, payment, or Participation record."
+                  : "A Workforce assignment can require documents, headcount, a distinct approver, a scoped role, and Participation capacity."}{" "}
                 Sharing a software-access group does not fill a Position.
               </p>
             </div>
@@ -4136,6 +4194,7 @@ function SetupView({
   canAccessAdvancedRecords: boolean;
   onTransitioned: (result: EditionTransitionResult) => void;
 }) {
+  const workforceOnly = edition.adoption_profile_code === "workforce_only";
   const [readiness, setReadiness] = useState<ClosureReadiness>();
   const [readinessDenied, setReadinessDenied] = useState(false);
   const [readinessError, setReadinessError] = useState<string>();
@@ -4145,6 +4204,7 @@ function SetupView({
     setReadiness(undefined);
     setReadinessDenied(false);
     setReadinessError(undefined);
+    if (workforceOnly) return;
     loadClosureReadiness(edition)
       .then(setReadiness)
       .catch((error: unknown) => {
@@ -4158,7 +4218,7 @@ function SetupView({
             : "Readiness evidence could not be loaded.",
         );
       });
-  }, [edition]);
+  }, [edition, workforceOnly]);
 
   async function reviewGate(
     code: ReadinessGateCode,
@@ -4190,7 +4250,7 @@ function SetupView({
     }
   }
 
-  const steps = [
+  const foundationSteps = [
     {
       title: "Organization",
       summary: "Set the legal organizer, working languages, and default time zone.",
@@ -4203,33 +4263,77 @@ function SetupView({
     },
     {
       title: "Event edition",
-      summary: "Create the dated convention occurrence, venue, locale, and currency.",
+      summary: workforceOnly
+        ? "Review the dated Workforce workspace and its local time. No payment currency is required."
+        : "Create the dated convention occurrence, venue, locale, and currency.",
       href: `/admin/platform/organizations/${encodeURIComponent(edition.organization_slug)}/series/${encodeURIComponent(edition.series_slug)}/editions/${encodeURIComponent(edition.edition_slug)}/`,
     },
-    {
-      title: "Registration",
-      summary: "Prepare products, form questions, opening windows, and payment rules.",
-      href: registrationSetupPath(edition),
-    },
-    {
-      title: "Workforce",
-      summary:
-        "Review Departments, Positions, active assignments, and the future shift-planning boundary.",
-      href: workforceWorkspacePath(),
-    },
-    {
-      title: "Teams & access",
-      summary:
-        "Share system capabilities without treating access as a workforce appointment.",
-      action: "access",
-    },
-    {
-      title: "Edition closeout readiness",
-      summary:
-        "Review privacy, finance, operations, security, and safeguarding evidence before archive.",
-      href: "#readiness-review",
-    },
   ];
+  const steps = workforceOnly
+    ? [
+        ...foundationSteps,
+        {
+          title: "Accountable access",
+          summary:
+            "Keep at least two accountable Maru operators; this does not claim Executive Board office.",
+          href: `/admin/platform/organizations/${encodeURIComponent(edition.organization_slug)}/representation/`,
+        },
+        {
+          title: "Structure & Positions",
+          summary:
+            "Define Departments and Positions before assigning volunteers.",
+          href: workforceStructurePath(edition),
+        },
+        {
+          title: "Assignments",
+          summary:
+            "Place volunteers in approved Positions without creating attendee registration.",
+          href: workforceAssignmentsPath(edition),
+        },
+        {
+          title: "Availability",
+          summary: "Collect when assigned volunteers can work in local convention time.",
+          href: workforceAvailabilityPath(edition),
+        },
+        {
+          title: "Shifts",
+          summary: "Plan coverage and publish Shift commitments after Availability is known.",
+          href: workforceShiftsPath(edition),
+        },
+        {
+          title: "Teams & access",
+          summary:
+            "Share system capabilities without treating access as a workforce appointment.",
+          action: "access",
+        },
+      ]
+    : [
+        ...foundationSteps,
+        {
+          title: "Registration",
+          summary:
+            "Prepare products, form questions, opening windows, and payment rules.",
+          href: registrationSetupPath(edition),
+        },
+        {
+          title: "Workforce",
+          summary:
+            "Review Departments, Positions, active assignments, and the future shift-planning boundary.",
+          href: workforceWorkspacePath(),
+        },
+        {
+          title: "Teams & access",
+          summary:
+            "Share system capabilities without treating access as a workforce appointment.",
+          action: "access",
+        },
+        {
+          title: "Edition closeout readiness",
+          summary:
+            "Review privacy, finance, operations, security, and safeguarding evidence before archive.",
+          href: "#readiness-review",
+        },
+      ];
 
   return (
     <div className="view">
@@ -4238,8 +4342,12 @@ function SetupView({
           <p className="eyebrow">Convention setup</p>
           <h1>Setup guide</h1>
           <PageHelp
-            purpose="Use this ordered guide for the settings that normally change only while a convention is being prepared."
-            examples="create the edition before building its registration form"
+            purpose={workforceOnly
+              ? "Use this focused guide to finish a reliable volunteer-management workspace without adopting unrelated modules."
+              : "Use this ordered guide for the settings that normally change only while a convention is being prepared."}
+            examples={workforceOnly
+              ? "define Positions before assigning volunteers"
+              : "create the edition before building its registration form"}
           />
         </div>
       </div>
@@ -4248,35 +4356,26 @@ function SetupView({
         edition={edition}
         onTransitioned={onTransitioned}
       />
-      {!canAccessAdvancedRecords ? (
-        <section className="permission-state">
-          <span className="permission-lock" aria-hidden="true">◇</span>
-          <h2>Advanced setup is restricted</h2>
-          <p>
-            You can use your recurring workspaces, but account staff status is
-            required for low-frequency convention records.
-          </p>
-        </section>
-      ) : (
-        <>
-          <ol className="setup-steps">
-            {steps.map((step, index) => (
-              <li key={step.title}>
-                <span className="setup-step-number">{index + 1}</span>
-                <div>
-                  <strong>{step.title}</strong>
-                  <p>{step.summary}</p>
-                </div>
-                {step.href ? (
-                  <a className="secondary-button" href={step.href}>
-                    Open <span aria-hidden="true">↗</span>
-                  </a>
-                ) : (
-                  <span className="quiet-badge">Use Manage access</span>
-                )}
-              </li>
-            ))}
-          </ol>
+      <>
+        <ol className="setup-steps">
+          {steps.map((step, index) => (
+            <li key={step.title}>
+              <span className="setup-step-number">{index + 1}</span>
+              <div>
+                <strong>{step.title}</strong>
+                <p>{step.summary}</p>
+              </div>
+              {"href" in step ? (
+                <a className="secondary-button" href={step.href}>
+                  Open <span aria-hidden="true">↗</span>
+                </a>
+              ) : (
+                <span className="quiet-badge">Use Manage access</span>
+              )}
+            </li>
+          ))}
+        </ol>
+        {!workforceOnly && (
           <section className="panel planned-capabilities" aria-labelledby="planned-capabilities-title">
             <div className="panel-heading">
               <div>
@@ -4295,6 +4394,8 @@ function SetupView({
               ))}
             </ul>
           </section>
+        )}
+        {canAccessAdvancedRecords ? (
           <section className="setup-note">
             <div>
               <p className="section-kicker">Occasional maintenance</p>
@@ -4304,67 +4405,81 @@ function SetupView({
                 should not clutter everyday convention work.
               </p>
             </div>
-            <a className="primary-button" href="/admin/">
+            <a
+              className="primary-button"
+              href="/admin/?records=open#maru-specialist-heading"
+            >
               Browse specialist records
             </a>
           </section>
-        </>
-      )}
-      <section
-        className="panel readiness-review"
-        id="readiness-review"
-        aria-labelledby="readiness-heading"
-      >
-        <div className="panel-heading">
-          <div>
-            <p className="section-kicker">Accountable closeout</p>
-            <h2 id="readiness-heading">Edition readiness review</h2>
-            <p className="muted-copy">
-              These five checks preserve the evidence behind a decision to
-              archive an edition. They are not IDs or ordinary configuration
-              fields.
-            </p>
-          </div>
-          {readiness && (
-            <span className="quiet-badge">
-              {
-                readiness.gates.filter((gate) => gate.status === "approved")
-                  .length
-              }{" "}
-              of {readinessGateDefinitions.length} approved
-            </span>
-          )}
-        </div>
-        {readinessError && (
-          <p className="form-error" role="alert">{readinessError}</p>
-        )}
-        {readinessDenied ? (
-          <div className="permission-state compact-permission">
-            <span className="permission-lock" aria-hidden="true">◇</span>
-            <h3>Readiness review is restricted</h3>
-            <p>
-              Ask a convention leader to assign a group with edition lifecycle
-              authority.
-            </p>
-          </div>
-        ) : readiness ? (
-          <div className="readiness-gates">
-            {readinessGateDefinitions.map((definition) => (
-              <ReadinessGateCard
-                key={definition.code}
-                definition={definition}
-                gate={readiness.gates.find(
-                  (gate) => gate.code === definition.code,
-                )}
-                busy={reviewingGate === definition.code}
-                onReview={reviewGate}
-              />
-            ))}
-          </div>
         ) : (
-          <p className="muted-copy">Loading readiness evidence…</p>
+          <section className="permission-state compact-permission">
+            <span className="permission-lock" aria-hidden="true">◇</span>
+            <h2>Specialist records are restricted</h2>
+            <p>
+              Your purpose-built setup pages remain available. Account staff
+              status is required only for the low-frequency record directory.
+            </p>
+          </section>
         )}
-      </section>
+      </>
+      {!workforceOnly && (
+        <section
+          className="panel readiness-review"
+          id="readiness-review"
+          aria-labelledby="readiness-heading"
+        >
+          <div className="panel-heading">
+            <div>
+              <p className="section-kicker">Accountable closeout</p>
+              <h2 id="readiness-heading">Edition readiness review</h2>
+              <p className="muted-copy">
+                These five checks preserve the evidence behind a decision to
+                archive an edition. They are not IDs or ordinary configuration
+                fields.
+              </p>
+            </div>
+            {readiness && (
+              <span className="quiet-badge">
+                {
+                  readiness.gates.filter((gate) => gate.status === "approved")
+                    .length
+                }{" "}
+                of {readinessGateDefinitions.length} approved
+              </span>
+            )}
+          </div>
+          {readinessError && (
+            <p className="form-error" role="alert">{readinessError}</p>
+          )}
+          {readinessDenied ? (
+            <div className="permission-state compact-permission">
+              <span className="permission-lock" aria-hidden="true">◇</span>
+              <h3>Readiness review is restricted</h3>
+              <p>
+                Ask a convention leader to assign a group with edition lifecycle
+                authority.
+              </p>
+            </div>
+          ) : readiness ? (
+            <div className="readiness-gates">
+              {readinessGateDefinitions.map((definition) => (
+                <ReadinessGateCard
+                  key={definition.code}
+                  definition={definition}
+                  gate={readiness.gates.find(
+                    (gate) => gate.code === definition.code,
+                  )}
+                  busy={reviewingGate === definition.code}
+                  onReview={reviewGate}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="muted-copy">Loading readiness evidence…</p>
+          )}
+        </section>
+      )}
     </div>
   );
 }
@@ -4737,10 +4852,10 @@ function AccessDrawer({
         <div className="access-safety-note access-purpose-note">
           <strong>Access is not a workforce appointment.</strong>
           <span>
-            Use a position assignment when someone must fill a hierarchy role,
-            satisfy an NDA, receive capacities, or appear with an official
-            convention title. Sharing here grants only the selected system
-            capabilities.
+            {edition.adoption_profile_code === "workforce_only"
+              ? "Use a Position assignment when someone must fill a hierarchy role, satisfy an agreement, or appear with an official convention title. This focused edition does not create attendee Participation capacities."
+              : "Use a Position assignment when someone must fill a hierarchy role, satisfy an agreement, receive capacities, or appear with an official convention title."}{" "}
+            Sharing here grants only the selected system capabilities.
           </span>
         </div>
         {preview ? (
@@ -5091,6 +5206,19 @@ export default function App({
 
   useEffect(() => {
     if (!edition) return;
+    if (!edition.available_destinations.includes(destination)) {
+      setDestination("today");
+    }
+  }, [destination, edition]);
+
+  useEffect(() => {
+    if (!edition) return;
+    if (!edition.available_destinations.includes("people")) {
+      setPeople(undefined);
+      setPeopleDenied(false);
+      setPeopleLoading(false);
+      return;
+    }
     setPeopleLoading(true);
     setPeopleDenied(false);
     void loadParticipations(edition, filters)
@@ -5112,6 +5240,7 @@ export default function App({
     if (!edition) return;
     setActions([]);
     setActionsDenied(false);
+    if (!edition.available_destinations.includes("commerce")) return;
     void loadActions(edition)
       .then(setActions)
       .catch((error: unknown) => {

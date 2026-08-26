@@ -18,7 +18,7 @@ from rest_framework.test import APIClient
 
 from maru.authorization.activation import activate_authority_provenance
 from maru.authorization.database_role_safety import (
-    RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2,
+    RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3,
     RUNTIME_DATABASE_SELECT_INSERT_DELETE_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_RELATIONS,
     RUNTIME_DATABASE_SELECT_INSERT_UPDATE_RELATIONS,
@@ -348,7 +348,7 @@ def _provision_runtime_role(
             ).format(role)
         )
         if grant_function_allowlist:
-            for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2:
+            for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3:
                 cursor.execute(
                     _function_privilege_statement(
                         action="GRANT",
@@ -964,7 +964,7 @@ def test_page9_trigger_helpers_do_not_expand_runtime_execute_closure() -> None:
     _provision_runtime_role(role_name)
 
     assert not set(_PAGE9_TRIGGER_HELPER_IDENTITIES) & set(
-        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2
+        RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3
     )
     with connection.cursor() as cursor:
         cursor.execute(
@@ -1228,7 +1228,7 @@ def test_public_only_function_execute_is_rejected() -> None:
     role_name = _create_role()
     _provision_runtime_role(role_name, grant_function_allowlist=False)
     with connection.cursor() as cursor:
-        for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2:
+        for identity in RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3:
             cursor.execute(
                 _function_privilege_statement(
                     action="GRANT",
@@ -1248,7 +1248,7 @@ def test_every_required_function_needs_explicit_effective_execute() -> None:
     _prepare_least_privilege_boundary()
     role_name = _create_role()
     _provision_runtime_role(role_name)
-    denied_identity = RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2[-1]
+    denied_identity = RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3[-1]
     with connection.cursor() as cursor:
         cursor.execute(
             _function_privilege_statement(
@@ -1786,7 +1786,7 @@ def test_representative_object_grant_options_are_rejected(
             cursor.execute(
                 _function_privilege_statement(
                     action="GRANT",
-                    identity=RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V2[0],
+                    identity=RUNTIME_DATABASE_FUNCTION_EXECUTE_ALLOWLIST_V3[0],
                     grantee=sql.Identifier(role_name),
                 )
                 + sql.SQL(" WITH GRANT OPTION")

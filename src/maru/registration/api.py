@@ -56,6 +56,7 @@ from maru.authorization.services import AuthorizationDenied
 from maru.communications.models import NotificationDelivery
 from maru.core.pagination import StandardPageNumberPagination
 from maru.core.problems import DependencyUnavailable
+from maru.events.adoption import profile_codes_for_module
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.identity.services import require_recent_step_up
@@ -237,6 +238,7 @@ def _open_public_configurations() -> QuerySet[RegistrationConfiguration]:
             status=ConfigurationStatus.ACTIVE,
             opens_at__lte=now,
             closes_at__gt=now,
+            edition__adoption_profile_code__in=profile_codes_for_module("registration"),
         )
         .exclude(edition__lifecycle__in=("archived", "cancelled"))
         .select_related("organization", "edition", "edition__series")

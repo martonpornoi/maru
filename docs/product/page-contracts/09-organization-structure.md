@@ -13,10 +13,12 @@
 - Current API: strict
   `/api/v1/organizations/<organization-id>/editions/<edition-id>/workforce/structure`
   GET projection plus five strict template/Department mutation operations
-- Requirements: IDN-002, IDN-004, IDN-009, IDN-011, IDN-012, EVT-002,
-  EVT-003, HR-007, HR-010, HR-011, UX-019, UX-020, UX-025, AUD-001,
-  AUD-005, INT-001, NFR-001 through NFR-004, NFR-008, and NFR-009
-- Decisions: ADRs 0007, 0028, 0036, 0039 through 0042, 0044, 0045, and 0048
+- Requirements: IDN-002, IDN-004, IDN-009, IDN-011, IDN-012, IDN-014,
+  EVT-002, EVT-003, EVT-006, HR-007, HR-010, HR-011, UX-019, UX-020,
+  UX-025, UX-030, AUD-001, AUD-005, INT-001, NFR-001 through NFR-004,
+  NFR-008, NFR-009, and NFR-013
+- Decisions: ADRs 0007, 0028, 0036, 0039 through 0042, 0044, 0045, 0048,
+  and 0080
 
 ## Purpose and primary users
 
@@ -34,7 +36,7 @@ The first management slice serves:
 - an organizer who additionally has `workforce.manage_structure` at that
   edition, who may apply the built-in reference and manage Departments.
 
-It is not a Board appointment page, people directory, general access editor,
+It is not a representation-appointment page, people directory, general access editor,
 Position/role-bundle editor, volunteer assignment tool, or generic specialist
 model form. Position changes belong to the separate
 [Position management contract](position-management.md).
@@ -49,12 +51,13 @@ one current navigation action. Every adapter calls the shared application
 services and database write protocol; no Organization structure adapter writes a Department
 through a model form or direct ORM save.
 
-The organizations module returns only the fixed **Executive Board** label and
-its `absent`, `provisioning`, `active`, or `suspended` representation state.
+The organizations module returns only the truthful code-owned accountable-
+representation label, purpose, and `absent`, `provisioning`, `active`, or
+`suspended` state.
 The workforce projector separately returns edition Departments, Positions,
-reporting labels, and current minimized holders. The governance anchor has no
+reporting labels, and current minimized holders. The accountability anchor has no
 Department identifier or workforce parent and remains separate even when a
-legacy operational Department is also named Executive Board.
+legacy operational Department resembles a representation label.
 
 The current projector owns these hard ceilings:
 
@@ -189,17 +192,18 @@ navigation or a selected workspace never widens those decisions.
 The first branch is composed as:
 
 ```text
-Executive Board — governance state from OrganizationRepresentation
+Accountable representation — truthful state from OrganizationRepresentation
   Convention Coordination — top-level Department in this edition
     operational Departments
       optional nested Departments
 ```
 
-Executive Board is a discriminated presentation node from the organizations
-module. It reports only its fixed human label and truthful absent,
-Provisioning, Active, or Suspended state. It has no Department identifier and
-is never persisted or mirrored as a Department, Position, generic group, or
-PositionAssignment. Representation & access remains the owning representation workflow.
+The accountable representation is a discriminated presentation node from the
+organizations module. It reports only its code-owned human label, purpose, and
+truthful absent, Provisioning, Active, or Suspended state. It has no Department
+identifier and is never persisted or mirrored as a Department, Position,
+generic group, or PositionAssignment. Representation & access remains the
+owning representation workflow.
 
 Convention Coordination is a real Department with no persisted parent. Organization structure visually
 places it beneath the governance node. Every subsequent parent relationship is
@@ -227,8 +231,8 @@ Department management implements and pins the code-owned template catalog, trans
 application command, and strict browser/API adapters. The catalog is
 immutable, resolves only the exact versioned
 identifier without aliases, validates bounded unique codes/names/order,
-requires exactly one root whose parent precedes every child, forbids an
-Executive Board Department, and retains canonical UTF-8 JSON plus SHA-256
+requires exactly one root whose parent precedes every child, forbids any
+accountable-representation label as a Department, and retains canonical UTF-8 JSON plus SHA-256
 content evidence. Version 1 has Convention Coordination as its sole root and
 all 21 operational Departments as its direct children.
 
@@ -490,7 +494,7 @@ Workforce `0006` and the stopped-writer `0007` cutover create one
 structure-control aggregate per existing
 populated edition without changing Department identifiers, names, parents, or
 codes. Such rows are marked legacy-existing and receive no template receipt.
-Names such as Executive Board or Convention Coordination never trigger representation,
+Names such as Executive Board, Maru operators, or Convention Coordination never trigger representation,
 template, person, role, or parent inference. Empty editions remain eligible at
 version zero.
 
@@ -518,9 +522,9 @@ invents template provenance for legacy rows.
 
 - exact platform/view/manage/department-only/inactive/anonymous/foreign and
   unknown access matrix for page, nav, header, and every command;
-- Executive Board comes only from OrganizationRepresentation and no Department,
-  Position, appointment, membership, participation, assignment, role, or grant
-  is synthesized by the structure template;
+- the accountability anchor comes only from OrganizationRepresentation and no
+  Department, Position, appointment, membership, Participation, assignment,
+  role, or grant is synthesized by the structure template;
 - exact 22-Department version-1 content and parent/order/code determinism;
 - empty-only application, same-input replay, changed-input conflict,
   concurrent apply, stale version, and atomic rollback;
@@ -552,7 +556,8 @@ invents template provenance for legacy rows.
 - Creating or changing Positions and volunteer opportunities; these belong to
   the Position management contract. Proposing, independently deciding, and
   ending assignments belong to the Assignment management contract.
-- Provisioning, changing, or publishing Executive Board appointments.
+- Provisioning, changing, or publishing accountable-representation
+  appointments.
 - Inferring access from Department nesting or editing CapabilityGrants and
   RoleAssignments as page-local ACL entries.
 - Merging the reference into a populated tree or synchronizing a copy to a

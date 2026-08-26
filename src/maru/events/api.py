@@ -412,6 +412,10 @@ class EditionListView(GenericAPIView[EventEdition]):
                 correlation_id=correlation_id,
                 request_id=correlation_id,
                 source_channel="api",
+                adoption_profile_code=cast(
+                    "str",
+                    values["adoption_profile_code"],
+                ),
             )
         except AuthorizationDenied as error:
             raise PermissionDenied(

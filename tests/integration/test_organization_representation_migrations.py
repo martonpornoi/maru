@@ -545,6 +545,6 @@ def test_fix_forward_freezes_active_board_membership_provenance(
 
     with pytest.raises(
         IntegrityError,
-        match="active Executive Board membership evidence is incomplete",
+        match="active representation membership evidence is incomplete",
     ):
         tamper_with_membership()

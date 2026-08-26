@@ -1,7 +1,7 @@
 # Current project state
 
 Last updated: 2026-08-26
-Phase: Production consolidation and management-experience recovery.
+Phase: Progressive adoption and management-experience recovery.
 
 Maru is an actively developed Django/PostgreSQL modular monolith. It is not a
 supported hosted service, a production-ready release, or approved for
@@ -11,28 +11,47 @@ concise handoff.
 
 ## Latest working outcome
 
-The current feature branch adds a repository-owned contributor support layer;
-it changes no Maru runtime behavior or database schema.
+The current feature branch makes Workforce-only use an executable product
+profile rather than a navigation promise.
 
-- Root `AGENTS.md` remains the always-on contract and now routes four focused
-  playbooks: material change mapping, product planning, browser rehearsal, and
-  protected pull-request delivery.
-- Each `.agents/skills/` entry has a narrow selection description, optional
-  progressively disclosed references, and human-facing Codex metadata. Skills
-  retain procedure only and cannot override requirements, ADRs, current state,
-  review, acceptance, or the authority of the user's request.
-- Documentation policy validates the exact curated catalog, metadata,
-  placeholders, and reachable references. `.agents/` changes enter
-  documentation acceptance and skill deletion is protected review scope.
-- The human [agent-assisted workflow guide](../development/agent-workflows.md)
-  explains selection, sequencing, privacy, authority, and maintenance.
-- NFR-013 and the product vision now make progressive modular adoption a
-  durable product rule: one complete workflow may be adopted without
-  registration, payments, attendance, or unrelated side effects.
+- Every edition has an immutable, versioned adoption profile. Existing
+  editions remain `full_convention@1`; the new bounded option is
+  `workforce_only@1`.
+- **Set up Workforce** creates or reuses only the minimum Organization,
+  Convention series, and Event edition foundation. It asks for names, dates,
+  and time zone, applies internal `en`/`XXX` defaults, and records one atomic,
+  idempotent setup receipt.
+- A new organization may use two truthful **Maru operators** instead of
+  inventing an Executive Board. Invitation, self-acceptance, independent
+  activation, provenance, recovery, and audit controls remain two-person and
+  inspectable. Existing Board organizations and evidence are unchanged.
+- Adoption is checked before platform policy, grants, or roles. Registration,
+  payments, attendee Participation, attendance, unrelated access groups,
+  public Registration discovery, and unrelated menu destinations are absent
+  from a Workforce-only edition.
+- Ordinary Workforce authority still requires exact edition scope. The
+  canonical Maru-operator root is a database-guarded exception and applies only
+  to Workforce-only editions, so a later full-convention edition grants no
+  implicit operator access.
+- Position assignment activation and ending now use profile-matched evidence:
+  full-convention editions retain Participation capacities, while
+  Workforce-only assignments never create Participation.
+- A fresh Workforce-only organization can create one safe Volunteer Position
+  template after its first Department. A different accountable operator must
+  approve the minimal role meaning; the action grants nobody access and creates
+  no Position, person relationship, Participation, or Registration.
+- The Django management shell and Staff Console expose the profile and focus on
+  Structure, Positions, Assignments, Availability, and Shifts. Specialist
+  records require an explicit disclosure instead of dominating the landing
+  page.
+- Exact-edition links select and focus their routed workspace even without
+  saved session context. Public volunteer pages use Volunteer navigation, and
+  personal Workforce pages retain only purpose-matched My Maru and My
+  Workforce destinations.
 
-ADR 0079 records the support boundary. The complete implementation and
-verification record is in the
-[2026-08-26 repository agent workflow checkpoint](../checkpoints/2026-08-26-repository-agent-workflow-support.md).
+ADR 0080 records the durable profile, accountability, authority, coexistence,
+and recovery boundaries. The complete branch verification record will be in
+the [2026-08-26 Workforce-only adoption checkpoint](../checkpoints/2026-08-26-workforce-only-progressive-adoption.md).
 
 ## Current product baseline
 
@@ -145,6 +164,12 @@ The complete implementation and verification record is in the
 
 ## Decisions
 
+- ADR 0080 accepts immutable edition adoption profiles, the first
+  `workforce_only@1` profile, minimum guided setup, truthful Maru-operator
+  accountability, profile-before-authority enforcement, no implied
+  Participation, and explicit portability and removal limitations. It
+  supersedes ADR 0040 only where that ADR assumed every organization must call
+  its accountable root an Executive Board.
 - ADR 0079 accepts one concise always-on `AGENTS.md` contract plus four focused,
   repository-scoped skills with progressive disclosure, user-facing metadata,
   deterministic validation, protected deletion, and human guidance.
@@ -171,32 +196,46 @@ The complete implementation and verification record is in the
 
 ## Verification for this working outcome
 
-### Repository support branch
+### Workforce-only adoption branch
 
-Completed locally:
+Completed locally for the pull-request head:
 
-- the upstream skill-creator quick validator accepts all four repository skill
-  packages;
-- documentation policy passes across 343 Markdown files, four repository
-  skills, and 205 unique requirement identifiers;
-- all 68 documentation-policy and change-classifier tests pass;
-- whole-tree Ruff lint and formatting pass;
-- strict mypy reports no issues across 369 source files;
-- full PyDocLint passes and the semantic Python-docstring validator passes 379
-  source files;
-- warning-fatal Sphinx/AutoAPI builds the complete contributor portal,
-  including the new guide, ADR, checkpoint, and generated reference;
-- `git diff --check` passes; and
-- no runtime behavior, model, migration, API, generated client, or database
-  permission changed, so runtime and migration rehearsals are not applicable to
-  this branch.
+- a fresh PostgreSQL database applies the complete migration graph and passes
+  Workforce-only setup, two-person activation, raw authority-scope guards,
+  immutable profiles, profile-isolated policy, and the legacy policy ceiling;
+- 64 focused structure, assignment, adoption, and access-management unit and
+  integration tests pass together;
+- 100 edition, page, representation, navigation, and authorization regressions
+  exposed one scope-ceiling regression; that regression was corrected and its
+  fresh 14-test profile/policy proof now passes;
+- the authorization readiness contract recognizes the new trigger functions
+  and attachments; its focused 11-test unit/integration proof passes;
+- all 29 Staff Console component and accessibility tests and strict TypeScript
+  checking pass; and
+- a consolidated 67-test browser-adapter and navigation regression passes after
+  the first-use rehearsal corrections;
+- whole-tree Ruff formatting/lint, strict mypy across 373 source files,
+  PyDocLint, semantic docstrings, Django checks, and migration-drift checks
+  pass;
+- documentation policy validates 347 Markdown files and 207 requirement
+  identifiers, and warning-fatal Sphinx/AutoAPI builds the complete site;
+- the clean-tree `scripts/certify.ps1` gate passes the complete unit and
+  eight-shard integration suite, combined branch-aware coverage, packaging,
+  dependency audits, production settings, generated contracts, frontend build,
+  and migration recovery for one exact commit; and
+- a synthetic platform-administrator, two-distinct-operator, and volunteer
+  browser rehearsal passes the entire setup-to-locked-Shift journey at 1,280
+  and 390 CSS pixels. It shows no inspected console warning/error or page-level
+  horizontal overflow, and database inspection confirms zero Participation,
+  Registration, attendee membership, or other direct unadopted-module rows.
 
-The 68 focused tests cover the complete changed executable surface. The
-`ci_changes.py` update deliberately routes `.agents/` changes to documentation
-acceptance and skill deletion to protected destructive-change review. Because
-that classifier is part of repository automation, the exact pull-request head
-will still require the complete fail-closed hosted acceptance selected by the
-protected workflow.
+The visible rehearsal used separate synthetic accounts and a deliberately
+created verified volunteer identity, not real convention owners or production
+personal data. Pointer interaction verified the mobile drawer; automated tests
+retain the keyboard/Escape/focus contract because the browser abstraction did
+not provide reliable keyboard activation evidence. Representative screen-reader
+acceptance remains open. The exact pull-request head still requires the
+protected hosted acceptance selected by GitHub Actions.
 
 ### Merged Shift implementation evidence
 
@@ -256,14 +295,17 @@ support branch, a deployment, or production readiness.
 
 ## Known risks and incomplete work
 
-- Repository skills are procedural aids, not an independent source of product
-  truth or evidence. Their routing and format need review when the upstream
-  skill interface changes, and a newly opened session may be needed to observe
-  a catalog change in every client.
-- NFR-013 is now accepted product intent, but no zero-configuration adoption
-  profile, activation control, coexistence contract, or removal rehearsal is
-  implemented yet. Existing module navigation must not be mistaken for proven
-  standalone adoption.
+- Workforce-only adoption is implemented for trustworthy evaluation, not
+  production cutover. General partner bulk import, a complete continuity
+  export, printable rota, offline/manual reconciliation pack, profile expansion
+  or decommissioning workflow, and stopped-operation rehearsal remain absent.
+- Existing scoped APIs and browser pages provide access to retained Workforce
+  data, but they are not yet an accepted portability package. An organization
+  must not decommission its incumbent system based only on this branch.
+- Platform specialist records and direct database recovery remain privileged
+  operational surfaces. Supported setup, policy, service, public discovery,
+  and operator workflows enforce the profile; production deployment still
+  needs role provisioning and runbook acceptance for those exceptional paths.
 - UX-029 remains a release gate at 320, 768, 958, 1,024, and 1,920 CSS pixels,
   200 percent zoom, complete keyboard paths, representative screen readers,
   reduced motion, and every empty, failure, stale, read-only, disclosure, and
@@ -287,11 +329,11 @@ support branch, a deployment, or production readiness.
 
 ## Smallest sensible next actions
 
-1. Define and rehearse the first **Workforce-only** adoption profile: minimum
-   identity, organization and edition setup; imports; visible destinations;
-   purpose-specific accounts; exports and print/manual fallback; coexistence;
-   removal; and proof that Registration, payments, and attendance stay absent.
-2. Complete the Shift mutation-role and UX-029 acceptance matrix, prioritizing
+1. Build the Workforce-only continuity package: an accepted import schema with
+   preview and correction, scoped export, printable rota/manual fallback,
+   reconciliation evidence, and explicit stop/expand procedures.
+2. Complete the Workforce-only and Shift mutation-role and UX-029 acceptance
+   matrix, prioritizing
    distinct claimant/confirmer accounts, stale evidence, full capacity,
    underfill, denied/read-only states, 200 percent zoom, and a representative
    screen reader.
@@ -310,8 +352,9 @@ Read `AGENTS.md`, the
 [agent-assisted workflow guide](../development/agent-workflows.md), this file,
 `ROADMAP.md`, the production-consolidation ledger,
 the management-shell, Position, Assignment, Availability, and Shift page
-contracts, and ADRs 0019/0028/0039/0041/0049/0055/0075 through 0079. Use only
-synthetic data. Preserve exact organization and edition scope, authorization
+contracts, the Workforce-only adoption setup contract and runbook, and ADRs
+0019/0028/0039/0041/0049/0055/0075 through 0080. Use only synthetic data.
+Preserve exact organization and edition scope, authorization
 before disclosure, My Maru/Administration separation, private Availability,
 independent confirmation, privacy-minimized self-withdrawal, canonical lock
 order, immutable command evidence, runtime-role containment, and fix-forward

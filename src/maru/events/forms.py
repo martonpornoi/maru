@@ -8,17 +8,23 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 from django import forms
+from django.db.models import Q
 
 from maru.core.forms import StrictInputForm
 from maru.core.localization import grouped_language_choices, grouped_time_zone_choices
 from maru.core.validators import validate_currency_codes, validate_language_codes
-from maru.events.models import MAX_EDITION_SPAN_DAYS, EventEdition
+from maru.events.adoption import ADOPTION_PROFILE_CHOICES, AdoptionProfileCode
+from maru.events.models import (
+    MAX_EDITION_SPAN_DAYS,
+    EventEdition,
+    WorkforceAdoptionSetupReceipt,
+)
 from maru.events.services import EventEditionDetails
+from maru.events.workforce_adoption import WorkforceAdoptionSetupInput
+from maru.organizations.models import ConventionSeries, Organization
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
-
-    from maru.organizations.models import ConventionSeries, Organization
 
 _CURRENCY_SEPARATOR = re.compile(r"[\s,]+")
 
@@ -169,6 +175,15 @@ class EventEditionDetailsForm(StrictInputForm):
 class EventEditionCreationForm(EventEditionDetailsForm):
     """Collect and validate event edition creation input."""
 
+    adoption_profile_code = forms.ChoiceField(
+        label="How will this edition use Maru?",
+        choices=ADOPTION_PROFILE_CHOICES,
+        help_text=(
+            "Choose only the tools this convention is ready to adopt. This "
+            "boundary cannot be changed casually after creation."
+        ),
+        widget=forms.RadioSelect,
+    )
     idempotency_key = forms.UUIDField(widget=forms.HiddenInput)
 
     @classmethod
@@ -199,6 +214,7 @@ class EventEditionCreationForm(EventEditionDetailsForm):
         form = cls(
             data=data,
             initial={
+                "adoption_profile_code": AdoptionProfileCode.FULL_CONVENTION,
                 "time_zone": organization.default_time_zone,
                 "language_codes": organization.default_language_codes,
                 "idempotency_key": uuid4(),
@@ -237,7 +253,7 @@ class EventEditionUpdateForm(EventEditionDetailsForm):
         EventEditionUpdateForm
             The resolved EventEditionUpdateForm for for edition.
         """
-        return cls(
+        form = cls(
             data=data,
             initial={
                 "name": edition.name,
@@ -248,4 +264,222 @@ class EventEditionUpdateForm(EventEditionDetailsForm):
                 "currency_codes": ", ".join(edition.currency_codes),
                 "expected_aggregate_version": edition.aggregate_version,
             },
+        )
+        if edition.adoption_profile_code == AdoptionProfileCode.WORKFORCE_ONLY:
+            currency_field = form.fields["currency_codes"]
+            currency_field.disabled = True
+            currency_field.widget = forms.HiddenInput()
+            currency_field.help_text = ""
+        return form
+
+
+class WorkforceAdoptionSetupForm(StrictInputForm):
+    """Collect the minimum deliberate foundation for Workforce-only use."""
+
+    mode = forms.ChoiceField(
+        label="What already exists in Maru?",
+        choices=WorkforceAdoptionSetupReceipt.Mode.choices,
+        widget=forms.RadioSelect,
+        help_text=(
+            "Reuse the highest matching foundation level. Maru will not "
+            "duplicate an organization or convention series you select."
+        ),
+    )
+    organization = forms.ModelChoiceField(
+        label="Existing organization",
+        queryset=Organization.objects.none(),
+        required=False,
+        empty_label="Choose an organization",
+    )
+    series = forms.ModelChoiceField(
+        label="Existing convention series",
+        queryset=ConventionSeries.objects.none(),
+        required=False,
+        empty_label="Choose a convention series",
+    )
+    organization_name = forms.CharField(
+        label="Organization name",
+        max_length=160,
+        required=False,
+        strip=True,
+        help_text="The organizer or community responsible for this convention.",
+    )
+    series_name = forms.CharField(
+        label="Convention name",
+        max_length=160,
+        required=False,
+        strip=True,
+        help_text="The recurring convention brand, without a year if possible.",
+    )
+    edition_name = forms.CharField(
+        label="Edition name",
+        max_length=160,
+        strip=True,
+        help_text="The dated occurrence people will recognize, such as MaruCon 2027.",
+    )
+    starts_on = forms.DateField(
+        label="Starts on",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    ends_on = forms.DateField(
+        label="Ends on",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    time_zone = forms.ChoiceField(
+        label="Convention time zone",
+        choices=grouped_time_zone_choices,
+        help_text="Used for Availability and Shift times.",
+    )
+    idempotency_key = forms.UUIDField(widget=forms.HiddenInput)
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize bounded reuse choices and humane defaults.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional form arguments.
+        **kwargs : Any
+            Keyword form arguments.
+        """
+        super().__init__(*args, **kwargs)
+        reusable_organizations = Q(lifecycle=Organization.Lifecycle.DRAFT) | Q(
+            lifecycle=Organization.Lifecycle.ACTIVE,
+            representation__isnull=False,
+        )
+        organization_field = cast(
+            "forms.ModelChoiceField[Organization]",
+            self.fields["organization"],
+        )
+        organization_field.queryset = Organization.objects.filter(
+            reusable_organizations
+        ).order_by("name", "id")
+        series_field = cast(
+            "forms.ModelChoiceField[ConventionSeries]",
+            self.fields["series"],
+        )
+        series_field.queryset = (
+            ConventionSeries.objects.filter(
+                is_active=True,
+            )
+            .filter(
+                Q(organization__lifecycle=Organization.Lifecycle.DRAFT)
+                | Q(
+                    organization__lifecycle=Organization.Lifecycle.ACTIVE,
+                    organization__representation__isnull=False,
+                )
+            )
+            .select_related("organization")
+            .order_by("organization__name", "name", "id")
+        )
+        if not self.is_bound:
+            self.initial.setdefault(
+                "mode",
+                WorkforceAdoptionSetupReceipt.Mode.NEW_FOUNDATION,
+            )
+            self.initial.setdefault("time_zone", "UTC")
+            self.initial.setdefault("idempotency_key", uuid4())
+        self.fields["organization_name"].widget.attrs["autofocus"] = True
+
+    def clean_organization_name(self) -> str:
+        """Normalize the optional new organization name.
+
+        Returns
+        -------
+        str
+            The normalized organization name.
+        """
+        return " ".join(str(self.cleaned_data.get("organization_name", "")).split())
+
+    def clean_series_name(self) -> str:
+        """Normalize the optional new convention-series name.
+
+        Returns
+        -------
+        str
+            The normalized convention-series name.
+        """
+        return " ".join(str(self.cleaned_data.get("series_name", "")).split())
+
+    def clean_edition_name(self) -> str:
+        """Normalize the required edition name.
+
+        Returns
+        -------
+        str
+            The normalized event-edition name.
+        """
+        return " ".join(str(self.cleaned_data["edition_name"]).split())
+
+    def clean(self) -> dict[str, object] | None:
+        """Validate mode-specific foundation fields and the date range.
+
+        Returns
+        -------
+        dict[str, object] | None
+            The complete cleaned form mapping when valid.
+        """
+        cleaned = super().clean()
+        if cleaned is None:
+            return None
+        mode = cleaned.get("mode")
+        if mode == WorkforceAdoptionSetupReceipt.Mode.NEW_FOUNDATION:
+            if not cleaned.get("organization_name"):
+                self.add_error("organization_name", "Enter the organization name.")
+            if not cleaned.get("series_name"):
+                self.add_error("series_name", "Enter the convention name.")
+        elif mode == WorkforceAdoptionSetupReceipt.Mode.EXISTING_ORGANIZATION:
+            if cleaned.get("organization") is None:
+                self.add_error("organization", "Choose the organization to reuse.")
+            if not cleaned.get("series_name"):
+                self.add_error("series_name", "Enter the convention name.")
+        elif mode == WorkforceAdoptionSetupReceipt.Mode.EXISTING_SERIES:
+            if cleaned.get("series") is None:
+                self.add_error("series", "Choose the convention series to reuse.")
+
+        starts_on = cleaned.get("starts_on")
+        ends_on = cleaned.get("ends_on")
+        if isinstance(starts_on, date) and isinstance(ends_on, date):
+            if ends_on < starts_on:
+                self.add_error(
+                    "ends_on",
+                    "The end date cannot be before the start date.",
+                )
+            elif (ends_on - starts_on).days > MAX_EDITION_SPAN_DAYS:
+                self.add_error(
+                    "ends_on",
+                    (
+                        "An edition date range cannot exceed "
+                        f"{MAX_EDITION_SPAN_DAYS} days."
+                    ),
+                )
+        return cleaned
+
+    def setup_input(self) -> WorkforceAdoptionSetupInput:
+        """Return the complete service input after successful validation.
+
+        Returns
+        -------
+        WorkforceAdoptionSetupInput
+            The immutable guided-setup input.
+
+        Raises
+        ------
+        ValueError
+            If the form has not validated successfully.
+        """
+        if not self.is_valid():
+            raise ValueError("Validate the Workforce setup form before using it.")
+        organization = cast("Organization | None", self.cleaned_data["organization"])
+        series = cast("ConventionSeries | None", self.cleaned_data["series"])
+        return WorkforceAdoptionSetupInput(
+            mode=cast("str", self.cleaned_data["mode"]),
+            organization_id=organization.id if organization is not None else None,
+            series_id=series.id if series is not None else None,
+            organization_name=cast("str", self.cleaned_data["organization_name"]),
+            series_name=cast("str", self.cleaned_data["series_name"]),
+            edition_name=cast("str", self.cleaned_data["edition_name"]),
+            starts_on=cast("date", self.cleaned_data["starts_on"]),
+            ends_on=cast("date", self.cleaned_data["ends_on"]),
+            time_zone=cast("str", self.cleaned_data["time_zone"]),
         )

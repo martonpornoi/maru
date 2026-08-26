@@ -16,6 +16,12 @@ from maru.core.validators import (
     validate_lowercase_slug,
     validate_time_zone,
 )
+from maru.events.adoption import (
+    ADOPTION_PROFILE_CHOICES,
+    ADOPTION_PROFILE_VERSION,
+    AdoptionProfileCode,
+    adoption_profile,
+)
 
 ARCHIVE_AMENDMENT_LABEL_LENGTH = 60
 ARCHIVE_AMENDMENT_CONTENT_LENGTH = ARCHIVE_AMENDMENT_LABEL_LENGTH - 3
@@ -55,6 +61,18 @@ class EventEdition(UUIDTimeStampedModel):
     )
     lifecycle_version = models.PositiveIntegerField(default=0, editable=False)
     aggregate_version = models.PositiveIntegerField(default=1, editable=False)
+    adoption_profile_code = models.CharField(
+        max_length=40,
+        choices=ADOPTION_PROFILE_CHOICES,
+        default=AdoptionProfileCode.FULL_CONVENTION,
+        db_default=AdoptionProfileCode.FULL_CONVENTION,
+        editable=False,
+    )
+    adoption_profile_version = models.PositiveIntegerField(
+        default=ADOPTION_PROFILE_VERSION,
+        db_default=ADOPTION_PROFILE_VERSION,
+        editable=False,
+    )
     time_zone = models.CharField(max_length=63, validators=[validate_time_zone])
     language_codes = ArrayField(
         models.CharField(max_length=35),
@@ -89,6 +107,19 @@ class EventEdition(UUIDTimeStampedModel):
                 ),
                 name="edition_span_no_more_than_31_days",
             ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        adoption_profile_code=AdoptionProfileCode.FULL_CONVENTION,
+                        adoption_profile_version=ADOPTION_PROFILE_VERSION,
+                    )
+                    | models.Q(
+                        adoption_profile_code=AdoptionProfileCode.WORKFORCE_ONLY,
+                        adoption_profile_version=ADOPTION_PROFILE_VERSION,
+                    )
+                ),
+                name="edition_adoption_profile_supported",
+            ),
         ]
 
     def clean(self) -> None:
@@ -100,6 +131,16 @@ class EventEdition(UUIDTimeStampedModel):
             If the submitted state or input violates a domain invariant.
         """
         super().clean()
+        profile = adoption_profile(self.adoption_profile_code)
+        if profile is None or self.adoption_profile_version != profile.version:
+            raise ValidationError(
+                {
+                    "adoption_profile_code": (
+                        "Choose a supported, versioned adoption profile."
+                    )
+                },
+                code="edition_adoption_profile_unsupported",
+            )
         if self.series_id and self.organization_id:
             series_organization_id = self.series.organization_id
             if series_organization_id != self.organization_id:
@@ -123,16 +164,28 @@ class EventEdition(UUIDTimeStampedModel):
             If the submitted state or input violates a domain invariant.
         """
         if not self._state.adding:
-            current_lifecycle = (
+            current = (
                 type(self)
                 .objects.filter(pk=self.pk)
-                .values_list("lifecycle", flat=True)
+                .values(
+                    "lifecycle",
+                    "adoption_profile_code",
+                    "adoption_profile_version",
+                )
                 .first()
             )
-            if current_lifecycle == self.Lifecycle.ARCHIVED:
+            if current is not None and current["lifecycle"] == self.Lifecycle.ARCHIVED:
                 raise ValidationError(
                     "Archived editions require the correction workflow.",
                     code="archived_edition",
+                )
+            if current is not None and (
+                current["adoption_profile_code"] != self.adoption_profile_code
+                or current["adoption_profile_version"] != self.adoption_profile_version
+            ):
+                raise ValidationError(
+                    "An edition adoption profile is immutable after creation.",
+                    code="edition_adoption_profile_immutable",
                 )
 
         self.slug = self.slug.lower()
@@ -185,12 +238,12 @@ class EditionCreationReceipt(UUIDTimeStampedModel):
         ]
 
     def clean(self) -> None:
-        """Validate and normalize the record.
+        """Validate the receipt's exact organization and series scope.
 
         Raises
         ------
         ValidationError
-            If the submitted state or input violates a domain invariant.
+            If the receipt does not match its edition.
         """
         super().clean()
         if self.edition_id:
@@ -206,7 +259,7 @@ class EditionCreationReceipt(UUIDTimeStampedModel):
                 )
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        """Validate and persist the record.
+        """Validate and persist the immutable receipt.
 
         Parameters
         ----------
@@ -218,7 +271,7 @@ class EditionCreationReceipt(UUIDTimeStampedModel):
         Raises
         ------
         ValidationError
-            If the submitted state or input violates a domain invariant.
+            If an existing receipt is mutated.
         """
         if not self._state.adding:
             raise ValidationError(
@@ -229,7 +282,7 @@ class EditionCreationReceipt(UUIDTimeStampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
-        """Delete this record when its protection rules allow it.
+        """Refuse deletion of retained edition-creation evidence.
 
         Parameters
         ----------
@@ -241,17 +294,143 @@ class EditionCreationReceipt(UUIDTimeStampedModel):
         Returns
         -------
         tuple[int, dict[str, int]]
-            The matching delete records in deterministic order.
+            Django's deletion result, which is never reached.
 
         Raises
         ------
         ValidationError
-            If the submitted state or input violates a domain invariant.
+            Always, because creation evidence is retained.
         """
         _ = args, kwargs
         raise ValidationError(
             "Edition creation receipts are retained with the edition.",
             code="protected_edition_creation_receipt",
+        )
+
+
+class WorkforceAdoptionSetupReceipt(UUIDTimeStampedModel):
+    """Immutable idempotency evidence for guided Workforce setup."""
+
+    class Mode(models.TextChoices):
+        """Enumerate supported guided setup foundation choices."""
+
+        NEW_FOUNDATION = "new_foundation", "Create organization, series, and edition"
+        EXISTING_ORGANIZATION = (
+            "existing_organization",
+            "Add a series and edition to an organization",
+        )
+        EXISTING_SERIES = "existing_series", "Add an edition to a series"
+
+    edition = models.ForeignKey(
+        EventEdition,
+        on_delete=models.PROTECT,
+        related_name="workforce_adoption_setup_receipts",
+    )
+    organization_id = models.UUIDField()
+    series_id = models.UUIDField()
+    actor_id = models.UUIDField()
+    idempotency_key = models.UUIDField()
+    request_digest = models.CharField(
+        max_length=64,
+        validators=(
+            RegexValidator(
+                regex=r"^[0-9a-f]{64}$",
+                message="Use a lowercase SHA-256 digest.",
+                code="invalid_workforce_adoption_setup_digest",
+            ),
+        ),
+    )
+    mode = models.CharField(max_length=40, choices=Mode)
+    representation_code = models.CharField(max_length=40)
+    created_organization = models.BooleanField()
+    created_series = models.BooleanField()
+    created_edition = models.BooleanField()
+
+    class Meta:
+        """Configure Django's declarative class metadata."""
+
+        ordering = ("created_at", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("actor_id", "idempotency_key"),
+                name="workforce_setup_actor_idempotency_unique",
+            ),
+        ]
+
+    def clean(self) -> None:
+        """Validate the retained setup scope and adopted profile.
+
+        Raises
+        ------
+        ValidationError
+            If the receipt does not match its exact Workforce edition.
+        """
+        super().clean()
+        if not self.edition_id:
+            return
+        if self.edition.organization_id != self.organization_id:
+            raise ValidationError(
+                "Workforce setup receipt organization does not match.",
+                code="workforce_setup_receipt_organization_mismatch",
+            )
+        if self.edition.series_id != self.series_id:
+            raise ValidationError(
+                "Workforce setup receipt series does not match.",
+                code="workforce_setup_receipt_series_mismatch",
+            )
+        if self.edition.adoption_profile_code != AdoptionProfileCode.WORKFORCE_ONLY:
+            raise ValidationError(
+                "Guided Workforce setup must resolve to a Workforce-only edition.",
+                code="workforce_setup_receipt_profile_mismatch",
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Validate and persist the immutable setup receipt.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Raises
+        ------
+        ValidationError
+            If an existing receipt is mutated.
+        """
+        if not self._state.adding:
+            raise ValidationError(
+                "Workforce adoption setup receipts are immutable.",
+                code="immutable_workforce_adoption_setup_receipt",
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
+        """Refuse deletion of retained guided-setup evidence.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the framework implementation.
+        **kwargs : Any
+            Keyword arguments forwarded to the framework implementation.
+
+        Returns
+        -------
+        tuple[int, dict[str, int]]
+            Django's deletion result, which is never reached.
+
+        Raises
+        ------
+        ValidationError
+            Always, because setup evidence is retained.
+        """
+        _ = args, kwargs
+        raise ValidationError(
+            "Workforce adoption setup receipts are retained.",
+            code="protected_workforce_adoption_setup_receipt",
         )
 
 

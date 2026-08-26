@@ -117,6 +117,8 @@ def test_basic_edition_api_requires_exact_scoped_capability() -> None:
         "name": edition.name,
         "lifecycle": edition.lifecycle,
         "aggregate_version": edition.aggregate_version,
+        "adoption_profile_code": edition.adoption_profile_code,
+        "adoption_profile_version": edition.adoption_profile_version,
         "time_zone": edition.time_zone,
         "language_codes": edition.language_codes,
         "currency_codes": edition.currency_codes,

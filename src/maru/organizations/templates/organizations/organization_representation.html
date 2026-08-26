@@ -34,13 +34,22 @@
     </div>
   {% else %}
   <header class="baseline-page-heading">
-    <p class="baseline-kicker">Governance setup</p>
-    <h1>{% if representation and representation.state == "active" %}Executive Board{% else %}Set up the Executive Board{% endif %}</h1>
+    <p class="baseline-kicker">Accountable access</p>
+    <h1>
+      {% if representation_definition %}
+        {% if representation and representation.state == "active" %}{{ representation_definition.name }}{% else %}Set up {{ representation_definition.name }}{% endif %}
+      {% else %}
+        Set up accountable access
+      {% endif %}
+    </h1>
     <p class="baseline-intro">
-      Establish the accountable people who may operate {{ organization.name }}.
-      Platform administrators oversee this handoff but never become board members
-      or convention participants.
+      Establish the people accountable for operating Maru for
+      {{ organization.name }}. Platform administrators oversee this handoff but
+      do not become organization members or convention participants.
     </p>
+    {% if representation_definition %}
+      <p class="baseline-help">{{ representation_definition.purpose }}</p>
+    {% endif %}
   </header>
 
   <details class="maru-access-summary">
@@ -58,7 +67,7 @@
       </p>
       {% if representation and representation.state == "active" %}
         <p class="baseline-access-line">
-          <strong>Active Executive Board controllers</strong>
+          <strong>Active {{ representation_definition.controller_label }}s</strong>
           <span>may view the organization and manage its scoped authority.</span>
         </p>
       {% elif own_appointment %}
@@ -75,11 +84,11 @@
     </div>
   </details>
 
-  <section class="baseline-panel" aria-labelledby="board-setup-progress-title">
+  <section class="baseline-panel" aria-labelledby="representation-setup-progress-title">
     <div class="baseline-panel-heading">
       <div>
         <p class="baseline-kicker">Setup progress</p>
-        <h2 id="board-setup-progress-title">Board setup</h2>
+        <h2 id="representation-setup-progress-title">Accountable-access setup</h2>
       </div>
       <span class="baseline-count">
         {% if representation and representation.state == "active" %}Complete{% elif representation %}Step 2 of 3{% else %}Step 1 of 3{% endif %}
@@ -88,8 +97,8 @@
     <ol class="baseline-activity-list">
       <li{% if not representation %} aria-current="step"{% endif %}>
         <div>
-          <strong>1. Create the Executive Board</strong>
-          <span>{% if representation %}Complete{% else %}Current step{% endif %}</span>
+          <strong>1. Choose the truthful representation</strong>
+          <span>{% if representation %}{{ representation.name }} created{% else %}Current step{% endif %}</span>
         </div>
         <p>Create the accountable representation without assigning a person or granting authority.</p>
       </li>
@@ -100,7 +109,7 @@
         </div>
         <p>
           Invite existing active, verified user accounts. Each person must
-          accept their own Board invitation before activation.
+          accept their own accountable-access invitation before activation.
         </p>
         {% if request.user.is_platform_administrator %}
           <div class="baseline-form-actions">
@@ -116,7 +125,7 @@
         </div>
         <p>
           After every invitation is answered and at least two people have
-          accepted, activate the Board with independent cross-approval.
+          accepted, activate the representation with independent cross-approval.
         </p>
       </li>
     </ol>
@@ -127,7 +136,7 @@
       <div class="baseline-panel-heading">
         <div>
           <p class="baseline-kicker">Step 1 of 3</p>
-          <h2 id="provision-title">Create the Executive Board</h2>
+          <h2 id="provision-title">Choose accountable access</h2>
         </div>
       </div>
       {% if can_provision_representation %}
@@ -141,9 +150,18 @@
           {% if provision_form.non_field_errors %}
             <div class="baseline-errors" role="alert">{{ provision_form.non_field_errors }}</div>
           {% endif %}
+          {% include "core/_baseline_form_field.html" with field=provision_form.representation_code %}
+          <div class="baseline-boundary">
+            {% for definition in representation_definitions %}
+              <p>
+                <strong>{{ definition.name }}:</strong>
+                {{ definition.purpose }}
+              </p>
+            {% endfor %}
+          </div>
           {% include "core/_baseline_form_field.html" with field=provision_form.reason %}
           <div class="baseline-form-actions">
-            <button type="submit">Create Executive Board</button>
+            <button type="submit">Create accountable representation</button>
           </div>
         </form>
       {% else %}
@@ -183,7 +201,7 @@
         <div class="baseline-panel-heading">
         <div>
           <p class="baseline-kicker">Step 2 of 3</p>
-          <h2 id="invite-controller-title">Invite a Board controller</h2>
+          <h2 id="invite-controller-title">Invite a controller</h2>
           </div>
         </div>
         <form
@@ -199,8 +217,10 @@
           {% include "core/_baseline_form_field.html" with field=invite_form.account_email %}
           {% include "core/_baseline_form_field.html" with field=invite_form.reason %}
           <p class="baseline-help">
-            Use the exact email of an existing active, verified user account.
-            The person answers this Board invitation from their own account.
+            This person will be listed as a
+            <strong>{{ representation_definition.controller_label }}</strong>.
+            Use the exact email of an existing active, verified user account;
+            they answer this governance invitation from their own account.
           </p>
           <div class="baseline-form-actions">
             <button type="submit">Invite controller</button>
@@ -214,7 +234,7 @@
       <div class="baseline-panel-heading">
         <div>
           <p class="baseline-kicker">Controller terms</p>
-          <h2 id="appointments-title">Executive Board appointments</h2>
+          <h2 id="appointments-title">{{ representation.name }} appointments</h2>
         </div>
         <span class="baseline-count">
           {% if appointment_history_truncated %}Latest {% endif %}{{ appointments|length }}
@@ -295,11 +315,11 @@
     {% endif %}
 
     {% if can_activate_representation and activation_form %}
-      <section class="baseline-panel baseline-danger-zone" aria-labelledby="activate-board-title">
+      <section class="baseline-panel baseline-danger-zone" aria-labelledby="activate-representation-title">
         <div class="baseline-panel-heading">
           <div>
             <p class="baseline-kicker">Step 3 of 3 · Root authority</p>
-            <h2 id="activate-board-title">Activate governance</h2>
+            <h2 id="activate-representation-title">Activate accountable access</h2>
           </div>
         </div>
         <form
@@ -320,10 +340,11 @@
           {% include "core/_baseline_form_field.html" with field=activation_form.reason %}
           <p class="baseline-help">
             Activation makes the organization Active and grants the accepted
-            controllers the immutable Executive Board role under cross-approval.
+            controllers the immutable {{ representation_definition.name }} role
+            under cross-approval.
           </p>
           <div class="baseline-form-actions">
-            <button type="submit">Activate Executive Board</button>
+            <button type="submit">Activate {{ representation_definition.name }}</button>
           </div>
         </form>
       </section>

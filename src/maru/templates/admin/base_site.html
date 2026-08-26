@@ -79,13 +79,13 @@
             <label class="maru-edition-context-picker" for="maru-edition-context">
               <span>Choose a workspace</span>
               <select id="maru-edition-context" name="edition_id">
-                <option value="">All foundation data</option>
-                {% for edition in maru_edition_context.editions %}
+                <option value=""{% if not edition and not maru_edition_context.selected %} selected{% endif %}>All foundation data</option>
+                {% for available_edition in maru_edition_context.editions %}
                   <option
-                    value="{{ edition.id }}"
-                    {% if maru_edition_context.selected and edition.id == maru_edition_context.selected.id %}selected{% endif %}
+                    value="{{ available_edition.id }}"
+                    {% if edition and available_edition.id == edition.id or not edition and maru_edition_context.selected and available_edition.id == maru_edition_context.selected.id %}selected{% endif %}
                   >
-                    {{ edition.name }} · {{ edition.organization.name }}
+                    {{ available_edition.name }} · {{ available_edition.organization.name }}
                   </option>
                 {% endfor %}
               </select>
@@ -104,7 +104,8 @@
 
 {% block content_title %}
   {{ block.super }}
-  {% admin_page_help request.path opts.app_label opts.model_name as maru_page_help %}
+  {% admin_edition_context request as maru_help_edition_context %}
+  {% admin_page_help request.path opts.app_label opts.model_name maru_help_edition_context.selected.adoption_profile_code as maru_page_help %}
   {% if maru_page_help %}
     <p class="maru-page-help">{{ maru_page_help }}</p>
   {% endif %}

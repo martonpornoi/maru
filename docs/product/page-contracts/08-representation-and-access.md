@@ -1,20 +1,22 @@
 # Representation & access contract
 
-- Status: Initial lifecycle implemented, hardened, and locally verified; final
-  suite, automated accessibility, complete visual-state, and owner rehearsal pending
+- Status: Truthful Executive Board and Maru-operator initial lifecycles
+  implemented, hardened, and locally verified; final suite, representative
+  accessibility, complete visual-state, and owner rehearsal pending
 - Route: `/admin/platform/organizations/<organization-slug>/representation/`
 - Mutations: POST-only child routes `provision/`, `invite/`,
   `appointments/<appointment-id>/respond/`, and `activate/`
 - API: none declared in this slice
 - Requirements: IDN-002, IDN-004, IDN-005, IDN-007, IDN-009, IDN-011,
-  IDN-012, UX-012, UX-013, UX-017, UX-019, UX-020, UX-024, AUD-001,
-  UX-029, AUD-005, NFR-001 through NFR-004, NFR-008, and NFR-009
-- Decisions: ADRs 0003, 0031, 0038 through 0043, and 0055
+  IDN-012, IDN-014, UX-012, UX-013, UX-017, UX-019, UX-020, UX-024,
+  UX-029, UX-030, AUD-001, AUD-005, NFR-001 through NFR-004, NFR-008,
+  NFR-009, and NFR-013
+- Decisions: ADRs 0003, 0031, 0038 through 0044, 0055, and 0080
 
 ## Purpose and primary users
 
-Establish one organization's accountable Executive Board through a visible,
-human-controlled handoff:
+Establish one organization's truthful accountable representation through a
+visible, human-controlled handoff:
 
 ```text
 platform provision -> exact invitations -> each person answers
@@ -22,7 +24,7 @@ platform provision -> exact invitations -> each person answers
 ```
 
 The platform administrator oversees the initial boundary and is recorded as an
-actor. They never become an Executive Board controller, organization member,
+actor. They never become a representation controller, organization member,
 role-assignment principal, edition participant, registrant, volunteer, or
 workforce assignee.
 
@@ -35,8 +37,9 @@ The page serves three deliberately different audiences:
 - an exact active, verified invitee may see and answer only their own open
   invitation.
 
-This is not a department editor, staff roster, Django Group page, public Board
-directory, or complete page-level access-control list.
+This is not a department editor, staff roster, Django Group page, public
+controller directory, legal-office inference, or complete page-level access-
+control list.
 
 ## Placement and navigation
 
@@ -52,12 +55,12 @@ The first task-oriented people-to-governance journey reaches this page from
 person or use the contextual **Invite account** action. The invitation outcome
 states that the result is an identity only, then directs the operator to choose
 an organization and open its exact **Representation & access** route. The
-handoff does not create a membership or Board appointment and does not bypass
+handoff does not create a membership or representation appointment and does not bypass
 this page's exact-account eligibility and disclosure rules.
 
 The page presents its existing commands as one visible three-step progress
-sequence: **1. Create the Executive Board**, **2. Invite at least two
-controllers**, and **3. Activate governance**. The current persisted state says
+sequence: **Choose accountable access**, **Invite at least two controllers**,
+and **Activate governance**. The current persisted state says
 which step is complete, current, waiting, or unavailable and gives the next
 authorized action. A shortcut back to **User accounts** may help prepare
 another identity, but it never implies that the account has been appointed.
@@ -75,9 +78,10 @@ appointment response is indistinguishable from an unknown appointment.
 
 ## Record and lifecycle
 
-The page presents the fixed `Executive Board` representation name, organization
-name and lifecycle, representation state and aggregate version, minimum
-controller count, and at most the 100 most recently invited appointments.
+The page presents the persisted code-owned representation name and purpose,
+organization name and lifecycle, representation state and aggregate version,
+minimum controller count, and at most the 100 most recently invited
+appointments.
 Appointment history is filtered to the exact representation before slicing and
 is ordered by descending invitation time with appointment UUID as a stable
 tie-breaker. A truncated result says that it is the latest bounded window.
@@ -105,13 +109,17 @@ is incomplete.
 
 Only an active platform administrator may provision. The exact organization
 must be Draft and must not already have a representation. Provisioning creates
-one code-owned `executive_board` representation in `Provisioning` at aggregate
-version 1. It creates no person appointment, membership, authority, series,
-edition, participation, registration, department, position, or workforce
+one code-owned `executive_board` or `maru_operators` representation in
+`Provisioning` at aggregate version 1. Executive Board is valid only when the
+people really hold that constitutional office; Maru operators identify
+software responsibility without making that claim. The choice is immutable.
+Provisioning creates no person appointment, membership, authority, series,
+edition, Participation, Registration, Department, Position, or Workforce
 record.
 
 | Field | Type and format | Bounds; null/blank | Normalization | Classification and writer | Lifecycle and retention |
 | --- | --- | --- | --- | --- | --- |
+| `representation_code` | Closed code-owned choice | Exactly `executive_board` or `maru_operators`; null/blank forbidden | No alias or inferred default at the browser boundary | C1 accountability classification; active platform administrator | Immutable after provisioning; existing Board history is never relabelled |
 | `reason` | Unicode text | 1–240 characters; null/blank forbidden | Trim ends and collapse whitespace | C1 governance rationale; active platform administrator | Required while organization is Draft and representation absent; retained in governance record and audit purpose, not domain-event payload |
 
 Organization, representation code/name/state/version, actor, timestamps, and
@@ -140,11 +148,11 @@ one open Invited, Accepted, or Active appointment for this representation.
 
 A successful invitation atomically creates the Invited appointment and, when
 no compatible organization relationship exists, an Invited membership labelled
-`Executive Board controller`, then advances the representation aggregate
-version. An eligible existing active membership may be reused without
-weakening its state. Invitation grants no capability. A suspended membership
-blocks invitation; a conflicting ended non-Board relationship requires human
-review instead of silent reuse.
+the selected definition's exact `Executive Board controller` or `Maru
+operator` label, then advances the representation aggregate version. An
+eligible existing active membership may be reused without weakening its state.
+Invitation grants no capability. A suspended membership blocks invitation; a
+conflicting ended relationship requires human review instead of silent reuse.
 
 ## Invitee response
 
@@ -159,7 +167,7 @@ Draft/Provisioning.
 
 Accept moves Invited to Accepted and grants no authority yet. Decline moves the
 appointment to Declined, records response/end time, and ends only the matching
-Invited Executive Board membership. A stale version returns
+Invited purpose-matched representation membership. A stale version returns
 `stale_representation_invitation`; a replay returns
 `representation_invitation_answered`. Neither mutates state or produces a
 second success event. Wrong-subject and unknown appointment responses use the
@@ -181,13 +189,15 @@ accepted appointment, and relevant memberships.
 Activation refuses unless at least two distinct controllers have Accepted, no
 controller invitation remains unanswered, and every accepted account is still
 active, verified, non-platform, and without a suspended membership. A
-pre-existing reserved `executive-board` bundle is a conflict for human
-reconciliation; Representation & access never overwrites it.
+pre-existing reserved bundle for the selected representation type is a
+conflict for human reconciliation; Representation & access never overwrites it
+or uses one type's bundle for the other.
 
 One transaction:
 
-1. creates immutable organization-scoped `executive-board` role-bundle version
-   1 with the code-reviewed root capability set;
+1. creates the selected immutable organization-scoped `executive-board@1` or
+   `maru-operators@1` role bundle with its code-reviewed purpose-matched root
+   capability set;
 2. creates one organization-scoped authority assignment per accepted
    controller, granted by the platform operator and approved by a different
    accepted controller in a deterministic cycle;
@@ -208,9 +218,9 @@ The header must derive its wording from the current principal and persisted
 state:
 
 - platform administrators may oversee the initial handoff but are not Board
-  members or convention participants;
-- active Board controllers hold the fixed organization root bundle while their
-  assignment remains effective and unrevoked; and
+  members, Maru operators, or convention participants;
+- active controllers hold the selected fixed organization root bundle while
+  their assignment remains effective and unrevoked; and
 - an exact invitee may view and answer only their own invitation.
 
 Managers may see each visible controller's safe display label, exact email,
@@ -230,7 +240,7 @@ commands.
 Provision, invitation, accept/decline, each root assignment, and activation
 produce correlated, value-minimized security audit. Successful representation
 changes publish `organizations.representation.changed.v1` and its outbox row in
-the same transaction. The payload contains only action, fixed representation
+the same transaction. The payload contains only action, code-owned representation
 code, and resulting state. Email, display name, reason text, organization
 profile values, password/session facts, and full capability lists are absent.
 
@@ -268,9 +278,10 @@ repeat a non-idempotent governance action merely to force delivery.
 
 ## Migration and recovery implications
 
-The schema migration must be additive and must not infer Board members from
-staff flags, Django Groups, old role assignments, account age, email, or demo
-rosters. Existing Draft organizations remain Draft. Every existing Active,
+The schema migrations must be additive and must not infer a representation
+type or controllers from staff flags, Django Groups, old role assignments,
+account age, email, or demo rosters. Existing Board records retain their type
+and existing Draft organizations remain Draft. Every existing Active,
 Suspended, or Closed organization without a compliant active representation
 must appear in a preflight report and receive an approved reconciliation path
 before M2 is called enforced.
@@ -291,6 +302,14 @@ evidence chain per affected representation before the account is deactivated.
 Old application connections must be drained before upgrade. Emergency evidence
 fences reverse migration; recovery is fix-forward or a whole-database restore
 to a consistent pre-emergency point.
+
+Organizations `0014` adds the immutable Maru-operator type, purpose-matched
+membership/appointment/root-role validation, two pinned operator helpers, and
+a downgrade fence. Authorization `0019` validates representation-control type
+and broadens the code-owned organization minimum scope needed by the operator
+root. Neither migration creates, relabels, or activates a representation or
+person relationship. The bounded-profile procedure is in
+[`workforce-only-adoption-and-recovery.md`](../../operations/workforce-only-adoption-and-recovery.md).
 
 Organizations `0012`, participation `0004`, registration `0031`, and workforce
 `0003` enforce IDN-011 at the database boundary for every covered convention-
@@ -317,8 +336,8 @@ procedure is in
   navigation and no second shell;
 - User accounts, invitation outcome, and Representation & access form a
   truthful identity-to-governance handoff with no relationship side effect;
-- the three-step Board progress sequence and next action reflect persisted
-  state and current authorization;
+- the three-step accountable-representation progress sequence and next action
+  reflect persisted type, state, and current authorization;
 - anonymous redirect plus inactive, ordinary, Django staff, platform,
   basic-view, representation-manager, own-invite, wrong-subject, and
   cross-tenant matrices;
@@ -329,8 +348,8 @@ procedure is in
   pre-activation authority;
 - at least two distinct accepted controllers, all-invitations-answered rule,
   eligibility recheck, exact-name confirmation, and reserved-bundle conflict;
-- deterministic non-self cross-approval, fixed immutable role version, exact
-  organization scope, and atomic Draft-to-Active activation;
+- deterministic non-self cross-approval, purpose-matched immutable role
+  version, exact organization scope, and atomic Draft-to-Active activation;
 - closed input rejection for every forged scope, actor, state, role, version,
   timestamp, lifecycle, or evidence field;
 - value-minimized allow/deny/read audit, event registry/schema, transactional
@@ -355,7 +374,8 @@ reserved-role conflict, PostgreSQL constraints, transaction rollback, minimized
 mutation events, and absence of unrelated domain side effects. Django system
 check, migration drift, Ruff, and mypy pass for the consolidated tree. Generic
 authority commands and the access workspace cannot list, create a version of,
-share, replace, project, or revoke the reserved Executive Board role.
+share, replace, project, or revoke the reserved Executive Board or Maru-
+operator role.
 The backend also covers atomic global emergency containment from pending or
 active relationships, multi-organization authority revocation, quorum-loss
 suspension, session/account deactivation, historical approval provenance, and
@@ -363,7 +383,8 @@ concurrent relationship/identity serialization. This is an audited service
 boundary; a routine lifecycle editor and quorum-recovery UI are not implied.
 
 Focused HTML integration coverage verifies the User accounts handoff links and
-the state-aware three-step Board presentation without changing the underlying
+the state-aware three-step accountable-representation presentation without
+changing the underlying
 commands or authorization matrix. The shared responsive drawer and navigation
 have source-contract coverage. Authenticated rendered inspection across the
 complete ADR 0055 width/zoom matrix is still open.

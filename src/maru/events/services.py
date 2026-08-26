@@ -26,6 +26,11 @@ from maru.authorization.policy import (
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.adoption import (
+    ADOPTION_PROFILE_VERSION,
+    AdoptionProfileCode,
+    adoption_profile,
+)
 from maru.events.models import (
     MAX_EDITION_SPAN_DAYS,
     EditionCreationReceipt,
@@ -33,7 +38,11 @@ from maru.events.models import (
     EventEdition,
 )
 from maru.identity.models import Account
-from maru.organizations.models import ConventionSeries, Organization
+from maru.organizations.models import (
+    ConventionSeries,
+    Organization,
+    OrganizationRepresentation,
+)
 
 MAX_EDITION_NAME_LENGTH = 160
 MAX_EDITION_SLUG_LENGTH = 80
@@ -46,6 +55,8 @@ EDITION_CREATION_FIELDS = (
     "slug",
     "lifecycle",
     "aggregate_version",
+    "adoption_profile_code",
+    "adoption_profile_version",
     "time_zone",
     "language_codes",
     "currency_codes",
@@ -185,6 +196,7 @@ def _create_edition_with_generated_slug(
     organization: Organization,
     series: ConventionSeries,
     details: EventEditionDetails,
+    adoption_profile_code: str,
 ) -> EventEdition:
     base = slugify(details.name)[:MAX_EDITION_SLUG_LENGTH].strip("-") or "edition"
     for number in range(1, MAX_EDITION_SLUG_CANDIDATES + 1):
@@ -205,6 +217,8 @@ def _create_edition_with_generated_slug(
                     lifecycle=EventEdition.Lifecycle.DRAFT,
                     lifecycle_version=0,
                     aggregate_version=1,
+                    adoption_profile_code=adoption_profile_code,
+                    adoption_profile_version=ADOPTION_PROFILE_VERSION,
                     time_zone=details.time_zone,
                     language_codes=list(details.language_codes),
                     currency_codes=list(details.currency_codes),
@@ -226,6 +240,7 @@ def _edition_creation_digest(
     organization_id: UUID,
     series_id: UUID,
     details: EventEditionDetails,
+    adoption_profile_code: str,
 ) -> str:
     payload = {
         "organization_id": str(organization_id),
@@ -237,6 +252,10 @@ def _edition_creation_digest(
         "starts_on": details.starts_on.isoformat(),
         "ends_on": details.ends_on.isoformat(),
     }
+    # Preserve the historical full-convention digest so pre-profile retries
+    # continue to replay. Purpose-bounded profiles are explicit digest input.
+    if adoption_profile_code != AdoptionProfileCode.FULL_CONVENTION:
+        payload["adoption_profile_code"] = adoption_profile_code
     canonical = json.dumps(
         payload,
         ensure_ascii=False,
@@ -287,6 +306,7 @@ def create_event_edition(
     correlation_id: UUID,
     request_id: UUID | None = None,
     source_channel: str = "service",
+    adoption_profile_code: str = AdoptionProfileCode.FULL_CONVENTION,
 ) -> EventEditionCreationResult:
     """Create one Draft edition with idempotent audit and outbox evidence.
 
@@ -308,6 +328,8 @@ def create_event_edition(
         The correlation identifier attached to the incoming request.
     source_channel : str, default='service'
         The closed channel code identifying where the request originated.
+    adoption_profile_code : str, default=AdoptionProfileCode.FULL_CONVENTION
+        The immutable code-owned adoption profile for the new edition.
 
     Returns
     -------
@@ -325,10 +347,21 @@ def create_event_edition(
         organization_id=organization_id,
     )
     normalized = _normalize_edition_details(details)
+    profile = adoption_profile(adoption_profile_code)
+    if profile is None or profile.version != ADOPTION_PROFILE_VERSION:
+        raise ValidationError(
+            {
+                "adoption_profile_code": ValidationError(
+                    "Choose a supported event-edition adoption profile.",
+                    code="edition_adoption_profile_unsupported",
+                )
+            }
+        )
     request_digest = _edition_creation_digest(
         organization_id=organization_id,
         series_id=series_id,
         details=normalized,
+        adoption_profile_code=profile.code.value,
     )
 
     with transaction.atomic():
@@ -337,6 +370,26 @@ def create_event_edition(
             id=series_id,
             organization=organization,
         )
+        if (
+            profile.code == AdoptionProfileCode.FULL_CONVENTION
+            and not actor.is_platform_administrator
+            and OrganizationRepresentation.objects.filter(
+                organization=organization,
+                code=OrganizationRepresentation.MARU_OPERATORS_CODE,
+            ).exists()
+        ):
+            raise ValidationError(
+                {
+                    "adoption_profile_code": ValidationError(
+                        (
+                            "Expanding a Maru-operator organization beyond "
+                            "Workforce requires an explicit platform-administrator "
+                            "setup decision."
+                        ),
+                        code="edition_adoption_expansion_requires_platform_oversight",
+                    )
+                }
+            )
         existing_receipt = (
             EditionCreationReceipt.objects.select_related("edition")
             .filter(
@@ -379,6 +432,7 @@ def create_event_edition(
             organization=organization,
             series=series,
             details=normalized,
+            adoption_profile_code=profile.code.value,
         )
         EditionCreationReceipt.objects.create(
             edition=edition,
@@ -421,6 +475,8 @@ def create_event_edition(
                 aggregate_version=edition.aggregate_version,
                 payload={
                     "aggregate_version": str(edition.aggregate_version),
+                    "adoption_profile_code": edition.adoption_profile_code,
+                    "adoption_profile_version": str(edition.adoption_profile_version),
                     "lifecycle": edition.lifecycle,
                 },
                 correlation_id=correlation_id,
@@ -524,6 +580,18 @@ def update_event_edition(
                             "Reload it before saving your changes."
                         ),
                         code="stale_edition_version",
+                    )
+                }
+            )
+        if (
+            edition.adoption_profile_code == AdoptionProfileCode.WORKFORCE_ONLY
+            and tuple(edition.currency_codes) != normalized.currency_codes
+        ):
+            raise ValidationError(
+                {
+                    "currency_codes": ValidationError(
+                        "Payment currencies are outside a Workforce-only edition.",
+                        code="edition_module_not_adopted",
                     )
                 }
             )

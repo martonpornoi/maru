@@ -1,10 +1,38 @@
 # Key end-to-end workflows
 
-Status: Baseline  
-Last updated: 2026-07-26
+Status: Baseline plus executable Workforce-only adoption
+Last updated: 2026-08-26
 
 These narratives test whether modules form a convention operating system rather
 than a collection of forms. Detailed acceptance scenarios will refine them.
+
+## Start with Workforce only
+
+1. A platform administrator opens **Set up Workforce** and reuses the highest
+   Organization → Convention series level already present.
+2. They enter only missing organization/convention identity plus the edition
+   name, dates, and time zone. Maru stores `workforce_only@1`, `en`, and the
+   internal no-currency sentinel in one idempotent transaction.
+3. Maru reuses the existing accountable representation or provisions truthful
+   Maru operators. Two distinct people accept their own invitations before a
+   platform administrator activates the organization.
+4. Operators define Structure. If the organization has no compatible Position
+   template, one controller creates the code-owned safe Volunteer starter with
+   a different controller's approval; the starter grants nobody authority and
+   creates no person or attendee state. Operators then create Positions,
+   connect purpose-bounded volunteer accounts, independently approve
+   assignments, collect deliberately shared Availability, and plan and confirm
+   Shifts.
+5. Incumbent attendee, payment, attendance, programme, communications, venue,
+   and logistics systems continue unchanged. Maru creates no Participation,
+   Registration, payment, or attendance state and grants no related authority.
+6. If the organization later wants another Maru workflow, it makes a separate
+   reviewed adoption decision; Workforce authority does not expand itself.
+
+**Proof of success:** a volunteer can be assigned and scheduled, and operators
+can complete the full Workforce journey, while the same edition remains absent
+from Registration discovery and contains no attendee Participation or payment
+state.
 
 ## 1. Create and authorize a new edition
 

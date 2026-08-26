@@ -1,24 +1,24 @@
 # Event edition record contract
 
 - Status: Implemented and desktop/390-pixel smoke verified for platform
-  oversight and scoped Executive Board visibility; accessibility, complete
-  visual-state, and owner residuals remain
+  oversight, scoped accountable-representation visibility, and immutable
+  adoption-profile explanation; accessibility, complete visual-state, and
+  owner residuals remain
 - Route: `/admin/platform/organizations/<organization-slug>/series/<series-slug>/editions/<edition-slug>/`
 - API: `GET` and `PUT /api/v1/organizations/<organization-id>/editions/<edition-id>`
-- Requirements: IDN-004, IDN-012, UX-009, UX-012, UX-013, UX-019, UX-020,
-  UX-023, UX-024, INT-001, NFR-009
-- Decisions: ADRs 0037–0041
+- Requirements: IDN-004, IDN-012, IDN-014, EVT-006, UX-009, UX-012, UX-013,
+  UX-019, UX-020, UX-023, UX-024, UX-030, INT-001, NFR-009, and NFR-013
+- Decisions: ADRs 0037–0041 and 0080
 
 ## Purpose and primary user
 
 Provide the stable record and landing page for one dated edition. It
-establishes the visible scope beneath which people, registration,
-applications, programme, timetable, venue operations, logistics, documents,
-communications, reports, and settings will appear only after their complete
-workflows are mounted.
+establishes the visible scope beneath which only deliberately adopted people,
+operations, documents, and settings appear after their complete workflows are
+mounted.
 
 The page permits an active Maru platform administrator.
-ADR 0040's Board root carries organization-scoped `events.view_basic`, while a
+The accountable root carries organization-scoped `events.view_basic`, while a
 profile change still requires exact `events.change_profile` authority at this
 edition; the current backend matrix verifies that distinction. Route or selected
 working context never grants convention access or participation.
@@ -30,9 +30,10 @@ shared sidebar retains each selected scope and adds the edition name with
 **Overview**, current exactly once. No placeholder destination is rendered for
 an unmounted domain.
 
-The record shows name, lifecycle, immutable slug and parents, official dates,
-time zone, languages, currencies, aggregate version, timestamps, current
-working-context state, and bounded recent activity. Draft and Preparing
+The record shows name, lifecycle, immutable slug, parents, adoption profile and
+plain-language boundary, official dates, time zone, languages, relevant
+currencies, aggregate version, timestamps, current working-context state, and
+bounded recent activity. Draft and Preparing
 records beneath a non-Closed organization expose the complete profile form;
 Ready, Live, Closing, Archived, and Cancelled records are read-only here.
 Lifecycle transitions remain a separate reasoned command.
@@ -42,6 +43,11 @@ Lifecycle transitions remain a separate reasoned command.
 All persisted profile fields are non-null. The update is a complete
 replacement, so API clients send every profile property even when only one
 changes.
+
+Adoption-profile code and version are server-owned immutable identity, never
+part of the update form. For Workforce-only, the browser suppresses the
+irrelevant currency editor and the service rejects any currency other than the
+stored `XXX` no-currency sentinel.
 
 | Field | Type and format | Bounds; null/blank | Normalization | Classification and writer | Lifecycle and retention |
 | --- | --- | --- | --- | --- | --- |
@@ -96,16 +102,17 @@ navigation/display context only; it
 does not write the edition, create audit/domain-event/outbox evidence, grant a
 capability, replace an assignment, or create/change membership, participation,
 or registration. This remains true when access comes from the canonical
-organization-scoped Executive Board assignment. Edition creation does not
+organization-scoped accountable-representation assignment. Edition creation does not
 select automatically.
 
 ## Effective access and activity
 
 The access header states that active platform administrators may view or,
 where lifecycle allows, change the record under platform oversight. It also
-distinguishes organization-scoped Board view from exact-edition
-`events.change_profile`; the root Board assignment alone does not imply profile
-edit. This is still not the final department/resource/field effective-access
+distinguishes organization-scoped accountable view from exact-edition
+`events.change_profile`; the root assignment alone does not imply profile edit.
+An unadopted module is denied before platform or stored authority. This is still
+not the final department/resource/field effective-access
 explanation or **Manage access** workflow.
 
 Recent activity projects only allowlisted domain facts for the exact edition:
@@ -135,7 +142,7 @@ The security audit remains a separate restricted control-evidence boundary.
 - value-minimized audit/event/activity and platform non-participation tests;
 - explicit select/clear POST, strict no-business-field input, session
   corruption, and no-authority/domain/evidence-side-effect tests for platform,
-  direct-grant, and canonical Executive Board authority; and
+  direct-grant, and canonical accountable-representation authority; and
 - keyboard, focus, desktop, 390-pixel, read-only, error, and current-navigation
   evidence. Desktop/390-pixel current-navigation smoke passes; keyboard,
   automated accessibility, the full state matrix, and owner rehearsal remain.

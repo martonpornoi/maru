@@ -53,6 +53,18 @@
     </nav>
   {% endif %}
 
+  {% if action_error %}
+    <div
+      class="baseline-state baseline-state--error workforce-structure-action-error"
+      role="alert"
+      tabindex="-1"
+      data-maru-focus-on-load
+    >
+      <h2>The Volunteer starter was not created</h2>
+      <p>{{ action_error }}</p>
+    </div>
+  {% endif %}
+
   <section class="baseline-panel" aria-labelledby="position-list-title">
     <div class="baseline-panel-heading">
       <div>
@@ -123,13 +135,45 @@
       <p><a href="{% url 'organization-structure' organization.slug convention_series.slug edition.slug %}">Open organization structure</a></p>
     </div>
   {% elif not has_position_templates %}
-    <div class="baseline-state baseline-state--warning" role="status">
-      <h2>No approved Position template is available</h2>
-      <p>
-        A Position must pin a published template whose immutable role bundle
-        has complete independent-approval provenance. Create or reconcile that
-        role definition through Representation &amp; access before returning here.
-      </p>
+    <div class="baseline-state baseline-state--warning"{% if not starter_template_available %} role="status"{% endif %}>
+      {% if workforce_only_profile and starter_template_available %}
+        <h2>Create the safe Volunteer starter</h2>
+        <p>
+          A fresh Workforce workspace needs one reusable Position meaning before
+          its first Position can be created. This starter carries only basic
+          event and exact-Position structure visibility. It grants nobody
+          access and creates no Position, assignment, Registration,
+          Participation, attendance, or payment record.
+        </p>
+        <form
+          method="post"
+          action="{% url 'create-workforce-starter-position-template' organization.slug convention_series.slug edition.slug %}"
+          class="baseline-form"
+          novalidate
+        >
+          {% csrf_token %}
+          {% include "core/_baseline_form_field.html" with field=starter_template_form.approver_email %}
+          {% include "core/_baseline_form_field.html" with field=starter_template_form.reason %}
+          <div class="baseline-form-actions">
+            <button type="submit">Create Volunteer starter</button>
+          </div>
+        </form>
+      {% elif workforce_only_profile %}
+        <h2>No compatible Position template is available</h2>
+        <p>
+          Ask an active accountable controller to create the safe Volunteer
+          starter or reconcile an independently approved template. Maru will
+          not offer a template containing Registration or other unadopted
+          authority in this Workforce-only edition.
+        </p>
+      {% else %}
+        <h2>No approved Position template is available</h2>
+        <p>
+          A Position must pin a published template whose immutable role bundle
+          has complete independent-approval provenance. Create or reconcile that
+          role definition through Representation &amp; access before returning here.
+        </p>
+      {% endif %}
     </div>
   {% elif not position_mutations_allowed %}
     <div class="baseline-state baseline-state--warning" role="status">

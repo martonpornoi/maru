@@ -33,10 +33,14 @@ from maru.organizations.models import (
     RepresentationAppointment,
 )
 from maru.organizations.representation import (
-    activate_executive_board,
+    activate_representation,
     invite_representation_controller,
-    provision_executive_board,
+    provision_representation,
     respond_to_representation_invitation,
+)
+from maru.organizations.representation_catalog import (
+    REPRESENTATION_DEFINITIONS,
+    representation_definition,
 )
 
 if TYPE_CHECKING:
@@ -65,6 +69,7 @@ _ACCOUNT_INELIGIBILITY_CODES = frozenset(
 _REPRESENTATION_CONFLICT_CODES = frozenset(
     {
         "executive_board_role_conflict",
+        "maru_operator_role_conflict",
         "representation_appointment_exists",
         "representation_controller_ineligible",
         "representation_controllers_incomplete",
@@ -489,10 +494,23 @@ def _representation_page(
         and representation is not None
         and representation.state == OrganizationRepresentation.State.PROVISIONING
     )
+    definition = (
+        representation_definition(representation.code)
+        if representation is not None
+        else None
+    )
+    if definition is None and provision_form is not None:
+        selected_code = provision_form.data.get("representation_code")
+        if isinstance(selected_code, str):
+            definition = representation_definition(selected_code)
     context = admin.site.each_context(request)
     context.update(
         {
-            "title": f"Executive Board — {organization.name}",
+            "title": (
+                f"{definition.name} — {organization.name}"
+                if definition is not None
+                else f"Representation and access — {organization.name}"
+            ),
             "has_permission": True,
             "baseline_admin_parent_template": "admin/base_site.html",
             "baseline_use_admin_shell": True,
@@ -504,6 +522,8 @@ def _representation_page(
             "baseline_can_create_edition": can_create_edition,
             "organization": organization,
             "representation": representation,
+            "representation_definition": definition,
+            "representation_definitions": tuple(REPRESENTATION_DEFINITIONS.values()),
             "representation_load_failed": False,
             "appointments": appointments,
             "appointment_history_limit": _REPRESENTATION_APPOINTMENT_HISTORY_LIMIT,
@@ -717,9 +737,10 @@ def provision_organization_representation(
             status=400,
         )
     try:
-        provision_executive_board(
+        provision_representation(
             actor=actor,
             organization_id=organization.id,
+            representation_code=str(form.cleaned_data["representation_code"]),
             reason=str(form.cleaned_data["reason"]),
             correlation_id=UUID(request.correlation_id),  # type: ignore[attr-defined]
             source_channel="web",
@@ -743,7 +764,17 @@ def provision_organization_representation(
             provision_form=form,
             status=503,
         )
-    messages.success(request, "The Executive Board representation root was created.")
+    created_definition = representation_definition(
+        str(form.cleaned_data["representation_code"])
+    )
+    messages.success(
+        request,
+        (
+            f"The {created_definition.name} representation was created."
+            if created_definition is not None
+            else "The accountable representation was created."
+        ),
+    )
     return redirect("organization-representation", organization_slug=organization.slug)
 
 
@@ -808,7 +839,7 @@ def invite_organization_controller(
                 status=_validation_status(error),
             )
         except DatabaseError:
-            logger.exception("Unable to invite Executive Board controller")
+            logger.exception("Unable to invite accountable representation controller")
             form.add_error(
                 None,
                 "The invitation could not be saved. No partial change was kept.",
@@ -917,7 +948,7 @@ def respond_organization_controller_invitation(
             )
             raise Http404 from error
         except DatabaseError:
-            logger.exception("Unable to answer Executive Board invitation")
+            logger.exception("Unable to answer representation invitation")
             return _my_invitations_page(
                 request,
                 status=503,
@@ -926,7 +957,10 @@ def respond_organization_controller_invitation(
                 ),
             )
         else:
-            messages.success(request, "Your Executive Board invitation was updated.")
+            messages.success(
+                request,
+                "Your accountable-access invitation was updated.",
+            )
             return redirect("my-representation-invitations")
     return _representation_page(
         request,
@@ -989,7 +1023,7 @@ def activate_organization_representation(
     )
     if form.is_valid():
         try:
-            activate_executive_board(
+            activate_representation(
                 actor=actor,
                 representation_id=representation.id,
                 expected_version=int(form.cleaned_data["expected_version"]),
@@ -1006,7 +1040,7 @@ def activate_organization_representation(
                 status=_validation_status(error),
             )
         except DatabaseError:
-            logger.exception("Unable to activate Executive Board")
+            logger.exception("Unable to activate accountable representation")
             form.add_error(
                 None,
                 (
@@ -1021,9 +1055,14 @@ def activate_organization_representation(
                 status=503,
             )
         else:
+            definition = representation_definition(representation.code)
             messages.success(
                 request,
-                "The Executive Board and organization authority are now active.",
+                (
+                    f"The {definition.name} and organization authority are now active."
+                    if definition is not None
+                    else "The representation and organization authority are now active."
+                ),
             )
             return redirect(
                 "organization-representation",

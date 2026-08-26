@@ -48,6 +48,7 @@ from maru.authorization.serializers import (
     AccessPreviewSerializer,
     AccessWorkspaceSerializer,
 )
+from maru.events.adoption import profile_allows_capabilities
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 
@@ -164,7 +165,11 @@ def _edition(*, organization_id: UUID, edition_id: UUID) -> EventEdition:
     return edition
 
 
-def _latest_roles(organization_id: UUID) -> list[RoleBundle]:
+def _role_matches_profile(role: RoleBundle, profile_code: str) -> bool:
+    return profile_allows_capabilities(profile_code, role.capability_codes)
+
+
+def _latest_roles(organization_id: UUID, profile_code: str) -> list[RoleBundle]:
     roles = (
         RoleBundle.objects.filter(organization_id=organization_id)
         .exclude(code__in=NON_SHAREABLE_ROLE_CODES)
@@ -172,7 +177,8 @@ def _latest_roles(organization_id: UUID) -> list[RoleBundle]:
     )
     latest: dict[str, RoleBundle] = {}
     for role in roles:
-        latest.setdefault(role.code, role)
+        if _role_matches_profile(role, profile_code):
+            latest.setdefault(role.code, role)
     return sorted(
         latest.values(),
         key=lambda role: _group_name(role).casefold(),
@@ -262,9 +268,10 @@ def _current_assignments(
     *,
     organization_id: UUID,
     edition_id: UUID,
+    profile_code: str,
 ) -> Iterable[RoleAssignment]:
     now = timezone.now()
-    return (
+    rows = (
         RoleAssignment.objects.filter(
             Q(edition_id=edition_id) | Q(edition__isnull=True),
             organization_id=organization_id,
@@ -284,6 +291,9 @@ def _current_assignments(
             "principal__email",
         )
     )
+    return tuple(
+        row for row in rows if _role_matches_profile(row.role_bundle, profile_code)
+    )
 
 
 def _workspace_payload(
@@ -299,6 +309,7 @@ def _workspace_payload(
         _current_assignments(
             organization_id=edition.organization_id,
             edition_id=edition.id,
+            profile_code=edition.adoption_profile_code,
         )
     )
     return {
@@ -327,7 +338,11 @@ def _workspace_payload(
             )
         ),
         "groups": [
-            _group_payload(role) for role in _latest_roles(edition.organization_id)
+            _group_payload(role)
+            for role in _latest_roles(
+                edition.organization_id,
+                edition.adoption_profile_code,
+            )
         ],
         "assignments": [
             _assignment_payload(assignment, edition=edition)
@@ -361,7 +376,12 @@ def _exact_active_person(email: str) -> Account:
     return account
 
 
-def _exact_role(*, organization_id: UUID, code: str) -> RoleBundle:
+def _exact_role(
+    *,
+    organization_id: UUID,
+    code: str,
+    profile_code: str,
+) -> RoleBundle:
     role = (
         RoleBundle.objects.filter(
             organization_id=organization_id,
@@ -371,12 +391,17 @@ def _exact_role(*, organization_id: UUID, code: str) -> RoleBundle:
         .order_by("-version", "id")
         .first()
     )
-    if role is None:
+    if role is None or not _role_matches_profile(role, profile_code):
         raise ValidationError({"group_code": "Choose an available access group."})
     return role
 
 
-def _exact_role_version(*, organization_id: UUID, role_version_id: UUID) -> RoleBundle:
+def _exact_role_version(
+    *,
+    organization_id: UUID,
+    role_version_id: UUID,
+    profile_code: str,
+) -> RoleBundle:
     role = (
         RoleBundle.objects.filter(
             pk=role_version_id,
@@ -385,7 +410,7 @@ def _exact_role_version(*, organization_id: UUID, role_version_id: UUID) -> Role
         .exclude(code__in=NON_SHAREABLE_ROLE_CODES)
         .first()
     )
-    if role is None:
+    if role is None or not _role_matches_profile(role, profile_code):
         raise ValidationError(
             {"role_version_id": "Choose an available immutable role version."}
         )
@@ -594,6 +619,7 @@ class EditionAccessWorkspaceView(APIView):
         role = _exact_role(
             organization_id=organization_id,
             code=str(values["group_code"]),
+            profile_code=edition.adoption_profile_code,
         )
         try:
             assign_role(
@@ -699,6 +725,7 @@ class EditionAccessPreviewView(APIView):
                 role = _exact_role_version(
                     organization_id=organization_id,
                     role_version_id=cast("UUID", values["role_version_id"]),
+                    profile_code=edition.adoption_profile_code,
                 )
                 result = preview_role_bundle_access(
                     viewer=account,
@@ -814,6 +841,7 @@ class EditionAccessAssignmentView(APIView):
         replacement_role = _exact_role(
             organization_id=organization_id,
             code=str(values["group_code"]),
+            profile_code=edition.adoption_profile_code,
         )
         try:
             with transaction.atomic():

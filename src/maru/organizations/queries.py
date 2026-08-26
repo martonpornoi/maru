@@ -13,8 +13,9 @@ from maru.organizations.models import (
     OrganizationRepresentation,
     RepresentationAppointment,
 )
+from maru.organizations.representation_catalog import representation_definition
 
-ExecutiveBoardState = Literal[
+OrganizationGovernanceState = Literal[
     "absent",
     "provisioning",
     "active",
@@ -23,8 +24,8 @@ ExecutiveBoardState = Literal[
 
 
 @dataclass(frozen=True, slots=True)
-class ExecutiveBoardAnchor:
-    """The fixed, identity-free governance anchor used by structure views.
+class OrganizationGovernanceAnchor:
+    """The minimized, identity-free governance anchor used by structure views.
 
     Attributes
     ----------
@@ -34,18 +35,80 @@ class ExecutiveBoardAnchor:
         The human-readable label shown to authorized readers.
     state
         The lifecycle state to evaluate or expose.
+    purpose
+        The truthful responsibility boundary for the representation.
     """
 
     kind: Literal["governance"]
     label: str
-    state: ExecutiveBoardState
+    state: OrganizationGovernanceState
+    purpose: str
+
+
+ExecutiveBoardState = OrganizationGovernanceState
+ExecutiveBoardAnchor = OrganizationGovernanceAnchor
+
+
+def organization_governance_anchor(
+    *,
+    organization_id: UUID,
+) -> OrganizationGovernanceAnchor:
+    """Return minimized accountable-representation state for one organization.
+
+    This public module query deliberately exposes no appointment, controller,
+    membership, reason, account, or authority information. Callers must
+    authorize the exact organization or edition before invoking it.
+
+    Parameters
+    ----------
+    organization_id : UUID
+        The organization identifier that owns the requested resource.
+
+    Returns
+    -------
+    OrganizationGovernanceAnchor
+        The truthful identity-free organization governance anchor.
+    """
+    representation = (
+        OrganizationRepresentation.objects.filter(organization_id=organization_id)
+        .values("code", "name", "state")
+        .first()
+    )
+    state = representation["state"] if representation is not None else None
+    if state not in {
+        OrganizationRepresentation.State.PROVISIONING,
+        OrganizationRepresentation.State.ACTIVE,
+        OrganizationRepresentation.State.SUSPENDED,
+    }:
+        anchor_state: OrganizationGovernanceState = "absent"
+    else:
+        anchor_state = cast("OrganizationGovernanceState", state)
+    definition = (
+        representation_definition(str(representation["code"]))
+        if representation is not None
+        else None
+    )
+    return OrganizationGovernanceAnchor(
+        kind="governance",
+        label=(
+            str(representation["name"])
+            if representation is not None
+            else "Accountable representation"
+        ),
+        state=anchor_state,
+        purpose=(
+            definition.purpose
+            if definition is not None
+            else "No accountable Maru representation has been established yet."
+        ),
+    )
 
 
 def executive_board_governance_anchor(
     *,
     organization_id: UUID,
 ) -> ExecutiveBoardAnchor:
-    """Return the minimized Executive Board state for one exact organization.
+    """Return the compatible minimized organization-governance projection.
 
     This public module query deliberately exposes no appointment, controller,
     membership, reason, account, or authority information. Callers must
@@ -61,27 +124,7 @@ def executive_board_governance_anchor(
     ExecutiveBoardAnchor
         The resolved ExecutiveBoardAnchor for executive board governance anchor.
     """
-    state = (
-        OrganizationRepresentation.objects.filter(
-            organization_id=organization_id,
-            code=OrganizationRepresentation.EXECUTIVE_BOARD_CODE,
-        )
-        .values_list("state", flat=True)
-        .first()
-    )
-    if state not in {
-        OrganizationRepresentation.State.PROVISIONING,
-        OrganizationRepresentation.State.ACTIVE,
-        OrganizationRepresentation.State.SUSPENDED,
-    }:
-        anchor_state: ExecutiveBoardState = "absent"
-    else:
-        anchor_state = cast("ExecutiveBoardState", state)
-    return ExecutiveBoardAnchor(
-        kind="governance",
-        label=OrganizationRepresentation.EXECUTIVE_BOARD_NAME,
-        state=anchor_state,
-    )
+    return organization_governance_anchor(organization_id=organization_id)
 
 
 def platform_organization_inventory() -> QuerySet[Organization]:

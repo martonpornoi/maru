@@ -18,6 +18,7 @@ from maru.authorization.commands import revoke_role_assignment
 from maru.authorization.policy import PolicyDecision, decide, resolve_edition_target
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.adoption import profile_adopts_module
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
@@ -1154,6 +1155,11 @@ def _complete_assignment_capacities(
 ) -> None:
     capacity = assignment.participation_capacity
     if capacity is None:
+        if not profile_adopts_module(
+            assignment.edition.adoption_profile_code,
+            "participation",
+        ):
+            return
         raise AssignmentStateConflictError
     participation = capacity.participation
     capacities = tuple(
@@ -1364,7 +1370,15 @@ def end_position_assignment(
             assignment=assignment,
             operation="workforce.position_assignment.end",
             reason_code="assignment_ended",
-            changed_fields=("status", "end_evidence", "participation_capacity"),
+            changed_fields=(
+                "status",
+                "end_evidence",
+                *(
+                    ("participation_capacity",)
+                    if assignment.participation_capacity_id is not None
+                    else ()
+                ),
+            ),
             correlation_id=correlation_id,
             request_id=request_id,
             source_channel=source_channel,

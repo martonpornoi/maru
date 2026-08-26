@@ -118,6 +118,8 @@ class EventEditionAdmin(
     readonly_fields = (
         "lifecycle_display",
         "lifecycle_version",
+        "adoption_profile_code",
+        "adoption_profile_version",
         "id",
         "created_at",
         "updated_at",
@@ -134,6 +136,8 @@ class EventEditionAdmin(
                     "series",
                     "lifecycle_display",
                     "lifecycle_version",
+                    "adoption_profile_code",
+                    "adoption_profile_version",
                 )
             },
         ),

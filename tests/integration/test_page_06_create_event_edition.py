@@ -38,6 +38,7 @@ def _payload(*, key: UUID | None = None, **changes: object) -> dict[str, object]
         "time_zone": "Europe/Vienna",
         "language_codes": ["de", "en"],
         "currency_codes": "EUR",
+        "adoption_profile_code": "full_convention",
         "idempotency_key": str(key or uuid4()),
     }
     payload.update(changes)
@@ -82,6 +83,8 @@ def test_creation_page_inherits_visible_locale_defaults_and_has_strict_scope() -
     assert '<option value="de" selected>' in content
     assert '<option value="en" selected>' in content
     assert 'name="currency_codes"' in content
+    assert 'name="adoption_profile_code"' in content
+    assert "Choose what this edition will use" in content
     assert 'name="idempotency_key"' in content
     assert 'name="slug"' not in content
     assert 'name="lifecycle"' not in content
@@ -118,6 +121,7 @@ def test_creation_is_atomic_audited_explicit_context_and_non_participating() -> 
     assert edition.lifecycle == EventEdition.Lifecycle.DRAFT
     assert edition.lifecycle_version == 0
     assert edition.aggregate_version == 1
+    assert edition.adoption_profile_code == "full_convention"
     assert edition.language_codes == ["de", "en"]
     assert edition.currency_codes == ["EUR"]
     assert ADMIN_EDITION_SESSION_KEY not in client.session

@@ -27,6 +27,7 @@ from maru.audit.models import AuditEvent
 from maru.audit.services import AuditRecord, append_audit
 from maru.authorization.catalog import POLICY_VERSION
 from maru.authorization.policy import decide, resolve_edition_target
+from maru.events.adoption import profile_codes_for_module
 from maru.events.models import EventEdition
 from maru.identity.models import Account, IdentityChallenge
 from maru.identity.services import (
@@ -142,6 +143,7 @@ def _open_configurations() -> QuerySet[RegistrationConfiguration]:
             status=ConfigurationStatus.ACTIVE,
             opens_at__lte=now,
             closes_at__gt=now,
+            edition__adoption_profile_code__in=profile_codes_for_module("registration"),
         )
         .exclude(edition__lifecycle__in=("archived", "cancelled"))
         .select_related("organization", "edition", "edition__series")

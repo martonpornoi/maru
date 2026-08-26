@@ -108,20 +108,24 @@ GRANT SELECT ON TABLE
     public.authorization_provenanceactivationlatch
     TO maru_runtime;
 
--- Organization structure receipts are append-only runtime evidence. Structure
--- controls are optimistic-concurrency aggregates that may be inserted and
--- advanced, but never deleted, by runtime. REFERENCES is unnecessary for both
--- relations and remains denied at table and column level by the catalog proof.
+-- Workforce adoption setup and Organization structure receipts are append-only
+-- runtime evidence. Structure controls are optimistic-concurrency aggregates
+-- that may be inserted and advanced, but never deleted, by runtime. REFERENCES
+-- is unnecessary for these relations and remains denied at table and column
+-- level by the catalog proof.
 -- Keep these explicit exceptions after blanket/default grants. Department is
 -- intentionally absent: it retains ordinary runtime DML and its stopped-writer
 -- retirement trigger remains the database integrity boundary.
 REVOKE UPDATE, DELETE, REFERENCES ON TABLE
+    public.events_workforceadoptionsetupreceipt,
     public.workforce_editionstructurecommandreceipt
     FROM maru_runtime;
 REVOKE INSERT, UPDATE, DELETE, REFERENCES ON TABLE
+    public.events_workforceadoptionsetupreceipt,
     public.workforce_editionstructurecommandreceipt
     FROM PUBLIC;
 GRANT SELECT, INSERT ON TABLE
+    public.events_workforceadoptionsetupreceipt,
     public.workforce_editionstructurecommandreceipt
     TO maru_runtime;
 
@@ -565,10 +569,10 @@ REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role FROM PUBLIC;
 REVOKE SET, ALTER SYSTEM ON PARAMETER session_replication_role
     FROM maru_runtime;
 
--- Functions are executable by PUBLIC by default.  The ADR 0046 v2 allowlist below is
--- the complete non-trigger helper closure used by Maru's current runtime SQL
--- and database triggers.  A change must update code, migration evidence, this
--- file, and the genuine-login service smoke together.
+-- Functions are executable by PUBLIC by default. The ADR 0080 v3 allowlist
+-- below is the complete non-trigger helper closure used by Maru's current
+-- runtime SQL and database triggers. A change must update code, migration
+-- evidence, this file, and the genuine-login service smoke together.
 REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
 REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM maru_runtime;
 ALTER DEFAULT PRIVILEGES FOR ROLE maru_migration IN SCHEMA public
@@ -577,6 +581,8 @@ GRANT EXECUTE ON FUNCTION
     public.maru_assert_active_board_membership_provenance(uuid),
     public.maru_assert_active_executive_board(uuid),
     public.maru_assert_active_executive_board_v0009(uuid),
+    public.maru_assert_active_maru_operators(uuid),
+    public.maru_assert_active_maru_operators_v0009(uuid),
     public.maru_assert_authority_issuance_complete(bigint),
     public.maru_assert_authority_issuance_complete_internal(
         bigint,
@@ -661,7 +667,8 @@ REVOKE TRIGGER, TRUNCATE, MAINTAIN
 -- settings, sequence UPDATE, reachable membership ADMIN OPTION, object grant
 -- options, any runtime DML on migration metadata or the two cutover-state
 -- relations, REFERENCES on the SELECT-only control trio, DELETE/REFERENCES on
--- the structure control, or UPDATE/DELETE/REFERENCES on structure receipts.
+-- the structure control, or UPDATE/DELETE/REFERENCES on Workforce adoption and
+-- structure receipts.
 -- Registration setup and account onboarding additionally requires UPDATE-only account-inventory control access,
 -- append-only invitation, delivery-attempt, late-outcome, and reconciliation
 -- evidence plus retention receipts, SELECT-only retention-policy control,

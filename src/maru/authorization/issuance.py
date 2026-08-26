@@ -21,6 +21,10 @@ from maru.organizations.models import (
     OrganizationRepresentation,
     RepresentationAppointment,
 )
+from maru.organizations.representation_catalog import (
+    EXECUTIVE_BOARD,
+    representation_definition,
+)
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -30,7 +34,7 @@ type AuthorityTarget = CapabilityGrant | RoleBundle | RoleAssignment
 
 _GRANT_CAPABILITY = "authorization.grant_direct"
 _ROLE_CAPABILITY = "authorization.manage_roles"
-_EXECUTIVE_BOARD_ROLE_CODE = "executive-board"
+_EXECUTIVE_BOARD_ROLE_CODE = EXECUTIVE_BOARD.role_code
 
 
 def _raise_validation(message: str, *, code: str) -> Never:
@@ -373,7 +377,7 @@ def create_delegated_grant_issuance(
     )
 
 
-def _validate_board_basis(
+def _validate_representation_basis(
     *,
     target: RoleBundle | RoleAssignment,
     representation: OrganizationRepresentation,
@@ -381,6 +385,12 @@ def _validate_board_basis(
     approver_appointment: RepresentationAppointment,
     evaluated_at: datetime,
 ) -> None:
+    definition = representation_definition(representation.code)
+    if definition is None or representation.name != definition.name:
+        _raise_validation(
+            "The representation type is unsupported.",
+            code="organization_representation_type_unsupported",
+        )
     actor_id, approver_id, recipient_id, _capability_code = _target_attribution(target)
     if (
         representation.organization_id != target.organization_id
@@ -414,10 +424,10 @@ def _validate_board_basis(
             code="representation_acceptance_mismatch",
         )
     if isinstance(target, RoleBundle):
-        valid_target = target.code == _EXECUTIVE_BOARD_ROLE_CODE
+        valid_target = target.code == definition.role_code
     else:
         valid_target = (
-            target.role_bundle.code == _EXECUTIVE_BOARD_ROLE_CODE
+            target.role_bundle.code == definition.role_code
             and target.edition_id is None
             and target.department_id is None
             and target.resource_binding_id is None
@@ -426,12 +436,12 @@ def _validate_board_basis(
         )
     if not valid_target:
         _raise_validation(
-            "Special representation provenance is reserved for the root Board.",
-            code="executive_board_authority_target_mismatch",
+            "Special representation provenance requires its exact reserved root.",
+            code="representation_authority_target_mismatch",
         )
 
 
-def _lock_board_evidence(
+def _lock_representation_evidence(
     *,
     representation: OrganizationRepresentation,
     actor: Account,
@@ -471,14 +481,14 @@ def _lock_board_evidence(
         RepresentationAppointment.DoesNotExist,
     ):
         _raise_validation(
-            "The Executive Board ceremony evidence is unavailable.",
-            code="executive_board_evidence_unavailable",
+            "The representation ceremony evidence is unavailable.",
+            code="representation_evidence_unavailable",
         )
     return locked_representation, locked_actor, locked_appointment
 
 
 @transaction.atomic
-def create_executive_board_issuance(
+def create_representation_issuance(
     *,
     target: RoleBundle | RoleAssignment,
     representation: OrganizationRepresentation,
@@ -486,7 +496,7 @@ def create_executive_board_issuance(
     approver_appointment: RepresentationAppointment,
     evaluated_at: datetime,
 ) -> AuthorityIssuance:
-    """Record the non-cyclic, code-owned initial Executive Board ceremony.
+    """Record a non-cyclic, code-owned initial representation ceremony.
 
     Parameters
     ----------
@@ -509,15 +519,17 @@ def create_executive_board_issuance(
     locked_target = _lock_target(target)
     if not isinstance(locked_target, (RoleBundle, RoleAssignment)):
         _raise_validation(
-            "Executive Board provenance requires a bundle or assignment.",
-            code="executive_board_authority_target_required",
+            "Representation provenance requires a bundle or assignment.",
+            code="representation_authority_target_required",
         )
-    locked_representation, locked_actor, locked_appointment = _lock_board_evidence(
-        representation=representation,
-        actor=actor,
-        approver_appointment=approver_appointment,
+    locked_representation, locked_actor, locked_appointment = (
+        _lock_representation_evidence(
+            representation=representation,
+            actor=actor,
+            approver_appointment=approver_appointment,
+        )
     )
-    _validate_board_basis(
+    _validate_representation_basis(
         target=locked_target,
         representation=locked_representation,
         actor=locked_actor,
@@ -542,3 +554,72 @@ def create_executive_board_issuance(
         evaluated_at=evaluated_at,
     )
     return issuance
+
+
+def create_executive_board_issuance(
+    *,
+    target: RoleBundle | RoleAssignment,
+    representation: OrganizationRepresentation,
+    actor: Account,
+    approver_appointment: RepresentationAppointment,
+    evaluated_at: datetime,
+) -> AuthorityIssuance:
+    """Retain the historical Executive Board issuance entry point.
+
+    Parameters
+    ----------
+    target : RoleBundle | RoleAssignment
+        The exact reserved bundle or controller assignment.
+    representation : OrganizationRepresentation
+        The accountable organization representation.
+    actor : Account
+        The platform administrator recording activation.
+    approver_appointment : RepresentationAppointment
+        The independently accepted controller appointment.
+    evaluated_at : datetime
+        The exact activation instant.
+
+    Returns
+    -------
+    AuthorityIssuance
+        The append-only authority issuance evidence.
+
+    Raises
+    ------
+    ValidationError
+        If the representation or retained authority evidence is incompatible
+        with the historical Executive Board entry point.
+    """
+    if representation.code != EXECUTIVE_BOARD.code:
+        _raise_validation(
+            "The Executive Board compatibility path requires a Board representation.",
+            code="executive_board_representation_required",
+        )
+    try:
+        return create_representation_issuance(
+            target=target,
+            representation=representation,
+            actor=actor,
+            approver_appointment=approver_appointment,
+            evaluated_at=evaluated_at,
+        )
+    except ValidationError as error:
+        compatibility_errors = {
+            "representation_authority_target_required": (
+                "Executive Board provenance requires a bundle or assignment.",
+                "executive_board_authority_target_required",
+            ),
+            "representation_evidence_unavailable": (
+                "The Executive Board ceremony evidence is unavailable.",
+                "executive_board_evidence_unavailable",
+            ),
+            "representation_authority_target_mismatch": (
+                "Special representation provenance is reserved for the root Board.",
+                "executive_board_authority_target_mismatch",
+            ),
+        }
+        compatibility_error = compatibility_errors.get(error.code or "")
+        if compatibility_error is None:
+            raise
+        message, code = compatibility_error
+        _raise_validation(message, code=code)

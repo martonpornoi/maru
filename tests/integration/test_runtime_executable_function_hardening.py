@@ -398,17 +398,18 @@ def test_persistent_trigger_callers_pin_their_runtime_helper_resolution() -> Non
     assert callers.keys() == CALLER_FUNCTION_TARGETS.keys()
     for identity, target in CALLER_FUNCTION_TARGETS.items():
         source, configuration = callers[identity]
+        source_without_literals = re.sub(r"'(?:''|[^'])*'", "''", source)
         assert configuration == SAFE_SEARCH_PATH
         assert f"public.{target}" in source
         assert not re.search(
             rf"(?<![A-Za-z0-9_.]){re.escape(target)}(?![A-Za-z0-9_])",
-            source,
+            source_without_literals,
         )
         assert not re.search(
             r"(?<![A-Za-z0-9_.])"
             r"(?:organizations|authorization|identity|audit|effects|events|"
             r"workforce|participation)_[a-z0-9_]+(?![A-Za-z0-9_])",
-            source,
+            source_without_literals,
         )
 
     combined_sources = "\n".join(source for source, _config in callers.values())

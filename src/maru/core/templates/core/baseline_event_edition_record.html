@@ -44,10 +44,22 @@
             </p>
             <p class="baseline-record-meta">
               <span>Lifecycle: <strong>{{ edition.get_lifecycle_display }}</strong></span>
+              <span>Use of Maru: <strong>{{ edition_profile.label }}</strong></span>
               <span>Dates: <strong>{{ edition.starts_on|date:"Y-m-d" }} → {{ edition.ends_on|date:"Y-m-d" }}</strong></span>
               <span>Stable URL name: <code>{{ edition.slug }}</code></span>
             </p>
           </header>
+
+          <aside class="baseline-boundary" aria-labelledby="edition-adoption-profile-title">
+            <p class="baseline-kicker">Adoption boundary</p>
+            <h2 id="edition-adoption-profile-title">{{ edition_profile.label }}</h2>
+            <p>{{ edition_profile.description }}</p>
+            <p>
+              This boundary is retained with the edition. An account created
+              for this purpose does not become an attendee and does not gain
+              access to modules the convention has not adopted.
+            </p>
+          </aside>
 
           {% if edition_editable %}
             {% include "core/_baseline_access_summary.html" with access_operation="view and change this event-edition record" %}
@@ -145,8 +157,13 @@
                 <dd>{{ edition.language_codes|join:", " }}</dd>
               </div>
               <div>
-                <dt>Operating currencies</dt>
-                <dd>{{ edition.currency_codes|join:", " }}</dd>
+                {% if edition.adoption_profile_code == "workforce_only" %}
+                  <dt>Payments and attendee registration</dt>
+                  <dd>Not adopted</dd>
+                {% else %}
+                  <dt>Operating currencies</dt>
+                  <dd>{{ edition.currency_codes|join:", " }}</dd>
+                {% endif %}
               </div>
               <div>
                 <dt>Stable URL name</dt>
@@ -212,15 +229,25 @@
               <section class="baseline-panel baseline-form-panel" aria-labelledby="edition-profile-locale-title">
                 <div class="baseline-section-heading">
                   <p class="baseline-kicker">Edition defaults</p>
-                  <h2 id="edition-profile-locale-title">Languages and currencies</h2>
+                  <h2 id="edition-profile-locale-title">
+                    {% if edition.adoption_profile_code == "workforce_only" %}Languages{% else %}Languages and currencies{% endif %}
+                  </h2>
                   <p>
-                    These codes define later localized content and money-entry
-                    boundaries for this edition.
+                    {% if edition.adoption_profile_code == "workforce_only" %}
+                      Languages support volunteer-facing content. Payment
+                      currency is absent because this edition has not adopted
+                      attendee registration or payments.
+                    {% else %}
+                      These codes define later localized content and money-entry
+                      boundaries for this edition.
+                    {% endif %}
                   </p>
                 </div>
                 <div class="baseline-field-grid baseline-field-grid--locale">
                   {% include "core/_baseline_form_field.html" with field=form.language_codes %}
-                  {% include "core/_baseline_form_field.html" with field=form.currency_codes %}
+                  {% if edition.adoption_profile_code != "workforce_only" %}
+                    {% include "core/_baseline_form_field.html" with field=form.currency_codes %}
+                  {% endif %}
                 </div>
               </section>
 

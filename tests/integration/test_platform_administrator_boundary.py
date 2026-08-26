@@ -8,6 +8,7 @@ from rest_framework.test import APIClient
 
 from maru.authorization.models import CapabilityGrant, RoleAssignment
 from maru.authorization.policy import decide, resolve_organization_target
+from maru.events.adoption import adoption_profile
 from maru.identity.models import Account
 from maru.organizations.models import OrganizationMembership
 from maru.participation.models import Participation
@@ -135,6 +136,8 @@ def test_platform_administrator_uses_platform_policy_without_a_convention_grant(
 def test_platform_context_lists_editions_without_participation() -> None:
     administrator = AccountFactory(is_staff=True, is_superuser=True)
     edition = EventEditionFactory(name="Marucon 2031")
+    profile = adoption_profile(edition.adoption_profile_code)
+    assert profile is not None
     client = APIClient()
     client.force_authenticate(administrator)
 
@@ -154,6 +157,20 @@ def test_platform_context_lists_editions_without_participation() -> None:
             "edition_slug": edition.slug,
             "edition_name": "Marucon 2031",
             "lifecycle": edition.lifecycle,
+            "adoption_profile_code": edition.adoption_profile_code,
+            "adoption_profile_version": edition.adoption_profile_version,
+            "adoption_profile_label": profile.label,
+            "adopted_modules": sorted(profile.modules),
+            "available_destinations": [
+                "today",
+                "my-registration",
+                "people",
+                "workforce",
+                "commerce",
+                "reports",
+                "setup",
+                "security",
+            ],
             "time_zone": edition.time_zone,
             "language_codes": edition.language_codes,
             "currency_codes": edition.currency_codes,

@@ -142,6 +142,11 @@ def test_catalog_uses_exact_identifiers_without_aliases() -> None:
         ),
         (
             StructureDepartmentDefinition(
+                "maru-operators", "Maru operators", "Operations", None, 0
+            ),
+        ),
+        (
+            StructureDepartmentDefinition(
                 "child", "Child", "Child", "missing-parent", 0
             ),
         ),

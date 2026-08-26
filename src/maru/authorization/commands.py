@@ -47,9 +47,11 @@ from maru.authorization.retired_targets import (
 )
 from maru.authorization.services import AuthorizationDenied
 from maru.effects.services import DomainEventRecord, publish_domain_event
+from maru.events.adoption import profile_allows_capabilities
 from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.organizations.models import Organization
+from maru.organizations.representation_catalog import REPRESENTATION_ROLE_CODES
 from maru.workforce.models import Department
 
 GRANT_CAPABILITY = "authorization.grant_direct"
@@ -58,7 +60,7 @@ ROLE_CAPABILITY = "authorization.manage_roles"
 MAX_AUTHORITY_REASON_LENGTH = 240
 MAX_ROLE_NAME_LENGTH = 120
 EXECUTIVE_BOARD_ROLE_CODE = "executive-board"
-REPRESENTATION_MANAGED_ROLE_CODES = frozenset({EXECUTIVE_BOARD_ROLE_CODE})
+REPRESENTATION_MANAGED_ROLE_CODES = REPRESENTATION_ROLE_CODES
 DUAL_CONTROL_COUNT = 2
 
 
@@ -1442,7 +1444,7 @@ def assign_role(  # noqa: DOC503 - bare re-raise preserves original error
                     pk=role_bundle_id,
                     organization=organization,
                 )
-                .exclude(code__iexact=EXECUTIVE_BOARD_ROLE_CODE)
+                .exclude(code__in=REPRESENTATION_MANAGED_ROLE_CODES)
                 .only("id", "organization_id", "code", "version", "capability_codes")
                 .first()
             )
@@ -1450,6 +1452,22 @@ def assign_role(  # noqa: DOC503 - bare re-raise preserves original error
                 _raise_authorization(
                     "The role bundle is unavailable.",
                     reason_code="role_bundle_unavailable",
+                )
+            if (
+                locked_target.adoption_profile_code is not None
+                and not profile_allows_capabilities(
+                    locked_target.adoption_profile_code,
+                    role.capability_codes,
+                )
+            ):
+                _raise_validation(
+                    {
+                        "role_bundle": (
+                            "This access group includes a module this edition has "
+                            "not adopted."
+                        )
+                    },
+                    reason_code="module_not_adopted",
                 )
             if not role_bundle_provenance_is_historical(
                 bundle=role,
@@ -1653,7 +1671,7 @@ def revoke_role_assignment(  # noqa: DOC503 - bare re-raise preserves original e
                     department=locked.department,
                     resource_binding_id=locked_target.resource_binding_id,
                 )
-                .exclude(role_bundle__code__iexact=EXECUTIVE_BOARD_ROLE_CODE)
+                .exclude(role_bundle__code__in=REPRESENTATION_MANAGED_ROLE_CODES)
                 .first()
             )
             if assignment is None:
@@ -1989,7 +2007,10 @@ def revoke_expired_retired_department_role_assignment(  # noqa: DOC503 - bare re
                 .filter(pk=assignment.role_bundle_id)
                 .first()
             )
-            if role is None or role.code.casefold() == EXECUTIVE_BOARD_ROLE_CODE:
+            if (
+                role is None
+                or role.code.casefold() in REPRESENTATION_MANAGED_ROLE_CODES
+            ):
                 _raise_authorization(
                     "The authority record is unavailable.",
                     reason_code="authority_unavailable",

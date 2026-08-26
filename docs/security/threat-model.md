@@ -174,7 +174,7 @@ untrusted channel, bounded, observable, and assumed capable of failure.
   role cannot appear safe. Deny excess structure-table mutation and
   `REFERENCES` without removing Department from the trigger-governed ordinary
   DML plane. Revoke non-system function execution from `PUBLIC`
-  and grant the runtime role only the versioned v2 policy/trigger-helper
+  and grant the runtime role only the versioned v3 policy/trigger-helper
   closure. Require current, session, and authenticated-backend identity for
   runtime health; owner role switching is not authentication evidence.
 - Treat workforce `0006`/`0007` as a stopped-writer security boundary, not only

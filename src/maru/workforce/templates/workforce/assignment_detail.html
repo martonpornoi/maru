@@ -37,7 +37,7 @@
   {% if assignment.status == "proposed" %}
     {% if can_decide_assignment %}
       <section class="baseline-panel" aria-labelledby="assignment-decision-title">
-        <div class="baseline-section-heading"><p class="baseline-kicker">Step 2 of 2</p><h2 id="assignment-decision-title">Independent decision</h2><p>Both actions require a fresh sign-in check. Approval activates the Position's scoped role and participation capacity atomically.</p></div>
+        <div class="baseline-section-heading"><p class="baseline-kicker">Step 2 of 2</p><h2 id="assignment-decision-title">Independent decision</h2><p>Both actions require a fresh sign-in check. {% if edition.adoption_profile_code == "workforce_only" %}Approval activates the Position's scoped Workforce role without creating attendee Participation.{% else %}Approval activates the Position's scoped role and Participation capacity atomically.{% endif %}</p></div>
         <div class="workforce-assignment-decision-grid">
           <form method="post" action="{% url 'approve-organization-workforce-assignment' organization.slug convention_series.slug edition.slug assignment.id %}" class="baseline-form" novalidate>
             {% csrf_token %}{{ approve_form.expected_version }}{{ approve_form.retry_key }}

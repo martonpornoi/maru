@@ -217,6 +217,37 @@ class _StructureReasonForm(StrictInputForm):
         )
 
 
+class WorkforceStarterTemplateForm(_StructureReasonForm):
+    """Collect independent approval for the safe Workforce starter template."""
+
+    approver_email = forms.EmailField(
+        label="Independent approver email",
+        max_length=254,
+        help_text=(
+            "Enter the exact verified email of a different active accountable "
+            "controller for this organization."
+        ),
+        widget=forms.EmailInput(attrs={"autocomplete": "off"}),
+    )
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the focused starter-template approval form.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments forwarded to the strict form.
+        **kwargs : Any
+            Keyword arguments forwarded to the strict form.
+        """
+        kwargs.setdefault("auto_id", "id_workforce_starter_%s")
+        super().__init__(*args, **kwargs)
+        self.fields["reason"].help_text = (
+            "Record why this organization needs the safe Volunteer starter. "
+            "The rationale is retained with the independently approved role."
+        )
+
+
 class StructureTemplateApplicationForm(_StructureReasonForm):
     """Collect and validate structure template application input."""
 
@@ -299,8 +330,9 @@ class _DepartmentDetailsForm(_StructureReasonForm):
         label="Department name",
         strip=False,
         help_text=(
-            "Use the operational name people recognize. Executive Board is "
-            "reserved for the separate governance record."
+            "Use the operational name people recognize. Accountable "
+            "representation names such as Maru operators and Executive Board "
+            "are reserved for separate governance records."
         ),
         widget=forms.TextInput(
             attrs={"autocomplete": "off", "maxlength": MAX_DEPARTMENT_NAME_LENGTH}

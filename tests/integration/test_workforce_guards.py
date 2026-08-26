@@ -365,7 +365,7 @@ def test_workforce_models_reject_invalid_scope_cycles_versions_and_evidence() ->
         assignment.clean()
     assignment.approved_by = None
     assignment.status = PositionAssignment.Status.ACTIVE
-    with pytest.raises(ValidationError, match="role, and capacity"):
+    with pytest.raises(ValidationError, match="profile-matched evidence"):
         assignment.clean()
     assignment.status = PositionAssignment.Status.PROPOSED
     with pytest.raises(ValidationError, match="retained evidence"):

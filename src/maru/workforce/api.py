@@ -42,8 +42,8 @@ from maru.events.models import EventEdition
 from maru.identity.models import Account
 from maru.identity.services import require_recent_step_up
 from maru.organizations.queries import (
-    ExecutiveBoardAnchor,
-    executive_board_governance_anchor,
+    OrganizationGovernanceAnchor,
+    organization_governance_anchor,
 )
 from maru.workforce.assignment_commands import (
     AssignmentAuthorizationDeniedError,
@@ -903,7 +903,7 @@ class _WorkforceStructureSnapshot:
     organization_name: str
     series_name: str
     edition_name: str
-    governance: ExecutiveBoardAnchor
+    governance: OrganizationGovernanceAnchor
     structure: EditionStructureProjection
 
 
@@ -954,7 +954,7 @@ def _load_workforce_structure_snapshot(
             series__organization_id=organization_id,
         )
     )
-    governance = executive_board_governance_anchor(
+    governance = organization_governance_anchor(
         organization_id=organization_id,
     )
     structure = project_edition_structure(

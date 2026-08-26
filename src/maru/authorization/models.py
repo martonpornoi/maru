@@ -13,6 +13,11 @@ from django.utils import timezone
 from maru.authorization.catalog import ScopeLevel, capability
 from maru.core.models import UUIDTimeStampedModel
 from maru.identity.policies import validate_convention_subject
+from maru.organizations.representation_catalog import (
+    MARU_OPERATORS,
+    RepresentationDefinition,
+    representation_definition_for_role,
+)
 
 ROLE_CODE_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 AUTHORITY_PROVENANCE_CONTRACT_VERSION = "adr-0044-v1"
@@ -1027,13 +1032,20 @@ class RoleAssignment(UUIDTimeStampedModel):
                         )
                     }
                 )
+            purpose_bounded_root = (
+                self.edition_id is None
+                and self.role_bundle.code == MARU_OPERATORS.role_code
+                and tuple(self.role_bundle.capability_codes)
+                == MARU_OPERATORS.capability_codes
+            )
             for code in self.role_bundle.capability_codes:
-                _validate_capability_scope(
-                    capability_code=code,
-                    edition_id=self.edition_id,
-                    department_id=self.department_id,
-                    resource_binding_id=self.resource_binding_id,
-                )
+                if not purpose_bounded_root:
+                    _validate_capability_scope(
+                        capability_code=code,
+                        edition_id=self.edition_id,
+                        department_id=self.department_id,
+                        resource_binding_id=self.resource_binding_id,
+                    )
         _validate_revocation_evidence(
             revoked_at=self.revoked_at,
             revoked_by_id=self.revoked_by_id,
@@ -1404,14 +1416,14 @@ class AuthorityControl(UUIDTimeStampedModel):
         return target.organization_id
 
     @staticmethod
-    def _is_executive_board_target(
+    def _target_representation_definition(
         target: CapabilityGrant | RoleBundle | RoleAssignment,
-    ) -> bool:
+    ) -> RepresentationDefinition | None:
         if isinstance(target, RoleBundle):
-            return target.code == "executive-board"
+            return representation_definition_for_role(target.code)
         if isinstance(target, RoleAssignment):
-            return target.role_bundle.code == "executive-board"
-        return False
+            return representation_definition_for_role(target.role_bundle.code)
+        return None
 
     def _validate_basis(self) -> None:
         pointers = (
@@ -1594,12 +1606,13 @@ class AuthorityControl(UUIDTimeStampedModel):
 
     def _validate_representation_basis(self) -> None:
         target = self.issuance.target
-        if not self._is_executive_board_target(target):
+        definition = self._target_representation_definition(target)
+        if definition is None:
             raise ValidationError(
                 {
                     "basis": (
-                        "Representation evidence is reserved for Executive Board "
-                        "authority."
+                        "Representation evidence is reserved for a code-owned "
+                        "accountable authority root."
                     )
                 }
             )
@@ -1608,6 +1621,8 @@ class AuthorityControl(UUIDTimeStampedModel):
             representation = self.representation
             if representation is None or (
                 representation.organization_id != target_organization_id
+                or representation.code != definition.code
+                or representation.name != definition.name
                 or representation.activated_by_id != self.principal_id
                 or not self.principal.is_platform_administrator
                 or representation.activated_at != self.issuance.evaluated_at
@@ -1615,8 +1630,7 @@ class AuthorityControl(UUIDTimeStampedModel):
                 raise ValidationError(
                     {
                         "representation": (
-                            "Use the exact platform-operated Executive Board "
-                            "activation."
+                            "Use the exact platform-operated representation activation."
                         )
                     }
                 )
@@ -1624,6 +1638,8 @@ class AuthorityControl(UUIDTimeStampedModel):
         appointment = self.appointment
         if appointment is None or (
             appointment.representation.organization_id != target_organization_id
+            or appointment.representation.code != definition.code
+            or appointment.representation.name != definition.name
             or (appointment.representation.activated_at != self.issuance.evaluated_at)
             or appointment.account_id != self.principal_id
             or appointment.responded_at is None

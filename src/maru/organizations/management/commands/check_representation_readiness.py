@@ -19,9 +19,12 @@ from maru.organizations.models import (
     RepresentationAppointment,
 )
 from maru.organizations.representation import (
-    EXECUTIVE_BOARD_CAPABILITIES,
-    EXECUTIVE_BOARD_ROLE_CODE,
-    MINIMUM_EXECUTIVE_BOARD_CONTROLLERS,
+    MINIMUM_REPRESENTATION_CONTROLLERS,
+)
+from maru.organizations.representation_catalog import (
+    REPRESENTATION_ROLE_CODES,
+    RepresentationDefinition,
+    representation_definition,
 )
 
 if TYPE_CHECKING:
@@ -100,13 +103,23 @@ def _is_emergency_governed_state(
 def _reserved_bundle(
     representation: OrganizationRepresentation,
 ) -> RoleBundle | None:
+    definition = _definition(representation)
     bundles = list(
         RoleBundle.objects.filter(
             organization_id=representation.organization_id,
-            code=EXECUTIVE_BOARD_ROLE_CODE,
+            code=definition.role_code,
         ).order_by("id")[:2]
     )
     return bundles[0] if len(bundles) == 1 else None
+
+
+def _definition(
+    representation: OrganizationRepresentation,
+) -> RepresentationDefinition:
+    definition = representation_definition(representation.code)
+    if definition is None:
+        raise RuntimeError("A representation has an unsupported code.")
+    return definition
 
 
 def _has_controller_approver(
@@ -137,7 +150,6 @@ def _has_controller_approver(
 
 def _reserved_bundle_mismatches() -> set[UUID]:
     mismatches: set[UUID] = set()
-    expected_capabilities = sorted(EXECUTIVE_BOARD_CAPABILITIES)
     for representation in OrganizationRepresentation.objects.filter(
         state__in=(
             OrganizationRepresentation.State.ACTIVE,
@@ -147,6 +159,8 @@ def _reserved_bundle_mismatches() -> set[UUID]:
         bundle = _reserved_bundle(representation)
         if bundle is None:
             continue
+        definition = _definition(representation)
+        expected_capabilities = sorted(definition.capability_codes)
         current_event = _current_representation_event(representation)
         emergency_state = _is_emergency_governed_state(
             representation,
@@ -154,9 +168,9 @@ def _reserved_bundle_mismatches() -> set[UUID]:
         )
         capabilities = list(bundle.capability_codes)
         if (
-            bundle.version != 1
-            or bundle.name != "Executive Board"
-            or len(capabilities) != len(EXECUTIVE_BOARD_CAPABILITIES)
+            bundle.version != definition.role_version
+            or bundle.name != definition.role_name
+            or len(capabilities) != len(definition.capability_codes)
             or sorted(capabilities) != expected_capabilities
             or bundle.created_by_id != representation.activated_by_id
             or bundle.reason != representation.activation_reason
@@ -173,11 +187,12 @@ def _reserved_bundle_mismatches() -> set[UUID]:
 def _appointment_has_exact_membership(
     appointment: RepresentationAppointment,
 ) -> bool:
+    definition = _definition(appointment.representation)
     return OrganizationMembership.objects.filter(
         organization_id=appointment.representation.organization_id,
         account_id=appointment.account_id,
         state=OrganizationMembership.State.ACTIVE,
-        relationship_label="Executive Board controller",
+        relationship_label=definition.membership_label,
         started_at__isnull=False,
         ended_at__isnull=True,
     ).exists()
@@ -351,7 +366,7 @@ def _stray_board_memberships() -> set[UUID]:
             )
         memberships = OrganizationMembership.objects.filter(
             organization_id=representation.organization_id,
-            relationship_label="Executive Board controller",
+            relationship_label=_definition(representation).membership_label,
             state__in=membership_states,
         )
         active_controller_ids: Any = ()
@@ -397,7 +412,7 @@ def _has_original_activation_event(
         causation_id=activation_audit.id,
         actor_id=representation.activated_by_id,
         payload__action="activated",
-        payload__representation_code="executive_board",
+        payload__representation_code=representation.code,
         payload__state="active",
         outbox_messages__organization_id=representation.organization_id,
     )
@@ -488,6 +503,7 @@ def _revoked_assignments_have_audits(
 def _ended_appointments_have_memberships(
     representation: OrganizationRepresentation,
 ) -> bool:
+    definition = _definition(representation)
     for appointment in RepresentationAppointment.objects.filter(
         representation=representation,
         state=RepresentationAppointment.State.ENDED,
@@ -497,7 +513,7 @@ def _ended_appointments_have_memberships(
             organization_id=representation.organization_id,
             account_id=appointment.account_id,
             state=OrganizationMembership.State.ENDED,
-            relationship_label="Executive Board controller",
+            relationship_label=definition.membership_label,
             started_at__isnull=False,
             ended_at__isnull=False,
         ).exists():
@@ -593,7 +609,7 @@ def _emergency_evidence_is_exact(  # noqa: PLR0911
         ).exists()
         or OrganizationMembership.objects.filter(
             organization_id=representation.organization_id,
-            relationship_label="Executive Board controller",
+            relationship_label=_definition(representation).membership_label,
             state__in=(
                 OrganizationMembership.State.INVITED,
                 OrganizationMembership.State.ACTIVE,
@@ -680,7 +696,7 @@ def _collect_blockers() -> dict[str, set[UUID]]:
     )
     active_board_insufficient_controllers = _organization_ids(
         active_representations_with_counts.filter(
-            active_controller_count__lt=MINIMUM_EXECUTIVE_BOARD_CONTROLLERS
+            active_controller_count__lt=MINIMUM_REPRESENTATION_CONTROLLERS
         ).values_list("organization_id", flat=True)
     )
     active_board_pending_appointments = _organization_ids(
@@ -696,7 +712,7 @@ def _collect_blockers() -> dict[str, set[UUID]]:
     organizations_with_board_artifacts = Organization.objects.annotate(
         reserved_bundle_count=Count(
             "role_bundles",
-            filter=Q(role_bundles__code=EXECUTIVE_BOARD_ROLE_CODE),
+            filter=Q(role_bundles__code__in=REPRESENTATION_ROLE_CODES),
             distinct=True,
         ),
         governed_representation_count=Count(

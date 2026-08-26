@@ -13,6 +13,7 @@ from maru.core.localization import (
     grouped_time_zone_choices,
 )
 from maru.organizations.models import ConventionSeries, Organization
+from maru.organizations.representation_catalog import REPRESENTATION_CODE_CHOICES
 from maru.organizations.services import (
     ConventionSeriesCreationDetails,
     OrganizationCreationDetails,
@@ -413,10 +414,20 @@ class OrganizationDeletionForm(StrictInputForm):
 class RepresentationProvisionForm(StrictInputForm):
     """Collect and validate representation provision input."""
 
+    representation_code = forms.ChoiceField(
+        label="Who is accountable for operating Maru?",
+        choices=REPRESENTATION_CODE_CHOICES,
+        widget=forms.RadioSelect,
+        help_text=(
+            "Choose Executive Board only when these people really hold that "
+            "office. Choose Maru operators for software responsibility without "
+            "a legal or constitutional claim."
+        ),
+    )
     reason = forms.CharField(
         max_length=240,
         strip=True,
-        help_text=("Record why the accountable Executive Board is being established."),
+        help_text="Record why this accountable Maru access is being established.",
         widget=forms.Textarea(attrs={"rows": 3}),
     )
 
@@ -435,7 +446,7 @@ class RepresentationInviteForm(StrictInputForm):
     reason = forms.CharField(
         max_length=240,
         strip=True,
-        help_text="Explain the proposed Executive Board appointment.",
+        help_text="Explain the proposed accountable-controller appointment.",
         widget=forms.Textarea(attrs={"rows": 3}),
     )
 
