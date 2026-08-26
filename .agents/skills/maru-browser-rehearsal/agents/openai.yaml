@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maru Browser Rehearsal"
+  short_description: "Rehearse role-based accessible Maru journeys"
+  default_prompt: "Use $maru-browser-rehearsal to test this Maru journey across roles and viewports."

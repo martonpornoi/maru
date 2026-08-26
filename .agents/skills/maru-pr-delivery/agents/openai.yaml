@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maru Pull-Request Delivery"
+  short_description: "Deliver Maru changes through protected review"
+  default_prompt: "Use $maru-pr-delivery to prepare and verify this Maru pull request."

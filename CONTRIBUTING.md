@@ -13,6 +13,9 @@ to every change.
 4. Read [the development setup](docs/development/setup.md),
    [testing strategy](docs/quality/testing-strategy.md), and
    [documentation standards](docs/quality/documentation-standards.md).
+5. If a coding agent will participate, read the
+   [agent-assisted workflow guide](docs/development/agent-workflows.md) and keep
+   the same human review and evidence obligations.
 
 ## Development workflow
 
@@ -51,6 +54,21 @@ Open unfinished work as a draft. Draft updates run only the cheap locked-input
 and automation-policy feedback and intentionally keep `PR gate` red. After the
 complete local certification passes, choose **Ready for review** to start the
 authoritative hosted path. Converting back to draft cancels obsolete acceptance.
+
+## Agent-assisted contributions
+
+Repository-root [`AGENTS.md`](AGENTS.md) is the always-on project contract.
+Maru also provides focused playbooks under `.agents/skills/` for change
+mapping, product planning, browser rehearsal, and protected pull-request
+delivery. Use the smallest matching set and load routed references only when
+the task needs them.
+
+These playbooks do not grant authority to implement, push, merge, deploy,
+change repository settings, or use personal data. They do not turn generated
+output into accepted behavior. The contributor remains responsible for
+checking current requirements and ADRs, inspecting the actual diff, running
+appropriate tests, documenting the outcome, and satisfying the protected
+`PR gate`.
 
 ## Issue triage and newcomer work
 

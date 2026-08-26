@@ -16,6 +16,29 @@ At the start of every material task:
 Do not infer current state from conversation history when the repository
 contains a newer checkpoint.
 
+## Repository skill routing
+
+`AGENTS.md` is the always-on repository contract. Focused playbooks under
+`.agents/skills/` supplement it when a task matches their description; they do
+not override these instructions, product requirements, accepted ADRs, or the
+authority granted by the user's request.
+
+- Use `maru-change-map` for a material implementation, diagnosis, or review
+  that crosses product or technical contracts.
+- Use `maru-product-planning` for requirement collection, journey analysis,
+  prioritization, roadmap choices, and progressive modular adoption.
+- Use `maru-browser-rehearsal` for visible role, state, responsive,
+  accessibility, and disclosure acceptance in a real browser journey.
+- Use `maru-pr-delivery` for pull-request preparation, hosted-check repair,
+  merge verification, and exact protected-main synchronization.
+
+Load only the matching skill entrypoint and the references it routes to. Keep
+current status in `docs/project/CURRENT.md` and durable facts in their owning
+documentation; skills contain reusable procedure, not status snapshots,
+credentials, private data, or personal memory. See the
+[agent-assisted workflow guide](docs/development/agent-workflows.md) for the
+catalog and maintenance contract.
+
 ## Required end-of-task checkpoint
 
 Before declaring a material task complete:

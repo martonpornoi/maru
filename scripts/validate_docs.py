@@ -40,6 +40,21 @@ ROOT_HUB_DOCNAMES = (
     "operations/index",
     "reference/index",
 )
+AGENT_SKILL_ROOT = Path(".agents/skills")
+EXPECTED_AGENT_SKILLS = (
+    "maru-browser-rehearsal",
+    "maru-change-map",
+    "maru-pr-delivery",
+    "maru-product-planning",
+)
+AGENT_SKILL_NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+AGENT_SKILL_FRONTMATTER_FIELD_PATTERN = re.compile(r"^([a-z][a-z0-9_-]*):\s*(.+?)\s*$")
+AGENT_SKILL_PLACEHOLDER_PATTERN = re.compile(r"\b(?:TODO|TBD)\b")
+MIN_QUOTED_SCALAR_LENGTH = 2
+MAX_AGENT_SKILL_NAME_LENGTH = 64
+MAX_AGENT_SKILL_DESCRIPTION_LENGTH = 500
+MIN_AGENT_SKILL_SHORT_DESCRIPTION_LENGTH = 25
+MAX_AGENT_SKILL_SHORT_DESCRIPTION_LENGTH = 64
 ARCHIVE_DOCNAME_PREFIXES = ("architecture/decisions/", "checkpoints/")
 PURPOSE_NAMING_ARCHIVE_PREFIXES = (
     "docs/architecture/decisions/",
@@ -82,6 +97,7 @@ LIVE_PERSON_PATH_SEGMENTS = frozenset(
 )
 RESERVED_EXAMPLE_HOSTS = frozenset({"example.com", "example.net", "example.org"})
 POLICY_CONTENT_ROOTS = (
+    Path(".agents"),
     Path("frontends"),
     Path("openapi.yaml"),
     Path("scripts"),
@@ -433,6 +449,347 @@ def purpose_name_failures(root: Path) -> list[str]:
     return failures
 
 
+def _agent_skill_frontmatter(content: str) -> dict[str, str] | None:
+    """Parse the flat required fields from one skill frontmatter block.
+
+    Parameters
+    ----------
+    content : str
+        Complete ``SKILL.md`` text.
+
+    Returns
+    -------
+    dict[str, str] | None
+        Unquoted top-level scalar fields, or ``None`` when the opening or
+        closing delimiter is missing.
+    """
+    lines = content.splitlines()
+    if not lines or lines[0] != "---":
+        return None
+    try:
+        closing_index = lines.index("---", 1)
+    except ValueError:
+        return None
+
+    fields: dict[str, str] = {}
+    for line in lines[1:closing_index]:
+        match = AGENT_SKILL_FRONTMATTER_FIELD_PATTERN.fullmatch(line)
+        if match is None:
+            continue
+        value = match.group(2).strip()
+        quoted_scalar = (
+            len(value) >= MIN_QUOTED_SCALAR_LENGTH
+            and value[0] == value[-1]
+            and value[0] in {'"', "'"}
+        )
+        if quoted_scalar:
+            value = value[1:-1]
+        fields[match.group(1)] = value
+    return fields
+
+
+def _quoted_openai_yaml_value(content: str, field: str) -> str | None:
+    """Return one quoted two-space-indented interface scalar.
+
+    Parameters
+    ----------
+    content : str
+        Complete ``agents/openai.yaml`` text.
+    field : str
+        Interface field name to locate.
+
+    Returns
+    -------
+    str | None
+        The quoted scalar value, or ``None`` when the field is absent or uses
+        another shape.
+    """
+    match = re.search(
+        rf'^  {re.escape(field)}: "([^"\n]+)"\s*$',
+        content,
+        flags=re.MULTILINE,
+    )
+    return None if match is None else match.group(1)
+
+
+def _agent_skill_entrypoint_findings(
+    root: Path,
+    skill_root: Path,
+    skill_name: str,
+) -> tuple[str, list[str]]:
+    """Read and validate one skill entrypoint and directory shape.
+
+    Parameters
+    ----------
+    root : Path
+        Repository root used for stable relative paths.
+    skill_root : Path
+        Directory containing the skill entrypoint.
+    skill_name : str
+        Expected directory and frontmatter name.
+
+    Returns
+    -------
+    tuple[str, list[str]]
+        Complete entrypoint text when present and stable validation failures.
+    """
+    failures: list[str] = []
+    relative_root = skill_root.relative_to(root).as_posix()
+    invalid_name = (
+        len(skill_name) > MAX_AGENT_SKILL_NAME_LENGTH
+        or AGENT_SKILL_NAME_PATTERN.fullmatch(skill_name) is None
+    )
+    if invalid_name:
+        failures.append(f"{relative_root}: invalid lowercase hyphenated skill name")
+
+    readme = skill_root / "README.md"
+    if readme.exists():
+        relative_readme = readme.relative_to(root).as_posix()
+        failures.append(
+            f"{relative_readme}: skill guidance belongs in SKILL.md or a routed "
+            "reference"
+        )
+
+    skill_path = skill_root / "SKILL.md"
+    if not skill_path.is_file():
+        failures.append(f"{relative_root}/SKILL.md: missing skill entrypoint")
+        return "", failures
+
+    skill_content = skill_path.read_text(encoding="utf-8")
+    relative_skill_path = skill_path.relative_to(root).as_posix()
+    fields = _agent_skill_frontmatter(skill_content)
+    if fields is None:
+        failures.append(f"{relative_skill_path}: missing delimited YAML frontmatter")
+        return skill_content, failures
+
+    if fields.get("name") != skill_name:
+        failures.append(
+            f"{relative_skill_path}: frontmatter name must equal {skill_name!r}"
+        )
+    description = fields.get("description", "").strip()
+    if not description:
+        failures.append(f"{relative_skill_path}: description is required")
+    elif len(description) > MAX_AGENT_SKILL_DESCRIPTION_LENGTH:
+        failures.append(
+            f"{relative_skill_path}: description must remain concise enough for "
+            "skill discovery"
+        )
+    return skill_content, failures
+
+
+def _agent_skill_metadata_failures(
+    root: Path,
+    skill_root: Path,
+    skill_name: str,
+) -> list[str]:
+    """Validate one skill's user-facing Codex interface metadata.
+
+    Parameters
+    ----------
+    root : Path
+        Repository root used for stable relative paths.
+    skill_root : Path
+        Directory containing the skill metadata.
+    skill_name : str
+        Skill name that the default prompt must invoke.
+
+    Returns
+    -------
+    list[str]
+        Stable metadata validation failures.
+    """
+    metadata_path = skill_root / "agents" / "openai.yaml"
+    relative_root = skill_root.relative_to(root).as_posix()
+    if not metadata_path.is_file():
+        return [
+            f"{relative_root}/agents/openai.yaml: missing repository skill metadata"
+        ]
+
+    failures: list[str] = []
+    metadata_content = metadata_path.read_text(encoding="utf-8")
+    relative_metadata_path = metadata_path.relative_to(root).as_posix()
+    if not metadata_content.startswith("interface:\n"):
+        failures.append(
+            f"{relative_metadata_path}: metadata must start with the interface mapping"
+        )
+
+    display_name = _quoted_openai_yaml_value(metadata_content, "display_name")
+    short_description = _quoted_openai_yaml_value(
+        metadata_content,
+        "short_description",
+    )
+    default_prompt = _quoted_openai_yaml_value(metadata_content, "default_prompt")
+    if display_name is None:
+        failures.append(f"{relative_metadata_path}: quoted display_name is required")
+
+    valid_short_description = short_description is not None and (
+        MIN_AGENT_SKILL_SHORT_DESCRIPTION_LENGTH
+        <= len(short_description)
+        <= MAX_AGENT_SKILL_SHORT_DESCRIPTION_LENGTH
+    )
+    if not valid_short_description:
+        failures.append(
+            f"{relative_metadata_path}: quoted short_description must contain "
+            f"{MIN_AGENT_SKILL_SHORT_DESCRIPTION_LENGTH} through "
+            f"{MAX_AGENT_SKILL_SHORT_DESCRIPTION_LENGTH} characters"
+        )
+    if default_prompt is None or f"${skill_name}" not in default_prompt:
+        failures.append(
+            f"{relative_metadata_path}: quoted default_prompt must explicitly mention "
+            f"${skill_name}"
+        )
+    return failures
+
+
+def _agent_skill_placeholder_failures(
+    root: Path,
+    skill_path: Path,
+    metadata_path: Path,
+    references: list[Path],
+) -> list[str]:
+    """Find unfinished scaffold markers in one complete skill package.
+
+    Parameters
+    ----------
+    root : Path
+        Repository root used for stable relative paths.
+    skill_path : Path
+        Skill entrypoint to inspect.
+    metadata_path : Path
+        Optional interface metadata path to inspect when present.
+    references : list[Path]
+        Routed Markdown references belonging to the skill.
+
+    Returns
+    -------
+    list[str]
+        Stable placeholder validation failures.
+    """
+    skill_text_files = [skill_path]
+    if metadata_path.is_file():
+        skill_text_files.append(metadata_path)
+    skill_text_files.extend(references)
+    return [
+        f"{path.relative_to(root).as_posix()}: unfinished scaffold placeholder"
+        for path in skill_text_files
+        if AGENT_SKILL_PLACEHOLDER_PATTERN.search(path.read_text(encoding="utf-8"))
+    ]
+
+
+def _agent_skill_reference_failures(
+    root: Path,
+    skill_root: Path,
+    skill_content: str,
+    references: list[Path],
+) -> list[str]:
+    """Require every skill reference to be reachable from its entrypoint.
+
+    Parameters
+    ----------
+    root : Path
+        Repository root used for stable relative paths.
+    skill_root : Path
+        Directory used to resolve entrypoint-relative links.
+    skill_content : str
+        Complete skill entrypoint text.
+    references : list[Path]
+        Markdown references that must be linked for progressive disclosure.
+
+    Returns
+    -------
+    list[str]
+        Stable failures for references not linked from ``SKILL.md``.
+    """
+    linked_references: set[Path] = set()
+    for match in LINK_PATTERN.finditer(skill_content):
+        raw_target = match.group(1).strip().strip("<>").split("#", 1)[0]
+        target = unquote(raw_target)
+        if target.startswith("references/"):
+            linked_references.add((skill_root / target).resolve())
+
+    return [
+        (
+            f"{reference.relative_to(root).as_posix()}: reference must be linked "
+            "from SKILL.md for progressive disclosure"
+        )
+        for reference in references
+        if reference.resolve() not in linked_references
+    ]
+
+
+def agent_skill_failures(root: Path) -> list[str]:
+    """Validate Maru's curated repository-scoped Codex skills.
+
+    Parameters
+    ----------
+    root : Path
+        Repository root containing ``.agents/skills``.
+
+    Returns
+    -------
+    list[str]
+        Stable failures for missing skills, invalid metadata, scaffold
+        placeholders, or references that progressive disclosure cannot reach.
+    """
+    failures: list[str] = []
+    skills_root = root / AGENT_SKILL_ROOT
+    if not skills_root.is_dir():
+        return [f"{AGENT_SKILL_ROOT.as_posix()}: missing repository skill catalog"]
+
+    actual_names = tuple(
+        sorted(path.name for path in skills_root.iterdir() if path.is_dir())
+    )
+    missing = sorted(set(EXPECTED_AGENT_SKILLS) - set(actual_names))
+    unexpected = sorted(set(actual_names) - set(EXPECTED_AGENT_SKILLS))
+    if missing:
+        failures.append(
+            f"{AGENT_SKILL_ROOT.as_posix()}: missing curated skills: "
+            + ", ".join(missing)
+        )
+    if unexpected:
+        failures.append(
+            f"{AGENT_SKILL_ROOT.as_posix()}: unexpected skills require policy review: "
+            + ", ".join(unexpected)
+        )
+
+    for skill_name in EXPECTED_AGENT_SKILLS:
+        skill_root = skills_root / skill_name
+        if not skill_root.is_dir():
+            continue
+        skill_path = skill_root / "SKILL.md"
+        skill_content, entrypoint_failures = _agent_skill_entrypoint_findings(
+            root,
+            skill_root,
+            skill_name,
+        )
+        failures.extend(entrypoint_failures)
+        if not skill_content:
+            continue
+        metadata_path = skill_root / "agents" / "openai.yaml"
+        failures.extend(_agent_skill_metadata_failures(root, skill_root, skill_name))
+        references_root = skill_root / "references"
+        references = (
+            sorted(references_root.rglob("*.md")) if references_root.is_dir() else []
+        )
+        failures.extend(
+            _agent_skill_placeholder_failures(
+                root,
+                skill_path,
+                metadata_path,
+                references,
+            )
+        )
+        failures.extend(
+            _agent_skill_reference_failures(
+                root,
+                skill_root,
+                skill_content,
+                references,
+            )
+        )
+    return failures
+
+
 def _policy_content_files(root: Path) -> list[Path]:
     """Return maintained guides, examples, fixtures, and application text.
 
@@ -585,6 +942,7 @@ def main() -> int:
 
     failures.extend(navigation_failures(ROOT / "docs"))
     failures.extend(purpose_name_failures(ROOT))
+    failures.extend(agent_skill_failures(ROOT))
     failures.extend(ethical_content_failures(ROOT))
 
     requirements_path = ROOT / "docs" / "product" / "requirements.md"
@@ -605,7 +963,8 @@ def main() -> int:
         return 1
 
     print(
-        f"Documentation valid: {len(files)} Markdown files, "
+        f"Documentation and agent support valid: {len(files)} Markdown files, "
+        f"{len(EXPECTED_AGENT_SKILLS)} repository skills, "
         f"{len(requirements)} unique requirement identifiers."
     )
     return 0

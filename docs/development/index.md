@@ -13,6 +13,8 @@ collaboration contracts\
   newcomer route.
 - [Repository governance](repository-governance.md) defines branches, pull
   requests, protected acceptance, dependency policy, and release authority.
+- [Agent-assisted workflows](agent-workflows.md) explain Maru's always-on
+  instructions, focused repository skills, and their authority boundaries.
 
 ## Verify
 
@@ -32,6 +34,7 @@ a new [architecture decision](../architecture/decisions/index.md).
 :maxdepth: 1
 
 setup
+agent-workflows
 repository-governance
 local-certification
 ../quality/testing-strategy

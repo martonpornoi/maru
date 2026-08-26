@@ -3,6 +3,33 @@
 The roadmap is outcome-based. Dates are intentionally omitted until a team and
 first convention partner are known.
 
+## Progressive adoption strategy
+
+Maru earns trust through useful, bounded adoption rather than an all-or-nothing
+replacement. NFR-013 requires an organization to be able to operate one
+complete workflow without turning on registration, payments, attendance, or
+unrelated modules. Shared identity, organization and edition scope,
+authorization, audit, recovery, and export remain trustworthy foundations, but
+they must not create participation or operational side effects in capabilities
+the organization has not selected.
+
+Each product increment therefore defines an adoption profile: what foundations
+it needs, which destinations and roles become visible, which records and
+notifications it creates, how existing systems import or exchange data, what
+print or manual fallback exists, and how the organization can expand or stop
+using it. A bidder, event host, volunteer, or communications operator remains a
+purpose-specific relationship unless another capability is deliberately
+adopted.
+
+The first profile to prove end to end is **Workforce-only**, building on the
+current Structure through Shifts journey without requiring attendee
+registration or payment state. Follow-up profiles are **Programme and event
+submissions**, **Communications publishing**, **Charity art auction**, and
+**Registration without payments**, ordered by partner need and the completeness
+of their import, export, print, degraded-operation, and recovery contracts.
+These profiles are roadmap outcomes, not claims that the current interfaces
+already provide zero-configuration activation or safe production cutover.
+
 ## Current contributor-documentation outcome
 
 ADRs 0073 and 0074 add a newcomer-first public documentation layer without
